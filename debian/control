@@ -1,0 +1,19 @@
+Source: cockpit-caddy
+Section: admin
+Priority: optional
+Maintainer: RXTX4816 <RXTX4816@proton.me>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+Homepage: https://github.com/RXTX4816/cockpit-caddy
+Rules-Requires-Root: no
+
+Package: cockpit-caddy
+Architecture: all
+Depends: ${misc:Depends}, cockpit
+Description: Caddy reverse proxy management plugin for Cockpit
+ A Cockpit plugin for managing Caddy reverse proxy from the Cockpit web
+ interface. Configure port-based reverse proxying with automatic self-signed
+ TLS certificates — no DNS or subdomains required.
+ .
+ Each service is accessible via its own HTTPS port. Requires Caddy with the
+ Admin API enabled (default: localhost:2019).

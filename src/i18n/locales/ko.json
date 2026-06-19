@@ -1,0 +1,100 @@
+{
+  "common": {
+    "cancel": "취소",
+    "close": "닫기",
+    "save": "저장",
+    "delete": "삭제",
+    "edit": "편집",
+    "retry": "다시 시도",
+    "refresh": "새로 고침",
+    "copy": "복사",
+    "copied": "복사됨!",
+    "unknown": "알 수 없음"
+  },
+  "app": {
+    "title": "Caddy Reverse Proxy"
+  },
+  "service": {
+    "running": "Running",
+    "stopped": "Stopped",
+    "failed": "Failed",
+    "unknown": "Unknown",
+    "not_installed": "Caddy is not installed",
+    "not_installed_body": "Install Caddy to use this plugin. On most distros: sudo pacman -S caddy / sudo apt install caddy / sudo dnf install caddy",
+    "api_unreachable": "Caddy Admin API unreachable",
+    "api_unreachable_body": "Caddy is not running or the Admin API is not enabled. Start Caddy to continue.",
+    "start": "Start",
+    "stop": "Stop",
+    "restart": "Restart",
+    "reload": "Reload config",
+    "start_failed": "Failed to start Caddy",
+    "stop_failed": "Failed to stop Caddy",
+    "restart_failed": "Failed to restart Caddy",
+    "reload_failed": "Failed to reload Caddy config"
+  },
+  "proxies": {
+    "title": "Reverse Proxies",
+    "empty_title": "No reverse proxies configured",
+    "empty_body": "Add a proxy to expose a local service over HTTPS.",
+    "add_proxy": "Add Proxy",
+    "search_placeholder": "Search proxies…",
+    "col_port": "External Port",
+    "col_target": "Target",
+    "col_tls": "TLS",
+    "col_label": "Label",
+    "col_actions": "Actions",
+    "tls_self_signed": "Self-signed",
+    "tls_none": "None",
+    "copy_url": "Copy URL",
+    "load_failed": "Failed to load proxies",
+    "delete_confirm_title": "Delete proxy :{{port}}?",
+    "delete_confirm_body": "This will remove the reverse proxy for port {{port}} → {{target}}.",
+    "delete_confirm_button": "Delete"
+  },
+  "add_proxy": {
+    "title": "Add Reverse Proxy",
+    "aria_label": "Add reverse proxy dialog",
+    "field_external_port": "External Port",
+    "field_external_port_help": "HTTPS port to expose on this machine (1024–65535)",
+    "field_target_host": "Target Host",
+    "field_target_host_placeholder": "localhost",
+    "field_target_port": "Target Port",
+    "field_tls": "Enable TLS (self-signed via Caddy internal CA)",
+    "field_label": "Label (optional)",
+    "field_label_placeholder": "My Service",
+    "add_button": "Add Proxy",
+    "validation_port_required": "Port is required",
+    "validation_port_range": "Port must be between 1024 and 65535",
+    "validation_port_duplicate": "Port {{port}} is already in use",
+    "validation_port_number": "Port must be a number",
+    "validation_target_port_required": "Target port is required",
+    "validation_target_port_range": "Target port must be between 1 and 65535",
+    "validation_target_host_required": "Target host is required",
+    "error_save_failed": "Failed to save proxy"
+  },
+  "edit_proxy": {
+    "title": "Edit Proxy — :{{port}}",
+    "aria_label": "Edit reverse proxy dialog",
+    "save_button": "Save Changes"
+  },
+  "caddyfile": {
+    "title": "Caddyfile",
+    "save_button": "Save",
+    "load_failed": "Failed to load Caddyfile",
+    "save_failed": "Save failed",
+    "saved": "Caddyfile saved"
+  },
+  "logs": {
+    "title": "Logs",
+    "empty": "No log entries yet.",
+    "search_placeholder": "Search logs…"
+  },
+  "tabs": {
+    "proxy_list": "Proxy List",
+    "caddyfile": "Caddyfile",
+    "logs": "Logs"
+  },
+  "error_boundary": {
+    "load_error": "Error loading Caddy plugin"
+  }
+}
