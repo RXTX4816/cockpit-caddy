@@ -6,6 +6,7 @@ import {
   Content,
   EmptyState,
   EmptyStateBody,
+  Label,
   Page,
   PageSection,
   Spinner,
@@ -16,7 +17,8 @@ import {
   TabTitleText,
   Title,
 } from "@patternfly/react-core";
-import { ErrorBoundary, ToastProvider } from "@rxtx4816/cockpit-plugin-base-react/components";
+import { ErrorBoundary, ToastProvider, PluginFooter } from "@rxtx4816/cockpit-plugin-base-react/components";
+import pkg from "../../package.json";
 
 import { ProxyList } from "./ProxyList";
 import { ServiceControl } from "./ServiceControl";
@@ -24,11 +26,13 @@ import { CaddyfileEditor } from "./CaddyfileEditor";
 import { LogsViewer } from "./LogsViewer";
 import { useCaddyStatus } from "../hooks/useCaddyStatus";
 import { useAdminMode } from "../hooks/useAdminMode";
+import { useCaddyVersion } from "../hooks/useCaddyVersion";
 
 function AppInner() {
   const { t } = useTranslation();
   const { status, adminApiOk, loading, refresh } = useCaddyStatus();
   const adminAllowed = useAdminMode();
+  const caddyVersion = useCaddyVersion();
   const [activeTab, setActiveTab] = useState(0);
   const [adminBypass, setAdminBypass] = useState(false);
   function showLogsFor() {
@@ -125,6 +129,17 @@ function AppInner() {
           </StackItem>
         </Stack>
       </PageSection>
+      <PluginFooter
+        version={pkg.version}
+        links={[
+          { label: t("footer.help"), href: (pkg.homepage as string) + "/wiki" },
+          { label: t("footer.feedback"), href: (pkg.homepage as string) + "/issues/new/choose" },
+        ]}
+      >
+        {caddyVersion && (
+          <Label isCompact color="blue">{t("footer.caddy_version", { version: caddyVersion })}</Label>
+        )}
+      </PluginFooter>
     </Page>
   );
 }

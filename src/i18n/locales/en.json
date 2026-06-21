@@ -134,6 +134,11 @@
     "gate_continue": "Continue anyway",
     "gate_continue_warning": "Continuing without migration may cause Caddy to reject the configuration due to duplicate entries."
   },
+  "footer": {
+    "caddy_version": "Caddy {{version}}",
+    "help": "Help & Wiki",
+    "feedback": "Report an issue"
+  },
   "error_boundary": {
     "load_error": "Error loading Caddy plugin"
   },

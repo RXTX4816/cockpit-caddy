@@ -16,7 +16,6 @@ import {
   ModalBody,
   ModalFooter,
   ModalHeader,
-  SearchInput,
   Spinner,
   Stack,
   StackItem,
@@ -25,7 +24,7 @@ import {
   ToolbarItem,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
-import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
+import { useToast, CollapsibleSearch } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { AddProxyDialog } from "./AddProxyDialog";
 import { EditProxyDialog } from "./EditProxyDialog";
 import { useProxies } from "../hooks/useProxies";
@@ -275,11 +274,12 @@ export function ProxyList({ onShowLogs }: ProxyListProps) {
                 </Button>
               </ToolbarItem>
               <ToolbarItem>
-                <SearchInput
-                  placeholder={t("proxies.search_placeholder")}
+                <CollapsibleSearch
                   value={search}
-                  onChange={(_e, v) => setSearch(v)}
+                  onChange={setSearch}
                   onClear={() => setSearch("")}
+                  placeholder={t("proxies.search_placeholder")}
+                  aria-label={t("proxies.search_placeholder")}
                 />
               </ToolbarItem>
               <ToolbarItem align={{ default: "alignEnd" }}>
