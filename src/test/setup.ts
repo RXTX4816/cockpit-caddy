@@ -1,3 +1,4 @@
+import "@testing-library/jest-dom/vitest";
 import { vi } from "vitest";
 
 // localStorage mock is installed by @rxtx4816/cockpit-plugin-base-react/testing (first setupFile).

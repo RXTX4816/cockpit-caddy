@@ -11,8 +11,8 @@
     "url": "https://github.com/RXTX4816/cockpit-caddy.git"
   },
   "scripts": {
-    "build": "mkdir -p src/assets && cp -r node_modules/@patternfly/react-core/dist/styles/assets/fonts node_modules/@patternfly/react-core/dist/styles/assets/pficon src/assets/ && node scripts/i18n-coverage.mjs && esbuild src/index.tsx --bundle --outfile=src/main.js --minify --target=es2020 --jsx=automatic --loader:.tsx=tsx --loader:.ts=ts --loader:.svg=dataurl --external:*.woff --external:*.woff2 --external:*.ttf --external:*.eot --external:*.png --external:*.jpg --external:*.gif --alias:react=./node_modules/react --alias:react-dom=./node_modules/react-dom --alias:react/jsx-runtime=./node_modules/react/jsx-runtime --alias:i18next=./node_modules/i18next --alias:react-i18next=./node_modules/react-i18next",
-    "watch": "mkdir -p src/assets && cp -r node_modules/@patternfly/react-core/dist/styles/assets/fonts node_modules/@patternfly/react-core/dist/styles/assets/pficon src/assets/ && esbuild src/index.tsx --bundle --outfile=src/main.js --target=es2020 --jsx=automatic --loader:.tsx=tsx --loader:.ts=ts --loader:.svg=dataurl --external:*.woff --external:*.woff2 --external:*.ttf --external:*.eot --external:*.png --external:*.jpg --external:*.gif --alias:react=./node_modules/react --alias:react-dom=./node_modules/react-dom --alias:react/jsx-runtime=./node_modules/react/jsx-runtime --alias:i18next=./node_modules/i18next --alias:react-i18next=./node_modules/react-i18next --watch",
+    "build": "mkdir -p src/assets && cp -r node_modules/@patternfly/react-core/dist/styles/assets/fonts node_modules/@patternfly/react-core/dist/styles/assets/pficon src/assets/ && node scripts/i18n-coverage.mjs && esbuild src/index.tsx --bundle --outfile=src/main.js --minify --target=es2020 --jsx=automatic --loader:.tsx=tsx --loader:.ts=ts --loader:.svg=dataurl --external:*.woff --external:*.woff2 --external:*.ttf --external:*.eot --external:*.png --external:*.jpg --external:*.gif --alias:react=react --alias:react-dom=react-dom --alias:scheduler=scheduler",
+    "watch": "mkdir -p src/assets && cp -r node_modules/@patternfly/react-core/dist/styles/assets/fonts node_modules/@patternfly/react-core/dist/styles/assets/pficon src/assets/ && esbuild src/index.tsx --bundle --outfile=src/main.js --target=es2020 --jsx=automatic --loader:.tsx=tsx --loader:.ts=ts --loader:.svg=dataurl --external:*.woff --external:*.woff2 --external:*.ttf --external:*.eot --external:*.png --external:*.jpg --external:*.gif --watch --alias:react=react --alias:react-dom=react-dom --alias:scheduler=scheduler",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/",
     "test": "NODE_OPTIONS='--max-old-space-size=8192 --disable-warning=ExperimentalWarning' vitest run",
@@ -25,23 +25,24 @@
   },
   "devDependencies": {
     "@patternfly/react-core": "^6.5.1",
-    "@rxtx4816/cockpit-plugin-base-react": "^1.0.7",
+    "@rxtx4816/cockpit-plugin-base-react": "^1.0.8",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "@typescript-eslint/eslint-plugin": "^8.61.1",
-    "@typescript-eslint/parser": "^8.61.1",
     "@vitest/coverage-v8": "^4.1.9",
     "esbuild": "^0.28.1",
     "eslint": "^9.39.4",
-    "eslint-plugin-react": "^7.37.5",
-    "eslint-plugin-react-hooks": "^7.1.1",
     "jsdom": "^29.1.1",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "typescript": "^6.0.3",
     "vitest": "^4.1.9"
+  },
+  "overrides": {
+    "react": "$react",
+    "react-dom": "$react-dom",
+    "scheduler": "0.27.0"
   },
   "engines": {
     "node": ">=22.0.0"

@@ -4,7 +4,11 @@ export {
   stopService,
   restartService,
   reloadService,
+  readFile,
+  writeFile,
 } from "@rxtx4816/cockpit-plugin-base-react/systemd";
+
+import { fetchServiceLogs as baseFetchServiceLogs } from "@rxtx4816/cockpit-plugin-base-react/systemd";
 
 const SERVICE = "caddy";
 const CADDYFILE_PATH = "/etc/caddy/Caddyfile";
@@ -35,20 +39,7 @@ export async function validateCaddyfile(content: string): Promise<void> {
   }
 }
 
-export async function fetchServiceLogs(): Promise<string> {
-  return cockpit.spawn(
-    ["journalctl", "-u", SERVICE, "-n", "300", "--no-pager", "--output=short-iso"],
-    { superuser: "try" },
-  );
-}
-
-export async function readFile(path: string): Promise<string> {
-  return cockpit.file(path, { superuser: "try" }).read();
-}
-
-export async function writeFile(path: string, content: string): Promise<void> {
-  await cockpit.file(path, { superuser: "try" }).replace(content);
-}
+export const fetchServiceLogs = () => baseFetchServiceLogs(SERVICE);
 
 export async function listConfDFiles(): Promise<string[]> {
   try {

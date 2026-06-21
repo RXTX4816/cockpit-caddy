@@ -18,6 +18,7 @@ import {
   Title,
 } from "@patternfly/react-core";
 import { ErrorBoundary, ToastProvider, PluginFooter } from "@rxtx4816/cockpit-plugin-base-react/components";
+import { useAdminMode } from "@rxtx4816/cockpit-plugin-base-react";
 import pkg from "../../package.json";
 
 import { ProxyList } from "./ProxyList";
@@ -27,7 +28,6 @@ import { LogsViewer } from "./LogsViewer";
 import { BackupDialog } from "./BackupDialog";
 import { RestoreDialog } from "./RestoreDialog";
 import { useCaddyStatus } from "../hooks/useCaddyStatus";
-import { useAdminMode } from "../hooks/useAdminMode";
 import { useCaddyVersion } from "../hooks/useCaddyVersion";
 
 function AppInner() {
