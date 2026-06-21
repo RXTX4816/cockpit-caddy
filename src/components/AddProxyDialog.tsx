@@ -17,6 +17,7 @@ import {
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
+import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
 import type { ProxyEntry } from "../api";
 
 interface FormState {
@@ -39,6 +40,7 @@ interface Props {
 
 export function AddProxyDialog({ existingPorts, onAdd, onClose }: Props) {
   const { t } = useTranslation();
+  const toast = useToast();
   const confirmAction = useConfirmAction();
   const [form, setForm] = useState<FormState>({
     externalPort: "",
@@ -101,6 +103,14 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose }: Props) {
     <Modal isOpen onClose={onClose} aria-label={t("add_proxy.aria_label")} variant="small">
       <ModalHeader title={t("add_proxy.title")} />
       <ModalBody>
+        {isLocked && (
+          <Alert
+            variant="warning"
+            isInline
+            title={t("add_proxy.confirm_body", { port: form.externalPort, target })}
+            style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}
+          />
+        )}
         <Form>
           <FormGroup label={t("add_proxy.field_external_port")} fieldId="external-port" isRequired>
             <TextInput
@@ -211,14 +221,6 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose }: Props) {
           </FormGroup>
         </Form>
 
-        {isLocked && (
-          <Alert
-            variant="warning"
-            isInline
-            title={t("add_proxy.confirm_body", { port: form.externalPort, target })}
-            style={{ marginTop: "var(--pf-v6-global--spacer--md)" }}
-          />
-        )}
         {confirmAction.error && (
           <Alert
             variant="danger"
@@ -243,6 +245,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose }: Props) {
                   tlsSkipVerify: form.targetScheme === "https" ? form.tlsSkipVerify : false,
                   label: form.label.trim() || undefined,
                 });
+                toast.success(t("toast.proxy_added", { port: form.externalPort }));
                 onClose();
               })}
               isLoading={isSaving}

@@ -25,13 +25,14 @@ import {
   ToolbarItem,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
+import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { AddProxyDialog } from "./AddProxyDialog";
 import { EditProxyDialog } from "./EditProxyDialog";
 import { useProxies } from "../hooks/useProxies";
 import type { ProxyEntry } from "../api";
 
 // Pending action that the gate modal is guarding
-type GateAction = "add" | { type: "edit"; proxy: ProxyEntry };
+type GateAction = "add" | { type: "edit"; proxy: ProxyEntry } | { type: "delete"; proxy: ProxyEntry };
 
 function HeaderRow() {
   const { t } = useTranslation();
@@ -40,10 +41,10 @@ function HeaderRow() {
       <DataListItemRow>
         <DataListItemCells
           dataListCells={[
+            <DataListCell key="label" width={2}><strong>{t("proxies.col_label")}</strong></DataListCell>,
             <DataListCell key="port" width={1}><strong>{t("proxies.col_port")}</strong></DataListCell>,
             <DataListCell key="target" width={2}><strong>{t("proxies.col_target")}</strong></DataListCell>,
             <DataListCell key="tls" width={1}><strong>{t("proxies.col_tls")}</strong></DataListCell>,
-            <DataListCell key="label" width={2}><strong>{t("proxies.col_label")}</strong></DataListCell>,
             <DataListCell key="actions" width={1}><strong>{t("proxies.col_actions")}</strong></DataListCell>,
           ]}
         />
@@ -52,7 +53,11 @@ function HeaderRow() {
   );
 }
 
-function ProxyRow({ proxy, onEdit }: { proxy: ProxyEntry; onEdit: (p: ProxyEntry) => void }) {
+function ProxyRow({ proxy, onEdit, onDelete }: {
+  proxy: ProxyEntry;
+  onEdit: (p: ProxyEntry) => void;
+  onDelete: (p: ProxyEntry) => void;
+}) {
   const { t } = useTranslation();
   const proto = proxy.tls ? "https" : "http";
   const url = `${proto}://${window.location.hostname}:${proxy.externalPort}`;
@@ -62,6 +67,11 @@ function ProxyRow({ proxy, onEdit }: { proxy: ProxyEntry; onEdit: (p: ProxyEntry
       <DataListItemRow>
         <DataListItemCells
           dataListCells={[
+            <DataListCell key="label" width={2}>
+              {proxy.label
+                ? <strong style={{ fontSize: "1.05em" }}>{proxy.label}</strong>
+                : <span style={{ color: "var(--pf-v6-global--Color--200)" }}>—</span>}
+            </DataListCell>,
             <DataListCell key="port" width={1}>
               <a
                 href={url}
@@ -88,12 +98,13 @@ function ProxyRow({ proxy, onEdit }: { proxy: ProxyEntry; onEdit: (p: ProxyEntry
                 <>{" "}<Label color="orange" isCompact>{t("proxies.tls_skip_verify")}</Label></>
               )}
             </DataListCell>,
-            <DataListCell key="label" width={2}>
-              {proxy.label ?? "—"}
-            </DataListCell>,
             <DataListCell key="actions" width={1}>
               <Button variant="plain" size="sm" onClick={() => onEdit(proxy)}>
                 {t("common.edit")}
+              </Button>
+              {" "}
+              <Button variant="plain" size="sm" isDanger onClick={() => onDelete(proxy)}>
+                {t("common.delete")}
               </Button>
             </DataListCell>,
           ]}
@@ -105,6 +116,7 @@ function ProxyRow({ proxy, onEdit }: { proxy: ProxyEntry; onEdit: (p: ProxyEntry
 
 export function ProxyList() {
   const { t } = useTranslation();
+  const toast = useToast();
   const { proxies, loading, error, refresh, addProxy, editProxy, deleteProxy, needsMigration, migrate } = useProxies();
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
@@ -117,6 +129,11 @@ export function ProxyList() {
   const [showMigrateConfirm, setShowMigrateConfirm] = useState(false);
   const [migrating, setMigrating] = useState(false);
   const [migrateError, setMigrateError] = useState<string | null>(null);
+
+  // Standalone delete confirmation
+  const [deletingProxy, setDeletingProxy] = useState<ProxyEntry | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // Attempt an action — intercept with gate when migration is needed
   function tryAdd() {
@@ -135,14 +152,43 @@ export function ProxyList() {
     }
   }
 
+  function tryDelete(proxy: ProxyEntry) {
+    if (needsMigration) {
+      setMigrationGate({ type: "delete", proxy });
+    } else {
+      setDeleteError(null);
+      setDeletingProxy(proxy);
+    }
+  }
+
+  async function handleDeleteConfirm() {
+    if (!deletingProxy) return;
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      await deleteProxy(deletingProxy.serverKey);
+      toast.success(t("toast.proxy_deleted", { port: deletingProxy.externalPort }));
+      setDeletingProxy(null);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : t("proxies.load_failed");
+      setDeleteError(msg);
+      toast.error(t("proxies.load_failed"), msg);
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
   // "Continue anyway" in the gate modal — proceed with the pending action
   function gateForceThrough() {
     const gate = migrationGate;
     setMigrationGate(null);
     if (gate === "add") {
       setShowAdd(true);
-    } else if (gate && typeof gate === "object") {
+    } else if (gate && typeof gate === "object" && gate.type === "edit") {
       setEditing(gate.proxy);
+    } else if (gate && typeof gate === "object" && gate.type === "delete") {
+      setDeleteError(null);
+      setDeletingProxy(gate.proxy);
     }
   }
 
@@ -252,7 +298,7 @@ export function ProxyList() {
             <DataList aria-label={t("proxies.title")} isCompact>
               <HeaderRow />
               {filtered.map(proxy => (
-                <ProxyRow key={proxy.id} proxy={proxy} onEdit={tryEdit} />
+                <ProxyRow key={proxy.id} proxy={proxy} onEdit={tryEdit} onDelete={tryDelete} />
               ))}
             </DataList>
           )}
@@ -334,10 +380,48 @@ export function ProxyList() {
           proxy={editing}
           existingPorts={proxies.filter(p => p.id !== editing.id).map(p => p.externalPort)}
           onSave={editProxy}
-          onDelete={deleteProxy}
           onClose={() => setEditing(null)}
         />
       )}
+
+      {/* Delete confirmation modal */}
+      <Modal
+        isOpen={deletingProxy !== null}
+        variant="small"
+        onClose={() => !isDeleting && setDeletingProxy(null)}
+        aria-labelledby="delete-proxy-title"
+      >
+        <ModalHeader
+          title={t("proxies.delete_confirm_title", { port: deletingProxy?.externalPort })}
+          labelId="delete-proxy-title"
+        />
+        <ModalBody>
+          <Content>
+            {t("proxies.delete_confirm_body", {
+              port: deletingProxy?.externalPort,
+              target: deletingProxy
+                ? `${deletingProxy.targetScheme}://${deletingProxy.targetHost}:${deletingProxy.targetPort}`
+                : "",
+            })}
+          </Content>
+          {deleteError && (
+            <Alert variant="danger" isInline title={deleteError} style={{ marginTop: "var(--pf-v6-global--spacer--md)" }} />
+          )}
+        </ModalBody>
+        <ModalFooter>
+          <Button
+            variant="danger"
+            onClick={() => void handleDeleteConfirm()}
+            isLoading={isDeleting}
+            isDisabled={isDeleting}
+          >
+            {t("proxies.delete_confirm_button")}
+          </Button>
+          <Button variant="link" onClick={() => setDeletingProxy(null)} isDisabled={isDeleting}>
+            {t("common.cancel")}
+          </Button>
+        </ModalFooter>
+      </Modal>
     </>
   );
 }

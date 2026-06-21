@@ -13,7 +13,8 @@
     "unknown": "unknown"
   },
   "app": {
-    "title": "Caddy Reverse Proxy"
+    "title": "Caddy Reverse Proxy",
+    "loading": "Connecting to Caddy…"
   },
   "service": {
     "running": "Running",
@@ -134,5 +135,19 @@
   },
   "error_boundary": {
     "load_error": "Error loading Caddy plugin"
+  },
+  "toast": {
+    "service_started": "Caddy started",
+    "service_stopped": "Caddy stopped",
+    "service_restarted": "Caddy restarted",
+    "service_reloaded": "Caddy config reloaded",
+    "proxy_added": "Proxy :{{port}} added",
+    "proxy_saved": "Proxy :{{port}} saved",
+    "proxy_deleted": "Proxy :{{port}} deleted"
+  },
+  "admin": {
+    "warning_title": "Administrative access required",
+    "warning_body": "This plugin manages system services and configuration files. Without administrative access in Cockpit, most actions will fail. Enable administrative mode in the top-right Cockpit menu before continuing.",
+    "continue_button": "Continue on my own risk"
   }
 }

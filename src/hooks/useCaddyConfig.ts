@@ -28,8 +28,8 @@ export function useCaddyConfig() {
     void refresh();
   }, [refresh]);
 
-  // Silent background poll every 5s (pauses when tab hidden)
-  useAutoRefresh(fetchConfig, 5000);
+  // Silent background poll every 1s (pauses when tab hidden)
+  useAutoRefresh(fetchConfig, 1000);
 
   const update = useCallback(
     async (next: CaddyConfig) => {

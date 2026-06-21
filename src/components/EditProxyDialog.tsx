@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Alert,
   Button,
@@ -17,20 +17,20 @@ import {
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
+import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
 import type { ProxyEntry } from "../api";
 
 interface Props {
   proxy: ProxyEntry;
   existingPorts: number[];
   onSave: (entry: ProxyEntry) => Promise<void>;
-  onDelete: (serverKey: string) => Promise<void>;
   onClose: () => void;
 }
 
-export function EditProxyDialog({ proxy, existingPorts, onSave, onDelete, onClose }: Props) {
+export function EditProxyDialog({ proxy, existingPorts, onSave, onClose }: Props) {
   const { t } = useTranslation();
+  const toast = useToast();
   const saveConfirm = useConfirmAction();
-  const deleteConfirm = useConfirmAction();
   const [externalPort, setExternalPort] = useState(String(proxy.externalPort));
   const [targetScheme, setTargetScheme] = useState<"http" | "https">(proxy.targetScheme);
   const [targetHost, setTargetHost] = useState(proxy.targetHost);
@@ -48,15 +48,31 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onDelete, onClos
   }
 
   const portErr = portError();
-  const confirmingAction = saveConfirm.step !== "idle" ? "save" : deleteConfirm.step !== "idle" ? "delete" : null;
-  const isLocked = confirmingAction !== null;
-  const isBusy = saveConfirm.step === "submitting" || deleteConfirm.step === "submitting";
+  const isConfirming = saveConfirm.step !== "idle";
+  const isLocked = isConfirming;
+  const isBusy = saveConfirm.step === "submitting";
   const target = `${targetScheme}://${targetHost}:${targetPort}`;
+
+  const warningRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (isConfirming) {
+      warningRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [isConfirming]);
 
   return (
     <Modal isOpen onClose={onClose} aria-label={t("edit_proxy.aria_label")} variant="small">
       <ModalHeader title={t("edit_proxy.title", { port: proxy.externalPort })} />
       <ModalBody>
+        <div ref={warningRef} />
+        {isConfirming && (
+          <Alert
+            variant="warning"
+            isInline
+            title={t("edit_proxy.confirm_save_body", { port: externalPort })}
+            style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}
+          />
+        )}
         <Form>
           <FormGroup label={t("add_proxy.field_external_port")} fieldId="edit-external-port">
             <TextInput
@@ -149,33 +165,17 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onDelete, onClos
           </FormGroup>
         </Form>
 
-        {confirmingAction === "save" && (
-          <Alert
-            variant="warning"
-            isInline
-            title={t("edit_proxy.confirm_save_body", { port: externalPort })}
-            style={{ marginTop: "var(--pf-v6-global--spacer--md)" }}
-          />
-        )}
-        {confirmingAction === "delete" && (
+        {saveConfirm.error && (
           <Alert
             variant="danger"
             isInline
-            title={t("edit_proxy.confirm_delete_body", { port: proxy.externalPort, target })}
-            style={{ marginTop: "var(--pf-v6-global--spacer--md)" }}
-          />
-        )}
-        {(saveConfirm.error || deleteConfirm.error) && (
-          <Alert
-            variant="danger"
-            isInline
-            title={saveConfirm.error ?? deleteConfirm.error ?? ""}
+            title={saveConfirm.error}
             style={{ marginTop: "var(--pf-v6-global--spacer--md)" }}
           />
         )}
       </ModalBody>
       <ModalFooter>
-        {confirmingAction === "save" && (
+        {isConfirming ? (
           <>
             <Button
               variant="primary"
@@ -194,6 +194,7 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onDelete, onClos
                   tlsSkipVerify: targetScheme === "https" ? tlsSkipVerify : false,
                   label: label.trim() || undefined,
                 });
+                toast.success(t("toast.proxy_saved", { port: externalPort }));
                 onClose();
               })}
             >
@@ -203,26 +204,7 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onDelete, onClos
               {t("common.back")}
             </Button>
           </>
-        )}
-        {confirmingAction === "delete" && (
-          <>
-            <Button
-              variant="danger"
-              isLoading={isBusy}
-              isDisabled={isBusy}
-              onClick={() => void deleteConfirm.submit(async () => {
-                await onDelete(proxy.serverKey);
-                onClose();
-              })}
-            >
-              {t("proxies.delete_confirm_button")}
-            </Button>
-            <Button variant="link" onClick={deleteConfirm.cancel} isDisabled={isBusy}>
-              {t("common.back")}
-            </Button>
-          </>
-        )}
-        {confirmingAction === null && (
+        ) : (
           <>
             <Button
               variant="primary"
@@ -230,9 +212,6 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onDelete, onClos
               isDisabled={!!portErr}
             >
               {t("edit_proxy.save_button")}
-            </Button>
-            <Button variant="danger" onClick={deleteConfirm.confirm}>
-              {t("common.delete")}
             </Button>
             <Button variant="link" onClick={onClose}>
               {t("common.cancel")}

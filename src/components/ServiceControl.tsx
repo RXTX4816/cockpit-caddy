@@ -34,6 +34,10 @@ export function ServiceControl({ status, loading, onRefresh }: Props) {
         confirmRestartBody: t("service.confirm_restart_body"),
         confirmReloadTitle: t("service.confirm_reload_title"),
         confirmReloadBody: t("service.confirm_reload_body"),
+        successStart: t("toast.service_started"),
+        successStop: t("toast.service_stopped"),
+        successRestart: t("toast.service_restarted"),
+        successReload: t("toast.service_reloaded"),
       }}
     />
   );
