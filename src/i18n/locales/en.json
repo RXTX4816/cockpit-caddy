@@ -1,6 +1,7 @@
 {
   "common": {
     "cancel": "Cancel",
+    "back": "Back",
     "close": "Close",
     "save": "Save",
     "delete": "Delete",
@@ -27,6 +28,15 @@
     "stop": "Stop",
     "restart": "Restart",
     "reload": "Reload config",
+    "confirm_start_title": "Start Caddy?",
+    "confirm_start_body": "This will start the Caddy reverse proxy service.",
+    "confirm_stop_title": "Stop Caddy?",
+    "confirm_stop_body": "This will stop Caddy and take down all reverse proxies.",
+    "confirm_restart_title": "Restart Caddy?",
+    "confirm_restart_body": "Caddy will restart, briefly interrupting all active connections.",
+    "confirm_reload_title": "Reload Caddy config?",
+    "confirm_reload_body": "Caddy will reload its configuration without interrupting existing connections.",
+    "confirm_action": "Confirm",
     "start_failed": "Failed to start Caddy",
     "stop_failed": "Failed to stop Caddy",
     "restart_failed": "Failed to restart Caddy",
@@ -45,8 +55,10 @@
     "col_actions": "Actions",
     "tls_self_signed": "Self-signed",
     "tls_none": "None",
+    "tls_skip_verify": "Skip verify",
     "copy_url": "Copy URL",
     "load_failed": "Failed to load proxies",
+    "service_not_running": "Start the Caddy service to view and manage proxies.",
     "delete_confirm_title": "Delete proxy :{{port}}?",
     "delete_confirm_body": "This will remove the reverse proxy for port {{port}} → {{target}}.",
     "delete_confirm_button": "Delete"
@@ -59,6 +71,8 @@
     "field_target_host": "Target Host",
     "field_target_host_placeholder": "localhost",
     "field_target_port": "Target Port",
+    "field_target_scheme": "Backend Scheme",
+    "field_tls_skip_verify": "Skip TLS verification on backend (for self-signed backend certs)",
     "field_tls": "Enable TLS (self-signed via Caddy internal CA)",
     "field_label": "Label (optional)",
     "field_label_placeholder": "My Service",
@@ -70,29 +84,53 @@
     "validation_target_port_required": "Target port is required",
     "validation_target_port_range": "Target port must be between 1 and 65535",
     "validation_target_host_required": "Target host is required",
-    "error_save_failed": "Failed to save proxy"
+    "error_save_failed": "Failed to save proxy",
+    "confirm_body": "This will create a reverse proxy :{{port}} → {{target}} and reload Caddy's configuration."
   },
   "edit_proxy": {
     "title": "Edit Proxy — :{{port}}",
     "aria_label": "Edit reverse proxy dialog",
-    "save_button": "Save Changes"
+    "save_button": "Save Changes",
+    "confirm_save_body": "This will update the proxy on :{{port}} and reload Caddy's configuration.",
+    "confirm_delete_body": "This will permanently remove the reverse proxy on :{{port}} → {{target}}."
   },
   "caddyfile": {
     "title": "Caddyfile",
     "save_button": "Save",
-    "load_failed": "Failed to load Caddyfile",
+    "load_failed": "Failed to load file",
     "save_failed": "Save failed",
-    "saved": "Caddyfile saved"
+    "saved": "File saved",
+    "saved_needs_reload": "File saved — reload Caddy to apply changes",
+    "reloaded": "Caddy config reloaded successfully",
+    "changed_on_disk": "Changed on disk",
+    "empty": "File is empty",
+    "managed_file": "This file is managed by cockpit-caddy. Manual edits may be overwritten by proxy changes."
   },
   "logs": {
     "title": "Logs",
     "empty": "No log entries yet.",
+    "no_matches": "No log lines match your search.",
+    "load_failed": "Failed to load logs",
     "search_placeholder": "Search logs…"
   },
   "tabs": {
     "proxy_list": "Proxy List",
     "caddyfile": "Caddyfile",
     "logs": "Logs"
+  },
+  "migration": {
+    "banner_title": "Migrate Caddyfile to conf.d",
+    "banner_body": "Proxy entries are defined directly in /etc/caddy/Caddyfile. Migrate them to /etc/caddy/conf.d so this plugin can manage them. The original file will be backed up to /etc/caddy/Caddyfile.bak.",
+    "button": "Migrate…",
+    "confirm_title": "Migrate Caddyfile?",
+    "confirm_body": "All proxy entries will be moved verbatim to /etc/caddy/conf.d/cockpit-caddy.conf and /etc/caddy/Caddyfile will be replaced with an import statement. The original is backed up to /etc/caddy/Caddyfile.bak. Caddy will reload automatically.",
+    "confirm_action": "Migrate",
+    "error": "Migration failed",
+    "gate_title": "Caddyfile migration needed",
+    "gate_body": "Your proxies are defined directly in /etc/caddy/Caddyfile. This plugin writes to /etc/caddy/conf.d — without migrating first, Caddy may see duplicate server entries and reject the configuration.",
+    "gate_migrate": "Migrate first",
+    "gate_continue": "Continue anyway",
+    "gate_continue_warning": "Continuing without migration may cause Caddy to reject the configuration due to duplicate entries."
   },
   "error_boundary": {
     "load_error": "Error loading Caddy plugin"

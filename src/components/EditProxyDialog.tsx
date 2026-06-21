@@ -1,76 +1,108 @@
 import { useState } from "react";
 import {
+  Alert,
   Button,
   Checkbox,
   Form,
   FormGroup,
+  FormHelperText,
+  HelperText,
+  HelperTextItem,
   Modal,
   ModalBody,
   ModalFooter,
   ModalHeader,
+  Radio,
   TextInput,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
+import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import type { ProxyEntry } from "../api";
 
 interface Props {
   proxy: ProxyEntry;
+  existingPorts: number[];
   onSave: (entry: ProxyEntry) => Promise<void>;
   onDelete: (serverKey: string) => Promise<void>;
   onClose: () => void;
 }
 
-export function EditProxyDialog({ proxy, onSave, onDelete, onClose }: Props) {
+export function EditProxyDialog({ proxy, existingPorts, onSave, onDelete, onClose }: Props) {
   const { t } = useTranslation();
+  const saveConfirm = useConfirmAction();
+  const deleteConfirm = useConfirmAction();
+  const [externalPort, setExternalPort] = useState(String(proxy.externalPort));
+  const [targetScheme, setTargetScheme] = useState<"http" | "https">(proxy.targetScheme);
   const [targetHost, setTargetHost] = useState(proxy.targetHost);
   const [targetPort, setTargetPort] = useState(String(proxy.targetPort));
   const [tls, setTls] = useState(proxy.tls);
+  const [tlsSkipVerify, setTlsSkipVerify] = useState(proxy.tlsSkipVerify);
   const [label, setLabel] = useState(proxy.label ?? "");
-  const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
 
-  async function handleSave() {
-    setSaving(true);
-    setSaveError(null);
-    try {
-      await onSave({
-        ...proxy,
-        targetHost: targetHost.trim(),
-        targetPort: parseInt(targetPort, 10),
-        tls,
-        label: label.trim() || undefined,
-      });
-      onClose();
-    } catch (e) {
-      setSaveError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setSaving(false);
-    }
+  function portError(): string | null {
+    const n = parseInt(externalPort, 10);
+    if (!externalPort || isNaN(n)) return t("add_proxy.validation_port_number");
+    if (n < 1 || n > 65535) return t("add_proxy.validation_port_range");
+    if (existingPorts.includes(n)) return t("add_proxy.validation_port_duplicate", { port: n });
+    return null;
   }
 
-  async function handleDelete() {
-    setDeleting(true);
-    try {
-      await onDelete(proxy.serverKey);
-      onClose();
-    } catch (e) {
-      setSaveError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setDeleting(false);
-    }
-  }
+  const portErr = portError();
+  const confirmingAction = saveConfirm.step !== "idle" ? "save" : deleteConfirm.step !== "idle" ? "delete" : null;
+  const isLocked = confirmingAction !== null;
+  const isBusy = saveConfirm.step === "submitting" || deleteConfirm.step === "submitting";
+  const target = `${targetScheme}://${targetHost}:${targetPort}`;
 
   return (
     <Modal isOpen onClose={onClose} aria-label={t("edit_proxy.aria_label")} variant="small">
       <ModalHeader title={t("edit_proxy.title", { port: proxy.externalPort })} />
       <ModalBody>
         <Form>
+          <FormGroup label={t("add_proxy.field_external_port")} fieldId="edit-external-port">
+            <TextInput
+              id="edit-external-port"
+              type="number"
+              value={externalPort}
+              onChange={(_e, v) => setExternalPort(v)}
+              validated={portErr ? "error" : "default"}
+              isDisabled={isLocked}
+            />
+            {portErr && (
+              <FormHelperText>
+                <HelperText>
+                  <HelperTextItem variant="error">{portErr}</HelperTextItem>
+                </HelperText>
+              </FormHelperText>
+            )}
+          </FormGroup>
+
+          <FormGroup label={t("add_proxy.field_target_scheme")} fieldId="edit-target-scheme" role="radiogroup">
+            <Radio
+              id="edit-scheme-http"
+              name="edit-target-scheme"
+              label="HTTP"
+              value="http"
+              isChecked={targetScheme === "http"}
+              onChange={() => setTargetScheme("http")}
+              isDisabled={isLocked}
+            />
+            <Radio
+              id="edit-scheme-https"
+              name="edit-target-scheme"
+              label="HTTPS"
+              value="https"
+              isChecked={targetScheme === "https"}
+              onChange={() => setTargetScheme("https")}
+              isDisabled={isLocked}
+            />
+          </FormGroup>
+
           <FormGroup label={t("add_proxy.field_target_host")} fieldId="edit-target-host">
             <TextInput
               id="edit-target-host"
               value={targetHost}
               onChange={(_e, v) => setTargetHost(v)}
+              isDisabled={isLocked}
             />
           </FormGroup>
 
@@ -80,8 +112,21 @@ export function EditProxyDialog({ proxy, onSave, onDelete, onClose }: Props) {
               type="number"
               value={targetPort}
               onChange={(_e, v) => setTargetPort(v)}
+              isDisabled={isLocked}
             />
           </FormGroup>
+
+          {targetScheme === "https" && (
+            <FormGroup fieldId="edit-tls-skip-verify">
+              <Checkbox
+                id="edit-tls-skip-verify"
+                label={t("add_proxy.field_tls_skip_verify")}
+                isChecked={tlsSkipVerify}
+                onChange={(_e, checked) => setTlsSkipVerify(checked)}
+                isDisabled={isLocked}
+              />
+            </FormGroup>
+          )}
 
           <FormGroup fieldId="edit-tls">
             <Checkbox
@@ -89,6 +134,7 @@ export function EditProxyDialog({ proxy, onSave, onDelete, onClose }: Props) {
               label={t("add_proxy.field_tls")}
               isChecked={tls}
               onChange={(_e, checked) => setTls(checked)}
+              isDisabled={isLocked}
             />
           </FormGroup>
 
@@ -98,22 +144,101 @@ export function EditProxyDialog({ proxy, onSave, onDelete, onClose }: Props) {
               value={label}
               onChange={(_e, v) => setLabel(v)}
               placeholder={t("add_proxy.field_label_placeholder")}
+              isDisabled={isLocked}
             />
           </FormGroup>
-
-          {saveError && <div style={{ color: "var(--pf-v6-global--danger-color--100)" }}>{saveError}</div>}
         </Form>
+
+        {confirmingAction === "save" && (
+          <Alert
+            variant="warning"
+            isInline
+            title={t("edit_proxy.confirm_save_body", { port: externalPort })}
+            style={{ marginTop: "var(--pf-v6-global--spacer--md)" }}
+          />
+        )}
+        {confirmingAction === "delete" && (
+          <Alert
+            variant="danger"
+            isInline
+            title={t("edit_proxy.confirm_delete_body", { port: proxy.externalPort, target })}
+            style={{ marginTop: "var(--pf-v6-global--spacer--md)" }}
+          />
+        )}
+        {(saveConfirm.error || deleteConfirm.error) && (
+          <Alert
+            variant="danger"
+            isInline
+            title={saveConfirm.error ?? deleteConfirm.error ?? ""}
+            style={{ marginTop: "var(--pf-v6-global--spacer--md)" }}
+          />
+        )}
       </ModalBody>
       <ModalFooter>
-        <Button variant="primary" onClick={handleSave} isLoading={saving} isDisabled={saving || deleting}>
-          {t("edit_proxy.save_button")}
-        </Button>
-        <Button variant="danger" onClick={handleDelete} isLoading={deleting} isDisabled={saving || deleting}>
-          {t("common.delete")}
-        </Button>
-        <Button variant="link" onClick={onClose} isDisabled={saving || deleting}>
-          {t("common.cancel")}
-        </Button>
+        {confirmingAction === "save" && (
+          <>
+            <Button
+              variant="primary"
+              isLoading={isBusy}
+              isDisabled={isBusy}
+              onClick={() => void saveConfirm.submit(async () => {
+                const port = parseInt(externalPort, 10);
+                await onSave({
+                  ...proxy,
+                  externalPort: port,
+                  id: String(port),
+                  targetScheme,
+                  targetHost: targetHost.trim(),
+                  targetPort: parseInt(targetPort, 10),
+                  tls,
+                  tlsSkipVerify: targetScheme === "https" ? tlsSkipVerify : false,
+                  label: label.trim() || undefined,
+                });
+                onClose();
+              })}
+            >
+              {t("service.confirm_action")}
+            </Button>
+            <Button variant="link" onClick={saveConfirm.cancel} isDisabled={isBusy}>
+              {t("common.back")}
+            </Button>
+          </>
+        )}
+        {confirmingAction === "delete" && (
+          <>
+            <Button
+              variant="danger"
+              isLoading={isBusy}
+              isDisabled={isBusy}
+              onClick={() => void deleteConfirm.submit(async () => {
+                await onDelete(proxy.serverKey);
+                onClose();
+              })}
+            >
+              {t("proxies.delete_confirm_button")}
+            </Button>
+            <Button variant="link" onClick={deleteConfirm.cancel} isDisabled={isBusy}>
+              {t("common.back")}
+            </Button>
+          </>
+        )}
+        {confirmingAction === null && (
+          <>
+            <Button
+              variant="primary"
+              onClick={saveConfirm.confirm}
+              isDisabled={!!portErr}
+            >
+              {t("edit_proxy.save_button")}
+            </Button>
+            <Button variant="danger" onClick={deleteConfirm.confirm}>
+              {t("common.delete")}
+            </Button>
+            <Button variant="link" onClick={onClose}>
+              {t("common.cancel")}
+            </Button>
+          </>
+        )}
       </ModalFooter>
     </Modal>
   );

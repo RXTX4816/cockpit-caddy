@@ -1,8 +1,6 @@
-import { useState } from "react";
-import { Button, Flex, FlexItem, Spinner } from "@patternfly/react-core";
+import { ServiceControl as BaseServiceControl } from "@rxtx4816/cockpit-plugin-base-react/systemd";
 import { useTranslation } from "react-i18next";
 import { StatusBadge } from "./StatusBadge";
-import { startService, stopService, restartService, reloadService } from "../api";
 import type { ServiceStatus } from "../api";
 
 interface Props {
@@ -13,66 +11,30 @@ interface Props {
 
 export function ServiceControl({ status, loading, onRefresh }: Props) {
   const { t } = useTranslation();
-  const [busy, setBusy] = useState(false);
-
-  async function run(fn: () => Promise<void>) {
-    setBusy(true);
-    try {
-      await fn();
-    } finally {
-      setBusy(false);
-      onRefresh();
-    }
-  }
-
-  const isRunning = status === "active";
-  const notInstalled = status === "not-installed";
 
   return (
-    <Flex alignItems={{ default: "alignItemsCenter" }} gap={{ default: "gapSm" }}>
-      <FlexItem>
-        {loading ? <Spinner size="sm" /> : <StatusBadge status={status} />}
-      </FlexItem>
-      <FlexItem>
-        <Button
-          variant="primary"
-          size="sm"
-          isDisabled={busy || notInstalled || isRunning}
-          onClick={() => run(startService)}
-        >
-          {t("service.start")}
-        </Button>
-      </FlexItem>
-      <FlexItem>
-        <Button
-          variant="secondary"
-          size="sm"
-          isDisabled={busy || notInstalled || !isRunning}
-          onClick={() => run(stopService)}
-        >
-          {t("service.stop")}
-        </Button>
-      </FlexItem>
-      <FlexItem>
-        <Button
-          variant="secondary"
-          size="sm"
-          isDisabled={busy || notInstalled || !isRunning}
-          onClick={() => run(restartService)}
-        >
-          {t("service.restart")}
-        </Button>
-      </FlexItem>
-      <FlexItem>
-        <Button
-          variant="plain"
-          size="sm"
-          isDisabled={busy || notInstalled || !isRunning}
-          onClick={() => run(reloadService)}
-        >
-          {t("service.reload")}
-        </Button>
-      </FlexItem>
-    </Flex>
+    <BaseServiceControl
+      unit="caddy"
+      status={status}
+      loading={loading}
+      onRefresh={onRefresh}
+      statusBadge={<StatusBadge status={status} />}
+      labels={{
+        start: t("service.start"),
+        stop: t("service.stop"),
+        restart: t("service.restart"),
+        reload: t("service.reload"),
+        cancel: t("common.cancel"),
+        confirmAction: t("service.confirm_action"),
+        confirmStartTitle: t("service.confirm_start_title"),
+        confirmStartBody: t("service.confirm_start_body"),
+        confirmStopTitle: t("service.confirm_stop_title"),
+        confirmStopBody: t("service.confirm_stop_body"),
+        confirmRestartTitle: t("service.confirm_restart_title"),
+        confirmRestartBody: t("service.confirm_restart_body"),
+        confirmReloadTitle: t("service.confirm_reload_title"),
+        confirmReloadBody: t("service.confirm_reload_body"),
+      }}
+    />
   );
 }

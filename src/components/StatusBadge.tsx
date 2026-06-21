@@ -1,4 +1,4 @@
-import { Label } from "@patternfly/react-core";
+import { StatusBadge as BaseStatusBadge, type StatusBadgeConfig } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { useTranslation } from "react-i18next";
 import type { ServiceStatus } from "../api";
 
@@ -9,16 +9,13 @@ interface Props {
 export function StatusBadge({ status }: Props) {
   const { t } = useTranslation();
 
-  switch (status) {
-    case "active":
-      return <Label color="green">{t("service.running")}</Label>;
-    case "inactive":
-      return <Label color="grey">{t("service.stopped")}</Label>;
-    case "failed":
-      return <Label color="red">{t("service.failed")}</Label>;
-    case "not-installed":
-      return <Label color="orange">{t("service.not_installed")}</Label>;
-    default:
-      return <Label color="grey">{t("service.unknown")}</Label>;
-  }
+  const config: Record<ServiceStatus, StatusBadgeConfig> = {
+    active: { color: "green", label: t("service.running") },
+    inactive: { color: "grey", label: t("service.stopped") },
+    failed: { color: "red", label: t("service.failed") },
+    "not-installed": { color: "orange", label: t("service.not_installed") },
+    unknown: { color: "grey", label: t("service.unknown") },
+  };
+
+  return <BaseStatusBadge status={status} config={config} />;
 }

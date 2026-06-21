@@ -3,7 +3,7 @@
 [![CI](https://github.com/RXTX4816/cockpit-caddy/actions/workflows/ci.yml/badge.svg)](https://github.com/RXTX4816/cockpit-caddy/actions/workflows/ci.yml)
 [![Packaging](https://github.com/RXTX4816/cockpit-caddy/actions/workflows/pkg-ci.yml/badge.svg)](https://github.com/RXTX4816/cockpit-caddy/actions/workflows/pkg-ci.yml)
 
-Caddy reverse proxy management for [Cockpit](https://cockpit-project.org) — expose local services over HTTPS.
+Caddy reverse proxy management for [Cockpit](https://cockpit-project.org)
 
 ## Concept
 
@@ -124,6 +124,10 @@ Open `http://localhost:9090` — **Caddy Proxy** appears in the sidebar automati
 | `npm run test` | Run tests |
 | `npm run test:coverage` | Coverage report |
 
+### Plugin Base
+
+Build scripts, shared TypeScript/ESLint/Vitest config, and the VM test runner are provided by [`@rxtx4816/cockpit-plugin-base-react`](https://github.com/RXTX4816/cockpit-plugin-base-react), installed automatically as a devDependency via `npm install`. You do not need to clone or configure it separately.
+
 ## Translations
 
 The UI language follows Cockpit's language setting.
@@ -131,7 +135,8 @@ The UI language follows Cockpit's language setting.
 <!-- i18n-coverage-start -->
 | Coverage | Languages |
 |---|---|
-| 100% | English (`en`) — source, `ar`, `cs`, `de`, `es`, `fi`, `fr`, `he`, `id`, `it`, `ja`, `ka`, `ko`, `nl`, `pl`, `pt-BR`, `ro`, `ru`, `sk`, `sv`, `tr`, `uk`, `zh-CN`, `zh-TW` |
+| 100% | English (`en`) — source |
+| 68% | `ar`, `cs`, `de`, `es`, `fi`, `fr`, `he`, `id`, `it`, `ja`, `ka`, `ko`, `nl`, `pl`, `pt-BR`, `ro`, `ru`, `sk`, `sv`, `tr`, `uk`, `zh-CN`, `zh-TW` |
 <!-- i18n-coverage-end -->
 
 To add or improve a translation, copy `src/i18n/locales/en.json`, translate the values, and open a PR.

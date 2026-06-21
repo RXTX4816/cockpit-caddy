@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import {
   Alert,
   Content,
+  EmptyState,
+  EmptyStateBody,
   Page,
   PageSection,
   Stack,
@@ -12,16 +14,21 @@ import {
   TabTitleText,
   Title,
 } from "@patternfly/react-core";
+import { ErrorBoundary, ToastProvider } from "@rxtx4816/cockpit-plugin-base-react/components";
+
 import { ProxyList } from "./ProxyList";
 import { ServiceControl } from "./ServiceControl";
+import { CaddyfileEditor } from "./CaddyfileEditor";
+import { LogsViewer } from "./LogsViewer";
 import { useCaddyStatus } from "../hooks/useCaddyStatus";
 
-export function App() {
+function AppInner() {
   const { t } = useTranslation();
-  const { status, loading, refresh } = useCaddyStatus();
+  const { status, adminApiOk, loading, refresh } = useCaddyStatus();
   const [activeTab, setActiveTab] = useState(0);
 
-  const apiUnreachable = status === "inactive" || status === "failed";
+  const apiUnreachable = status === "inactive" || status === "failed" ||
+    (status === "active" && !adminApiOk);
 
   return (
     <Page className="pf-m-no-sidebar">
@@ -61,21 +68,23 @@ export function App() {
             >
               <Tab eventKey={0} title={<TabTitleText>{t("tabs.proxy_list")}</TabTitleText>}>
                 <PageSection hasBodyWrapper={false}>
-                  <ProxyList />
+                  {adminApiOk ? (
+                    <ProxyList />
+                  ) : (
+                    <EmptyState>
+                      <EmptyStateBody>{t("proxies.service_not_running")}</EmptyStateBody>
+                    </EmptyState>
+                  )}
                 </PageSection>
               </Tab>
               <Tab eventKey={1} title={<TabTitleText>{t("tabs.caddyfile")}</TabTitleText>}>
                 <PageSection hasBodyWrapper={false}>
-                  <Content component="p" style={{ color: "var(--pf-v6-global--Color--200)" }}>
-                    {t("caddyfile.title")} — coming soon
-                  </Content>
+                  <CaddyfileEditor />
                 </PageSection>
               </Tab>
               <Tab eventKey={2} title={<TabTitleText>{t("tabs.logs")}</TabTitleText>}>
                 <PageSection hasBodyWrapper={false}>
-                  <Content component="p" style={{ color: "var(--pf-v6-global--Color--200)" }}>
-                    {t("logs.title")} — coming soon
-                  </Content>
+                  <LogsViewer />
                 </PageSection>
               </Tab>
             </Tabs>
@@ -83,5 +92,15 @@ export function App() {
         </Stack>
       </PageSection>
     </Page>
+  );
+}
+
+export function App() {
+  return (
+    <ErrorBoundary fallbackTitle="Error loading Caddy plugin">
+      <ToastProvider>
+        <AppInner />
+      </ToastProvider>
+    </ErrorBoundary>
   );
 }

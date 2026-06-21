@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  Alert,
   Button,
   Checkbox,
   Form,
@@ -11,16 +12,20 @@ import {
   ModalBody,
   ModalFooter,
   ModalHeader,
+  Radio,
   TextInput,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
+import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import type { ProxyEntry } from "../api";
 
 interface FormState {
   externalPort: string;
   targetHost: string;
   targetPort: string;
+  targetScheme: "http" | "https";
   tls: boolean;
+  tlsSkipVerify: boolean;
   label: string;
 }
 
@@ -34,16 +39,17 @@ interface Props {
 
 export function AddProxyDialog({ existingPorts, onAdd, onClose }: Props) {
   const { t } = useTranslation();
+  const confirmAction = useConfirmAction();
   const [form, setForm] = useState<FormState>({
     externalPort: "",
     targetHost: "localhost",
     targetPort: "",
+    targetScheme: "http",
     tls: true,
+    tlsSkipVerify: false,
     label: "",
   });
   const [errors, setErrors] = useState<FormErrors>({});
-  const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
 
   function validate(): FormErrors {
     const errs: FormErrors = {};
@@ -53,7 +59,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose }: Props) {
       errs.externalPort = t("add_proxy.validation_port_required");
     } else if (isNaN(port)) {
       errs.externalPort = t("add_proxy.validation_port_number");
-    } else if (port < 1024 || port > 65535) {
+    } else if (port < 1 || port > 65535) {
       errs.externalPort = t("add_proxy.validation_port_range");
     } else if (existingPorts.includes(port)) {
       errs.externalPort = t("add_proxy.validation_port_duplicate", { port });
@@ -78,30 +84,18 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose }: Props) {
     if (errors[key]) setErrors(prev => ({ ...prev, [key]: undefined }));
   }
 
-  async function handleAdd() {
+  function handleAddClick() {
     const errs = validate();
     if (Object.keys(errs).length > 0) {
       setErrors(errs);
       return;
     }
-
-    setSaving(true);
-    setSaveError(null);
-    try {
-      await onAdd({
-        externalPort: parseInt(form.externalPort, 10),
-        targetHost: form.targetHost.trim(),
-        targetPort: parseInt(form.targetPort, 10),
-        tls: form.tls,
-        label: form.label.trim() || undefined,
-      });
-      onClose();
-    } catch (e) {
-      setSaveError(e instanceof Error ? e.message : t("add_proxy.error_save_failed"));
-    } finally {
-      setSaving(false);
-    }
+    confirmAction.confirm();
   }
+
+  const target = `${form.targetScheme}://${form.targetHost || "…"}:${form.targetPort || "…"}`;
+  const isLocked = confirmAction.step !== "idle";
+  const isSaving = confirmAction.step === "submitting";
 
   return (
     <Modal isOpen onClose={onClose} aria-label={t("add_proxy.aria_label")} variant="small">
@@ -115,6 +109,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose }: Props) {
               value={form.externalPort}
               onChange={(_e, v) => set("externalPort", v)}
               placeholder="8443"
+              isDisabled={isLocked}
             />
             <FormHelperText>
               <HelperText>
@@ -127,12 +122,34 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose }: Props) {
             </FormHelperText>
           </FormGroup>
 
+          <FormGroup label={t("add_proxy.field_target_scheme")} fieldId="target-scheme" role="radiogroup">
+            <Radio
+              id="scheme-http"
+              name="target-scheme"
+              label="HTTP"
+              value="http"
+              isChecked={form.targetScheme === "http"}
+              onChange={() => set("targetScheme", "http")}
+              isDisabled={isLocked}
+            />
+            <Radio
+              id="scheme-https"
+              name="target-scheme"
+              label="HTTPS"
+              value="https"
+              isChecked={form.targetScheme === "https"}
+              onChange={() => set("targetScheme", "https")}
+              isDisabled={isLocked}
+            />
+          </FormGroup>
+
           <FormGroup label={t("add_proxy.field_target_host")} fieldId="target-host" isRequired>
             <TextInput
               id="target-host"
               value={form.targetHost}
               onChange={(_e, v) => set("targetHost", v)}
               placeholder={t("add_proxy.field_target_host_placeholder")}
+              isDisabled={isLocked}
             />
             {errors.targetHost && (
               <FormHelperText>
@@ -150,6 +167,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose }: Props) {
               value={form.targetPort}
               onChange={(_e, v) => set("targetPort", v)}
               placeholder="8080"
+              isDisabled={isLocked}
             />
             {errors.targetPort && (
               <FormHelperText>
@@ -160,12 +178,25 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose }: Props) {
             )}
           </FormGroup>
 
+          {form.targetScheme === "https" && (
+            <FormGroup fieldId="tls-skip-verify">
+              <Checkbox
+                id="tls-skip-verify"
+                label={t("add_proxy.field_tls_skip_verify")}
+                isChecked={form.tlsSkipVerify}
+                onChange={(_e, checked) => set("tlsSkipVerify", checked)}
+                isDisabled={isLocked}
+              />
+            </FormGroup>
+          )}
+
           <FormGroup fieldId="tls">
             <Checkbox
               id="tls"
               label={t("add_proxy.field_tls")}
               isChecked={form.tls}
               onChange={(_e, checked) => set("tls", checked)}
+              isDisabled={isLocked}
             />
           </FormGroup>
 
@@ -175,25 +206,64 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose }: Props) {
               value={form.label}
               onChange={(_e, v) => set("label", v)}
               placeholder={t("add_proxy.field_label_placeholder")}
+              isDisabled={isLocked}
             />
           </FormGroup>
-
-          {saveError && (
-            <FormHelperText>
-              <HelperText>
-                <HelperTextItem variant="error">{saveError}</HelperTextItem>
-              </HelperText>
-            </FormHelperText>
-          )}
         </Form>
+
+        {isLocked && (
+          <Alert
+            variant="warning"
+            isInline
+            title={t("add_proxy.confirm_body", { port: form.externalPort, target })}
+            style={{ marginTop: "var(--pf-v6-global--spacer--md)" }}
+          />
+        )}
+        {confirmAction.error && (
+          <Alert
+            variant="danger"
+            isInline
+            title={confirmAction.error}
+            style={{ marginTop: "var(--pf-v6-global--spacer--md)" }}
+          />
+        )}
       </ModalBody>
       <ModalFooter>
-        <Button variant="primary" onClick={handleAdd} isLoading={saving} isDisabled={saving}>
-          {t("add_proxy.add_button")}
-        </Button>
-        <Button variant="link" onClick={onClose} isDisabled={saving}>
-          {t("common.cancel")}
-        </Button>
+        {isLocked ? (
+          <>
+            <Button
+              variant="primary"
+              onClick={() => void confirmAction.submit(async () => {
+                await onAdd({
+                  externalPort: parseInt(form.externalPort, 10),
+                  targetHost: form.targetHost.trim(),
+                  targetPort: parseInt(form.targetPort, 10),
+                  targetScheme: form.targetScheme,
+                  tls: form.tls,
+                  tlsSkipVerify: form.targetScheme === "https" ? form.tlsSkipVerify : false,
+                  label: form.label.trim() || undefined,
+                });
+                onClose();
+              })}
+              isLoading={isSaving}
+              isDisabled={isSaving}
+            >
+              {t("service.confirm_action")}
+            </Button>
+            <Button variant="link" onClick={confirmAction.cancel} isDisabled={isSaving}>
+              {t("common.back")}
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button variant="primary" onClick={handleAddClick}>
+              {t("add_proxy.add_button")}
+            </Button>
+            <Button variant="link" onClick={onClose}>
+              {t("common.cancel")}
+            </Button>
+          </>
+        )}
       </ModalFooter>
     </Modal>
   );
