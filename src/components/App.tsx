@@ -31,6 +31,9 @@ function AppInner() {
   const adminAllowed = useAdminMode();
   const [activeTab, setActiveTab] = useState(0);
   const [adminBypass, setAdminBypass] = useState(false);
+  function showLogsFor() {
+    setActiveTab(2);
+  }
 
   const apiUnreachable = status === "inactive" || status === "failed" ||
     (status === "active" && !adminApiOk);
@@ -99,7 +102,7 @@ function AppInner() {
                 <Tab eventKey={0} title={<TabTitleText>{t("tabs.proxy_list")}</TabTitleText>}>
                   <PageSection hasBodyWrapper={false}>
                     {adminApiOk ? (
-                      <ProxyList />
+                      <ProxyList onShowLogs={showLogsFor} />
                     ) : (
                       <EmptyState>
                         <EmptyStateBody>{t("proxies.service_not_running")}</EmptyStateBody>

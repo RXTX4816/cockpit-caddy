@@ -51,7 +51,7 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose }: Props
   const isConfirming = saveConfirm.step !== "idle";
   const isLocked = isConfirming;
   const isBusy = saveConfirm.step === "submitting";
-  const target = `${targetScheme}://${targetHost}:${targetPort}`;
+
 
   const warningRef = useRef<HTMLDivElement>(null);
   useEffect(() => {

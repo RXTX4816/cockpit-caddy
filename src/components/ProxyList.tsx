@@ -53,10 +53,11 @@ function HeaderRow() {
   );
 }
 
-function ProxyRow({ proxy, onEdit, onDelete }: {
+function ProxyRow({ proxy, onEdit, onDelete, onShowLogs }: {
   proxy: ProxyEntry;
   onEdit: (p: ProxyEntry) => void;
   onDelete: (p: ProxyEntry) => void;
+  onShowLogs: () => void;
 }) {
   const { t } = useTranslation();
   const proto = proxy.tls ? "https" : "http";
@@ -103,6 +104,10 @@ function ProxyRow({ proxy, onEdit, onDelete }: {
                 {t("common.edit")}
               </Button>
               {" "}
+              <Button variant="plain" size="sm" onClick={onShowLogs}>
+                {t("proxies.logs_button")}
+              </Button>
+              {" "}
               <Button variant="plain" size="sm" isDanger onClick={() => onDelete(proxy)}>
                 {t("common.delete")}
               </Button>
@@ -114,7 +119,11 @@ function ProxyRow({ proxy, onEdit, onDelete }: {
   );
 }
 
-export function ProxyList() {
+interface ProxyListProps {
+  onShowLogs: () => void;
+}
+
+export function ProxyList({ onShowLogs }: ProxyListProps) {
   const { t } = useTranslation();
   const toast = useToast();
   const { proxies, loading, error, refresh, addProxy, editProxy, deleteProxy, needsMigration, migrate } = useProxies();
@@ -298,7 +307,13 @@ export function ProxyList() {
             <DataList aria-label={t("proxies.title")} isCompact>
               <HeaderRow />
               {filtered.map(proxy => (
-                <ProxyRow key={proxy.id} proxy={proxy} onEdit={tryEdit} onDelete={tryDelete} />
+                <ProxyRow
+                  key={proxy.id}
+                  proxy={proxy}
+                  onEdit={tryEdit}
+                  onDelete={tryDelete}
+                  onShowLogs={onShowLogs}
+                />
               ))}
             </DataList>
           )}

@@ -1,18 +1,25 @@
-import { useState, useCallback } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useAutoRefresh } from "@rxtx4816/cockpit-plugin-base-react";
 import { fetchServiceLogs } from "../api";
 
-const POLL_INTERVAL = 10000;
+const POLL_INTERVAL = 5000;
 
 export function useLogs() {
-  const [logs, setLogs] = useState("");
+  const [liveLogs, setLiveLogs] = useState("");
+  const [frozenLogs, setFrozenLogs] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [paused, setPaused] = useState(false);
 
-  const refresh = useCallback(async () => {
+  // Always keep a ref of the latest live logs for the pause snapshot
+  const liveRef = useRef("");
+
+  const fetchLogs = useCallback(async () => {
     try {
       const output = await fetchServiceLogs();
-      setLogs(output ?? "");
+      const text = output ?? "";
+      liveRef.current = text;
+      setLiveLogs(text);
       setError(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -21,7 +28,24 @@ export function useLogs() {
     }
   }, []);
 
-  useAutoRefresh(refresh, POLL_INTERVAL);
+  useAutoRefresh(fetchLogs, POLL_INTERVAL);
 
-  return { logs, loading, error, refresh };
+  const pause = useCallback(() => {
+    setFrozenLogs(liveRef.current);
+    setPaused(true);
+  }, []);
+
+  const resume = useCallback(() => {
+    setFrozenLogs(null);
+    setPaused(false);
+  }, []);
+
+  const refresh = useCallback(async () => {
+    resume();
+    await fetchLogs();
+  }, [fetchLogs, resume]);
+
+  const logs = paused && frozenLogs !== null ? frozenLogs : liveLogs;
+
+  return { logs, loading, error, refresh, paused, pause, resume };
 }

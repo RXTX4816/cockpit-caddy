@@ -62,7 +62,8 @@
     "service_not_running": "Start the Caddy service to view and manage proxies.",
     "delete_confirm_title": "Delete proxy :{{port}}?",
     "delete_confirm_body": "This will remove the reverse proxy for port {{port}} → {{target}}.",
-    "delete_confirm_button": "Delete"
+    "delete_confirm_button": "Delete",
+    "logs_button": "Logs"
   },
   "add_proxy": {
     "title": "Add Reverse Proxy",
