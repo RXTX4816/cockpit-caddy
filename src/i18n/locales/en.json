@@ -76,6 +76,7 @@
     "field_target_scheme": "Backend Scheme",
     "field_tls_skip_verify": "Skip TLS verification on backend (for self-signed backend certs)",
     "field_tls": "Enable TLS (self-signed via Caddy internal CA)",
+    "field_tls_short": "Enable TLS (self-signed)",
     "field_label": "Label (optional)",
     "field_label_placeholder": "My Service",
     "add_button": "Add Proxy",
@@ -133,6 +134,29 @@
     "gate_migrate": "Migrate first",
     "gate_continue": "Continue anyway",
     "gate_continue_warning": "Continuing without migration may cause Caddy to reject the configuration due to duplicate entries."
+  },
+  "backup": {
+    "button": "Backup",
+    "title": "Backup Caddy Config",
+    "dest_dir_label": "Destination",
+    "archive_preview_label": "Archive path",
+    "create_button": "Create backup",
+    "success_title": "Backup created",
+    "success_body": "Saved to {{path}}",
+    "warning_partial": "Archive created with warnings (some files may have changed during backup)"
+  },
+  "restore": {
+    "button": "Restore",
+    "title": "Restore Caddy Config",
+    "scan_dir_label": "Search in",
+    "scan_button": "Scan",
+    "select_label": "Select backup",
+    "no_archives": "No caddy-config-*.tar.gz files found in this directory.",
+    "restore_button": "Restore",
+    "delete_confirm_title": "Delete backup?",
+    "delete_confirm_body": "Permanently delete {{name}}?",
+    "success_title": "Restored successfully",
+    "success_body": "Caddy configuration has been restored. Reload Caddy to apply."
   },
   "footer": {
     "caddy_version": "Caddy {{version}}",

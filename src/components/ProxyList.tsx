@@ -11,6 +11,7 @@ import {
   EmptyState,
   EmptyStateBody,
   EmptyStateFooter,
+  Gallery,
   Label,
   Modal,
   ModalBody,
@@ -23,12 +24,26 @@ import {
   ToolbarContent,
   ToolbarItem,
 } from "@patternfly/react-core";
+import { ListAltIcon, ThIcon } from "@patternfly/react-icons";
 import { useTranslation } from "react-i18next";
-import { useToast, CollapsibleSearch } from "@rxtx4816/cockpit-plugin-base-react/components";
+import {
+  useToast,
+  CollapsibleSearch,
+  LayoutSelector,
+  type LayoutOption,
+} from "@rxtx4816/cockpit-plugin-base-react/components";
+import { useLayout } from "@rxtx4816/cockpit-plugin-base-react";
 import { AddProxyDialog } from "./AddProxyDialog";
 import { EditProxyDialog } from "./EditProxyDialog";
+import { ProxyCard } from "./ProxyCard";
 import { useProxies } from "../hooks/useProxies";
 import type { ProxyEntry } from "../api";
+
+type ProxyLayout = "list" | "card";
+const PROXY_LAYOUTS: LayoutOption<ProxyLayout>[] = [
+  { key: "list", icon: <ListAltIcon />, label: "List" },
+  { key: "card", icon: <ThIcon />,      label: "Cards" },
+];
 
 // Pending action that the gate modal is guarding
 type GateAction = "add" | { type: "edit"; proxy: ProxyEntry } | { type: "delete"; proxy: ProxyEntry };
@@ -52,11 +67,10 @@ function HeaderRow() {
   );
 }
 
-function ProxyRow({ proxy, onEdit, onDelete, onShowLogs }: {
+function ProxyRow({ proxy, onEdit, onDelete }: {
   proxy: ProxyEntry;
   onEdit: (p: ProxyEntry) => void;
   onDelete: (p: ProxyEntry) => void;
-  onShowLogs: () => void;
 }) {
   const { t } = useTranslation();
   const proto = proxy.tls ? "https" : "http";
@@ -103,10 +117,6 @@ function ProxyRow({ proxy, onEdit, onDelete, onShowLogs }: {
                 {t("common.edit")}
               </Button>
               {" "}
-              <Button variant="plain" size="sm" onClick={onShowLogs}>
-                {t("proxies.logs_button")}
-              </Button>
-              {" "}
               <Button variant="plain" size="sm" isDanger onClick={() => onDelete(proxy)}>
                 {t("common.delete")}
               </Button>
@@ -118,14 +128,11 @@ function ProxyRow({ proxy, onEdit, onDelete, onShowLogs }: {
   );
 }
 
-interface ProxyListProps {
-  onShowLogs: () => void;
-}
-
-export function ProxyList({ onShowLogs }: ProxyListProps) {
+export function ProxyList() {
   const { t } = useTranslation();
   const toast = useToast();
   const { proxies, loading, error, refresh, addProxy, editProxy, deleteProxy, needsMigration, migrate } = useProxies();
+  const [layout, setLayout] = useLayout<ProxyLayout>("cockpit-caddy:proxy-layout", "list", ["list", "card"]);
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState<ProxyEntry | null>(null);
@@ -283,7 +290,14 @@ export function ProxyList({ onShowLogs }: ProxyListProps) {
                 />
               </ToolbarItem>
               <ToolbarItem align={{ default: "alignEnd" }}>
-                <Button variant="plain" onClick={refresh} aria-label={t("common.refresh")}>↺</Button>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                  <LayoutSelector
+                    layout={layout}
+                    onLayoutChange={setLayout}
+                    layouts={PROXY_LAYOUTS}
+                  />
+                  <Button variant="plain" onClick={refresh} aria-label={t("common.refresh")}>↺</Button>
+                </div>
               </ToolbarItem>
             </ToolbarContent>
           </Toolbar>
@@ -303,6 +317,17 @@ export function ProxyList({ onShowLogs }: ProxyListProps) {
                 </EmptyStateFooter>
               )}
             </EmptyState>
+          ) : layout === "card" ? (
+            <Gallery hasGutter minWidths={{ default: "220px" }}>
+              {filtered.map(proxy => (
+                <ProxyCard
+                  key={proxy.id}
+                  proxy={proxy}
+                  onEdit={tryEdit}
+                  onDelete={tryDelete}
+                />
+              ))}
+            </Gallery>
           ) : (
             <DataList aria-label={t("proxies.title")} isCompact>
               <HeaderRow />
@@ -312,7 +337,6 @@ export function ProxyList({ onShowLogs }: ProxyListProps) {
                   proxy={proxy}
                   onEdit={tryEdit}
                   onDelete={tryDelete}
-                  onShowLogs={onShowLogs}
                 />
               ))}
             </DataList>

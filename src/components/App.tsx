@@ -24,6 +24,8 @@ import { ProxyList } from "./ProxyList";
 import { ServiceControl } from "./ServiceControl";
 import { CaddyfileEditor } from "./CaddyfileEditor";
 import { LogsViewer } from "./LogsViewer";
+import { BackupDialog } from "./BackupDialog";
+import { RestoreDialog } from "./RestoreDialog";
 import { useCaddyStatus } from "../hooks/useCaddyStatus";
 import { useAdminMode } from "../hooks/useAdminMode";
 import { useCaddyVersion } from "../hooks/useCaddyVersion";
@@ -35,9 +37,8 @@ function AppInner() {
   const caddyVersion = useCaddyVersion();
   const [activeTab, setActiveTab] = useState(0);
   const [adminBypass, setAdminBypass] = useState(false);
-  function showLogsFor() {
-    setActiveTab(2);
-  }
+  const [showBackup, setShowBackup] = useState(false);
+  const [showRestore, setShowRestore] = useState(false);
 
   const apiUnreachable = status === "inactive" || status === "failed" ||
     (status === "active" && !adminApiOk);
@@ -54,7 +55,17 @@ function AppInner() {
                 <Title headingLevel="h1">{t("app.title")}</Title>
               </StackItem>
               <StackItem>
-                <ServiceControl status={status} loading={loading} onRefresh={refresh} />
+                <ServiceControl
+                  status={status}
+                  loading={loading}
+                  onRefresh={refresh}
+                  extraActions={
+                    <div style={{ display: "flex", gap: "0.5rem" }}>
+                      <Button variant="secondary" size="sm" onClick={() => setShowBackup(true)}>{t("backup.button")}</Button>
+                      <Button variant="secondary" size="sm" onClick={() => setShowRestore(true)}>{t("restore.button")}</Button>
+                    </div>
+                  }
+                />
               </StackItem>
             </Stack>
           </StackItem>
@@ -106,7 +117,7 @@ function AppInner() {
                 <Tab eventKey={0} title={<TabTitleText>{t("tabs.proxy_list")}</TabTitleText>}>
                   <PageSection hasBodyWrapper={false}>
                     {adminApiOk ? (
-                      <ProxyList onShowLogs={showLogsFor} />
+                      <ProxyList />
                     ) : (
                       <EmptyState>
                         <EmptyStateBody>{t("proxies.service_not_running")}</EmptyStateBody>
@@ -129,6 +140,8 @@ function AppInner() {
           </StackItem>
         </Stack>
       </PageSection>
+      {showBackup && <BackupDialog onClose={() => setShowBackup(false)} />}
+      {showRestore && <RestoreDialog onClose={() => setShowRestore(false)} />}
       <PluginFooter
         version={pkg.version}
         links={[
