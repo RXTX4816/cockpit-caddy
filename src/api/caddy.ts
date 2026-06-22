@@ -1,5 +1,18 @@
 import type { CaddyConfig, CaddyHandler, CaddyReverseProxyHandler, CaddyServer, ProxyEntry } from "./types";
 
+/**
+ * Thrown when a proxy config was written to disk successfully but the Caddy
+ * Admin API rejected the resulting config (e.g. HTTP 500). Callers can use
+ * `instanceof CaddyApiError` to distinguish this "soft" failure (the file is
+ * saved; Caddy just didn't accept it) from a hard write-failure.
+ */
+export class CaddyApiError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "CaddyApiError";
+  }
+}
+
 // The admin API is either on TCP (default :2019) or a Unix socket (Arch default).
 // cockpit.http() runs as the current user and cannot reach the caddy-owned socket,
 // so we use `cockpit.spawn(["curl", "--unix-socket", ...], { superuser: "try" })` for
@@ -187,6 +200,28 @@ export function parseLegacyLabelsFromCaddyfile(content: string): Record<number, 
 }
 
 /**
+ * Parses externalScheme and externalHost from block headers in the conf.d content.
+ * Handles:
+ *   scheme://host:PORT {   → { scheme, host }
+ *   host:PORT {            → { host }
+ *   :PORT {                → {}
+ */
+export function parseConfExternalAddresses(content: string): Record<number, { scheme?: string; host?: string }> {
+  const result: Record<number, { scheme?: string; host?: string }> = {};
+  for (const block of extractRawBlocksFromCaddyfile(content)) {
+    const firstLine = block.raw.split("\n")[0].trim();
+    const schemeHostMatch = firstLine.match(/^(\w[\w+\-.]*):\/\/([^:/\s]+):/);
+    if (schemeHostMatch) {
+      result[block.port] = { scheme: schemeHostMatch[1], host: schemeHostMatch[2] };
+    } else {
+      const hostMatch = firstLine.match(/^([^:/\s]+):/);
+      if (hostMatch) result[block.port] = { host: hostMatch[1] };
+    }
+  }
+  return result;
+}
+
+/**
  * Returns a port → tls map by reading raw block content from the conf.d file.
  * Detects TLS via `https://` block header or a `tls` directive (not `tls off`).
  * Used to supplement the JSON API when Caddy hasn't finished applying TLS
@@ -258,9 +293,16 @@ function buildReverseProxyLines(p: Pick<ProxyEntry, "targetScheme" | "targetHost
   return [`\treverse_proxy http://${p.targetHost}:${p.targetPort}`];
 }
 
+function buildExternalAddress(p: Pick<ProxyEntry, "externalPort" | "externalScheme" | "externalHost">): string {
+  if (p.externalScheme && p.externalHost) return `${p.externalScheme}://${p.externalHost}:${p.externalPort}`;
+  if (p.externalHost) return `${p.externalHost}:${p.externalPort}`;
+  return `:${p.externalPort}`;
+}
+
 /** Generates the Caddyfile block for a single proxy (label comment + block body). */
 export function proxyToBlock(p: ProxyEntry): string {
-  const lines = p.label ? [`# label: ${p.label}`, `:${p.externalPort} {`] : [`:${p.externalPort} {`];
+  const header = buildExternalAddress(p);
+  const lines = p.label ? [`# label: ${p.label}`, `${header} {`] : [`${header} {`];
   if (p.tls) lines.push("\ttls internal");
   lines.push(...buildReverseProxyLines(p));
   lines.push("}");
@@ -500,6 +542,9 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
     if (!portMatch) continue;
     const externalPort = parseInt(portMatch[1], 10);
     if (isNaN(externalPort)) continue;
+    const colonIdx = listenAddr.lastIndexOf(":");
+    const rawHost = colonIdx > 0 ? listenAddr.slice(0, colonIdx) : "";
+    const externalHost = rawHost || undefined;
 
     const allHandles = (server.routes ?? []).flatMap(r => (r.handle ?? []) as AnyHandler[]);
     const rp = findReverseProxy(allHandles);
@@ -519,6 +564,7 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
     proxies.push({
       id: String(externalPort),
       externalPort,
+      externalHost,
       targetHost: targetHost || "localhost",
       targetPort: isNaN(targetPort) ? 80 : targetPort,
       targetScheme,
@@ -550,8 +596,11 @@ function buildReverseProxyHandler(proxy: Pick<ProxyEntry, "targetHost" | "target
 }
 
 export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): CaddyServer {
+  const listenAddr = proxy.externalHost
+    ? `${proxy.externalHost}:${proxy.externalPort}`
+    : `:${proxy.externalPort}`;
   const server: CaddyServer = {
-    listen: [`:${proxy.externalPort}`],
+    listen: [listenAddr],
     routes: [{ handle: [buildReverseProxyHandler(proxy)], terminal: true }],
   };
   if (proxy.tls) {
@@ -595,7 +644,9 @@ function patchHandles(handles: CaddyHandler[], proxy: ProxyEntry): CaddyHandler[
 function patchServer(original: CaddyServer, proxy: ProxyEntry): CaddyServer {
   const server = { ...original };
 
-  server.listen = [`:${proxy.externalPort}`];
+  server.listen = [proxy.externalHost
+    ? `${proxy.externalHost}:${proxy.externalPort}`
+    : `:${proxy.externalPort}`];
 
   if (proxy.tls) {
     if (!server.tls_connection_policies?.length) {

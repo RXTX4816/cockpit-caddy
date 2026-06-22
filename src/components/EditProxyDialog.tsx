@@ -19,7 +19,8 @@ import {
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
-import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
+import { useToast, ExternalAddressInput } from "@rxtx4816/cockpit-plugin-base-react/components";
+import { readProxyConf, parseConfExternalAddresses, CaddyApiError } from "../api";
 import type { ProxyEntry } from "../api";
 
 interface Props {
@@ -27,12 +28,15 @@ interface Props {
   existingPorts: number[];
   onSave: (entry: ProxyEntry) => Promise<void>;
   onClose: () => void;
+  onApiError?: (message: string) => void;
 }
 
-export function EditProxyDialog({ proxy, existingPorts, onSave, onClose }: Props) {
+export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiError }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
   const saveConfirm = useConfirmAction();
+  const [externalScheme, setExternalScheme] = useState(proxy.externalScheme ?? "");
+  const [externalHost, setExternalHost] = useState(proxy.externalHost ?? "");
   const [externalPort, setExternalPort] = useState(String(proxy.externalPort));
   const [targetScheme, setTargetScheme] = useState<"http" | "https">(proxy.targetScheme);
   const [targetHost, setTargetHost] = useState(proxy.targetHost);
@@ -40,6 +44,18 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose }: Props
   const [tls, setTls] = useState(proxy.tls);
   const [tlsSkipVerify, setTlsSkipVerify] = useState(proxy.tlsSkipVerify);
   const [label, setLabel] = useState(proxy.label ?? "");
+  const [extraSchemes, setExtraSchemes] = useState<string[]>([]);
+  const [extHostErr, setExtHostErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    void readProxyConf().then(content => {
+      const addresses = parseConfExternalAddresses(content);
+      const schemes = Object.values(addresses)
+        .map(a => a.scheme)
+        .filter((s): s is string => !!s);
+      setExtraSchemes([...new Set(schemes)]);
+    }).catch(() => {});
+  }, []);
 
   function portError(): string | null {
     const n = parseInt(externalPort, 10);
@@ -47,6 +63,15 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose }: Props
     if (n < 1 || n > 65535) return t("add_proxy.validation_port_range");
     if (existingPorts.includes(n)) return t("add_proxy.validation_port_duplicate", { port: n });
     return null;
+  }
+
+  function validateAndConfirm() {
+    if (externalScheme && !externalHost.trim()) {
+      setExtHostErr(t("add_proxy.validation_ext_host_required_with_scheme"));
+      return;
+    }
+    setExtHostErr(null);
+    saveConfirm.confirm();
   }
 
   const portErr = portError();
@@ -58,8 +83,11 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose }: Props
     if (isConfirming) warningRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [isConfirming]);
 
-  const extProto = tls ? "https" : "http";
-  const extUrl = `${extProto}://…:${externalPort || "…"}`;
+  const extHeader = externalScheme && externalHost
+    ? `${externalScheme}://${externalHost}:${externalPort || "…"}`
+    : externalHost
+      ? `${externalHost}:${externalPort || "…"}`
+      : `:${externalPort || "…"}`;
   const targetUrl = `${targetScheme}://${targetHost || "…"}:${targetPort || "…"}`;
 
   return (
@@ -88,7 +116,7 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose }: Props
           gap: "0.5rem",
           flexWrap: "wrap",
         }}>
-          <Label isCompact color={tls ? "blue" : "grey"}>{extUrl}</Label>
+          <Label isCompact color={tls || externalScheme === "https" ? "blue" : "grey"}>{extHeader}</Label>
           <span style={{ color: "var(--pf-t--global--text--color--subtle)" }}>→</span>
           <Label isCompact color="grey">{targetUrl}</Label>
         </div>
@@ -104,21 +132,26 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose }: Props
             />
           </FormGroup>
 
-          <FormGroup label={t("add_proxy.field_external_port")} fieldId="edit-external-port" isRequired>
-            <InputGroup>
-              <InputGroupText>:</InputGroupText>
-              <TextInput
-                id="edit-external-port"
-                type="number"
-                value={externalPort}
-                onChange={(_e, v) => setExternalPort(v)}
-                validated={portErr ? "error" : "default"}
-                isDisabled={isConfirming}
-              />
-            </InputGroup>
-            {portErr && (
+          <FormGroup label={t("add_proxy.field_external_address")} fieldId="edit-external-port" isRequired>
+            <ExternalAddressInput
+              scheme={externalScheme}
+              onSchemeChange={v => { setExternalScheme(v); setExtHostErr(null); }}
+              host={externalHost}
+              onHostChange={v => { setExternalHost(v); setExtHostErr(null); }}
+              port={externalPort}
+              onPortChange={setExternalPort}
+              suggestedSchemes={extraSchemes}
+              isDisabled={isConfirming}
+              hostValidated={extHostErr ? "error" : "default"}
+              portValidated={portErr ? "error" : "default"}
+              portPlaceholder="8443"
+              hostPlaceholder={t("add_proxy.ext_host_placeholder")}
+              schemeNoneLabel={t("add_proxy.ext_scheme_none")}
+              schemeCustomLabel={t("add_proxy.ext_scheme_custom")}
+            />
+            {(portErr || extHostErr) && (
               <FormHelperText>
-                <HelperText><HelperTextItem variant="error">{portErr}</HelperTextItem></HelperText>
+                <HelperText><HelperTextItem variant="error">{extHostErr ?? portErr}</HelperTextItem></HelperText>
               </FormHelperText>
             )}
           </FormGroup>
@@ -194,8 +227,10 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose }: Props
               isDisabled={isBusy}
               onClick={() => void saveConfirm.submit(async () => {
                 const port = parseInt(externalPort, 10);
-                await onSave({
+                const entry: ProxyEntry = {
                   ...proxy,
+                  externalScheme: externalScheme || undefined,
+                  externalHost: externalHost.trim() || undefined,
                   externalPort: port,
                   id: String(port),
                   targetScheme,
@@ -204,7 +239,18 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose }: Props
                   tls,
                   tlsSkipVerify: targetScheme === "https" ? tlsSkipVerify : false,
                   label: label.trim() || undefined,
-                });
+                };
+                try {
+                  await onSave(entry);
+                } catch (e) {
+                  if (e instanceof CaddyApiError) {
+                    onClose();
+                    toast.error(t("proxies.api_error_edit_title"), e.message);
+                    onApiError?.(e.message);
+                    return;
+                  }
+                  throw e;
+                }
                 toast.success(t("toast.proxy_saved", { port: externalPort }));
                 onClose();
               })}
@@ -215,7 +261,7 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose }: Props
           </>
         ) : (
           <>
-            <Button variant="primary" onClick={saveConfirm.confirm} isDisabled={!!portErr}>
+            <Button variant="primary" onClick={validateAndConfirm} isDisabled={!!portErr}>
               {t("edit_proxy.save_button")}
             </Button>
             <Button variant="link" onClick={onClose}>{t("common.cancel")}</Button>

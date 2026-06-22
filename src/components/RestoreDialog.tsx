@@ -14,6 +14,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { ConfirmDialog } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { listTarArchives, extractTarArchive } from "@rxtx4816/cockpit-plugin-base-react/lib/tar";
+import { reloadService } from "../api";
 
 interface Props {
   onClose: () => void;
@@ -31,10 +32,12 @@ export function RestoreDialog({ onClose }: Props) {
   const [restoring, setRestoring] = useState(false);
   const [restoreError, setRestoreError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [reloading, setReloading] = useState(false);
+  const [reloadError, setReloadError] = useState<string | null>(null);
+  const [reloadOk, setReloadOk] = useState(false);
 
   useEffect(() => {
     void scan("/etc/caddy");
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function scan(dir: string) {
@@ -84,15 +87,50 @@ export function RestoreDialog({ onClose }: Props) {
     }
   }
 
+  async function handleReload() {
+    setReloading(true);
+    setReloadError(null);
+    try {
+      await reloadService("caddy");
+      setReloadOk(true);
+      setTimeout(() => setReloadOk(false), 4000);
+    } catch (e) {
+      setReloadError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setReloading(false);
+    }
+  }
+
   return (
     <>
     <Modal isOpen onClose={onClose} variant="medium" aria-label={t("restore.title")}>
       <ModalHeader title={t("restore.title")} />
       <ModalBody>
         {success ? (
-          <Alert variant="success" isInline title={t("restore.success_title")}>
-            {t("restore.success_body")}
-          </Alert>
+          <>
+            <Alert variant="success" isInline title={t("restore.success_title")}>
+              {t("restore.success_body")}
+            </Alert>
+            {reloadOk ? (
+              <Alert variant="success" isInline title={t("caddyfile.reloaded")} style={{ marginTop: "0.5rem" }} />
+            ) : (
+              <Alert
+                variant="warning"
+                title={t("restore.needs_reload_title")}
+                style={{ marginTop: "0.5rem" }}
+                actionLinks={
+                  <Button variant="warning" size="sm" isLoading={reloading} isDisabled={reloading} onClick={() => void handleReload()}>
+                    {t("service.reload")}
+                  </Button>
+                }
+              >
+                {t("restore.needs_reload_body")}
+              </Alert>
+            )}
+            {reloadError && (
+              <Alert variant="danger" isInline title={reloadError} style={{ marginTop: "0.5rem" }} />
+            )}
+          </>
         ) : (
           <Form isHorizontal>
             <FormGroup label={t("restore.scan_dir_label")} fieldId="rd-scan-dir">

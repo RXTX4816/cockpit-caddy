@@ -39,6 +39,7 @@ function AppInner() {
   const [adminBypass, setAdminBypass] = useState(false);
   const [showBackup, setShowBackup] = useState(false);
   const [showRestore, setShowRestore] = useState(false);
+  const [logsSearch, setLogsSearch] = useState("");
 
   const apiUnreachable = status === "inactive" || status === "failed" ||
     (status === "active" && !adminApiOk);
@@ -103,6 +104,7 @@ function AppInner() {
             </StackItem>
           )}
 
+
           <StackItem isFilled>
             {loading ? (
               <EmptyState>
@@ -117,7 +119,7 @@ function AppInner() {
                 <Tab eventKey={0} title={<TabTitleText>{t("tabs.proxy_list")}</TabTitleText>}>
                   <PageSection hasBodyWrapper={false}>
                     {adminApiOk ? (
-                      <ProxyList />
+                      <ProxyList onViewLogs={(search) => { setLogsSearch(search); setActiveTab(2); }} />
                     ) : (
                       <EmptyState>
                         <EmptyStateBody>{t("proxies.service_not_running")}</EmptyStateBody>
@@ -132,7 +134,7 @@ function AppInner() {
                 </Tab>
                 <Tab eventKey={2} title={<TabTitleText>{t("tabs.logs")}</TabTitleText>}>
                   <PageSection hasBodyWrapper={false}>
-                    <LogsViewer />
+                    <LogsViewer filterValue={logsSearch} onFilterChange={setLogsSearch} />
                   </PageSection>
                 </Tab>
               </Tabs>

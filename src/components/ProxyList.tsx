@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
   Alert,
+  AlertActionCloseButton,
   Button,
   Content,
   DataList,
@@ -24,7 +25,7 @@ import {
   ToolbarContent,
   ToolbarItem,
 } from "@patternfly/react-core";
-import { ListAltIcon, ThIcon } from "@patternfly/react-icons";
+import { ExternalLinkAltIcon, ListAltIcon, ThIcon } from "@patternfly/react-icons";
 import { useTranslation } from "react-i18next";
 import {
   useToast,
@@ -44,6 +45,13 @@ const PROXY_LAYOUTS: LayoutOption<ProxyLayout>[] = [
   { key: "list", icon: <ListAltIcon />, label: "List" },
   { key: "card", icon: <ThIcon />,      label: "Cards" },
 ];
+
+interface ApiError { message: string; search: string; action: "add" | "edit" }
+
+function extractLogsSearch(message: string): string {
+  const code = message.match(/\b(\d{3})\b/)?.[1];
+  return code ? `"status_code":${code}` : message.substring(0, 60);
+}
 
 // Pending action that the gate modal is guarding
 type GateAction = "add" | { type: "edit"; proxy: ProxyEntry } | { type: "delete"; proxy: ProxyEntry };
@@ -128,7 +136,11 @@ function ProxyRow({ proxy, onEdit, onDelete }: {
   );
 }
 
-export function ProxyList() {
+interface Props {
+  onViewLogs?: (search: string) => void;
+}
+
+export function ProxyList({ onViewLogs }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
   const { proxies, loading, error, refresh, addProxy, editProxy, deleteProxy, needsMigration, migrate } = useProxies();
@@ -136,6 +148,8 @@ export function ProxyList() {
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState<ProxyEntry | null>(null);
+
+  const [apiError, setApiError] = useState<ApiError | null>(null);
 
   // Migration gate: the action waiting behind the "Continue anyway" or "Migrate" choice
   const [migrationGate, setMigrationGate] = useState<GateAction | null>(null);
@@ -256,6 +270,29 @@ export function ProxyList() {
               }
             >
               {t("migration.banner_body")}
+            </Alert>
+          </StackItem>
+        )}
+
+        {apiError && (
+          <StackItem>
+            <Alert
+              variant="warning"
+              title={apiError.action === "add" ? t("proxies.api_error_add_title") : t("proxies.api_error_edit_title")}
+              actionClose={<AlertActionCloseButton onClose={() => setApiError(null)} />}
+              actionLinks={
+                <Button
+                  variant="link"
+                  isInline
+                  icon={<ExternalLinkAltIcon />}
+                  iconPosition="end"
+                  onClick={() => { onViewLogs?.(apiError.search); setApiError(null); }}
+                >
+                  {t("proxies.view_logs")}
+                </Button>
+              }
+            >
+              {apiError.message}
             </Alert>
           </StackItem>
         )}
@@ -411,6 +448,7 @@ export function ProxyList() {
           existingPorts={proxies.map(p => p.externalPort)}
           onAdd={addProxy}
           onClose={() => setShowAdd(false)}
+          onApiError={msg => setApiError({ message: msg, search: extractLogsSearch(msg), action: "add" })}
         />
       )}
 
@@ -420,6 +458,7 @@ export function ProxyList() {
           existingPorts={proxies.filter(p => p.id !== editing.id).map(p => p.externalPort)}
           onSave={editProxy}
           onClose={() => setEditing(null)}
+          onApiError={msg => setApiError({ message: msg, search: extractLogsSearch(msg), action: "edit" })}
         />
       )}
 

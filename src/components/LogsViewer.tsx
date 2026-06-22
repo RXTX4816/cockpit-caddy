@@ -2,7 +2,12 @@ import { LogViewer } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { useTranslation } from "react-i18next";
 import { useLogs } from "../hooks/useLogs";
 
-export function LogsViewer() {
+interface Props {
+  filterValue?: string;
+  onFilterChange?: (v: string) => void;
+}
+
+export function LogsViewer({ filterValue, onFilterChange }: Props) {
   const { t } = useTranslation();
   const { logs, loading, error, refresh, paused, pause, resume } = useLogs();
 
@@ -23,6 +28,8 @@ export function LogsViewer() {
       noMatchesMessage={t("logs.no_matches")}
       errorTitle={t("logs.load_failed")}
       refreshAriaLabel={t("common.refresh")}
+      filterValue={filterValue}
+      onFilterChange={onFilterChange}
     />
   );
 }

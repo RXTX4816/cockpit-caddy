@@ -3,7 +3,7 @@ import { useAutoRefresh } from "@rxtx4816/cockpit-plugin-base-react";
 import {
   parseProxies, mergeProxy, removeProxy,
   readCaddyfile, writeCaddyfile, readProxyConf,
-  parseLabelsFromCaddyfile, parseConfTlsMap,
+  parseLabelsFromCaddyfile, parseConfTlsMap, parseConfExternalAddresses,
   surgicallyWriteProxy, surgicallyRemoveBlock,
   extractRawBlocksFromCaddyfile, buildMigratedConfContent, writeRawProxyConf,
   writeFile, reloadService,
@@ -29,12 +29,14 @@ export function useProxies() {
   const { config, loading, error, refresh, update } = useCaddyConfig();
   const [labels, setLabels] = useState<Record<number, string>>({});
   const [confTls, setConfTls] = useState<Record<number, boolean>>({});
+  const [confExternal, setConfExternal] = useState<Record<number, { scheme?: string; host?: string }>>({});
   const [caddyfileContent, setCaddyfileContent] = useState<string>("");
 
   const syncConf = useCallback(() => {
     void readProxyConf().then(c => {
       setLabels(parseLabelsFromCaddyfile(c));
       setConfTls(parseConfTlsMap(c));
+      setConfExternal(parseConfExternalAddresses(c));
     }).catch(() => {});
   }, []);
 
@@ -61,8 +63,10 @@ export function useProxies() {
       ...p,
       label: labels[p.externalPort],
       tls: p.tls || (confTls[p.externalPort] ?? false),
+      externalScheme: p.externalScheme ?? confExternal[p.externalPort]?.scheme,
+      externalHost: p.externalHost ?? confExternal[p.externalPort]?.host,
     })),
-    [config, labels, confTls],
+    [config, labels, confTls, confExternal],
   );
 
   const addProxy = useCallback(
@@ -83,6 +87,10 @@ export function useProxies() {
         return n;
       });
       setConfTls(prev => ({ ...prev, [newProxy.externalPort]: newProxy.tls }));
+      setConfExternal(prev => ({
+        ...prev,
+        [newProxy.externalPort]: { scheme: newProxy.externalScheme, host: newProxy.externalHost },
+      }));
       await update(mergeProxy(config, newProxy));
     },
     [config, update],
@@ -116,6 +124,12 @@ export function useProxies() {
         n[entry.externalPort] = entry.tls;
         return n;
       });
+      setConfExternal(prev => {
+        const n = { ...prev };
+        delete n[originalPort];
+        n[entry.externalPort] = { scheme: entry.externalScheme, host: entry.externalHost };
+        return n;
+      });
       await update(mergeProxy(config, entry));
     },
     [config, proxies, update],
@@ -129,6 +143,7 @@ export function useProxies() {
       await writeRawProxyConf(surgicallyRemoveBlock(current, proxy.externalPort));
       setLabels(prev => { const n = { ...prev }; delete n[proxy.externalPort]; return n; });
       setConfTls(prev => { const n = { ...prev }; delete n[proxy.externalPort]; return n; });
+      setConfExternal(prev => { const n = { ...prev }; delete n[proxy.externalPort]; return n; });
       await update(removeProxy(config, serverKey));
     },
     [config, proxies, update],

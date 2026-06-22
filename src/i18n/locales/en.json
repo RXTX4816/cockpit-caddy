@@ -63,13 +63,22 @@
     "delete_confirm_title": "Delete proxy :{{port}}?",
     "delete_confirm_body": "This will remove the reverse proxy for port {{port}} → {{target}}.",
     "delete_confirm_button": "Delete",
-    "logs_button": "Logs"
+    "logs_button": "Logs",
+    "api_error_add_title": "Proxy created on disk — Caddy rejected the live push",
+    "api_error_edit_title": "Label saved — Caddy rejected the config update (other changes not applied)",
+    "view_logs": "View Logs"
   },
   "add_proxy": {
     "title": "Add Reverse Proxy",
     "aria_label": "Add reverse proxy dialog",
     "field_external_port": "External Port",
     "field_external_port_help": "HTTPS port to expose on this machine (1024–65535)",
+    "field_external_address": "External Address",
+    "field_external_address_help": "Protocol and hostname are optional. Port is required.",
+    "ext_scheme_none": "(none)",
+    "ext_scheme_custom": "Custom…",
+    "ext_host_placeholder": "hostname (optional)",
+    "validation_ext_host_required_with_scheme": "Hostname is required when a protocol is set",
     "field_target_host": "Target Host",
     "field_target_host_placeholder": "localhost",
     "field_target_port": "Target Port",
@@ -156,7 +165,9 @@
     "delete_confirm_title": "Delete backup?",
     "delete_confirm_body": "Permanently delete {{name}}?",
     "success_title": "Restored successfully",
-    "success_body": "Caddy configuration has been restored. Reload Caddy to apply."
+    "success_body": "Caddy configuration has been restored. Reload Caddy to apply.",
+    "needs_reload_title": "Reload recommended",
+    "needs_reload_body": "The restored config is on disk but Caddy is still running the old config. Reload to apply the changes."
   },
   "footer": {
     "caddy_version": "Caddy {{version}}",

@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { usePollingFetch } from "@rxtx4816/cockpit-plugin-base-react";
-import { fetchCaddyConfig, pushCaddyConfig, type CaddyConfig } from "../api";
+import { fetchCaddyConfig, pushCaddyConfig, CaddyApiError, type CaddyConfig } from "../api";
 
 export function useCaddyConfig() {
   const { data: config, loading, error, refresh } = usePollingFetch<CaddyConfig>(
@@ -11,7 +11,11 @@ export function useCaddyConfig() {
 
   const update = useCallback(
     async (next: CaddyConfig) => {
-      await pushCaddyConfig(next);
+      try {
+        await pushCaddyConfig(next);
+      } catch (e) {
+        throw new CaddyApiError(e instanceof Error ? e.message : String(e));
+      }
       await refresh();
     },
     [refresh],

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Alert,
   Button,
@@ -19,10 +19,13 @@ import {
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
-import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
+import { useToast, ExternalAddressInput } from "@rxtx4816/cockpit-plugin-base-react/components";
+import { readProxyConf, parseConfExternalAddresses, CaddyApiError } from "../api";
 import type { ProxyEntry } from "../api";
 
 interface FormState {
+  externalScheme: string;
+  externalHost: string;
   externalPort: string;
   targetHost: string;
   targetPort: string;
@@ -38,13 +41,16 @@ interface Props {
   existingPorts: number[];
   onAdd: (entry: Omit<ProxyEntry, "id" | "serverKey">) => Promise<void>;
   onClose: () => void;
+  onApiError?: (message: string) => void;
 }
 
-export function AddProxyDialog({ existingPorts, onAdd, onClose }: Props) {
+export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
   const confirmAction = useConfirmAction();
   const [form, setForm] = useState<FormState>({
+    externalScheme: "",
+    externalHost: "",
     externalPort: "",
     targetHost: "localhost",
     targetPort: "",
@@ -54,6 +60,17 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose }: Props) {
     label: "",
   });
   const [errors, setErrors] = useState<FormErrors>({});
+  const [extraSchemes, setExtraSchemes] = useState<string[]>([]);
+
+  useEffect(() => {
+    void readProxyConf().then(content => {
+      const addresses = parseConfExternalAddresses(content);
+      const schemes = Object.values(addresses)
+        .map(a => a.scheme)
+        .filter((s): s is string => !!s);
+      setExtraSchemes([...new Set(schemes)]);
+    }).catch(() => {});
+  }, []);
 
   function validate(): FormErrors {
     const errs: FormErrors = {};
@@ -62,6 +79,9 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose }: Props) {
     else if (isNaN(port)) errs.externalPort = t("add_proxy.validation_port_number");
     else if (port < 1 || port > 65535) errs.externalPort = t("add_proxy.validation_port_range");
     else if (existingPorts.includes(port)) errs.externalPort = t("add_proxy.validation_port_duplicate", { port });
+    if (form.externalScheme && !form.externalHost.trim()) {
+      errs.externalHost = t("add_proxy.validation_ext_host_required_with_scheme");
+    }
     if (!form.targetHost.trim()) errs.targetHost = t("add_proxy.validation_target_host_required");
     const tport = parseInt(form.targetPort, 10);
     if (!form.targetPort) errs.targetPort = t("add_proxy.validation_target_port_required");
@@ -83,8 +103,13 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose }: Props) {
   const isLocked = confirmAction.step !== "idle";
   const isSaving = confirmAction.step === "submitting";
 
-  const extProto = form.tls ? "https" : "http";
-  const extUrl = form.externalPort ? `${extProto}://…:${form.externalPort}` : null;
+  const extHeader = form.externalScheme && form.externalHost
+    ? `${form.externalScheme}://${form.externalHost}:${form.externalPort || "…"}`
+    : form.externalHost
+      ? `${form.externalHost}:${form.externalPort || "…"}`
+      : form.externalPort
+        ? `:${form.externalPort}`
+        : null;
   const targetUrl = `${form.targetScheme}://${form.targetHost || "…"}:${form.targetPort || "…"}`;
 
   return (
@@ -100,7 +125,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose }: Props) {
           />
         )}
 
-        {extUrl && (
+        {extHeader && (
           <div style={{
             marginBottom: "var(--pf-v6-global--spacer--md)",
             padding: "0.5rem 0.75rem",
@@ -113,7 +138,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose }: Props) {
             gap: "0.5rem",
             flexWrap: "wrap",
           }}>
-            <Label isCompact color={form.tls ? "blue" : "grey"}>{extUrl}</Label>
+            <Label isCompact color={form.tls || form.externalScheme === "https" ? "blue" : "grey"}>{extHeader}</Label>
             <span style={{ color: "var(--pf-t--global--text--color--subtle)" }}>→</span>
             <Label isCompact color="grey">{targetUrl}</Label>
           </div>
@@ -130,27 +155,37 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose }: Props) {
             />
           </FormGroup>
 
-          <FormGroup label={t("add_proxy.field_external_port")} fieldId="external-port" isRequired>
-            <InputGroup>
-              <InputGroupText>:</InputGroupText>
-              <TextInput
-                id="external-port"
-                type="number"
-                value={form.externalPort}
-                onChange={(_e, v) => set("externalPort", v)}
-                placeholder="8443"
-                isDisabled={isLocked}
-                validated={errors.externalPort ? "error" : "default"}
-              />
-            </InputGroup>
-            <FormHelperText>
-              <HelperText>
-                {errors.externalPort
-                  ? <HelperTextItem variant="error">{errors.externalPort}</HelperTextItem>
-                  : <HelperTextItem>{t("add_proxy.field_external_port_help")}</HelperTextItem>
-                }
-              </HelperText>
-            </FormHelperText>
+          <FormGroup label={t("add_proxy.field_external_address")} fieldId="external-port" isRequired>
+            <ExternalAddressInput
+              scheme={form.externalScheme}
+              onSchemeChange={v => set("externalScheme", v)}
+              host={form.externalHost}
+              onHostChange={v => set("externalHost", v)}
+              port={form.externalPort}
+              onPortChange={v => set("externalPort", v)}
+              suggestedSchemes={extraSchemes}
+              isDisabled={isLocked}
+              hostValidated={errors.externalHost ? "error" : "default"}
+              portValidated={errors.externalPort ? "error" : "default"}
+              portPlaceholder="8443"
+              hostPlaceholder={t("add_proxy.ext_host_placeholder")}
+              schemeNoneLabel={t("add_proxy.ext_scheme_none")}
+              schemeCustomLabel={t("add_proxy.ext_scheme_custom")}
+            />
+            {(errors.externalPort || errors.externalHost) && (
+              <FormHelperText>
+                <HelperText>
+                  <HelperTextItem variant="error">{errors.externalHost ?? errors.externalPort}</HelperTextItem>
+                </HelperText>
+              </FormHelperText>
+            )}
+            {!errors.externalPort && !errors.externalHost && (
+              <FormHelperText>
+                <HelperText>
+                  <HelperTextItem>{t("add_proxy.field_external_address_help")}</HelperTextItem>
+                </HelperText>
+              </FormHelperText>
+            )}
           </FormGroup>
 
           <FormGroup label={t("add_proxy.field_target_host")} fieldId="target-host" isRequired>
@@ -232,15 +267,27 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose }: Props) {
             <Button
               variant="primary"
               onClick={() => void confirmAction.submit(async () => {
-                await onAdd({
-                  externalPort: parseInt(form.externalPort, 10),
-                  targetHost: form.targetHost.trim(),
-                  targetPort: parseInt(form.targetPort, 10),
-                  targetScheme: form.targetScheme,
-                  tls: form.tls,
-                  tlsSkipVerify: form.targetScheme === "https" ? form.tlsSkipVerify : false,
-                  label: form.label.trim() || undefined,
-                });
+                try {
+                  await onAdd({
+                    externalScheme: form.externalScheme || undefined,
+                    externalHost: form.externalHost.trim() || undefined,
+                    externalPort: parseInt(form.externalPort, 10),
+                    targetHost: form.targetHost.trim(),
+                    targetPort: parseInt(form.targetPort, 10),
+                    targetScheme: form.targetScheme,
+                    tls: form.tls,
+                    tlsSkipVerify: form.targetScheme === "https" ? form.tlsSkipVerify : false,
+                    label: form.label.trim() || undefined,
+                  });
+                } catch (e) {
+                  if (e instanceof CaddyApiError) {
+                    onClose();
+                    toast.error(t("proxies.api_error_add_title"), e.message);
+                    onApiError?.(e.message);
+                    return;
+                  }
+                  throw e;
+                }
                 toast.success(t("toast.proxy_added", { port: form.externalPort }));
                 onClose();
               })}

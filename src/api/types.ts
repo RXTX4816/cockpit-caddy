@@ -62,6 +62,10 @@ export interface CaddyConfig {
 export interface ProxyEntry {
   id: string;
   externalPort: number;
+  /** Optional protocol for the external listener (e.g. "http", "https", "h2c") */
+  externalScheme?: string;
+  /** Optional hostname/IP for the external listener; omit to bind all interfaces */
+  externalHost?: string;
   targetHost: string;
   targetPort: number;
   /** Scheme used when connecting to the upstream */
