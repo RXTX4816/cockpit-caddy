@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "cockpit-caddy",
-  "version": "dev-local",
+  "version": "0.0.0",
   "description": "Caddy reverse proxy management plugin for Cockpit",
   "author": "RXTX4816",
   "license": "MIT",
@@ -24,6 +24,7 @@
     "base:reset": "yalc retreat --all && npm install"
   },
   "devDependencies": {
+    "@codemirror/merge": "^6.12.2",
     "@patternfly/react-core": "^6.5.1",
     "@rxtx4816/cockpit-plugin-base-react": "^1.0.8",
     "@testing-library/jest-dom": "^6.9.1",

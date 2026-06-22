@@ -13,6 +13,7 @@ import {
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import { ConfirmDialog } from "@rxtx4816/cockpit-plugin-base-react/components";
+import { listTarArchives, extractTarArchive } from "@rxtx4816/cockpit-plugin-base-react/lib/tar";
 
 interface Props {
   onClose: () => void;
@@ -20,7 +21,7 @@ interface Props {
 
 export function RestoreDialog({ onClose }: Props) {
   const { t } = useTranslation();
-  const [scanDir, setScanDir] = useState("");
+  const [scanDir, setScanDir] = useState("/etc/caddy");
   const [scanning, setScanning] = useState(false);
   const [archives, setArchives] = useState<string[]>([]);
   const [scanError, setScanError] = useState<string | null>(null);
@@ -32,9 +33,8 @@ export function RestoreDialog({ onClose }: Props) {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    const dir = "/etc/caddy";
-    setScanDir(dir);
-    void scan(dir);
+    void scan("/etc/caddy");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function scan(dir: string) {
@@ -42,19 +42,13 @@ export function RestoreDialog({ onClose }: Props) {
     setScanError(null);
     setArchives([]);
     setSelected(null);
-    try {
-      const out: string = await cockpit.spawn(
-        ["find", dir, "-maxdepth", "2", "-name", "caddy-config-*.tar.gz", "-type", "f"],
-        { err: "message" },
-      );
-      const found = out.trim().split("\n").filter(Boolean).sort().reverse();
-      setArchives(found);
-      if (found.length > 0) setSelected(found[0]);
-    } catch (e) {
-      setScanError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setScanning(false);
+    const found = await listTarArchives(dir, "caddy-config-*.tar.gz", { maxDepth: 2 });
+    if (found.length === 0 && dir) {
+      setScanError(null);
     }
+    setArchives(found);
+    if (found.length > 0) setSelected(found[0]);
+    setScanning(false);
   }
 
   async function confirmDelete() {
@@ -81,7 +75,7 @@ export function RestoreDialog({ onClose }: Props) {
     setRestoring(true);
     setRestoreError(null);
     try {
-      await cockpit.spawn(["tar", "-xzf", selected, "-C", "/etc"], { superuser: "require", err: "message" });
+      await extractTarArchive(selected, "/etc", { superuser: "require" });
       setSuccess(true);
     } catch (e) {
       setRestoreError(e instanceof Error ? e.message : String(e));

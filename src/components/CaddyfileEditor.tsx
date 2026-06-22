@@ -6,13 +6,13 @@ import {
   Spinner,
   Stack,
   StackItem,
-  TextArea,
   Toolbar,
   ToolbarContent,
   ToolbarGroup,
   ToolbarItem,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
+import { CodeEditor } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { useCaddyfile } from "../hooks/useCaddyfile";
 import { listConfDFiles, validateCaddyfile, reloadService } from "../api";
 
@@ -185,7 +185,6 @@ export function CaddyfileEditor() {
       <StackItem>
         <Toolbar>
           <ToolbarContent>
-            {/* File selector */}
             <ToolbarGroup variant="filter-group">
               {files.map(f => (
                 <ToolbarItem key={f.path}>
@@ -200,7 +199,6 @@ export function CaddyfileEditor() {
               ))}
             </ToolbarGroup>
 
-            {/* Action buttons */}
             <ToolbarGroup align={{ default: "alignEnd" }}>
               {diskChangedWhileEditing && (
                 <ToolbarItem>
@@ -235,14 +233,9 @@ export function CaddyfileEditor() {
       <StackItem isFilled>
         {diskContent !== null && (
           editMode ? (
-            <TextArea
-              value={draft}
-              onChange={(_e, v) => setDraft(v)}
-              rows={25}
-              resizeOrientation="vertical"
-              aria-label={t("caddyfile.title")}
-              style={{ fontFamily: "monospace", fontSize: "0.875rem" }}
-            />
+            <div style={{ minHeight: "25rem" }}>
+              <CodeEditor content={draft} onChange={setDraft} />
+            </div>
           ) : (
             <pre style={{
               fontFamily: "monospace",
