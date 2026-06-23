@@ -33,10 +33,32 @@ Then open http://localhost:9090 — Caddy Proxy appears in the sidebar automatic
 ## Running Tests
 
 ```bash
-npm run test          # Run tests once
+npm run test          # Run unit tests once
 npm run test:watch    # Watch mode
 npm run test:coverage # Coverage report
 ```
+
+### E2E Browser Tests
+
+E2E tests run against a real Cockpit VM via Playwright. Each distro (arch/debian/fedora) is a Playwright project:
+
+```bash
+npm run test:e2e                          # All running VMs
+npm run test:e2e -- --project=arch        # Target a specific VM
+npm run test:e2e -- --project=arch --project=debian
+npm run test:e2e:ui                       # Visual runner (step-by-step debugging)
+BASE_URL=https://localhost:9093 npm run test:e2e:codegen  # Record a new test
+```
+
+Start and wait for a VM before running:
+
+```bash
+npm run vm start arch
+npm run vm wait arch
+npm run vm status     # Show all VMs with ports
+```
+
+See [docs/wiki/VM-Testing.md](docs/wiki/VM-Testing.md) for full VM setup instructions.
 
 ## Code Quality
 

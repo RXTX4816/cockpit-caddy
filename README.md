@@ -121,12 +121,18 @@ Open `http://localhost:9090` — **Caddy Proxy** appears in the sidebar automati
 | `npm run watch` | Build with file watching |
 | `npm run typecheck` | TypeScript type check |
 | `npm run lint` | ESLint |
-| `npm run test` | Run tests |
+| `npm run test` | Run unit tests |
 | `npm run test:coverage` | Coverage report |
+| `npm run test:e2e` | Run E2E browser tests (requires a running VM) |
+| `npm run test:e2e:ui` | E2E tests in the Playwright visual runner |
+
+### VM Testing
+
+For testing in real browser environments across Arch, Debian, and Fedora, the `npm run vm` command manages local QEMU VMs. See [docs/wiki/VM-Testing.md](docs/wiki/VM-Testing.md) for setup and usage.
 
 ### Plugin Base
 
-Build scripts, shared TypeScript/ESLint/Vitest config, and the VM test runner are provided by [`@rxtx4816/cockpit-plugin-base-react`](https://github.com/RXTX4816/cockpit-plugin-base-react), installed automatically as a devDependency via `npm install`. You do not need to clone or configure it separately.
+Build scripts, shared TypeScript/ESLint/Vitest config, the VM test runner, and Playwright fixtures are provided by [`@rxtx4816/cockpit-plugin-base-react`](https://github.com/RXTX4816/cockpit-plugin-base-react), installed automatically as a devDependency via `npm install`. You do not need to clone or configure it separately.
 
 ## Translations
 
