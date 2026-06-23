@@ -49,7 +49,7 @@ const PROXY_LAYOUTS: LayoutOption<ProxyLayout>[] = [
 interface ApiError { message: string; search: string; action: "add" | "edit" }
 
 function extractLogsSearch(message: string): string {
-  const code = message.match(/\b(\d{3})\b/)?.[1];
+  const code = message.match(/\b(?:HTTP|status|code)[/ :]+([45]\d{2})\b/i)?.[1];
   return code ? `"status_code":${code}` : message.substring(0, 60);
 }
 
