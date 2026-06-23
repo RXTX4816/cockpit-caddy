@@ -5,6 +5,8 @@
 
 Caddy reverse proxy management for [Cockpit](https://cockpit-project.org)
 
+![Screenshot](docs/assets/overview.png)
+
 ## Concept
 
 Each service gets its own HTTPS port on your local machine:
