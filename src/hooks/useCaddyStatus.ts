@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useAutoRefresh } from "@rxtx4816/cockpit-plugin-base-react";
 import { getServiceStatus, pingCaddyApi, type ServiceStatus } from "../api";
 
@@ -20,6 +20,7 @@ export function useCaddyStatus() {
     setLoading(false);
   }, []);
 
+  useEffect(() => { void refresh(); }, [refresh]);
   useAutoRefresh(refresh, POLL_INTERVAL);
 
   return { status, adminApiOk, loading, refresh };

@@ -25,7 +25,7 @@ let transport: Transport | null = null;
 
 async function tcpGet(path: string): Promise<string> {
   return cockpit.spawn(
-    ["curl", "-sf", `${TCP_BASE}${path}`],
+    ["curl", "-sf", "--connect-timeout", "2", `${TCP_BASE}${path}`],
     { err: "ignore" },
   );
 }
