@@ -14,31 +14,20 @@ export class CaddyApiError extends Error {
 }
 
 // The admin API is either on TCP (default :2019) or a Unix socket (Arch default).
-// cockpit.http() runs as the current user and cannot reach the caddy-owned socket,
-// so we use `cockpit.spawn(["curl", "--unix-socket", ...], { superuser: "try" })` for
-// the Unix path. TCP uses cockpit.http directly (no elevated privileges needed).
+// Both transports use curl via cockpit.spawn — cockpit.http() proved unreliable across
+// distros (IPv4/IPv6 resolution differences). curl is available on all supported distros.
 type Transport = "tcp" | "unix";
 
+const TCP_BASE = "http://127.0.0.1:2019";
 const UNIX_SOCKET = "/run/caddy/admin.socket";
 
 let transport: Transport | null = null;
 
 async function tcpGet(path: string): Promise<string> {
-  const c = cockpit.http({ port: 2019, address: "localhost" });
-  try {
-    return await c.get(path);
-  } finally {
-    c.close();
-  }
-}
-
-async function tcpPost(path: string, body: string): Promise<void> {
-  const c = cockpit.http({ port: 2019, address: "localhost" });
-  try {
-    await c.request({ method: "POST", path, headers: { "Content-Type": "application/json" }, body });
-  } finally {
-    c.close();
-  }
+  return cockpit.spawn(
+    ["curl", "-sf", `${TCP_BASE}${path}`],
+    { err: "ignore" },
+  );
 }
 
 async function unixGet(path: string): Promise<string> {
@@ -48,10 +37,32 @@ async function unixGet(path: string): Promise<string> {
   );
 }
 
+// POST helpers avoid curl -f so the response body is captured on HTTP errors.
+// We append -w "\n%{http_code}" and split on the last newline to get status + body.
+async function curlPost(curlArgs: string[], body: string, opts: object = {}): Promise<void> {
+  const out = await cockpit.spawn(
+    [...curlArgs, "-s", "-X", "POST", "-H", "Content-Type: application/json",
+     "-d", body, "-w", "\n%{http_code}"],
+    opts,
+  );
+  const nl = out.lastIndexOf("\n");
+  const code = parseInt(out.slice(nl + 1).trim(), 10);
+  if (code >= 400) {
+    const raw = out.slice(0, nl).trim();
+    let msg = raw;
+    try { msg = (JSON.parse(raw) as { error?: string }).error ?? raw; } catch { /* keep raw */ }
+    throw new Error(msg || `HTTP ${code}`);
+  }
+}
+
+async function tcpPost(path: string, body: string): Promise<void> {
+  await curlPost(["curl", `${TCP_BASE}${path}`], body);
+}
+
 async function unixPost(path: string, body: string): Promise<void> {
-  await cockpit.spawn(
-    ["curl", "-sf", "-X", "POST", "--unix-socket", UNIX_SOCKET,
-     `http://localhost${path}`, "-H", "Content-Type: application/json", "-d", body],
+  await curlPost(
+    ["curl", "--unix-socket", UNIX_SOCKET, `http://localhost${path}`],
+    body,
     { superuser: "try" },
   );
 }

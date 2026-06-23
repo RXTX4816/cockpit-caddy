@@ -21,9 +21,20 @@ extra_packages() {
 }
 
 extra_runcmd() {
-  cat <<YAML
+  local distro; distro="${1%%-*}"
+  case "$distro" in
+    arch)
+      cat <<'YAML'
+  - pacman -Sy --noconfirm caddy || true
   - systemctl enable --now caddy
 YAML
+      ;;
+    *)
+      cat <<'YAML'
+  - systemctl enable --now caddy
+YAML
+      ;;
+  esac
 }
 
 pre_staged_files() {
