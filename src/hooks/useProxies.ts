@@ -76,9 +76,11 @@ export function useProxies() {
         id: String(entry.externalPort),
         serverKey: `srv${entry.externalPort}`,
       };
-      await ensureConfDImported();
-      await cockpit.spawn(["mkdir", "-p", "/etc/caddy/conf.d"], { superuser: "try" });
-      const current = await readProxyConf();
+      const [, , current] = await Promise.all([
+        ensureConfDImported(),
+        cockpit.spawn(["mkdir", "-p", "/etc/caddy/conf.d"], { superuser: "try" }),
+        readProxyConf(),
+      ]);
       await writeRawProxyConf(surgicallyWriteProxy(current, newProxy));
       setLabels(prev => {
         const n = { ...prev };
@@ -101,8 +103,10 @@ export function useProxies() {
       const originalPort = proxies.find(p => p.serverKey === entry.serverKey)?.externalPort
         ?? entry.externalPort;
 
-      await ensureConfDImported();
-      const current = await readProxyConf();
+      const [, current] = await Promise.all([
+        ensureConfDImported(),
+        readProxyConf(),
+      ]);
 
       let updated = current;
       if (originalPort !== entry.externalPort) {
