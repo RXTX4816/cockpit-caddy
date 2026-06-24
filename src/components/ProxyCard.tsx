@@ -60,14 +60,27 @@ export function ProxyCard({ proxy, onEdit, onDelete, onDuplicate, upstreamFailin
       <CardBody>
         <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", fontSize: "0.85rem" }}>
           {proxy.label && portLink}
-          <code style={{ color: "var(--pf-t--global--text--color--subtle)" }}>
-            → {proxy.targetScheme}://{proxy.targetHost}:{proxy.targetPort}
-          </code>
-          <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap" }}>
-            {proxy.tls && <Label isCompact color="blue">{t("proxies.tls_self_signed")}</Label>}
-            {proxy.tlsSkipVerify && <Label isCompact color="orange">{t("proxies.tls_skip_verify")}</Label>}
-            {!proxy.tls && <Label isCompact color="grey">{t("proxies.tls_none")}</Label>}
-          </div>
+          {proxy.redirect ? (
+            <>
+              <code style={{ color: "var(--pf-t--global--text--color--subtle)" }}>
+                → {proxy.redirect.to}
+              </code>
+              <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap" }}>
+                <Label isCompact color="purple">{t("proxies.type_redirect")} {proxy.redirect.code}</Label>
+              </div>
+            </>
+          ) : (
+            <>
+              <code style={{ color: "var(--pf-t--global--text--color--subtle)" }}>
+                → {proxy.targetScheme}://{proxy.targetHost}:{proxy.targetPort}
+              </code>
+              <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap" }}>
+                {proxy.tls && <Label isCompact color="blue">{t("proxies.tls_self_signed")}</Label>}
+                {proxy.tlsSkipVerify && <Label isCompact color="orange">{t("proxies.tls_skip_verify")}</Label>}
+                {!proxy.tls && <Label isCompact color="grey">{t("proxies.tls_none")}</Label>}
+              </div>
+            </>
+          )}
         </div>
       </CardBody>
       <CardFooter>
