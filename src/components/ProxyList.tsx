@@ -551,6 +551,7 @@ export function ProxyList({ onViewLogs }: Props) {
             label: duplicating.label ? `${duplicating.label} (copy)` : "",
           }}
           initialRewrite={duplicating.rewrite}
+          initialRequestHeaders={duplicating.requestHeaders}
         />
       ))}
 

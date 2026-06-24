@@ -442,6 +442,101 @@ describe("buildServerEntry — rewrite", () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// Request headers — Caddyfile generation (proxyToBlock)
+// ---------------------------------------------------------------------------
+
+describe("proxyToBlock — requestHeaders", () => {
+  it("emits header_up set inside reverse_proxy block", () => {
+    const result = proxyToBlock(proxy({ requestHeaders: [{ op: "set", name: "X-Real-IP", value: "{remote_host}" }] }));
+    expect(result).toContain("reverse_proxy http://localhost:7701 {");
+    expect(result).toContain("\theader_up X-Real-IP {remote_host}");
+  });
+
+  it("emits header_up + prefix for add op", () => {
+    const result = proxyToBlock(proxy({ requestHeaders: [{ op: "add", name: "X-Foo", value: "bar" }] }));
+    expect(result).toContain("\theader_up +X-Foo bar");
+  });
+
+  it("emits header_up - prefix for delete op", () => {
+    const result = proxyToBlock(proxy({ requestHeaders: [{ op: "delete", name: "X-Forwarded-For" }] }));
+    expect(result).toContain("\theader_up -X-Forwarded-For");
+  });
+
+  it("combines tlsSkipVerify transport and header_up in same block", () => {
+    const result = proxyToBlock(proxy({
+      targetScheme: "https",
+      tlsSkipVerify: true,
+      requestHeaders: [{ op: "set", name: "X-Real-IP", value: "{remote_host}" }],
+    }));
+    expect(result).toContain("tls_insecure_skip_verify");
+    expect(result).toContain("header_up X-Real-IP {remote_host}");
+  });
+
+  it("emits no block when requestHeaders is undefined", () => {
+    const result = proxyToBlock(proxy());
+    expect(result).toContain("reverse_proxy http://localhost:7701\n}");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Request headers — JSON API (buildServerEntry + parseProxies round-trip)
+// ---------------------------------------------------------------------------
+
+describe("buildServerEntry — requestHeaders", () => {
+  it("emits headers.request.set in reverse_proxy handler", () => {
+    const server = buildServerEntry(proxy({ requestHeaders: [{ op: "set", name: "X-Real-IP", value: "{remote_host}" }] }));
+    const rp = server.routes[0].handle[0] as { handler: string; headers?: { request?: { set?: Record<string, string[]> } } };
+    expect(rp.headers?.request?.set?.["X-Real-IP"]).toEqual(["{http.request.remote.host}"]);
+  });
+
+  it("emits headers.request.add for add op", () => {
+    const server = buildServerEntry(proxy({ requestHeaders: [{ op: "add", name: "X-Foo", value: "bar" }] }));
+    const rp = server.routes[0].handle[0] as { handler: string; headers?: { request?: { add?: Record<string, string[]> } } };
+    expect(rp.headers?.request?.add?.["X-Foo"]).toEqual(["bar"]);
+  });
+
+  it("emits headers.request.delete for delete op", () => {
+    const server = buildServerEntry(proxy({ requestHeaders: [{ op: "delete", name: "X-Forwarded-For" }] }));
+    const rp = server.routes[0].handle[0] as { handler: string; headers?: { request?: { delete?: string[] } } };
+    expect(rp.headers?.request?.delete).toContain("X-Forwarded-For");
+  });
+
+  it("omits headers field when requestHeaders is undefined", () => {
+    const server = buildServerEntry(proxy());
+    const rp = server.routes[0].handle[0] as { handler: string; headers?: unknown };
+    expect(rp.headers).toBeUndefined();
+  });
+});
+
+describe("parseProxies — requestHeaders round-trip", () => {
+  it("parses set header from JSON config", () => {
+    const config = makeConfig([{
+      handler: "reverse_proxy",
+      upstreams: [{ dial: "localhost:7701" }],
+      headers: { request: { set: { "X-Real-IP": ["{http.request.remote.host}"] } } },
+    }]);
+    const [p] = parseProxies(config);
+    expect(p.requestHeaders).toEqual([{ op: "set", name: "X-Real-IP", value: "{remote_host}" }]);
+  });
+
+  it("parses delete header from JSON config", () => {
+    const config = makeConfig([{
+      handler: "reverse_proxy",
+      upstreams: [{ dial: "localhost:7701" }],
+      headers: { request: { delete: ["X-Forwarded-For"] } },
+    }]);
+    const [p] = parseProxies(config);
+    expect(p.requestHeaders).toEqual([{ op: "delete", name: "X-Forwarded-For" }]);
+  });
+
+  it("leaves requestHeaders undefined when no headers field", () => {
+    const config = makeConfig([{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:7701" }] }]);
+    const [p] = parseProxies(config);
+    expect(p.requestHeaders).toBeUndefined();
+  });
+});
+
 describe("parseProxies — rewrite round-trip", () => {
   it("parses strip_prefix from JSON config", () => {
     const config = makeConfig([

@@ -141,6 +141,19 @@
     "field_replace_placeholder": "/$1",
     "field_replace_help": "Use $1, $2 for capture groups"
   },
+  "request_headers": {
+    "section_title": "Request Headers (optional)",
+    "op_set": "Set",
+    "op_add": "Add",
+    "op_delete": "Delete",
+    "field_name": "Header name",
+    "field_value": "Value",
+    "add_button": "Add",
+    "presets_label": "Presets",
+    "preset_real_ip": "X-Real-IP",
+    "preset_forwarded_for": "X-Forwarded-For",
+    "preset_forwarded_proto": "X-Forwarded-Proto"
+  },
   "edit_redirect": {
     "title": "Edit Redirect — :{{port}}",
     "aria_label": "Edit redirect dialog",
