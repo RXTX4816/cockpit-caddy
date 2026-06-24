@@ -552,6 +552,7 @@ export function ProxyList({ onViewLogs }: Props) {
           }}
           initialRewrite={duplicating.rewrite}
           initialRequestHeaders={duplicating.requestHeaders}
+          initialResponseHeaders={duplicating.responseHeaders}
         />
       ))}
 

@@ -382,6 +382,11 @@ export function proxyToBlock(p: ProxyEntry): string {
     lines.push(`\tredir ${p.redirect.to} ${p.redirect.code}`);
   } else {
     if (p.tls) lines.push("\ttls internal");
+    for (const h of p.responseHeaders ?? []) {
+      if (h.op === "delete") lines.push(`\theader -${h.name}`);
+      else if (h.op === "add") lines.push(`\theader +${h.name} ${h.value ?? ""}`);
+      else lines.push(`\theader ${h.name} "${h.value ?? ""}"`);
+    }
     if (p.rewrite) lines.push(...buildRewriteCaddyLines(p.rewrite, p.externalPort));
     lines.push(...buildReverseProxyLines(p));
   }
@@ -666,6 +671,9 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
     const rewriteHandle = allHandles.find(h => h.handler === "rewrite");
     const rewrite = rewriteHandle ? parseRewriteFromHandle(rewriteHandle) : undefined;
 
+    const headersHandle = allHandles.find(h => h.handler === "headers");
+    const responseHeadersParsed = headersHandle ? parseResponseHeadersJson(headersHandle) : [];
+
     const requestHeaders = parseRequestHeadersJson(rp.headers as Record<string, unknown> | undefined);
 
     proxies.push({
@@ -680,6 +688,7 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
       serverKey: key,
       rewrite,
       requestHeaders: requestHeaders.length ? requestHeaders : undefined,
+      responseHeaders: responseHeadersParsed.length ? responseHeadersParsed : undefined,
     });
   }
 
@@ -725,6 +734,37 @@ function parseRequestHeadersJson(headers: Record<string, unknown> | undefined): 
   return ops;
 }
 
+function buildResponseHeadersHandler(ops: import("./types").HeaderOperation[]): CaddyHandler {
+  const set: Record<string, string[]> = {};
+  const add: Record<string, string[]> = {};
+  const del: string[] = [];
+  for (const h of ops) {
+    if (h.op === "delete") { del.push(h.name); continue; }
+    const val = [h.value ?? ""];
+    if (h.op === "add") add[h.name] = val;
+    else set[h.name] = val;
+  }
+  const resp: Record<string, unknown> = {};
+  if (Object.keys(set).length) resp["set"] = set;
+  if (Object.keys(add).length) resp["add"] = add;
+  if (del.length) resp["delete"] = del;
+  return { handler: "headers", response: resp };
+}
+
+function parseResponseHeadersJson(h: AnyHandler): import("./types").HeaderOperation[] {
+  if (h.handler !== "headers") return [];
+  const resp = (h as { handler: string; response?: Record<string, unknown> }).response;
+  if (!resp) return [];
+  const ops: import("./types").HeaderOperation[] = [];
+  const set = resp["set"] as Record<string, string[]> | undefined;
+  const add = resp["add"] as Record<string, string[]> | undefined;
+  const del = resp["delete"] as string[] | undefined;
+  for (const [name, vals] of Object.entries(set ?? {})) ops.push({ op: "set", name, value: vals[0] ?? "" });
+  for (const [name, vals] of Object.entries(add ?? {})) ops.push({ op: "add", name, value: vals[0] ?? "" });
+  for (const name of del ?? []) ops.push({ op: "delete", name });
+  return ops;
+}
+
 function buildReverseProxyHandler(proxy: Pick<ProxyEntry, "targetHost" | "targetPort" | "targetScheme" | "tlsSkipVerify" | "requestHeaders">): CaddyReverseProxyHandler {
   const rp: CaddyReverseProxyHandler = {
     handler: "reverse_proxy",
@@ -759,6 +799,7 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
     };
   }
   const handles: CaddyHandler[] = [];
+  if (proxy.responseHeaders?.length) handles.push(buildResponseHeadersHandler(proxy.responseHeaders));
   if (proxy.rewrite) handles.push(buildRewriteHandler(proxy.rewrite));
   handles.push(buildReverseProxyHandler(proxy));
   const server: CaddyServer = {
@@ -774,8 +815,8 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
 /** Patch handles in-place: update reverse_proxy and rewrite handlers, leave everything else untouched. */
 function patchHandles(handles: CaddyHandler[], proxy: ProxyEntry): CaddyHandler[] {
   let found = false;
-  // Strip any existing rewrite handlers first; we'll re-add the correct one below
-  const withoutRewrite = handles.filter(h => h.handler !== "rewrite");
+  // Strip any existing rewrite and headers handlers; we'll re-add the correct ones below
+  const withoutRewrite = handles.filter(h => h.handler !== "rewrite" && h.handler !== "headers");
   const patched = withoutRewrite.map(h => {
     if (h.handler === "reverse_proxy") {
       found = true;
@@ -802,9 +843,11 @@ function patchHandles(handles: CaddyHandler[], proxy: ProxyEntry): CaddyHandler[
   if (!found) {
     patched.push(buildReverseProxyHandler(proxy));
   }
-  // Prepend rewrite handler if configured
-  if (proxy.rewrite) return [buildRewriteHandler(proxy.rewrite), ...patched] as CaddyHandler[];
-  return patched as CaddyHandler[];
+  // Prepend rewrite and response-headers handlers if configured
+  const prefix: CaddyHandler[] = [];
+  if (proxy.responseHeaders?.length) prefix.push(buildResponseHeadersHandler(proxy.responseHeaders));
+  if (proxy.rewrite) prefix.push(buildRewriteHandler(proxy.rewrite));
+  return [...prefix, ...patched] as CaddyHandler[];
 }
 
 /** Patch only the fields we manage; preserve everything else in the original server. */

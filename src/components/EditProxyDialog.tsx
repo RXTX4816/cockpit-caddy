@@ -24,6 +24,7 @@ import { readProxyConf, parseConfExternalAddresses, CaddyApiError } from "../api
 import type { ProxyEntry, RewriteConfig, HeaderOperation } from "../api";
 import { RewriteSection } from "./RewriteSection";
 import { RequestHeadersSection } from "./RequestHeadersSection";
+import { ResponseHeadersSection } from "./ResponseHeadersSection";
 
 interface Props {
   proxy: ProxyEntry;
@@ -48,6 +49,7 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
   const [label, setLabel] = useState(proxy.label ?? "");
   const [rewrite, setRewrite] = useState<RewriteConfig | undefined>(proxy.rewrite);
   const [requestHeaders, setRequestHeaders] = useState<HeaderOperation[] | undefined>(proxy.requestHeaders);
+  const [responseHeaders, setResponseHeaders] = useState<HeaderOperation[] | undefined>(proxy.responseHeaders);
   const [extraSchemes, setExtraSchemes] = useState<string[]>([]);
   const [extHostErr, setExtHostErr] = useState<string | null>(null);
 
@@ -219,6 +221,7 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
         </Form>
         <RewriteSection value={rewrite} onChange={setRewrite} isDisabled={isConfirming} />
         <RequestHeadersSection value={requestHeaders} onChange={setRequestHeaders} isDisabled={isConfirming} />
+        <ResponseHeadersSection value={responseHeaders} onChange={setResponseHeaders} isDisabled={isConfirming} />
 
         {saveConfirm.error && (
           <Alert variant="danger" isInline title={saveConfirm.error} style={{ marginTop: "var(--pf-v6-global--spacer--md)" }} />
@@ -247,6 +250,7 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
                   label: label.trim() || undefined,
                   rewrite: rewrite ?? undefined,
                   requestHeaders: requestHeaders ?? undefined,
+                  responseHeaders: responseHeaders ?? undefined,
                 };
                 try {
                   await onSave(entry);

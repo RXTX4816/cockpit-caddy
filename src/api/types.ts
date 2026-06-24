@@ -95,6 +95,7 @@ export interface ProxyEntry {
   redirect?: RedirectConfig;
   rewrite?: RewriteConfig;
   requestHeaders?: HeaderOperation[];
+  responseHeaders?: HeaderOperation[];
 }
 
 export type { ServiceStatus } from "@rxtx4816/cockpit-plugin-base-react/systemd";
