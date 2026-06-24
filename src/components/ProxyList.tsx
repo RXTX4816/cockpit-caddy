@@ -558,6 +558,7 @@ export function ProxyList({ onViewLogs }: Props) {
             dialTimeout: duplicating.dialTimeout ?? "",
             responseHeaderTimeout: duplicating.responseHeaderTimeout ?? "",
           }}
+          initialBasicAuth={(duplicating.basicAuth ?? []).map(a => ({ username: a.username, password: "", existingHash: a.passwordHash }))}
         />
       ))}
 

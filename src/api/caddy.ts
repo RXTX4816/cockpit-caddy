@@ -314,6 +314,28 @@ function buildEncodeHandler(): CaddyHandler {
   return { handler: "encode", encodings: { gzip: {}, zstd: {} } };
 }
 
+function buildBasicAuthCaddyLines(accounts: { username: string; passwordHash: string }[]): string[] {
+  return ["\tbasic_auth {", ...accounts.map(a => `\t\t${a.username} ${a.passwordHash}`), "\t}"];
+}
+
+function buildBasicAuthHandler(accounts: { username: string; passwordHash: string }[]): CaddyHandler {
+  return {
+    handler: "authentication",
+    providers: {
+      http_basic: {
+        accounts: accounts.map(a => ({ username: a.username, password: a.passwordHash })),
+      },
+    },
+  };
+}
+
+function parseBasicAuthJson(h: AnyHandler): { username: string; passwordHash: string }[] | undefined {
+  const providers = (h as { providers?: Record<string, unknown> }).providers;
+  const httpBasic = providers?.["http_basic"] as { accounts?: Array<{ username: string; password: string }> } | undefined;
+  if (!httpBasic?.accounts?.length) return undefined;
+  return httpBasic.accounts.map(a => ({ username: a.username, passwordHash: a.password }));
+}
+
 function buildRewriteHandler(rewrite: import("./types").RewriteConfig): CaddyHandler {
   if (rewrite.type === "strip_prefix") {
     return { handler: "rewrite", strip_path_prefix: rewrite.value };
@@ -408,6 +430,7 @@ export function proxyToBlock(p: ProxyEntry): string {
   } else {
     if (p.tls) lines.push("\ttls internal");
     if (p.compress) lines.push("\tencode gzip zstd");
+    if (p.basicAuth?.length) lines.push(...buildBasicAuthCaddyLines(p.basicAuth));
     for (const h of p.responseHeaders ?? []) {
       if (h.op === "delete") lines.push(`\theader -${h.name}`);
       else if (h.op === "add") lines.push(`\theader +${h.name} ${h.value ?? ""}`);
@@ -454,6 +477,18 @@ function patchRawBlock(raw: string, proxy: ProxyEntry): string {
         continue;
       }
 
+      // Skip top-level `basic_auth` block
+      if (trimmed === "basic_auth" || trimmed.startsWith("basic_auth ")) {
+        nestDepth += opens - closes;
+        i++;
+        while (i < closingIdx && nestDepth > 0) {
+          const t = lines[i].trim();
+          nestDepth += (t.match(/\{/g) ?? []).length - (t.match(/\}/g) ?? []).length;
+          i++;
+        }
+        continue;
+      }
+
       // Skip top-level `reverse_proxy` directive, including any nested { } block
       if (trimmed.startsWith("reverse_proxy") && (trimmed.length === 13 || trimmed[13] === " ")) {
         nestDepth += opens - closes;
@@ -475,6 +510,7 @@ function patchRawBlock(raw: string, proxy: ProxyEntry): string {
   // Re-add updated directives before closing brace
   if (proxy.tls) kept.push("\ttls internal");
   if (proxy.compress) kept.push("\tencode gzip zstd");
+  if (proxy.basicAuth?.length) kept.push(...buildBasicAuthCaddyLines(proxy.basicAuth));
   kept.push(...buildReverseProxyLines(proxy));
   kept.push(lines[closingIdx]); // closing }
   return kept.join("\n");
@@ -706,6 +742,9 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
 
     const compress = allHandles.some(h => h.handler === "encode");
 
+    const authHandle = allHandles.find(h => h.handler === "authentication");
+    const basicAuth = authHandle ? parseBasicAuthJson(authHandle) : undefined;
+
     const rewriteHandle = allHandles.find(h => h.handler === "rewrite");
     const rewrite = rewriteHandle ? parseRewriteFromHandle(rewriteHandle) : undefined;
 
@@ -725,6 +764,7 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
       tlsSkipVerify,
       serverKey: key,
       compress: compress || undefined,
+      basicAuth: basicAuth?.length ? basicAuth : undefined,
       dialTimeout: dialTimeout || undefined,
       responseHeaderTimeout: responseHeaderTimeout || undefined,
       rewrite,
@@ -837,6 +877,7 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
   }
   const handles: CaddyHandler[] = [];
   if (proxy.compress) handles.push(buildEncodeHandler());
+  if (proxy.basicAuth?.length) handles.push(buildBasicAuthHandler(proxy.basicAuth));
   if (proxy.responseHeaders?.length) handles.push(buildResponseHeadersHandler(proxy.responseHeaders));
   if (proxy.rewrite) handles.push(buildRewriteHandler(proxy.rewrite));
   handles.push(buildReverseProxyHandler(proxy));
@@ -853,8 +894,8 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
 /** Patch handles in-place: update reverse_proxy and rewrite handlers, leave everything else untouched. */
 function patchHandles(handles: CaddyHandler[], proxy: ProxyEntry): CaddyHandler[] {
   let found = false;
-  // Strip any existing encode/rewrite/headers handlers; we'll re-add the correct ones below
-  const withoutRewrite = handles.filter(h => h.handler !== "rewrite" && h.handler !== "headers" && h.handler !== "encode");
+  // Strip any existing encode/authentication/rewrite/headers handlers; we'll re-add the correct ones below
+  const withoutRewrite = handles.filter(h => h.handler !== "rewrite" && h.handler !== "headers" && h.handler !== "encode" && h.handler !== "authentication");
   const patched = withoutRewrite.map(h => {
     if (h.handler === "reverse_proxy") {
       found = true;
@@ -879,9 +920,10 @@ function patchHandles(handles: CaddyHandler[], proxy: ProxyEntry): CaddyHandler[
   if (!found) {
     patched.push(buildReverseProxyHandler(proxy));
   }
-  // Prepend encode/response-headers/rewrite handlers if configured
+  // Prepend encode/auth/response-headers/rewrite handlers if configured
   const prefix: CaddyHandler[] = [];
   if (proxy.compress) prefix.push(buildEncodeHandler());
+  if (proxy.basicAuth?.length) prefix.push(buildBasicAuthHandler(proxy.basicAuth));
   if (proxy.responseHeaders?.length) prefix.push(buildResponseHeadersHandler(proxy.responseHeaders));
   if (proxy.rewrite) prefix.push(buildRewriteHandler(proxy.rewrite));
   return [...prefix, ...patched] as CaddyHandler[];
@@ -931,6 +973,14 @@ export function mergeProxy(config: CaddyConfig, proxy: ProxyEntry): CaddyConfig 
         : config.apps?.tls,
     },
   };
+}
+
+export async function hashPassword(plaintext: string): Promise<string> {
+  const out = await cockpit.spawn(
+    ["caddy", "hash-password", "--plaintext", plaintext],
+    { superuser: "try", err: "message" },
+  );
+  return out.trim();
 }
 
 export async function fetchUpstreamStatus(): Promise<import("./types").UpstreamStatus[]> {

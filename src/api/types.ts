@@ -101,6 +101,7 @@ export interface ProxyEntry {
   compress?: boolean;
   dialTimeout?: string;
   responseHeaderTimeout?: string;
+  basicAuth?: { username: string; passwordHash: string }[];
 }
 
 export type { ServiceStatus } from "@rxtx4816/cockpit-plugin-base-react/systemd";

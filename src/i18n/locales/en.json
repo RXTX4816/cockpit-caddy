@@ -128,6 +128,14 @@
     "validation_to_required": "Redirect target is required",
     "confirm_body": "This will create a redirect on :{{port}} → {{to}} ({{code}}) and reload Caddy's configuration."
   },
+  "basic_auth": {
+    "section_title": "HTTP Basic Auth (optional)",
+    "field_username": "Username",
+    "field_password": "Password",
+    "field_password_keep": "Leave empty to keep existing",
+    "add_button": "Add account",
+    "remove_button": "Remove account"
+  },
   "transport": {
     "section_title": "Upstream Timeouts (optional)",
     "dial_timeout": "Connect timeout",
