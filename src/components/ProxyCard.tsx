@@ -14,9 +14,10 @@ interface Props {
   proxy: ProxyEntry;
   onEdit: (p: ProxyEntry) => void;
   onDelete: (p: ProxyEntry) => void;
+  onDuplicate: (p: ProxyEntry) => void;
 }
 
-export function ProxyCard({ proxy, onEdit, onDelete }: Props) {
+export function ProxyCard({ proxy, onEdit, onDelete, onDuplicate }: Props) {
   const { t } = useTranslation();
   const proto = proxy.tls ? "https" : "http";
   const url = `${proto}://${window.location.hostname}:${proxy.externalPort}`;
@@ -51,6 +52,7 @@ export function ProxyCard({ proxy, onEdit, onDelete }: Props) {
       <CardFooter>
         <div style={{ display: "flex", gap: "0.25rem" }}>
           <Button variant="plain" size="sm" onClick={() => onEdit(proxy)}>{t("common.edit")}</Button>
+          <Button variant="plain" size="sm" onClick={() => onDuplicate(proxy)}>{t("common.duplicate")}</Button>
           <Button variant="plain" size="sm" isDanger onClick={() => onDelete(proxy)}>{t("common.delete")}</Button>
         </div>
       </CardFooter>

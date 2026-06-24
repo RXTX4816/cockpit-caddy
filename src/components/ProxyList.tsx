@@ -75,10 +75,11 @@ function HeaderRow() {
   );
 }
 
-function ProxyRow({ proxy, onEdit, onDelete }: {
+function ProxyRow({ proxy, onEdit, onDelete, onDuplicate }: {
   proxy: ProxyEntry;
   onEdit: (p: ProxyEntry) => void;
   onDelete: (p: ProxyEntry) => void;
+  onDuplicate: (p: ProxyEntry) => void;
 }) {
   const { t } = useTranslation();
   const proto = proxy.tls ? "https" : "http";
@@ -125,6 +126,10 @@ function ProxyRow({ proxy, onEdit, onDelete }: {
                 {t("common.edit")}
               </Button>
               {" "}
+              <Button variant="plain" size="sm" onClick={() => onDuplicate(proxy)}>
+                {t("common.duplicate")}
+              </Button>
+              {" "}
               <Button variant="plain" size="sm" isDanger onClick={() => onDelete(proxy)}>
                 {t("common.delete")}
               </Button>
@@ -148,6 +153,7 @@ export function ProxyList({ onViewLogs }: Props) {
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState<ProxyEntry | null>(null);
+  const [duplicating, setDuplicating] = useState<ProxyEntry | null>(null);
 
   const [apiError, setApiError] = useState<ApiError | null>(null);
 
@@ -170,6 +176,14 @@ export function ProxyList({ onViewLogs }: Props) {
       setMigrationGate("add");
     } else {
       setShowAdd(true);
+    }
+  }
+
+  function tryDuplicate(proxy: ProxyEntry) {
+    if (needsMigration) {
+      setMigrationGate({ type: "edit", proxy });
+    } else {
+      setDuplicating(proxy);
     }
   }
 
@@ -362,6 +376,7 @@ export function ProxyList({ onViewLogs }: Props) {
                   proxy={proxy}
                   onEdit={tryEdit}
                   onDelete={tryDelete}
+                  onDuplicate={tryDuplicate}
                 />
               ))}
             </Gallery>
@@ -374,6 +389,7 @@ export function ProxyList({ onViewLogs }: Props) {
                   proxy={proxy}
                   onEdit={tryEdit}
                   onDelete={tryDelete}
+                  onDuplicate={tryDuplicate}
                 />
               ))}
             </DataList>
@@ -449,6 +465,26 @@ export function ProxyList({ onViewLogs }: Props) {
           onAdd={addProxy}
           onClose={() => setShowAdd(false)}
           onApiError={msg => setApiError({ message: msg, search: extractLogsSearch(msg), action: "add" })}
+        />
+      )}
+
+      {duplicating && (
+        <AddProxyDialog
+          existingPorts={proxies.map(p => p.externalPort)}
+          onAdd={addProxy}
+          onClose={() => setDuplicating(null)}
+          onApiError={msg => setApiError({ message: msg, search: extractLogsSearch(msg), action: "add" })}
+          initialValues={{
+            externalScheme: duplicating.externalScheme ?? "",
+            externalHost: duplicating.externalHost ?? "",
+            externalPort: "",
+            targetHost: duplicating.targetHost,
+            targetPort: String(duplicating.targetPort),
+            targetScheme: duplicating.targetScheme,
+            tls: duplicating.tls,
+            tlsSkipVerify: duplicating.tlsSkipVerify,
+            label: duplicating.label ? `${duplicating.label} (copy)` : "",
+          }}
         />
       )}
 
