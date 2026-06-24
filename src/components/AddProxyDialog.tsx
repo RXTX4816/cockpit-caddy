@@ -24,6 +24,7 @@ import { readProxyConf, parseConfExternalAddresses, CaddyApiError } from "../api
 import type { ProxyEntry, RewriteConfig, HeaderOperation } from "../api";
 import { RewriteSection } from "./RewriteSection";
 import { RequestHeadersSection } from "./RequestHeadersSection";
+import { ResponseHeadersSection } from "./ResponseHeadersSection";
 
 interface FormState {
   externalScheme: string;
@@ -47,9 +48,10 @@ interface Props {
   initialValues?: Partial<FormState>;
   initialRewrite?: RewriteConfig;
   initialRequestHeaders?: HeaderOperation[];
+  initialResponseHeaders?: HeaderOperation[];
 }
 
-export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, initialValues, initialRewrite, initialRequestHeaders }: Props) {
+export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, initialValues, initialRewrite, initialRequestHeaders, initialResponseHeaders }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
   const confirmAction = useConfirmAction();
@@ -68,6 +70,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
   const [errors, setErrors] = useState<FormErrors>({});
   const [rewrite, setRewrite] = useState<RewriteConfig | undefined>(initialRewrite);
   const [requestHeaders, setRequestHeaders] = useState<HeaderOperation[] | undefined>(initialRequestHeaders);
+  const [responseHeaders, setResponseHeaders] = useState<HeaderOperation[] | undefined>(initialResponseHeaders);
   const [extraSchemes, setExtraSchemes] = useState<string[]>([]);
 
   useEffect(() => {
@@ -266,6 +269,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
         </Form>
         <RewriteSection value={rewrite} onChange={setRewrite} isDisabled={isLocked} />
         <RequestHeadersSection value={requestHeaders} onChange={setRequestHeaders} isDisabled={isLocked} />
+        <ResponseHeadersSection value={responseHeaders} onChange={setResponseHeaders} isDisabled={isLocked} />
 
         {confirmAction.error && (
           <Alert variant="danger" isInline title={confirmAction.error} style={{ marginTop: "var(--pf-v6-global--spacer--md)" }} />
@@ -290,6 +294,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
                     label: form.label.trim() || undefined,
                     rewrite: rewrite ?? undefined,
                     requestHeaders: requestHeaders ?? undefined,
+                    responseHeaders: responseHeaders ?? undefined,
                   });
                 } catch (e) {
                   if (e instanceof CaddyApiError) {

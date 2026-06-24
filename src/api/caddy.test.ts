@@ -537,6 +537,93 @@ describe("parseProxies — requestHeaders round-trip", () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// Response headers — Caddyfile generation (proxyToBlock)
+// ---------------------------------------------------------------------------
+
+describe("proxyToBlock — responseHeaders", () => {
+  it("emits header set directive before reverse_proxy", () => {
+    const result = proxyToBlock(proxy({ responseHeaders: [{ op: "set", name: "X-Frame-Options", value: "DENY" }] }));
+    const lines = result.split("\n");
+    const rpIdx = lines.findIndex(l => l.includes("reverse_proxy"));
+    const hIdx = lines.findIndex(l => l.includes('header X-Frame-Options "DENY"'));
+    expect(hIdx).toBeGreaterThan(-1);
+    expect(hIdx).toBeLessThan(rpIdx);
+  });
+
+  it("emits header delete directive", () => {
+    const result = proxyToBlock(proxy({ responseHeaders: [{ op: "delete", name: "Server" }] }));
+    expect(result).toContain("\theader -Server");
+  });
+
+  it("emits header add directive with + prefix", () => {
+    const result = proxyToBlock(proxy({ responseHeaders: [{ op: "add", name: "X-Custom", value: "val" }] }));
+    expect(result).toContain("\theader +X-Custom val");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Response headers — JSON API (buildServerEntry + parseProxies round-trip)
+// ---------------------------------------------------------------------------
+
+describe("buildServerEntry — responseHeaders", () => {
+  it("prepends headers handler before reverse_proxy", () => {
+    const server = buildServerEntry(proxy({ responseHeaders: [{ op: "set", name: "X-Frame-Options", value: "DENY" }] }));
+    const handles = server.routes[0].handle as Array<{ handler: string }>;
+    expect(handles[0].handler).toBe("headers");
+    expect(handles[1].handler).toBe("reverse_proxy");
+  });
+
+  it("puts headers handler before rewrite handler", () => {
+    const server = buildServerEntry(proxy({
+      responseHeaders: [{ op: "set", name: "X-Frame-Options", value: "DENY" }],
+      rewrite: { type: "strip_prefix", value: "/api" },
+    }));
+    const handles = server.routes[0].handle as Array<{ handler: string }>;
+    expect(handles[0].handler).toBe("headers");
+    expect(handles[1].handler).toBe("rewrite");
+    expect(handles[2].handler).toBe("reverse_proxy");
+  });
+
+  it("sets response.set in the headers handler", () => {
+    const server = buildServerEntry(proxy({ responseHeaders: [{ op: "set", name: "X-Frame-Options", value: "DENY" }] }));
+    const h = server.routes[0].handle[0] as { handler: string; response?: { set?: Record<string, string[]> } };
+    expect(h.response?.set?.["X-Frame-Options"]).toEqual(["DENY"]);
+  });
+
+  it("sets response.delete in the headers handler", () => {
+    const server = buildServerEntry(proxy({ responseHeaders: [{ op: "delete", name: "Server" }] }));
+    const h = server.routes[0].handle[0] as { handler: string; response?: { delete?: string[] } };
+    expect(h.response?.delete).toContain("Server");
+  });
+});
+
+describe("parseProxies — responseHeaders round-trip", () => {
+  it("parses set response header from JSON config", () => {
+    const config = makeConfig([
+      { handler: "headers", response: { set: { "X-Frame-Options": ["DENY"] } } },
+      { handler: "reverse_proxy", upstreams: [{ dial: "localhost:7701" }] },
+    ]);
+    const [p] = parseProxies(config);
+    expect(p.responseHeaders).toEqual([{ op: "set", name: "X-Frame-Options", value: "DENY" }]);
+  });
+
+  it("parses delete response header from JSON config", () => {
+    const config = makeConfig([
+      { handler: "headers", response: { delete: ["Server"] } },
+      { handler: "reverse_proxy", upstreams: [{ dial: "localhost:7701" }] },
+    ]);
+    const [p] = parseProxies(config);
+    expect(p.responseHeaders).toEqual([{ op: "delete", name: "Server" }]);
+  });
+
+  it("leaves responseHeaders undefined when no headers handler", () => {
+    const config = makeConfig([{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:7701" }] }]);
+    const [p] = parseProxies(config);
+    expect(p.responseHeaders).toBeUndefined();
+  });
+});
+
 describe("parseProxies — rewrite round-trip", () => {
   it("parses strip_prefix from JSON config", () => {
     const config = makeConfig([

@@ -141,6 +141,21 @@
     "field_replace_placeholder": "/$1",
     "field_replace_help": "Use $1, $2 for capture groups"
   },
+  "response_headers": {
+    "section_title": "Response Headers (optional)",
+    "op_set": "Set",
+    "op_add": "Add",
+    "op_delete": "Delete",
+    "field_name": "Header name",
+    "field_value": "Value",
+    "add_button": "Add",
+    "presets_label": "Security presets",
+    "preset_hsts": "HSTS",
+    "preset_nosniff": "X-Content-Type-Options",
+    "preset_frame": "X-Frame-Options",
+    "preset_referrer": "Referrer-Policy",
+    "preset_remove_server": "Remove Server"
+  },
   "request_headers": {
     "section_title": "Request Headers (optional)",
     "op_set": "Set",
