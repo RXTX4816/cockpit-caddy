@@ -35,6 +35,7 @@ interface FormState {
   targetScheme: "http" | "https";
   tls: boolean;
   tlsSkipVerify: boolean;
+  compress: boolean;
   label: string;
 }
 
@@ -64,6 +65,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
     targetScheme: "http",
     tls: true,
     tlsSkipVerify: false,
+    compress: false,
     label: "",
     ...initialValues,
   });
@@ -266,6 +268,16 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
               isDisabled={isLocked}
             />
           </FormGroup>
+
+          <FormGroup label={t("add_proxy.field_compress")} fieldId="compress">
+            <Checkbox
+              id="compress"
+              label={t("add_proxy.field_compress_short")}
+              isChecked={form.compress}
+              onChange={(_e, checked) => set("compress", checked)}
+              isDisabled={isLocked}
+            />
+          </FormGroup>
         </Form>
         <RewriteSection value={rewrite} onChange={setRewrite} isDisabled={isLocked} />
         <RequestHeadersSection value={requestHeaders} onChange={setRequestHeaders} isDisabled={isLocked} />
@@ -291,6 +303,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
                     targetScheme: form.targetScheme,
                     tls: form.tls,
                     tlsSkipVerify: form.targetScheme === "https" ? form.tlsSkipVerify : false,
+                    compress: form.compress || undefined,
                     label: form.label.trim() || undefined,
                     rewrite: rewrite ?? undefined,
                     requestHeaders: requestHeaders ?? undefined,

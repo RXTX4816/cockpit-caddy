@@ -92,6 +92,8 @@
     "field_tls_skip_verify": "Skip TLS verification on backend (for self-signed backend certs)",
     "field_tls": "Enable TLS (self-signed via Caddy internal CA)",
     "field_tls_short": "Enable TLS (self-signed)",
+    "field_compress": "Compression",
+    "field_compress_short": "Enable gzip / zstd response compression",
     "field_label": "Label (optional)",
     "field_label_placeholder": "My Service",
     "add_button": "Add Proxy",

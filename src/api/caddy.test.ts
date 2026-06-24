@@ -660,3 +660,60 @@ describe("parseProxies — rewrite round-trip", () => {
     expect(p.rewrite).toBeUndefined();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Response compression (#37)
+// ---------------------------------------------------------------------------
+
+describe("proxyToBlock — compress", () => {
+  it("emits encode gzip zstd when compress is true", () => {
+    const result = proxyToBlock(proxy({ compress: true }));
+    expect(result).toContain("\tencode gzip zstd");
+  });
+
+  it("encode line appears before reverse_proxy", () => {
+    const result = proxyToBlock(proxy({ compress: true }));
+    const lines = result.split("\n");
+    const encIdx = lines.findIndex(l => l.includes("encode gzip"));
+    const rpIdx = lines.findIndex(l => l.includes("reverse_proxy"));
+    expect(encIdx).toBeGreaterThan(-1);
+    expect(encIdx).toBeLessThan(rpIdx);
+  });
+
+  it("does not emit encode when compress is false/undefined", () => {
+    expect(proxyToBlock(proxy())).not.toContain("encode");
+    expect(proxyToBlock(proxy({ compress: false }))).not.toContain("encode");
+  });
+});
+
+describe("buildServerEntry — compress", () => {
+  it("includes encode handler first when compress is true", () => {
+    const server = buildServerEntry(proxy({ compress: true }));
+    const handles = server.routes[0].handle;
+    expect(handles[0]).toMatchObject({ handler: "encode" });
+    expect((handles[0] as { handler: string; encodings: object }).encodings).toMatchObject({ gzip: {}, zstd: {} });
+  });
+
+  it("omits encode handler when compress is false", () => {
+    const server = buildServerEntry(proxy());
+    const handles = server.routes[0].handle;
+    expect(handles.every(h => h.handler !== "encode")).toBe(true);
+  });
+});
+
+describe("parseProxies — compress round-trip", () => {
+  it("detects compress=true when encode handler present", () => {
+    const config = makeConfig([
+      { handler: "encode", encodings: { gzip: {}, zstd: {}, br: {} } },
+      { handler: "reverse_proxy", upstreams: [{ dial: "localhost:7701" }] },
+    ]);
+    const [p] = parseProxies(config);
+    expect(p.compress).toBe(true);
+  });
+
+  it("leaves compress undefined when no encode handler", () => {
+    const config = makeConfig([{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:7701" }] }]);
+    const [p] = parseProxies(config);
+    expect(p.compress).toBeUndefined();
+  });
+});

@@ -548,6 +548,7 @@ export function ProxyList({ onViewLogs }: Props) {
             targetScheme: duplicating.targetScheme,
             tls: duplicating.tls,
             tlsSkipVerify: duplicating.tlsSkipVerify,
+            compress: duplicating.compress ?? false,
             label: duplicating.label ? `${duplicating.label} (copy)` : "",
           }}
           initialRewrite={duplicating.rewrite}

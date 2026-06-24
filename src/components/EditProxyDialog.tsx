@@ -46,6 +46,7 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
   const [targetPort, setTargetPort] = useState(String(proxy.targetPort));
   const [tls, setTls] = useState(proxy.tls);
   const [tlsSkipVerify, setTlsSkipVerify] = useState(proxy.tlsSkipVerify);
+  const [compress, setCompress] = useState(proxy.compress ?? false);
   const [label, setLabel] = useState(proxy.label ?? "");
   const [rewrite, setRewrite] = useState<RewriteConfig | undefined>(proxy.rewrite);
   const [requestHeaders, setRequestHeaders] = useState<HeaderOperation[] | undefined>(proxy.requestHeaders);
@@ -218,6 +219,16 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
               isDisabled={isConfirming}
             />
           </FormGroup>
+
+          <FormGroup label={t("add_proxy.field_compress")} fieldId="edit-compress">
+            <Checkbox
+              id="edit-compress"
+              label={t("add_proxy.field_compress_short")}
+              isChecked={compress}
+              onChange={(_e, checked) => setCompress(checked)}
+              isDisabled={isConfirming}
+            />
+          </FormGroup>
         </Form>
         <RewriteSection value={rewrite} onChange={setRewrite} isDisabled={isConfirming} />
         <RequestHeadersSection value={requestHeaders} onChange={setRequestHeaders} isDisabled={isConfirming} />
@@ -247,6 +258,7 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
                   targetPort: parseInt(targetPort, 10),
                   tls,
                   tlsSkipVerify: targetScheme === "https" ? tlsSkipVerify : false,
+                  compress: compress || undefined,
                   label: label.trim() || undefined,
                   rewrite: rewrite ?? undefined,
                   requestHeaders: requestHeaders ?? undefined,

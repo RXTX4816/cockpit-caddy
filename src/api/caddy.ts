@@ -310,6 +310,10 @@ function regexReplaceToCaddy(replace: string): string {
 }
 
 
+function buildEncodeHandler(): CaddyHandler {
+  return { handler: "encode", encodings: { gzip: {}, zstd: {} } };
+}
+
 function buildRewriteHandler(rewrite: import("./types").RewriteConfig): CaddyHandler {
   if (rewrite.type === "strip_prefix") {
     return { handler: "rewrite", strip_path_prefix: rewrite.value };
@@ -382,6 +386,7 @@ export function proxyToBlock(p: ProxyEntry): string {
     lines.push(`\tredir ${p.redirect.to} ${p.redirect.code}`);
   } else {
     if (p.tls) lines.push("\ttls internal");
+    if (p.compress) lines.push("\tencode gzip zstd");
     for (const h of p.responseHeaders ?? []) {
       if (h.op === "delete") lines.push(`\theader -${h.name}`);
       else if (h.op === "add") lines.push(`\theader +${h.name} ${h.value ?? ""}`);
@@ -421,6 +426,13 @@ function patchRawBlock(raw: string, proxy: ProxyEntry): string {
         continue;
       }
 
+      // Skip top-level `encode` directive
+      if (trimmed === "encode" || trimmed.startsWith("encode ")) {
+        nestDepth += opens - closes;
+        i++;
+        continue;
+      }
+
       // Skip top-level `reverse_proxy` directive, including any nested { } block
       if (trimmed.startsWith("reverse_proxy") && (trimmed.length === 13 || trimmed[13] === " ")) {
         nestDepth += opens - closes;
@@ -441,6 +453,7 @@ function patchRawBlock(raw: string, proxy: ProxyEntry): string {
 
   // Re-add updated directives before closing brace
   if (proxy.tls) kept.push("\ttls internal");
+  if (proxy.compress) kept.push("\tencode gzip zstd");
   kept.push(...buildReverseProxyLines(proxy));
   kept.push(lines[closingIdx]); // closing }
   return kept.join("\n");
@@ -668,6 +681,8 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
 
     const tls = Array.isArray(server.tls_connection_policies) && server.tls_connection_policies.length > 0;
 
+    const compress = allHandles.some(h => h.handler === "encode");
+
     const rewriteHandle = allHandles.find(h => h.handler === "rewrite");
     const rewrite = rewriteHandle ? parseRewriteFromHandle(rewriteHandle) : undefined;
 
@@ -686,6 +701,7 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
       tls,
       tlsSkipVerify,
       serverKey: key,
+      compress: compress || undefined,
       rewrite,
       requestHeaders: requestHeaders.length ? requestHeaders : undefined,
       responseHeaders: responseHeadersParsed.length ? responseHeadersParsed : undefined,
@@ -799,6 +815,7 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
     };
   }
   const handles: CaddyHandler[] = [];
+  if (proxy.compress) handles.push(buildEncodeHandler());
   if (proxy.responseHeaders?.length) handles.push(buildResponseHeadersHandler(proxy.responseHeaders));
   if (proxy.rewrite) handles.push(buildRewriteHandler(proxy.rewrite));
   handles.push(buildReverseProxyHandler(proxy));
@@ -815,8 +832,8 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
 /** Patch handles in-place: update reverse_proxy and rewrite handlers, leave everything else untouched. */
 function patchHandles(handles: CaddyHandler[], proxy: ProxyEntry): CaddyHandler[] {
   let found = false;
-  // Strip any existing rewrite and headers handlers; we'll re-add the correct ones below
-  const withoutRewrite = handles.filter(h => h.handler !== "rewrite" && h.handler !== "headers");
+  // Strip any existing encode/rewrite/headers handlers; we'll re-add the correct ones below
+  const withoutRewrite = handles.filter(h => h.handler !== "rewrite" && h.handler !== "headers" && h.handler !== "encode");
   const patched = withoutRewrite.map(h => {
     if (h.handler === "reverse_proxy") {
       found = true;
@@ -843,8 +860,9 @@ function patchHandles(handles: CaddyHandler[], proxy: ProxyEntry): CaddyHandler[
   if (!found) {
     patched.push(buildReverseProxyHandler(proxy));
   }
-  // Prepend rewrite and response-headers handlers if configured
+  // Prepend encode/response-headers/rewrite handlers if configured
   const prefix: CaddyHandler[] = [];
+  if (proxy.compress) prefix.push(buildEncodeHandler());
   if (proxy.responseHeaders?.length) prefix.push(buildResponseHeadersHandler(proxy.responseHeaders));
   if (proxy.rewrite) prefix.push(buildRewriteHandler(proxy.rewrite));
   return [...prefix, ...patched] as CaddyHandler[];
