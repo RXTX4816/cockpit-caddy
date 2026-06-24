@@ -54,6 +54,16 @@ export function ProxyCard({ proxy, onEdit, onDelete, onDuplicate, probeStatuses 
                 <Label isCompact color="purple" variant="outline">{proxy.redirect.code}</Label>
               </div>
             </>
+          ) : proxy.staticResponse ? (
+            <>
+              <code style={{ color: "var(--pf-t--global--text--color--subtle)" }}>
+                HTTP {proxy.staticResponse.statusCode}{proxy.staticResponse.body ? ` "${proxy.staticResponse.body.slice(0, 30)}${proxy.staticResponse.body.length > 30 ? "…" : ""}"` : ""}
+              </code>
+              <div style={chipRow}>
+                <Label isCompact color="orange">{t("proxies.type_respond")}</Label>
+                {proxy.staticResponse.close && <Label isCompact color="grey" variant="outline">{t("proxies.indicator_close")}</Label>}
+              </div>
+            </>
           ) : proxy.fileServer ? (
             <>
               <code style={{ color: "var(--pf-t--global--text--color--subtle)" }}>
