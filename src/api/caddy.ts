@@ -291,7 +291,8 @@ function caddyPlaceholderToJson(s: string): string {
   return s
     .replace(/\{host\}/g, "{http.request.host}")
     .replace(/\{uri\}/g, "{http.request.uri}")
-    .replace(/\{scheme\}/g, "{http.request.scheme}");
+    .replace(/\{scheme\}/g, "{http.request.scheme}")
+    .replace(/\{remote_host\}/g, "{http.request.remote.host}");
 }
 
 /** Converts JSON API long placeholders back to Caddyfile short form. */
@@ -299,7 +300,8 @@ function jsonPlaceholderToCaddy(s: string): string {
   return s
     .replace(/\{http\.request\.host\}/g, "{host}")
     .replace(/\{http\.request\.uri\}/g, "{uri}")
-    .replace(/\{http\.request\.scheme\}/g, "{scheme}");
+    .replace(/\{http\.request\.scheme\}/g, "{scheme}")
+    .replace(/\{http\.request\.remote\.host\}/g, "{remote_host}");
 }
 
 /** Converts $1/$2 backreferences (JSON regex format) to Caddyfile {re.rw.N} form. */
@@ -343,21 +345,27 @@ function buildRewriteCaddyLines(rewrite: import("./types").RewriteConfig, port: 
 }
 
 /** Builds the reverse_proxy directive lines for a proxy (tab-indented). */
-function buildReverseProxyLines(p: Pick<ProxyEntry, "targetScheme" | "targetHost" | "targetPort" | "tlsSkipVerify">): string[] {
-  if (p.targetScheme === "https") {
-    const upstream = `https://${p.targetHost}:${p.targetPort}`;
-    if (p.tlsSkipVerify) {
-      return [
-        `\treverse_proxy ${upstream} {`,
-        "\t\ttransport http {",
-        "\t\t\ttls_insecure_skip_verify",
-        "\t\t}",
-        "\t}",
-      ];
-    }
-    return [`\treverse_proxy ${upstream}`];
+function buildReverseProxyLines(p: Pick<ProxyEntry, "targetScheme" | "targetHost" | "targetPort" | "tlsSkipVerify" | "requestHeaders">): string[] {
+  const upstream = p.targetScheme === "https"
+    ? `https://${p.targetHost}:${p.targetPort}`
+    : `http://${p.targetHost}:${p.targetPort}`;
+
+  const headerLines = (p.requestHeaders ?? []).map(h => {
+    if (h.op === "delete") return `\t\theader_up -${h.name}`;
+    if (h.op === "add") return `\t\theader_up +${h.name} ${h.value ?? ""}`;
+    return `\t\theader_up ${h.name} ${h.value ?? ""}`;
+  });
+
+  const needsBlock = (p.targetScheme === "https" && p.tlsSkipVerify) || headerLines.length > 0;
+  if (!needsBlock) return [`\treverse_proxy ${upstream}`];
+
+  const lines = [`\treverse_proxy ${upstream} {`];
+  if (p.targetScheme === "https" && p.tlsSkipVerify) {
+    lines.push("\t\ttransport http {", "\t\t\ttls_insecure_skip_verify", "\t\t}");
   }
-  return [`\treverse_proxy http://${p.targetHost}:${p.targetPort}`];
+  lines.push(...headerLines);
+  lines.push("\t}");
+  return lines;
 }
 
 function buildExternalAddress(p: Pick<ProxyEntry, "externalPort" | "externalScheme" | "externalHost">): string {
@@ -658,6 +666,8 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
     const rewriteHandle = allHandles.find(h => h.handler === "rewrite");
     const rewrite = rewriteHandle ? parseRewriteFromHandle(rewriteHandle) : undefined;
 
+    const requestHeaders = parseRequestHeadersJson(rp.headers as Record<string, unknown> | undefined);
+
     proxies.push({
       id: String(externalPort),
       externalPort,
@@ -669,6 +679,7 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
       tlsSkipVerify,
       serverKey: key,
       rewrite,
+      requestHeaders: requestHeaders.length ? requestHeaders : undefined,
     });
   }
 
@@ -679,7 +690,42 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
 // Building / patching server entries
 // ---------------------------------------------------------------------------
 
-function buildReverseProxyHandler(proxy: Pick<ProxyEntry, "targetHost" | "targetPort" | "targetScheme" | "tlsSkipVerify">): CaddyReverseProxyHandler {
+function buildRequestHeadersJson(ops: import("./types").HeaderOperation[] | undefined): Record<string, unknown> | undefined {
+  if (!ops?.length) return undefined;
+  const set: Record<string, string[]> = {};
+  const add: Record<string, string[]> = {};
+  const del: string[] = [];
+  for (const h of ops) {
+    if (h.op === "delete") { del.push(h.name); continue; }
+    const val = [caddyPlaceholderToJson(h.value ?? "")];
+    if (h.op === "add") add[h.name] = val;
+    else set[h.name] = val;
+  }
+  const req: Record<string, unknown> = {};
+  if (Object.keys(set).length) req["set"] = set;
+  if (Object.keys(add).length) req["add"] = add;
+  if (del.length) req["delete"] = del;
+  return Object.keys(req).length ? { request: req } : undefined;
+}
+
+function parseRequestHeadersJson(headers: Record<string, unknown> | undefined): import("./types").HeaderOperation[] {
+  if (!headers) return [];
+  const req = headers["request"] as Record<string, unknown> | undefined;
+  if (!req) return [];
+  const ops: import("./types").HeaderOperation[] = [];
+  const set = req["set"] as Record<string, string[]> | undefined;
+  const add = req["add"] as Record<string, string[]> | undefined;
+  const del = req["delete"] as string[] | undefined;
+  for (const [name, vals] of Object.entries(set ?? {}))
+    ops.push({ op: "set", name, value: jsonPlaceholderToCaddy(vals[0] ?? "") });
+  for (const [name, vals] of Object.entries(add ?? {}))
+    ops.push({ op: "add", name, value: jsonPlaceholderToCaddy(vals[0] ?? "") });
+  for (const name of del ?? [])
+    ops.push({ op: "delete", name });
+  return ops;
+}
+
+function buildReverseProxyHandler(proxy: Pick<ProxyEntry, "targetHost" | "targetPort" | "targetScheme" | "tlsSkipVerify" | "requestHeaders">): CaddyReverseProxyHandler {
   const rp: CaddyReverseProxyHandler = {
     handler: "reverse_proxy",
     upstreams: [{ dial: `${proxy.targetHost}:${proxy.targetPort}` }],
@@ -690,6 +736,8 @@ function buildReverseProxyHandler(proxy: Pick<ProxyEntry, "targetHost" | "target
       tls: proxy.tlsSkipVerify ? { insecure_skip_verify: true } : {},
     };
   }
+  const hdrs = buildRequestHeadersJson(proxy.requestHeaders);
+  if (hdrs) rp.headers = hdrs;
   return rp;
 }
 
@@ -735,7 +783,8 @@ function patchHandles(handles: CaddyHandler[], proxy: ProxyEntry): CaddyHandler[
       const transport = proxy.targetScheme === "https"
         ? { ...(rp.transport ?? {}), protocol: "http", tls: { ...(rp.transport?.tls ?? {}), insecure_skip_verify: proxy.tlsSkipVerify || undefined } }
         : undefined;
-      return { ...rp, upstreams: [{ dial: `${proxy.targetHost}:${proxy.targetPort}` }], transport };
+      const hdrs = buildRequestHeadersJson(proxy.requestHeaders);
+      return { ...rp, upstreams: [{ dial: `${proxy.targetHost}:${proxy.targetPort}` }], transport, headers: hdrs };
     }
     // Recurse into subroute
     const anyH = h as AnyHandler;
