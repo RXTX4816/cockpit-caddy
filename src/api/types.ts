@@ -77,6 +77,11 @@ export interface RedirectConfig {
   code: 301 | 302 | 307 | 308;
 }
 
+export interface FileServerConfig {
+  root: string;
+  browse?: boolean;
+}
+
 export interface ProxyEntry {
   id: string;
   externalPort: number;
@@ -95,6 +100,7 @@ export interface ProxyEntry {
   label?: string;
   serverKey: string;
   redirect?: RedirectConfig;
+  fileServer?: FileServerConfig;
   rewrite?: RewriteConfig;
   requestHeaders?: HeaderOperation[];
   responseHeaders?: HeaderOperation[];

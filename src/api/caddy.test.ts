@@ -841,3 +841,144 @@ describe("parseProxies — basic_auth round-trip", () => {
     expect(p.basicAuth).toBeUndefined();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Static file server
+// ---------------------------------------------------------------------------
+
+describe("proxyToBlock — fileServer", () => {
+  it("generates file_server block without browse", () => {
+    const result = proxyToBlock(proxy({ fileServer: { root: "/var/www/html" }, tls: false, targetHost: "localhost", targetPort: 0 }));
+    expect(result).toContain("root * /var/www/html");
+    expect(result).toContain("file_server");
+    expect(result).not.toContain("file_server browse");
+    expect(result).not.toContain("reverse_proxy");
+  });
+
+  it("generates file_server browse block when browse is true", () => {
+    const result = proxyToBlock(proxy({ fileServer: { root: "/srv/files", browse: true }, tls: false, targetHost: "localhost", targetPort: 0 }));
+    expect(result).toContain("root * /srv/files");
+    expect(result).toContain("file_server browse");
+  });
+
+  it("includes tls internal when tls is true", () => {
+    const result = proxyToBlock(proxy({ fileServer: { root: "/var/www" }, tls: true, targetHost: "localhost", targetPort: 0 }));
+    expect(result).toContain("tls internal");
+    expect(result).toContain("root * /var/www");
+  });
+
+  it("includes label comment", () => {
+    const result = proxyToBlock(proxy({ fileServer: { root: "/var/www" }, tls: false, targetHost: "localhost", targetPort: 0, label: "docs" }));
+    expect(result.split("\n")[0]).toBe("# label: docs");
+  });
+});
+
+describe("buildServerEntry — fileServer", () => {
+  it("builds file_server handler", () => {
+    const server = buildServerEntry({ externalPort: 7700, externalScheme: undefined, externalHost: undefined, targetHost: "localhost", targetPort: 0, targetScheme: "http", tls: false, tlsSkipVerify: false, fileServer: { root: "/var/www/html" } });
+    const handle = server.routes[0].handle[0] as Record<string, unknown>;
+    expect(handle["handler"]).toBe("file_server");
+    expect(handle["root"]).toBe("/var/www/html");
+    expect(handle["browse"]).toBeUndefined();
+  });
+
+  it("sets browse property when browse is true", () => {
+    const server = buildServerEntry({ externalPort: 7700, externalScheme: undefined, externalHost: undefined, targetHost: "localhost", targetPort: 0, targetScheme: "http", tls: false, tlsSkipVerify: false, fileServer: { root: "/var/www", browse: true } });
+    const handle = server.routes[0].handle[0] as Record<string, unknown>;
+    expect(handle["browse"]).toBeDefined();
+  });
+
+  it("sets tls_connection_policies when tls is true", () => {
+    const server = buildServerEntry({ externalPort: 7700, externalScheme: undefined, externalHost: undefined, targetHost: "localhost", targetPort: 0, targetScheme: "http", tls: true, tlsSkipVerify: false, fileServer: { root: "/var/www" } });
+    expect(server.tls_connection_policies).toBeDefined();
+    expect(server.tls_connection_policies!.length).toBe(1);
+  });
+});
+
+describe("parseProxies — fileServer round-trip", () => {
+  it("parses file_server handler", () => {
+    const config = makeConfig([{ handler: "file_server", root: "/var/www/html" }]);
+    const [p] = parseProxies(config);
+    expect(p.fileServer).toEqual({ root: "/var/www/html", browse: false });
+    expect(p.targetHost).toBe("localhost");
+    expect(p.targetPort).toBe(0);
+  });
+
+  it("parses browse flag", () => {
+    const config = makeConfig([{ handler: "file_server", root: "/srv/files", browse: {} }]);
+    const [p] = parseProxies(config);
+    expect(p.fileServer?.browse).toBe(true);
+  });
+
+  it("parses tls from connection policies", () => {
+    const config: CaddyConfig = {
+      apps: {
+        http: {
+          servers: {
+            srv0: {
+              listen: [":7700"],
+              tls_connection_policies: [{}],
+              routes: [{ handle: [{ handler: "file_server", root: "/var/www" } as import("./types").CaddyHandler], terminal: true }],
+            },
+          },
+        },
+      },
+    };
+    const [p] = parseProxies(config);
+    expect(p.tls).toBe(true);
+    expect(p.fileServer?.root).toBe("/var/www");
+  });
+});
+
+describe("proxyToBlock — fileServer with compress/auth/headers", () => {
+  it("adds encode directive when compress is true", () => {
+    const result = proxyToBlock(proxy({ fileServer: { root: "/var/www" }, compress: true, tls: false, targetHost: "localhost", targetPort: 0 }));
+    expect(result).toContain("encode gzip zstd");
+    expect(result.indexOf("encode gzip zstd")).toBeLessThan(result.indexOf("root *"));
+  });
+
+  it("adds basic_auth block when basicAuth is set", () => {
+    const result = proxyToBlock(proxy({ fileServer: { root: "/srv" }, basicAuth: [{ username: "alice", passwordHash: "$2a$14$xyz" }], tls: false, targetHost: "localhost", targetPort: 0 }));
+    expect(result).toContain("basic_auth {");
+    expect(result).toContain("alice $2a$14$xyz");
+  });
+
+  it("adds header directives when responseHeaders set", () => {
+    const result = proxyToBlock(proxy({ fileServer: { root: "/srv" }, responseHeaders: [{ op: "set", name: "Cache-Control", value: "max-age=3600" }], tls: false, targetHost: "localhost", targetPort: 0 }));
+    expect(result).toContain('header Cache-Control "max-age=3600"');
+  });
+});
+
+describe("buildServerEntry — fileServer with compress/auth/headers", () => {
+  it("prepends encode handler when compress", () => {
+    const server = buildServerEntry({ externalPort: 7700, externalScheme: undefined, externalHost: undefined, targetHost: "localhost", targetPort: 0, targetScheme: "http", tls: false, tlsSkipVerify: false, fileServer: { root: "/var/www" }, compress: true });
+    expect(server.routes[0].handle[0].handler).toBe("encode");
+    const fsH = server.routes[0].handle.find(h => h.handler === "file_server");
+    expect(fsH).toBeDefined();
+  });
+
+  it("prepends authentication handler when basicAuth", () => {
+    const server = buildServerEntry({ externalPort: 7700, externalScheme: undefined, externalHost: undefined, targetHost: "localhost", targetPort: 0, targetScheme: "http", tls: false, tlsSkipVerify: false, fileServer: { root: "/srv" }, basicAuth: [{ username: "bob", passwordHash: "hash" }] });
+    const authH = server.routes[0].handle.find(h => h.handler === "authentication");
+    expect(authH).toBeDefined();
+  });
+});
+
+describe("parseProxies — fileServer compress/auth round-trip", () => {
+  it("parses compress from encode handler alongside file_server", () => {
+    const config = makeConfig([{ handler: "encode", encodings: { gzip: {}, zstd: {} } }, { handler: "file_server", root: "/var/www" }]);
+    const [p] = parseProxies(config);
+    expect(p.fileServer?.root).toBe("/var/www");
+    expect(p.compress).toBe(true);
+  });
+
+  it("parses basicAuth from authentication handler alongside file_server", () => {
+    const config = makeConfig([
+      { handler: "authentication", providers: { http_basic: { accounts: [{ username: "alice", password: "$2a$14$xyz" }] } } },
+      { handler: "file_server", root: "/srv" },
+    ]);
+    const [p] = parseProxies(config);
+    expect(p.fileServer?.root).toBe("/srv");
+    expect(p.basicAuth).toEqual([{ username: "alice", passwordHash: "$2a$14$xyz" }]);
+  });
+});
