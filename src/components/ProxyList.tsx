@@ -554,8 +554,11 @@ export function ProxyList({ onViewLogs }: Props) {
             root: duplicating.fileServer.root,
             browse: duplicating.fileServer.browse,
             tls: duplicating.tls,
+            compress: duplicating.compress ?? false,
             label: duplicating.label ? `${duplicating.label} (copy)` : "",
           }}
+          initialBasicAuth={(duplicating.basicAuth ?? []).map(a => ({ username: a.username, password: "", existingHash: a.passwordHash }))}
+          initialResponseHeaders={duplicating.responseHeaders}
         />
       ) : (
         <AddProxyDialog

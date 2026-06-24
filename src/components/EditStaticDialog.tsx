@@ -17,8 +17,23 @@ import {
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
-import { CaddyApiError } from "../api";
+import { CaddyApiError, hashPassword } from "../api";
 import type { ProxyEntry } from "../api";
+import { BasicAuthSection, type AuthEntry } from "./BasicAuthSection";
+import { ResponseHeadersSection } from "./ResponseHeadersSection";
+
+async function resolveBasicAuth(entries: AuthEntry[]): Promise<{ username: string; passwordHash: string }[]> {
+  return Promise.all(
+    entries
+      .filter(e => e.username.trim())
+      .map(async e => {
+        const hash = e.password.trim()
+          ? await hashPassword(e.password.trim())
+          : (e.existingHash ?? "");
+        return { username: e.username.trim(), passwordHash: hash };
+      }),
+  );
+}
 
 interface Props {
   proxy: ProxyEntry;
@@ -36,7 +51,12 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
   const [root, setRoot] = useState(proxy.fileServer?.root ?? "");
   const [browse, setBrowse] = useState(proxy.fileServer?.browse ?? false);
   const [tls, setTls] = useState(proxy.tls);
+  const [compress, setCompress] = useState(proxy.compress ?? false);
   const [label, setLabel] = useState(proxy.label ?? "");
+  const [basicAuth, setBasicAuth] = useState<AuthEntry[]>(
+    (proxy.basicAuth ?? []).map(a => ({ username: a.username, password: "", existingHash: a.passwordHash })),
+  );
+  const [responseHeaders, setResponseHeaders] = useState(proxy.responseHeaders ?? []);
   const [portErr, setPortErr] = useState<string | null>(null);
   const [rootErr, setRootErr] = useState<string | null>(null);
 
@@ -137,7 +157,29 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
               isDisabled={isLocked}
             />
           </FormGroup>
+
+          <FormGroup fieldId="static-edit-compress">
+            <Checkbox
+              id="static-edit-compress"
+              label={t("add_proxy.field_compress_short")}
+              isChecked={compress}
+              onChange={(_e, v) => setCompress(v)}
+              isDisabled={isLocked}
+            />
+          </FormGroup>
         </Form>
+
+        <BasicAuthSection
+          value={basicAuth}
+          onChange={setBasicAuth}
+          isDisabled={isLocked}
+        />
+
+        <ResponseHeadersSection
+          value={responseHeaders}
+          onChange={v => setResponseHeaders(v ?? [])}
+          isDisabled={isLocked}
+        />
 
         {confirmAction.error && (
           <Alert variant="danger" isInline title={confirmAction.error} style={{ marginTop: "var(--pf-v6-global--spacer--md)" }} />
@@ -151,13 +193,17 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
               isLoading={isSaving}
               isDisabled={isSaving}
               onClick={() => void confirmAction.submit(async () => {
+                const resolvedAuth = await resolveBasicAuth(basicAuth);
                 try {
                   await onSave({
                     ...proxy,
                     externalPort: parseInt(port, 10),
                     tls,
+                    compress: compress || undefined,
                     label: label.trim() || undefined,
                     fileServer: { root: root.trim(), browse: browse || undefined },
+                    basicAuth: resolvedAuth.length ? resolvedAuth : undefined,
+                    responseHeaders: responseHeaders.length ? responseHeaders : undefined,
                   });
                 } catch (e) {
                   if (e instanceof CaddyApiError) {

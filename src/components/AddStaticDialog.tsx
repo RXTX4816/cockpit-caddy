@@ -17,17 +17,34 @@ import {
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
-import { CaddyApiError } from "../api";
-import type { ProxyEntry } from "../api";
+import { CaddyApiError, hashPassword } from "../api";
+import type { ProxyEntry, HeaderOperation } from "../api";
+import { BasicAuthSection, type AuthEntry } from "./BasicAuthSection";
+import { ResponseHeadersSection } from "./ResponseHeadersSection";
 
 interface Props {
   existingPorts: number[];
   onAdd: (entry: Omit<ProxyEntry, "id" | "serverKey">) => Promise<void>;
   onClose: () => void;
-  initialValues?: { port?: string; root?: string; browse?: boolean; label?: string; tls?: boolean };
+  initialValues?: { port?: string; root?: string; browse?: boolean; tls?: boolean; compress?: boolean; label?: string };
+  initialBasicAuth?: AuthEntry[];
+  initialResponseHeaders?: HeaderOperation[];
 }
 
-export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues }: Props) {
+async function resolveBasicAuth(entries: AuthEntry[]): Promise<{ username: string; passwordHash: string }[]> {
+  return Promise.all(
+    entries
+      .filter(e => e.username.trim())
+      .map(async e => {
+        const hash = e.password.trim()
+          ? await hashPassword(e.password.trim())
+          : (e.existingHash ?? "");
+        return { username: e.username.trim(), passwordHash: hash };
+      }),
+  );
+}
+
+export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues, initialBasicAuth, initialResponseHeaders }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
   const confirmAction = useConfirmAction();
@@ -36,7 +53,10 @@ export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues }
   const [root, setRoot] = useState(initialValues?.root ?? "");
   const [browse, setBrowse] = useState(initialValues?.browse ?? false);
   const [tls, setTls] = useState(initialValues?.tls ?? true);
+  const [compress, setCompress] = useState(initialValues?.compress ?? false);
   const [label, setLabel] = useState(initialValues?.label ?? "");
+  const [basicAuth, setBasicAuth] = useState<AuthEntry[]>(initialBasicAuth ?? []);
+  const [responseHeaders, setResponseHeaders] = useState<HeaderOperation[]>(initialResponseHeaders ?? []);
   const [portErr, setPortErr] = useState<string | null>(null);
   const [rootErr, setRootErr] = useState<string | null>(null);
 
@@ -142,7 +162,29 @@ export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues }
               isDisabled={isLocked}
             />
           </FormGroup>
+
+          <FormGroup fieldId="static-compress">
+            <Checkbox
+              id="static-compress"
+              label={t("add_proxy.field_compress_short")}
+              isChecked={compress}
+              onChange={(_e, v) => setCompress(v)}
+              isDisabled={isLocked}
+            />
+          </FormGroup>
         </Form>
+
+        <BasicAuthSection
+          value={basicAuth}
+          onChange={setBasicAuth}
+          isDisabled={isLocked}
+        />
+
+        <ResponseHeadersSection
+          value={responseHeaders}
+          onChange={v => setResponseHeaders(v ?? [])}
+          isDisabled={isLocked}
+        />
 
         {confirmAction.error && (
           <Alert variant="danger" isInline title={confirmAction.error} style={{ marginTop: "var(--pf-v6-global--spacer--md)" }} />
@@ -156,6 +198,7 @@ export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues }
               isLoading={isSaving}
               isDisabled={isSaving}
               onClick={() => void confirmAction.submit(async () => {
+                const resolvedAuth = await resolveBasicAuth(basicAuth);
                 try {
                   await onAdd({
                     externalPort: parseInt(port, 10),
@@ -166,8 +209,11 @@ export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues }
                     targetScheme: "http",
                     tls,
                     tlsSkipVerify: false,
+                    compress: compress || undefined,
                     label: label.trim() || undefined,
                     fileServer: { root: root.trim(), browse: browse || undefined },
+                    basicAuth: resolvedAuth.length ? resolvedAuth : undefined,
+                    responseHeaders: responseHeaders.length ? responseHeaders : undefined,
                   });
                 } catch (e) {
                   if (e instanceof CaddyApiError) {
