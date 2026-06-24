@@ -38,9 +38,11 @@ import { useLayout } from "@rxtx4816/cockpit-plugin-base-react";
 import { AddProxyDialog } from "./AddProxyDialog";
 import { AddRedirectDialog } from "./AddRedirectDialog";
 import { AddStaticDialog } from "./AddStaticDialog";
+import { AddRespondDialog } from "./AddRespondDialog";
 import { EditProxyDialog } from "./EditProxyDialog";
 import { EditRedirectDialog } from "./EditRedirectDialog";
 import { EditStaticDialog } from "./EditStaticDialog";
+import { EditRespondDialog } from "./EditRespondDialog";
 import { ProxyCard } from "./ProxyCard";
 import { useProxies } from "../hooks/useProxies";
 import { useUpstreamProbe } from "../hooks/useUpstreamProbe";
@@ -68,6 +70,7 @@ interface EntryType { label: string; color: EntryTypeColor }
 function entryType(proxy: ProxyEntry, t: (k: string) => string): EntryType {
   if (proxy.redirect) return { label: t("proxies.type_redirect"), color: "purple" };
   if (proxy.fileServer) return { label: t("proxies.type_static"), color: "green" };
+  if (proxy.staticResponse) return { label: t("proxies.type_respond"), color: "orange" };
   return { label: t("proxies.type_proxy"), color: "blue" };
 }
 
@@ -75,6 +78,9 @@ function FlagChips({ proxy, t }: { proxy: ProxyEntry; t: (k: string) => string }
   const chips: { label: string; color: EntryTypeColor }[] = [];
   if (proxy.redirect) {
     chips.push({ label: String(proxy.redirect.code), color: "purple" });
+  }
+  if (proxy.staticResponse?.close) {
+    chips.push({ label: t("proxies.indicator_close"), color: "grey" });
   }
   if (proxy.rewrite) chips.push({ label: t(`rewrite.type_${proxy.rewrite.type}`), color: "teal" });
   if (proxy.fileServer?.browse) chips.push({ label: "browse", color: "teal" });
@@ -151,6 +157,8 @@ function ProxyRow({ proxy, onEdit, onDelete, onDuplicate, probeStatuses }: {
             <DataListCell key="target" width={2}>
               {proxy.redirect ? (
                 <code style={{ fontSize: "0.85em" }}>{proxy.redirect.to}</code>
+              ) : proxy.staticResponse ? (
+                <code style={{ fontSize: "0.85em" }}>{proxy.staticResponse.statusCode}{proxy.staticResponse.body ? ` "${proxy.staticResponse.body.slice(0, 30)}${proxy.staticResponse.body.length > 30 ? "…" : ""}"` : ""}</code>
               ) : proxy.fileServer ? (
                 <code style={{ fontSize: "0.85em" }}>{proxy.fileServer.root}</code>
               ) : (
@@ -250,6 +258,7 @@ export function ProxyList({ onViewLogs }: Props) {
   const [showAdd, setShowAdd] = useState(false);
   const [showAddRedirect, setShowAddRedirect] = useState(false);
   const [showAddStatic, setShowAddStatic] = useState(false);
+  const [showAddRespond, setShowAddRespond] = useState(false);
   const [editing, setEditing] = useState<ProxyEntry | null>(null);
   const [duplicating, setDuplicating] = useState<ProxyEntry | null>(null);
 
@@ -458,6 +467,11 @@ export function ProxyList({ onViewLogs }: Props) {
                 </Button>
               </ToolbarItem>
               <ToolbarItem>
+                <Button variant="secondary" onClick={() => setShowAddRespond(true)}>
+                  {t("proxies.add_respond")}
+                </Button>
+              </ToolbarItem>
+              <ToolbarItem>
                 <CollapsibleSearch
                   value={search}
                   onChange={setSearch}
@@ -615,6 +629,19 @@ export function ProxyList({ onViewLogs }: Props) {
             label: duplicating.label ? `${duplicating.label} (copy)` : "",
           }}
         />
+      ) : duplicating.staticResponse ? (
+        <AddRespondDialog
+          existingPorts={proxies.map(p => p.externalPort)}
+          onAdd={addProxy}
+          onClose={() => setDuplicating(null)}
+          initialValues={{
+            port: "",
+            statusCode: String(duplicating.staticResponse.statusCode),
+            body: duplicating.staticResponse.body ?? "",
+            close: duplicating.staticResponse.close ?? false,
+            label: duplicating.label ? `${duplicating.label} (copy)` : "",
+          }}
+        />
       ) : duplicating.fileServer ? (
         <AddStaticDialog
           existingPorts={proxies.map(p => p.externalPort)}
@@ -678,8 +705,23 @@ export function ProxyList({ onViewLogs }: Props) {
         />
       )}
 
+      {showAddRespond && (
+        <AddRespondDialog
+          existingPorts={proxies.map(p => p.externalPort)}
+          onAdd={addProxy}
+          onClose={() => setShowAddRespond(false)}
+        />
+      )}
+
       {editing && (editing.redirect ? (
         <EditRedirectDialog
+          proxy={editing}
+          existingPorts={proxies.filter(p => p.id !== editing.id).map(p => p.externalPort)}
+          onSave={editProxy}
+          onClose={() => setEditing(null)}
+        />
+      ) : editing.staticResponse ? (
+        <EditRespondDialog
           proxy={editing}
           existingPorts={proxies.filter(p => p.id !== editing.id).map(p => p.externalPort)}
           onSave={editProxy}

@@ -82,6 +82,12 @@ export interface FileServerConfig {
   browse?: boolean;
 }
 
+export interface StaticResponseConfig {
+  statusCode: number;
+  body?: string;
+  close?: boolean;
+}
+
 export type LbPolicy = "round_robin" | "random" | "least_conn" | "first";
 
 export interface ProxyEntry {
@@ -103,6 +109,7 @@ export interface ProxyEntry {
   serverKey: string;
   redirect?: RedirectConfig;
   fileServer?: FileServerConfig;
+  staticResponse?: StaticResponseConfig;
   rewrite?: RewriteConfig;
   requestHeaders?: HeaderOperation[];
   responseHeaders?: HeaderOperation[];

@@ -482,7 +482,22 @@ function buildExternalAddress(p: Pick<ProxyEntry, "externalPort" | "externalSche
 export function proxyToBlock(p: ProxyEntry): string {
   const header = buildExternalAddress(p);
   const lines = p.label ? [`# label: ${p.label}`, `${header} {`] : [`${header} {`];
-  if (p.redirect) {
+  if (p.staticResponse) {
+    const { statusCode, body, close } = p.staticResponse;
+    if (body && close) {
+      lines.push(`\trespond "${body}" ${statusCode} {`);
+      lines.push("\t\tclose");
+      lines.push("\t}");
+    } else if (body) {
+      lines.push(`\trespond "${body}" ${statusCode}`);
+    } else if (close) {
+      lines.push(`\trespond ${statusCode} {`);
+      lines.push("\t\tclose");
+      lines.push("\t}");
+    } else {
+      lines.push(`\trespond ${statusCode}`);
+    }
+  } else if (p.redirect) {
     lines.push(`\tredir ${p.redirect.to} ${p.redirect.code}`);
   } else if (p.fileServer) {
     if (p.tls) lines.push("\ttls internal");
@@ -793,7 +808,7 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
 
     // Detect redirect (static_response with Location header)
     const staticResp = allHandles.find(h => h.handler === "static_response") as
-      { handler: string; headers?: Record<string, string[]>; status_code?: number } | undefined;
+      { handler: string; headers?: Record<string, string[]>; status_code?: number; body?: string; close?: boolean } | undefined;
     const locationHeader = staticResp?.headers?.["Location"]?.[0];
     if (staticResp && locationHeader) {
       const code = (staticResp.status_code ?? 302) as 301 | 302 | 307 | 308;
@@ -808,6 +823,27 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
         tlsSkipVerify: false,
         serverKey: key,
         redirect: { to: jsonPlaceholderToCaddy(locationHeader), code },
+      });
+      continue;
+    }
+
+    // Detect static response (static_response without Location header)
+    if (staticResp && !locationHeader) {
+      proxies.push({
+        id: String(externalPort),
+        externalPort,
+        externalHost,
+        targetHost: "localhost",
+        targetPort: 0,
+        targetScheme: "http",
+        tls: false,
+        tlsSkipVerify: false,
+        serverKey: key,
+        staticResponse: {
+          statusCode: staticResp.status_code ?? 200,
+          body: staticResp.body || undefined,
+          close: staticResp.close || undefined,
+        },
       });
       continue;
     }
@@ -992,6 +1028,18 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
   const listenAddr = proxy.externalHost
     ? `${proxy.externalHost}:${proxy.externalPort}`
     : `:${proxy.externalPort}`;
+  if (proxy.staticResponse) {
+    const h: Record<string, unknown> = {
+      handler: "static_response",
+      status_code: proxy.staticResponse.statusCode,
+    };
+    if (proxy.staticResponse.body) h.body = proxy.staticResponse.body;
+    if (proxy.staticResponse.close) h.close = true;
+    return {
+      listen: [listenAddr],
+      routes: [{ handle: [h as CaddyHandler], terminal: true }],
+    };
+  }
   if (proxy.redirect) {
     return {
       listen: [listenAddr],
@@ -1109,7 +1157,7 @@ function patchServer(original: CaddyServer, proxy: ProxyEntry): CaddyServer {
 export function mergeProxy(config: CaddyConfig, proxy: ProxyEntry): CaddyConfig {
   const servers = { ...(config.apps?.http?.servers ?? {}) };
   const original = servers[proxy.serverKey];
-  servers[proxy.serverKey] = (original && !proxy.redirect) ? patchServer(original, proxy) : buildServerEntry(proxy);
+  servers[proxy.serverKey] = (original && !proxy.redirect && !proxy.staticResponse) ? patchServer(original, proxy) : buildServerEntry(proxy);
 
   const hasTls = Object.values(servers).some(
     s => Array.isArray(s.tls_connection_policies) && s.tls_connection_policies.length > 0,
