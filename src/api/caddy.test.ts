@@ -982,3 +982,84 @@ describe("parseProxies — fileServer compress/auth round-trip", () => {
     expect(p.basicAuth).toEqual([{ username: "alice", passwordHash: "$2a$14$xyz" }]);
   });
 });
+
+describe("proxyToBlock — multiple upstreams", () => {
+  it("emits all upstreams on the reverse_proxy line", () => {
+    const result = proxyToBlock(proxy({
+      extraUpstreams: [{ host: "backend2", port: 8081 }, { host: "backend3", port: 8082 }],
+    }));
+    expect(result).toContain("reverse_proxy http://localhost:7701 http://backend2:8081 http://backend3:8082");
+  });
+
+  it("emits lb_policy when set", () => {
+    const result = proxyToBlock(proxy({
+      extraUpstreams: [{ host: "backend2", port: 8081 }],
+      lbPolicy: "least_conn",
+    }));
+    expect(result).toContain("lb_policy least_conn");
+  });
+
+  it("does not emit lb_policy when no extra upstreams", () => {
+    const result = proxyToBlock(proxy({ lbPolicy: "random" }));
+    expect(result).not.toContain("lb_policy");
+  });
+});
+
+describe("buildServerEntry — multiple upstreams", () => {
+  it("includes all upstreams in reverse_proxy handler", () => {
+    const server = buildServerEntry({
+      externalPort: 7700, externalScheme: undefined, externalHost: undefined,
+      targetHost: "localhost", targetPort: 8080, targetScheme: "http",
+      tls: false, tlsSkipVerify: false,
+      extraUpstreams: [{ host: "backend2", port: 8081 }],
+    });
+    const rp = server.routes[0].handle.find(h => h.handler === "reverse_proxy") as Record<string, unknown> | undefined;
+    expect(rp).toBeDefined();
+    const ups = rp!.upstreams as Array<{ dial: string }>;
+    expect(ups).toHaveLength(2);
+    expect(ups[0].dial).toBe("localhost:8080");
+    expect(ups[1].dial).toBe("backend2:8081");
+  });
+
+  it("includes load_balancing when lbPolicy set", () => {
+    const server = buildServerEntry({
+      externalPort: 7700, externalScheme: undefined, externalHost: undefined,
+      targetHost: "localhost", targetPort: 8080, targetScheme: "http",
+      tls: false, tlsSkipVerify: false,
+      extraUpstreams: [{ host: "backend2", port: 8081 }],
+      lbPolicy: "round_robin",
+    });
+    const rp = server.routes[0].handle.find(h => h.handler === "reverse_proxy") as Record<string, unknown> | undefined;
+    const lb = rp!.load_balancing as Record<string, unknown> | undefined;
+    expect(lb?.selection_policy).toMatchObject({ policy: "round_robin" });
+  });
+});
+
+describe("parseProxies — multiple upstreams round-trip", () => {
+  it("parses extra upstreams from reverse_proxy handler", () => {
+    const config = makeConfig([{
+      handler: "reverse_proxy",
+      upstreams: [{ dial: "localhost:8080" }, { dial: "backend2:8081" }],
+    }]);
+    const [p] = parseProxies(config);
+    expect(p.targetHost).toBe("localhost");
+    expect(p.targetPort).toBe(8080);
+    expect(p.extraUpstreams).toEqual([{ host: "backend2", port: 8081 }]);
+  });
+
+  it("parses lbPolicy from load_balancing selection_policy", () => {
+    const config = makeConfig([{
+      handler: "reverse_proxy",
+      upstreams: [{ dial: "localhost:8080" }, { dial: "backend2:8081" }],
+      load_balancing: { selection_policy: { policy: "random" } },
+    }]);
+    const [p] = parseProxies(config);
+    expect(p.lbPolicy).toBe("random");
+  });
+
+  it("omits extraUpstreams when only one upstream", () => {
+    const config = makeConfig([{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:8080" }] }]);
+    const [p] = parseProxies(config);
+    expect(p.extraUpstreams).toBeUndefined();
+  });
+});

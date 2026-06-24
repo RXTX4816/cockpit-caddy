@@ -82,6 +82,8 @@ export interface FileServerConfig {
   browse?: boolean;
 }
 
+export type LbPolicy = "round_robin" | "random" | "least_conn" | "first";
+
 export interface ProxyEntry {
   id: string;
   externalPort: number;
@@ -108,6 +110,10 @@ export interface ProxyEntry {
   dialTimeout?: string;
   responseHeaderTimeout?: string;
   basicAuth?: { username: string; passwordHash: string }[];
+  /** Additional upstreams beyond the primary targetHost:targetPort */
+  extraUpstreams?: Array<{ host: string; port: number }>;
+  /** Load-balancing policy when multiple upstreams are configured */
+  lbPolicy?: LbPolicy;
 }
 
 export type { ServiceStatus } from "@rxtx4816/cockpit-plugin-base-react/systemd";

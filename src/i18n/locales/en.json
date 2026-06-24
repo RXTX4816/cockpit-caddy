@@ -69,6 +69,7 @@
     "indicator_compress": "Compress",
     "indicator_auth": "Auth",
     "indicator_timeouts": "Timeouts",
+    "indicator_lb": "LB",
     "copy_url": "Copy URL",
     "load_failed": "Failed to load proxies",
     "service_not_running": "Start the Caddy service to view and manage proxies.",
@@ -182,6 +183,21 @@
     "field_find_placeholder": "^/api/(.*)",
     "field_replace_placeholder": "/$1",
     "field_replace_help": "Use $1, $2 for capture groups"
+  },
+  "upstreams": {
+    "section_title": "Additional Upstreams (optional)",
+    "section_hide": "Additional Upstreams",
+    "field_host": "Host",
+    "field_port": "Port",
+    "add_button": "Add upstream",
+    "remove_button": "Remove",
+    "lb_policy": "Load-balancing policy",
+    "policy_round_robin": "Round robin",
+    "policy_random": "Random",
+    "policy_least_conn": "Least connections",
+    "policy_first": "First available",
+    "validation_host": "Host is required",
+    "validation_port": "Port must be 1–65535"
   },
   "response_headers": {
     "section_title": "Response Headers (optional)",
