@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Alert,
@@ -17,6 +17,7 @@ import {
   TabTitleText,
   Title,
 } from "@patternfly/react-core";
+import CogIcon from "@patternfly/react-icons/dist/esm/icons/cog-icon";
 import { ErrorBoundary, ToastProvider, PluginFooter } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { useAdminMode } from "@rxtx4816/cockpit-plugin-base-react";
 import pkg from "../../package.json";
@@ -27,7 +28,9 @@ import { CaddyfileEditor } from "./CaddyfileEditor";
 import { LogsViewer } from "./LogsViewer";
 import { BackupDialog } from "./BackupDialog";
 import { RestoreDialog } from "./RestoreDialog";
+import { AdminAddressDialog } from "./AdminAddressDialog";
 import { useCaddyStatus } from "../hooks/useCaddyStatus";
+import { applyStoredAdminAddress } from "../hooks/useAdminAddress";
 import { useCaddyVersion } from "../hooks/useCaddyVersion";
 
 function AppInner() {
@@ -39,7 +42,10 @@ function AppInner() {
   const [adminBypass, setAdminBypass] = useState(false);
   const [showBackup, setShowBackup] = useState(false);
   const [showRestore, setShowRestore] = useState(false);
+  const [showAdminAddress, setShowAdminAddress] = useState(false);
   const [logsSearch, setLogsSearch] = useState("");
+
+  useEffect(() => { applyStoredAdminAddress(); }, []);
 
   const apiUnreachable = status === "inactive" || status === "failed" ||
     (status === "active" && !adminApiOk);
@@ -64,6 +70,7 @@ function AppInner() {
                     <div style={{ display: "flex", gap: "0.5rem" }}>
                       <Button variant="secondary" size="sm" onClick={() => setShowBackup(true)}>{t("backup.button")}</Button>
                       <Button variant="secondary" size="sm" onClick={() => setShowRestore(true)}>{t("restore.button")}</Button>
+                      <Button variant="plain" size="sm" aria-label={t("admin_address.title")} onClick={() => setShowAdminAddress(true)}><CogIcon /></Button>
                     </div>
                   }
                 />
@@ -144,6 +151,7 @@ function AppInner() {
       </PageSection>
       {showBackup && <BackupDialog onClose={() => setShowBackup(false)} />}
       {showRestore && <RestoreDialog onClose={() => setShowRestore(false)} />}
+      {showAdminAddress && <AdminAddressDialog onClose={() => setShowAdminAddress(false)} />}
       <PluginFooter
         version={pkg.version}
         links={[

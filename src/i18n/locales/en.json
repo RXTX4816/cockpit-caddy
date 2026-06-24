@@ -334,5 +334,20 @@
     "warning_title": "Administrative access required",
     "warning_body": "This plugin manages system services and configuration files. Without administrative access in Cockpit, most actions will fail. Enable administrative mode in the top-right Cockpit menu before continuing.",
     "continue_button": "Continue on my own risk"
+  },
+  "admin_address": {
+    "title": "Admin API Address",
+    "storage_note": "These settings are saved in your browser's local storage — they apply only to this browser and are not shared with other users or browsers.",
+    "tcp_label": "TCP address",
+    "tcp_help": "Host and port of the Caddy Admin API (default: http://127.0.0.1:2019)",
+    "socket_label": "Unix socket path",
+    "socket_help": "Path to the Caddy Admin API Unix socket, used as fallback when TCP fails (default: /run/caddy/admin.socket)",
+    "test_tcp_button": "Test TCP connection",
+    "test_socket_button": "Test Unix socket",
+    "test_ok": "Connection successful",
+    "test_tcp_fail": "TCP connection failed — check address and ensure Caddy is running",
+    "test_socket_fail": "Unix socket unreachable — check path and socket permissions",
+    "reset_button": "Reset to defaults",
+    "save_tooltip": "Test a successful connection first"
   }
 }
