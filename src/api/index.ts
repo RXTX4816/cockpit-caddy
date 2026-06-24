@@ -1,4 +1,4 @@
 export { fetchCaddyConfig, pushCaddyConfig, parseProxies, mergeProxy, removeProxy, buildServerEntry, pingCaddyApi, writeProxyConf, proxiesToCaddyfile, proxyToBlock, parseLabelsFromCaddyfile, parseConfTlsMap, parseConfExternalAddresses, parseLegacyLabelsFromCaddyfile, readProxyConf, extractRawBlocksFromCaddyfile, buildMigratedConfContent, writeRawProxyConf, surgicallyReplaceBlock, surgicallyRemoveBlock, surgicallyWriteProxy, CaddyApiError, fetchUpstreamStatus } from "./caddy";
 export type { RawBlock } from "./caddy";
 export { getServiceStatus, startService, stopService, restartService, reloadService, readCaddyfile, writeCaddyfile, fetchServiceLogs, validateCaddyfile, readFile, writeFile, listConfDFiles } from "./systemd";
-export type { CaddyConfig, ProxyEntry, ServiceStatus, CaddyServer, UpstreamStatus } from "./types";
+export type { CaddyConfig, ProxyEntry, ServiceStatus, CaddyServer, UpstreamStatus, RedirectConfig } from "./types";

@@ -59,6 +59,11 @@ export interface CaddyConfig {
   [key: string]: unknown;
 }
 
+export interface RedirectConfig {
+  to: string;
+  code: 301 | 302 | 307 | 308;
+}
+
 export interface ProxyEntry {
   id: string;
   externalPort: number;
@@ -76,6 +81,7 @@ export interface ProxyEntry {
   tlsSkipVerify: boolean;
   label?: string;
   serverKey: string;
+  redirect?: RedirectConfig;
 }
 
 export type { ServiceStatus } from "@rxtx4816/cockpit-plugin-base-react/systemd";

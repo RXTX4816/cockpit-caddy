@@ -35,7 +35,9 @@ import {
 } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { useLayout } from "@rxtx4816/cockpit-plugin-base-react";
 import { AddProxyDialog } from "./AddProxyDialog";
+import { AddRedirectDialog } from "./AddRedirectDialog";
 import { EditProxyDialog } from "./EditProxyDialog";
+import { EditRedirectDialog } from "./EditRedirectDialog";
 import { ProxyCard } from "./ProxyCard";
 import { useProxies } from "../hooks/useProxies";
 import { useUpstreamStatus } from "../hooks/useUpstreamStatus";
@@ -57,6 +59,13 @@ function extractLogsSearch(message: string): string {
 // Pending action that the gate modal is guarding
 type GateAction = "add" | { type: "edit"; proxy: ProxyEntry } | { type: "delete"; proxy: ProxyEntry };
 
+type EntryTypeColor = "blue" | "purple" | "grey";
+interface EntryType { label: string; color: EntryTypeColor }
+function entryType(proxy: ProxyEntry, t: (k: string) => string): EntryType {
+  if (proxy.redirect) return { label: t("proxies.type_redirect"), color: "purple" };
+  return { label: t("proxies.type_proxy"), color: "blue" };
+}
+
 function HeaderRow() {
   const { t } = useTranslation();
   return (
@@ -65,6 +74,7 @@ function HeaderRow() {
         <DataListItemCells
           dataListCells={[
             <DataListCell key="label" width={2}><strong>{t("proxies.col_label")}</strong></DataListCell>,
+            <DataListCell key="type" width={1}><strong>{t("proxies.col_type")}</strong></DataListCell>,
             <DataListCell key="port" width={1}><strong>{t("proxies.col_port")}</strong></DataListCell>,
             <DataListCell key="target" width={2}><strong>{t("proxies.col_target")}</strong></DataListCell>,
             <DataListCell key="tls" width={1}><strong>{t("proxies.col_tls")}</strong></DataListCell>,
@@ -97,6 +107,9 @@ function ProxyRow({ proxy, onEdit, onDelete, onDuplicate, upstreamFailing }: {
                 ? <strong style={{ fontSize: "1.05em" }}>{proxy.label}</strong>
                 : <span style={{ color: "var(--pf-v6-global--Color--200)" }}>—</span>}
             </DataListCell>,
+            <DataListCell key="type" width={1}>
+              {(() => { const et = entryType(proxy, t); return <Label color={et.color} isCompact>{et.label}</Label>; })()}
+            </DataListCell>,
             <DataListCell key="port" width={1}>
               <span style={{ display: "inline-flex", alignItems: "center" }}>
                 <a
@@ -126,16 +139,20 @@ function ProxyRow({ proxy, onEdit, onDelete, onDuplicate, upstreamFailing }: {
             </DataListCell>,
             <DataListCell key="target" width={2}>
               <code style={{ fontSize: "0.85em" }}>
-                {proxy.targetScheme}://{proxy.targetHost}:{proxy.targetPort}
+                {proxy.redirect
+                  ? proxy.redirect.to
+                  : `${proxy.targetScheme}://${proxy.targetHost}:${proxy.targetPort}`}
               </code>
             </DataListCell>,
             <DataListCell key="tls" width={1}>
-              {proxy.tls ? (
+              {proxy.redirect ? (
+                <span style={{ color: "var(--pf-v6-global--Color--200)" }}>—</span>
+              ) : proxy.tls ? (
                 <Label color="blue" isCompact>{t("proxies.tls_self_signed")}</Label>
               ) : (
                 <Label color="grey" isCompact>{t("proxies.tls_none")}</Label>
               )}
-              {proxy.tlsSkipVerify && (
+              {!proxy.redirect && proxy.tlsSkipVerify && (
                 <>{" "}<Label color="orange" isCompact>{t("proxies.tls_skip_verify")}</Label></>
               )}
             </DataListCell>,
@@ -171,6 +188,7 @@ export function ProxyList({ onViewLogs }: Props) {
   const [layout, setLayout] = useLayout<ProxyLayout>("cockpit-caddy:proxy-layout", "list", ["list", "card"]);
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
+  const [showAddRedirect, setShowAddRedirect] = useState(false);
   const [editing, setEditing] = useState<ProxyEntry | null>(null);
   const [duplicating, setDuplicating] = useState<ProxyEntry | null>(null);
 
@@ -351,6 +369,11 @@ export function ProxyList({ onViewLogs }: Props) {
                 </Button>
               </ToolbarItem>
               <ToolbarItem>
+                <Button variant="secondary" onClick={() => setShowAddRedirect(true)}>
+                  {t("proxies.add_redirect")}
+                </Button>
+              </ToolbarItem>
+              <ToolbarItem>
                 <CollapsibleSearch
                   value={search}
                   onChange={setSearch}
@@ -489,7 +512,19 @@ export function ProxyList({ onViewLogs }: Props) {
         />
       )}
 
-      {duplicating && (
+      {duplicating && (duplicating.redirect ? (
+        <AddRedirectDialog
+          existingPorts={proxies.map(p => p.externalPort)}
+          onAdd={addProxy}
+          onClose={() => setDuplicating(null)}
+          initialValues={{
+            port: "",
+            to: duplicating.redirect.to,
+            code: duplicating.redirect.code,
+            label: duplicating.label ? `${duplicating.label} (copy)` : "",
+          }}
+        />
+      ) : (
         <AddProxyDialog
           existingPorts={proxies.map(p => p.externalPort)}
           onAdd={addProxy}
@@ -507,9 +542,24 @@ export function ProxyList({ onViewLogs }: Props) {
             label: duplicating.label ? `${duplicating.label} (copy)` : "",
           }}
         />
+      ))}
+
+      {showAddRedirect && (
+        <AddRedirectDialog
+          existingPorts={proxies.map(p => p.externalPort)}
+          onAdd={addProxy}
+          onClose={() => setShowAddRedirect(false)}
+        />
       )}
 
-      {editing && (
+      {editing && (editing.redirect ? (
+        <EditRedirectDialog
+          proxy={editing}
+          existingPorts={proxies.filter(p => p.id !== editing.id).map(p => p.externalPort)}
+          onSave={editProxy}
+          onClose={() => setEditing(null)}
+        />
+      ) : (
         <EditProxyDialog
           proxy={editing}
           existingPorts={proxies.filter(p => p.id !== editing.id).map(p => p.externalPort)}
@@ -517,7 +567,7 @@ export function ProxyList({ onViewLogs }: Props) {
           onClose={() => setEditing(null)}
           onApiError={msg => setApiError({ message: msg, search: extractLogsSearch(msg), action: "edit" })}
         />
-      )}
+      ))}
 
       {/* Delete confirmation modal */}
       <Modal

@@ -286,6 +286,22 @@ export async function readProxyConf(): Promise<string> {
 
 const CONF_HEADER = "# Managed by cockpit-caddy - do not edit manually";
 
+/** Converts Caddyfile short placeholders to JSON API long form. */
+function caddyPlaceholderToJson(s: string): string {
+  return s
+    .replace(/\{host\}/g, "{http.request.host}")
+    .replace(/\{uri\}/g, "{http.request.uri}")
+    .replace(/\{scheme\}/g, "{http.request.scheme}");
+}
+
+/** Converts JSON API long placeholders back to Caddyfile short form. */
+function jsonPlaceholderToCaddy(s: string): string {
+  return s
+    .replace(/\{http\.request\.host\}/g, "{host}")
+    .replace(/\{http\.request\.uri\}/g, "{uri}")
+    .replace(/\{http\.request\.scheme\}/g, "{scheme}");
+}
+
 /** Builds the reverse_proxy directive lines for a proxy (tab-indented). */
 function buildReverseProxyLines(p: Pick<ProxyEntry, "targetScheme" | "targetHost" | "targetPort" | "tlsSkipVerify">): string[] {
   if (p.targetScheme === "https") {
@@ -314,8 +330,12 @@ function buildExternalAddress(p: Pick<ProxyEntry, "externalPort" | "externalSche
 export function proxyToBlock(p: ProxyEntry): string {
   const header = buildExternalAddress(p);
   const lines = p.label ? [`# label: ${p.label}`, `${header} {`] : [`${header} {`];
-  if (p.tls) lines.push("\ttls internal");
-  lines.push(...buildReverseProxyLines(p));
+  if (p.redirect) {
+    lines.push(`\tredir ${p.redirect.to} ${p.redirect.code}`);
+  } else {
+    if (p.tls) lines.push("\ttls internal");
+    lines.push(...buildReverseProxyLines(p));
+  }
   lines.push("}");
   return lines.join("\n");
 }
@@ -558,6 +578,28 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
     const externalHost = rawHost || undefined;
 
     const allHandles = (server.routes ?? []).flatMap(r => (r.handle ?? []) as AnyHandler[]);
+
+    // Detect redirect (static_response with Location header)
+    const staticResp = allHandles.find(h => h.handler === "static_response") as
+      { handler: string; headers?: Record<string, string[]>; status_code?: number } | undefined;
+    const locationHeader = staticResp?.headers?.["Location"]?.[0];
+    if (staticResp && locationHeader) {
+      const code = (staticResp.status_code ?? 302) as 301 | 302 | 307 | 308;
+      proxies.push({
+        id: String(externalPort),
+        externalPort,
+        externalHost,
+        targetHost: "localhost",
+        targetPort: 0,
+        targetScheme: "http",
+        tls: false,
+        tlsSkipVerify: false,
+        serverKey: key,
+        redirect: { to: jsonPlaceholderToCaddy(locationHeader), code },
+      });
+      continue;
+    }
+
     const rp = findReverseProxy(allHandles);
     if (!rp) continue;
 
@@ -610,6 +652,19 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
   const listenAddr = proxy.externalHost
     ? `${proxy.externalHost}:${proxy.externalPort}`
     : `:${proxy.externalPort}`;
+  if (proxy.redirect) {
+    return {
+      listen: [listenAddr],
+      routes: [{
+        handle: [{
+          handler: "static_response",
+          headers: { Location: [caddyPlaceholderToJson(proxy.redirect.to)] },
+          status_code: proxy.redirect.code,
+        }],
+        terminal: true,
+      }],
+    };
+  }
   const server: CaddyServer = {
     listen: [listenAddr],
     routes: [{ handle: [buildReverseProxyHandler(proxy)], terminal: true }],
@@ -679,7 +734,7 @@ function patchServer(original: CaddyServer, proxy: ProxyEntry): CaddyServer {
 export function mergeProxy(config: CaddyConfig, proxy: ProxyEntry): CaddyConfig {
   const servers = { ...(config.apps?.http?.servers ?? {}) };
   const original = servers[proxy.serverKey];
-  servers[proxy.serverKey] = original ? patchServer(original, proxy) : buildServerEntry(proxy);
+  servers[proxy.serverKey] = (original && !proxy.redirect) ? patchServer(original, proxy) : buildServerEntry(proxy);
 
   const hasTls = Object.values(servers).some(
     s => Array.isArray(s.tls_connection_policies) && s.tls_connection_policies.length > 0,
