@@ -78,6 +78,7 @@ export function ProxyCard({ proxy, onEdit, onDelete, onDuplicate, upstreamFailin
                 {proxy.tls && <Label isCompact color="blue">{t("proxies.tls_self_signed")}</Label>}
                 {proxy.tlsSkipVerify && <Label isCompact color="orange">{t("proxies.tls_skip_verify")}</Label>}
                 {!proxy.tls && <Label isCompact color="grey">{t("proxies.tls_none")}</Label>}
+                {proxy.rewrite && <Label isCompact color="teal">{t(`rewrite.type_${proxy.rewrite.type}`)}</Label>}
               </div>
             </>
           )}

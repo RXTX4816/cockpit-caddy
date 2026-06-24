@@ -126,6 +126,21 @@
     "validation_to_required": "Redirect target is required",
     "confirm_body": "This will create a redirect on :{{port}} → {{to}} ({{code}}) and reload Caddy's configuration."
   },
+  "rewrite": {
+    "section_title": "URI Rewrite (optional)",
+    "type_none": "None",
+    "type_strip_prefix": "Strip prefix",
+    "type_add_prefix": "Add prefix",
+    "type_regex": "Regex",
+    "field_prefix": "Prefix",
+    "field_find": "Find (regex)",
+    "field_replace": "Replace",
+    "field_prefix_placeholder_strip": "/api",
+    "field_prefix_placeholder_add": "/api",
+    "field_find_placeholder": "^/api/(.*)",
+    "field_replace_placeholder": "/$1",
+    "field_replace_help": "Use $1, $2 for capture groups"
+  },
   "edit_redirect": {
     "title": "Edit Redirect — :{{port}}",
     "aria_label": "Edit redirect dialog",

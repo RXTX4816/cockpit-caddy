@@ -59,10 +59,11 @@ function extractLogsSearch(message: string): string {
 // Pending action that the gate modal is guarding
 type GateAction = "add" | { type: "edit"; proxy: ProxyEntry } | { type: "delete"; proxy: ProxyEntry };
 
-type EntryTypeColor = "blue" | "purple" | "grey";
-interface EntryType { label: string; color: EntryTypeColor }
+type EntryTypeColor = "blue" | "purple" | "teal" | "grey";
+interface EntryType { label: string; color: EntryTypeColor; badge?: string }
 function entryType(proxy: ProxyEntry, t: (k: string) => string): EntryType {
   if (proxy.redirect) return { label: t("proxies.type_redirect"), color: "purple" };
+  if (proxy.rewrite) return { label: t("proxies.type_proxy"), color: "blue", badge: t(`rewrite.type_${proxy.rewrite.type}`) };
   return { label: t("proxies.type_proxy"), color: "blue" };
 }
 
@@ -108,7 +109,15 @@ function ProxyRow({ proxy, onEdit, onDelete, onDuplicate, upstreamFailing }: {
                 : <span style={{ color: "var(--pf-v6-global--Color--200)" }}>—</span>}
             </DataListCell>,
             <DataListCell key="type" width={1}>
-              {(() => { const et = entryType(proxy, t); return <Label color={et.color} isCompact>{et.label}</Label>; })()}
+              {(() => {
+                const et = entryType(proxy, t);
+                return (
+                  <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap" }}>
+                    <Label color={et.color} isCompact>{et.label}</Label>
+                    {et.badge && <Label color="teal" isCompact>{et.badge}</Label>}
+                  </div>
+                );
+              })()}
             </DataListCell>,
             <DataListCell key="port" width={1}>
               <span style={{ display: "inline-flex", alignItems: "center" }}>
@@ -541,6 +550,7 @@ export function ProxyList({ onViewLogs }: Props) {
             tlsSkipVerify: duplicating.tlsSkipVerify,
             label: duplicating.label ? `${duplicating.label} (copy)` : "",
           }}
+          initialRewrite={duplicating.rewrite}
         />
       ))}
 

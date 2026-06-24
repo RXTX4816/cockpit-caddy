@@ -59,6 +59,11 @@ export interface CaddyConfig {
   [key: string]: unknown;
 }
 
+export type RewriteConfig =
+  | { type: "strip_prefix"; value: string }
+  | { type: "add_prefix"; value: string }
+  | { type: "regex"; find: string; replace: string };
+
 export interface RedirectConfig {
   to: string;
   code: 301 | 302 | 307 | 308;
@@ -82,6 +87,7 @@ export interface ProxyEntry {
   label?: string;
   serverKey: string;
   redirect?: RedirectConfig;
+  rewrite?: RewriteConfig;
 }
 
 export type { ServiceStatus } from "@rxtx4816/cockpit-plugin-base-react/systemd";
