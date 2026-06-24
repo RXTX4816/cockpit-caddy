@@ -79,3 +79,9 @@ export interface ProxyEntry {
 }
 
 export type { ServiceStatus } from "@rxtx4816/cockpit-plugin-base-react/systemd";
+
+export interface UpstreamStatus {
+  address: string;
+  num_requests: number;
+  fails: number;
+}

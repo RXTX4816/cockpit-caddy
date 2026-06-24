@@ -15,30 +15,51 @@ interface Props {
   onEdit: (p: ProxyEntry) => void;
   onDelete: (p: ProxyEntry) => void;
   onDuplicate: (p: ProxyEntry) => void;
+  upstreamFailing?: boolean;
 }
 
-export function ProxyCard({ proxy, onEdit, onDelete, onDuplicate }: Props) {
+function FailDot({ t }: { t: (k: string) => string }) {
+  return (
+    <span
+      title={t("proxies.upstream_failing")}
+      style={{
+        display: "inline-block",
+        width: "8px",
+        height: "8px",
+        borderRadius: "50%",
+        backgroundColor: "var(--pf-t--global--color--status--danger--default)",
+        marginLeft: "5px",
+        verticalAlign: "middle",
+        flexShrink: 0,
+      }}
+    />
+  );
+}
+
+export function ProxyCard({ proxy, onEdit, onDelete, onDuplicate, upstreamFailing }: Props) {
   const { t } = useTranslation();
   const proto = proxy.tls ? "https" : "http";
   const url = `${proto}://${window.location.hostname}:${proxy.externalPort}`;
+
+  const portLink = (
+    <span style={{ display: "inline-flex", alignItems: "center" }}>
+      <a href={url} target="_blank" rel="noopener noreferrer" style={{ fontFamily: "monospace", fontWeight: "bold" }}>
+        :{proxy.externalPort}
+      </a>
+      {upstreamFailing && <FailDot t={t} />}
+    </span>
+  );
 
   return (
     <Card isCompact isFullHeight>
       <CardHeader>
         <CardTitle>
-          {proxy.label
-            ? <strong>{proxy.label}</strong>
-            : <a href={url} target="_blank" rel="noopener noreferrer" style={{ fontFamily: "monospace", fontWeight: "bold" }}>:{proxy.externalPort}</a>
-          }
+          {proxy.label ? <strong>{proxy.label}</strong> : portLink}
         </CardTitle>
       </CardHeader>
       <CardBody>
         <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", fontSize: "0.85rem" }}>
-          {proxy.label && (
-            <a href={url} target="_blank" rel="noopener noreferrer" style={{ fontFamily: "monospace", fontWeight: 600 }}>
-              :{proxy.externalPort}
-            </a>
-          )}
+          {proxy.label && portLink}
           <code style={{ color: "var(--pf-t--global--text--color--subtle)" }}>
             → {proxy.targetScheme}://{proxy.targetHost}:{proxy.targetPort}
           </code>
