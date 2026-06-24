@@ -717,3 +717,68 @@ describe("parseProxies — compress round-trip", () => {
     expect(p.compress).toBeUndefined();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Upstream timeouts (#28)
+// ---------------------------------------------------------------------------
+
+describe("proxyToBlock — transport timeouts", () => {
+  it("emits transport http block with dial_timeout for http upstream", () => {
+    const result = proxyToBlock(proxy({ dialTimeout: "10s" }));
+    expect(result).toContain("transport http {");
+    expect(result).toContain("dial_timeout 10s");
+  });
+
+  it("emits both timeout directives", () => {
+    const result = proxyToBlock(proxy({ dialTimeout: "5s", responseHeaderTimeout: "30s" }));
+    expect(result).toContain("dial_timeout 5s");
+    expect(result).toContain("response_header_timeout 30s");
+  });
+
+  it("does not emit transport block when no timeouts and http upstream", () => {
+    const result = proxyToBlock(proxy());
+    expect(result).not.toContain("transport http");
+  });
+
+  it("combines tls_insecure_skip_verify with timeouts in one transport block", () => {
+    const result = proxyToBlock(proxy({ targetScheme: "https", tlsSkipVerify: true, dialTimeout: "5s" }));
+    const transportStart = result.indexOf("transport http {");
+    const transportEnd = result.indexOf("}", transportStart);
+    const transportBlock = result.slice(transportStart, transportEnd + 1);
+    expect(transportBlock).toContain("tls_insecure_skip_verify");
+    expect(transportBlock).toContain("dial_timeout 5s");
+    // Only one transport block
+    expect(result.indexOf("transport http {", transportStart + 1)).toBe(-1);
+  });
+});
+
+describe("parseProxies — timeouts round-trip", () => {
+  it("parses dial_timeout from transport", () => {
+    const config = makeConfig([{
+      handler: "reverse_proxy",
+      upstreams: [{ dial: "localhost:7701" }],
+      transport: { protocol: "http", dial_timeout: "10s" },
+    }]);
+    const [p] = parseProxies(config);
+    expect(p.dialTimeout).toBe("10s");
+    expect(p.targetScheme).toBe("http");
+  });
+
+  it("parses both timeouts", () => {
+    const config = makeConfig([{
+      handler: "reverse_proxy",
+      upstreams: [{ dial: "localhost:7701" }],
+      transport: { protocol: "http", dial_timeout: "5s", response_header_timeout: "30s" },
+    }]);
+    const [p] = parseProxies(config);
+    expect(p.dialTimeout).toBe("5s");
+    expect(p.responseHeaderTimeout).toBe("30s");
+  });
+
+  it("leaves timeouts undefined when no transport", () => {
+    const config = makeConfig([{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:7701" }] }]);
+    const [p] = parseProxies(config);
+    expect(p.dialTimeout).toBeUndefined();
+    expect(p.responseHeaderTimeout).toBeUndefined();
+  });
+});

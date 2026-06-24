@@ -25,6 +25,7 @@ import type { ProxyEntry, RewriteConfig, HeaderOperation } from "../api";
 import { RewriteSection } from "./RewriteSection";
 import { RequestHeadersSection } from "./RequestHeadersSection";
 import { ResponseHeadersSection } from "./ResponseHeadersSection";
+import { TransportSection, type TransportValues } from "./TransportSection";
 
 interface FormState {
   externalScheme: string;
@@ -50,9 +51,10 @@ interface Props {
   initialRewrite?: RewriteConfig;
   initialRequestHeaders?: HeaderOperation[];
   initialResponseHeaders?: HeaderOperation[];
+  initialTransport?: TransportValues;
 }
 
-export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, initialValues, initialRewrite, initialRequestHeaders, initialResponseHeaders }: Props) {
+export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, initialValues, initialRewrite, initialRequestHeaders, initialResponseHeaders, initialTransport }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
   const confirmAction = useConfirmAction();
@@ -73,6 +75,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
   const [rewrite, setRewrite] = useState<RewriteConfig | undefined>(initialRewrite);
   const [requestHeaders, setRequestHeaders] = useState<HeaderOperation[] | undefined>(initialRequestHeaders);
   const [responseHeaders, setResponseHeaders] = useState<HeaderOperation[] | undefined>(initialResponseHeaders);
+  const [transport, setTransport] = useState<TransportValues>(initialTransport ?? { dialTimeout: "", responseHeaderTimeout: "" });
   const [extraSchemes, setExtraSchemes] = useState<string[]>([]);
 
   useEffect(() => {
@@ -279,6 +282,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
             />
           </FormGroup>
         </Form>
+        <TransportSection value={transport} onChange={setTransport} isDisabled={isLocked} />
         <RewriteSection value={rewrite} onChange={setRewrite} isDisabled={isLocked} />
         <RequestHeadersSection value={requestHeaders} onChange={setRequestHeaders} isDisabled={isLocked} />
         <ResponseHeadersSection value={responseHeaders} onChange={setResponseHeaders} isDisabled={isLocked} />
@@ -305,6 +309,8 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
                     tlsSkipVerify: form.targetScheme === "https" ? form.tlsSkipVerify : false,
                     compress: form.compress || undefined,
                     label: form.label.trim() || undefined,
+                    dialTimeout: transport.dialTimeout.trim() || undefined,
+                    responseHeaderTimeout: transport.responseHeaderTimeout.trim() || undefined,
                     rewrite: rewrite ?? undefined,
                     requestHeaders: requestHeaders ?? undefined,
                     responseHeaders: responseHeaders ?? undefined,
