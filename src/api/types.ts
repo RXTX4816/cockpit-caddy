@@ -8,6 +8,8 @@ export interface CaddyHttpTransport {
     insecure_skip_verify?: boolean;
     [key: string]: unknown;
   };
+  dial_timeout?: string;
+  response_header_timeout?: string;
   [key: string]: unknown;
 }
 
@@ -97,6 +99,8 @@ export interface ProxyEntry {
   requestHeaders?: HeaderOperation[];
   responseHeaders?: HeaderOperation[];
   compress?: boolean;
+  dialTimeout?: string;
+  responseHeaderTimeout?: string;
 }
 
 export type { ServiceStatus } from "@rxtx4816/cockpit-plugin-base-react/systemd";

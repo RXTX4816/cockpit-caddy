@@ -348,8 +348,34 @@ function buildRewriteCaddyLines(rewrite: import("./types").RewriteConfig, port: 
   ];
 }
 
+type TransportProps = Pick<ProxyEntry, "targetScheme" | "tlsSkipVerify" | "dialTimeout" | "responseHeaderTimeout">;
+
+function buildTransportLines(p: TransportProps): string[] {
+  const needsSkipVerify = p.targetScheme === "https" && p.tlsSkipVerify;
+  const hasTimeouts = !!(p.dialTimeout || p.responseHeaderTimeout);
+  if (!needsSkipVerify && !hasTimeouts) return [];
+
+  const inner: string[] = [];
+  if (needsSkipVerify) inner.push("\t\t\ttls_insecure_skip_verify");
+  if (p.dialTimeout) inner.push(`\t\t\tdial_timeout ${p.dialTimeout}`);
+  if (p.responseHeaderTimeout) inner.push(`\t\t\tresponse_header_timeout ${p.responseHeaderTimeout}`);
+  return ["\t\ttransport http {", ...inner, "\t\t}"];
+}
+
+function buildTransport(p: TransportProps): import("./types").CaddyHttpTransport | undefined {
+  const hasTls = p.targetScheme === "https";
+  const hasTimeouts = !!(p.dialTimeout || p.responseHeaderTimeout);
+  if (!hasTls && !hasTimeouts) return undefined;
+
+  const t: import("./types").CaddyHttpTransport = { protocol: "http" };
+  if (hasTls) t.tls = p.tlsSkipVerify ? { insecure_skip_verify: true } : {};
+  if (p.dialTimeout) t.dial_timeout = p.dialTimeout;
+  if (p.responseHeaderTimeout) t.response_header_timeout = p.responseHeaderTimeout;
+  return t;
+}
+
 /** Builds the reverse_proxy directive lines for a proxy (tab-indented). */
-function buildReverseProxyLines(p: Pick<ProxyEntry, "targetScheme" | "targetHost" | "targetPort" | "tlsSkipVerify" | "requestHeaders">): string[] {
+function buildReverseProxyLines(p: Pick<ProxyEntry, "targetScheme" | "targetHost" | "targetPort" | "tlsSkipVerify" | "requestHeaders" | "dialTimeout" | "responseHeaderTimeout">): string[] {
   const upstream = p.targetScheme === "https"
     ? `https://${p.targetHost}:${p.targetPort}`
     : `http://${p.targetHost}:${p.targetPort}`;
@@ -360,16 +386,11 @@ function buildReverseProxyLines(p: Pick<ProxyEntry, "targetScheme" | "targetHost
     return `\t\theader_up ${h.name} ${h.value ?? ""}`;
   });
 
-  const needsBlock = (p.targetScheme === "https" && p.tlsSkipVerify) || headerLines.length > 0;
+  const transportLines = buildTransportLines(p);
+  const needsBlock = transportLines.length > 0 || headerLines.length > 0;
   if (!needsBlock) return [`\treverse_proxy ${upstream}`];
 
-  const lines = [`\treverse_proxy ${upstream} {`];
-  if (p.targetScheme === "https" && p.tlsSkipVerify) {
-    lines.push("\t\ttransport http {", "\t\t\ttls_insecure_skip_verify", "\t\t}");
-  }
-  lines.push(...headerLines);
-  lines.push("\t}");
-  return lines;
+  return [`\treverse_proxy ${upstream} {`, ...transportLines, ...headerLines, "\t}"];
 }
 
 function buildExternalAddress(p: Pick<ProxyEntry, "externalPort" | "externalScheme" | "externalHost">): string {
@@ -678,6 +699,8 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
     // Transport presence means HTTPS upstream
     const targetScheme: "http" | "https" = rp.transport?.tls !== undefined ? "https" : "http";
     const tlsSkipVerify = rp.transport?.tls?.insecure_skip_verify ?? false;
+    const dialTimeout = rp.transport?.dial_timeout as string | undefined;
+    const responseHeaderTimeout = rp.transport?.response_header_timeout as string | undefined;
 
     const tls = Array.isArray(server.tls_connection_policies) && server.tls_connection_policies.length > 0;
 
@@ -702,6 +725,8 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
       tlsSkipVerify,
       serverKey: key,
       compress: compress || undefined,
+      dialTimeout: dialTimeout || undefined,
+      responseHeaderTimeout: responseHeaderTimeout || undefined,
       rewrite,
       requestHeaders: requestHeaders.length ? requestHeaders : undefined,
       responseHeaders: responseHeadersParsed.length ? responseHeadersParsed : undefined,
@@ -781,17 +806,13 @@ function parseResponseHeadersJson(h: AnyHandler): import("./types").HeaderOperat
   return ops;
 }
 
-function buildReverseProxyHandler(proxy: Pick<ProxyEntry, "targetHost" | "targetPort" | "targetScheme" | "tlsSkipVerify" | "requestHeaders">): CaddyReverseProxyHandler {
+function buildReverseProxyHandler(proxy: Pick<ProxyEntry, "targetHost" | "targetPort" | "targetScheme" | "tlsSkipVerify" | "requestHeaders" | "dialTimeout" | "responseHeaderTimeout">): CaddyReverseProxyHandler {
   const rp: CaddyReverseProxyHandler = {
     handler: "reverse_proxy",
     upstreams: [{ dial: `${proxy.targetHost}:${proxy.targetPort}` }],
   };
-  if (proxy.targetScheme === "https") {
-    rp.transport = {
-      protocol: "http",
-      tls: proxy.tlsSkipVerify ? { insecure_skip_verify: true } : {},
-    };
-  }
+  const transport = buildTransport(proxy);
+  if (transport) rp.transport = transport;
   const hdrs = buildRequestHeadersJson(proxy.requestHeaders);
   if (hdrs) rp.headers = hdrs;
   return rp;
@@ -838,9 +859,7 @@ function patchHandles(handles: CaddyHandler[], proxy: ProxyEntry): CaddyHandler[
     if (h.handler === "reverse_proxy") {
       found = true;
       const rp = h as CaddyReverseProxyHandler;
-      const transport = proxy.targetScheme === "https"
-        ? { ...(rp.transport ?? {}), protocol: "http", tls: { ...(rp.transport?.tls ?? {}), insecure_skip_verify: proxy.tlsSkipVerify || undefined } }
-        : undefined;
+      const transport = buildTransport(proxy) ?? (proxy.targetScheme !== "https" ? undefined : { ...(rp.transport ?? {}), protocol: "http" as const });
       const hdrs = buildRequestHeadersJson(proxy.requestHeaders);
       return { ...rp, upstreams: [{ dial: `${proxy.targetHost}:${proxy.targetPort}` }], transport, headers: hdrs };
     }

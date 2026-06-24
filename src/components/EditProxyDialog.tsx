@@ -25,6 +25,7 @@ import type { ProxyEntry, RewriteConfig, HeaderOperation } from "../api";
 import { RewriteSection } from "./RewriteSection";
 import { RequestHeadersSection } from "./RequestHeadersSection";
 import { ResponseHeadersSection } from "./ResponseHeadersSection";
+import { TransportSection, type TransportValues } from "./TransportSection";
 
 interface Props {
   proxy: ProxyEntry;
@@ -51,6 +52,10 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
   const [rewrite, setRewrite] = useState<RewriteConfig | undefined>(proxy.rewrite);
   const [requestHeaders, setRequestHeaders] = useState<HeaderOperation[] | undefined>(proxy.requestHeaders);
   const [responseHeaders, setResponseHeaders] = useState<HeaderOperation[] | undefined>(proxy.responseHeaders);
+  const [transport, setTransport] = useState<TransportValues>({
+    dialTimeout: proxy.dialTimeout ?? "",
+    responseHeaderTimeout: proxy.responseHeaderTimeout ?? "",
+  });
   const [extraSchemes, setExtraSchemes] = useState<string[]>([]);
   const [extHostErr, setExtHostErr] = useState<string | null>(null);
 
@@ -230,6 +235,7 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
             />
           </FormGroup>
         </Form>
+        <TransportSection value={transport} onChange={setTransport} isDisabled={isConfirming} />
         <RewriteSection value={rewrite} onChange={setRewrite} isDisabled={isConfirming} />
         <RequestHeadersSection value={requestHeaders} onChange={setRequestHeaders} isDisabled={isConfirming} />
         <ResponseHeadersSection value={responseHeaders} onChange={setResponseHeaders} isDisabled={isConfirming} />
@@ -260,6 +266,8 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
                   tlsSkipVerify: targetScheme === "https" ? tlsSkipVerify : false,
                   compress: compress || undefined,
                   label: label.trim() || undefined,
+                  dialTimeout: transport.dialTimeout.trim() || undefined,
+                  responseHeaderTimeout: transport.responseHeaderTimeout.trim() || undefined,
                   rewrite: rewrite ?? undefined,
                   requestHeaders: requestHeaders ?? undefined,
                   responseHeaders: responseHeaders ?? undefined,
