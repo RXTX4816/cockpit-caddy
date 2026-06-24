@@ -58,6 +58,7 @@
     "tls_self_signed": "Self-signed",
     "tls_none": "None",
     "tls_skip_verify": "Skip verify",
+    "upstream_failing": "Upstream: failures detected",
     "copy_url": "Copy URL",
     "load_failed": "Failed to load proxies",
     "service_not_running": "Start the Caddy service to view and manage proxies.",

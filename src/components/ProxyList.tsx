@@ -38,6 +38,7 @@ import { AddProxyDialog } from "./AddProxyDialog";
 import { EditProxyDialog } from "./EditProxyDialog";
 import { ProxyCard } from "./ProxyCard";
 import { useProxies } from "../hooks/useProxies";
+import { useUpstreamStatus } from "../hooks/useUpstreamStatus";
 import type { ProxyEntry } from "../api";
 
 type ProxyLayout = "list" | "card";
@@ -75,11 +76,12 @@ function HeaderRow() {
   );
 }
 
-function ProxyRow({ proxy, onEdit, onDelete, onDuplicate }: {
+function ProxyRow({ proxy, onEdit, onDelete, onDuplicate, upstreamFailing }: {
   proxy: ProxyEntry;
   onEdit: (p: ProxyEntry) => void;
   onDelete: (p: ProxyEntry) => void;
   onDuplicate: (p: ProxyEntry) => void;
+  upstreamFailing?: boolean;
 }) {
   const { t } = useTranslation();
   const proto = proxy.tls ? "https" : "http";
@@ -96,15 +98,31 @@ function ProxyRow({ proxy, onEdit, onDelete, onDuplicate }: {
                 : <span style={{ color: "var(--pf-v6-global--Color--200)" }}>—</span>}
             </DataListCell>,
             <DataListCell key="port" width={1}>
-              <a
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-                id={`proxy-${proxy.id}`}
-                style={{ fontFamily: "monospace", fontWeight: "bold" }}
-              >
-                :{proxy.externalPort}
-              </a>
+              <span style={{ display: "inline-flex", alignItems: "center" }}>
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  id={`proxy-${proxy.id}`}
+                  style={{ fontFamily: "monospace", fontWeight: "bold" }}
+                >
+                  :{proxy.externalPort}
+                </a>
+                {upstreamFailing && (
+                  <span
+                    title={t("proxies.upstream_failing")}
+                    style={{
+                      display: "inline-block",
+                      width: "8px",
+                      height: "8px",
+                      borderRadius: "50%",
+                      backgroundColor: "var(--pf-t--global--color--status--danger--default)",
+                      marginLeft: "5px",
+                      flexShrink: 0,
+                    }}
+                  />
+                )}
+              </span>
             </DataListCell>,
             <DataListCell key="target" width={2}>
               <code style={{ fontSize: "0.85em" }}>
@@ -149,6 +167,7 @@ export function ProxyList({ onViewLogs }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
   const { proxies, loading, error, refresh, addProxy, editProxy, deleteProxy, needsMigration, migrate } = useProxies();
+  const failingUpstreams = useUpstreamStatus();
   const [layout, setLayout] = useLayout<ProxyLayout>("cockpit-caddy:proxy-layout", "list", ["list", "card"]);
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
@@ -377,6 +396,7 @@ export function ProxyList({ onViewLogs }: Props) {
                   onEdit={tryEdit}
                   onDelete={tryDelete}
                   onDuplicate={tryDuplicate}
+                  upstreamFailing={failingUpstreams.has(`${proxy.targetHost}:${proxy.targetPort}`)}
                 />
               ))}
             </Gallery>
@@ -390,6 +410,7 @@ export function ProxyList({ onViewLogs }: Props) {
                   onEdit={tryEdit}
                   onDelete={tryDelete}
                   onDuplicate={tryDuplicate}
+                  upstreamFailing={failingUpstreams.has(`${proxy.targetHost}:${proxy.targetPort}`)}
                 />
               ))}
             </DataList>

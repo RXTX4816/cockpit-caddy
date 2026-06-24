@@ -697,6 +697,18 @@ export function mergeProxy(config: CaddyConfig, proxy: ProxyEntry): CaddyConfig 
   };
 }
 
+export async function fetchUpstreamStatus(): Promise<import("./types").UpstreamStatus[]> {
+  try {
+    const data = await (transport === "unix"
+      ? unixGet("/reverse_proxy/upstreams")
+      : tcpGet("/reverse_proxy/upstreams"));
+    const parsed = JSON.parse(data) as import("./types").UpstreamStatus[] | null;
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 export function removeProxy(config: CaddyConfig, serverKey: string): CaddyConfig {
   const servers = { ...(config.apps?.http?.servers ?? {}) };
   delete servers[serverKey];
