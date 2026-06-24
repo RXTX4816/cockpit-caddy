@@ -69,6 +69,18 @@ export function ProxyCard({ proxy, onEdit, onDelete, onDuplicate, upstreamFailin
                 <Label isCompact color="purple">{t("proxies.type_redirect")} {proxy.redirect.code}</Label>
               </div>
             </>
+          ) : proxy.fileServer ? (
+            <>
+              <code style={{ color: "var(--pf-t--global--text--color--subtle)" }}>
+                {proxy.fileServer.root}
+              </code>
+              <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap" }}>
+                <Label isCompact color="green">{t("proxies.type_static")}</Label>
+                {proxy.fileServer.browse && <Label isCompact color="teal">browse</Label>}
+                {proxy.tls && <Label isCompact color="blue">{t("proxies.tls_self_signed")}</Label>}
+                {!proxy.tls && <Label isCompact color="grey">{t("proxies.tls_none")}</Label>}
+              </div>
+            </>
           ) : (
             <>
               <code style={{ color: "var(--pf-t--global--text--color--subtle)" }}>

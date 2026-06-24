@@ -50,6 +50,8 @@
     "empty_body": "Add a proxy to expose a local service over HTTPS.",
     "add_proxy": "Add Proxy",
     "add_redirect": "Add Redirect",
+    "add_static": "Add Static",
+    "type_static": "Static",
     "search_placeholder": "Search proxies…",
     "col_port": "External Port",
     "col_type": "Type",
@@ -106,6 +108,27 @@
     "validation_target_host_required": "Target host is required",
     "error_save_failed": "Failed to save proxy",
     "confirm_body": "This will create a reverse proxy :{{port}} → {{target}} and reload Caddy's configuration."
+  },
+  "add_static": {
+    "title": "Add Static File Server",
+    "aria_label": "Add static file server dialog",
+    "field_root": "Root Directory",
+    "field_root_placeholder": "/var/www/html",
+    "field_root_help": "Path on disk to serve files from",
+    "field_browse": "Enable directory listing (browse)",
+    "add_button": "Add Static Server",
+    "validation_port_required": "Port is required",
+    "validation_port_number": "Port must be a number",
+    "validation_port_range": "Port must be between 1 and 65535",
+    "validation_port_duplicate": "Port {{port}} is already in use",
+    "validation_root_required": "Root directory is required",
+    "confirm_body": "This will create a static file server on :{{port}} serving {{root}} and reload Caddy's configuration."
+  },
+  "edit_static": {
+    "title": "Edit Static Server — :{{port}}",
+    "aria_label": "Edit static file server dialog",
+    "save_button": "Save Changes",
+    "confirm_body": "This will update the static file server on :{{port}} and reload Caddy's configuration."
   },
   "add_redirect": {
     "title": "Add Redirect",

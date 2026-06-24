@@ -427,6 +427,10 @@ export function proxyToBlock(p: ProxyEntry): string {
   const lines = p.label ? [`# label: ${p.label}`, `${header} {`] : [`${header} {`];
   if (p.redirect) {
     lines.push(`\tredir ${p.redirect.to} ${p.redirect.code}`);
+  } else if (p.fileServer) {
+    if (p.tls) lines.push("\ttls internal");
+    lines.push(`\troot * ${p.fileServer.root}`);
+    lines.push(p.fileServer.browse ? "\tfile_server browse" : "\tfile_server");
   } else {
     if (p.tls) lines.push("\ttls internal");
     if (p.compress) lines.push("\tencode gzip zstd");
@@ -477,6 +481,13 @@ function patchRawBlock(raw: string, proxy: ProxyEntry): string {
         continue;
       }
 
+      // Skip top-level `root` and `file_server` directives
+      if (trimmed.startsWith("root ") || trimmed === "file_server" || trimmed.startsWith("file_server ")) {
+        nestDepth += opens - closes;
+        i++;
+        continue;
+      }
+
       // Skip top-level `basic_auth` block
       if (trimmed === "basic_auth" || trimmed.startsWith("basic_auth ")) {
         nestDepth += opens - closes;
@@ -509,9 +520,14 @@ function patchRawBlock(raw: string, proxy: ProxyEntry): string {
 
   // Re-add updated directives before closing brace
   if (proxy.tls) kept.push("\ttls internal");
-  if (proxy.compress) kept.push("\tencode gzip zstd");
-  if (proxy.basicAuth?.length) kept.push(...buildBasicAuthCaddyLines(proxy.basicAuth));
-  kept.push(...buildReverseProxyLines(proxy));
+  if (proxy.fileServer) {
+    kept.push(`\troot * ${proxy.fileServer.root}`);
+    kept.push(proxy.fileServer.browse ? "\tfile_server browse" : "\tfile_server");
+  } else {
+    if (proxy.compress) kept.push("\tencode gzip zstd");
+    if (proxy.basicAuth?.length) kept.push(...buildBasicAuthCaddyLines(proxy.basicAuth));
+    kept.push(...buildReverseProxyLines(proxy));
+  }
   kept.push(lines[closingIdx]); // closing }
   return kept.join("\n");
 }
@@ -724,6 +740,25 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
       continue;
     }
 
+    // Detect file_server
+    const fsHandle = allHandles.find(h => h.handler === "file_server") as
+      { handler: string; root?: string; browse?: Record<string, unknown> } | undefined;
+    if (fsHandle) {
+      proxies.push({
+        id: String(externalPort),
+        externalPort,
+        externalHost,
+        targetHost: "localhost",
+        targetPort: 0,
+        targetScheme: "http",
+        tls: Array.isArray(server.tls_connection_policies) && server.tls_connection_policies.length > 0,
+        tlsSkipVerify: false,
+        serverKey: key,
+        fileServer: { root: fsHandle.root ?? "/", browse: fsHandle.browse !== undefined },
+      });
+      continue;
+    }
+
     const rp = findReverseProxy(allHandles);
     if (!rp) continue;
 
@@ -875,6 +910,16 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
       }],
     };
   }
+  if (proxy.fileServer) {
+    const fsHandler: Record<string, unknown> = { handler: "file_server", root: proxy.fileServer.root };
+    if (proxy.fileServer.browse) fsHandler["browse"] = {};
+    const server: CaddyServer = {
+      listen: [listenAddr],
+      routes: [{ handle: [fsHandler as CaddyHandler], terminal: true }],
+    };
+    if (proxy.tls) server.tls_connection_policies = [{}];
+    return server;
+  }
   const handles: CaddyHandler[] = [];
   if (proxy.compress) handles.push(buildEncodeHandler());
   if (proxy.basicAuth?.length) handles.push(buildBasicAuthHandler(proxy.basicAuth));
@@ -893,9 +938,14 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
 
 /** Patch handles in-place: update reverse_proxy and rewrite handlers, leave everything else untouched. */
 function patchHandles(handles: CaddyHandler[], proxy: ProxyEntry): CaddyHandler[] {
+  if (proxy.fileServer) {
+    const fsHandler: Record<string, unknown> = { handler: "file_server", root: proxy.fileServer.root };
+    if (proxy.fileServer.browse) fsHandler["browse"] = {};
+    return [fsHandler as CaddyHandler];
+  }
   let found = false;
-  // Strip any existing encode/authentication/rewrite/headers handlers; we'll re-add the correct ones below
-  const withoutRewrite = handles.filter(h => h.handler !== "rewrite" && h.handler !== "headers" && h.handler !== "encode" && h.handler !== "authentication");
+  // Strip any existing encode/authentication/rewrite/headers/file_server handlers; we'll re-add the correct ones below
+  const withoutRewrite = handles.filter(h => h.handler !== "rewrite" && h.handler !== "headers" && h.handler !== "encode" && h.handler !== "authentication" && h.handler !== "file_server");
   const patched = withoutRewrite.map(h => {
     if (h.handler === "reverse_proxy") {
       found = true;

@@ -36,8 +36,10 @@ import {
 import { useLayout } from "@rxtx4816/cockpit-plugin-base-react";
 import { AddProxyDialog } from "./AddProxyDialog";
 import { AddRedirectDialog } from "./AddRedirectDialog";
+import { AddStaticDialog } from "./AddStaticDialog";
 import { EditProxyDialog } from "./EditProxyDialog";
 import { EditRedirectDialog } from "./EditRedirectDialog";
+import { EditStaticDialog } from "./EditStaticDialog";
 import { ProxyCard } from "./ProxyCard";
 import { useProxies } from "../hooks/useProxies";
 import { useUpstreamStatus } from "../hooks/useUpstreamStatus";
@@ -59,10 +61,11 @@ function extractLogsSearch(message: string): string {
 // Pending action that the gate modal is guarding
 type GateAction = "add" | { type: "edit"; proxy: ProxyEntry } | { type: "delete"; proxy: ProxyEntry };
 
-type EntryTypeColor = "blue" | "purple" | "teal" | "grey";
+type EntryTypeColor = "blue" | "purple" | "teal" | "grey" | "green";
 interface EntryType { label: string; color: EntryTypeColor; badge?: string }
 function entryType(proxy: ProxyEntry, t: (k: string) => string): EntryType {
   if (proxy.redirect) return { label: t("proxies.type_redirect"), color: "purple" };
+  if (proxy.fileServer) return { label: t("proxies.type_static"), color: "green", badge: proxy.fileServer.browse ? "browse" : undefined };
   if (proxy.rewrite) return { label: t("proxies.type_proxy"), color: "blue", badge: t(`rewrite.type_${proxy.rewrite.type}`) };
   return { label: t("proxies.type_proxy"), color: "blue" };
 }
@@ -150,7 +153,9 @@ function ProxyRow({ proxy, onEdit, onDelete, onDuplicate, upstreamFailing }: {
               <code style={{ fontSize: "0.85em" }}>
                 {proxy.redirect
                   ? proxy.redirect.to
-                  : `${proxy.targetScheme}://${proxy.targetHost}:${proxy.targetPort}`}
+                  : proxy.fileServer
+                    ? proxy.fileServer.root
+                    : `${proxy.targetScheme}://${proxy.targetHost}:${proxy.targetPort}`}
               </code>
             </DataListCell>,
             <DataListCell key="tls" width={1}>
@@ -161,7 +166,7 @@ function ProxyRow({ proxy, onEdit, onDelete, onDuplicate, upstreamFailing }: {
               ) : (
                 <Label color="grey" isCompact>{t("proxies.tls_none")}</Label>
               )}
-              {!proxy.redirect && proxy.tlsSkipVerify && (
+              {!proxy.redirect && !proxy.fileServer && proxy.tlsSkipVerify && (
                 <>{" "}<Label color="orange" isCompact>{t("proxies.tls_skip_verify")}</Label></>
               )}
             </DataListCell>,
@@ -198,6 +203,7 @@ export function ProxyList({ onViewLogs }: Props) {
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [showAddRedirect, setShowAddRedirect] = useState(false);
+  const [showAddStatic, setShowAddStatic] = useState(false);
   const [editing, setEditing] = useState<ProxyEntry | null>(null);
   const [duplicating, setDuplicating] = useState<ProxyEntry | null>(null);
 
@@ -383,6 +389,11 @@ export function ProxyList({ onViewLogs }: Props) {
                 </Button>
               </ToolbarItem>
               <ToolbarItem>
+                <Button variant="secondary" onClick={() => setShowAddStatic(true)}>
+                  {t("proxies.add_static")}
+                </Button>
+              </ToolbarItem>
+              <ToolbarItem>
                 <CollapsibleSearch
                   value={search}
                   onChange={setSearch}
@@ -533,6 +544,19 @@ export function ProxyList({ onViewLogs }: Props) {
             label: duplicating.label ? `${duplicating.label} (copy)` : "",
           }}
         />
+      ) : duplicating.fileServer ? (
+        <AddStaticDialog
+          existingPorts={proxies.map(p => p.externalPort)}
+          onAdd={addProxy}
+          onClose={() => setDuplicating(null)}
+          initialValues={{
+            port: "",
+            root: duplicating.fileServer.root,
+            browse: duplicating.fileServer.browse,
+            tls: duplicating.tls,
+            label: duplicating.label ? `${duplicating.label} (copy)` : "",
+          }}
+        />
       ) : (
         <AddProxyDialog
           existingPorts={proxies.map(p => p.externalPort)}
@@ -570,8 +594,23 @@ export function ProxyList({ onViewLogs }: Props) {
         />
       )}
 
+      {showAddStatic && (
+        <AddStaticDialog
+          existingPorts={proxies.map(p => p.externalPort)}
+          onAdd={addProxy}
+          onClose={() => setShowAddStatic(false)}
+        />
+      )}
+
       {editing && (editing.redirect ? (
         <EditRedirectDialog
+          proxy={editing}
+          existingPorts={proxies.filter(p => p.id !== editing.id).map(p => p.externalPort)}
+          onSave={editProxy}
+          onClose={() => setEditing(null)}
+        />
+      ) : editing.fileServer ? (
+        <EditStaticDialog
           proxy={editing}
           existingPorts={proxies.filter(p => p.id !== editing.id).map(p => p.externalPort)}
           onSave={editProxy}
