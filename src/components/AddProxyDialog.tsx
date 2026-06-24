@@ -27,6 +27,8 @@ import { RequestHeadersSection } from "./RequestHeadersSection";
 import { ResponseHeadersSection } from "./ResponseHeadersSection";
 import { TransportSection, type TransportValues } from "./TransportSection";
 import { BasicAuthSection, type AuthEntry } from "./BasicAuthSection";
+import { UpstreamsSection, validateUpstreams, type ExtraUpstream } from "./UpstreamsSection";
+import type { LbPolicy } from "../api";
 import { hashPassword } from "../api";
 
 interface FormState {
@@ -68,9 +70,11 @@ interface Props {
   initialResponseHeaders?: HeaderOperation[];
   initialTransport?: TransportValues;
   initialBasicAuth?: AuthEntry[];
+  initialExtraUpstreams?: ExtraUpstream[];
+  initialLbPolicy?: LbPolicy;
 }
 
-export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, initialValues, initialRewrite, initialRequestHeaders, initialResponseHeaders, initialTransport, initialBasicAuth }: Props) {
+export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, initialValues, initialRewrite, initialRequestHeaders, initialResponseHeaders, initialTransport, initialBasicAuth, initialExtraUpstreams, initialLbPolicy }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
   const confirmAction = useConfirmAction();
@@ -93,6 +97,8 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
   const [responseHeaders, setResponseHeaders] = useState<HeaderOperation[] | undefined>(initialResponseHeaders);
   const [transport, setTransport] = useState<TransportValues>(initialTransport ?? { dialTimeout: "", responseHeaderTimeout: "" });
   const [basicAuth, setBasicAuth] = useState<AuthEntry[]>(initialBasicAuth ?? []);
+  const [extraUpstreams, setExtraUpstreams] = useState<ExtraUpstream[]>(initialExtraUpstreams ?? []);
+  const [lbPolicy, setLbPolicy] = useState<LbPolicy | "">(initialLbPolicy ?? "");
   const [extraSchemes, setExtraSchemes] = useState<string[]>([]);
 
   useEffect(() => {
@@ -129,7 +135,8 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
 
   function handleAddClick() {
     const errs = validate();
-    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
+    const upstreamErr = validateUpstreams(extraUpstreams);
+    if (Object.keys(errs).length > 0 || upstreamErr) { setErrors(errs); return; }
     confirmAction.confirm();
   }
 
@@ -304,6 +311,12 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
         <RewriteSection value={rewrite} onChange={setRewrite} isDisabled={isLocked} />
         <RequestHeadersSection value={requestHeaders} onChange={setRequestHeaders} isDisabled={isLocked} />
         <ResponseHeadersSection value={responseHeaders} onChange={setResponseHeaders} isDisabled={isLocked} />
+        <UpstreamsSection
+          value={extraUpstreams}
+          lbPolicy={lbPolicy}
+          onChange={(u, p) => { setExtraUpstreams(u); setLbPolicy(p); }}
+          isDisabled={isLocked}
+        />
 
         {confirmAction.error && (
           <Alert variant="danger" isInline title={confirmAction.error} style={{ marginTop: "var(--pf-v6-global--spacer--md)" }} />
@@ -333,6 +346,10 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
                     rewrite: rewrite ?? undefined,
                     requestHeaders: requestHeaders ?? undefined,
                     responseHeaders: responseHeaders ?? undefined,
+                    extraUpstreams: extraUpstreams.length
+                      ? extraUpstreams.map(u => ({ host: u.host.trim(), port: parseInt(u.port, 10) }))
+                      : undefined,
+                    lbPolicy: (lbPolicy || undefined) as LbPolicy | undefined,
                   });
                 } catch (e) {
                   if (e instanceof CaddyApiError) {

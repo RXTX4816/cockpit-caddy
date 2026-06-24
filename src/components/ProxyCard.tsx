@@ -103,6 +103,7 @@ export function ProxyCard({ proxy, onEdit, onDelete, onDuplicate, upstreamFailin
                 {proxy.compress && <Label isCompact color="teal" variant="outline">{t("proxies.indicator_compress")}</Label>}
                 {proxy.basicAuth?.length ? <Label isCompact color="red" variant="outline">{t("proxies.indicator_auth")}</Label> : null}
                 {(proxy.dialTimeout ?? proxy.responseHeaderTimeout) && <Label isCompact color="grey" variant="outline">{t("proxies.indicator_timeouts")}</Label>}
+                {proxy.extraUpstreams?.length ? <Label isCompact color="blue" variant="outline">{t("proxies.indicator_lb")}</Label> : null}
               </div>
             </>
           )}

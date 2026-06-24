@@ -27,7 +27,9 @@ import { RequestHeadersSection } from "./RequestHeadersSection";
 import { ResponseHeadersSection } from "./ResponseHeadersSection";
 import { TransportSection, type TransportValues } from "./TransportSection";
 import { BasicAuthSection, type AuthEntry } from "./BasicAuthSection";
+import { UpstreamsSection, validateUpstreams, type ExtraUpstream } from "./UpstreamsSection";
 import { hashPassword } from "../api";
+import type { LbPolicy } from "../api";
 
 async function resolveBasicAuth(entries: AuthEntry[]): Promise<{ username: string; passwordHash: string }[]> {
   return Promise.all(
@@ -74,6 +76,10 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
   const [basicAuth, setBasicAuth] = useState<AuthEntry[]>(
     (proxy.basicAuth ?? []).map(a => ({ username: a.username, password: "", existingHash: a.passwordHash }))
   );
+  const [extraUpstreams, setExtraUpstreams] = useState<ExtraUpstream[]>(
+    (proxy.extraUpstreams ?? []).map(u => ({ host: u.host, port: String(u.port) }))
+  );
+  const [lbPolicy, setLbPolicy] = useState<LbPolicy | "">(proxy.lbPolicy ?? "");
   const [extraSchemes, setExtraSchemes] = useState<string[]>([]);
   const [extHostErr, setExtHostErr] = useState<string | null>(null);
 
@@ -100,6 +106,7 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
       setExtHostErr(t("add_proxy.validation_ext_host_required_with_scheme"));
       return;
     }
+    if (validateUpstreams(extraUpstreams)) return;
     setExtHostErr(null);
     saveConfirm.confirm();
   }
@@ -258,6 +265,12 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
         <RewriteSection value={rewrite} onChange={setRewrite} isDisabled={isConfirming} />
         <RequestHeadersSection value={requestHeaders} onChange={setRequestHeaders} isDisabled={isConfirming} />
         <ResponseHeadersSection value={responseHeaders} onChange={setResponseHeaders} isDisabled={isConfirming} />
+        <UpstreamsSection
+          value={extraUpstreams}
+          lbPolicy={lbPolicy}
+          onChange={(u, p) => { setExtraUpstreams(u); setLbPolicy(p); }}
+          isDisabled={isConfirming}
+        />
 
         {saveConfirm.error && (
           <Alert variant="danger" isInline title={saveConfirm.error} style={{ marginTop: "var(--pf-v6-global--spacer--md)" }} />
@@ -291,6 +304,10 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
                   rewrite: rewrite ?? undefined,
                   requestHeaders: requestHeaders ?? undefined,
                   responseHeaders: responseHeaders ?? undefined,
+                  extraUpstreams: extraUpstreams.length
+                    ? extraUpstreams.map(u => ({ host: u.host.trim(), port: parseInt(u.port, 10) }))
+                    : undefined,
+                  lbPolicy: (lbPolicy || undefined) as LbPolicy | undefined,
                 };
                 try {
                   await onSave(entry);

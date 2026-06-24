@@ -79,6 +79,7 @@ function FlagChips({ proxy, t }: { proxy: ProxyEntry; t: (k: string) => string }
   if (proxy.compress) chips.push({ label: t("proxies.indicator_compress"), color: "teal" });
   if (proxy.basicAuth?.length) chips.push({ label: t("proxies.indicator_auth"), color: "red" });
   if (proxy.dialTimeout ?? proxy.responseHeaderTimeout) chips.push({ label: t("proxies.indicator_timeouts"), color: "grey" });
+  if (proxy.extraUpstreams?.length) chips.push({ label: t("proxies.indicator_lb"), color: "blue" });
   if (chips.length === 0) return <span style={{ color: "var(--pf-v6-global--Color--200)" }}>—</span>;
   return (
     <div style={{ display: "flex", gap: "0.2rem", flexWrap: "wrap" }}>
@@ -603,6 +604,8 @@ export function ProxyList({ onViewLogs }: Props) {
             responseHeaderTimeout: duplicating.responseHeaderTimeout ?? "",
           }}
           initialBasicAuth={(duplicating.basicAuth ?? []).map(a => ({ username: a.username, password: "", existingHash: a.passwordHash }))}
+          initialExtraUpstreams={(duplicating.extraUpstreams ?? []).map(u => ({ host: u.host, port: String(u.port) }))}
+          initialLbPolicy={duplicating.lbPolicy}
         />
       ))}
 
