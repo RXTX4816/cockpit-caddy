@@ -18,21 +18,29 @@ export class CaddyApiError extends Error {
 // distros (IPv4/IPv6 resolution differences). curl is available on all supported distros.
 type Transport = "tcp" | "unix";
 
-const TCP_BASE = "http://127.0.0.1:2019";
-const UNIX_SOCKET = "/run/caddy/admin.socket";
+let tcpBase = "http://127.0.0.1:2019";
+let unixSocket = "/run/caddy/admin.socket";
+
+export const ADMIN_TCP_DEFAULT = "http://127.0.0.1:2019";
+export const ADMIN_SOCKET_DEFAULT = "/run/caddy/admin.socket";
+
+export function setAdminAddress(tcp: string, socket: string): void {
+  tcpBase = tcp || ADMIN_TCP_DEFAULT;
+  unixSocket = socket || ADMIN_SOCKET_DEFAULT;
+}
 
 let transport: Transport | null = null;
 
 async function tcpGet(path: string): Promise<string> {
   return cockpit.spawn(
-    ["curl", "-sf", "--connect-timeout", "2", `${TCP_BASE}${path}`],
+    ["curl", "-sf", "--connect-timeout", "2", `${tcpBase}${path}`],
     { err: "ignore" },
   );
 }
 
 async function unixGet(path: string): Promise<string> {
   return cockpit.spawn(
-    ["curl", "-sf", "--unix-socket", UNIX_SOCKET, `http://localhost${path}`],
+    ["curl", "-sf", "--unix-socket", unixSocket, `http://localhost${path}`],
     { superuser: "try" },
   );
 }
@@ -56,15 +64,48 @@ async function curlPost(curlArgs: string[], body: string, opts: object = {}): Pr
 }
 
 async function tcpPost(path: string, body: string): Promise<void> {
-  await curlPost(["curl", `${TCP_BASE}${path}`], body);
+  await curlPost(["curl", `${tcpBase}${path}`], body);
 }
 
 async function unixPost(path: string, body: string): Promise<void> {
   await curlPost(
-    ["curl", "--unix-socket", UNIX_SOCKET, `http://localhost${path}`],
+    ["curl", "--unix-socket", unixSocket, `http://localhost${path}`],
     body,
     { superuser: "try" },
   );
+}
+
+export async function pingCaddyUnixSocket(): Promise<boolean> {
+  try {
+    await unixGet("/config/");
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function testTcpConnection(address: string): Promise<boolean> {
+  try {
+    await cockpit.spawn(
+      ["curl", "-sf", "--connect-timeout", "2", `${address}/config/`],
+      { err: "ignore" },
+    );
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function testUnixSocket(socketPath: string): Promise<boolean> {
+  try {
+    await cockpit.spawn(
+      ["curl", "-sf", "--unix-socket", socketPath, "http://localhost/config/"],
+      { superuser: "try" },
+    );
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function pingCaddyApi(): Promise<boolean> {
