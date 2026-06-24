@@ -36,6 +36,8 @@ function FailDot({ t }: { t: (k: string) => string }) {
   );
 }
 
+const chipRow = { display: "flex", gap: "0.2rem", flexWrap: "wrap" } as const;
+
 export function ProxyCard({ proxy, onEdit, onDelete, onDuplicate, upstreamFailing }: Props) {
   const { t } = useTranslation();
   const proto = proxy.tls ? "https" : "http";
@@ -58,15 +60,17 @@ export function ProxyCard({ proxy, onEdit, onDelete, onDuplicate, upstreamFailin
         </CardTitle>
       </CardHeader>
       <CardBody>
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", fontSize: "0.85rem" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", fontSize: "0.85rem" }}>
           {proxy.label && portLink}
+
           {proxy.redirect ? (
             <>
               <code style={{ color: "var(--pf-t--global--text--color--subtle)" }}>
                 → {proxy.redirect.to}
               </code>
-              <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap" }}>
-                <Label isCompact color="purple">{t("proxies.type_redirect")} {proxy.redirect.code}</Label>
+              <div style={chipRow}>
+                <Label isCompact color="purple">{t("proxies.type_redirect")}</Label>
+                <Label isCompact color="purple" variant="outline">{proxy.redirect.code}</Label>
               </div>
             </>
           ) : proxy.fileServer ? (
@@ -74,11 +78,14 @@ export function ProxyCard({ proxy, onEdit, onDelete, onDuplicate, upstreamFailin
               <code style={{ color: "var(--pf-t--global--text--color--subtle)" }}>
                 {proxy.fileServer.root}
               </code>
-              <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap" }}>
+              <div style={chipRow}>
                 <Label isCompact color="green">{t("proxies.type_static")}</Label>
-                {proxy.fileServer.browse && <Label isCompact color="teal">browse</Label>}
-                {proxy.tls && <Label isCompact color="blue">{t("proxies.tls_self_signed")}</Label>}
-                {!proxy.tls && <Label isCompact color="grey">{t("proxies.tls_none")}</Label>}
+                {proxy.tls
+                  ? <Label isCompact color="blue" variant="outline">{t("proxies.tls_self_signed")}</Label>
+                  : <Label isCompact color="grey" variant="outline">{t("proxies.tls_none")}</Label>}
+                {proxy.fileServer.browse && <Label isCompact color="teal" variant="outline">browse</Label>}
+                {proxy.compress && <Label isCompact color="teal" variant="outline">{t("proxies.indicator_compress")}</Label>}
+                {proxy.basicAuth?.length ? <Label isCompact color="red" variant="outline">{t("proxies.indicator_auth")}</Label> : null}
               </div>
             </>
           ) : (
@@ -86,11 +93,16 @@ export function ProxyCard({ proxy, onEdit, onDelete, onDuplicate, upstreamFailin
               <code style={{ color: "var(--pf-t--global--text--color--subtle)" }}>
                 → {proxy.targetScheme}://{proxy.targetHost}:{proxy.targetPort}
               </code>
-              <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap" }}>
-                {proxy.tls && <Label isCompact color="blue">{t("proxies.tls_self_signed")}</Label>}
-                {proxy.tlsSkipVerify && <Label isCompact color="orange">{t("proxies.tls_skip_verify")}</Label>}
-                {!proxy.tls && <Label isCompact color="grey">{t("proxies.tls_none")}</Label>}
-                {proxy.rewrite && <Label isCompact color="teal">{t(`rewrite.type_${proxy.rewrite.type}`)}</Label>}
+              <div style={chipRow}>
+                <Label isCompact color="blue">{t("proxies.type_proxy")}</Label>
+                {proxy.tls
+                  ? <Label isCompact color="blue" variant="outline">{t("proxies.tls_self_signed")}</Label>
+                  : <Label isCompact color="grey" variant="outline">{t("proxies.tls_none")}</Label>}
+                {proxy.tlsSkipVerify && <Label isCompact color="orange" variant="outline">{t("proxies.tls_skip_verify")}</Label>}
+                {proxy.rewrite && <Label isCompact color="teal" variant="outline">{t(`rewrite.type_${proxy.rewrite.type}`)}</Label>}
+                {proxy.compress && <Label isCompact color="teal" variant="outline">{t("proxies.indicator_compress")}</Label>}
+                {proxy.basicAuth?.length ? <Label isCompact color="red" variant="outline">{t("proxies.indicator_auth")}</Label> : null}
+                {(proxy.dialTimeout ?? proxy.responseHeaderTimeout) && <Label isCompact color="grey" variant="outline">{t("proxies.indicator_timeouts")}</Label>}
               </div>
             </>
           )}

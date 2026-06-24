@@ -61,13 +61,32 @@ function extractLogsSearch(message: string): string {
 // Pending action that the gate modal is guarding
 type GateAction = "add" | { type: "edit"; proxy: ProxyEntry } | { type: "delete"; proxy: ProxyEntry };
 
-type EntryTypeColor = "blue" | "purple" | "teal" | "grey" | "green";
-interface EntryType { label: string; color: EntryTypeColor; badge?: string }
+type EntryTypeColor = "blue" | "purple" | "teal" | "grey" | "green" | "red" | "orange";
+interface EntryType { label: string; color: EntryTypeColor }
 function entryType(proxy: ProxyEntry, t: (k: string) => string): EntryType {
   if (proxy.redirect) return { label: t("proxies.type_redirect"), color: "purple" };
-  if (proxy.fileServer) return { label: t("proxies.type_static"), color: "green", badge: proxy.fileServer.browse ? "browse" : undefined };
-  if (proxy.rewrite) return { label: t("proxies.type_proxy"), color: "blue", badge: t(`rewrite.type_${proxy.rewrite.type}`) };
+  if (proxy.fileServer) return { label: t("proxies.type_static"), color: "green" };
   return { label: t("proxies.type_proxy"), color: "blue" };
+}
+
+function FlagChips({ proxy, t }: { proxy: ProxyEntry; t: (k: string) => string }) {
+  const chips: { label: string; color: EntryTypeColor }[] = [];
+  if (proxy.redirect) {
+    chips.push({ label: String(proxy.redirect.code), color: "purple" });
+  }
+  if (proxy.rewrite) chips.push({ label: t(`rewrite.type_${proxy.rewrite.type}`), color: "teal" });
+  if (proxy.fileServer?.browse) chips.push({ label: "browse", color: "teal" });
+  if (proxy.compress) chips.push({ label: t("proxies.indicator_compress"), color: "teal" });
+  if (proxy.basicAuth?.length) chips.push({ label: t("proxies.indicator_auth"), color: "red" });
+  if (proxy.dialTimeout ?? proxy.responseHeaderTimeout) chips.push({ label: t("proxies.indicator_timeouts"), color: "grey" });
+  if (chips.length === 0) return <span style={{ color: "var(--pf-v6-global--Color--200)" }}>—</span>;
+  return (
+    <div style={{ display: "flex", gap: "0.2rem", flexWrap: "wrap" }}>
+      {chips.map(c => (
+        <Label key={c.label} isCompact color={c.color} variant="outline">{c.label}</Label>
+      ))}
+    </div>
+  );
 }
 
 function HeaderRow() {
@@ -82,6 +101,7 @@ function HeaderRow() {
             <DataListCell key="port" width={1}><strong>{t("proxies.col_port")}</strong></DataListCell>,
             <DataListCell key="target" width={2}><strong>{t("proxies.col_target")}</strong></DataListCell>,
             <DataListCell key="tls" width={1}><strong>{t("proxies.col_tls")}</strong></DataListCell>,
+            <DataListCell key="flags" width={1}><strong>{t("proxies.col_flags")}</strong></DataListCell>,
             <DataListCell key="actions" width={1}><strong>{t("proxies.col_actions")}</strong></DataListCell>,
           ]}
         />
@@ -112,15 +132,7 @@ function ProxyRow({ proxy, onEdit, onDelete, onDuplicate, upstreamFailing }: {
                 : <span style={{ color: "var(--pf-v6-global--Color--200)" }}>—</span>}
             </DataListCell>,
             <DataListCell key="type" width={1}>
-              {(() => {
-                const et = entryType(proxy, t);
-                return (
-                  <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap" }}>
-                    <Label color={et.color} isCompact>{et.label}</Label>
-                    {et.badge && <Label color="teal" isCompact>{et.badge}</Label>}
-                  </div>
-                );
-              })()}
+              {(() => { const et = entryType(proxy, t); return <Label color={et.color} isCompact>{et.label}</Label>; })()}
             </DataListCell>,
             <DataListCell key="port" width={1}>
               <span style={{ display: "inline-flex", alignItems: "center" }}>
@@ -161,14 +173,19 @@ function ProxyRow({ proxy, onEdit, onDelete, onDuplicate, upstreamFailing }: {
             <DataListCell key="tls" width={1}>
               {proxy.redirect ? (
                 <span style={{ color: "var(--pf-v6-global--Color--200)" }}>—</span>
-              ) : proxy.tls ? (
-                <Label color="blue" isCompact>{t("proxies.tls_self_signed")}</Label>
               ) : (
-                <Label color="grey" isCompact>{t("proxies.tls_none")}</Label>
+                <div style={{ display: "flex", gap: "0.2rem", flexWrap: "wrap" }}>
+                  {proxy.tls
+                    ? <Label color="blue" isCompact variant="outline">{t("proxies.tls_self_signed")}</Label>
+                    : <Label color="grey" isCompact variant="outline">{t("proxies.tls_none")}</Label>}
+                  {!proxy.fileServer && proxy.tlsSkipVerify && (
+                    <Label color="orange" isCompact variant="outline">{t("proxies.tls_skip_verify")}</Label>
+                  )}
+                </div>
               )}
-              {!proxy.redirect && !proxy.fileServer && proxy.tlsSkipVerify && (
-                <>{" "}<Label color="orange" isCompact>{t("proxies.tls_skip_verify")}</Label></>
-              )}
+            </DataListCell>,
+            <DataListCell key="flags" width={1}>
+              <FlagChips proxy={proxy} t={t} />
             </DataListCell>,
             <DataListCell key="actions" width={1}>
               <Button variant="plain" size="sm" onClick={() => onEdit(proxy)}>
