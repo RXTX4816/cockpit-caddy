@@ -21,7 +21,8 @@ import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast, ExternalAddressInput } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { readProxyConf, parseConfExternalAddresses, CaddyApiError } from "../api";
-import type { ProxyEntry } from "../api";
+import type { ProxyEntry, RewriteConfig } from "../api";
+import { RewriteSection } from "./RewriteSection";
 
 interface Props {
   proxy: ProxyEntry;
@@ -44,6 +45,7 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
   const [tls, setTls] = useState(proxy.tls);
   const [tlsSkipVerify, setTlsSkipVerify] = useState(proxy.tlsSkipVerify);
   const [label, setLabel] = useState(proxy.label ?? "");
+  const [rewrite, setRewrite] = useState<RewriteConfig | undefined>(proxy.rewrite);
   const [extraSchemes, setExtraSchemes] = useState<string[]>([]);
   const [extHostErr, setExtHostErr] = useState<string | null>(null);
 
@@ -213,6 +215,7 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
             />
           </FormGroup>
         </Form>
+        <RewriteSection value={rewrite} onChange={setRewrite} isDisabled={isConfirming} />
 
         {saveConfirm.error && (
           <Alert variant="danger" isInline title={saveConfirm.error} style={{ marginTop: "var(--pf-v6-global--spacer--md)" }} />
@@ -239,6 +242,7 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
                   tls,
                   tlsSkipVerify: targetScheme === "https" ? tlsSkipVerify : false,
                   label: label.trim() || undefined,
+                  rewrite: rewrite ?? undefined,
                 };
                 try {
                   await onSave(entry);

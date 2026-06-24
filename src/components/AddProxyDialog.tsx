@@ -21,7 +21,8 @@ import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast, ExternalAddressInput } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { readProxyConf, parseConfExternalAddresses, CaddyApiError } from "../api";
-import type { ProxyEntry } from "../api";
+import type { ProxyEntry, RewriteConfig } from "../api";
+import { RewriteSection } from "./RewriteSection";
 
 interface FormState {
   externalScheme: string;
@@ -43,9 +44,10 @@ interface Props {
   onClose: () => void;
   onApiError?: (message: string) => void;
   initialValues?: Partial<FormState>;
+  initialRewrite?: RewriteConfig;
 }
 
-export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, initialValues }: Props) {
+export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, initialValues, initialRewrite }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
   const confirmAction = useConfirmAction();
@@ -62,6 +64,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
     ...initialValues,
   });
   const [errors, setErrors] = useState<FormErrors>({});
+  const [rewrite, setRewrite] = useState<RewriteConfig | undefined>(initialRewrite);
   const [extraSchemes, setExtraSchemes] = useState<string[]>([]);
 
   useEffect(() => {
@@ -258,6 +261,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
             />
           </FormGroup>
         </Form>
+        <RewriteSection value={rewrite} onChange={setRewrite} isDisabled={isLocked} />
 
         {confirmAction.error && (
           <Alert variant="danger" isInline title={confirmAction.error} style={{ marginTop: "var(--pf-v6-global--spacer--md)" }} />
@@ -280,6 +284,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
                     tls: form.tls,
                     tlsSkipVerify: form.targetScheme === "https" ? form.tlsSkipVerify : false,
                     label: form.label.trim() || undefined,
+                    rewrite: rewrite ?? undefined,
                   });
                 } catch (e) {
                   if (e instanceof CaddyApiError) {

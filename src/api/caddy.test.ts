@@ -6,11 +6,13 @@ import {
   extractRawBlocksFromCaddyfile,
   buildMigratedConfContent,
   proxyToBlock,
+  buildServerEntry,
+  parseProxies,
   surgicallyReplaceBlock,
   surgicallyRemoveBlock,
   surgicallyWriteProxy,
 } from "./caddy";
-import type { ProxyEntry } from "./types";
+import type { CaddyConfig, ProxyEntry } from "./types";
 
 // ---------------------------------------------------------------------------
 // Test fixtures
@@ -348,5 +350,131 @@ describe("surgicallyWriteProxy", () => {
     const result = surgicallyWriteProxy(confWithLabel, p);
     expect(result).not.toContain("# label: old");
     expect(result).toContain("https://host.lan:7700 {");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// URI rewrite — Caddyfile generation (proxyToBlock)
+// ---------------------------------------------------------------------------
+
+describe("proxyToBlock — rewrite", () => {
+  it("emits uri strip_prefix before reverse_proxy", () => {
+    const result = proxyToBlock(proxy({ rewrite: { type: "strip_prefix", value: "/api" } }));
+    const lines = result.split("\n");
+    const rpIdx = lines.findIndex(l => l.includes("reverse_proxy"));
+    const rwIdx = lines.findIndex(l => l.includes("uri strip_prefix /api"));
+    expect(rwIdx).toBeGreaterThan(-1);
+    expect(rwIdx).toBeLessThan(rpIdx);
+  });
+
+  it("emits rewrite add_prefix before reverse_proxy", () => {
+    const result = proxyToBlock(proxy({ rewrite: { type: "add_prefix", value: "/v2" } }));
+    const lines = result.split("\n");
+    const rpIdx = lines.findIndex(l => l.includes("reverse_proxy"));
+    const rwIdx = lines.findIndex(l => l.includes("rewrite /v2{uri}"));
+    expect(rwIdx).toBeGreaterThan(-1);
+    expect(rwIdx).toBeLessThan(rpIdx);
+  });
+
+  it("emits path_regexp matcher + rewrite for regex mode", () => {
+    const result = proxyToBlock(proxy({ rewrite: { type: "regex", find: "^/old/(.*)", replace: "/new/$1" } }));
+    expect(result).toContain("path_regexp rw ^/old/(.*)");
+    expect(result).toContain("{re.rw.1}");
+    expect(result).toContain("reverse_proxy");
+  });
+
+  it("emits no rewrite directive when rewrite is undefined", () => {
+    const result = proxyToBlock(proxy());
+    expect(result).not.toContain("uri strip_prefix");
+    expect(result).not.toContain("path_regexp");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// URI rewrite — JSON API (buildServerEntry + parseProxies round-trip)
+// ---------------------------------------------------------------------------
+
+function makeConfig(handles: Record<string, unknown>[]): CaddyConfig {
+  return {
+    apps: {
+      http: {
+        servers: {
+          srv0: {
+            listen: [":7700"],
+            routes: [{ handle: handles as import("./types").CaddyHandler[], terminal: true }],
+          },
+        },
+      },
+    },
+  };
+}
+
+describe("buildServerEntry — rewrite", () => {
+  it("prepends strip_path_prefix handler for strip_prefix", () => {
+    const server = buildServerEntry(proxy({ rewrite: { type: "strip_prefix", value: "/api" } }));
+    const handles = server.routes[0].handle as Array<{ handler: string; strip_path_prefix?: string }>;
+    expect(handles[0].handler).toBe("rewrite");
+    expect(handles[0].strip_path_prefix).toBe("/api");
+    expect(handles[1].handler).toBe("reverse_proxy");
+  });
+
+  it("prepends uri handler for add_prefix", () => {
+    const server = buildServerEntry(proxy({ rewrite: { type: "add_prefix", value: "/v2" } }));
+    const handles = server.routes[0].handle as Array<{ handler: string; uri?: string }>;
+    expect(handles[0].handler).toBe("rewrite");
+    expect(handles[0].uri).toBe("/v2{http.request.uri}");
+    expect(handles[1].handler).toBe("reverse_proxy");
+  });
+
+  it("prepends path_regexp handler for regex", () => {
+    const server = buildServerEntry(proxy({ rewrite: { type: "regex", find: "^/old/(.*)", replace: "/new/$1" } }));
+    const handles = server.routes[0].handle as Array<{ handler: string; path_regexp?: Array<{ find: string; replace: string }> }>;
+    expect(handles[0].handler).toBe("rewrite");
+    expect(handles[0].path_regexp?.[0]).toEqual({ find: "^/old/(.*)", replace: "/new/$1" });
+    expect(handles[1].handler).toBe("reverse_proxy");
+  });
+
+  it("emits no rewrite handler when rewrite is undefined", () => {
+    const server = buildServerEntry(proxy());
+    const handles = server.routes[0].handle;
+    expect(handles).toHaveLength(1);
+    expect(handles[0].handler).toBe("reverse_proxy");
+  });
+});
+
+describe("parseProxies — rewrite round-trip", () => {
+  it("parses strip_prefix from JSON config", () => {
+    const config = makeConfig([
+      { handler: "rewrite", strip_path_prefix: "/api" },
+      { handler: "reverse_proxy", upstreams: [{ dial: "localhost:7701" }] },
+    ]);
+    const [p] = parseProxies(config);
+    expect(p.rewrite).toEqual({ type: "strip_prefix", value: "/api" });
+  });
+
+  it("parses add_prefix from JSON config", () => {
+    const config = makeConfig([
+      { handler: "rewrite", uri: "/v2{http.request.uri}" },
+      { handler: "reverse_proxy", upstreams: [{ dial: "localhost:7701" }] },
+    ]);
+    const [p] = parseProxies(config);
+    expect(p.rewrite).toEqual({ type: "add_prefix", value: "/v2" });
+  });
+
+  it("parses regex from JSON config", () => {
+    const config = makeConfig([
+      { handler: "rewrite", path_regexp: [{ find: "^/old/(.*)", replace: "/new/$1" }] },
+      { handler: "reverse_proxy", upstreams: [{ dial: "localhost:7701" }] },
+    ]);
+    const [p] = parseProxies(config);
+    expect(p.rewrite).toEqual({ type: "regex", find: "^/old/(.*)", replace: "/new/$1" });
+  });
+
+  it("leaves rewrite undefined when no rewrite handler", () => {
+    const config = makeConfig([
+      { handler: "reverse_proxy", upstreams: [{ dial: "localhost:7701" }] },
+    ]);
+    const [p] = parseProxies(config);
+    expect(p.rewrite).toBeUndefined();
   });
 });

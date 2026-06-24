@@ -302,6 +302,46 @@ function jsonPlaceholderToCaddy(s: string): string {
     .replace(/\{http\.request\.scheme\}/g, "{scheme}");
 }
 
+/** Converts $1/$2 backreferences (JSON regex format) to Caddyfile {re.rw.N} form. */
+function regexReplaceToCaddy(replace: string): string {
+  return replace.replace(/\$(\d+)/g, "{re.rw.$1}");
+}
+
+
+function buildRewriteHandler(rewrite: import("./types").RewriteConfig): CaddyHandler {
+  if (rewrite.type === "strip_prefix") {
+    return { handler: "rewrite", strip_path_prefix: rewrite.value };
+  }
+  if (rewrite.type === "add_prefix") {
+    return { handler: "rewrite", uri: `${rewrite.value}{http.request.uri}` };
+  }
+  return { handler: "rewrite", path_regexp: [{ find: rewrite.find, replace: rewrite.replace }] };
+}
+
+function parseRewriteFromHandle(h: AnyHandler): import("./types").RewriteConfig | undefined {
+  if (h.handler !== "rewrite") return undefined;
+  const rw = h as { handler: string; strip_path_prefix?: string; uri?: string; path_regexp?: Array<{ find: string; replace: string }> };
+  if (rw.strip_path_prefix) return { type: "strip_prefix", value: rw.strip_path_prefix };
+  if (rw.uri) {
+    const m = rw.uri.match(/^(.+)\{http\.request\.uri\}$/);
+    if (m) return { type: "add_prefix", value: m[1] };
+  }
+  if (rw.path_regexp?.[0]) {
+    const { find, replace } = rw.path_regexp[0];
+    return { type: "regex", find, replace };
+  }
+  return undefined;
+}
+
+function buildRewriteCaddyLines(rewrite: import("./types").RewriteConfig, port: number): string[] {
+  if (rewrite.type === "strip_prefix") return [`\turi strip_prefix ${rewrite.value}`];
+  if (rewrite.type === "add_prefix") return [`\trewrite ${rewrite.value}{uri}`];
+  return [
+    `\t@rw${port} path_regexp rw ${rewrite.find}`,
+    `\trewrite @rw${port} ${regexReplaceToCaddy(rewrite.replace)}`,
+  ];
+}
+
 /** Builds the reverse_proxy directive lines for a proxy (tab-indented). */
 function buildReverseProxyLines(p: Pick<ProxyEntry, "targetScheme" | "targetHost" | "targetPort" | "tlsSkipVerify">): string[] {
   if (p.targetScheme === "https") {
@@ -334,6 +374,7 @@ export function proxyToBlock(p: ProxyEntry): string {
     lines.push(`\tredir ${p.redirect.to} ${p.redirect.code}`);
   } else {
     if (p.tls) lines.push("\ttls internal");
+    if (p.rewrite) lines.push(...buildRewriteCaddyLines(p.rewrite, p.externalPort));
     lines.push(...buildReverseProxyLines(p));
   }
   lines.push("}");
@@ -614,6 +655,9 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
 
     const tls = Array.isArray(server.tls_connection_policies) && server.tls_connection_policies.length > 0;
 
+    const rewriteHandle = allHandles.find(h => h.handler === "rewrite");
+    const rewrite = rewriteHandle ? parseRewriteFromHandle(rewriteHandle) : undefined;
+
     proxies.push({
       id: String(externalPort),
       externalPort,
@@ -624,6 +668,7 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
       tls,
       tlsSkipVerify,
       serverKey: key,
+      rewrite,
     });
   }
 
@@ -665,9 +710,12 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
       }],
     };
   }
+  const handles: CaddyHandler[] = [];
+  if (proxy.rewrite) handles.push(buildRewriteHandler(proxy.rewrite));
+  handles.push(buildReverseProxyHandler(proxy));
   const server: CaddyServer = {
     listen: [listenAddr],
-    routes: [{ handle: [buildReverseProxyHandler(proxy)], terminal: true }],
+    routes: [{ handle: handles, terminal: true }],
   };
   if (proxy.tls) {
     server.tls_connection_policies = [{}];
@@ -675,10 +723,12 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
   return server;
 }
 
-/** Patch handles in-place: update reverse_proxy upstreams/transport, leave everything else untouched. */
+/** Patch handles in-place: update reverse_proxy and rewrite handlers, leave everything else untouched. */
 function patchHandles(handles: CaddyHandler[], proxy: ProxyEntry): CaddyHandler[] {
   let found = false;
-  const patched = handles.map(h => {
+  // Strip any existing rewrite handlers first; we'll re-add the correct one below
+  const withoutRewrite = handles.filter(h => h.handler !== "rewrite");
+  const patched = withoutRewrite.map(h => {
     if (h.handler === "reverse_proxy") {
       found = true;
       const rp = h as CaddyReverseProxyHandler;
@@ -703,6 +753,8 @@ function patchHandles(handles: CaddyHandler[], proxy: ProxyEntry): CaddyHandler[
   if (!found) {
     patched.push(buildReverseProxyHandler(proxy));
   }
+  // Prepend rewrite handler if configured
+  if (proxy.rewrite) return [buildRewriteHandler(proxy.rewrite), ...patched] as CaddyHandler[];
   return patched as CaddyHandler[];
 }
 
