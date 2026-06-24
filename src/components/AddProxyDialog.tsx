@@ -42,9 +42,10 @@ interface Props {
   onAdd: (entry: Omit<ProxyEntry, "id" | "serverKey">) => Promise<void>;
   onClose: () => void;
   onApiError?: (message: string) => void;
+  initialValues?: Partial<FormState>;
 }
 
-export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError }: Props) {
+export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, initialValues }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
   const confirmAction = useConfirmAction();
@@ -58,6 +59,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError }: Pr
     tls: true,
     tlsSkipVerify: false,
     label: "",
+    ...initialValues,
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [extraSchemes, setExtraSchemes] = useState<string[]>([]);
