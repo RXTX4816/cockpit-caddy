@@ -782,3 +782,62 @@ describe("parseProxies — timeouts round-trip", () => {
     expect(p.responseHeaderTimeout).toBeUndefined();
   });
 });
+
+// ---------------------------------------------------------------------------
+// HTTP Basic Auth (#38)
+// ---------------------------------------------------------------------------
+
+describe("proxyToBlock — basic_auth", () => {
+  it("emits basic_auth block with account", () => {
+    const result = proxyToBlock(proxy({ basicAuth: [{ username: "alice", passwordHash: "$2a$14$xyz" }] }));
+    expect(result).toContain("\tbasic_auth {");
+    expect(result).toContain("\t\talice $2a$14$xyz");
+    expect(result).toContain("}");
+  });
+
+  it("basic_auth block appears before reverse_proxy", () => {
+    const result = proxyToBlock(proxy({ basicAuth: [{ username: "alice", passwordHash: "$2a$14$xyz" }] }));
+    const lines = result.split("\n");
+    const authIdx = lines.findIndex(l => l.includes("basic_auth"));
+    const rpIdx = lines.findIndex(l => l.includes("reverse_proxy"));
+    expect(authIdx).toBeGreaterThan(-1);
+    expect(authIdx).toBeLessThan(rpIdx);
+  });
+
+  it("does not emit basic_auth when not configured", () => {
+    expect(proxyToBlock(proxy())).not.toContain("basic_auth");
+  });
+});
+
+describe("buildServerEntry — basic_auth", () => {
+  it("includes authentication handler when basicAuth set", () => {
+    const server = buildServerEntry(proxy({ basicAuth: [{ username: "alice", passwordHash: "$2a$14$xyz" }] }));
+    const handles = server.routes[0].handle;
+    const authHandler = handles.find(h => h.handler === "authentication");
+    expect(authHandler).toBeDefined();
+    const accounts = (authHandler as unknown as { providers: { http_basic: { accounts: Array<{ username: string; password: string }> } } }).providers.http_basic.accounts;
+    expect(accounts).toEqual([{ username: "alice", password: "$2a$14$xyz" }]);
+  });
+
+  it("omits authentication handler when no basicAuth", () => {
+    const server = buildServerEntry(proxy());
+    expect(server.routes[0].handle.every(h => h.handler !== "authentication")).toBe(true);
+  });
+});
+
+describe("parseProxies — basic_auth round-trip", () => {
+  it("parses basicAuth from authentication handler", () => {
+    const config = makeConfig([
+      { handler: "authentication", providers: { http_basic: { accounts: [{ username: "alice", password: "$2a$14$xyz" }] } } },
+      { handler: "reverse_proxy", upstreams: [{ dial: "localhost:7701" }] },
+    ]);
+    const [p] = parseProxies(config);
+    expect(p.basicAuth).toEqual([{ username: "alice", passwordHash: "$2a$14$xyz" }]);
+  });
+
+  it("leaves basicAuth undefined when no authentication handler", () => {
+    const config = makeConfig([{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:7701" }] }]);
+    const [p] = parseProxies(config);
+    expect(p.basicAuth).toBeUndefined();
+  });
+});

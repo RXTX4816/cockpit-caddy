@@ -26,6 +26,21 @@ import { RewriteSection } from "./RewriteSection";
 import { RequestHeadersSection } from "./RequestHeadersSection";
 import { ResponseHeadersSection } from "./ResponseHeadersSection";
 import { TransportSection, type TransportValues } from "./TransportSection";
+import { BasicAuthSection, type AuthEntry } from "./BasicAuthSection";
+import { hashPassword } from "../api";
+
+async function resolveBasicAuth(entries: AuthEntry[]): Promise<{ username: string; passwordHash: string }[]> {
+  return Promise.all(
+    entries
+      .filter(e => e.username.trim())
+      .map(async e => {
+        const hash = e.password.trim()
+          ? await hashPassword(e.password.trim())
+          : (e.existingHash ?? "");
+        return { username: e.username.trim(), passwordHash: hash };
+      }),
+  );
+}
 
 interface Props {
   proxy: ProxyEntry;
@@ -56,6 +71,9 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
     dialTimeout: proxy.dialTimeout ?? "",
     responseHeaderTimeout: proxy.responseHeaderTimeout ?? "",
   });
+  const [basicAuth, setBasicAuth] = useState<AuthEntry[]>(
+    (proxy.basicAuth ?? []).map(a => ({ username: a.username, password: "", existingHash: a.passwordHash }))
+  );
   const [extraSchemes, setExtraSchemes] = useState<string[]>([]);
   const [extHostErr, setExtHostErr] = useState<string | null>(null);
 
@@ -236,6 +254,7 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
           </FormGroup>
         </Form>
         <TransportSection value={transport} onChange={setTransport} isDisabled={isConfirming} />
+        <BasicAuthSection value={basicAuth} onChange={setBasicAuth} isDisabled={isConfirming} />
         <RewriteSection value={rewrite} onChange={setRewrite} isDisabled={isConfirming} />
         <RequestHeadersSection value={requestHeaders} onChange={setRequestHeaders} isDisabled={isConfirming} />
         <ResponseHeadersSection value={responseHeaders} onChange={setResponseHeaders} isDisabled={isConfirming} />
@@ -268,6 +287,7 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
                   label: label.trim() || undefined,
                   dialTimeout: transport.dialTimeout.trim() || undefined,
                   responseHeaderTimeout: transport.responseHeaderTimeout.trim() || undefined,
+                  basicAuth: basicAuth.length ? await resolveBasicAuth(basicAuth) : undefined,
                   rewrite: rewrite ?? undefined,
                   requestHeaders: requestHeaders ?? undefined,
                   responseHeaders: responseHeaders ?? undefined,

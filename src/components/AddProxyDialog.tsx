@@ -26,6 +26,8 @@ import { RewriteSection } from "./RewriteSection";
 import { RequestHeadersSection } from "./RequestHeadersSection";
 import { ResponseHeadersSection } from "./ResponseHeadersSection";
 import { TransportSection, type TransportValues } from "./TransportSection";
+import { BasicAuthSection, type AuthEntry } from "./BasicAuthSection";
+import { hashPassword } from "../api";
 
 interface FormState {
   externalScheme: string;
@@ -42,6 +44,19 @@ interface FormState {
 
 type FormErrors = Partial<Record<keyof FormState, string>>;
 
+async function resolveBasicAuth(entries: AuthEntry[]): Promise<{ username: string; passwordHash: string }[]> {
+  return Promise.all(
+    entries
+      .filter(e => e.username.trim())
+      .map(async e => {
+        const hash = e.password.trim()
+          ? await hashPassword(e.password.trim())
+          : (e.existingHash ?? "");
+        return { username: e.username.trim(), passwordHash: hash };
+      }),
+  );
+}
+
 interface Props {
   existingPorts: number[];
   onAdd: (entry: Omit<ProxyEntry, "id" | "serverKey">) => Promise<void>;
@@ -52,9 +67,10 @@ interface Props {
   initialRequestHeaders?: HeaderOperation[];
   initialResponseHeaders?: HeaderOperation[];
   initialTransport?: TransportValues;
+  initialBasicAuth?: AuthEntry[];
 }
 
-export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, initialValues, initialRewrite, initialRequestHeaders, initialResponseHeaders, initialTransport }: Props) {
+export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, initialValues, initialRewrite, initialRequestHeaders, initialResponseHeaders, initialTransport, initialBasicAuth }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
   const confirmAction = useConfirmAction();
@@ -76,6 +92,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
   const [requestHeaders, setRequestHeaders] = useState<HeaderOperation[] | undefined>(initialRequestHeaders);
   const [responseHeaders, setResponseHeaders] = useState<HeaderOperation[] | undefined>(initialResponseHeaders);
   const [transport, setTransport] = useState<TransportValues>(initialTransport ?? { dialTimeout: "", responseHeaderTimeout: "" });
+  const [basicAuth, setBasicAuth] = useState<AuthEntry[]>(initialBasicAuth ?? []);
   const [extraSchemes, setExtraSchemes] = useState<string[]>([]);
 
   useEffect(() => {
@@ -283,6 +300,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
           </FormGroup>
         </Form>
         <TransportSection value={transport} onChange={setTransport} isDisabled={isLocked} />
+        <BasicAuthSection value={basicAuth} onChange={setBasicAuth} isDisabled={isLocked} />
         <RewriteSection value={rewrite} onChange={setRewrite} isDisabled={isLocked} />
         <RequestHeadersSection value={requestHeaders} onChange={setRequestHeaders} isDisabled={isLocked} />
         <ResponseHeadersSection value={responseHeaders} onChange={setResponseHeaders} isDisabled={isLocked} />
@@ -311,6 +329,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
                     label: form.label.trim() || undefined,
                     dialTimeout: transport.dialTimeout.trim() || undefined,
                     responseHeaderTimeout: transport.responseHeaderTimeout.trim() || undefined,
+                    basicAuth: basicAuth.length ? await resolveBasicAuth(basicAuth) : undefined,
                     rewrite: rewrite ?? undefined,
                     requestHeaders: requestHeaders ?? undefined,
                     responseHeaders: responseHeaders ?? undefined,
@@ -329,9 +348,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
               })}
               isLoading={isSaving}
               isDisabled={isSaving}
-            >
-              {t("service.confirm_action")}
-            </Button>
+            >{t("service.confirm_action")}</Button>
             <Button variant="link" onClick={confirmAction.cancel} isDisabled={isSaving}>{t("common.back")}</Button>
           </>
         ) : (
