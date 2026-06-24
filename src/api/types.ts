@@ -96,6 +96,7 @@ export interface ProxyEntry {
   rewrite?: RewriteConfig;
   requestHeaders?: HeaderOperation[];
   responseHeaders?: HeaderOperation[];
+  compress?: boolean;
 }
 
 export type { ServiceStatus } from "@rxtx4816/cockpit-plugin-base-react/systemd";
