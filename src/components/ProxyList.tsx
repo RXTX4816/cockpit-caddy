@@ -21,6 +21,7 @@ import {
   Spinner,
   Stack,
   StackItem,
+  Switch,
   Toolbar,
   ToolbarContent,
   ToolbarItem,
@@ -42,7 +43,8 @@ import { EditRedirectDialog } from "./EditRedirectDialog";
 import { EditStaticDialog } from "./EditStaticDialog";
 import { ProxyCard } from "./ProxyCard";
 import { useProxies } from "../hooks/useProxies";
-import { useUpstreamStatus } from "../hooks/useUpstreamStatus";
+import { useUpstreamProbe } from "../hooks/useUpstreamProbe";
+import { UpstreamStatusDot } from "./UpstreamStatusDot";
 import type { ProxyEntry } from "../api";
 
 type ProxyLayout = "list" | "card";
@@ -111,12 +113,12 @@ function HeaderRow() {
   );
 }
 
-function ProxyRow({ proxy, onEdit, onDelete, onDuplicate, upstreamFailing }: {
+function ProxyRow({ proxy, onEdit, onDelete, onDuplicate, probeStatuses }: {
   proxy: ProxyEntry;
   onEdit: (p: ProxyEntry) => void;
   onDelete: (p: ProxyEntry) => void;
   onDuplicate: (p: ProxyEntry) => void;
-  upstreamFailing?: boolean;
+  probeStatuses: Map<string, import("../api/probe").ProbeStatus>;
 }) {
   const { t } = useTranslation();
   const proto = proxy.tls ? "https" : "http";
@@ -136,40 +138,49 @@ function ProxyRow({ proxy, onEdit, onDelete, onDuplicate, upstreamFailing }: {
               {(() => { const et = entryType(proxy, t); return <Label color={et.color} isCompact>{et.label}</Label>; })()}
             </DataListCell>,
             <DataListCell key="port" width={1}>
-              <span style={{ display: "inline-flex", alignItems: "center" }}>
-                <a
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  id={`proxy-${proxy.id}`}
-                  style={{ fontFamily: "monospace", fontWeight: "bold" }}
-                >
-                  :{proxy.externalPort}
-                </a>
-                {upstreamFailing && (
-                  <span
-                    title={t("proxies.upstream_failing")}
-                    style={{
-                      display: "inline-block",
-                      width: "8px",
-                      height: "8px",
-                      borderRadius: "50%",
-                      backgroundColor: "var(--pf-t--global--color--status--danger--default)",
-                      marginLeft: "5px",
-                      flexShrink: 0,
-                    }}
-                  />
-                )}
-              </span>
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                id={`proxy-${proxy.id}`}
+                style={{ fontFamily: "monospace", fontWeight: "bold" }}
+              >
+                :{proxy.externalPort}
+              </a>
             </DataListCell>,
             <DataListCell key="target" width={2}>
-              <code style={{ fontSize: "0.85em" }}>
-                {proxy.redirect
-                  ? proxy.redirect.to
-                  : proxy.fileServer
-                    ? proxy.fileServer.root
-                    : `${proxy.targetScheme}://${proxy.targetHost}:${proxy.targetPort}`}
-              </code>
+              {proxy.redirect ? (
+                <code style={{ fontSize: "0.85em" }}>{proxy.redirect.to}</code>
+              ) : proxy.fileServer ? (
+                <code style={{ fontSize: "0.85em" }}>{proxy.fileServer.root}</code>
+              ) : (
+                <span style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", flexWrap: "wrap" }}>
+                  {(() => {
+                    const primaryKey = `${proxy.targetHost}:${proxy.targetPort}`;
+                    const primaryStatus = probeStatuses.get(primaryKey);
+                    const primaryAddr = `${proxy.targetScheme}://${proxy.targetHost}:${proxy.targetPort}`;
+                    return (
+                      <>
+                        {primaryStatus !== undefined && (
+                          <UpstreamStatusDot status={primaryStatus} address={primaryAddr} />
+                        )}
+                        <code style={{ fontSize: "0.85em" }}>{primaryAddr}</code>
+                        {(proxy.extraUpstreams ?? []).map(u => {
+                          const key = `${u.host}:${u.port}`;
+                          const status = probeStatuses.get(key);
+                          const addr = `${proxy.targetScheme}://${u.host}:${u.port}`;
+                          return (
+                            <span key={key} style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
+                              {status !== undefined && <UpstreamStatusDot status={status} address={addr} />}
+                              <code style={{ fontSize: "0.85em", color: "var(--pf-t--global--text--color--subtle)" }}>{addr}</code>
+                            </span>
+                          );
+                        })}
+                      </>
+                    );
+                  })()}
+                </span>
+              )}
             </DataListCell>,
             <DataListCell key="tls" width={1}>
               {proxy.redirect ? (
@@ -216,7 +227,24 @@ export function ProxyList({ onViewLogs }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
   const { proxies, loading, error, refresh, addProxy, editProxy, deleteProxy, needsMigration, migrate } = useProxies();
-  const failingUpstreams = useUpstreamStatus();
+  const [probeEnabled, setProbeEnabled] = useState(() => localStorage.getItem("cockpit-caddy:probe") === "1");
+  const [probeConfirming, setProbeConfirming] = useState(false);
+  const probeStatuses = useUpstreamProbe(proxies, probeEnabled);
+
+  function handleProbeToggle(_e: unknown, checked: boolean) {
+    if (checked) {
+      setProbeConfirming(true);
+    } else {
+      setProbeEnabled(false);
+      localStorage.setItem("cockpit-caddy:probe", "0");
+    }
+  }
+
+  function confirmProbeEnable() {
+    setProbeEnabled(true);
+    setProbeConfirming(false);
+    localStorage.setItem("cockpit-caddy:probe", "1");
+  }
   const [layout, setLayout] = useLayout<ProxyLayout>("cockpit-caddy:proxy-layout", "list", ["list", "card"]);
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
@@ -393,6 +421,24 @@ export function ProxyList({ onViewLogs }: Props) {
           </StackItem>
         )}
 
+        {probeConfirming && (
+          <StackItem>
+            <Alert
+              variant="info"
+              isInline
+              title={t("probe.confirm_title")}
+              actionClose={<AlertActionCloseButton onClose={() => setProbeConfirming(false)} />}
+              style={{ marginBottom: 0 }}
+            >
+              <p style={{ marginBottom: "0.75rem" }}>{t("probe.confirm_body")}</p>
+              <div style={{ display: "flex", gap: "0.5rem" }}>
+                <Button variant="primary" size="sm" onClick={confirmProbeEnable}>{t("probe.confirm_enable")}</Button>
+                <Button variant="link" size="sm" onClick={() => setProbeConfirming(false)}>{t("probe.confirm_cancel")}</Button>
+              </div>
+            </Alert>
+          </StackItem>
+        )}
+
         <StackItem>
           <Toolbar>
             <ToolbarContent>
@@ -421,7 +467,14 @@ export function ProxyList({ onViewLogs }: Props) {
                 />
               </ToolbarItem>
               <ToolbarItem align={{ default: "alignEnd" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                  <Switch
+                    id="probe-toggle"
+                    label={t("probe.toggle_label")}
+                    isChecked={probeEnabled || probeConfirming}
+                    onChange={handleProbeToggle}
+                    aria-label={t("probe.toggle_label")}
+                  />
                   <LayoutSelector
                     layout={layout}
                     onLayoutChange={setLayout}
@@ -457,7 +510,7 @@ export function ProxyList({ onViewLogs }: Props) {
                   onEdit={tryEdit}
                   onDelete={tryDelete}
                   onDuplicate={tryDuplicate}
-                  upstreamFailing={failingUpstreams.has(`${proxy.targetHost}:${proxy.targetPort}`)}
+                  probeStatuses={probeStatuses}
                 />
               ))}
             </Gallery>
@@ -471,7 +524,7 @@ export function ProxyList({ onViewLogs }: Props) {
                   onEdit={tryEdit}
                   onDelete={tryDelete}
                   onDuplicate={tryDuplicate}
-                  upstreamFailing={failingUpstreams.has(`${proxy.targetHost}:${proxy.targetPort}`)}
+                  probeStatuses={probeStatuses}
                 />
               ))}
             </DataList>

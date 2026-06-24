@@ -9,47 +9,28 @@ import {
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import type { ProxyEntry } from "../api";
+import type { ProbeStatus } from "../api/probe";
+import { UpstreamStatusDot } from "./UpstreamStatusDot";
 
 interface Props {
   proxy: ProxyEntry;
   onEdit: (p: ProxyEntry) => void;
   onDelete: (p: ProxyEntry) => void;
   onDuplicate: (p: ProxyEntry) => void;
-  upstreamFailing?: boolean;
-}
-
-function FailDot({ t }: { t: (k: string) => string }) {
-  return (
-    <span
-      title={t("proxies.upstream_failing")}
-      style={{
-        display: "inline-block",
-        width: "8px",
-        height: "8px",
-        borderRadius: "50%",
-        backgroundColor: "var(--pf-t--global--color--status--danger--default)",
-        marginLeft: "5px",
-        verticalAlign: "middle",
-        flexShrink: 0,
-      }}
-    />
-  );
+  probeStatuses?: Map<string, ProbeStatus>;
 }
 
 const chipRow = { display: "flex", gap: "0.2rem", flexWrap: "wrap" } as const;
 
-export function ProxyCard({ proxy, onEdit, onDelete, onDuplicate, upstreamFailing }: Props) {
+export function ProxyCard({ proxy, onEdit, onDelete, onDuplicate, probeStatuses }: Props) {
   const { t } = useTranslation();
   const proto = proxy.tls ? "https" : "http";
   const url = `${proto}://${window.location.hostname}:${proxy.externalPort}`;
 
   const portLink = (
-    <span style={{ display: "inline-flex", alignItems: "center" }}>
-      <a href={url} target="_blank" rel="noopener noreferrer" style={{ fontFamily: "monospace", fontWeight: "bold" }}>
-        :{proxy.externalPort}
-      </a>
-      {upstreamFailing && <FailDot t={t} />}
-    </span>
+    <a href={url} target="_blank" rel="noopener noreferrer" style={{ fontFamily: "monospace", fontWeight: "bold" }}>
+      :{proxy.externalPort}
+    </a>
   );
 
   return (
@@ -90,9 +71,23 @@ export function ProxyCard({ proxy, onEdit, onDelete, onDuplicate, upstreamFailin
             </>
           ) : (
             <>
-              <code style={{ color: "var(--pf-t--global--text--color--subtle)" }}>
-                → {proxy.targetScheme}://{proxy.targetHost}:{proxy.targetPort}
-              </code>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem" }}>
+                {[
+                  { host: proxy.targetHost, port: proxy.targetPort },
+                  ...(proxy.extraUpstreams ?? []),
+                ].map(u => {
+                  const key = `${u.host}:${u.port}`;
+                  const status = probeStatuses?.get(key);
+                  return (
+                    <span key={key} style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>
+                      {status !== undefined && <UpstreamStatusDot status={status} address={`${proxy.targetScheme}://${key}`} />}
+                      <code style={{ color: "var(--pf-t--global--text--color--subtle)", fontSize: "0.9em" }}>
+                        → {proxy.targetScheme}://{key}
+                      </code>
+                    </span>
+                  );
+                })}
+              </div>
               <div style={chipRow}>
                 <Label isCompact color="blue">{t("proxies.type_proxy")}</Label>
                 {proxy.tls
