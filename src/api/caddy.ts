@@ -1385,3 +1385,55 @@ export async function syncGlobalTimeouts(proxies: ProxyEntry[]): Promise<void> {
     throw new CaddyfileError(msg.replace(/^Error:\s*/i, ""));
   }
 }
+
+// ---------------------------------------------------------------------------
+// PKI / Internal CA
+// ---------------------------------------------------------------------------
+
+export interface PkiCaInfo {
+  id: string;
+  name: string;
+  rootCommonName: string;
+  intermediateCommonName: string;
+  rootPem: string;
+  intermediatePem: string;
+}
+
+export interface CertDetails {
+  notBefore: string;
+  notAfter: string;
+  fingerprint: string;
+}
+
+export async function fetchPkiCa(): Promise<PkiCaInfo> {
+  const raw = await (transport === "unix" ? unixGet("/pki/ca/local") : tcpGet("/pki/ca/local"));
+  const data = JSON.parse(raw) as {
+    id: string;
+    name: string;
+    root_common_name: string;
+    intermediate_common_name: string;
+    root_certificate: string;
+    intermediate_certificate: string;
+  };
+  return {
+    id: data.id,
+    name: data.name,
+    rootCommonName: data.root_common_name,
+    intermediateCommonName: data.intermediate_common_name,
+    rootPem: data.root_certificate,
+    intermediatePem: data.intermediate_certificate,
+  };
+}
+
+export async function parseCertDetails(pem: string): Promise<CertDetails> {
+  // cockpit.spawn supports `input` at runtime; the TypeScript types omit it
+  const spawn = cockpit.spawn as (args: string[], opts: { input?: string; err?: string }) => Promise<string>;
+  const out = await spawn(
+    ["openssl", "x509", "-noout", "-dates", "-fingerprint", "-sha256"],
+    { input: pem, err: "out" },
+  );
+  const notBefore = out.match(/notBefore=(.+)/)?.[1]?.trim() ?? "";
+  const notAfter = out.match(/notAfter=(.+)/)?.[1]?.trim() ?? "";
+  const fingerprint = out.match(/SHA256 Fingerprint=(.+)/)?.[1]?.trim() ?? "";
+  return { notBefore, notAfter, fingerprint };
+}
