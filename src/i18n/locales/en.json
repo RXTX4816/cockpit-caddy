@@ -311,7 +311,8 @@
   "tabs": {
     "proxy_list": "Proxy List",
     "caddyfile": "Caddyfile",
-    "logs": "Logs"
+    "logs": "Logs",
+    "settings": "Settings"
   },
   "migration": {
     "banner_title": "Migrate Caddyfile to conf.d",
@@ -373,6 +374,24 @@
     "warning_title": "Administrative access required",
     "warning_body": "This plugin manages system services and configuration files. Without administrative access in Cockpit, most actions will fail. Enable administrative mode in the top-right Cockpit menu before continuing.",
     "continue_button": "Continue on my own risk"
+  },
+  "global_opts": {
+    "title": "Global Caddy options",
+    "caddyfile_note": "These settings are written to the global options block in /etc/caddy/Caddyfile. Caddy is reloaded automatically on save.",
+    "http_port": "HTTP port",
+    "https_port": "HTTPS port",
+    "grace_period": "Grace period",
+    "shutdown_delay": "Shutdown delay",
+    "debug": "Enable debug logging",
+    "debug_help": "Raises the global log level to DEBUG. Produces very verbose output.",
+    "duration_placeholder": "e.g. 10s, 2m, 1h",
+    "save_button": "Save",
+    "confirm_body": "This will overwrite the global options section in /etc/caddy/Caddyfile. A Caddy reload will be required to apply the changes.",
+    "needs_reload": "Caddyfile updated — reload Caddy to apply the new global options",
+    "load_error": "Failed to load global options",
+    "save_error": "Caddyfile validation failed — changes not saved",
+    "validation_port": "Must be a port number between 1 and 65535",
+    "validation_duration": "Must be a valid duration (e.g. 10s, 2m, 1h)"
   },
   "ca": {
     "title": "Internal Certificate Authority",

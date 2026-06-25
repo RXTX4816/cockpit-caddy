@@ -1277,6 +1277,8 @@ export function removeProxy(config: CaddyConfig, serverKey: string): CaddyConfig
 const MAIN_CADDYFILE = "/etc/caddy/Caddyfile";
 const GLOBAL_MANAGED_BEGIN = "# cockpit-caddy:begin";
 const GLOBAL_MANAGED_END = "# cockpit-caddy:end";
+const GLOBAL_OPTS_BEGIN = "# cockpit-caddy:opts:begin";
+const GLOBAL_OPTS_END = "# cockpit-caddy:opts:end";
 
 /**
  * Find the top-level global options block { } in a Caddyfile.
@@ -1322,20 +1324,20 @@ function buildManagedServersBlocks(proxies: ProxyEntry[]): string {
 }
 
 /**
- * Pure function: inserts/replaces/removes the cockpit-caddy managed section in the
- * main Caddyfile text. `blocks` is the new servers block content (empty = remove).
+ * Generic pure helper: inserts/replaces/removes a named managed section (delimited
+ * by `beginMarker` / `endMarker`) inside the main Caddyfile global options block.
+ * `body` is the new content between the markers (empty string = remove the section).
  */
-export function patchMainCaddyfile(content: string, blocks: string): string {
-  const bi = content.indexOf(GLOBAL_MANAGED_BEGIN);
-  const ei = content.indexOf(GLOBAL_MANAGED_END);
+function patchManagedSection(content: string, beginMarker: string, endMarker: string, body: string): string {
+  const bi = content.indexOf(beginMarker);
+  const ei = content.indexOf(endMarker);
 
   if (bi !== -1 && ei !== -1) {
-    if (!blocks) {
-      // Remove the managed section and its surrounding blank lines
+    if (!body) {
       const before = content.slice(0, bi).replace(/\n[ \t]*\n?$/, "\n");
-      const after = content.slice(ei + GLOBAL_MANAGED_END.length).replace(/^[ \t]*\n/, "");
+      const after = content.slice(ei + endMarker.length).replace(/^[ \t]*\n/, "");
       const joined = before.trimEnd() + "\n" + after.trimStart();
-      // If the global block is now empty, remove it entirely
+      // If the global block is now entirely empty, remove it
       const gb = findGlobalBlock(joined);
       if (gb && !joined.slice(gb.open + 1, gb.close).trim()) {
         return joined.slice(0, gb.open).trimEnd() + "\n" + joined.slice(gb.close + 1).trimStart();
@@ -1343,22 +1345,28 @@ export function patchMainCaddyfile(content: string, blocks: string): string {
       return joined;
     }
     return (
-      content.slice(0, bi + GLOBAL_MANAGED_BEGIN.length) +
-      "\n" + blocks + "\n" +
+      content.slice(0, bi + beginMarker.length) +
+      "\n" + body + "\n" +
       content.slice(ei)
     );
   }
 
-  if (!blocks) return content;
+  if (!body) return content;
 
-  const managed = `${GLOBAL_MANAGED_BEGIN}\n${blocks}\n${GLOBAL_MANAGED_END}`;
+  const managed = `${beginMarker}\n${body}\n${endMarker}`;
   const gb = findGlobalBlock(content);
   if (gb) {
-    // Append before the closing } of the existing global block
     return content.slice(0, gb.close) + "\n" + managed + "\n" + content.slice(gb.close);
   }
-  // No global block yet — create one before any existing content
   return "{\n" + managed + "\n}\n" + content;
+}
+
+/**
+ * Pure function: inserts/replaces/removes the cockpit-caddy server-timeouts managed
+ * section. `blocks` is the new servers block content (empty = remove).
+ */
+export function patchMainCaddyfile(content: string, blocks: string): string {
+  return patchManagedSection(content, GLOBAL_MANAGED_BEGIN, GLOBAL_MANAGED_END, blocks);
 }
 
 /**
@@ -1436,4 +1444,76 @@ export async function parseCertDetails(pem: string): Promise<CertDetails> {
   const notAfter = out.match(/notAfter=(.+)/)?.[1]?.trim() ?? "";
   const fingerprint = out.match(/SHA256 Fingerprint=(.+)/)?.[1]?.trim() ?? "";
   return { notBefore, notAfter, fingerprint };
+}
+
+// ---------------------------------------------------------------------------
+// Global Caddy options (http_port, https_port, debug, grace_period, shutdown_delay)
+// ---------------------------------------------------------------------------
+
+export interface GlobalOptions {
+  httpPort?: number;
+  httpsPort?: number;
+  debug?: boolean;
+  gracePeriod?: string;
+  shutdownDelay?: string;
+}
+
+/** Parse global options from the cockpit-caddy:opts managed section in a Caddyfile string. */
+export function parseGlobalOptions(content: string): GlobalOptions {
+  const bi = content.indexOf(GLOBAL_OPTS_BEGIN);
+  const ei = content.indexOf(GLOBAL_OPTS_END);
+  if (bi === -1 || ei === -1) return {};
+  const section = content.slice(bi + GLOBAL_OPTS_BEGIN.length, ei);
+  const opts: GlobalOptions = {};
+  for (const raw of section.split("\n")) {
+    const line = raw.trim();
+    const m = line.match(/^(\S+)(?:\s+(.+))?$/);
+    if (!m) continue;
+    const [, key, val] = m;
+    if (key === "http_port" && val) opts.httpPort = parseInt(val, 10);
+    else if (key === "https_port" && val) opts.httpsPort = parseInt(val, 10);
+    else if (key === "debug") opts.debug = true;
+    else if (key === "grace_period" && val) opts.gracePeriod = val;
+    else if (key === "shutdown_delay" && val) opts.shutdownDelay = val;
+  }
+  return opts;
+}
+
+function buildGlobalOptionsLines(opts: GlobalOptions): string {
+  const lines: string[] = [];
+  if (opts.httpPort) lines.push(`\thttp_port ${opts.httpPort}`);
+  if (opts.httpsPort) lines.push(`\thttps_port ${opts.httpsPort}`);
+  if (opts.debug) lines.push("\tdebug");
+  if (opts.gracePeriod) lines.push(`\tgrace_period ${opts.gracePeriod}`);
+  if (opts.shutdownDelay) lines.push(`\tshutdown_delay ${opts.shutdownDelay}`);
+  return lines.join("\n");
+}
+
+/**
+ * Writes global Caddy options into the main Caddyfile's managed opts section,
+ * validates, and restores on failure. Throws CaddyfileError on validation failure.
+ */
+export async function syncGlobalOptions(opts: GlobalOptions): Promise<void> {
+  const body = buildGlobalOptionsLines(opts);
+  const original = (await cockpit.file(MAIN_CADDYFILE, { superuser: "try" }).read()) ?? "";
+  const patched = patchManagedSection(original, GLOBAL_OPTS_BEGIN, GLOBAL_OPTS_END, body);
+  if (patched === original) return;
+
+  await cockpit.file(MAIN_CADDYFILE, { superuser: "try" }).replace(patched);
+  try {
+    await cockpit.spawn(
+      ["caddy", "validate", "--config", MAIN_CADDYFILE, "--adapter", "caddyfile"],
+      { superuser: "try", err: "out" },
+    );
+  } catch (e) {
+    await cockpit.file(MAIN_CADDYFILE, { superuser: "try" }).replace(original);
+    const msg = e instanceof Error ? e.message : String(e);
+    throw new CaddyfileError(msg.replace(/^Error:\s*/i, ""));
+  }
+}
+
+/** Read current global options from the main Caddyfile. */
+export async function readGlobalOptions(): Promise<GlobalOptions> {
+  const content = (await cockpit.file(MAIN_CADDYFILE, { superuser: "try" }).read()) ?? "";
+  return parseGlobalOptions(content);
 }
