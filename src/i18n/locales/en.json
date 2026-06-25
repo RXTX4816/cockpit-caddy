@@ -443,7 +443,17 @@
     "acme_eab_key_id": "EAB key ID (optional)",
     "acme_eab_mac_key": "EAB MAC key (optional)",
     "acme_eab_placeholder": "Leave blank if not required",
-    "acme_eab_help": "External Account Binding credentials required by some providers (e.g. ZeroSSL). Both fields must be set together."
+    "acme_eab_help": "External Account Binding credentials required by some providers (e.g. ZeroSSL). Both fields must be set together.",
+    "on_demand_title": "On-demand TLS",
+    "on_demand_enabled": "Enable on-demand TLS",
+    "on_demand_enabled_help": "Caddy will provision certificates at connection time for hostnames not known at startup. Requires a publicly reachable server.",
+    "on_demand_no_ask_warning": "No ask URL set — Caddy will issue certificates for any domain without authorization. Set an ask URL to prevent abuse.",
+    "on_demand_ask": "Ask URL",
+    "on_demand_ask_help": "Caddy queries this endpoint before issuing a certificate. It must return HTTP 2xx to allow issuance.",
+    "on_demand_interval": "Rate limit interval",
+    "on_demand_burst": "Rate limit burst",
+    "on_demand_burst_help": "Maximum certificates issued per interval. Leave both blank for no rate limit (not recommended).",
+    "validation_burst": "Must be a positive integer"
   },
   "ca": {
     "title": "Internal Certificate Authority",

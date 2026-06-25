@@ -2101,6 +2101,14 @@ export interface GlobalOptions {
   acmeEabKeyId?: string;
   /** External Account Binding MAC key */
   acmeEabMacKey?: string;
+  /** Enable on-demand TLS certificate provisioning */
+  onDemandEnabled?: boolean;
+  /** Authorization URL Caddy queries before issuing an on-demand certificate */
+  onDemandAsk?: string;
+  /** Rate limit window for on-demand certificate issuance (Go duration, e.g. "2m") */
+  onDemandInterval?: string;
+  /** Maximum certificates that may be issued per rate-limit interval */
+  onDemandBurst?: number;
 }
 
 /** Parse global options from the cockpit-caddy:opts managed section in a Caddyfile string. */
@@ -2137,6 +2145,20 @@ export function parseGlobalOptions(content: string): GlobalOptions {
         }
         i++;
       }
+    } else if (key === "on_demand_tls" && line.endsWith("{")) {
+      opts.onDemandEnabled = true;
+      i++;
+      while (i < lines.length) {
+        const inner = lines[i].trim();
+        if (inner === "}") break;
+        const im = inner.match(/^(\S+)\s+(.+)$/);
+        if (im) {
+          if (im[1] === "ask") opts.onDemandAsk = im[2];
+          else if (im[1] === "interval") opts.onDemandInterval = im[2];
+          else if (im[1] === "burst") opts.onDemandBurst = parseInt(im[2], 10);
+        }
+        i++;
+      }
     }
     i++;
   }
@@ -2157,6 +2179,13 @@ function buildGlobalOptionsLines(opts: GlobalOptions): string {
     lines.push("\tacme_eab {");
     lines.push(`\t\tkey_id ${opts.acmeEabKeyId}`);
     lines.push(`\t\tmac_key ${opts.acmeEabMacKey}`);
+    lines.push("\t}");
+  }
+  if (opts.onDemandEnabled) {
+    lines.push("\ton_demand_tls {");
+    if (opts.onDemandAsk) lines.push(`\t\task ${opts.onDemandAsk}`);
+    if (opts.onDemandInterval) lines.push(`\t\tinterval ${opts.onDemandInterval}`);
+    if (opts.onDemandBurst) lines.push(`\t\tburst ${opts.onDemandBurst}`);
     lines.push("\t}");
   }
   return lines.join("\n");
