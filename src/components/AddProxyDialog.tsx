@@ -27,6 +27,7 @@ import { RequestHeadersSection } from "./RequestHeadersSection";
 import { ResponseHeadersSection } from "./ResponseHeadersSection";
 import { TransportSection, type TransportValues } from "./TransportSection";
 import { ServerTimeoutsSection, type ServerTimeoutValues } from "./ServerTimeoutsSection";
+import { AccessLogSection, type AccessLogValues, accessLogValuesToConfig, accessLogConfigToValues } from "./AccessLogSection";
 import { BasicAuthSection, type AuthEntry } from "./BasicAuthSection";
 import { UpstreamsSection, validateUpstreams, type ExtraUpstream } from "./UpstreamsSection";
 import type { LbPolicy } from "../api";
@@ -74,9 +75,10 @@ interface Props {
   initialExtraUpstreams?: ExtraUpstream[];
   initialLbPolicy?: LbPolicy;
   initialServerTimeouts?: ServerTimeoutValues;
+  initialAccessLog?: AccessLogValues;
 }
 
-export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, initialValues, initialRewrite, initialRequestHeaders, initialResponseHeaders, initialTransport, initialBasicAuth, initialExtraUpstreams, initialLbPolicy, initialServerTimeouts }: Props) {
+export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, initialValues, initialRewrite, initialRequestHeaders, initialResponseHeaders, initialTransport, initialBasicAuth, initialExtraUpstreams, initialLbPolicy, initialServerTimeouts, initialAccessLog }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
   const confirmAction = useConfirmAction();
@@ -99,6 +101,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
   const [responseHeaders, setResponseHeaders] = useState<HeaderOperation[] | undefined>(initialResponseHeaders);
   const [transport, setTransport] = useState<TransportValues>(initialTransport ?? { dialTimeout: "", responseHeaderTimeout: "" });
   const [serverTimeouts, setServerTimeouts] = useState<ServerTimeoutValues>(initialServerTimeouts ?? { readTimeout: "", readHeaderTimeout: "", writeTimeout: "", idleTimeout: "", maxHeaderBytes: "" });
+  const [accessLog, setAccessLog] = useState<AccessLogValues>(initialAccessLog ?? accessLogConfigToValues(undefined));
   const [basicAuth, setBasicAuth] = useState<AuthEntry[]>(initialBasicAuth ?? []);
   const [extraUpstreams, setExtraUpstreams] = useState<ExtraUpstream[]>(initialExtraUpstreams ?? []);
   const [lbPolicy, setLbPolicy] = useState<LbPolicy | "">(initialLbPolicy ?? "");
@@ -310,6 +313,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
           </FormGroup>
         </Form>
         <TransportSection value={transport} onChange={setTransport} isDisabled={isLocked} />
+        <AccessLogSection value={accessLog} onChange={setAccessLog} isDisabled={isLocked} />
         <ServerTimeoutsSection value={serverTimeouts} onChange={setServerTimeouts} isDisabled={isLocked} />
         <BasicAuthSection value={basicAuth} onChange={setBasicAuth} isDisabled={isLocked} />
         <RewriteSection value={rewrite} onChange={setRewrite} isDisabled={isLocked} />
@@ -354,6 +358,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
                       ? extraUpstreams.map(u => ({ host: u.host.trim(), port: parseInt(u.port, 10) }))
                       : undefined,
                     lbPolicy: (lbPolicy || undefined) as LbPolicy | undefined,
+                    accessLog: accessLogValuesToConfig(accessLog),
                     serverReadTimeout: serverTimeouts.readTimeout.trim() || undefined,
                     serverReadHeaderTimeout: serverTimeouts.readHeaderTimeout.trim() || undefined,
                     serverWriteTimeout: serverTimeouts.writeTimeout.trim() || undefined,

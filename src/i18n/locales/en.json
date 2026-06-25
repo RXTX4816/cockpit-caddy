@@ -306,7 +306,13 @@
     "empty": "No log entries yet.",
     "no_matches": "No log lines match your search.",
     "load_failed": "Failed to load logs",
-    "search_placeholder": "Search logs…"
+    "search_placeholder": "Search logs…",
+    "tab_all": "All",
+    "tab_caddy": "Caddy",
+    "level_all": "All",
+    "level_error": "Error",
+    "level_warn": "Warn",
+    "level_info": "Info"
   },
   "tabs": {
     "proxy_list": "Proxy List",
@@ -374,6 +380,29 @@
     "warning_title": "Administrative access required",
     "warning_body": "This plugin manages system services and configuration files. Without administrative access in Cockpit, most actions will fail. Enable administrative mode in the top-right Cockpit menu before continuing.",
     "continue_button": "Continue on my own risk"
+  },
+  "access_log": {
+    "section_title": "Access logging",
+    "section_title_on": "Access logging (enabled)",
+    "enable": "Enable access logging",
+    "output": "Output",
+    "output_stderr": "stderr",
+    "output_stdout": "stdout",
+    "output_file": "File",
+    "output_discard": "Discard",
+    "file_path": "Log file path",
+    "file_path_required": "File path is required when output is File",
+    "format": "Format",
+    "format_default": "Default",
+    "format_json": "JSON",
+    "format_console": "Console",
+    "level": "Log level",
+    "level_default": "Default",
+    "level_DEBUG": "DEBUG",
+    "level_INFO": "INFO",
+    "level_WARN": "WARN",
+    "level_ERROR": "ERROR",
+    "indicator": "Logging"
   },
   "global_opts": {
     "title": "Global Caddy options",

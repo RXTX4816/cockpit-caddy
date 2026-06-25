@@ -42,6 +42,23 @@ export interface CaddyServer {
   [key: string]: unknown;
 }
 
+export interface CaddyLogWriter {
+  output: string;
+  filename?: string;
+}
+
+export interface CaddyLogEncoder {
+  format: string;
+}
+
+export interface CaddyLoggerConfig {
+  writer?: CaddyLogWriter;
+  encoder?: CaddyLogEncoder;
+  level?: string;
+  include?: string[];
+  exclude?: string[];
+}
+
 export interface CaddyConfig {
   apps?: {
     http?: {
@@ -58,7 +75,21 @@ export interface CaddyConfig {
     };
     [key: string]: unknown;
   };
+  logging?: {
+    logs?: Record<string, CaddyLoggerConfig>;
+  };
   [key: string]: unknown;
+}
+
+export type AccessLogOutput = "stderr" | "stdout" | "file" | "discard";
+export type AccessLogFormat = "json" | "console";
+export type AccessLogLevel = "DEBUG" | "INFO" | "WARN" | "ERROR";
+
+export interface AccessLogConfig {
+  output: AccessLogOutput;
+  filePath?: string;
+  format?: AccessLogFormat;
+  level?: AccessLogLevel;
 }
 
 export interface HeaderOperation {
@@ -128,6 +159,8 @@ export interface ProxyEntry {
   serverIdleTimeout?: string;
   /** Maximum size of incoming request headers in bytes */
   maxHeaderBytes?: number;
+  /** Per-server access log configuration */
+  accessLog?: AccessLogConfig;
 }
 
 export type { ServiceStatus } from "@rxtx4816/cockpit-plugin-base-react/systemd";

@@ -39,7 +39,7 @@ export async function validateCaddyfile(content: string): Promise<void> {
   }
 }
 
-export const fetchServiceLogs = () => baseFetchServiceLogs(SERVICE);
+export const fetchServiceLogs = () => baseFetchServiceLogs(SERVICE, 1000);
 
 export async function listConfDFiles(): Promise<string[]> {
   try {
