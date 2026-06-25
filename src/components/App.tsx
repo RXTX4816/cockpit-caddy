@@ -30,6 +30,7 @@ import { BackupDialog } from "./BackupDialog";
 import { RestoreDialog } from "./RestoreDialog";
 import { AdminAddressDialog } from "./AdminAddressDialog";
 import { InternalCaModal } from "./InternalCaModal";
+import { GlobalOptionsTab } from "./GlobalOptionsTab";
 import { useCaddyStatus } from "../hooks/useCaddyStatus";
 import { applyStoredAdminAddress } from "../hooks/useAdminAddress";
 import { useCaddyVersion } from "../hooks/useCaddyVersion";
@@ -145,6 +146,11 @@ function AppInner() {
                 <Tab eventKey={2} title={<TabTitleText>{t("tabs.logs")}</TabTitleText>}>
                   <PageSection hasBodyWrapper={false}>
                     <LogsViewer filterValue={logsSearch} onFilterChange={setLogsSearch} />
+                  </PageSection>
+                </Tab>
+                <Tab eventKey={3} title={<TabTitleText>{t("tabs.settings")}</TabTitleText>}>
+                  <PageSection hasBodyWrapper={false}>
+                    <GlobalOptionsTab />
                   </PageSection>
                 </Tab>
               </Tabs>
