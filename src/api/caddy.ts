@@ -13,6 +13,31 @@ export class CaddyApiError extends Error {
   }
 }
 
+/** Thrown when the main Caddyfile cannot be updated (e.g. caddy validate rejects the result). */
+export class CaddyfileError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "CaddyfileError";
+  }
+}
+
+/**
+ * Converts a Caddy duration value to a string.
+ * Caddy stores durations as nanosecond integers in JSON when loaded from a
+ * Caddyfile (e.g. "10s" becomes 10000000000). This normalises both forms to
+ * a human-readable string like "10s", "2m", "1h".
+ */
+function parseDuration(val: unknown): string | undefined {
+  if (typeof val === "string") return val || undefined;
+  if (typeof val === "number" && val > 0) {
+    const s = val / 1_000_000_000;
+    if (s % 3600 === 0) return `${s / 3600}h`;
+    if (s % 60 === 0) return `${s / 60}m`;
+    return `${s}s`;
+  }
+  return undefined;
+}
+
 // The admin API is either on TCP (default :2019) or a Unix socket (Arch default).
 // Both transports use curl via cockpit.spawn — cockpit.http() proved unreliable across
 // distros (IPv4/IPv6 resolution differences). curl is available on all supported distros.
@@ -480,7 +505,11 @@ function buildExternalAddress(p: Pick<ProxyEntry, "externalPort" | "externalSche
 
 /** Generates the Caddyfile block for a single proxy (label comment + block body). */
 export function proxyToBlock(p: ProxyEntry): string {
-  const header = buildExternalAddress(p);
+  // Plain-port redirect/respond blocks must use http:// prefix to avoid Caddy TLS automation policy conflicts
+  // when other unnamed blocks use `tls internal` (which creates a catch-all InternalIssuer policy).
+  const isPlainHttp = !p.externalScheme && !p.externalHost && (p.redirect || p.staticResponse);
+  const rawAddr = buildExternalAddress(p);
+  const header = isPlainHttp ? `http://${rawAddr}` : rawAddr;
   const lines = p.label ? [`# label: ${p.label}`, `${header} {`] : [`${header} {`];
   if (p.staticResponse) {
     const { statusCode, body, close } = p.staticResponse;
@@ -804,6 +833,14 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
     const rawHost = colonIdx > 0 ? listenAddr.slice(0, colonIdx) : "";
     const externalHost = rawHost || undefined;
 
+    // Server-level timeouts and size limits — Caddy returns nanoseconds as integers after
+    // a Caddyfile reload, so parseDuration handles both string ("10s") and number forms.
+    const serverReadTimeout = parseDuration(server.read_timeout);
+    const serverReadHeaderTimeout = parseDuration(server.read_header_timeout);
+    const serverWriteTimeout = parseDuration(server.write_timeout);
+    const serverIdleTimeout = parseDuration(server.idle_timeout);
+    const maxHeaderBytes = typeof server.max_header_bytes === "number" ? server.max_header_bytes : undefined;
+
     const allHandles = (server.routes ?? []).flatMap(r => (r.handle ?? []) as AnyHandler[]);
 
     // Detect redirect (static_response with Location header)
@@ -823,6 +860,7 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
         tlsSkipVerify: false,
         serverKey: key,
         redirect: { to: jsonPlaceholderToCaddy(locationHeader), code },
+        serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
       });
       continue;
     }
@@ -844,6 +882,7 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
           body: staticResp.body || undefined,
           close: staticResp.close || undefined,
         },
+        serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
       });
       continue;
     }
@@ -871,6 +910,7 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
         compress: fsCompress || undefined,
         basicAuth: fsBasicAuth?.length ? fsBasicAuth : undefined,
         responseHeaders: fsResponseHeaders.length ? fsResponseHeaders : undefined,
+        serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
       });
       continue;
     }
@@ -894,8 +934,8 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
     // Transport presence means HTTPS upstream
     const targetScheme: "http" | "https" = rp.transport?.tls !== undefined ? "https" : "http";
     const tlsSkipVerify = rp.transport?.tls?.insecure_skip_verify ?? false;
-    const dialTimeout = rp.transport?.dial_timeout as string | undefined;
-    const responseHeaderTimeout = rp.transport?.response_header_timeout as string | undefined;
+    const dialTimeout = parseDuration(rp.transport?.dial_timeout);
+    const responseHeaderTimeout = parseDuration(rp.transport?.response_header_timeout);
 
     const tls = Array.isArray(server.tls_connection_policies) && server.tls_connection_policies.length > 0;
 
@@ -931,6 +971,7 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
       responseHeaders: responseHeadersParsed.length ? responseHeadersParsed : undefined,
       extraUpstreams: extraUpstreams.length ? extraUpstreams : undefined,
       lbPolicy,
+      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
     });
   }
 
@@ -1024,6 +1065,22 @@ function buildReverseProxyHandler(proxy: Pick<ProxyEntry, "targetHost" | "target
   return rp;
 }
 
+type TimeoutProxy = Pick<ProxyEntry, "serverReadTimeout" | "serverReadHeaderTimeout" | "serverWriteTimeout" | "serverIdleTimeout" | "maxHeaderBytes">;
+
+function applyServerTimeouts(server: CaddyServer, proxy: TimeoutProxy): CaddyServer {
+  if (proxy.serverReadTimeout) server.read_timeout = proxy.serverReadTimeout;
+  else delete server.read_timeout;
+  if (proxy.serverReadHeaderTimeout) server.read_header_timeout = proxy.serverReadHeaderTimeout;
+  else delete server.read_header_timeout;
+  if (proxy.serverWriteTimeout) server.write_timeout = proxy.serverWriteTimeout;
+  else delete server.write_timeout;
+  if (proxy.serverIdleTimeout) server.idle_timeout = proxy.serverIdleTimeout;
+  else delete server.idle_timeout;
+  if (proxy.maxHeaderBytes) server.max_header_bytes = proxy.maxHeaderBytes;
+  else delete server.max_header_bytes;
+  return server;
+}
+
 export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): CaddyServer {
   const listenAddr = proxy.externalHost
     ? `${proxy.externalHost}:${proxy.externalPort}`
@@ -1035,13 +1092,13 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
     };
     if (proxy.staticResponse.body) h.body = proxy.staticResponse.body;
     if (proxy.staticResponse.close) h.close = true;
-    return {
+    return applyServerTimeouts({
       listen: [listenAddr],
       routes: [{ handle: [h as CaddyHandler], terminal: true }],
-    };
+    }, proxy);
   }
   if (proxy.redirect) {
-    return {
+    return applyServerTimeouts({
       listen: [listenAddr],
       routes: [{
         handle: [{
@@ -1051,7 +1108,7 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
         }],
         terminal: true,
       }],
-    };
+    }, proxy);
   }
   if (proxy.fileServer) {
     const fsHandles: CaddyHandler[] = [];
@@ -1066,7 +1123,7 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
       routes: [{ handle: fsHandles, terminal: true }],
     };
     if (proxy.tls) server.tls_connection_policies = [{}];
-    return server;
+    return applyServerTimeouts(server, proxy);
   }
   const handles: CaddyHandler[] = [];
   if (proxy.compress) handles.push(buildEncodeHandler());
@@ -1081,7 +1138,7 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
   if (proxy.tls) {
     server.tls_connection_policies = [{}];
   }
-  return server;
+  return applyServerTimeouts(server, proxy);
 }
 
 /** Patch handles in-place: update reverse_proxy and rewrite handlers, leave everything else untouched. */
@@ -1151,7 +1208,7 @@ function patchServer(original: CaddyServer, proxy: ProxyEntry): CaddyServer {
     handle: patchHandles((route.handle ?? []) as CaddyHandler[], proxy),
   }));
 
-  return server;
+  return applyServerTimeouts(server, proxy);
 }
 
 export function mergeProxy(config: CaddyConfig, proxy: ProxyEntry): CaddyConfig {
@@ -1211,4 +1268,120 @@ export function removeProxy(config: CaddyConfig, serverKey: string): CaddyConfig
       tls: hasTls ? config.apps?.tls : undefined,
     },
   };
+}
+
+// ---------------------------------------------------------------------------
+// Main Caddyfile global options — server-level timeouts & request limits
+// ---------------------------------------------------------------------------
+
+const MAIN_CADDYFILE = "/etc/caddy/Caddyfile";
+const GLOBAL_MANAGED_BEGIN = "# cockpit-caddy:begin";
+const GLOBAL_MANAGED_END = "# cockpit-caddy:end";
+
+/**
+ * Find the top-level global options block { } in a Caddyfile.
+ * Returns the indices of the opening and closing braces, or null if absent.
+ * The global options block must be the first non-comment, non-whitespace token.
+ */
+function findGlobalBlock(content: string): { open: number; close: number } | null {
+  let i = 0;
+  while (i < content.length) {
+    const ch = content[i];
+    if (ch === " " || ch === "\t" || ch === "\r" || ch === "\n") { i++; continue; }
+    if (ch === "#") { while (i < content.length && content[i] !== "\n") i++; continue; }
+    if (ch !== "{") return null; // First token is not {, no global block
+    const open = i++;
+    let depth = 1;
+    while (i < content.length && depth > 0) {
+      if (content[i] === "{") depth++;
+      else if (content[i] === "}") depth--;
+      i++;
+    }
+    return { open, close: i - 1 };
+  }
+  return null;
+}
+
+/** Build the `servers :PORT { timeouts { ... } }` blocks for proxies that have timeouts set. */
+function buildManagedServersBlocks(proxies: ProxyEntry[]): string {
+  return proxies
+    .filter(p => p.serverReadTimeout || p.serverReadHeaderTimeout || p.serverWriteTimeout || p.serverIdleTimeout || p.maxHeaderBytes)
+    .map(p => {
+      const lines = [`\tservers :${p.externalPort} {`];
+      const tLines: string[] = [];
+      if (p.serverReadTimeout) tLines.push(`\t\t\tread_body ${p.serverReadTimeout}`);
+      if (p.serverReadHeaderTimeout) tLines.push(`\t\t\tread_header ${p.serverReadHeaderTimeout}`);
+      if (p.serverWriteTimeout) tLines.push(`\t\t\twrite ${p.serverWriteTimeout}`);
+      if (p.serverIdleTimeout) tLines.push(`\t\t\tidle ${p.serverIdleTimeout}`);
+      if (tLines.length) lines.push("\t\ttimeouts {", ...tLines, "\t\t}");
+      if (p.maxHeaderBytes) lines.push(`\t\tmax_header_size ${p.maxHeaderBytes}`);
+      lines.push("\t}");
+      return lines.join("\n");
+    })
+    .join("\n");
+}
+
+/**
+ * Pure function: inserts/replaces/removes the cockpit-caddy managed section in the
+ * main Caddyfile text. `blocks` is the new servers block content (empty = remove).
+ */
+export function patchMainCaddyfile(content: string, blocks: string): string {
+  const bi = content.indexOf(GLOBAL_MANAGED_BEGIN);
+  const ei = content.indexOf(GLOBAL_MANAGED_END);
+
+  if (bi !== -1 && ei !== -1) {
+    if (!blocks) {
+      // Remove the managed section and its surrounding blank lines
+      const before = content.slice(0, bi).replace(/\n[ \t]*\n?$/, "\n");
+      const after = content.slice(ei + GLOBAL_MANAGED_END.length).replace(/^[ \t]*\n/, "");
+      const joined = before.trimEnd() + "\n" + after.trimStart();
+      // If the global block is now empty, remove it entirely
+      const gb = findGlobalBlock(joined);
+      if (gb && !joined.slice(gb.open + 1, gb.close).trim()) {
+        return joined.slice(0, gb.open).trimEnd() + "\n" + joined.slice(gb.close + 1).trimStart();
+      }
+      return joined;
+    }
+    return (
+      content.slice(0, bi + GLOBAL_MANAGED_BEGIN.length) +
+      "\n" + blocks + "\n" +
+      content.slice(ei)
+    );
+  }
+
+  if (!blocks) return content;
+
+  const managed = `${GLOBAL_MANAGED_BEGIN}\n${blocks}\n${GLOBAL_MANAGED_END}`;
+  const gb = findGlobalBlock(content);
+  if (gb) {
+    // Append before the closing } of the existing global block
+    return content.slice(0, gb.close) + "\n" + managed + "\n" + content.slice(gb.close);
+  }
+  // No global block yet — create one before any existing content
+  return "{\n" + managed + "\n}\n" + content;
+}
+
+/**
+ * Writes server-level timeout settings for all proxies into the main Caddyfile's
+ * global options block, then validates. Throws CaddyfileError on failure and
+ * restores the original file content before throwing.
+ */
+export async function syncGlobalTimeouts(proxies: ProxyEntry[]): Promise<void> {
+  const blocks = buildManagedServersBlocks(proxies);
+  const original = (await cockpit.file(MAIN_CADDYFILE, { superuser: "try" }).read()) ?? "";
+  const patched = patchMainCaddyfile(original, blocks);
+  if (patched === original) return;
+
+  await cockpit.file(MAIN_CADDYFILE, { superuser: "try" }).replace(patched);
+
+  try {
+    await cockpit.spawn(
+      ["caddy", "validate", "--config", MAIN_CADDYFILE, "--adapter", "caddyfile"],
+      { superuser: "try", err: "out" },
+    );
+  } catch (e) {
+    await cockpit.file(MAIN_CADDYFILE, { superuser: "try" }).replace(original);
+    const msg = e instanceof Error ? e.message : String(e);
+    throw new CaddyfileError(msg.replace(/^Error:\s*/i, ""));
+  }
 }

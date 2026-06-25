@@ -20,12 +20,13 @@ import {
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast, ExternalAddressInput } from "@rxtx4816/cockpit-plugin-base-react/components";
-import { readProxyConf, parseConfExternalAddresses, CaddyApiError } from "../api";
+import { readProxyConf, parseConfExternalAddresses, CaddyApiError, CaddyfileError } from "../api";
 import type { ProxyEntry, RewriteConfig, HeaderOperation } from "../api";
 import { RewriteSection } from "./RewriteSection";
 import { RequestHeadersSection } from "./RequestHeadersSection";
 import { ResponseHeadersSection } from "./ResponseHeadersSection";
 import { TransportSection, type TransportValues } from "./TransportSection";
+import { ServerTimeoutsSection, type ServerTimeoutValues } from "./ServerTimeoutsSection";
 import { BasicAuthSection, type AuthEntry } from "./BasicAuthSection";
 import { UpstreamsSection, validateUpstreams, type ExtraUpstream } from "./UpstreamsSection";
 import type { LbPolicy } from "../api";
@@ -72,9 +73,10 @@ interface Props {
   initialBasicAuth?: AuthEntry[];
   initialExtraUpstreams?: ExtraUpstream[];
   initialLbPolicy?: LbPolicy;
+  initialServerTimeouts?: ServerTimeoutValues;
 }
 
-export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, initialValues, initialRewrite, initialRequestHeaders, initialResponseHeaders, initialTransport, initialBasicAuth, initialExtraUpstreams, initialLbPolicy }: Props) {
+export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, initialValues, initialRewrite, initialRequestHeaders, initialResponseHeaders, initialTransport, initialBasicAuth, initialExtraUpstreams, initialLbPolicy, initialServerTimeouts }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
   const confirmAction = useConfirmAction();
@@ -96,6 +98,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
   const [requestHeaders, setRequestHeaders] = useState<HeaderOperation[] | undefined>(initialRequestHeaders);
   const [responseHeaders, setResponseHeaders] = useState<HeaderOperation[] | undefined>(initialResponseHeaders);
   const [transport, setTransport] = useState<TransportValues>(initialTransport ?? { dialTimeout: "", responseHeaderTimeout: "" });
+  const [serverTimeouts, setServerTimeouts] = useState<ServerTimeoutValues>(initialServerTimeouts ?? { readTimeout: "", readHeaderTimeout: "", writeTimeout: "", idleTimeout: "", maxHeaderBytes: "" });
   const [basicAuth, setBasicAuth] = useState<AuthEntry[]>(initialBasicAuth ?? []);
   const [extraUpstreams, setExtraUpstreams] = useState<ExtraUpstream[]>(initialExtraUpstreams ?? []);
   const [lbPolicy, setLbPolicy] = useState<LbPolicy | "">(initialLbPolicy ?? "");
@@ -307,6 +310,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
           </FormGroup>
         </Form>
         <TransportSection value={transport} onChange={setTransport} isDisabled={isLocked} />
+        <ServerTimeoutsSection value={serverTimeouts} onChange={setServerTimeouts} isDisabled={isLocked} />
         <BasicAuthSection value={basicAuth} onChange={setBasicAuth} isDisabled={isLocked} />
         <RewriteSection value={rewrite} onChange={setRewrite} isDisabled={isLocked} />
         <RequestHeadersSection value={requestHeaders} onChange={setRequestHeaders} isDisabled={isLocked} />
@@ -350,8 +354,16 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
                       ? extraUpstreams.map(u => ({ host: u.host.trim(), port: parseInt(u.port, 10) }))
                       : undefined,
                     lbPolicy: (lbPolicy || undefined) as LbPolicy | undefined,
+                    serverReadTimeout: serverTimeouts.readTimeout.trim() || undefined,
+                    serverReadHeaderTimeout: serverTimeouts.readHeaderTimeout.trim() || undefined,
+                    serverWriteTimeout: serverTimeouts.writeTimeout.trim() || undefined,
+                    serverIdleTimeout: serverTimeouts.idleTimeout.trim() || undefined,
+                    maxHeaderBytes: serverTimeouts.maxHeaderBytes.trim() ? parseInt(serverTimeouts.maxHeaderBytes, 10) : undefined,
                   });
                 } catch (e) {
+                  if (e instanceof CaddyfileError) {
+                    throw new Error(t("proxies.caddyfile_error_title") + ": " + e.message);
+                  }
                   if (e instanceof CaddyApiError) {
                     onClose();
                     toast.error(t("proxies.api_error_add_title"), e.message);

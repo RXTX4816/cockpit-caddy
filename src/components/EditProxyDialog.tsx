@@ -20,12 +20,13 @@ import {
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast, ExternalAddressInput } from "@rxtx4816/cockpit-plugin-base-react/components";
-import { readProxyConf, parseConfExternalAddresses, CaddyApiError } from "../api";
+import { readProxyConf, parseConfExternalAddresses, CaddyApiError, CaddyfileError } from "../api";
 import type { ProxyEntry, RewriteConfig, HeaderOperation } from "../api";
 import { RewriteSection } from "./RewriteSection";
 import { RequestHeadersSection } from "./RequestHeadersSection";
 import { ResponseHeadersSection } from "./ResponseHeadersSection";
 import { TransportSection, type TransportValues } from "./TransportSection";
+import { ServerTimeoutsSection, type ServerTimeoutValues } from "./ServerTimeoutsSection";
 import { BasicAuthSection, type AuthEntry } from "./BasicAuthSection";
 import { UpstreamsSection, validateUpstreams, type ExtraUpstream } from "./UpstreamsSection";
 import { hashPassword } from "../api";
@@ -72,6 +73,13 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
   const [transport, setTransport] = useState<TransportValues>({
     dialTimeout: proxy.dialTimeout ?? "",
     responseHeaderTimeout: proxy.responseHeaderTimeout ?? "",
+  });
+  const [serverTimeouts, setServerTimeouts] = useState<ServerTimeoutValues>({
+    readTimeout: proxy.serverReadTimeout ?? "",
+    readHeaderTimeout: proxy.serverReadHeaderTimeout ?? "",
+    writeTimeout: proxy.serverWriteTimeout ?? "",
+    idleTimeout: proxy.serverIdleTimeout ?? "",
+    maxHeaderBytes: proxy.maxHeaderBytes != null ? String(proxy.maxHeaderBytes) : "",
   });
   const [basicAuth, setBasicAuth] = useState<AuthEntry[]>(
     (proxy.basicAuth ?? []).map(a => ({ username: a.username, password: "", existingHash: a.passwordHash }))
@@ -261,6 +269,7 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
           </FormGroup>
         </Form>
         <TransportSection value={transport} onChange={setTransport} isDisabled={isConfirming} />
+        <ServerTimeoutsSection value={serverTimeouts} onChange={setServerTimeouts} isDisabled={isConfirming} />
         <BasicAuthSection value={basicAuth} onChange={setBasicAuth} isDisabled={isConfirming} />
         <RewriteSection value={rewrite} onChange={setRewrite} isDisabled={isConfirming} />
         <RequestHeadersSection value={requestHeaders} onChange={setRequestHeaders} isDisabled={isConfirming} />
@@ -308,10 +317,19 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
                     ? extraUpstreams.map(u => ({ host: u.host.trim(), port: parseInt(u.port, 10) }))
                     : undefined,
                   lbPolicy: (lbPolicy || undefined) as LbPolicy | undefined,
+                  serverReadTimeout: serverTimeouts.readTimeout.trim() || undefined,
+                  serverReadHeaderTimeout: serverTimeouts.readHeaderTimeout.trim() || undefined,
+                  serverWriteTimeout: serverTimeouts.writeTimeout.trim() || undefined,
+                  serverIdleTimeout: serverTimeouts.idleTimeout.trim() || undefined,
+                  maxHeaderBytes: serverTimeouts.maxHeaderBytes.trim() ? parseInt(serverTimeouts.maxHeaderBytes, 10) : undefined,
                 };
                 try {
                   await onSave(entry);
                 } catch (e) {
+                  if (e instanceof CaddyfileError) {
+                    // Keep dialog open; error is shown via saveConfirm.error
+                    throw new Error(t("proxies.caddyfile_error_title") + ": " + e.message);
+                  }
                   if (e instanceof CaddyApiError) {
                     onClose();
                     toast.error(t("proxies.api_error_edit_title"), e.message);
