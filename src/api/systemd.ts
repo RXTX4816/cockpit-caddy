@@ -14,7 +14,7 @@ const SERVICE = "caddy";
 const CADDYFILE_PATH = "/etc/caddy/Caddyfile";
 
 export async function readCaddyfile(): Promise<string> {
-  return cockpit.file(CADDYFILE_PATH, { superuser: "try" }).read();
+  return (await cockpit.file(CADDYFILE_PATH, { superuser: "try" }).read()) ?? "";
 }
 
 export async function writeCaddyfile(content: string): Promise<void> {

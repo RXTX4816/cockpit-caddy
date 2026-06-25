@@ -395,7 +395,8 @@ export function parseLabelsFromCaddyfile(content: string): Record<number, string
 
 export async function readProxyConf(): Promise<string> {
   try {
-    return (await cockpit.file(PROXY_CONF_PATH, { superuser: "try" }).read()) ?? "";
+    const content = await cockpit.file(PROXY_CONF_PATH, { superuser: "try" }).read();
+    return content ?? "";
   } catch {
     return "";
   }
