@@ -702,6 +702,7 @@ export function ProxyList({ onViewLogs }: Props) {
             format: duplicating.accessLog.format ?? "",
             level: duplicating.accessLog.level ?? "",
           } : undefined}
+          initialErrorHandlers={duplicating.errorHandlers}
         />
       ))}
 

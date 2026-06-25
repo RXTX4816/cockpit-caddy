@@ -29,8 +29,9 @@ import { TransportSection, type TransportValues } from "./TransportSection";
 import { ServerTimeoutsSection, type ServerTimeoutValues } from "./ServerTimeoutsSection";
 import { AccessLogSection, type AccessLogValues, accessLogValuesToConfig, accessLogConfigToValues } from "./AccessLogSection";
 import { BasicAuthSection, type AuthEntry } from "./BasicAuthSection";
+import { ErrorHandlersSection } from "./ErrorHandlersSection";
 import { UpstreamsSection, validateUpstreams, type ExtraUpstream } from "./UpstreamsSection";
-import type { LbPolicy } from "../api";
+import type { ErrorHandlerConfig, LbPolicy } from "../api";
 import { hashPassword } from "../api";
 
 interface FormState {
@@ -76,9 +77,10 @@ interface Props {
   initialLbPolicy?: LbPolicy;
   initialServerTimeouts?: ServerTimeoutValues;
   initialAccessLog?: AccessLogValues;
+  initialErrorHandlers?: ErrorHandlerConfig[];
 }
 
-export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, initialValues, initialRewrite, initialRequestHeaders, initialResponseHeaders, initialTransport, initialBasicAuth, initialExtraUpstreams, initialLbPolicy, initialServerTimeouts, initialAccessLog }: Props) {
+export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, initialValues, initialRewrite, initialRequestHeaders, initialResponseHeaders, initialTransport, initialBasicAuth, initialExtraUpstreams, initialLbPolicy, initialServerTimeouts, initialAccessLog, initialErrorHandlers }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
   const confirmAction = useConfirmAction();
@@ -102,6 +104,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
   const [transport, setTransport] = useState<TransportValues>(initialTransport ?? { dialTimeout: "", responseHeaderTimeout: "" });
   const [serverTimeouts, setServerTimeouts] = useState<ServerTimeoutValues>(initialServerTimeouts ?? { readTimeout: "", readHeaderTimeout: "", writeTimeout: "", idleTimeout: "", maxHeaderBytes: "" });
   const [accessLog, setAccessLog] = useState<AccessLogValues>(initialAccessLog ?? accessLogConfigToValues(undefined));
+  const [errorHandlers, setErrorHandlers] = useState<ErrorHandlerConfig[]>(initialErrorHandlers ?? []);
   const [basicAuth, setBasicAuth] = useState<AuthEntry[]>(initialBasicAuth ?? []);
   const [extraUpstreams, setExtraUpstreams] = useState<ExtraUpstream[]>(initialExtraUpstreams ?? []);
   const [lbPolicy, setLbPolicy] = useState<LbPolicy | "">(initialLbPolicy ?? "");
@@ -314,6 +317,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
         </Form>
         <TransportSection value={transport} onChange={setTransport} isDisabled={isLocked} />
         <AccessLogSection value={accessLog} onChange={setAccessLog} isDisabled={isLocked} />
+        <ErrorHandlersSection value={errorHandlers} onChange={setErrorHandlers} isDisabled={isLocked} />
         <ServerTimeoutsSection value={serverTimeouts} onChange={setServerTimeouts} isDisabled={isLocked} />
         <BasicAuthSection value={basicAuth} onChange={setBasicAuth} isDisabled={isLocked} />
         <RewriteSection value={rewrite} onChange={setRewrite} isDisabled={isLocked} />
@@ -359,6 +363,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
                       : undefined,
                     lbPolicy: (lbPolicy || undefined) as LbPolicy | undefined,
                     accessLog: accessLogValuesToConfig(accessLog),
+                    errorHandlers: errorHandlers.length ? errorHandlers : undefined,
                     serverReadTimeout: serverTimeouts.readTimeout.trim() || undefined,
                     serverReadHeaderTimeout: serverTimeouts.readHeaderTimeout.trim() || undefined,
                     serverWriteTimeout: serverTimeouts.writeTimeout.trim() || undefined,

@@ -454,5 +454,31 @@
     "test_socket_fail": "Unix socket unreachable — check path and socket permissions",
     "reset_button": "Reset to defaults",
     "save_tooltip": "Test a successful connection first"
+  },
+  "error_handler": {
+    "section_title": "Custom error handlers (optional)",
+    "section_title_on": "Custom error handlers ({{count}})",
+    "add_button": "Add error handler",
+    "remove_button": "Remove handler",
+    "indicator": "Errors",
+    "field_match": "Match",
+    "match_specific": "Specific codes",
+    "match_4xx": "4xx",
+    "match_5xx": "5xx",
+    "match_all": "All errors",
+    "field_codes": "Status codes",
+    "field_codes_help": "Comma-separated HTTP status codes (e.g. 404, 502, 503)",
+    "field_type": "Action",
+    "type_respond": "Inline response",
+    "type_redirect": "Redirect",
+    "type_static": "Static files",
+    "field_body": "Response body",
+    "field_body_placeholder": "Error {http.error.status_code}: {http.error.status_text}",
+    "field_status_code": "Status code",
+    "field_status_code_placeholder": "default",
+    "field_redirect_to": "Redirect to",
+    "field_redirect_code": "Code",
+    "field_file_root": "Files root directory",
+    "field_file_root_help": "Caddy will serve {status_code}.html from this directory (e.g. /var/www/errors/404.html)"
   }
 }

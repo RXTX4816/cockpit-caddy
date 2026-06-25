@@ -109,6 +109,7 @@ export function ProxyCard({ proxy, onEdit, onDelete, onDuplicate, probeStatuses 
                 {proxy.basicAuth?.length ? <Label isCompact color="red" variant="outline">{t("proxies.indicator_auth")}</Label> : null}
                 {(proxy.dialTimeout ?? proxy.responseHeaderTimeout) && <Label isCompact color="grey" variant="outline">{t("proxies.indicator_timeouts")}</Label>}
                 {proxy.accessLog && <Label isCompact color="teal" variant="outline">{t("access_log.indicator")}</Label>}
+                {proxy.errorHandlers?.length ? <Label isCompact color="orange" variant="outline">{t("error_handler.indicator")}</Label> : null}
                 {(proxy.serverReadTimeout ?? proxy.serverReadHeaderTimeout ?? proxy.serverWriteTimeout ?? proxy.serverIdleTimeout ?? proxy.maxHeaderBytes) && <Label isCompact color="grey" variant="outline">{t("proxies.indicator_limits")}</Label>}
                 {proxy.extraUpstreams?.length ? <Label isCompact color="blue" variant="outline">{t("proxies.indicator_lb")}</Label> : null}
               </div>

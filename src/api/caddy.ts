@@ -528,7 +528,10 @@ const LB_POLICY_MAP: Record<string, string> = {
 };
 
 /** Builds the reverse_proxy directive lines for a proxy (tab-indented). */
-function buildReverseProxyLines(p: Pick<ProxyEntry, "targetScheme" | "targetHost" | "targetPort" | "tlsSkipVerify" | "requestHeaders" | "dialTimeout" | "responseHeaderTimeout" | "extraUpstreams" | "lbPolicy">): string[] {
+function buildReverseProxyLines(
+  p: Pick<ProxyEntry, "targetScheme" | "targetHost" | "targetPort" | "tlsSkipVerify" | "requestHeaders" | "dialTimeout" | "responseHeaderTimeout" | "extraUpstreams" | "lbPolicy">,
+  errorHandlers?: import("./types").ErrorHandlerConfig[],
+): string[] {
   const upstreams = buildUpstreamList(p);
 
   const headerLines = (p.requestHeaders ?? []).map(h => {
@@ -542,16 +545,81 @@ function buildReverseProxyLines(p: Pick<ProxyEntry, "targetScheme" | "targetHost
     ? [`\t\tlb_policy ${LB_POLICY_MAP[p.lbPolicy]}`]
     : [];
 
-  const needsBlock = transportLines.length > 0 || headerLines.length > 0 || lbLines.length > 0;
+  // When error handlers are configured, intercept upstream HTTP error responses and
+  // re-raise them as Caddy errors so that handle_errors blocks fire.
+  const errorPassthroughLines: string[] = [];
+  if (errorHandlers?.length) {
+    const codes = errorHandlerResponseCodes(errorHandlers);
+    if (codes.length) {
+      const statusTokens = codes.map(c => (c < 10 ? `${c}xx` : String(c))).join(" ");
+      errorPassthroughLines.push(
+        `\t\t@upstream_error status ${statusTokens}`,
+        `\t\thandle_response @upstream_error {`,
+        `\t\t\terror {rp.status_code}`,
+        `\t\t}`,
+      );
+    }
+  }
+
+  const needsBlock = transportLines.length > 0 || headerLines.length > 0 || lbLines.length > 0 || errorPassthroughLines.length > 0;
   if (!needsBlock) return [`\treverse_proxy ${upstreams.join(" ")}`];
 
-  return [`\treverse_proxy ${upstreams.join(" ")} {`, ...lbLines, ...transportLines, ...headerLines, "\t}"];
+  return [`\treverse_proxy ${upstreams.join(" ")} {`, ...lbLines, ...transportLines, ...headerLines, ...errorPassthroughLines, "\t}"];
 }
 
 function buildExternalAddress(p: Pick<ProxyEntry, "externalPort" | "externalScheme" | "externalHost">): string {
   if (p.externalScheme && p.externalHost) return `${p.externalScheme}://${p.externalHost}:${p.externalPort}`;
   if (p.externalHost) return `${p.externalHost}:${p.externalPort}`;
   return `:${p.externalPort}`;
+}
+
+/**
+ * Computes the status code tokens needed for a `handle_response` or `handle_errors`
+ * matcher that covers all configured error handlers.
+ * Returns single-digit prefixes (4 = 4xx, 5 = 5xx) or exact codes (404, 502, …).
+ */
+function errorHandlerResponseCodes(handlers: import("./types").ErrorHandlerConfig[]): number[] {
+  const prefixes = new Set<number>();
+  const exact = new Set<number>();
+  for (const h of handlers) {
+    if (h.matchType === "all")     { prefixes.add(4); prefixes.add(5); break; }
+    if (h.matchType === "4xx")     prefixes.add(4);
+    if (h.matchType === "5xx")     prefixes.add(5);
+    if (h.matchType === "specific") h.codes?.forEach(c => exact.add(c));
+  }
+  const result = [...prefixes];
+  for (const c of exact) {
+    if (!prefixes.has(Math.floor(c / 100))) result.push(c);
+  }
+  return result;
+}
+
+/** Converts a list of error handler configs to `handle_errors` Caddyfile lines. */
+function buildErrorHandlerCaddyLines(handlers: import("./types").ErrorHandlerConfig[]): string[] {
+  const lines: string[] = [];
+  for (const h of handlers) {
+    const matchSuffix =
+      h.matchType === "specific" && h.codes?.length
+        ? " " + h.codes.join(" ")
+        : h.matchType === "4xx" ? " 4xx"
+        : h.matchType === "5xx" ? " 5xx"
+        : "";
+    lines.push(`\thandle_errors${matchSuffix} {`);
+    if (h.type === "redirect") {
+      lines.push(`\t\tredir ${h.redirectTo ?? "/"} ${h.redirectCode ?? 302}`);
+    } else if (h.type === "static") {
+      lines.push(`\t\trewrite * /{http.error.status_code}.html`);
+      lines.push(`\t\tfile_server {`);
+      lines.push(`\t\t\troot ${h.filePath ?? "/var/www/errors"}`);
+      lines.push(`\t\t}`);
+    } else {
+      const body = h.body ?? "{http.error.status_code} {http.error.status_text}";
+      const sc = h.statusCode ? ` ${h.statusCode}` : "";
+      lines.push(`\t\trespond "${body}"${sc}`);
+    }
+    lines.push("\t}");
+  }
+  return lines;
 }
 
 /** Generates the Caddyfile block for a single proxy (label comment + block body). */
@@ -617,8 +685,9 @@ export function proxyToBlock(p: ProxyEntry): string {
       else lines.push(`\theader ${h.name} "${h.value ?? ""}"`);
     }
     if (p.rewrite) lines.push(...buildRewriteCaddyLines(p.rewrite, p.externalPort));
-    lines.push(...buildReverseProxyLines(p));
+    lines.push(...buildReverseProxyLines(p, p.errorHandlers));
   }
+  if (p.errorHandlers?.length) lines.push(...buildErrorHandlerCaddyLines(p.errorHandlers));
   lines.push("}");
   return lines.join("\n");
 }
@@ -710,8 +779,9 @@ function patchRawBlock(raw: string, proxy: ProxyEntry): string {
   } else {
     if (proxy.compress) kept.push("\tencode gzip zstd");
     if (proxy.basicAuth?.length) kept.push(...buildBasicAuthCaddyLines(proxy.basicAuth));
-    kept.push(...buildReverseProxyLines(proxy));
+    kept.push(...buildReverseProxyLines(proxy, proxy.errorHandlers));
   }
+  if (proxy.errorHandlers?.length) kept.push(...buildErrorHandlerCaddyLines(proxy.errorHandlers));
   kept.push(lines[closingIdx]); // closing }
   return kept.join("\n");
 }
@@ -945,6 +1015,7 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
         serverKey: key,
         redirect: { to: jsonPlaceholderToCaddy(locationHeader), code },
         serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, accessLog,
+        errorHandlers: parseErrorHandlers(server),
       });
       continue;
     }
@@ -967,6 +1038,7 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
           close: staticResp.close || undefined,
         },
         serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, accessLog,
+        errorHandlers: parseErrorHandlers(server),
       });
       continue;
     }
@@ -995,6 +1067,7 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
         basicAuth: fsBasicAuth?.length ? fsBasicAuth : undefined,
         responseHeaders: fsResponseHeaders.length ? fsResponseHeaders : undefined,
         serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, accessLog,
+        errorHandlers: parseErrorHandlers(server),
       });
       continue;
     }
@@ -1056,6 +1129,7 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
       extraUpstreams: extraUpstreams.length ? extraUpstreams : undefined,
       lbPolicy,
       serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
+      errorHandlers: parseErrorHandlers(server),
     });
   }
 
@@ -1132,7 +1206,10 @@ function parseResponseHeadersJson(h: AnyHandler): import("./types").HeaderOperat
   return ops;
 }
 
-function buildReverseProxyHandler(proxy: Pick<ProxyEntry, "targetHost" | "targetPort" | "targetScheme" | "tlsSkipVerify" | "requestHeaders" | "dialTimeout" | "responseHeaderTimeout" | "extraUpstreams" | "lbPolicy">): CaddyReverseProxyHandler {
+function buildReverseProxyHandler(
+  proxy: Pick<ProxyEntry, "targetHost" | "targetPort" | "targetScheme" | "tlsSkipVerify" | "requestHeaders" | "dialTimeout" | "responseHeaderTimeout" | "extraUpstreams" | "lbPolicy">,
+  errorHandlers?: import("./types").ErrorHandlerConfig[],
+): CaddyReverseProxyHandler {
   const primaryDial = `${proxy.targetHost}:${proxy.targetPort}`;
   const extraDials = (proxy.extraUpstreams ?? []).map(u => ({ dial: `${u.host}:${u.port}` }));
   const rp: CaddyReverseProxyHandler = {
@@ -1145,6 +1222,15 @@ function buildReverseProxyHandler(proxy: Pick<ProxyEntry, "targetHost" | "target
   if (hdrs) rp.headers = hdrs;
   if (proxy.lbPolicy && (proxy.extraUpstreams?.length ?? 0) > 0 && LB_POLICY_MAP[proxy.lbPolicy]) {
     rp.load_balancing = { selection_policy: { policy: proxy.lbPolicy } };
+  }
+  if (errorHandlers?.length) {
+    const codes = errorHandlerResponseCodes(errorHandlers);
+    if (codes.length) {
+      rp.handle_response = [{
+        match: { status_code: codes },
+        routes: [{ handle: [{ handler: "error", status_code: "{rp.status_code}" }] }],
+      }];
+    }
   }
   return rp;
 }
@@ -1189,6 +1275,114 @@ function applyAccessLog(server: CaddyServer, proxy: { externalPort: number; acce
   }
 }
 
+/** Recursively flattens subroute handlers so we can find the actual leaf handler. */
+function flattenErrorHandles(handles: Array<Record<string, unknown>>): Array<Record<string, unknown>> {
+  const result: Array<Record<string, unknown>> = [];
+  for (const h of handles) {
+    if (h.handler === "subroute") {
+      const routes = (h.routes as Array<{ handle?: unknown[] }> | undefined) ?? [];
+      for (const r of routes) {
+        result.push(...flattenErrorHandles((r.handle ?? []) as Array<Record<string, unknown>>));
+      }
+    } else {
+      result.push(h);
+    }
+  }
+  return result;
+}
+
+function parseErrorHandlers(server: CaddyServer): import("./types").ErrorHandlerConfig[] | undefined {
+  const errRoutes = (server.errors as { routes?: unknown[] } | undefined)?.routes;
+  if (!errRoutes?.length) return undefined;
+
+  const handlers: import("./types").ErrorHandlerConfig[] = [];
+  for (const route of errRoutes as Array<Record<string, unknown>>) {
+    const matchArr = (route.match as Array<Record<string, unknown>> | undefined) ?? [];
+    const firstMatch = matchArr[0] ?? {};
+
+    let matchType: import("./types").ErrorMatchType = "all";
+    let codes: number[] | undefined;
+
+    if (typeof firstMatch.expression === "string") {
+      const expr = firstMatch.expression;
+      const inMatch = expr.match(/in \[([0-9, ]+)\]/);
+      if (inMatch) {
+        codes = inMatch[1].split(",").map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
+        matchType = "specific";
+      } else if (expr.includes(">= 400") || expr.includes("< 500")) {
+        matchType = "4xx";
+      } else if (expr.includes(">= 500") || expr.includes("< 600")) {
+        matchType = "5xx";
+      }
+    }
+
+    // Caddy's Caddyfile adapter wraps handlers in a subroute — flatten before searching.
+    const rawHandles = (route.handle as Array<Record<string, unknown>> | undefined) ?? [];
+    const handles = flattenErrorHandles(rawHandles);
+
+    const fsHandle = handles.find(h => h.handler === "file_server");
+    if (fsHandle) {
+      handlers.push({ matchType, codes, type: "static", filePath: typeof fsHandle.root === "string" ? fsHandle.root : undefined });
+      continue;
+    }
+    const srHandle = handles.find(h => h.handler === "static_response") as
+      { handler: string; status_code?: number; body?: string; headers?: Record<string, string[]> } | undefined;
+    if (srHandle) {
+      const location = srHandle.headers?.["Location"]?.[0];
+      if (location) {
+        handlers.push({ matchType, codes, type: "redirect", redirectTo: location, redirectCode: (srHandle.status_code ?? 302) as 301 | 302 | 307 | 308 });
+      } else {
+        handlers.push({ matchType, codes, type: "respond", body: srHandle.body, statusCode: srHandle.status_code });
+      }
+    }
+  }
+  return handlers.length ? handlers : undefined;
+}
+
+function buildErrorRoutes(handlers: import("./types").ErrorHandlerConfig[]): { routes: unknown[] } | undefined {
+  if (!handlers.length) return undefined;
+  const routes = handlers.map(h => {
+    let match: unknown[] | undefined;
+    if (h.matchType === "specific" && h.codes?.length) {
+      const codes = h.codes.join(", ");
+      match = [{ expression: `{http.error.status_code} in [${codes}]` }];
+    } else if (h.matchType === "4xx") {
+      match = [{ expression: "{http.error.status_code} >= 400 && {http.error.status_code} < 500" }];
+    } else if (h.matchType === "5xx") {
+      match = [{ expression: "{http.error.status_code} >= 500 && {http.error.status_code} < 600" }];
+    }
+
+    let handle: Record<string, unknown>[];
+    if (h.type === "redirect") {
+      handle = [{ handler: "static_response", status_code: h.redirectCode ?? 302, headers: { Location: [h.redirectTo ?? "/"] } }];
+    } else if (h.type === "static") {
+      handle = [
+        { handler: "rewrite", uri: "/{http.error.status_code}.html" },
+        { handler: "file_server", root: h.filePath ?? "/var/www/errors" },
+      ];
+    } else {
+      const r: Record<string, unknown> = { handler: "static_response" };
+      if (h.statusCode) r.status_code = h.statusCode;
+      if (h.body) r.body = h.body;
+      handle = [r];
+    }
+
+    const route: Record<string, unknown> = { handle };
+    if (match) route.match = match;
+    return route;
+  });
+  return { routes };
+}
+
+function applyErrorHandlers(server: CaddyServer, proxy: { errorHandlers?: import("./types").ErrorHandlerConfig[] }): void {
+  const built = proxy.errorHandlers?.length ? buildErrorRoutes(proxy.errorHandlers) : undefined;
+  if (built) {
+    (server as Record<string, unknown>).errors = built;
+  } else {
+    delete (server as Record<string, unknown>).errors;
+  }
+}
+
 export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): CaddyServer {
   const listenAddr = buildListenAddr(proxy);
   if (proxy.staticResponse) {
@@ -1203,6 +1397,7 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
       routes: [{ handle: [h as CaddyHandler], terminal: true }],
     };
     applyAccessLog(server, proxy);
+    applyErrorHandlers(server, proxy);
     return applyServerTimeouts(server, proxy);
   }
   if (proxy.redirect) {
@@ -1218,6 +1413,7 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
       }],
     };
     applyAccessLog(server, proxy);
+    applyErrorHandlers(server, proxy);
     return applyServerTimeouts(server, proxy);
   }
   if (proxy.fileServer) {
@@ -1234,6 +1430,7 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
     };
     if (proxy.tls) server.tls_connection_policies = [{}];
     applyAccessLog(server, proxy);
+    applyErrorHandlers(server, proxy);
     return applyServerTimeouts(server, proxy);
   }
   const handles: CaddyHandler[] = [];
@@ -1241,7 +1438,7 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
   if (proxy.basicAuth?.length) handles.push(buildBasicAuthHandler(proxy.basicAuth));
   if (proxy.responseHeaders?.length) handles.push(buildResponseHeadersHandler(proxy.responseHeaders));
   if (proxy.rewrite) handles.push(buildRewriteHandler(proxy.rewrite));
-  handles.push(buildReverseProxyHandler(proxy));
+  handles.push(buildReverseProxyHandler(proxy, proxy.errorHandlers));
   const server: CaddyServer = {
     listen: [listenAddr],
     routes: [{ handle: handles, terminal: true }],
@@ -1250,6 +1447,7 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
     server.tls_connection_policies = [{}];
   }
   applyAccessLog(server, proxy);
+  applyErrorHandlers(server, proxy);
   return applyServerTimeouts(server, proxy);
 }
 
@@ -1271,7 +1469,7 @@ function patchHandles(handles: CaddyHandler[], proxy: ProxyEntry): CaddyHandler[
   const patched = withoutRewrite.map(h => {
     if (h.handler === "reverse_proxy") {
       found = true;
-      return buildReverseProxyHandler(proxy);
+      return buildReverseProxyHandler(proxy, proxy.errorHandlers);
     }
     // Recurse into subroute
     const anyH = h as AnyHandler;
@@ -1287,7 +1485,7 @@ function patchHandles(handles: CaddyHandler[], proxy: ProxyEntry): CaddyHandler[
     return h;
   });
   if (!found) {
-    patched.push(buildReverseProxyHandler(proxy));
+    patched.push(buildReverseProxyHandler(proxy, proxy.errorHandlers));
   }
   // Prepend encode/auth/response-headers/rewrite handlers if configured
   const prefix: CaddyHandler[] = [];
@@ -1319,6 +1517,7 @@ function patchServer(original: CaddyServer, proxy: ProxyEntry): CaddyServer {
   }));
 
   applyAccessLog(server, proxy);
+  applyErrorHandlers(server, proxy);
 
   return applyServerTimeouts(server, proxy);
 }

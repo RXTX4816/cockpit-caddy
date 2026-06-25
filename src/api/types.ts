@@ -121,6 +121,26 @@ export interface StaticResponseConfig {
 
 export type LbPolicy = "round_robin" | "random" | "least_conn" | "first";
 
+export type ErrorMatchType = "specific" | "4xx" | "5xx" | "all";
+export type ErrorHandlerType = "respond" | "redirect" | "static";
+
+export interface ErrorHandlerConfig {
+  matchType: ErrorMatchType;
+  /** Status codes to match; only used when matchType === "specific". */
+  codes?: number[];
+  type: ErrorHandlerType;
+  /** respond: inline response body */
+  body?: string;
+  /** respond: HTTP status code to send (defaults to the error code) */
+  statusCode?: number;
+  /** redirect: URL to redirect to */
+  redirectTo?: string;
+  /** redirect: redirect status code */
+  redirectCode?: 301 | 302 | 307 | 308;
+  /** static: root directory; expects {code}.html files inside */
+  filePath?: string;
+}
+
 export interface ProxyEntry {
   id: string;
   externalPort: number;
@@ -161,6 +181,8 @@ export interface ProxyEntry {
   maxHeaderBytes?: number;
   /** Per-server access log configuration */
   accessLog?: AccessLogConfig;
+  /** Per-server error handlers (server.errors.routes) */
+  errorHandlers?: ErrorHandlerConfig[];
 }
 
 export type { ServiceStatus } from "@rxtx4816/cockpit-plugin-base-react/systemd";
