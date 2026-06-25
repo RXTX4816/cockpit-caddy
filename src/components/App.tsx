@@ -19,7 +19,7 @@ import {
 } from "@patternfly/react-core";
 import CogIcon from "@patternfly/react-icons/dist/esm/icons/cog-icon";
 import { ErrorBoundary, ToastProvider, PluginFooter } from "@rxtx4816/cockpit-plugin-base-react/components";
-import { useAdminMode } from "@rxtx4816/cockpit-plugin-base-react";
+import { useAdminMode, useDialogState } from "@rxtx4816/cockpit-plugin-base-react";
 import pkg from "../../package.json";
 
 import { ProxyList } from "./ProxyList";
@@ -40,12 +40,11 @@ function AppInner() {
   const { status, adminApiOk, loading, refresh } = useCaddyStatus();
   const adminAllowed = useAdminMode();
   const caddyVersion = useCaddyVersion();
+  type AppModals = { backup: undefined; restore: undefined; adminAddress: undefined; ca: undefined };
+  const modals = useDialogState<AppModals>(["backup", "restore", "adminAddress", "ca"]);
+
   const [activeTab, setActiveTab] = useState(0);
   const [adminBypass, setAdminBypass] = useState(false);
-  const [showBackup, setShowBackup] = useState(false);
-  const [showRestore, setShowRestore] = useState(false);
-  const [showAdminAddress, setShowAdminAddress] = useState(false);
-  const [showCa, setShowCa] = useState(false);
   const [logsSearch, setLogsSearch] = useState("");
 
   useEffect(() => { applyStoredAdminAddress(); }, []);
@@ -71,10 +70,10 @@ function AppInner() {
                   onRefresh={refresh}
                   extraActions={
                     <div style={{ display: "flex", gap: "0.5rem" }}>
-                      <Button variant="secondary" size="sm" onClick={() => setShowBackup(true)}>{t("backup.button")}</Button>
-                      <Button variant="secondary" size="sm" onClick={() => setShowRestore(true)}>{t("restore.button")}</Button>
-                      <Button variant="secondary" size="sm" onClick={() => setShowCa(true)}>{t("ca.button")}</Button>
-                      <Button variant="plain" size="sm" aria-label={t("admin_address.title")} onClick={() => setShowAdminAddress(true)}><CogIcon /></Button>
+                      <Button variant="secondary" size="sm" onClick={() => modals.open("backup")}>{t("backup.button")}</Button>
+                      <Button variant="secondary" size="sm" onClick={() => modals.open("restore")}>{t("restore.button")}</Button>
+                      <Button variant="secondary" size="sm" onClick={() => modals.open("ca")}>{t("ca.button")}</Button>
+                      <Button variant="plain" size="sm" aria-label={t("admin_address.title")} onClick={() => modals.open("adminAddress")}><CogIcon /></Button>
                     </div>
                   }
                 />
@@ -158,10 +157,10 @@ function AppInner() {
           </StackItem>
         </Stack>
       </PageSection>
-      {showBackup && <BackupDialog onClose={() => setShowBackup(false)} />}
-      {showRestore && <RestoreDialog onClose={() => setShowRestore(false)} />}
-      {showAdminAddress && <AdminAddressDialog onClose={() => setShowAdminAddress(false)} />}
-      {showCa && <InternalCaModal onClose={() => setShowCa(false)} />}
+      {modals.isOpen("backup") && <BackupDialog onClose={() => modals.close("backup")} />}
+      {modals.isOpen("restore") && <RestoreDialog onClose={() => modals.close("restore")} />}
+      {modals.isOpen("adminAddress") && <AdminAddressDialog onClose={() => modals.close("adminAddress")} />}
+      {modals.isOpen("ca") && <InternalCaModal onClose={() => modals.close("ca")} />}
       <PluginFooter
         version={pkg.version}
         links={[

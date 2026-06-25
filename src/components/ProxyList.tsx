@@ -34,7 +34,7 @@ import {
   LayoutSelector,
   type LayoutOption,
 } from "@rxtx4816/cockpit-plugin-base-react/components";
-import { useLayout } from "@rxtx4816/cockpit-plugin-base-react";
+import { useLayout, useLocalStorage } from "@rxtx4816/cockpit-plugin-base-react";
 import { AddProxyDialog } from "./AddProxyDialog";
 import { AddRedirectDialog } from "./AddRedirectDialog";
 import { AddStaticDialog } from "./AddStaticDialog";
@@ -238,7 +238,10 @@ export function ProxyList({ onViewLogs }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
   const { proxies, loading, error, refresh, addProxy, editProxy, deleteProxy, needsMigration, migrate } = useProxies();
-  const [probeEnabled, setProbeEnabled] = useState(() => localStorage.getItem("cockpit-caddy:probe") === "1");
+  const [probeEnabled, setProbeEnabled] = useLocalStorage<boolean>("cockpit-caddy:probe", false, {
+    serialize: v => v ? "1" : "0",
+    deserialize: r => r === "1",
+  });
   const [probeConfirming, setProbeConfirming] = useState(false);
   const probeStatuses = useUpstreamProbe(proxies, probeEnabled);
 
@@ -247,14 +250,12 @@ export function ProxyList({ onViewLogs }: Props) {
       setProbeConfirming(true);
     } else {
       setProbeEnabled(false);
-      localStorage.setItem("cockpit-caddy:probe", "0");
     }
   }
 
   function confirmProbeEnable() {
     setProbeEnabled(true);
     setProbeConfirming(false);
-    localStorage.setItem("cockpit-caddy:probe", "1");
   }
   const [layout, setLayout] = useLayout<ProxyLayout>("cockpit-caddy:proxy-layout", "list", ["list", "card"]);
   const [search, setSearch] = useState("");

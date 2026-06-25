@@ -1,4 +1,5 @@
 import type { CaddyConfig, CaddyHandler, CaddyReverseProxyHandler, CaddyServer, ProxyEntry } from "./types";
+import { readFile as fsReadFile, writeFile as fsWriteFile } from "@rxtx4816/cockpit-plugin-base-react/lib/cockpit-fs";
 
 /**
  * Thrown when a proxy config was written to disk successfully but the Caddy
@@ -234,7 +235,7 @@ export function buildMigratedConfContent(blocks: RawBlock[]): string {
 }
 
 export async function writeRawProxyConf(content: string): Promise<void> {
-  await cockpit.file(PROXY_CONF_PATH, { superuser: "try" }).replace(content);
+  await fsWriteFile(PROXY_CONF_PATH, content, "try");
 }
 
 /**
@@ -395,8 +396,7 @@ export function parseLabelsFromCaddyfile(content: string): Record<number, string
 
 export async function readProxyConf(): Promise<string> {
   try {
-    const content = await cockpit.file(PROXY_CONF_PATH, { superuser: "try" }).read();
-    return content ?? "";
+    return (await fsReadFile(PROXY_CONF_PATH, "try")) ?? "";
   } catch {
     return "";
   }
@@ -1071,7 +1071,7 @@ export function surgicallyRemoveBlock(content: string, port: number): string {
 
 export async function writeProxyConf(proxies: ProxyEntry[]): Promise<void> {
   await cockpit.spawn(["mkdir", "-p", "/etc/caddy/conf.d"], { superuser: "try" });
-  await cockpit.file(PROXY_CONF_PATH, { superuser: "try" }).replace(proxiesToCaddyfile(proxies));
+  await fsWriteFile(PROXY_CONF_PATH, proxiesToCaddyfile(proxies), "try");
 }
 
 // ---------------------------------------------------------------------------
@@ -1923,11 +1923,11 @@ export function patchMainCaddyfile(content: string, blocks: string): string {
  */
 export async function syncGlobalTimeouts(proxies: ProxyEntry[]): Promise<void> {
   const blocks = buildManagedServersBlocks(proxies);
-  const original = (await cockpit.file(MAIN_CADDYFILE, { superuser: "try" }).read()) ?? "";
+  const original = (await fsReadFile(MAIN_CADDYFILE, "try")) ?? "";
   const patched = patchMainCaddyfile(original, blocks);
   if (patched === original) return;
 
-  await cockpit.file(MAIN_CADDYFILE, { superuser: "try" }).replace(patched);
+  await fsWriteFile(MAIN_CADDYFILE, patched, "try");
 
   try {
     await cockpit.spawn(
@@ -1935,7 +1935,7 @@ export async function syncGlobalTimeouts(proxies: ProxyEntry[]): Promise<void> {
       { superuser: "try", err: "out" },
     );
   } catch (e) {
-    await cockpit.file(MAIN_CADDYFILE, { superuser: "try" }).replace(original);
+    await fsWriteFile(MAIN_CADDYFILE, original, "try");
     const msg = e instanceof Error ? e.message : String(e);
     throw new CaddyfileError(msg.replace(/^Error:\s*/i, ""));
   }
@@ -2042,18 +2042,18 @@ function buildGlobalOptionsLines(opts: GlobalOptions): string {
  */
 export async function syncGlobalOptions(opts: GlobalOptions): Promise<void> {
   const body = buildGlobalOptionsLines(opts);
-  const original = (await cockpit.file(MAIN_CADDYFILE, { superuser: "try" }).read()) ?? "";
+  const original = (await fsReadFile(MAIN_CADDYFILE, "try")) ?? "";
   const patched = patchManagedSection(original, GLOBAL_OPTS_BEGIN, GLOBAL_OPTS_END, body);
   if (patched === original) return;
 
-  await cockpit.file(MAIN_CADDYFILE, { superuser: "try" }).replace(patched);
+  await fsWriteFile(MAIN_CADDYFILE, patched, "try");
   try {
     await cockpit.spawn(
       ["caddy", "validate", "--config", MAIN_CADDYFILE, "--adapter", "caddyfile"],
       { superuser: "try", err: "out" },
     );
   } catch (e) {
-    await cockpit.file(MAIN_CADDYFILE, { superuser: "try" }).replace(original);
+    await fsWriteFile(MAIN_CADDYFILE, original, "try");
     const msg = e instanceof Error ? e.message : String(e);
     throw new CaddyfileError(msg.replace(/^Error:\s*/i, ""));
   }
@@ -2061,6 +2061,6 @@ export async function syncGlobalOptions(opts: GlobalOptions): Promise<void> {
 
 /** Read current global options from the main Caddyfile. */
 export async function readGlobalOptions(): Promise<GlobalOptions> {
-  const content = (await cockpit.file(MAIN_CADDYFILE, { superuser: "try" }).read()) ?? "";
+  const content = (await fsReadFile(MAIN_CADDYFILE, "try")) ?? "";
   return parseGlobalOptions(content);
 }
