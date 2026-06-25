@@ -1164,3 +1164,34 @@ describe("parseGlobalOptions — ACME fields", () => {
     expect(opts.acmeEabMacKey).toBe("mymac");
   });
 });
+
+describe("parseGlobalOptions — on-demand TLS", () => {
+  it("parses on_demand_tls block with ask, interval, burst", () => {
+    const body = [
+      "\ton_demand_tls {",
+      "\t\task http://localhost:9090/check",
+      "\t\tinterval 2m",
+      "\t\tburst 5",
+      "\t}",
+    ].join("\n");
+    const opts = parseGlobalOptions(makeOpts(body));
+    expect(opts.onDemandEnabled).toBe(true);
+    expect(opts.onDemandAsk).toBe("http://localhost:9090/check");
+    expect(opts.onDemandInterval).toBe("2m");
+    expect(opts.onDemandBurst).toBe(5);
+  });
+
+  it("sets onDemandEnabled without optional fields", () => {
+    const body = "\ton_demand_tls {\n\t}";
+    const opts = parseGlobalOptions(makeOpts(body));
+    expect(opts.onDemandEnabled).toBe(true);
+    expect(opts.onDemandAsk).toBeUndefined();
+    expect(opts.onDemandInterval).toBeUndefined();
+    expect(opts.onDemandBurst).toBeUndefined();
+  });
+
+  it("does not set onDemandEnabled when block absent", () => {
+    const opts = parseGlobalOptions(makeOpts("\temail admin@example.com"));
+    expect(opts.onDemandEnabled).toBeUndefined();
+  });
+});

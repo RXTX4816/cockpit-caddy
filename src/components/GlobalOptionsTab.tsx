@@ -44,6 +44,10 @@ export function GlobalOptionsTab() {
   const [acmeCARoot, setAcmeCARoot] = useState("");
   const [acmeEabKeyId, setAcmeEabKeyId] = useState("");
   const [acmeEabMacKey, setAcmeEabMacKey] = useState("");
+  const [onDemandEnabled, setOnDemandEnabled] = useState(false);
+  const [onDemandAsk, setOnDemandAsk] = useState("");
+  const [onDemandInterval, setOnDemandInterval] = useState("");
+  const [onDemandBurst, setOnDemandBurst] = useState("");
 
   const load = useCallback(() => {
     setLoading(true);
@@ -60,6 +64,10 @@ export function GlobalOptionsTab() {
         setAcmeCARoot(opts.acmeCARoot ?? "");
         setAcmeEabKeyId(opts.acmeEabKeyId ?? "");
         setAcmeEabMacKey(opts.acmeEabMacKey ?? "");
+        setOnDemandEnabled(opts.onDemandEnabled ?? false);
+        setOnDemandAsk(opts.onDemandAsk ?? "");
+        setOnDemandInterval(opts.onDemandInterval ?? "");
+        setOnDemandBurst(opts.onDemandBurst != null ? String(opts.onDemandBurst) : "");
       })
       .catch(e => setLoadError(e instanceof Error ? e.message : String(e)))
       .finally(() => setLoading(false));
@@ -78,7 +86,10 @@ export function GlobalOptionsTab() {
   const httpsPortErr = portError(httpsPort);
   const gracePeriodErr = !isDuration(gracePeriod) ? t("global_opts.validation_duration") : null;
   const shutdownDelayErr = !isDuration(shutdownDelay) ? t("global_opts.validation_duration") : null;
-  const hasErrors = !!(httpPortErr || httpsPortErr || gracePeriodErr || shutdownDelayErr);
+  const onDemandBurstErr = onDemandBurst && (isNaN(parseInt(onDemandBurst, 10)) || parseInt(onDemandBurst, 10) < 1)
+    ? t("global_opts.validation_burst") : null;
+  const onDemandIntervalErr = onDemandInterval && !isDuration(onDemandInterval) ? t("global_opts.validation_duration") : null;
+  const hasErrors = !!(httpPortErr || httpsPortErr || gracePeriodErr || shutdownDelayErr || onDemandBurstErr || onDemandIntervalErr);
 
   const isConfirming = confirm.step !== "idle";
   const isSaving = confirm.step === "submitting";
@@ -313,6 +324,76 @@ export function GlobalOptionsTab() {
           </FormHelperText>
         </FormGroup>
 
+        <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
+
+        <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+          {t("global_opts.on_demand_title")}
+        </Title>
+
+        <FormGroup fieldId="go-on-demand-enabled">
+          <Checkbox
+            id="go-on-demand-enabled"
+            label={t("global_opts.on_demand_enabled")}
+            description={t("global_opts.on_demand_enabled_help")}
+            isChecked={onDemandEnabled}
+            onChange={(_e, v) => setOnDemandEnabled(v)}
+            isDisabled={isConfirming}
+          />
+        </FormGroup>
+
+        {onDemandEnabled && (
+          <>
+            {!onDemandAsk.trim() && (
+              <Alert variant="warning" isInline title={t("global_opts.on_demand_no_ask_warning")} style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }} />
+            )}
+            <FormGroup label={t("global_opts.on_demand_ask")} fieldId="go-on-demand-ask">
+              <TextInput
+                id="go-on-demand-ask"
+                value={onDemandAsk}
+                onChange={(_e, v) => setOnDemandAsk(v)}
+                placeholder="http://localhost:9090/check"
+                isDisabled={isConfirming}
+              />
+              <FormHelperText>
+                <HelperText><HelperTextItem>{t("global_opts.on_demand_ask_help")}</HelperTextItem></HelperText>
+              </FormHelperText>
+            </FormGroup>
+            <FormGroup label={t("global_opts.on_demand_interval")} fieldId="go-on-demand-interval">
+              <TextInput
+                id="go-on-demand-interval"
+                value={onDemandInterval}
+                onChange={(_e, v) => setOnDemandInterval(v)}
+                placeholder={t("global_opts.duration_placeholder")}
+                validated={onDemandIntervalErr ? "error" : "default"}
+                isDisabled={isConfirming}
+              />
+              {onDemandIntervalErr && (
+                <FormHelperText>
+                  <HelperText><HelperTextItem variant="error">{onDemandIntervalErr}</HelperTextItem></HelperText>
+                </FormHelperText>
+              )}
+            </FormGroup>
+            <FormGroup label={t("global_opts.on_demand_burst")} fieldId="go-on-demand-burst">
+              <TextInput
+                id="go-on-demand-burst"
+                value={onDemandBurst}
+                onChange={(_e, v) => setOnDemandBurst(v)}
+                placeholder="5"
+                validated={onDemandBurstErr ? "error" : "default"}
+                isDisabled={isConfirming}
+              />
+              {onDemandBurstErr && (
+                <FormHelperText>
+                  <HelperText><HelperTextItem variant="error">{onDemandBurstErr}</HelperTextItem></HelperText>
+                </FormHelperText>
+              )}
+              <FormHelperText>
+                <HelperText><HelperTextItem>{t("global_opts.on_demand_burst_help")}</HelperTextItem></HelperText>
+              </FormHelperText>
+            </FormGroup>
+          </>
+        )}
+
         {confirm.error != null && (
           <Alert variant="danger" isInline title={t("global_opts.save_error")}>
             {confirm.error || t("global_opts.save_error_unknown")}
@@ -341,6 +422,10 @@ export function GlobalOptionsTab() {
                     acmeCARoot: acmeCARoot.trim() || undefined,
                     acmeEabKeyId: acmeEabKeyId.trim() || undefined,
                     acmeEabMacKey: acmeEabMacKey.trim() || undefined,
+                    onDemandEnabled: onDemandEnabled || undefined,
+                    onDemandAsk: onDemandEnabled ? (onDemandAsk.trim() || undefined) : undefined,
+                    onDemandInterval: onDemandEnabled ? (onDemandInterval.trim() || undefined) : undefined,
+                    onDemandBurst: onDemandEnabled && onDemandBurst.trim() ? parseInt(onDemandBurst, 10) : undefined,
                   };
                   await syncGlobalOptions(opts).catch(e => {
                     throw e instanceof Error ? e : new Error(String(e));
