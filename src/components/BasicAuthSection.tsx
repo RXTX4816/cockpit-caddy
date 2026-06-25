@@ -7,6 +7,7 @@ import {
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import { hashPassword } from "../api";
+import { SectionActions } from "./SectionActions";
 
 export interface AuthEntry {
   username: string;
@@ -57,7 +58,11 @@ export function BasicAuthSection({ value, onChange, isDisabled }: Props) {
       isExpanded={expanded}
       onToggle={(_e, v) => setExpanded(v)}
     >
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", paddingTop: "0.25rem" }}>
+      <SectionActions
+        onClear={() => { onChange([]); setExpanded(false); }}
+        isDisabled={isDisabled}
+      />
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
         {value.map((entry, idx) => (
           <div key={idx} style={{ display: "flex", gap: "0.5rem", alignItems: "flex-end", flexWrap: "wrap" }}>
             <FormGroup label={t("basic_auth.field_username")} fieldId={`auth-user-${idx}`} style={{ flex: "1 1 8rem" }}>

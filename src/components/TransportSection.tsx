@@ -5,11 +5,15 @@ import {
   TextInput,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
+import { SectionActions } from "./SectionActions";
 
 export interface TransportValues {
   dialTimeout: string;
   responseHeaderTimeout: string;
 }
+
+const TRANSPORT_DEFAULTS: TransportValues = { dialTimeout: "10s", responseHeaderTimeout: "30s" };
+const TRANSPORT_EMPTY: TransportValues = { dialTimeout: "", responseHeaderTimeout: "" };
 
 interface Props {
   value: TransportValues;
@@ -33,7 +37,12 @@ export function TransportSection({ value, onChange, isDisabled }: Props) {
       isExpanded={expanded}
       onToggle={(_e, v) => setExpanded(v)}
     >
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", paddingTop: "0.25rem" }}>
+      <SectionActions
+        onClear={() => onChange(TRANSPORT_EMPTY)}
+        onDefaults={() => onChange(TRANSPORT_DEFAULTS)}
+        isDisabled={isDisabled}
+      />
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
         <FormGroup label={t("transport.dial_timeout")} fieldId="transport-dial" style={{ flex: "1 1 10rem" }}>
           <TextInput
             id="transport-dial"
@@ -52,7 +61,6 @@ export function TransportSection({ value, onChange, isDisabled }: Props) {
             isDisabled={isDisabled}
           />
         </FormGroup>
-
       </div>
     </ExpandableSection>
   );

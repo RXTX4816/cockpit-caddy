@@ -10,6 +10,7 @@ import {
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import type { ForwardAuthConfig } from "../api";
+import { SectionActions } from "./SectionActions";
 
 interface Props {
   value: ForwardAuthConfig | undefined;
@@ -70,7 +71,11 @@ export function ForwardAuthSection({ value, onChange, isDisabled, uriError, urlE
       isExpanded={expanded}
       onToggle={(_e, v) => setExpanded(v)}
     >
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", paddingTop: "0.25rem" }}>
+      <SectionActions
+        onClear={() => { onChange(undefined); setExpanded(false); }}
+        isDisabled={isDisabled}
+      />
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
         {!enabled ? (
           <Button variant="link" isInline onClick={enable} isDisabled={isDisabled}>
             {t("forward_auth.enable_button")}

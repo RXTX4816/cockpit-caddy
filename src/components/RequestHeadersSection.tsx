@@ -9,6 +9,7 @@ import {
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import type { HeaderOperation } from "../api";
+import { SectionActions } from "./SectionActions";
 
 interface Props {
   value: HeaderOperation[] | undefined;
@@ -75,7 +76,11 @@ export function RequestHeadersSection({ value, onChange, isDisabled }: Props) {
       isExpanded={expanded}
       onToggle={(_e, v) => handleToggleExpand(v)}
     >
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", paddingTop: "0.25rem" }}>
+      <SectionActions
+        onClear={() => { onChange(undefined); setExpanded(false); }}
+        isDisabled={isDisabled}
+      />
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
 
         {/* Current operations */}
         {ops.length > 0 && (

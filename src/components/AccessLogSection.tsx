@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Checkbox,
   ExpandableSection,
@@ -10,6 +11,7 @@ import {
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import type { AccessLogConfig, AccessLogFormat, AccessLogLevel, AccessLogOutput } from "../api";
+import { SectionActions } from "./SectionActions";
 
 export interface AccessLogValues {
   enabled: boolean;
@@ -29,8 +31,12 @@ const OUTPUTS: AccessLogOutput[] = ["stderr", "stdout", "file", "discard"];
 const FORMATS: Array<AccessLogFormat | ""> = ["", "json", "console"];
 const LEVELS: Array<AccessLogLevel | ""> = ["", "DEBUG", "INFO", "WARN", "ERROR"];
 
+const ACCESS_LOG_DEFAULTS: AccessLogValues = { enabled: true, output: "stderr", filePath: "", format: "", level: "" };
+const ACCESS_LOG_EMPTY: AccessLogValues = { enabled: false, output: "stderr", filePath: "", format: "", level: "" };
+
 export function AccessLogSection({ value, onChange, isDisabled }: Props) {
   const { t } = useTranslation();
+  const [expanded, setExpanded] = useState(value.enabled);
 
   function set(patch: Partial<AccessLogValues>) {
     onChange({ ...value, ...patch });
@@ -44,7 +50,14 @@ export function AccessLogSection({ value, onChange, isDisabled }: Props) {
     <ExpandableSection
       toggleText={value.enabled ? t("access_log.section_title_on") : t("access_log.section_title")}
       isIndented
+      isExpanded={expanded}
+      onToggle={(_e, v) => setExpanded(v)}
     >
+      <SectionActions
+        onClear={() => { onChange(ACCESS_LOG_EMPTY); setExpanded(false); }}
+        onDefaults={() => { onChange(ACCESS_LOG_DEFAULTS); setExpanded(true); }}
+        isDisabled={isDisabled}
+      />
       <FormGroup fieldId="al-enabled" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
         <Checkbox
           id="al-enabled"

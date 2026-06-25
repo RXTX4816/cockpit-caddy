@@ -33,6 +33,7 @@ import { ErrorHandlersSection } from "./ErrorHandlersSection";
 import { ForwardAuthSection, validateForwardAuth } from "./ForwardAuthSection";
 import { UpstreamsSection, validateUpstreams, type ExtraUpstream } from "./UpstreamsSection";
 import type { ErrorHandlerConfig, ForwardAuthConfig, LbPolicy } from "../api";
+import { SectionActions } from "./SectionActions";
 
 interface FormState {
   externalScheme: string;
@@ -294,6 +295,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
               onChange={(_e, checked) => set("tls", checked)}
               isDisabled={isLocked}
             />
+            <SectionActions onDefaults={() => set("tls", true)} isDisabled={isLocked} />
           </FormGroup>
 
           <FormGroup label={t("add_proxy.field_compress")} fieldId="compress">

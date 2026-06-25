@@ -10,6 +10,7 @@ import {
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import type { LbPolicy } from "../api";
+import { SectionActions } from "./SectionActions";
 
 export interface ExtraUpstream {
   host: string;
@@ -56,7 +57,11 @@ export function UpstreamsSection({ value, lbPolicy, onChange, isDisabled }: Prop
       isExpanded={expanded}
       style={{ marginTop: "var(--pf-v6-global--spacer--md)" }}
     >
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", paddingTop: "0.5rem" }}>
+      <SectionActions
+        onClear={() => { onChange([], ""); setExpanded(false); }}
+        isDisabled={isDisabled}
+      />
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
         {value.map((u, idx) => (
           <div key={idx} style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start" }}>
             <FormGroup label={t("upstreams.field_host")} fieldId={`upstream-host-${idx}`} style={{ flex: 2 }}>

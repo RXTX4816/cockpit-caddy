@@ -11,7 +11,12 @@
     "refresh": "Refresh",
     "copy": "Copy",
     "copied": "Copied!",
-    "unknown": "unknown"
+    "unknown": "unknown",
+    "clear": "Clear",
+    "defaults": "Defaults",
+    "confirm_clear": "Clear all values in this section?",
+    "confirm_defaults": "Reset this section to default values?",
+    "confirm_apply": "Apply"
   },
   "app": {
     "title": "Caddy Reverse Proxy",
