@@ -26,17 +26,41 @@ const LEVEL_COLORS: Record<LevelFilter, "grey" | "red" | "orange" | "blue"> = {
 /** Caddy's stable namespace for HTTP access logs. */
 const ACCESS_LOG_PREFIX = "http.log.access.";
 
-/** Extract a field from a JSON log line that may have a journalctl timestamp prefix. */
-function parseJsonField(line: string, field: string): string | undefined {
-  const jsonStart = line.indexOf("{");
-  if (jsonStart === -1) return undefined;
-  try {
-    const obj = JSON.parse(line.slice(jsonStart)) as Record<string, unknown>;
-    const v = obj[field];
-    return typeof v === "string" ? v : undefined;
-  } catch {
-    return undefined;
+/**
+ * Extract a named field from a Caddy log line. Handles two formats after
+ * stripping the optional journalctl "TIMESTAMP HOST UNIT[PID]: " prefix:
+ *   JSON:    {"level":"info","logger":"http","msg":"..."}
+ *   Console: DATE TIME[whitespace]LEVEL[whitespace]LOGGER[whitespace]MESSAGE...
+ *
+ * journalctl --output=short-iso expands tabs to spaces, so we use regex
+ * rather than split("\t") for the console format.
+ */
+function parseCaddyField(line: string, field: string): string | undefined {
+  // Strip journalctl prefix: everything up to and including "unit[pid]: "
+  const prefixMatch = line.match(/\[\d+\]: (.*)/s);
+  const payload = prefixMatch ? prefixMatch[1] : line;
+
+  // JSON format: payload starts with {
+  if (payload.trimStart().startsWith("{")) {
+    try {
+      const obj = JSON.parse(payload.trimStart()) as Record<string, unknown>;
+      const v = obj[field];
+      return typeof v === "string" ? v : undefined;
+    } catch {
+      return undefined;
+    }
   }
+
+  // Console format: "2006/01/02 15:04:05.000  LEVEL  logger.name  message  ..."
+  // Tabs may be space-expanded by journalctl, so match on whitespace boundaries.
+  // LEVEL is always uppercase ASCII word; logger name has no whitespace.
+  const m = payload.match(/^\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}:\d{2}\.\d{3}[ \t]+([A-Z]+)[ \t]+(\S+)/);
+  if (m) {
+    if (field === "level") return m[1].toLowerCase();
+    if (field === "logger") return m[2];
+  }
+
+  return undefined;
 }
 
 export function LogsViewer({ filterValue, onFilterChange }: Props) {
@@ -51,7 +75,7 @@ export function LogsViewer({ filterValue, onFilterChange }: Props) {
   const loggers = useMemo(() => {
     const seen = new Set<string>();
     for (const line of lines) {
-      const logger = parseJsonField(line, "logger");
+      const logger = parseCaddyField(line, "logger");
       if (logger) seen.add(logger);
     }
     return [...seen].sort();
@@ -69,7 +93,7 @@ export function LogsViewer({ filterValue, onFilterChange }: Props) {
 
   const filteredLines = useMemo(() => {
     return lines.filter(line => {
-      const logger = parseJsonField(line, "logger");
+      const logger = parseCaddyField(line, "logger");
 
       if (activeLogger !== "all") {
         if (activeLogger === "caddy") {
@@ -82,7 +106,7 @@ export function LogsViewer({ filterValue, onFilterChange }: Props) {
       }
 
       if (levelFilter !== "all") {
-        const level = parseJsonField(line, "level")?.toLowerCase();
+        const level = parseCaddyField(line, "level")?.toLowerCase();
         if (!level) return levelFilter === "info";
         if (levelFilter === "error") return level === "error";
         if (levelFilter === "warn") return level === "error" || level === "warn";
