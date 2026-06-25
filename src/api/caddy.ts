@@ -323,6 +323,57 @@ export function parseConfTlsMap(content: string): Record<number, boolean> {
   return result;
 }
 
+/**
+ * Returns port → AccessLogConfig by reading `log { }` blocks from the conf.d
+ * site blocks. Used as a fallback when the JSON API config was last pushed by
+ * older code that didn't include the logging section.
+ */
+export function parseConfAccessLogMap(content: string): Record<number, import("./types").AccessLogConfig> {
+  const result: Record<number, import("./types").AccessLogConfig> = {};
+  for (const block of extractRawBlocksFromCaddyfile(content)) {
+    const lines = block.raw.split("\n");
+    let inLog = false;
+    let depth = 0;
+    const logLines: string[] = [];
+    for (let i = 1; i < lines.length; i++) {
+      const t = lines[i].trim();
+      if (!inLog && t === "log {") { inLog = true; depth = 1; continue; }
+      if (!inLog && t.startsWith("log {")) { inLog = true; depth = 1; continue; }
+      if (inLog) {
+        depth += (t.match(/\{/g) ?? []).length - (t.match(/\}/g) ?? []).length;
+        if (depth <= 0) break;
+        logLines.push(t);
+      }
+    }
+    if (!logLines.length) continue;
+
+    let output: import("./types").AccessLogOutput = "stderr";
+    let filePath: string | undefined;
+    let format: import("./types").AccessLogFormat | undefined;
+    let level: import("./types").AccessLogLevel | undefined;
+
+    for (const line of logLines) {
+      const m = line.match(/^(\w+)\s+(.*)/);
+      if (!m) continue;
+      const [, key, val] = m;
+      if (key === "output") {
+        if (val.startsWith("file ")) {
+          output = "file";
+          filePath = val.slice(5).trim();
+        } else {
+          output = val.trim() as import("./types").AccessLogOutput;
+        }
+      } else if (key === "format") {
+        format = val.trim() as import("./types").AccessLogFormat;
+      } else if (key === "level") {
+        level = val.trim() as import("./types").AccessLogLevel;
+      }
+    }
+    result[block.port] = { output, filePath, format, level };
+  }
+  return result;
+}
+
 export function parseLabelsFromCaddyfile(content: string): Record<number, string> {
   const labels: Record<number, string> = {};
   let pendingLabel: string | null = null;
@@ -504,6 +555,19 @@ function buildExternalAddress(p: Pick<ProxyEntry, "externalPort" | "externalSche
 }
 
 /** Generates the Caddyfile block for a single proxy (label comment + block body). */
+function buildLogCaddyLines(log: import("./types").AccessLogConfig): string[] {
+  const lines = ["\tlog {"];
+  if (log.output === "file" && log.filePath) {
+    lines.push(`\t\toutput file ${log.filePath}`);
+  } else {
+    lines.push(`\t\toutput ${log.output}`);
+  }
+  if (log.format) lines.push(`\t\tformat ${log.format}`);
+  if (log.level) lines.push(`\t\tlevel ${log.level}`);
+  lines.push("\t}");
+  return lines;
+}
+
 export function proxyToBlock(p: ProxyEntry): string {
   // Plain-port redirect/respond blocks must use http:// prefix to avoid Caddy TLS automation policy conflicts
   // when other unnamed blocks use `tls internal` (which creates a catch-all InternalIssuer policy).
@@ -512,6 +576,7 @@ export function proxyToBlock(p: ProxyEntry): string {
   const header = isPlainHttp ? `http://${rawAddr}` : rawAddr;
   const lines = p.label ? [`# label: ${p.label}`, `${header} {`] : [`${header} {`];
   if (p.staticResponse) {
+    if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
     const { statusCode, body, close } = p.staticResponse;
     if (body && close) {
       lines.push(`\trespond "${body}" ${statusCode} {`);
@@ -527,9 +592,11 @@ export function proxyToBlock(p: ProxyEntry): string {
       lines.push(`\trespond ${statusCode}`);
     }
   } else if (p.redirect) {
+    if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
     lines.push(`\tredir ${p.redirect.to} ${p.redirect.code}`);
   } else if (p.fileServer) {
     if (p.tls) lines.push("\ttls internal");
+    if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
     if (p.compress) lines.push("\tencode gzip zstd");
     if (p.basicAuth?.length) lines.push(...buildBasicAuthCaddyLines(p.basicAuth));
     for (const h of p.responseHeaders ?? []) {
@@ -541,6 +608,7 @@ export function proxyToBlock(p: ProxyEntry): string {
     lines.push(p.fileServer.browse ? "\tfile_server browse" : "\tfile_server");
   } else {
     if (p.tls) lines.push("\ttls internal");
+    if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
     if (p.compress) lines.push("\tencode gzip zstd");
     if (p.basicAuth?.length) lines.push(...buildBasicAuthCaddyLines(p.basicAuth));
     for (const h of p.responseHeaders ?? []) {
@@ -841,6 +909,22 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
     const serverIdleTimeout = parseDuration(server.idle_timeout);
     const maxHeaderBytes = typeof server.max_header_bytes === "number" ? server.max_header_bytes : undefined;
 
+    // Access log — look up logger by name in config.logging.logs
+    const loggerName = (server.logs as { default_logger_name?: string } | undefined)?.default_logger_name;
+    let accessLog: import("./types").AccessLogConfig | undefined;
+    if (loggerName) {
+      const loggerCfg = config.logging?.logs?.[loggerName];
+      if (loggerCfg) {
+        const output = (loggerCfg.writer?.output ?? "stderr") as import("./types").AccessLogOutput;
+        accessLog = {
+          output,
+          filePath: loggerCfg.writer?.filename,
+          format: loggerCfg.encoder?.format as import("./types").AccessLogFormat | undefined,
+          level: loggerCfg.level as import("./types").AccessLogLevel | undefined,
+        };
+      }
+    }
+
     const allHandles = (server.routes ?? []).flatMap(r => (r.handle ?? []) as AnyHandler[]);
 
     // Detect redirect (static_response with Location header)
@@ -860,7 +944,7 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
         tlsSkipVerify: false,
         serverKey: key,
         redirect: { to: jsonPlaceholderToCaddy(locationHeader), code },
-        serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
+        serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, accessLog,
       });
       continue;
     }
@@ -882,7 +966,7 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
           body: staticResp.body || undefined,
           close: staticResp.close || undefined,
         },
-        serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
+        serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, accessLog,
       });
       continue;
     }
@@ -910,7 +994,7 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
         compress: fsCompress || undefined,
         basicAuth: fsBasicAuth?.length ? fsBasicAuth : undefined,
         responseHeaders: fsResponseHeaders.length ? fsResponseHeaders : undefined,
-        serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
+        serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, accessLog,
       });
       continue;
     }
@@ -1081,10 +1165,32 @@ function applyServerTimeouts(server: CaddyServer, proxy: TimeoutProxy): CaddySer
   return server;
 }
 
-export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): CaddyServer {
-  const listenAddr = proxy.externalHost
+/** Returns true only for numeric IP addresses — these are valid TCP bind targets. Hostnames are site labels in Caddyfile, not bind interfaces. */
+function isIpAddress(host: string): boolean {
+  return /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(host) || host.startsWith("[");
+}
+
+function buildListenAddr(proxy: { externalHost?: string; externalPort: number }): string {
+  return proxy.externalHost && isIpAddress(proxy.externalHost)
     ? `${proxy.externalHost}:${proxy.externalPort}`
     : `:${proxy.externalPort}`;
+}
+
+/** Stable logger name for a proxy's access log, keyed by port. */
+function accessLoggerName(port: number): string {
+  return `cockpit-access-${port}`;
+}
+
+function applyAccessLog(server: CaddyServer, proxy: { externalPort: number; accessLog?: import("./types").AccessLogConfig }): void {
+  if (proxy.accessLog) {
+    server.logs = { default_logger_name: accessLoggerName(proxy.externalPort) };
+  } else {
+    delete (server as Record<string, unknown>).logs;
+  }
+}
+
+export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): CaddyServer {
+  const listenAddr = buildListenAddr(proxy);
   if (proxy.staticResponse) {
     const h: Record<string, unknown> = {
       handler: "static_response",
@@ -1092,13 +1198,15 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
     };
     if (proxy.staticResponse.body) h.body = proxy.staticResponse.body;
     if (proxy.staticResponse.close) h.close = true;
-    return applyServerTimeouts({
+    const server: CaddyServer = {
       listen: [listenAddr],
       routes: [{ handle: [h as CaddyHandler], terminal: true }],
-    }, proxy);
+    };
+    applyAccessLog(server, proxy);
+    return applyServerTimeouts(server, proxy);
   }
   if (proxy.redirect) {
-    return applyServerTimeouts({
+    const server: CaddyServer = {
       listen: [listenAddr],
       routes: [{
         handle: [{
@@ -1108,7 +1216,9 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
         }],
         terminal: true,
       }],
-    }, proxy);
+    };
+    applyAccessLog(server, proxy);
+    return applyServerTimeouts(server, proxy);
   }
   if (proxy.fileServer) {
     const fsHandles: CaddyHandler[] = [];
@@ -1123,6 +1233,7 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
       routes: [{ handle: fsHandles, terminal: true }],
     };
     if (proxy.tls) server.tls_connection_policies = [{}];
+    applyAccessLog(server, proxy);
     return applyServerTimeouts(server, proxy);
   }
   const handles: CaddyHandler[] = [];
@@ -1138,6 +1249,7 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
   if (proxy.tls) {
     server.tls_connection_policies = [{}];
   }
+  applyAccessLog(server, proxy);
   return applyServerTimeouts(server, proxy);
 }
 
@@ -1190,9 +1302,7 @@ function patchHandles(handles: CaddyHandler[], proxy: ProxyEntry): CaddyHandler[
 function patchServer(original: CaddyServer, proxy: ProxyEntry): CaddyServer {
   const server = { ...original };
 
-  server.listen = [proxy.externalHost
-    ? `${proxy.externalHost}:${proxy.externalPort}`
-    : `:${proxy.externalPort}`];
+  server.listen = [buildListenAddr(proxy)];
 
   if (proxy.tls) {
     if (!server.tls_connection_policies?.length) {
@@ -1208,7 +1318,57 @@ function patchServer(original: CaddyServer, proxy: ProxyEntry): CaddyServer {
     handle: patchHandles((route.handle ?? []) as CaddyHandler[], proxy),
   }));
 
+  applyAccessLog(server, proxy);
+
   return applyServerTimeouts(server, proxy);
+}
+
+function buildLoggingWriter(accessLog: import("./types").AccessLogConfig): import("./types").CaddyLogWriter {
+  return accessLog.output === "file" && accessLog.filePath
+    ? { output: "file", filename: accessLog.filePath }
+    : { output: accessLog.output };
+}
+
+/** Update config.logging.logs: swap out the old logger for this proxy (if any) and add/remove the new one. */
+function patchLoggingLogs(
+  config: CaddyConfig,
+  originalServer: CaddyServer | undefined,
+  proxy: ProxyEntry,
+): CaddyConfig["logging"] {
+  const existingLogs = { ...(config.logging?.logs ?? {}) };
+
+  // Remove the old logger for this server slot (it may be auto-named by Caddy or our own name)
+  const oldLoggerName = (originalServer?.logs as { default_logger_name?: string } | undefined)?.default_logger_name;
+  if (oldLoggerName) {
+    delete existingLogs[oldLoggerName];
+    const excKey = `http.log.access.${oldLoggerName}`;
+    if (existingLogs.default?.exclude) {
+      const filtered = existingLogs.default.exclude.filter(e => e !== excKey);
+      existingLogs.default = filtered.length
+        ? { ...existingLogs.default, exclude: filtered }
+        : Object.fromEntries(Object.entries(existingLogs.default).filter(([k]) => k !== "exclude")) as typeof existingLogs.default;
+      if (existingLogs.default && !Object.keys(existingLogs.default).length) delete existingLogs.default;
+    }
+  }
+
+  if (proxy.accessLog) {
+    const loggerName = accessLoggerName(proxy.externalPort);
+    const incKey = `http.log.access.${loggerName}`;
+    const logEntry: import("./types").CaddyLoggerConfig = {
+      writer: buildLoggingWriter(proxy.accessLog),
+      include: [incKey],
+    };
+    if (proxy.accessLog.format) logEntry.encoder = { format: proxy.accessLog.format };
+    if (proxy.accessLog.level) logEntry.level = proxy.accessLog.level;
+    existingLogs[loggerName] = logEntry;
+
+    // Keep the default logger from flooding its output with access log lines
+    const defExcludes = new Set<string>(existingLogs.default?.exclude ?? []);
+    defExcludes.add(incKey);
+    existingLogs.default = { ...(existingLogs.default ?? {}), exclude: [...defExcludes] };
+  }
+
+  return Object.keys(existingLogs).length > 0 ? { logs: existingLogs } : undefined;
 }
 
 export function mergeProxy(config: CaddyConfig, proxy: ProxyEntry): CaddyConfig {
@@ -1220,8 +1380,11 @@ export function mergeProxy(config: CaddyConfig, proxy: ProxyEntry): CaddyConfig 
     s => Array.isArray(s.tls_connection_policies) && s.tls_connection_policies.length > 0,
   );
 
+  const logging = patchLoggingLogs(config, original, proxy);
+
   return {
     ...config,
+    logging,
     apps: {
       ...config.apps,
       http: { ...config.apps?.http, servers },
@@ -1254,14 +1417,33 @@ export async function fetchUpstreamStatus(): Promise<import("./types").UpstreamS
 
 export function removeProxy(config: CaddyConfig, serverKey: string): CaddyConfig {
   const servers = { ...(config.apps?.http?.servers ?? {}) };
+  const removedServer = servers[serverKey];
   delete servers[serverKey];
 
   const hasTls = Object.values(servers).some(
     s => Array.isArray(s.tls_connection_policies) && s.tls_connection_policies.length > 0,
   );
 
+  // Clean up the access logger for the removed server
+  const removedLoggerName = (removedServer?.logs as { default_logger_name?: string } | undefined)?.default_logger_name;
+  let logging = config.logging;
+  if (removedLoggerName && config.logging?.logs) {
+    const logs = { ...config.logging.logs };
+    delete logs[removedLoggerName];
+    const excKey = `http.log.access.${removedLoggerName}`;
+    if (logs.default?.exclude) {
+      const filtered = logs.default.exclude.filter(e => e !== excKey);
+      logs.default = filtered.length
+        ? { ...logs.default, exclude: filtered }
+        : Object.fromEntries(Object.entries(logs.default).filter(([k]) => k !== "exclude")) as typeof logs.default;
+      if (logs.default && !Object.keys(logs.default).length) delete logs.default;
+    }
+    logging = Object.keys(logs).length > 0 ? { logs } : undefined;
+  }
+
   return {
     ...config,
+    logging,
     apps: {
       ...config.apps,
       http: { ...config.apps?.http, servers },

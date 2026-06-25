@@ -3,7 +3,7 @@ import { useAutoRefresh } from "@rxtx4816/cockpit-plugin-base-react";
 import {
   parseProxies, mergeProxy, removeProxy,
   readCaddyfile, writeCaddyfile, readProxyConf,
-  parseLabelsFromCaddyfile, parseConfTlsMap, parseConfExternalAddresses,
+  parseLabelsFromCaddyfile, parseConfTlsMap, parseConfExternalAddresses, parseConfAccessLogMap,
   surgicallyWriteProxy, surgicallyRemoveBlock,
   extractRawBlocksFromCaddyfile, buildMigratedConfContent, writeRawProxyConf,
   writeFile, reloadService, syncGlobalTimeouts,
@@ -30,6 +30,7 @@ export function useProxies() {
   const [labels, setLabels] = useState<Record<number, string>>({});
   const [confTls, setConfTls] = useState<Record<number, boolean>>({});
   const [confExternal, setConfExternal] = useState<Record<number, { scheme?: string; host?: string }>>({});
+  const [confAccessLog, setConfAccessLog] = useState<Record<number, import("../api").AccessLogConfig>>({});
   const [caddyfileContent, setCaddyfileContent] = useState<string>("");
 
   const syncConf = useCallback(() => {
@@ -37,6 +38,7 @@ export function useProxies() {
       setLabels(parseLabelsFromCaddyfile(c));
       setConfTls(parseConfTlsMap(c));
       setConfExternal(parseConfExternalAddresses(c));
+      setConfAccessLog(parseConfAccessLogMap(c));
     }).catch(() => {});
   }, []);
 
@@ -65,8 +67,11 @@ export function useProxies() {
       tls: p.tls || (confTls[p.externalPort] ?? false),
       externalScheme: p.externalScheme ?? confExternal[p.externalPort]?.scheme,
       externalHost: p.externalHost ?? confExternal[p.externalPort]?.host,
+      // Fallback: if the JSON API config doesn't have server.logs (was last pushed by
+      // older code), read access log config from the Caddyfile conf.d directly.
+      accessLog: p.accessLog ?? confAccessLog[p.externalPort],
     })),
-    [config, labels, confTls, confExternal],
+    [config, labels, confTls, confExternal, confAccessLog],
   );
 
   const addProxy = useCallback(

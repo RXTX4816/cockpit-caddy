@@ -87,6 +87,7 @@ function FlagChips({ proxy, t }: { proxy: ProxyEntry; t: (k: string) => string }
   if (proxy.compress) chips.push({ label: t("proxies.indicator_compress"), color: "teal" });
   if (proxy.basicAuth?.length) chips.push({ label: t("proxies.indicator_auth"), color: "red" });
   if (proxy.dialTimeout ?? proxy.responseHeaderTimeout) chips.push({ label: t("proxies.indicator_timeouts"), color: "grey" });
+  if (proxy.accessLog) chips.push({ label: t("access_log.indicator"), color: "teal" });
   if (proxy.serverReadTimeout ?? proxy.serverReadHeaderTimeout ?? proxy.serverWriteTimeout ?? proxy.serverIdleTimeout ?? proxy.maxHeaderBytes) chips.push({ label: t("proxies.indicator_limits"), color: "grey" });
   if (proxy.extraUpstreams?.length) chips.push({ label: t("proxies.indicator_lb"), color: "blue" });
   if (chips.length === 0) return <span style={{ color: "var(--pf-v6-global--Color--200)" }}>—</span>;
@@ -694,6 +695,13 @@ export function ProxyList({ onViewLogs }: Props) {
             idleTimeout: duplicating.serverIdleTimeout ?? "",
             maxHeaderBytes: duplicating.maxHeaderBytes != null ? String(duplicating.maxHeaderBytes) : "",
           }}
+          initialAccessLog={duplicating.accessLog ? {
+            enabled: true,
+            output: duplicating.accessLog.output,
+            filePath: duplicating.accessLog.filePath ?? "",
+            format: duplicating.accessLog.format ?? "",
+            level: duplicating.accessLog.level ?? "",
+          } : undefined}
         />
       ))}
 

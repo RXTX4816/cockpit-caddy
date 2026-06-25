@@ -27,6 +27,7 @@ import { RequestHeadersSection } from "./RequestHeadersSection";
 import { ResponseHeadersSection } from "./ResponseHeadersSection";
 import { TransportSection, type TransportValues } from "./TransportSection";
 import { ServerTimeoutsSection, type ServerTimeoutValues } from "./ServerTimeoutsSection";
+import { AccessLogSection, type AccessLogValues, accessLogValuesToConfig, accessLogConfigToValues } from "./AccessLogSection";
 import { BasicAuthSection, type AuthEntry } from "./BasicAuthSection";
 import { UpstreamsSection, validateUpstreams, type ExtraUpstream } from "./UpstreamsSection";
 import { hashPassword } from "../api";
@@ -74,6 +75,7 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
     dialTimeout: proxy.dialTimeout ?? "",
     responseHeaderTimeout: proxy.responseHeaderTimeout ?? "",
   });
+  const [accessLog, setAccessLog] = useState<AccessLogValues>(accessLogConfigToValues(proxy.accessLog));
   const [serverTimeouts, setServerTimeouts] = useState<ServerTimeoutValues>({
     readTimeout: proxy.serverReadTimeout ?? "",
     readHeaderTimeout: proxy.serverReadHeaderTimeout ?? "",
@@ -269,6 +271,7 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
           </FormGroup>
         </Form>
         <TransportSection value={transport} onChange={setTransport} isDisabled={isConfirming} />
+        <AccessLogSection value={accessLog} onChange={setAccessLog} isDisabled={isConfirming} />
         <ServerTimeoutsSection value={serverTimeouts} onChange={setServerTimeouts} isDisabled={isConfirming} />
         <BasicAuthSection value={basicAuth} onChange={setBasicAuth} isDisabled={isConfirming} />
         <RewriteSection value={rewrite} onChange={setRewrite} isDisabled={isConfirming} />
@@ -317,6 +320,7 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
                     ? extraUpstreams.map(u => ({ host: u.host.trim(), port: parseInt(u.port, 10) }))
                     : undefined,
                   lbPolicy: (lbPolicy || undefined) as LbPolicy | undefined,
+                  accessLog: accessLogValuesToConfig(accessLog),
                   serverReadTimeout: serverTimeouts.readTimeout.trim() || undefined,
                   serverReadHeaderTimeout: serverTimeouts.readHeaderTimeout.trim() || undefined,
                   serverWriteTimeout: serverTimeouts.writeTimeout.trim() || undefined,
