@@ -1,4 +1,4 @@
-import type { CaddyConfig, CaddyHandler, CaddyReverseProxyHandler, CaddyServer, ProxyEntry } from "./types";
+import type { CaddyConfig, CaddyHandler, CaddyReverseProxyHandler, CaddyServer, CaddyTLSClientAuthentication, CaddyTLSConnectionPolicy, ProxyEntry } from "./types";
 import { readFile as fsReadFile, writeFile as fsWriteFile } from "@rxtx4816/cockpit-plugin-base-react/lib/cockpit-fs";
 
 /**
@@ -761,6 +761,40 @@ function buildLogCaddyLines(log: import("./types").AccessLogConfig): string[] {
   return lines;
 }
 
+function buildTlsCaddyLines(p: Pick<ProxyEntry, "tls" | "tlsAdvanced" | "mtls">): string[] {
+  if (!p.tls) return [];
+  const adv = p.tlsAdvanced;
+  const mtls = p.mtls;
+  const hasAdvanced = adv && (adv.protocolMin || adv.protocolMax || adv.cipherSuites?.length || adv.curves?.length);
+  const hasMtls = mtls?.mode;
+  if (!hasAdvanced && !hasMtls) return ["\ttls internal"];
+
+  const lines: string[] = ["\ttls {", "\t\tissuer internal"];
+  if (adv?.protocolMin) {
+    lines.push(adv.protocolMax
+      ? `\t\tprotocols ${adv.protocolMin} ${adv.protocolMax}`
+      : `\t\tprotocols ${adv.protocolMin}`);
+  } else if (adv?.protocolMax) {
+    lines.push(`\t\tprotocols tls1.2 ${adv.protocolMax}`);
+  }
+  if (adv?.cipherSuites?.length) {
+    lines.push(`\t\tciphers ${adv.cipherSuites.join(" ")}`);
+  }
+  if (adv?.curves?.length) {
+    lines.push(`\t\tcurves ${adv.curves.join(" ")}`);
+  }
+  if (mtls?.mode) {
+    lines.push("\t\tclient_auth {");
+    lines.push(`\t\t\tmode ${mtls.mode}`);
+    if (mtls.trustedCaFile?.trim()) {
+      lines.push(`\t\t\ttrusted_ca_cert_file ${mtls.trustedCaFile.trim()}`);
+    }
+    lines.push("\t\t}");
+  }
+  lines.push("\t}");
+  return lines;
+}
+
 export function proxyToBlock(p: ProxyEntry): string {
   // Plain-port redirect/respond blocks must use http:// prefix to avoid Caddy TLS automation policy conflicts
   // when other unnamed blocks use `tls internal` (which creates a catch-all InternalIssuer policy).
@@ -788,7 +822,7 @@ export function proxyToBlock(p: ProxyEntry): string {
     if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
     lines.push(`\tredir ${p.redirect.to} ${p.redirect.code}`);
   } else if (p.fileServer) {
-    if (p.tls) lines.push("\ttls internal");
+    lines.push(...buildTlsCaddyLines(p));
     if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
     if (p.compress) lines.push("\tencode gzip zstd");
     if (p.basicAuth?.length) lines.push(...buildBasicAuthCaddyLines(p.basicAuth));
@@ -800,7 +834,7 @@ export function proxyToBlock(p: ProxyEntry): string {
     lines.push(`\troot * ${p.fileServer.root}`);
     lines.push(p.fileServer.browse ? "\tfile_server browse" : "\tfile_server");
   } else {
-    if (p.tls) lines.push("\ttls internal");
+    lines.push(...buildTlsCaddyLines(p));
     if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
     if (p.compress) lines.push("\tencode gzip zstd");
     if (p.basicAuth?.length) lines.push(...buildBasicAuthCaddyLines(p.basicAuth));
@@ -903,7 +937,7 @@ function patchRawBlock(raw: string, proxy: ProxyEntry): string {
   }
 
   // Re-add updated directives before closing brace
-  if (proxy.tls) kept.push("\ttls internal");
+  kept.push(...buildTlsCaddyLines(proxy));
   if (proxy.fileServer) {
     if (proxy.compress) kept.push("\tencode gzip zstd");
     if (proxy.basicAuth?.length) kept.push(...buildBasicAuthCaddyLines(proxy.basicAuth));
@@ -1198,6 +1232,8 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
       const fsBasicAuth = fsAuthHandle ? parseBasicAuthJson(fsAuthHandle) : undefined;
       const fsHeadersHandle = allHandles.find(h => h.handler === "headers");
       const fsResponseHeaders = fsHeadersHandle ? parseResponseHeadersJson(fsHeadersHandle) : [];
+      const fsTls = Array.isArray(server.tls_connection_policies) && server.tls_connection_policies.length > 0;
+      const fsTlsPolicy = fsTls ? server.tls_connection_policies![0] : undefined;
       proxies.push({
         id: String(externalPort),
         externalPort,
@@ -1205,7 +1241,7 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
         targetHost: "localhost",
         targetPort: 0,
         targetScheme: "http",
-        tls: Array.isArray(server.tls_connection_policies) && server.tls_connection_policies.length > 0,
+        tls: fsTls,
         tlsSkipVerify: false,
         serverKey: key,
         fileServer: { root: fsHandle.root ?? "/", browse: fsHandle.browse !== undefined },
@@ -1214,6 +1250,8 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
         responseHeaders: fsResponseHeaders.length ? fsResponseHeaders : undefined,
         serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, accessLog,
         errorHandlers: parseErrorHandlers(server),
+        tlsAdvanced: fsTlsPolicy ? parseTlsAdvanced(fsTlsPolicy) : undefined,
+        mtls: fsTlsPolicy ? parseMtls(fsTlsPolicy) : undefined,
       });
       continue;
     }
@@ -1243,6 +1281,7 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
     const responseHeaderTimeout = parseDuration(rp.transport?.response_header_timeout);
 
     const tls = Array.isArray(server.tls_connection_policies) && server.tls_connection_policies.length > 0;
+    const tlsPolicy = tls ? server.tls_connection_policies![0] : undefined;
 
     const compress = allHandles.some(h => h.handler === "encode");
 
@@ -1279,6 +1318,8 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
       serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
       errorHandlers: parseErrorHandlers(server),
       forwardAuth,
+      tlsAdvanced: tlsPolicy ? parseTlsAdvanced(tlsPolicy) : undefined,
+      mtls: tlsPolicy ? parseMtls(tlsPolicy) : undefined,
     });
   }
 
@@ -1440,6 +1481,41 @@ function flattenErrorHandles(handles: Array<Record<string, unknown>>): Array<Rec
   return result;
 }
 
+function parseTlsAdvanced(policy: CaddyTLSConnectionPolicy): import("./types").TlsAdvancedConfig | undefined {
+  const cfg: import("./types").TlsAdvancedConfig = {};
+  let hasData = false;
+  if (policy.protocol_min) { cfg.protocolMin = policy.protocol_min as import("./types").TlsProtocolVersion; hasData = true; }
+  if (policy.protocol_max) { cfg.protocolMax = policy.protocol_max as import("./types").TlsProtocolVersion; hasData = true; }
+  if (Array.isArray(policy.cipher_suites) && policy.cipher_suites.length) { cfg.cipherSuites = policy.cipher_suites as string[]; hasData = true; }
+  if (Array.isArray(policy.curves) && policy.curves.length) { cfg.curves = policy.curves as string[]; hasData = true; }
+  return hasData ? cfg : undefined;
+}
+
+function parseMtls(policy: CaddyTLSConnectionPolicy): import("./types").MtlsConfig | undefined {
+  const ca = policy.client_authentication;
+  if (!ca?.mode) return undefined;
+  const trustedCaFile = ca.trusted_ca_certs_pem_files?.[0] || undefined;
+  return { mode: ca.mode as import("./types").MtlsMode, trustedCaFile };
+}
+
+function buildTlsPolicy(proxy: { tlsAdvanced?: import("./types").TlsAdvancedConfig; mtls?: import("./types").MtlsConfig }): CaddyTLSConnectionPolicy {
+  const policy: CaddyTLSConnectionPolicy = {};
+  if (proxy.tlsAdvanced) {
+    if (proxy.tlsAdvanced.protocolMin) policy.protocol_min = proxy.tlsAdvanced.protocolMin;
+    if (proxy.tlsAdvanced.protocolMax) policy.protocol_max = proxy.tlsAdvanced.protocolMax;
+    if (proxy.tlsAdvanced.cipherSuites?.length) policy.cipher_suites = proxy.tlsAdvanced.cipherSuites;
+    if (proxy.tlsAdvanced.curves?.length) policy.curves = proxy.tlsAdvanced.curves;
+  }
+  if (proxy.mtls) {
+    const ca: CaddyTLSClientAuthentication = { mode: proxy.mtls.mode };
+    if (proxy.mtls.trustedCaFile?.trim()) {
+      ca.trusted_ca_certs_pem_files = [proxy.mtls.trustedCaFile.trim()];
+    }
+    policy.client_authentication = ca;
+  }
+  return policy;
+}
+
 function parseErrorHandlers(server: CaddyServer): import("./types").ErrorHandlerConfig[] | undefined {
   const errRoutes = (server.errors as { routes?: unknown[] } | undefined)?.routes;
   if (!errRoutes?.length) return undefined;
@@ -1577,7 +1653,7 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
       listen: [listenAddr],
       routes: [{ handle: fsHandles, terminal: true }],
     };
-    if (proxy.tls) server.tls_connection_policies = [{}];
+    if (proxy.tls) server.tls_connection_policies = [buildTlsPolicy(proxy)];
     applyAccessLog(server, proxy);
     applyErrorHandlers(server, proxy);
     return applyServerTimeouts(server, proxy);
@@ -1597,7 +1673,7 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
     routes: [{ handle: handles, terminal: true }],
   };
   if (proxy.tls) {
-    server.tls_connection_policies = [{}];
+    server.tls_connection_policies = [buildTlsPolicy(proxy)];
   }
   applyAccessLog(server, proxy);
   applyErrorHandlers(server, proxy);
@@ -1669,10 +1745,7 @@ function patchServer(original: CaddyServer, proxy: ProxyEntry): CaddyServer {
   server.listen = [buildListenAddr(proxy)];
 
   if (proxy.tls) {
-    if (!server.tls_connection_policies?.length) {
-      server.tls_connection_policies = [{}];
-    }
-    // else preserve existing custom TLS policies
+    server.tls_connection_policies = [buildTlsPolicy(proxy)];
   } else {
     delete server.tls_connection_policies;
   }

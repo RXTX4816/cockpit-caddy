@@ -32,6 +32,7 @@ import { BasicAuthSection, resolveBasicAuth, type AuthEntry } from "./BasicAuthS
 import { ErrorHandlersSection } from "./ErrorHandlersSection";
 import { ForwardAuthSection, validateForwardAuth } from "./ForwardAuthSection";
 import { UpstreamsSection, validateUpstreams, type ExtraUpstream } from "./UpstreamsSection";
+import { TlsSection, type TlsValues, tlsValuesToAdvanced, tlsValuesToMtls, tlsConfigToValues } from "./TlsSection";
 import type { ErrorHandlerConfig, ForwardAuthConfig, LbPolicy } from "../api";
 import { SectionActions } from "./SectionActions";
 
@@ -67,9 +68,10 @@ interface Props {
   initialAccessLog?: AccessLogValues;
   initialErrorHandlers?: ErrorHandlerConfig[];
   initialForwardAuth?: ForwardAuthConfig;
+  initialTlsValues?: TlsValues;
 }
 
-export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, initialValues, initialRewrite, initialRequestHeaders, initialResponseHeaders, initialTransport, initialBasicAuth, initialExtraUpstreams, initialLbPolicy, initialServerTimeouts, initialAccessLog, initialErrorHandlers, initialForwardAuth }: Props) {
+export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, initialValues, initialRewrite, initialRequestHeaders, initialResponseHeaders, initialTransport, initialBasicAuth, initialExtraUpstreams, initialLbPolicy, initialServerTimeouts, initialAccessLog, initialErrorHandlers, initialForwardAuth, initialTlsValues }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
   const confirmAction = useConfirmAction();
@@ -98,6 +100,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
   const [basicAuth, setBasicAuth] = useState<AuthEntry[]>(initialBasicAuth ?? []);
   const [extraUpstreams, setExtraUpstreams] = useState<ExtraUpstream[]>(initialExtraUpstreams ?? []);
   const [lbPolicy, setLbPolicy] = useState<LbPolicy | "">(initialLbPolicy ?? "");
+  const [tlsValues, setTlsValues] = useState<TlsValues>(initialTlsValues ?? tlsConfigToValues(undefined, undefined));
   const [extraSchemes, setExtraSchemes] = useState<string[]>([]);
 
   useEffect(() => {
@@ -309,6 +312,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
           </FormGroup>
         </Form>
         <TransportSection value={transport} onChange={setTransport} isDisabled={isLocked} />
+        <TlsSection value={tlsValues} onChange={setTlsValues} isDisabled={isLocked} />
         <AccessLogSection value={accessLog} onChange={setAccessLog} isDisabled={isLocked} />
         <ErrorHandlersSection value={errorHandlers} onChange={setErrorHandlers} isDisabled={isLocked} />
         <ForwardAuthSection
@@ -369,6 +373,8 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
                     serverWriteTimeout: serverTimeouts.writeTimeout.trim() || undefined,
                     serverIdleTimeout: serverTimeouts.idleTimeout.trim() || undefined,
                     maxHeaderBytes: serverTimeouts.maxHeaderBytes.trim() ? parseInt(serverTimeouts.maxHeaderBytes, 10) : undefined,
+                    tlsAdvanced: tlsValuesToAdvanced(tlsValues),
+                    mtls: tlsValuesToMtls(tlsValues),
                   });
                 } catch (e) {
                   if (e instanceof CaddyfileError) {

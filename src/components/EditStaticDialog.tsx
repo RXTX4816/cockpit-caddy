@@ -26,6 +26,7 @@ import { RequestHeadersSection } from "./RequestHeadersSection";
 import { AccessLogSection, type AccessLogValues, accessLogConfigToValues, accessLogValuesToConfig } from "./AccessLogSection";
 import { ServerTimeoutsSection, type ServerTimeoutValues } from "./ServerTimeoutsSection";
 import { ErrorHandlersSection } from "./ErrorHandlersSection";
+import { TlsSection, type TlsValues, tlsValuesToAdvanced, tlsValuesToMtls, tlsConfigToValues } from "./TlsSection";
 
 interface Props {
   proxy: ProxyEntry;
@@ -59,6 +60,7 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
     maxHeaderBytes: proxy.maxHeaderBytes != null ? String(proxy.maxHeaderBytes) : "",
   });
   const [errorHandlers, setErrorHandlers] = useState<ErrorHandlerConfig[]>(proxy.errorHandlers ?? []);
+  const [tlsValues, setTlsValues] = useState<TlsValues>(tlsConfigToValues(proxy.tlsAdvanced, proxy.mtls));
   const [portErr, setPortErr] = useState<string | null>(null);
   const [rootErr, setRootErr] = useState<string | null>(null);
 
@@ -172,6 +174,7 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
           </FormGroup>
         </Form>
 
+        <TlsSection value={tlsValues} onChange={setTlsValues} isDisabled={isLocked} />
         <AccessLogSection value={accessLog} onChange={setAccessLog} isDisabled={isLocked} />
         <ErrorHandlersSection value={errorHandlers} onChange={setErrorHandlers} isDisabled={isLocked} />
         <ServerTimeoutsSection value={serverTimeouts} onChange={setServerTimeouts} isDisabled={isLocked} />
@@ -218,6 +221,8 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
                     serverWriteTimeout: serverTimeouts.writeTimeout.trim() || undefined,
                     serverIdleTimeout: serverTimeouts.idleTimeout.trim() || undefined,
                     maxHeaderBytes: serverTimeouts.maxHeaderBytes.trim() ? parseInt(serverTimeouts.maxHeaderBytes, 10) : undefined,
+                    tlsAdvanced: tlsValuesToAdvanced(tlsValues),
+                    mtls: tlsValuesToMtls(tlsValues),
                   });
                 } catch (e) {
                   if (e instanceof CaddyApiError) {

@@ -26,6 +26,7 @@ import { RewriteSection } from "./RewriteSection";
 import { RequestHeadersSection } from "./RequestHeadersSection";
 import { ResponseHeadersSection } from "./ResponseHeadersSection";
 import { TransportSection, type TransportValues } from "./TransportSection";
+import { TlsSection, type TlsValues, tlsValuesToAdvanced, tlsValuesToMtls, tlsConfigToValues } from "./TlsSection";
 import { ServerTimeoutsSection, type ServerTimeoutValues } from "./ServerTimeoutsSection";
 import { AccessLogSection, type AccessLogValues, accessLogValuesToConfig, accessLogConfigToValues } from "./AccessLogSection";
 import { BasicAuthSection, resolveBasicAuth, type AuthEntry } from "./BasicAuthSection";
@@ -81,6 +82,7 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
   const [lbPolicy, setLbPolicy] = useState<LbPolicy | "">(proxy.lbPolicy ?? "");
   const [errorHandlers, setErrorHandlers] = useState<ErrorHandlerConfig[]>(proxy.errorHandlers ?? []);
   const [forwardAuth, setForwardAuth] = useState<ForwardAuthConfig | undefined>(proxy.forwardAuth);
+  const [tlsValues, setTlsValues] = useState<TlsValues>(tlsConfigToValues(proxy.tlsAdvanced, proxy.mtls));
   const [extraSchemes, setExtraSchemes] = useState<string[]>([]);
   const [extHostErr, setExtHostErr] = useState<string | null>(null);
 
@@ -266,6 +268,7 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
           </FormGroup>
         </Form>
         <TransportSection value={transport} onChange={setTransport} isDisabled={isConfirming} />
+        <TlsSection value={tlsValues} onChange={setTlsValues} isDisabled={isConfirming} />
         <AccessLogSection value={accessLog} onChange={setAccessLog} isDisabled={isConfirming} />
         <ErrorHandlersSection value={errorHandlers} onChange={setErrorHandlers} isDisabled={isConfirming} />
         <ForwardAuthSection
@@ -330,6 +333,8 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
                   serverWriteTimeout: serverTimeouts.writeTimeout.trim() || undefined,
                   serverIdleTimeout: serverTimeouts.idleTimeout.trim() || undefined,
                   maxHeaderBytes: serverTimeouts.maxHeaderBytes.trim() ? parseInt(serverTimeouts.maxHeaderBytes, 10) : undefined,
+                  tlsAdvanced: tlsValuesToAdvanced(tlsValues),
+                  mtls: tlsValuesToMtls(tlsValues),
                 };
                 try {
                   await onSave(entry);

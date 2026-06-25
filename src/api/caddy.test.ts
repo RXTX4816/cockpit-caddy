@@ -226,6 +226,54 @@ describe("proxyToBlock", () => {
     expect(result).toContain("tls_insecure_skip_verify");
     expect(result).toContain("transport http {");
   });
+
+  it("writes simple tls internal when no advanced settings", () => {
+    const result = proxyToBlock(proxy({ tls: true }));
+    expect(result).toContain("\ttls internal");
+    expect(result).not.toContain("protocols");
+    expect(result).not.toContain("ciphers");
+  });
+
+  it("writes tls block with protocols when protocolMin/Max set", () => {
+    const result = proxyToBlock(proxy({
+      tls: true,
+      tlsAdvanced: { protocolMin: "tls1.2", protocolMax: "tls1.3" },
+    }));
+    expect(result).toContain("\ttls {");
+    expect(result).toContain("issuer internal");
+    expect(result).toContain("protocols tls1.2 tls1.3");
+    expect(result).not.toContain("tls internal");
+  });
+
+  it("writes tls block with single protocol when only min set", () => {
+    const result = proxyToBlock(proxy({ tls: true, tlsAdvanced: { protocolMin: "tls1.2" } }));
+    expect(result).toContain("protocols tls1.2");
+    expect(result).not.toContain("tls1.0");
+  });
+
+  it("uses tls1.2 as floor when only max set", () => {
+    const result = proxyToBlock(proxy({ tls: true, tlsAdvanced: { protocolMax: "tls1.3" } }));
+    expect(result).toContain("protocols tls1.2 tls1.3");
+    expect(result).not.toContain("tls1.0");
+  });
+
+  it("writes tls block with ciphers", () => {
+    const result = proxyToBlock(proxy({
+      tls: true,
+      tlsAdvanced: { cipherSuites: ["TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256", "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256"] },
+    }));
+    expect(result).toContain("ciphers TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256 TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256");
+  });
+
+  it("writes tls block with client_auth for mTLS", () => {
+    const result = proxyToBlock(proxy({
+      tls: true,
+      mtls: { mode: "require_and_verify", trustedCaFile: "/etc/caddy/ca.pem" },
+    }));
+    expect(result).toContain("client_auth {");
+    expect(result).toContain("mode require_and_verify");
+    expect(result).toContain("trusted_ca_cert_file /etc/caddy/ca.pem");
+  });
 });
 
 // ---------------------------------------------------------------------------
