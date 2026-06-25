@@ -374,6 +374,24 @@
     "warning_body": "This plugin manages system services and configuration files. Without administrative access in Cockpit, most actions will fail. Enable administrative mode in the top-right Cockpit menu before continuing.",
     "continue_button": "Continue on my own risk"
   },
+  "ca": {
+    "title": "Internal Certificate Authority",
+    "button": "CA",
+    "load_error": "Failed to load CA information",
+    "root_cn": "Root certificate",
+    "intermediate_cn": "Intermediate certificate",
+    "valid_from": "Valid from",
+    "valid_until": "Valid until",
+    "fingerprint": "SHA-256 fingerprint",
+    "copy_tip": "Copy root PEM",
+    "copied_tip": "Copied",
+    "download_button": "Download root CA (.pem)",
+    "download_saved": "Saved to {{path}}",
+    "download_overwritten": "Overwrote existing file at {{path}}",
+    "download_error": "Download failed",
+    "install_instructions_title": "How to install in browsers / OS",
+    "firefox_instructions": "Open Firefox → Settings → Privacy & Security → Certificates → View Certificates → Authorities → Import. Select the downloaded .pem file and check \"Trust this CA to identify websites\"."
+  },
   "admin_address": {
     "title": "Admin API Address",
     "storage_note": "These settings are saved in your browser's local storage — they apply only to this browser and are not shared with other users or browsers.",

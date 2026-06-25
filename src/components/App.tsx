@@ -29,6 +29,7 @@ import { LogsViewer } from "./LogsViewer";
 import { BackupDialog } from "./BackupDialog";
 import { RestoreDialog } from "./RestoreDialog";
 import { AdminAddressDialog } from "./AdminAddressDialog";
+import { InternalCaModal } from "./InternalCaModal";
 import { useCaddyStatus } from "../hooks/useCaddyStatus";
 import { applyStoredAdminAddress } from "../hooks/useAdminAddress";
 import { useCaddyVersion } from "../hooks/useCaddyVersion";
@@ -43,6 +44,7 @@ function AppInner() {
   const [showBackup, setShowBackup] = useState(false);
   const [showRestore, setShowRestore] = useState(false);
   const [showAdminAddress, setShowAdminAddress] = useState(false);
+  const [showCa, setShowCa] = useState(false);
   const [logsSearch, setLogsSearch] = useState("");
 
   useEffect(() => { applyStoredAdminAddress(); }, []);
@@ -70,6 +72,7 @@ function AppInner() {
                     <div style={{ display: "flex", gap: "0.5rem" }}>
                       <Button variant="secondary" size="sm" onClick={() => setShowBackup(true)}>{t("backup.button")}</Button>
                       <Button variant="secondary" size="sm" onClick={() => setShowRestore(true)}>{t("restore.button")}</Button>
+                      <Button variant="secondary" size="sm" onClick={() => setShowCa(true)}>{t("ca.button")}</Button>
                       <Button variant="plain" size="sm" aria-label={t("admin_address.title")} onClick={() => setShowAdminAddress(true)}><CogIcon /></Button>
                     </div>
                   }
@@ -152,6 +155,7 @@ function AppInner() {
       {showBackup && <BackupDialog onClose={() => setShowBackup(false)} />}
       {showRestore && <RestoreDialog onClose={() => setShowRestore(false)} />}
       {showAdminAddress && <AdminAddressDialog onClose={() => setShowAdminAddress(false)} />}
+      {showCa && <InternalCaModal onClose={() => setShowCa(false)} />}
       <PluginFooter
         version={pkg.version}
         links={[
