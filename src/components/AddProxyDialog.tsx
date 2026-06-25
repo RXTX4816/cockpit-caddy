@@ -28,12 +28,11 @@ import { ResponseHeadersSection } from "./ResponseHeadersSection";
 import { TransportSection, type TransportValues } from "./TransportSection";
 import { ServerTimeoutsSection, type ServerTimeoutValues } from "./ServerTimeoutsSection";
 import { AccessLogSection, type AccessLogValues, accessLogValuesToConfig, accessLogConfigToValues } from "./AccessLogSection";
-import { BasicAuthSection, type AuthEntry } from "./BasicAuthSection";
+import { BasicAuthSection, resolveBasicAuth, type AuthEntry } from "./BasicAuthSection";
 import { ErrorHandlersSection } from "./ErrorHandlersSection";
 import { ForwardAuthSection, validateForwardAuth } from "./ForwardAuthSection";
 import { UpstreamsSection, validateUpstreams, type ExtraUpstream } from "./UpstreamsSection";
 import type { ErrorHandlerConfig, ForwardAuthConfig, LbPolicy } from "../api";
-import { hashPassword } from "../api";
 
 interface FormState {
   externalScheme: string;
@@ -49,19 +48,6 @@ interface FormState {
 }
 
 type FormErrors = Partial<Record<keyof FormState, string>>;
-
-async function resolveBasicAuth(entries: AuthEntry[]): Promise<{ username: string; passwordHash: string }[]> {
-  return Promise.all(
-    entries
-      .filter(e => e.username.trim())
-      .map(async e => {
-        const hash = e.password.trim()
-          ? await hashPassword(e.password.trim())
-          : (e.existingHash ?? "");
-        return { username: e.username.trim(), passwordHash: hash };
-      }),
-  );
-}
 
 interface Props {
   existingPorts: number[];
