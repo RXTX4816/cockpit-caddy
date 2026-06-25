@@ -3,7 +3,7 @@ import { useAutoRefresh } from "@rxtx4816/cockpit-plugin-base-react";
 import {
   parseProxies, mergeProxy, removeProxy,
   readCaddyfile, writeCaddyfile, readProxyConf,
-  parseLabelsFromCaddyfile, parseConfTlsMap, parseConfExternalAddresses, parseConfAccessLogMap,
+  parseLabelsFromCaddyfile, parseConfTlsMap, parseConfExternalAddresses, parseConfAccessLogMap, parseConfForwardAuthMap,
   surgicallyWriteProxy, surgicallyRemoveBlock,
   extractRawBlocksFromCaddyfile, buildMigratedConfContent, writeRawProxyConf,
   writeFile, reloadService, syncGlobalTimeouts,
@@ -31,6 +31,7 @@ export function useProxies() {
   const [confTls, setConfTls] = useState<Record<number, boolean>>({});
   const [confExternal, setConfExternal] = useState<Record<number, { scheme?: string; host?: string }>>({});
   const [confAccessLog, setConfAccessLog] = useState<Record<number, import("../api").AccessLogConfig>>({});
+  const [confForwardAuth, setConfForwardAuth] = useState<Record<number, import("../api").ForwardAuthConfig>>({});
   const [caddyfileContent, setCaddyfileContent] = useState<string>("");
 
   const syncConf = useCallback(() => {
@@ -39,6 +40,7 @@ export function useProxies() {
       setConfTls(parseConfTlsMap(c));
       setConfExternal(parseConfExternalAddresses(c));
       setConfAccessLog(parseConfAccessLogMap(c));
+      setConfForwardAuth(parseConfForwardAuthMap(c));
     }).catch(() => {});
   }, []);
 
@@ -70,8 +72,10 @@ export function useProxies() {
       // Fallback: if the JSON API config doesn't have server.logs (was last pushed by
       // older code), read access log config from the Caddyfile conf.d directly.
       accessLog: p.accessLog ?? confAccessLog[p.externalPort],
+      // Fallback: read forward_auth config from conf.d when JSON detection is insufficient.
+      forwardAuth: p.forwardAuth ?? confForwardAuth[p.externalPort],
     })),
-    [config, labels, confTls, confExternal, confAccessLog],
+    [config, labels, confTls, confExternal, confAccessLog, confForwardAuth],
   );
 
   const addProxy = useCallback(

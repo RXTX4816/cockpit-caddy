@@ -90,6 +90,7 @@ function FlagChips({ proxy, t }: { proxy: ProxyEntry; t: (k: string) => string }
   if (proxy.accessLog) chips.push({ label: t("access_log.indicator"), color: "teal" });
   if (proxy.serverReadTimeout ?? proxy.serverReadHeaderTimeout ?? proxy.serverWriteTimeout ?? proxy.serverIdleTimeout ?? proxy.maxHeaderBytes) chips.push({ label: t("proxies.indicator_limits"), color: "grey" });
   if (proxy.extraUpstreams?.length) chips.push({ label: t("proxies.indicator_lb"), color: "blue" });
+  if (proxy.forwardAuth) chips.push({ label: t("forward_auth.indicator"), color: "purple" });
   if (chips.length === 0) return <span style={{ color: "var(--pf-v6-global--Color--200)" }}>—</span>;
   return (
     <div style={{ display: "flex", gap: "0.2rem", flexWrap: "wrap" }}>
@@ -703,6 +704,7 @@ export function ProxyList({ onViewLogs }: Props) {
             level: duplicating.accessLog.level ?? "",
           } : undefined}
           initialErrorHandlers={duplicating.errorHandlers}
+          initialForwardAuth={duplicating.forwardAuth}
         />
       ))}
 

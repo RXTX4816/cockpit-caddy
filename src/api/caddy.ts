@@ -427,6 +427,130 @@ function regexReplaceToCaddy(replace: string): string {
 }
 
 
+// ---------------------------------------------------------------------------
+// Forward authentication helpers
+// ---------------------------------------------------------------------------
+
+function buildForwardAuthCaddyLines(fa: import("./types").ForwardAuthConfig): string[] {
+  if (!fa.upstreamUrl.trim()) return [];
+  const lines = [`\tforward_auth ${fa.upstreamUrl} {`];
+  lines.push(`\t\turi ${fa.uri || "/"}`);
+  if (fa.copyHeaders.length) lines.push(`\t\tcopy_headers ${fa.copyHeaders.join(" ")}`);
+  lines.push("\t}");
+  return lines;
+}
+
+function buildForwardAuthHandler(fa: import("./types").ForwardAuthConfig): CaddyHandler | null {
+  if (!fa.upstreamUrl.trim()) return null;
+  const dial = fa.upstreamUrl.replace(/^https?:\/\//, "");
+  const rp: Record<string, unknown> = {
+    handler: "reverse_proxy",
+    upstreams: [{ dial }],
+    headers: {
+      request: {
+        set: {
+          "X-Forwarded-Method": ["{http.request.method}"],
+          "X-Forwarded-Uri": ["{http.request.uri}"],
+        },
+      },
+    },
+    handle_response: [{
+      match: { status_code: [2] },
+      routes: [{
+        handle: [{
+          handler: "copy_response_headers",
+          ...(fa.copyHeaders.length ? { include: fa.copyHeaders } : {}),
+        }],
+      }],
+    }],
+  };
+  if (fa.uri) rp.rewrite = { method: "GET", uri: fa.uri };
+  return { handler: "subroute", routes: [{ handle: [rp as CaddyHandler] }] } as CaddyHandler;
+}
+
+function isForwardAuthProxy(rp: CaddyReverseProxyHandler): boolean {
+  const resp = (rp.handle_response as Array<Record<string, unknown>> | undefined)?.[0];
+  if (!resp) return false;
+  const match = resp.match as Record<string, unknown> | undefined;
+  if ((match?.status_code as number[] | undefined)?.[0] !== 2) return false;
+  const routes = (resp.routes as Array<{ handle?: unknown[] }> | undefined) ?? [];
+  return routes.some(r =>
+    (r.handle ?? []).some(h => (h as { handler?: string })?.handler === "copy_response_headers"),
+  );
+}
+
+function extractForwardAuthFromProxy(rp: CaddyReverseProxyHandler): import("./types").ForwardAuthConfig {
+  const dial = rp.upstreams?.[0]?.dial ?? "";
+  const upstreamUrl = /^https?:\/\//.test(dial) ? dial : `http://${dial}`;
+  const uri = (rp as Record<string, unknown>).rewrite as { uri?: string } | undefined;
+  const resp = (rp.handle_response as Array<Record<string, unknown>> | undefined)?.[0];
+  const routes = (resp?.routes as Array<{ handle?: unknown[] }> | undefined) ?? [];
+  const copyHandle = routes.flatMap(r => r.handle ?? [])
+    .find(h => (h as { handler?: string })?.handler === "copy_response_headers") as
+    { handler: string; include?: string[] } | undefined;
+  return { upstreamUrl, uri: uri?.uri, copyHeaders: copyHandle?.include ?? [] };
+}
+
+function detectForwardAuth(handles: AnyHandler[]): import("./types").ForwardAuthConfig | undefined {
+  for (const h of handles) {
+    if (h.handler === "reverse_proxy" && isForwardAuthProxy(h as CaddyReverseProxyHandler)) {
+      return extractForwardAuthFromProxy(h as CaddyReverseProxyHandler);
+    }
+    if (h.handler === "subroute" && h.routes) {
+      for (const route of h.routes as Array<{ handle?: AnyHandler[] }>) {
+        for (const subH of (route.handle ?? []) as AnyHandler[]) {
+          if (subH.handler === "reverse_proxy" && isForwardAuthProxy(subH as CaddyReverseProxyHandler)) {
+            return extractForwardAuthFromProxy(subH as CaddyReverseProxyHandler);
+          }
+        }
+      }
+    }
+  }
+  return undefined;
+}
+
+/** Parse the forward_auth block from within a single conf.d site block (raw text). */
+function parseForwardAuthFromBlockRaw(raw: string): import("./types").ForwardAuthConfig | undefined {
+  const lines = raw.split("\n");
+  let inFa = false;
+  let depth = 0;
+  let upstreamUrl = "";
+  let uri: string | undefined;
+  let copyHeaders: string[] = [];
+
+  for (let i = 1; i < lines.length - 1; i++) {
+    const t = lines[i].trim();
+    if (!inFa) {
+      const m = t.match(/^forward_auth\s+(\S+)(?:\s+\{)?$/);
+      if (m) {
+        upstreamUrl = m[1];
+        inFa = true;
+        depth = t.endsWith("{") ? 1 : 0;
+        continue;
+      }
+    } else {
+      depth += (t.match(/\{/g) ?? []).length - (t.match(/\}/g) ?? []).length;
+      if (depth <= 0) break;
+      const uriMatch = t.match(/^uri\s+(\S+)$/);
+      if (uriMatch) { uri = uriMatch[1]; continue; }
+      const hdrsMatch = t.match(/^copy_headers\s+(.+)$/);
+      if (hdrsMatch) { copyHeaders = hdrsMatch[1].trim().split(/\s+/); }
+    }
+  }
+
+  return upstreamUrl ? { upstreamUrl, uri, copyHeaders } : undefined;
+}
+
+/** Returns a port → ForwardAuthConfig map by scanning conf.d site blocks. */
+export function parseConfForwardAuthMap(content: string): Record<number, import("./types").ForwardAuthConfig> {
+  const result: Record<number, import("./types").ForwardAuthConfig> = {};
+  for (const block of extractRawBlocksFromCaddyfile(content)) {
+    const fa = parseForwardAuthFromBlockRaw(block.raw);
+    if (fa) result[block.port] = fa;
+  }
+  return result;
+}
+
 function buildEncodeHandler(): CaddyHandler {
   return { handler: "encode", encodings: { gzip: {}, zstd: {} } };
 }
@@ -685,6 +809,7 @@ export function proxyToBlock(p: ProxyEntry): string {
       else lines.push(`\theader ${h.name} "${h.value ?? ""}"`);
     }
     if (p.rewrite) lines.push(...buildRewriteCaddyLines(p.rewrite, p.externalPort));
+    if (p.forwardAuth) lines.push(...buildForwardAuthCaddyLines(p.forwardAuth));
     lines.push(...buildReverseProxyLines(p, p.errorHandlers));
   }
   if (p.errorHandlers?.length) lines.push(...buildErrorHandlerCaddyLines(p.errorHandlers));
@@ -746,6 +871,18 @@ function patchRawBlock(raw: string, proxy: ProxyEntry): string {
         continue;
       }
 
+      // Skip top-level `forward_auth` block
+      if (trimmed.startsWith("forward_auth ")) {
+        nestDepth += opens - closes;
+        i++;
+        while (i < closingIdx && nestDepth > 0) {
+          const t = lines[i].trim();
+          nestDepth += (t.match(/\{/g) ?? []).length - (t.match(/\}/g) ?? []).length;
+          i++;
+        }
+        continue;
+      }
+
       // Skip top-level `reverse_proxy` directive, including any nested { } block
       if (trimmed.startsWith("reverse_proxy") && (trimmed.length === 13 || trimmed[13] === " ")) {
         nestDepth += opens - closes;
@@ -779,6 +916,7 @@ function patchRawBlock(raw: string, proxy: ProxyEntry): string {
   } else {
     if (proxy.compress) kept.push("\tencode gzip zstd");
     if (proxy.basicAuth?.length) kept.push(...buildBasicAuthCaddyLines(proxy.basicAuth));
+    if (proxy.forwardAuth) kept.push(...buildForwardAuthCaddyLines(proxy.forwardAuth));
     kept.push(...buildReverseProxyLines(proxy, proxy.errorHandlers));
   }
   if (proxy.errorHandlers?.length) kept.push(...buildErrorHandlerCaddyLines(proxy.errorHandlers));
@@ -944,9 +1082,16 @@ type AnyHandler = { handler: string; routes?: Array<{ handle?: AnyHandler[]; [ke
 function findReverseProxy(handles: AnyHandler[]): CaddyReverseProxyHandler | undefined {
   for (const h of handles) {
     if (h.handler === "reverse_proxy") {
-      return h as CaddyReverseProxyHandler;
+      // Skip forward_auth proxies — they're auth guards, not the main upstream
+      if (!isForwardAuthProxy(h as CaddyReverseProxyHandler)) return h as CaddyReverseProxyHandler;
+      continue;
     }
     if (h.handler === "subroute" && h.routes) {
+      // Skip subroutes that are the forward_auth wrapper
+      const isAuthSubroute = (h.routes as Array<{ handle?: AnyHandler[] }>).some(r =>
+        (r.handle ?? []).some(sh => sh.handler === "reverse_proxy" && isForwardAuthProxy(sh as CaddyReverseProxyHandler)),
+      );
+      if (isAuthSubroute) continue;
       for (const sub of h.routes) {
         const found = findReverseProxy((sub.handle ?? []) as AnyHandler[]);
         if (found) return found;
@@ -1072,6 +1217,8 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
       continue;
     }
 
+    const forwardAuth = detectForwardAuth(allHandles);
+
     const rp = findReverseProxy(allHandles);
     if (!rp) continue;
 
@@ -1130,6 +1277,7 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
       lbPolicy,
       serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
       errorHandlers: parseErrorHandlers(server),
+      forwardAuth,
     });
   }
 
@@ -1438,6 +1586,10 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
   if (proxy.basicAuth?.length) handles.push(buildBasicAuthHandler(proxy.basicAuth));
   if (proxy.responseHeaders?.length) handles.push(buildResponseHeadersHandler(proxy.responseHeaders));
   if (proxy.rewrite) handles.push(buildRewriteHandler(proxy.rewrite));
+  if (proxy.forwardAuth) {
+    const faH = buildForwardAuthHandler(proxy.forwardAuth);
+    if (faH) handles.push(faH);
+  }
   handles.push(buildReverseProxyHandler(proxy, proxy.errorHandlers));
   const server: CaddyServer = {
     listen: [listenAddr],
@@ -1464,8 +1616,17 @@ function patchHandles(handles: CaddyHandler[], proxy: ProxyEntry): CaddyHandler[
     return fsHandles;
   }
   let found = false;
-  // Strip any existing encode/authentication/rewrite/headers/file_server handlers; we'll re-add the correct ones below
-  const withoutRewrite = handles.filter(h => h.handler !== "rewrite" && h.handler !== "headers" && h.handler !== "encode" && h.handler !== "authentication" && h.handler !== "file_server");
+  // Strip any existing encode/authentication/rewrite/headers/file_server/forward_auth handlers; we'll re-add the correct ones below
+  const withoutRewrite = handles.filter(h => {
+    if (h.handler === "rewrite" || h.handler === "headers" || h.handler === "encode" || h.handler === "authentication" || h.handler === "file_server") return false;
+    if (h.handler === "subroute") {
+      const isAuthSubroute = (h.routes as Array<{ handle?: AnyHandler[] }> | undefined)?.some(r =>
+        (r.handle ?? []).some(sh => sh.handler === "reverse_proxy" && isForwardAuthProxy(sh as CaddyReverseProxyHandler)),
+      );
+      if (isAuthSubroute) return false;
+    }
+    return true;
+  });
   const patched = withoutRewrite.map(h => {
     if (h.handler === "reverse_proxy") {
       found = true;
@@ -1487,12 +1648,16 @@ function patchHandles(handles: CaddyHandler[], proxy: ProxyEntry): CaddyHandler[
   if (!found) {
     patched.push(buildReverseProxyHandler(proxy, proxy.errorHandlers));
   }
-  // Prepend encode/auth/response-headers/rewrite handlers if configured
+  // Prepend encode/auth/response-headers/rewrite/forward_auth handlers if configured
   const prefix: CaddyHandler[] = [];
   if (proxy.compress) prefix.push(buildEncodeHandler());
   if (proxy.basicAuth?.length) prefix.push(buildBasicAuthHandler(proxy.basicAuth));
   if (proxy.responseHeaders?.length) prefix.push(buildResponseHeadersHandler(proxy.responseHeaders));
   if (proxy.rewrite) prefix.push(buildRewriteHandler(proxy.rewrite));
+  if (proxy.forwardAuth) {
+    const faH = buildForwardAuthHandler(proxy.forwardAuth);
+    if (faH) prefix.push(faH);
+  }
   return [...prefix, ...patched] as CaddyHandler[];
 }
 

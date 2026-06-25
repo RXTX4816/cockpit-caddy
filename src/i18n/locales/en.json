@@ -455,6 +455,20 @@
     "reset_button": "Reset to defaults",
     "save_tooltip": "Test a successful connection first"
   },
+  "forward_auth": {
+    "section_title": "Forward Authentication (optional)",
+    "section_title_on": "Forward Authentication (enabled)",
+    "enable_button": "Enable forward authentication",
+    "disable_button": "Remove forward authentication",
+    "field_url": "Auth service URL",
+    "field_url_help": "Base URL of the authentication service (e.g. http://localhost:9091)",
+    "field_uri": "Auth URI (optional)",
+    "field_uri_help": "Path to request on the auth service (e.g. /api/authz/forward-auth)",
+    "field_copy_headers": "Copy headers",
+    "field_copy_headers_help": "Space or comma-separated response headers to copy from the auth service to the upstream request (e.g. Remote-User, Remote-Groups)",
+    "indicator": "Forward Auth",
+    "validation_uri_required": "Auth URI is required when an auth service URL is set"
+  },
   "error_handler": {
     "section_title": "Custom error handlers (optional)",
     "section_title_on": "Custom error handlers ({{count}})",
