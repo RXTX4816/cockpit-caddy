@@ -12,7 +12,7 @@
     "unknown": "알 수 없음"
   },
   "app": {
-    "title": "Caddy Reverse Proxy"
+    "title": "Caddy"
   },
   "service": {
     "running": "Running",

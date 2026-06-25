@@ -25,7 +25,7 @@ ln -s "$PWD/src" ~/.local/share/cockpit/cockpit-caddy
 npm run watch
 ```
 
-Open `http://localhost:9090` — **Caddy Proxy** appears in the sidebar automatically. Changes to source files are picked up immediately without restarting Cockpit.
+Open `http://localhost:9090` — **Caddy** appears in the sidebar automatically. Changes to source files are picked up immediately without restarting Cockpit.
 
 ## Commands
 

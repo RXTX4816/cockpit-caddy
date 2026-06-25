@@ -32,7 +32,7 @@ Runs `systemctl restart caddy`. Stops and starts Caddy. Use this when Caddy is i
 
 Runs `systemctl reload caddy` (equivalent to `caddy reload`). Applies configuration changes without dropping existing connections. **Prefer Reload over Restart** for routine changes — it is faster and has zero downtime.
 
-The plugin uses Reload automatically when you add, edit, or delete a proxy rule.
+The plugin uses Reload automatically when you add, edit, or delete an entry.
 
 ---
 

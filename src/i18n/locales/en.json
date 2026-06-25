@@ -19,7 +19,7 @@
     "confirm_apply": "Apply"
   },
   "app": {
-    "title": "Caddy Reverse Proxy",
+    "title": "Caddy",
     "loading": "Connecting to Caddy…"
   },
   "service": {
