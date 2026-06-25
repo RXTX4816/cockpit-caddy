@@ -17,10 +17,14 @@ import {
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
-import { CaddyApiError, hashPassword } from "../api";
-import type { ProxyEntry, HeaderOperation } from "../api";
-import { BasicAuthSection, type AuthEntry } from "./BasicAuthSection";
+import { CaddyApiError } from "../api";
+import type { ProxyEntry, HeaderOperation, ErrorHandlerConfig } from "../api";
+import { BasicAuthSection, resolveBasicAuth, type AuthEntry } from "./BasicAuthSection";
 import { ResponseHeadersSection } from "./ResponseHeadersSection";
+import { RequestHeadersSection } from "./RequestHeadersSection";
+import { AccessLogSection, type AccessLogValues, accessLogConfigToValues, accessLogValuesToConfig } from "./AccessLogSection";
+import { ServerTimeoutsSection, type ServerTimeoutValues } from "./ServerTimeoutsSection";
+import { ErrorHandlersSection } from "./ErrorHandlersSection";
 
 interface Props {
   existingPorts: number[];
@@ -29,22 +33,13 @@ interface Props {
   initialValues?: { port?: string; root?: string; browse?: boolean; tls?: boolean; compress?: boolean; label?: string };
   initialBasicAuth?: AuthEntry[];
   initialResponseHeaders?: HeaderOperation[];
+  initialRequestHeaders?: HeaderOperation[];
+  initialAccessLog?: AccessLogValues;
+  initialServerTimeouts?: ServerTimeoutValues;
+  initialErrorHandlers?: ErrorHandlerConfig[];
 }
 
-async function resolveBasicAuth(entries: AuthEntry[]): Promise<{ username: string; passwordHash: string }[]> {
-  return Promise.all(
-    entries
-      .filter(e => e.username.trim())
-      .map(async e => {
-        const hash = e.password.trim()
-          ? await hashPassword(e.password.trim())
-          : (e.existingHash ?? "");
-        return { username: e.username.trim(), passwordHash: hash };
-      }),
-  );
-}
-
-export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues, initialBasicAuth, initialResponseHeaders }: Props) {
+export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues, initialBasicAuth, initialResponseHeaders, initialRequestHeaders, initialAccessLog, initialServerTimeouts, initialErrorHandlers }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
   const confirmAction = useConfirmAction();
@@ -57,6 +52,10 @@ export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues, 
   const [label, setLabel] = useState(initialValues?.label ?? "");
   const [basicAuth, setBasicAuth] = useState<AuthEntry[]>(initialBasicAuth ?? []);
   const [responseHeaders, setResponseHeaders] = useState<HeaderOperation[]>(initialResponseHeaders ?? []);
+  const [requestHeaders, setRequestHeaders] = useState<HeaderOperation[] | undefined>(initialRequestHeaders);
+  const [accessLog, setAccessLog] = useState<AccessLogValues>(initialAccessLog ?? accessLogConfigToValues(undefined));
+  const [serverTimeouts, setServerTimeouts] = useState<ServerTimeoutValues>(initialServerTimeouts ?? { readTimeout: "", readHeaderTimeout: "", writeTimeout: "", idleTimeout: "", maxHeaderBytes: "" });
+  const [errorHandlers, setErrorHandlers] = useState<ErrorHandlerConfig[]>(initialErrorHandlers ?? []);
   const [portErr, setPortErr] = useState<string | null>(null);
   const [rootErr, setRootErr] = useState<string | null>(null);
 
@@ -174,12 +173,15 @@ export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues, 
           </FormGroup>
         </Form>
 
+        <AccessLogSection value={accessLog} onChange={setAccessLog} isDisabled={isLocked} />
+        <ErrorHandlersSection value={errorHandlers} onChange={setErrorHandlers} isDisabled={isLocked} />
+        <ServerTimeoutsSection value={serverTimeouts} onChange={setServerTimeouts} isDisabled={isLocked} />
         <BasicAuthSection
           value={basicAuth}
           onChange={setBasicAuth}
           isDisabled={isLocked}
         />
-
+        <RequestHeadersSection value={requestHeaders} onChange={setRequestHeaders} isDisabled={isLocked} />
         <ResponseHeadersSection
           value={responseHeaders}
           onChange={v => setResponseHeaders(v ?? [])}
@@ -213,7 +215,15 @@ export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues, 
                     label: label.trim() || undefined,
                     fileServer: { root: root.trim(), browse: browse || undefined },
                     basicAuth: resolvedAuth.length ? resolvedAuth : undefined,
+                    requestHeaders: requestHeaders ?? undefined,
                     responseHeaders: responseHeaders.length ? responseHeaders : undefined,
+                    accessLog: accessLogValuesToConfig(accessLog),
+                    errorHandlers: errorHandlers.length ? errorHandlers : undefined,
+                    serverReadTimeout: serverTimeouts.readTimeout.trim() || undefined,
+                    serverReadHeaderTimeout: serverTimeouts.readHeaderTimeout.trim() || undefined,
+                    serverWriteTimeout: serverTimeouts.writeTimeout.trim() || undefined,
+                    serverIdleTimeout: serverTimeouts.idleTimeout.trim() || undefined,
+                    maxHeaderBytes: serverTimeouts.maxHeaderBytes.trim() ? parseInt(serverTimeouts.maxHeaderBytes, 10) : undefined,
                   });
                 } catch (e) {
                   if (e instanceof CaddyApiError) {

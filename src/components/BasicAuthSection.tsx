@@ -6,11 +6,25 @@ import {
   TextInput,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
+import { hashPassword } from "../api";
 
 export interface AuthEntry {
   username: string;
   password: string;
   existingHash?: string;
+}
+
+export async function resolveBasicAuth(entries: AuthEntry[]): Promise<{ username: string; passwordHash: string }[]> {
+  return Promise.all(
+    entries
+      .filter(e => e.username.trim())
+      .map(async e => {
+        const hash = e.password.trim()
+          ? await hashPassword(e.password.trim())
+          : (e.existingHash ?? "");
+        return { username: e.username.trim(), passwordHash: hash };
+      }),
+  );
 }
 
 interface Props {

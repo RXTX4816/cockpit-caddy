@@ -17,23 +17,14 @@ import {
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
-import { CaddyApiError, hashPassword } from "../api";
-import type { ProxyEntry } from "../api";
-import { BasicAuthSection, type AuthEntry } from "./BasicAuthSection";
+import { CaddyApiError } from "../api";
+import type { ProxyEntry, ErrorHandlerConfig } from "../api";
+import { BasicAuthSection, resolveBasicAuth, type AuthEntry } from "./BasicAuthSection";
 import { ResponseHeadersSection } from "./ResponseHeadersSection";
-
-async function resolveBasicAuth(entries: AuthEntry[]): Promise<{ username: string; passwordHash: string }[]> {
-  return Promise.all(
-    entries
-      .filter(e => e.username.trim())
-      .map(async e => {
-        const hash = e.password.trim()
-          ? await hashPassword(e.password.trim())
-          : (e.existingHash ?? "");
-        return { username: e.username.trim(), passwordHash: hash };
-      }),
-  );
-}
+import { RequestHeadersSection } from "./RequestHeadersSection";
+import { AccessLogSection, type AccessLogValues, accessLogConfigToValues, accessLogValuesToConfig } from "./AccessLogSection";
+import { ServerTimeoutsSection, type ServerTimeoutValues } from "./ServerTimeoutsSection";
+import { ErrorHandlersSection } from "./ErrorHandlersSection";
 
 interface Props {
   proxy: ProxyEntry;
@@ -57,6 +48,16 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
     (proxy.basicAuth ?? []).map(a => ({ username: a.username, password: "", existingHash: a.passwordHash })),
   );
   const [responseHeaders, setResponseHeaders] = useState(proxy.responseHeaders ?? []);
+  const [requestHeaders, setRequestHeaders] = useState(proxy.requestHeaders);
+  const [accessLog, setAccessLog] = useState<AccessLogValues>(accessLogConfigToValues(proxy.accessLog));
+  const [serverTimeouts, setServerTimeouts] = useState<ServerTimeoutValues>({
+    readTimeout: proxy.serverReadTimeout ?? "",
+    readHeaderTimeout: proxy.serverReadHeaderTimeout ?? "",
+    writeTimeout: proxy.serverWriteTimeout ?? "",
+    idleTimeout: proxy.serverIdleTimeout ?? "",
+    maxHeaderBytes: proxy.maxHeaderBytes != null ? String(proxy.maxHeaderBytes) : "",
+  });
+  const [errorHandlers, setErrorHandlers] = useState<ErrorHandlerConfig[]>(proxy.errorHandlers ?? []);
   const [portErr, setPortErr] = useState<string | null>(null);
   const [rootErr, setRootErr] = useState<string | null>(null);
 
@@ -169,12 +170,15 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
           </FormGroup>
         </Form>
 
+        <AccessLogSection value={accessLog} onChange={setAccessLog} isDisabled={isLocked} />
+        <ErrorHandlersSection value={errorHandlers} onChange={setErrorHandlers} isDisabled={isLocked} />
+        <ServerTimeoutsSection value={serverTimeouts} onChange={setServerTimeouts} isDisabled={isLocked} />
         <BasicAuthSection
           value={basicAuth}
           onChange={setBasicAuth}
           isDisabled={isLocked}
         />
-
+        <RequestHeadersSection value={requestHeaders} onChange={setRequestHeaders} isDisabled={isLocked} />
         <ResponseHeadersSection
           value={responseHeaders}
           onChange={v => setResponseHeaders(v ?? [])}
@@ -203,7 +207,15 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
                     label: label.trim() || undefined,
                     fileServer: { root: root.trim(), browse: browse || undefined },
                     basicAuth: resolvedAuth.length ? resolvedAuth : undefined,
+                    requestHeaders: requestHeaders ?? undefined,
                     responseHeaders: responseHeaders.length ? responseHeaders : undefined,
+                    accessLog: accessLogValuesToConfig(accessLog),
+                    errorHandlers: errorHandlers.length ? errorHandlers : undefined,
+                    serverReadTimeout: serverTimeouts.readTimeout.trim() || undefined,
+                    serverReadHeaderTimeout: serverTimeouts.readHeaderTimeout.trim() || undefined,
+                    serverWriteTimeout: serverTimeouts.writeTimeout.trim() || undefined,
+                    serverIdleTimeout: serverTimeouts.idleTimeout.trim() || undefined,
+                    maxHeaderBytes: serverTimeouts.maxHeaderBytes.trim() ? parseInt(serverTimeouts.maxHeaderBytes, 10) : undefined,
                   });
                 } catch (e) {
                   if (e instanceof CaddyApiError) {
