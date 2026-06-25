@@ -48,6 +48,7 @@ import { useProxies } from "../hooks/useProxies";
 import { useUpstreamProbe } from "../hooks/useUpstreamProbe";
 import { UpstreamStatusDot } from "./UpstreamStatusDot";
 import type { ProxyEntry } from "../api";
+import { accessLogConfigToValues } from "./AccessLogSection";
 
 type ProxyLayout = "list" | "card";
 const PROXY_LAYOUTS: LayoutOption<ProxyLayout>[] = [
@@ -661,6 +662,16 @@ export function ProxyList({ onViewLogs }: Props) {
           }}
           initialBasicAuth={(duplicating.basicAuth ?? []).map(a => ({ username: a.username, password: "", existingHash: a.passwordHash }))}
           initialResponseHeaders={duplicating.responseHeaders}
+          initialRequestHeaders={duplicating.requestHeaders}
+          initialAccessLog={duplicating.accessLog ? accessLogConfigToValues(duplicating.accessLog) : undefined}
+          initialServerTimeouts={{
+            readTimeout: duplicating.serverReadTimeout ?? "",
+            readHeaderTimeout: duplicating.serverReadHeaderTimeout ?? "",
+            writeTimeout: duplicating.serverWriteTimeout ?? "",
+            idleTimeout: duplicating.serverIdleTimeout ?? "",
+            maxHeaderBytes: duplicating.maxHeaderBytes != null ? String(duplicating.maxHeaderBytes) : "",
+          }}
+          initialErrorHandlers={duplicating.errorHandlers}
         />
       ) : (
         <AddProxyDialog
@@ -697,13 +708,7 @@ export function ProxyList({ onViewLogs }: Props) {
             idleTimeout: duplicating.serverIdleTimeout ?? "",
             maxHeaderBytes: duplicating.maxHeaderBytes != null ? String(duplicating.maxHeaderBytes) : "",
           }}
-          initialAccessLog={duplicating.accessLog ? {
-            enabled: true,
-            output: duplicating.accessLog.output,
-            filePath: duplicating.accessLog.filePath ?? "",
-            format: duplicating.accessLog.format ?? "",
-            level: duplicating.accessLog.level ?? "",
-          } : undefined}
+          initialAccessLog={duplicating.accessLog ? accessLogConfigToValues(duplicating.accessLog) : undefined}
           initialErrorHandlers={duplicating.errorHandlers}
           initialForwardAuth={duplicating.forwardAuth}
         />
