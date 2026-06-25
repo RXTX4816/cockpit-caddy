@@ -11,6 +11,7 @@ import {
   surgicallyReplaceBlock,
   surgicallyRemoveBlock,
   surgicallyWriteProxy,
+  parseGlobalOptions,
 } from "./caddy";
 import type { CaddyConfig, ProxyEntry } from "./types";
 
@@ -1109,5 +1110,57 @@ describe("parseProxies — multiple upstreams round-trip", () => {
     const config = makeConfig([{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:8080" }] }]);
     const [p] = parseProxies(config);
     expect(p.extraUpstreams).toBeUndefined();
+  });
+});
+
+const OPTS_BEGIN = "# cockpit-caddy:opts:begin";
+const OPTS_END = "# cockpit-caddy:opts:end";
+function makeOpts(body: string): string {
+  return `{\n${OPTS_BEGIN}\n${body}\n${OPTS_END}\n}`;
+}
+
+describe("parseGlobalOptions — ACME fields", () => {
+  it("returns empty object when no managed section", () => {
+    expect(parseGlobalOptions("")).toEqual({});
+  });
+
+  it("parses email", () => {
+    const opts = parseGlobalOptions(makeOpts("\temail admin@example.com"));
+    expect(opts.email).toBe("admin@example.com");
+  });
+
+  it("parses acme_ca", () => {
+    const opts = parseGlobalOptions(makeOpts("\tacme_ca https://acme-v02.api.letsencrypt.org/directory"));
+    expect(opts.acmeCA).toBe("https://acme-v02.api.letsencrypt.org/directory");
+  });
+
+  it("parses acme_ca_root", () => {
+    const opts = parseGlobalOptions(makeOpts("\tacme_ca_root /etc/caddy/ca.pem"));
+    expect(opts.acmeCARoot).toBe("/etc/caddy/ca.pem");
+  });
+
+  it("parses acme_eab block", () => {
+    const body = "\tacme_eab {\n\t\tkey_id kid123\n\t\tmac_key mac456\n\t}";
+    const opts = parseGlobalOptions(makeOpts(body));
+    expect(opts.acmeEabKeyId).toBe("kid123");
+    expect(opts.acmeEabMacKey).toBe("mac456");
+  });
+
+  it("parses all ACME fields together with existing opts", () => {
+    const body = [
+      "\thttp_port 8080",
+      "\temail admin@example.com",
+      "\tacme_ca https://acme-staging-v02.api.letsencrypt.org/directory",
+      "\tacme_eab {",
+      "\t\tkey_id mykey",
+      "\t\tmac_key mymac",
+      "\t}",
+    ].join("\n");
+    const opts = parseGlobalOptions(makeOpts(body));
+    expect(opts.httpPort).toBe(8080);
+    expect(opts.email).toBe("admin@example.com");
+    expect(opts.acmeCA).toBe("https://acme-staging-v02.api.letsencrypt.org/directory");
+    expect(opts.acmeEabKeyId).toBe("mykey");
+    expect(opts.acmeEabMacKey).toBe("mymac");
   });
 });
