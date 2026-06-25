@@ -141,6 +141,15 @@ export interface ErrorHandlerConfig {
   filePath?: string;
 }
 
+export interface ForwardAuthConfig {
+  /** Auth service URL, e.g. "http://localhost:9091" */
+  upstreamUrl: string;
+  /** Path to request on the auth service, e.g. "/api/authz/forward-auth" */
+  uri?: string;
+  /** Response header names to copy from auth service to the upstream request */
+  copyHeaders: string[];
+}
+
 export interface ProxyEntry {
   id: string;
   externalPort: number;
@@ -183,6 +192,8 @@ export interface ProxyEntry {
   accessLog?: AccessLogConfig;
   /** Per-server error handlers (server.errors.routes) */
   errorHandlers?: ErrorHandlerConfig[];
+  /** Forward authentication handler (delegates auth to an external service) */
+  forwardAuth?: ForwardAuthConfig;
 }
 
 export type { ServiceStatus } from "@rxtx4816/cockpit-plugin-base-react/systemd";

@@ -30,9 +30,10 @@ import { ServerTimeoutsSection, type ServerTimeoutValues } from "./ServerTimeout
 import { AccessLogSection, type AccessLogValues, accessLogValuesToConfig, accessLogConfigToValues } from "./AccessLogSection";
 import { BasicAuthSection, type AuthEntry } from "./BasicAuthSection";
 import { ErrorHandlersSection } from "./ErrorHandlersSection";
+import { ForwardAuthSection, validateForwardAuth } from "./ForwardAuthSection";
 import { UpstreamsSection, validateUpstreams, type ExtraUpstream } from "./UpstreamsSection";
 import { hashPassword } from "../api";
-import type { ErrorHandlerConfig, LbPolicy } from "../api";
+import type { ErrorHandlerConfig, ForwardAuthConfig, LbPolicy } from "../api";
 
 async function resolveBasicAuth(entries: AuthEntry[]): Promise<{ username: string; passwordHash: string }[]> {
   return Promise.all(
@@ -92,6 +93,7 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
   );
   const [lbPolicy, setLbPolicy] = useState<LbPolicy | "">(proxy.lbPolicy ?? "");
   const [errorHandlers, setErrorHandlers] = useState<ErrorHandlerConfig[]>(proxy.errorHandlers ?? []);
+  const [forwardAuth, setForwardAuth] = useState<ForwardAuthConfig | undefined>(proxy.forwardAuth);
   const [extraSchemes, setExtraSchemes] = useState<string[]>([]);
   const [extHostErr, setExtHostErr] = useState<string | null>(null);
 
@@ -113,12 +115,15 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
     return null;
   }
 
+  const forwardAuthErr = validateForwardAuth(forwardAuth);
+
   function validateAndConfirm() {
     if (externalScheme && !externalHost.trim()) {
       setExtHostErr(t("add_proxy.validation_ext_host_required_with_scheme"));
       return;
     }
     if (validateUpstreams(extraUpstreams)) return;
+    if (forwardAuthErr) return;
     setExtHostErr(null);
     saveConfirm.confirm();
   }
@@ -275,6 +280,12 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
         <TransportSection value={transport} onChange={setTransport} isDisabled={isConfirming} />
         <AccessLogSection value={accessLog} onChange={setAccessLog} isDisabled={isConfirming} />
         <ErrorHandlersSection value={errorHandlers} onChange={setErrorHandlers} isDisabled={isConfirming} />
+        <ForwardAuthSection
+          value={forwardAuth}
+          onChange={setForwardAuth}
+          isDisabled={isConfirming}
+          uriError={forwardAuthErr ?? undefined}
+        />
         <ServerTimeoutsSection value={serverTimeouts} onChange={setServerTimeouts} isDisabled={isConfirming} />
         <BasicAuthSection value={basicAuth} onChange={setBasicAuth} isDisabled={isConfirming} />
         <RewriteSection value={rewrite} onChange={setRewrite} isDisabled={isConfirming} />
@@ -325,6 +336,7 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
                   lbPolicy: (lbPolicy || undefined) as LbPolicy | undefined,
                   accessLog: accessLogValuesToConfig(accessLog),
                   errorHandlers: errorHandlers.length ? errorHandlers : undefined,
+                  forwardAuth: forwardAuth ?? undefined,
                   serverReadTimeout: serverTimeouts.readTimeout.trim() || undefined,
                   serverReadHeaderTimeout: serverTimeouts.readHeaderTimeout.trim() || undefined,
                   serverWriteTimeout: serverTimeouts.writeTimeout.trim() || undefined,
@@ -356,7 +368,7 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
           </>
         ) : (
           <>
-            <Button variant="primary" onClick={validateAndConfirm} isDisabled={!!portErr}>
+            <Button variant="primary" onClick={validateAndConfirm} isDisabled={!!portErr || !!forwardAuthErr}>
               {t("edit_proxy.save_button")}
             </Button>
             <Button variant="link" onClick={onClose}>{t("common.cancel")}</Button>
