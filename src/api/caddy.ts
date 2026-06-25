@@ -1901,6 +1901,26 @@ const GLOBAL_OPTS_BEGIN = "# cockpit-caddy:opts:begin";
 const GLOBAL_OPTS_END = "# cockpit-caddy:opts:end";
 
 /**
+ * Runs `caddy validate` on MAIN_CADDYFILE. Streams output so the error message
+ * is available even if cockpit.spawn rejects with an empty message object.
+ * Throws CaddyfileError with the relevant error line on failure.
+ */
+async function runCaddyValidate(): Promise<void> {
+  let output = "";
+  const proc = cockpit.spawn(
+    ["caddy", "validate", "--config", MAIN_CADDYFILE, "--adapter", "caddyfile"],
+    { superuser: "try", err: "out" },
+  ).stream(chunk => { output += chunk; });
+  try {
+    await proc;
+  } catch {
+    // Extract the first "Error: ..." line from the combined output, or fall back to the full output.
+    const errorLine = output.split("\n").find(l => /^Error:/i.test(l.trim())) ?? output.trim();
+    throw new CaddyfileError(errorLine.replace(/^Error:\s*/i, "").trim());
+  }
+}
+
+/**
  * Find the top-level global options block { } in a Caddyfile.
  * Returns the indices of the opening and closing braces, or null if absent.
  * The global options block must be the first non-comment, non-whitespace token.
@@ -2001,16 +2021,11 @@ export async function syncGlobalTimeouts(proxies: ProxyEntry[]): Promise<void> {
   if (patched === original) return;
 
   await fsWriteFile(MAIN_CADDYFILE, patched, "try");
-
   try {
-    await cockpit.spawn(
-      ["caddy", "validate", "--config", MAIN_CADDYFILE, "--adapter", "caddyfile"],
-      { superuser: "try", err: "out" },
-    );
+    await runCaddyValidate();
   } catch (e) {
     await fsWriteFile(MAIN_CADDYFILE, original, "try");
-    const msg = e instanceof Error ? e.message : String(e);
-    throw new CaddyfileError(msg.replace(/^Error:\s*/i, ""));
+    throw e;
   }
 }
 
@@ -2076,6 +2091,16 @@ export interface GlobalOptions {
   debug?: boolean;
   gracePeriod?: string;
   shutdownDelay?: string;
+  /** ACME registration email address */
+  email?: string;
+  /** ACME CA directory URL */
+  acmeCA?: string;
+  /** Path to a PEM file of trusted roots for connecting to the ACME CA (optional) */
+  acmeCARoot?: string;
+  /** External Account Binding key ID */
+  acmeEabKeyId?: string;
+  /** External Account Binding MAC key */
+  acmeEabMacKey?: string;
 }
 
 /** Parse global options from the cockpit-caddy:opts managed section in a Caddyfile string. */
@@ -2085,16 +2110,35 @@ export function parseGlobalOptions(content: string): GlobalOptions {
   if (bi === -1 || ei === -1) return {};
   const section = content.slice(bi + GLOBAL_OPTS_BEGIN.length, ei);
   const opts: GlobalOptions = {};
-  for (const raw of section.split("\n")) {
-    const line = raw.trim();
+  const lines = section.split("\n");
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i].trim();
     const m = line.match(/^(\S+)(?:\s+(.+))?$/);
-    if (!m) continue;
+    if (!m) { i++; continue; }
     const [, key, val] = m;
     if (key === "http_port" && val) opts.httpPort = parseInt(val, 10);
     else if (key === "https_port" && val) opts.httpsPort = parseInt(val, 10);
     else if (key === "debug") opts.debug = true;
     else if (key === "grace_period" && val) opts.gracePeriod = val;
     else if (key === "shutdown_delay" && val) opts.shutdownDelay = val;
+    else if (key === "email" && val) opts.email = val;
+    else if (key === "acme_ca" && val) opts.acmeCA = val;
+    else if (key === "acme_ca_root" && val) opts.acmeCARoot = val;
+    else if (key === "acme_eab" && line.endsWith("{")) {
+      i++;
+      while (i < lines.length) {
+        const inner = lines[i].trim();
+        if (inner === "}") break;
+        const im = inner.match(/^(\S+)\s+(.+)$/);
+        if (im) {
+          if (im[1] === "key_id") opts.acmeEabKeyId = im[2];
+          else if (im[1] === "mac_key") opts.acmeEabMacKey = im[2];
+        }
+        i++;
+      }
+    }
+    i++;
   }
   return opts;
 }
@@ -2106,6 +2150,15 @@ function buildGlobalOptionsLines(opts: GlobalOptions): string {
   if (opts.debug) lines.push("\tdebug");
   if (opts.gracePeriod) lines.push(`\tgrace_period ${opts.gracePeriod}`);
   if (opts.shutdownDelay) lines.push(`\tshutdown_delay ${opts.shutdownDelay}`);
+  if (opts.email) lines.push(`\temail ${opts.email}`);
+  if (opts.acmeCA) lines.push(`\tacme_ca ${opts.acmeCA}`);
+  if (opts.acmeCARoot) lines.push(`\tacme_ca_root ${opts.acmeCARoot}`);
+  if (opts.acmeEabKeyId && opts.acmeEabMacKey) {
+    lines.push("\tacme_eab {");
+    lines.push(`\t\tkey_id ${opts.acmeEabKeyId}`);
+    lines.push(`\t\tmac_key ${opts.acmeEabMacKey}`);
+    lines.push("\t}");
+  }
   return lines.join("\n");
 }
 
@@ -2121,14 +2174,10 @@ export async function syncGlobalOptions(opts: GlobalOptions): Promise<void> {
 
   await fsWriteFile(MAIN_CADDYFILE, patched, "try");
   try {
-    await cockpit.spawn(
-      ["caddy", "validate", "--config", MAIN_CADDYFILE, "--adapter", "caddyfile"],
-      { superuser: "try", err: "out" },
-    );
+    await runCaddyValidate();
   } catch (e) {
     await fsWriteFile(MAIN_CADDYFILE, original, "try");
-    const msg = e instanceof Error ? e.message : String(e);
-    throw new CaddyfileError(msg.replace(/^Error:\s*/i, ""));
+    throw e;
   }
 }
 

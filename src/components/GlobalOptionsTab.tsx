@@ -4,6 +4,7 @@ import {
   Alert,
   Button,
   Checkbox,
+  Divider,
   Form,
   FormGroup,
   FormHelperText,
@@ -15,7 +16,7 @@ import {
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
-import { readGlobalOptions, syncGlobalOptions, reloadService, CaddyfileError } from "../api";
+import { readGlobalOptions, syncGlobalOptions, reloadService } from "../api";
 import type { GlobalOptions } from "../api";
 
 function isDuration(v: string): boolean {
@@ -31,12 +32,18 @@ export function GlobalOptionsTab() {
   const [needsReload, setNeedsReload] = useState(false);
   const [reloadOk, setReloadOk] = useState(false);
   const [reloadError, setReloadError] = useState<string | null>(null);
+  const [saveOk, setSaveOk] = useState(false);
 
   const [httpPort, setHttpPort] = useState("");
   const [httpsPort, setHttpsPort] = useState("");
   const [debug, setDebug] = useState(false);
   const [gracePeriod, setGracePeriod] = useState("");
   const [shutdownDelay, setShutdownDelay] = useState("");
+  const [email, setEmail] = useState("");
+  const [acmeCA, setAcmeCA] = useState("");
+  const [acmeCARoot, setAcmeCARoot] = useState("");
+  const [acmeEabKeyId, setAcmeEabKeyId] = useState("");
+  const [acmeEabMacKey, setAcmeEabMacKey] = useState("");
 
   const load = useCallback(() => {
     setLoading(true);
@@ -48,6 +55,11 @@ export function GlobalOptionsTab() {
         setDebug(opts.debug ?? false);
         setGracePeriod(opts.gracePeriod ?? "");
         setShutdownDelay(opts.shutdownDelay ?? "");
+        setEmail(opts.email ?? "");
+        setAcmeCA(opts.acmeCA ?? "");
+        setAcmeCARoot(opts.acmeCARoot ?? "");
+        setAcmeEabKeyId(opts.acmeEabKeyId ?? "");
+        setAcmeEabMacKey(opts.acmeEabMacKey ?? "");
       })
       .catch(e => setLoadError(e instanceof Error ? e.message : String(e)))
       .finally(() => setLoading(false));
@@ -215,10 +227,99 @@ export function GlobalOptionsTab() {
           />
         </FormGroup>
 
-        {confirm.error && (
+        <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
+
+        <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+          {t("global_opts.acme_title")}
+        </Title>
+        <Alert variant="info" isInline title={t("global_opts.acme_note")} style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }} />
+
+        <FormGroup label={t("global_opts.acme_email")} fieldId="go-email">
+          <TextInput
+            id="go-email"
+            value={email}
+            onChange={(_e, v) => setEmail(v)}
+            placeholder="admin@example.com"
+            isDisabled={isConfirming}
+          />
+          <FormHelperText>
+            <HelperText><HelperTextItem>{t("global_opts.acme_email_help")}</HelperTextItem></HelperText>
+          </FormHelperText>
+        </FormGroup>
+
+        <FormGroup label={t("global_opts.acme_ca")} fieldId="go-acme-ca">
+          <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap", marginBottom: "0.4rem" }}>
+            {[
+              { label: t("global_opts.acme_ca_le_prod"), url: "https://acme-v02.api.letsencrypt.org/directory" },
+              { label: t("global_opts.acme_ca_le_staging"), url: "https://acme-staging-v02.api.letsencrypt.org/directory" },
+              { label: t("global_opts.acme_ca_zerossl"), url: "https://acme.zerossl.com/v2/DV90" },
+            ].map(({ label, url }) => (
+              <Button
+                key={url}
+                variant={acmeCA === url ? "primary" : "secondary"}
+                size="sm"
+                onClick={() => setAcmeCA(url)}
+                isDisabled={isConfirming}
+              >
+                {label}
+              </Button>
+            ))}
+          </div>
+          <TextInput
+            id="go-acme-ca"
+            value={acmeCA}
+            onChange={(_e, v) => setAcmeCA(v)}
+            placeholder={t("global_opts.acme_ca_placeholder")}
+            isDisabled={isConfirming}
+          />
+          <FormHelperText>
+            <HelperText><HelperTextItem>{t("global_opts.acme_ca_help")}</HelperTextItem></HelperText>
+          </FormHelperText>
+        </FormGroup>
+
+        <FormGroup label={t("global_opts.acme_ca_root")} fieldId="go-acme-ca-root">
+          <TextInput
+            id="go-acme-ca-root"
+            value={acmeCARoot}
+            onChange={(_e, v) => setAcmeCARoot(v)}
+            placeholder="/etc/caddy/acme-ca.pem"
+            isDisabled={isConfirming}
+          />
+          <FormHelperText>
+            <HelperText><HelperTextItem>{t("global_opts.acme_ca_root_help")}</HelperTextItem></HelperText>
+          </FormHelperText>
+        </FormGroup>
+
+        <FormGroup label={t("global_opts.acme_eab_key_id")} fieldId="go-eab-key-id">
+          <TextInput
+            id="go-eab-key-id"
+            value={acmeEabKeyId}
+            onChange={(_e, v) => setAcmeEabKeyId(v)}
+            placeholder={t("global_opts.acme_eab_placeholder")}
+            isDisabled={isConfirming}
+          />
+        </FormGroup>
+
+        <FormGroup label={t("global_opts.acme_eab_mac_key")} fieldId="go-eab-mac-key">
+          <TextInput
+            id="go-eab-mac-key"
+            value={acmeEabMacKey}
+            onChange={(_e, v) => setAcmeEabMacKey(v)}
+            placeholder={t("global_opts.acme_eab_placeholder")}
+            isDisabled={isConfirming}
+          />
+          <FormHelperText>
+            <HelperText><HelperTextItem>{t("global_opts.acme_eab_help")}</HelperTextItem></HelperText>
+          </FormHelperText>
+        </FormGroup>
+
+        {confirm.error != null && (
           <Alert variant="danger" isInline title={t("global_opts.save_error")}>
-            {confirm.error}
+            {confirm.error || t("global_opts.save_error_unknown")}
           </Alert>
+        )}
+        {saveOk && (
+          <Alert variant="success" isInline title={t("global_opts.save_ok")} />
         )}
 
         <ActionGroup>
@@ -235,14 +336,18 @@ export function GlobalOptionsTab() {
                     debug: debug || undefined,
                     gracePeriod: gracePeriod.trim() || undefined,
                     shutdownDelay: shutdownDelay.trim() || undefined,
+                    email: email.trim() || undefined,
+                    acmeCA: acmeCA.trim() || undefined,
+                    acmeCARoot: acmeCARoot.trim() || undefined,
+                    acmeEabKeyId: acmeEabKeyId.trim() || undefined,
+                    acmeEabMacKey: acmeEabMacKey.trim() || undefined,
                   };
-                  try {
-                    await syncGlobalOptions(opts);
-                  } catch (e) {
-                    if (e instanceof CaddyfileError) throw new Error(e.message);
-                    throw e;
-                  }
+                  await syncGlobalOptions(opts).catch(e => {
+                    throw e instanceof Error ? e : new Error(String(e));
+                  });
                   setNeedsReload(true);
+                  setSaveOk(true);
+                  setTimeout(() => setSaveOk(false), 4000);
                 })}
               >
                 {t("service.confirm_action")}
