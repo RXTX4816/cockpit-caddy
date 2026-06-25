@@ -8,6 +8,7 @@ import {
   TextInput,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
+import { SectionActions } from "./SectionActions";
 
 export interface ServerTimeoutValues {
   readTimeout: string;
@@ -16,6 +17,21 @@ export interface ServerTimeoutValues {
   idleTimeout: string;
   maxHeaderBytes: string;
 }
+
+const TIMEOUTS_DEFAULTS: ServerTimeoutValues = {
+  readTimeout: "5s",
+  readHeaderTimeout: "2s",
+  writeTimeout: "10s",
+  idleTimeout: "5m",
+  maxHeaderBytes: "1048576",
+};
+const TIMEOUTS_EMPTY: ServerTimeoutValues = {
+  readTimeout: "",
+  readHeaderTimeout: "",
+  writeTimeout: "",
+  idleTimeout: "",
+  maxHeaderBytes: "",
+};
 
 interface Props {
   value: ServerTimeoutValues;
@@ -39,7 +55,12 @@ export function ServerTimeoutsSection({ value, onChange, isDisabled }: Props) {
       isExpanded={expanded}
       onToggle={(_e, v) => setExpanded(v)}
     >
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", paddingTop: "0.25rem" }}>
+      <SectionActions
+        onClear={() => onChange(TIMEOUTS_EMPTY)}
+        onDefaults={() => onChange(TIMEOUTS_DEFAULTS)}
+        isDisabled={isDisabled}
+      />
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
         <FormGroup label={t("server_timeouts.read_timeout")} fieldId="st-read" style={{ flex: "1 1 10rem" }}>
           <TextInput
             id="st-read"

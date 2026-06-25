@@ -10,6 +10,7 @@ import {
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import type { ErrorHandlerConfig, ErrorMatchType, ErrorHandlerType } from "../api";
+import { SectionActions } from "./SectionActions";
 
 interface Props {
   value: ErrorHandlerConfig[];
@@ -61,7 +62,11 @@ export function ErrorHandlersSection({ value, onChange, isDisabled }: Props) {
       isExpanded={expanded}
       onToggle={(_e, v) => setExpanded(v)}
     >
-      <div style={{ display: "flex", flexDirection: "column", gap: "1rem", paddingTop: "0.25rem" }}>
+      <SectionActions
+        onClear={() => { onChange([]); setExpanded(false); }}
+        isDisabled={isDisabled}
+      />
+      <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
         {value.map((handler, idx) => (
           <div key={idx} style={{
             border: "1px solid var(--pf-t--global--border--color--default)",

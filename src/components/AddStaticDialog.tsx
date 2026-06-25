@@ -18,6 +18,7 @@ import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { CaddyApiError } from "../api";
+import { SectionActions } from "./SectionActions";
 import type { ProxyEntry, HeaderOperation, ErrorHandlerConfig } from "../api";
 import { BasicAuthSection, resolveBasicAuth, type AuthEntry } from "./BasicAuthSection";
 import { ResponseHeadersSection } from "./ResponseHeadersSection";
@@ -160,6 +161,7 @@ export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues, 
               onChange={(_e, v) => setTls(v)}
               isDisabled={isLocked}
             />
+            <SectionActions onDefaults={() => setTls(true)} isDisabled={isLocked} />
           </FormGroup>
 
           <FormGroup fieldId="static-compress">

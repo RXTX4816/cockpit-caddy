@@ -33,6 +33,7 @@ import { ErrorHandlersSection } from "./ErrorHandlersSection";
 import { ForwardAuthSection, validateForwardAuth } from "./ForwardAuthSection";
 import { UpstreamsSection, validateUpstreams, type ExtraUpstream } from "./UpstreamsSection";
 import type { ErrorHandlerConfig, ForwardAuthConfig, LbPolicy } from "../api";
+import { SectionActions } from "./SectionActions";
 
 interface Props {
   proxy: ProxyEntry;
@@ -251,6 +252,7 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
               onChange={(_e, checked) => setTls(checked)}
               isDisabled={isConfirming}
             />
+            <SectionActions onDefaults={() => setTls(true)} isDisabled={isConfirming} />
           </FormGroup>
 
           <FormGroup label={t("add_proxy.field_compress")} fieldId="edit-compress">

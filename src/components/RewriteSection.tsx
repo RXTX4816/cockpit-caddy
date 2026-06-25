@@ -8,6 +8,7 @@ import {
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import type { RewriteConfig } from "../api";
+import { SectionActions } from "./SectionActions";
 
 type RewriteType = "none" | RewriteConfig["type"];
 
@@ -56,7 +57,11 @@ export function RewriteSection({ value, onChange, isDisabled }: Props) {
       isExpanded={expanded}
       onToggle={(_e, v) => handleToggleExpand(v)}
     >
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", paddingTop: "0.25rem" }}>
+      <SectionActions
+        onClear={() => { onChange(undefined); setExpanded(false); }}
+        isDisabled={isDisabled}
+      />
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
         <ToggleGroup aria-label="rewrite type" isCompact>
           {(["none", "strip_prefix", "add_prefix", "regex"] as RewriteType[]).map(opt => (
             <ToggleGroupItem
