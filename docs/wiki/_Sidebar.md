@@ -5,13 +5,8 @@
 **Using the UI**
 
 - [Proxy Dashboard](Proxy-Dashboard)
-- [Managing Proxies](Managing-Proxies)
+- [Managing Entries](Managing-Proxies)
 - [Service Control](Service-Control)
-
-**Coming Soon**
-
-- Caddyfile Editor *(v0.2)*
-- Log Viewer *(v0.2)*
 
 **Help**
 

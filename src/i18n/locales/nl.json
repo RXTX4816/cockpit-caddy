@@ -12,7 +12,7 @@
     "unknown": "onbekend"
   },
   "app": {
-    "title": "Caddy Reverse Proxy"
+    "title": "Caddy"
   },
   "service": {
     "running": "Running",

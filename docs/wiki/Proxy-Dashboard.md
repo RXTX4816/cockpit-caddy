@@ -1,40 +1,59 @@
 # Proxy Dashboard
 
-The Proxy Dashboard is the main screen of the Cockpit Caddy plugin. It lists all reverse proxy rules currently configured in Caddy and shows the Caddy service status at a glance.
+The Proxy Dashboard is the main screen of the Cockpit Caddy plugin. It lists all entries currently configured in Caddy and shows the service status at a glance.
 
 ## Layout
 
-The page is divided into two areas:
+The page is divided into three areas:
 
-1. **Service Control bar** — shows the Caddy service status (running/stopped) and action buttons (Start, Stop, Restart, Reload). See [Service Control](Service-Control).
-2. **Proxy list** — a table of all configured reverse proxy rules.
+1. **Tab bar** — switches between Proxies, Logs, Caddyfile, and Settings tabs.
+2. **Service Control bar** — shows the Caddy service status (running/stopped) and action buttons (Start, Stop, Restart, Reload). See [Service Control](Service-Control).
+3. **Entry list** — a table of all configured rules.
 
-## Proxy list columns
+## Entry types
+
+| Type | What it does |
+|---|---|
+| **Proxy** | Forwards traffic to an upstream service (`reverse_proxy`) |
+| **Static** | Serves files from a directory (`file_server`) |
+| **Redirect** | Issues an HTTP redirect to another URL |
+| **Respond** | Returns a static HTTP response (status code + optional body) |
+
+## Entry list columns
 
 | Column | Description |
 |---|---|
 | Label | Optional human-readable name for the rule |
-| HTTPS Port | The local HTTPS port Caddy listens on (e.g. `8443`) |
-| Target | The upstream address traffic is forwarded to (e.g. `localhost:8080`) |
-| TLS | Whether Caddy's internal CA is used for this rule |
-| Actions | Edit and delete buttons for this rule |
-
-Each row represents one `reverse_proxy` block in the Caddyfile. Caddy handles TLS termination automatically — the browser connects to the HTTPS port, and Caddy forwards plain HTTP to the target.
+| Port | The external port Caddy listens on (e.g. `8443`) |
+| Type | Proxy, Static, Redirect, or Respond |
+| Target / Root | Upstream address (proxy) or root directory (static) |
+| TLS | Whether Caddy's internal CA is used |
+| Flags | Active optional features (compress, auth, access log, timeouts, …) |
+| Actions | Edit, duplicate, and delete buttons |
 
 ## Search and filter
 
-The search bar above the proxy list filters rows in real time. You can search by:
+The search bar filters entries in real time across port, target/root, label, and type.
 
-- **Port** — e.g. `8443`
-- **Target** — e.g. `localhost` or `10.0.0`
-- **Label** — any part of the rule's name
+## Adding entries
 
-The filter is case-insensitive and matches across all three fields simultaneously.
+The toolbar has four **Add** buttons:
 
-## Adding a proxy
+- **Add Proxy** — reverse proxy to an upstream service
+- **Add Static** — static file server from a directory
+- **Add Redirect** — HTTP redirect rule
+- **Add Respond** — static HTTP response
 
-Click **Add Proxy** in the toolbar to open the [Add Proxy dialog](Managing-Proxies).
+Each opens a dialog. See [Managing Entries](Managing-Proxies) for field details.
+
+## Other tabs
+
+| Tab | Description |
+|---|---|
+| **Logs** | Live Caddy log viewer with level filtering and search |
+| **Caddyfile** | Raw Caddyfile editor with syntax validation |
+| **Settings** | Global Caddy options (ports, debug mode, shutdown delays) and Internal CA viewer |
 
 ## Empty state
 
-If no proxy rules are configured, the list shows a prompt to add the first rule. This does not indicate a problem with Caddy — it simply means the Caddyfile has no reverse proxy blocks yet.
+If no entries are configured, the list shows a prompt to add the first rule. This does not indicate a problem with Caddy — it simply means the Caddyfile has no managed blocks yet.

@@ -6,7 +6,7 @@ Common problems and how to fix them.
 
 ## Plugin doesn't appear in Cockpit
 
-**Symptom:** You open Cockpit but there is no "Caddy Proxy" entry in the left navigation.
+**Symptom:** You open Cockpit but there is no "Caddy" entry in the left navigation.
 
 **Causes and fixes:**
 
@@ -28,7 +28,7 @@ Common problems and how to fix them.
 
 ## Caddy Admin API not reachable
 
-**Symptom:** The dashboard loads but shows an error connecting to Caddy, or the proxy list is empty with no "Add Proxy" option.
+**Symptom:** The dashboard loads but shows an error connecting to Caddy, or the entry list is empty with no add buttons.
 
 **Fix:** Verify the Admin API is running:
 

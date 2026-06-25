@@ -3,7 +3,7 @@
 [![CI](https://github.com/RXTX4816/cockpit-caddy/actions/workflows/ci.yml/badge.svg)](https://github.com/RXTX4816/cockpit-caddy/actions/workflows/ci.yml)
 [![Packaging](https://github.com/RXTX4816/cockpit-caddy/actions/workflows/pkg-ci.yml/badge.svg)](https://github.com/RXTX4816/cockpit-caddy/actions/workflows/pkg-ci.yml)
 
-Caddy reverse proxy management for [Cockpit](https://cockpit-project.org)
+Caddy management plugin for [Cockpit](https://cockpit-project.org)
 
 ![Screenshot](docs/assets/overview.png)
 
@@ -21,13 +21,17 @@ Caddy handles TLS automatically via its internal CA (`tls internal`). No DNS, no
 
 ## Features
 
-- Dashboard listing all reverse proxy rules with status
-- Add / edit / delete proxy rules from the web UI
+- Reverse proxy rules — add / edit / delete with optional load balancing, forward auth, rewrites, request/response headers, and custom error handlers
+- Static file servers — serve directories with optional browse, basic auth, and access logs
+- Redirects and static HTTP responses
 - Start, stop, restart, and reload the Caddy service
 - TLS self-signed certificates via Caddy's internal CA (enabled by default)
-- Search and filter proxies by port, target, or label
-- Caddyfile editor tab (coming in v0.2)
-- Log viewer tab (coming in v0.2)
+- Per-server access logging, server timeouts, and transport tuning
+- Search and filter entries by port, target, or label
+- Caddyfile editor with syntax highlighting
+- Log viewer with per-service filtering
+- Global Caddy options (ports, debug mode, shutdown delays)
+- Internal CA viewer with PEM export
 - 24 language support (UI follows Cockpit's language setting)
 
 ## Requirements
@@ -70,7 +74,7 @@ sudo mkdir -p /usr/share/cockpit/cockpit-caddy
 sudo cp -r cockpit-caddy/* /usr/share/cockpit/cockpit-caddy/
 ```
 
-Then open Cockpit in your browser or hard-refresh the page — **Caddy Proxy** appears in the left navigation.
+Then open Cockpit in your browser or hard-refresh the page — **Caddy** appears in the left navigation.
 
 ## Caddy Setup
 
@@ -115,7 +119,7 @@ ln -s "$PWD/src" ~/.local/share/cockpit/cockpit-caddy
 npm run watch
 ```
 
-Open `http://localhost:9090` — **Caddy Proxy** appears in the sidebar automatically.
+Open `http://localhost:9090` — **Caddy** appears in the sidebar automatically.
 
 | Command | Description |
 |---|---|
