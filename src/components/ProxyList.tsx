@@ -49,6 +49,7 @@ import { useUpstreamProbe } from "../hooks/useUpstreamProbe";
 import { UpstreamStatusDot } from "./UpstreamStatusDot";
 import type { ProxyEntry } from "../api";
 import { accessLogConfigToValues } from "./AccessLogSection";
+import { tlsConfigToValues } from "./TlsSection";
 
 type ProxyLayout = "list" | "card";
 const PROXY_LAYOUTS: LayoutOption<ProxyLayout>[] = [
@@ -92,6 +93,8 @@ function FlagChips({ proxy, t }: { proxy: ProxyEntry; t: (k: string) => string }
   if (proxy.serverReadTimeout ?? proxy.serverReadHeaderTimeout ?? proxy.serverWriteTimeout ?? proxy.serverIdleTimeout ?? proxy.maxHeaderBytes) chips.push({ label: t("proxies.indicator_limits"), color: "grey" });
   if (proxy.extraUpstreams?.length) chips.push({ label: t("proxies.indicator_lb"), color: "blue" });
   if (proxy.forwardAuth) chips.push({ label: t("forward_auth.indicator"), color: "purple" });
+  if (proxy.mtls) chips.push({ label: t("tls_policy.indicator_mtls"), color: "orange" });
+  if (proxy.tlsAdvanced) chips.push({ label: t("tls_policy.indicator_advanced"), color: "grey" });
   if (chips.length === 0) return <span style={{ color: "var(--pf-v6-global--Color--200)" }}>—</span>;
   return (
     <div style={{ display: "flex", gap: "0.2rem", flexWrap: "wrap" }}>
@@ -672,6 +675,7 @@ export function ProxyList({ onViewLogs }: Props) {
             maxHeaderBytes: duplicating.maxHeaderBytes != null ? String(duplicating.maxHeaderBytes) : "",
           }}
           initialErrorHandlers={duplicating.errorHandlers}
+          initialTlsValues={tlsConfigToValues(duplicating.tlsAdvanced, duplicating.mtls)}
         />
       ) : (
         <AddProxyDialog
@@ -711,6 +715,7 @@ export function ProxyList({ onViewLogs }: Props) {
           initialAccessLog={duplicating.accessLog ? accessLogConfigToValues(duplicating.accessLog) : undefined}
           initialErrorHandlers={duplicating.errorHandlers}
           initialForwardAuth={duplicating.forwardAuth}
+          initialTlsValues={tlsConfigToValues(duplicating.tlsAdvanced, duplicating.mtls)}
         />
       ))}
 

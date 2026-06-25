@@ -28,11 +28,37 @@ export interface CaddyRoute {
   [key: string]: unknown;
 }
 
+export interface CaddyTLSClientAuthentication {
+  mode?: string;
+  trusted_ca_certs_pem_files?: string[];
+}
+
 export interface CaddyTLSConnectionPolicy {
   certificate_selection?: {
     any_tag?: string[];
   };
+  protocol_min?: string;
+  protocol_max?: string;
+  cipher_suites?: string[];
+  curves?: string[];
+  client_authentication?: CaddyTLSClientAuthentication;
   [key: string]: unknown;
+}
+
+export type TlsProtocolVersion = "tls1.2" | "tls1.3";
+export type MtlsMode = "request" | "require" | "verify_if_given" | "require_and_verify";
+
+export interface TlsAdvancedConfig {
+  protocolMin?: TlsProtocolVersion;
+  protocolMax?: TlsProtocolVersion;
+  cipherSuites?: string[];
+  curves?: string[];
+}
+
+export interface MtlsConfig {
+  mode: MtlsMode;
+  /** Path to a PEM file containing the trusted CA certificate(s) */
+  trustedCaFile?: string;
 }
 
 export interface CaddyServer {
@@ -194,6 +220,10 @@ export interface ProxyEntry {
   errorHandlers?: ErrorHandlerConfig[];
   /** Forward authentication handler (delegates auth to an external service) */
   forwardAuth?: ForwardAuthConfig;
+  /** Advanced TLS connection policy settings (protocol versions, cipher suites, curves) */
+  tlsAdvanced?: TlsAdvancedConfig;
+  /** Mutual TLS / client certificate authentication */
+  mtls?: MtlsConfig;
 }
 
 export type { ServiceStatus } from "@rxtx4816/cockpit-plugin-base-react/systemd";

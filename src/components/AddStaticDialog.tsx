@@ -26,6 +26,7 @@ import { RequestHeadersSection } from "./RequestHeadersSection";
 import { AccessLogSection, type AccessLogValues, accessLogConfigToValues, accessLogValuesToConfig } from "./AccessLogSection";
 import { ServerTimeoutsSection, type ServerTimeoutValues } from "./ServerTimeoutsSection";
 import { ErrorHandlersSection } from "./ErrorHandlersSection";
+import { TlsSection, type TlsValues, tlsValuesToAdvanced, tlsValuesToMtls, tlsConfigToValues } from "./TlsSection";
 
 interface Props {
   existingPorts: number[];
@@ -38,9 +39,10 @@ interface Props {
   initialAccessLog?: AccessLogValues;
   initialServerTimeouts?: ServerTimeoutValues;
   initialErrorHandlers?: ErrorHandlerConfig[];
+  initialTlsValues?: TlsValues;
 }
 
-export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues, initialBasicAuth, initialResponseHeaders, initialRequestHeaders, initialAccessLog, initialServerTimeouts, initialErrorHandlers }: Props) {
+export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues, initialBasicAuth, initialResponseHeaders, initialRequestHeaders, initialAccessLog, initialServerTimeouts, initialErrorHandlers, initialTlsValues }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
   const confirmAction = useConfirmAction();
@@ -57,6 +59,7 @@ export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues, 
   const [accessLog, setAccessLog] = useState<AccessLogValues>(initialAccessLog ?? accessLogConfigToValues(undefined));
   const [serverTimeouts, setServerTimeouts] = useState<ServerTimeoutValues>(initialServerTimeouts ?? { readTimeout: "", readHeaderTimeout: "", writeTimeout: "", idleTimeout: "", maxHeaderBytes: "" });
   const [errorHandlers, setErrorHandlers] = useState<ErrorHandlerConfig[]>(initialErrorHandlers ?? []);
+  const [tlsValues, setTlsValues] = useState<TlsValues>(initialTlsValues ?? tlsConfigToValues(undefined, undefined));
   const [portErr, setPortErr] = useState<string | null>(null);
   const [rootErr, setRootErr] = useState<string | null>(null);
 
@@ -175,6 +178,7 @@ export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues, 
           </FormGroup>
         </Form>
 
+        <TlsSection value={tlsValues} onChange={setTlsValues} isDisabled={isLocked} />
         <AccessLogSection value={accessLog} onChange={setAccessLog} isDisabled={isLocked} />
         <ErrorHandlersSection value={errorHandlers} onChange={setErrorHandlers} isDisabled={isLocked} />
         <ServerTimeoutsSection value={serverTimeouts} onChange={setServerTimeouts} isDisabled={isLocked} />
@@ -226,6 +230,8 @@ export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues, 
                     serverWriteTimeout: serverTimeouts.writeTimeout.trim() || undefined,
                     serverIdleTimeout: serverTimeouts.idleTimeout.trim() || undefined,
                     maxHeaderBytes: serverTimeouts.maxHeaderBytes.trim() ? parseInt(serverTimeouts.maxHeaderBytes, 10) : undefined,
+                    tlsAdvanced: tlsValuesToAdvanced(tlsValues),
+                    mtls: tlsValuesToMtls(tlsValues),
                   });
                 } catch (e) {
                   if (e instanceof CaddyApiError) {
