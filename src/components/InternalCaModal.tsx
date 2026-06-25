@@ -18,6 +18,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { fetchPkiCa, parseCertDetails } from "../api";
 import type { PkiCaInfo, CertDetails } from "../api";
+import { readFile as fsReadFile, writeFile as fsWriteFile } from "@rxtx4816/cockpit-plugin-base-react/lib/cockpit-fs";
 
 type ShowSaveFilePicker = (opts: object) => Promise<{
   createWritable(): Promise<{ write(s: string): Promise<void>; close(): Promise<void> }>;
@@ -78,8 +79,8 @@ export function InternalCaModal({ onClose }: Props) {
       const user = await cockpit.user();
       const savePath = `${user.home}/Downloads/caddy-root-ca.pem`;
       await cockpit.spawn(["mkdir", "-p", "--", `${user.home}/Downloads`], { err: "message" });
-      const existing = await cockpit.file(savePath).read();
-      await cockpit.file(savePath).replace(ca.rootPem);
+      const existing = await fsReadFile(savePath);
+      await fsWriteFile(savePath, ca.rootPem);
       setSavedPath({ path: savePath, overwritten: existing !== null });
     } catch (err) {
       setDownloadError((err as { message?: string })?.message ?? String(err));

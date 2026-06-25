@@ -9,21 +9,22 @@ export {
 } from "@rxtx4816/cockpit-plugin-base-react/systemd";
 
 import { fetchServiceLogs as baseFetchServiceLogs } from "@rxtx4816/cockpit-plugin-base-react/systemd";
+import { readFile as fsReadFile, writeFile as fsWriteFile } from "@rxtx4816/cockpit-plugin-base-react/lib/cockpit-fs";
 
 const SERVICE = "caddy";
 const CADDYFILE_PATH = "/etc/caddy/Caddyfile";
 
 export async function readCaddyfile(): Promise<string> {
-  return (await cockpit.file(CADDYFILE_PATH, { superuser: "try" }).read()) ?? "";
+  return (await fsReadFile(CADDYFILE_PATH, "try")) ?? "";
 }
 
 export async function writeCaddyfile(content: string): Promise<void> {
-  await cockpit.file(CADDYFILE_PATH, { superuser: "try" }).replace(content);
+  await fsWriteFile(CADDYFILE_PATH, content, "try");
 }
 
 export async function validateCaddyfile(content: string): Promise<void> {
   const tmp = "/tmp/.cockpit-caddy-validate.conf";
-  await cockpit.file(tmp, { superuser: "try" }).replace(content);
+  await fsWriteFile(tmp, content, "try");
   let output = "";
   try {
     const proc = cockpit.spawn(
