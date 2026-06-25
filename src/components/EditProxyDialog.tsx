@@ -29,9 +29,10 @@ import { TransportSection, type TransportValues } from "./TransportSection";
 import { ServerTimeoutsSection, type ServerTimeoutValues } from "./ServerTimeoutsSection";
 import { AccessLogSection, type AccessLogValues, accessLogValuesToConfig, accessLogConfigToValues } from "./AccessLogSection";
 import { BasicAuthSection, type AuthEntry } from "./BasicAuthSection";
+import { ErrorHandlersSection } from "./ErrorHandlersSection";
 import { UpstreamsSection, validateUpstreams, type ExtraUpstream } from "./UpstreamsSection";
 import { hashPassword } from "../api";
-import type { LbPolicy } from "../api";
+import type { ErrorHandlerConfig, LbPolicy } from "../api";
 
 async function resolveBasicAuth(entries: AuthEntry[]): Promise<{ username: string; passwordHash: string }[]> {
   return Promise.all(
@@ -90,6 +91,7 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
     (proxy.extraUpstreams ?? []).map(u => ({ host: u.host, port: String(u.port) }))
   );
   const [lbPolicy, setLbPolicy] = useState<LbPolicy | "">(proxy.lbPolicy ?? "");
+  const [errorHandlers, setErrorHandlers] = useState<ErrorHandlerConfig[]>(proxy.errorHandlers ?? []);
   const [extraSchemes, setExtraSchemes] = useState<string[]>([]);
   const [extHostErr, setExtHostErr] = useState<string | null>(null);
 
@@ -272,6 +274,7 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
         </Form>
         <TransportSection value={transport} onChange={setTransport} isDisabled={isConfirming} />
         <AccessLogSection value={accessLog} onChange={setAccessLog} isDisabled={isConfirming} />
+        <ErrorHandlersSection value={errorHandlers} onChange={setErrorHandlers} isDisabled={isConfirming} />
         <ServerTimeoutsSection value={serverTimeouts} onChange={setServerTimeouts} isDisabled={isConfirming} />
         <BasicAuthSection value={basicAuth} onChange={setBasicAuth} isDisabled={isConfirming} />
         <RewriteSection value={rewrite} onChange={setRewrite} isDisabled={isConfirming} />
@@ -321,6 +324,7 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
                     : undefined,
                   lbPolicy: (lbPolicy || undefined) as LbPolicy | undefined,
                   accessLog: accessLogValuesToConfig(accessLog),
+                  errorHandlers: errorHandlers.length ? errorHandlers : undefined,
                   serverReadTimeout: serverTimeouts.readTimeout.trim() || undefined,
                   serverReadHeaderTimeout: serverTimeouts.readHeaderTimeout.trim() || undefined,
                   serverWriteTimeout: serverTimeouts.writeTimeout.trim() || undefined,
