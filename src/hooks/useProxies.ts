@@ -6,7 +6,7 @@ import {
   parseLabelsFromCaddyfile, parseConfTlsMap, parseConfExternalAddresses,
   surgicallyWriteProxy, surgicallyRemoveBlock,
   extractRawBlocksFromCaddyfile, buildMigratedConfContent, writeRawProxyConf,
-  writeFile, reloadService,
+  writeFile, reloadService, syncGlobalTimeouts,
 } from "../api";
 import type { ProxyEntry } from "../api";
 import { useCaddyConfig } from "./useCaddyConfig";
@@ -76,6 +76,9 @@ export function useProxies() {
         id: String(entry.externalPort),
         serverKey: `srv${entry.externalPort}`,
       };
+      // Validate + persist server-level timeouts in global Caddyfile first; throws CaddyfileError on failure.
+      const afterProxies = [...proxies.filter(p => p.externalPort !== newProxy.externalPort), newProxy];
+      await syncGlobalTimeouts(afterProxies);
       const [, , current] = await Promise.all([
         ensureConfDImported(),
         cockpit.spawn(["mkdir", "-p", "/etc/caddy/conf.d"], { superuser: "try" }),
@@ -95,13 +98,17 @@ export function useProxies() {
       }));
       await update(mergeProxy(config, newProxy));
     },
-    [config, update],
+    [config, proxies, update],
   );
 
   const editProxy = useCallback(
     async (entry: ProxyEntry) => {
       const originalPort = proxies.find(p => p.serverKey === entry.serverKey)?.externalPort
         ?? entry.externalPort;
+
+      // Validate + persist server-level timeouts in global Caddyfile first; throws CaddyfileError on failure.
+      const afterProxies = [...proxies.filter(p => p.serverKey !== entry.serverKey), entry];
+      await syncGlobalTimeouts(afterProxies);
 
       const [, current] = await Promise.all([
         ensureConfDImported(),
@@ -143,6 +150,8 @@ export function useProxies() {
     async (serverKey: string) => {
       const proxy = proxies.find(p => p.serverKey === serverKey);
       if (!proxy) return;
+      // Validate + persist removal of server-level timeouts in global Caddyfile first.
+      await syncGlobalTimeouts(proxies.filter(p => p.serverKey !== serverKey));
       const current = await readProxyConf();
       await writeRawProxyConf(surgicallyRemoveBlock(current, proxy.externalPort));
       setLabels(prev => { const n = { ...prev }; delete n[proxy.externalPort]; return n; });

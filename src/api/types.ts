@@ -121,6 +121,13 @@ export interface ProxyEntry {
   extraUpstreams?: Array<{ host: string; port: number }>;
   /** Load-balancing policy when multiple upstreams are configured */
   lbPolicy?: LbPolicy;
+  /** Incoming connection timeouts (Go duration strings e.g. "30s", "5m") */
+  serverReadTimeout?: string;
+  serverReadHeaderTimeout?: string;
+  serverWriteTimeout?: string;
+  serverIdleTimeout?: string;
+  /** Maximum size of incoming request headers in bytes */
+  maxHeaderBytes?: number;
 }
 
 export type { ServiceStatus } from "@rxtx4816/cockpit-plugin-base-react/systemd";

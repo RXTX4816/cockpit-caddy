@@ -72,6 +72,7 @@
     "indicator_timeouts": "Timeouts",
     "indicator_lb": "LB",
     "indicator_close": "Close conn",
+    "indicator_limits": "Limits",
     "copy_url": "Copy URL",
     "load_failed": "Failed to load proxies",
     "service_not_running": "Start the Caddy service to view and manage proxies.",
@@ -81,6 +82,7 @@
     "logs_button": "Logs",
     "api_error_add_title": "Proxy created on disk — Caddy rejected the live push",
     "api_error_edit_title": "Label saved — Caddy rejected the config update (other changes not applied)",
+    "caddyfile_error_title": "Caddyfile validation failed — changes not saved",
     "view_logs": "View Logs"
   },
   "add_proxy": {
@@ -194,6 +196,16 @@
     "section_title": "Upstream Timeouts (optional)",
     "dial_timeout": "Connect timeout",
     "response_header_timeout": "Response header timeout"
+  },
+  "server_timeouts": {
+    "section_title": "Server Timeouts & Limits (optional)",
+    "read_timeout": "Read body timeout",
+    "read_header_timeout": "Read header timeout",
+    "write_timeout": "Write timeout",
+    "idle_timeout": "Idle timeout",
+    "max_header_bytes": "Max header size (bytes)",
+    "max_header_bytes_help": "Maximum request header size in bytes (default: 1 MB = 1048576)",
+    "indicator": "Limits"
   },
   "rewrite": {
     "section_title": "URI Rewrite (optional)",
