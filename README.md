@@ -159,6 +159,10 @@ Bug reports and feature requests: open an issue on [GitHub](https://github.com/R
 
 Pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for commit conventions and development setup.
 
+## Security
+
+Found a security vulnerability? Please report it privately following our [Security Policy](SECURITY.md) rather than opening a public issue.
+
 ## License
 
 MIT

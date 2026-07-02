@@ -100,6 +100,7 @@ chore: update PatternFly to 6.5.0
 
 - **Bug?** Open an issue, include Caddy version, OS, and steps to reproduce
 - **Feature request?** Open an issue describing the problem being solved
+- **Security vulnerability?** Do **not** open a public issue — follow the [Security Policy](SECURITY.md) to report it privately
 
 ## License
 
