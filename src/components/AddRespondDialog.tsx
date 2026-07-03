@@ -6,8 +6,11 @@ import {
   Form,
   FormGroup,
   FormHelperText,
+  FormSelect,
+  FormSelectOption,
   HelperText,
   HelperTextItem,
+  Label,
   Modal,
   ModalBody,
   ModalFooter,
@@ -19,16 +22,23 @@ import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { CaddyApiError } from "../api";
-import type { ProxyEntry } from "../api";
+import type { ProxyEntry, RouteMatch, ServerDef } from "../api";
+import { RouteMatchersSection } from "./RouteMatchersSection";
+import { parseListenPort } from "./AddServerDialog";
+import type { ServerContext } from "./AddRedirectDialog";
 
 interface Props {
   existingPorts: number[];
   onAdd: (entry: Omit<ProxyEntry, "id" | "serverKey">) => Promise<void>;
   onClose: () => void;
   initialValues?: { port?: string; statusCode?: string; body?: string; close?: boolean; label?: string };
+  initialMatchers?: RouteMatch;
+  initialHandlePath?: boolean;
+  servers?: ServerDef[];
+  initialServerKey?: string;
 }
 
-export function AddRespondDialog({ existingPorts, onAdd, onClose, initialValues }: Props) {
+export function AddRespondDialog({ existingPorts, onAdd, onClose, initialValues, initialMatchers, initialHandlePath, servers, initialServerKey }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
   const confirmAction = useConfirmAction();
@@ -38,17 +48,29 @@ export function AddRespondDialog({ existingPorts, onAdd, onClose, initialValues 
   const [body, setBody] = useState(initialValues?.body ?? "");
   const [close, setClose] = useState(initialValues?.close ?? false);
   const [label, setLabel] = useState(initialValues?.label ?? "");
+  const [matchers, setMatchers] = useState<RouteMatch | undefined>(initialMatchers);
+  const [handlePath, setHandlePath] = useState(initialHandlePath ?? false);
+  const [selectedServerKey, setSelectedServerKey] = useState(initialServerKey ?? "");
   const [portErr, setPortErr] = useState<string | null>(null);
   const [statusErr, setStatusErr] = useState<string | null>(null);
 
+  const selectedServer = servers?.find(s => s.key === selectedServerKey);
+  const serverCtx: ServerContext | undefined = selectedServer ? {
+    serverKey: selectedServer.key,
+    serverName: selectedServer.name,
+    port: parseListenPort(selectedServer.listenAddresses[0] ?? ":443"),
+  } : undefined;
+
   function validate(): boolean {
     let ok = true;
-    const n = parseInt(port, 10);
-    if (!port) { setPortErr(t("add_respond.validation_port_required")); ok = false; }
-    else if (isNaN(n)) { setPortErr(t("add_respond.validation_port_number")); ok = false; }
-    else if (n < 1 || n > 65535) { setPortErr(t("add_respond.validation_port_range")); ok = false; }
-    else if (existingPorts.includes(n)) { setPortErr(t("add_respond.validation_port_duplicate", { port: n })); ok = false; }
-    else setPortErr(null);
+    if (!serverCtx) {
+      const n = parseInt(port, 10);
+      if (!port) { setPortErr(t("add_respond.validation_port_required")); ok = false; }
+      else if (isNaN(n)) { setPortErr(t("add_respond.validation_port_number")); ok = false; }
+      else if (n < 1 || n > 65535) { setPortErr(t("add_respond.validation_port_range")); ok = false; }
+      else if (existingPorts.includes(n)) { setPortErr(t("add_respond.validation_port_duplicate", { port: n })); ok = false; }
+      else setPortErr(null);
+    }
 
     const sc = parseInt(statusCode, 10);
     if (!statusCode) { setStatusErr(t("add_respond.validation_status_required")); ok = false; }
@@ -73,7 +95,7 @@ export function AddRespondDialog({ existingPorts, onAdd, onClose, initialValues 
           <Alert
             variant="warning"
             isInline
-            title={t("add_respond.confirm_body", { port, status: statusCode })}
+            title={t("add_respond.confirm_body", { port: serverCtx ? serverCtx.port : port, status: statusCode })}
             style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}
           />
         )}
@@ -88,22 +110,44 @@ export function AddRespondDialog({ existingPorts, onAdd, onClose, initialValues 
             />
           </FormGroup>
 
-          <FormGroup label={t("add_redirect.field_from_port")} fieldId="respond-port" isRequired>
-            <TextInput
-              id="respond-port"
-              type="number"
-              value={port}
-              onChange={(_e, v) => { setPort(v); setPortErr(null); }}
-              placeholder="8080"
-              isDisabled={isLocked}
-              validated={portErr ? "error" : "default"}
-            />
-            {portErr && (
-              <FormHelperText>
-                <HelperText><HelperTextItem variant="error">{portErr}</HelperTextItem></HelperText>
-              </FormHelperText>
-            )}
-          </FormGroup>
+          {servers && servers.length > 0 && (
+            <FormGroup label={t("servers.selector_label")} fieldId="respond-server">
+              <FormSelect
+                id="respond-server"
+                value={selectedServerKey}
+                onChange={(_e, v) => { setSelectedServerKey(v); setPortErr(null); }}
+                isDisabled={isLocked}
+              >
+                <FormSelectOption value="" label={t("servers.selector_none")} />
+                {servers.map(s => (
+                  <FormSelectOption key={s.key} value={s.key} label={`${s.name} (${s.listenAddresses[0] ?? ""})`} />
+                ))}
+              </FormSelect>
+            </FormGroup>
+          )}
+
+          {serverCtx ? (
+            <FormGroup label={t("add_redirect.field_from_port")} fieldId="respond-port">
+              <Label isCompact color="blue">{serverCtx.serverName} (:{serverCtx.port})</Label>
+            </FormGroup>
+          ) : (
+            <FormGroup label={t("add_redirect.field_from_port")} fieldId="respond-port" isRequired>
+              <TextInput
+                id="respond-port"
+                type="number"
+                value={port}
+                onChange={(_e, v) => { setPort(v); setPortErr(null); }}
+                placeholder="8080"
+                isDisabled={isLocked}
+                validated={portErr ? "error" : "default"}
+              />
+              {portErr && (
+                <FormHelperText>
+                  <HelperText><HelperTextItem variant="error">{portErr}</HelperTextItem></HelperText>
+                </FormHelperText>
+              )}
+            </FormGroup>
+          )}
 
           <FormGroup label={t("add_respond.field_status")} fieldId="respond-status" isRequired>
             <TextInput
@@ -151,6 +195,17 @@ export function AddRespondDialog({ existingPorts, onAdd, onClose, initialValues 
             />
           </FormGroup>
         </Form>
+        <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!v?.path?.length) setHandlePath(false); }} isDisabled={isLocked} />
+        {matchers?.path?.length && !matchers.host?.length && !matchers.method?.length && !matchers.header && !matchers.query && !matchers.remote_ip && (
+          <Checkbox
+            id="add-respond-handle-path"
+            label={t("handle_path.label")}
+            isChecked={handlePath}
+            onChange={(_e, v) => setHandlePath(v)}
+            isDisabled={isLocked}
+            style={{ marginLeft: "1rem", marginBottom: "0.5rem" }}
+          />
+        )}
 
         {confirmAction.error && (
           <Alert variant="danger" isInline title={confirmAction.error} style={{ marginTop: "var(--pf-v6-global--spacer--md)" }} />
@@ -166,7 +221,7 @@ export function AddRespondDialog({ existingPorts, onAdd, onClose, initialValues 
               onClick={() => void confirmAction.submit(async () => {
                 try {
                   await onAdd({
-                    externalPort: parseInt(port, 10),
+                    externalPort: serverCtx ? serverCtx.port : parseInt(port, 10),
                     externalScheme: undefined,
                     externalHost: undefined,
                     targetHost: "localhost",
@@ -180,6 +235,9 @@ export function AddRespondDialog({ existingPorts, onAdd, onClose, initialValues 
                       body: body.trim() || undefined,
                       close: close || undefined,
                     },
+                    matchers: matchers ?? undefined,
+                    handlePath: handlePath || undefined,
+                    namedServerKey: serverCtx?.serverKey,
                   });
                 } catch (e) {
                   if (e instanceof CaddyApiError) {
@@ -189,7 +247,7 @@ export function AddRespondDialog({ existingPorts, onAdd, onClose, initialValues 
                   }
                   throw e;
                 }
-                toast.success(t("toast.proxy_added", { port }));
+                toast.success(t("toast.proxy_added", { port: serverCtx ? serverCtx.port : port }));
                 onClose();
               })}
             >

@@ -21,7 +21,8 @@ import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast, ExternalAddressInput } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { readProxyConf, parseConfExternalAddresses, CaddyApiError, CaddyfileError } from "../api";
-import type { ProxyEntry, RewriteConfig, HeaderOperation } from "../api";
+import type { ProxyEntry, RewriteConfig, HeaderOperation, RouteMatch } from "../api";
+import { RouteMatchersSection } from "./RouteMatchersSection";
 import { RewriteSection } from "./RewriteSection";
 import { RequestHeadersSection } from "./RequestHeadersSection";
 import { ResponseHeadersSection } from "./ResponseHeadersSection";
@@ -83,6 +84,10 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
   const [errorHandlers, setErrorHandlers] = useState<ErrorHandlerConfig[]>(proxy.errorHandlers ?? []);
   const [forwardAuth, setForwardAuth] = useState<ForwardAuthConfig | undefined>(proxy.forwardAuth);
   const [tlsValues, setTlsValues] = useState<TlsValues>(tlsConfigToValues(proxy.tlsAdvanced, proxy.mtls));
+  const [matchers, setMatchers] = useState<RouteMatch | undefined>(proxy.matchers);
+  const [handlePath, setHandlePath] = useState(proxy.handlePath ?? false);
+  const [isNamedRoute, setIsNamedRoute] = useState(proxy.isNamedRoute ?? false);
+  const [namedRouteName, setNamedRouteName] = useState(proxy.namedRouteName ?? "");
   const [extraSchemes, setExtraSchemes] = useState<string[]>([]);
   const [extHostErr, setExtHostErr] = useState<string | null>(null);
 
@@ -288,6 +293,37 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
           onChange={(u, p) => { setExtraUpstreams(u); setLbPolicy(p); }}
           isDisabled={isConfirming}
         />
+        <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!v?.path?.length) setHandlePath(false); }} isDisabled={isConfirming} />
+        {matchers?.path?.length && !matchers.host?.length && !matchers.method?.length && !matchers.header && !matchers.query && !matchers.remote_ip && (
+          <Checkbox
+            id="edit-proxy-handle-path"
+            label={t("handle_path.label")}
+            isChecked={handlePath}
+            onChange={(_e, v) => setHandlePath(v)}
+            isDisabled={isConfirming}
+            style={{ marginLeft: "1rem", marginBottom: "0.5rem" }}
+          />
+        )}
+        <div style={{ marginLeft: "1rem", marginBottom: "0.5rem", display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+          <Checkbox
+            id="edit-proxy-named-route"
+            label={t("named_route.toggle_label")}
+            isChecked={isNamedRoute}
+            onChange={(_e, v) => { setIsNamedRoute(v); if (!v) setNamedRouteName(""); }}
+            isDisabled={isConfirming}
+          />
+          {isNamedRoute && (
+            <TextInput
+              id="edit-proxy-named-route-name"
+              aria-label={t("named_route.name_label")}
+              placeholder={t("named_route.name_placeholder")}
+              value={namedRouteName}
+              onChange={(_e, v) => setNamedRouteName(v)}
+              isDisabled={isConfirming}
+              style={{ maxWidth: "20rem" }}
+            />
+          )}
+        </div>
 
         {saveConfirm.error && (
           <Alert variant="danger" isInline title={saveConfirm.error} style={{ marginTop: "var(--pf-v6-global--spacer--md)" }} />
@@ -307,7 +343,7 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
                   externalScheme: externalScheme || undefined,
                   externalHost: externalHost.trim() || undefined,
                   externalPort: port,
-                  id: String(port),
+                  id: proxy.namedServerKey ? proxy.id : String(port),
                   targetScheme,
                   targetHost: targetHost.trim(),
                   targetPort: parseInt(targetPort, 10),
@@ -335,6 +371,10 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
                   maxHeaderBytes: serverTimeouts.maxHeaderBytes.trim() ? parseInt(serverTimeouts.maxHeaderBytes, 10) : undefined,
                   tlsAdvanced: tlsValuesToAdvanced(tlsValues),
                   mtls: tlsValuesToMtls(tlsValues),
+                  matchers: matchers ?? undefined,
+                  handlePath: handlePath || undefined,
+                  isNamedRoute: isNamedRoute || undefined,
+                  namedRouteName: (isNamedRoute && namedRouteName.trim()) ? namedRouteName.trim() : undefined,
                 };
                 try {
                   await onSave(entry);

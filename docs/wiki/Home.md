@@ -5,6 +5,9 @@ Cockpit Caddy is a web-based UI for managing [Caddy](https://caddyserver.com/), 
 ## What you can do
 
 - Manage reverse proxies, static file servers, redirects, and static HTTP responses
+- **Named virtual servers** — group multiple routes under one port with per-route matchers
+- **Route matchers** — match requests by path, host, method, header, query param, or remote IP
+- **Strip path prefix** (`handle_path`) — remove the matched prefix before forwarding to the upstream
 - Search and filter entries by port, target, or label
 - Add, edit, duplicate, and delete rules from the web UI
 - Start, stop, restart, and reload the Caddy service

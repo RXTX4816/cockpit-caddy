@@ -19,7 +19,8 @@ import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { CaddyApiError } from "../api";
-import type { ProxyEntry } from "../api";
+import type { ProxyEntry, RouteMatch } from "../api";
+import { RouteMatchersSection } from "./RouteMatchersSection";
 
 interface Props {
   proxy: ProxyEntry;
@@ -37,6 +38,8 @@ export function EditRespondDialog({ proxy, existingPorts: _existingPorts, onSave
   const [body, setBody] = useState(proxy.staticResponse?.body ?? "");
   const [close, setClose] = useState(proxy.staticResponse?.close ?? false);
   const [label, setLabel] = useState(proxy.label ?? "");
+  const [matchers, setMatchers] = useState<RouteMatch | undefined>(proxy.matchers);
+  const [handlePath, setHandlePath] = useState(proxy.handlePath ?? false);
   const [statusErr, setStatusErr] = useState<string | null>(null);
 
   function validate(): boolean {
@@ -125,6 +128,17 @@ export function EditRespondDialog({ proxy, existingPorts: _existingPorts, onSave
             />
           </FormGroup>
         </Form>
+        <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!v?.path?.length) setHandlePath(false); }} isDisabled={isLocked} />
+        {matchers?.path?.length && !matchers.host?.length && !matchers.method?.length && !matchers.header && !matchers.query && !matchers.remote_ip && (
+          <Checkbox
+            id="edit-respond-handle-path"
+            label={t("handle_path.label")}
+            isChecked={handlePath}
+            onChange={(_e, v) => setHandlePath(v)}
+            isDisabled={isLocked}
+            style={{ marginLeft: "1rem", marginBottom: "0.5rem" }}
+          />
+        )}
 
         {confirmAction.error && (
           <Alert variant="danger" isInline title={confirmAction.error} style={{ marginTop: "var(--pf-v6-global--spacer--md)" }} />
@@ -147,6 +161,8 @@ export function EditRespondDialog({ proxy, existingPorts: _existingPorts, onSave
                       body: body.trim() || undefined,
                       close: close || undefined,
                     },
+                    matchers: matchers ?? undefined,
+                    handlePath: handlePath || undefined,
                   });
                 } catch (e) {
                   if (e instanceof CaddyApiError) {

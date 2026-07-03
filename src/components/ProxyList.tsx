@@ -22,6 +22,9 @@ import {
   Stack,
   StackItem,
   Switch,
+  Tab,
+  Tabs,
+  TabTitleText,
   Toolbar,
   ToolbarContent,
   ToolbarItem,
@@ -43,11 +46,14 @@ import { EditProxyDialog } from "./EditProxyDialog";
 import { EditRedirectDialog } from "./EditRedirectDialog";
 import { EditStaticDialog } from "./EditStaticDialog";
 import { EditRespondDialog } from "./EditRespondDialog";
+import { AddServerDialog } from "./AddServerDialog";
+import { EditServerDialog } from "./EditServerDialog";
+import { ServerDetailPanel } from "./ServerDetailPanel";
 import { ProxyCard } from "./ProxyCard";
 import { useProxies } from "../hooks/useProxies";
 import { useUpstreamProbe } from "../hooks/useUpstreamProbe";
 import { UpstreamStatusDot } from "./UpstreamStatusDot";
-import type { ProxyEntry } from "../api";
+import type { ProxyEntry, ServerDef } from "../api";
 import { accessLogConfigToValues } from "./AccessLogSection";
 import { tlsConfigToValues } from "./TlsSection";
 
@@ -95,6 +101,7 @@ function FlagChips({ proxy, t }: { proxy: ProxyEntry; t: (k: string) => string }
   if (proxy.forwardAuth) chips.push({ label: t("forward_auth.indicator"), color: "purple" });
   if (proxy.mtls) chips.push({ label: t("tls_policy.indicator_mtls"), color: "orange" });
   if (proxy.tlsAdvanced) chips.push({ label: t("tls_policy.indicator_advanced"), color: "grey" });
+  if (proxy.matchers) chips.push({ label: "matcher", color: "teal" });
   if (chips.length === 0) return <span style={{ color: "var(--pf-v6-global--Color--200)" }}>—</span>;
   return (
     <div style={{ display: "flex", gap: "0.2rem", flexWrap: "wrap" }}>
@@ -126,16 +133,20 @@ function HeaderRow() {
   );
 }
 
-function ProxyRow({ proxy, onEdit, onDelete, onDuplicate, probeStatuses }: {
+function ProxyRow({ proxy, onEdit, onDelete, onDuplicate, probeStatuses, servers }: {
   proxy: ProxyEntry;
   onEdit: (p: ProxyEntry) => void;
   onDelete: (p: ProxyEntry) => void;
   onDuplicate: (p: ProxyEntry) => void;
   probeStatuses: Map<string, import("../api/probe").ProbeStatus>;
+  servers: ServerDef[];
 }) {
   const { t } = useTranslation();
   const proto = proxy.tls ? "https" : "http";
   const url = `${proto}://${window.location.hostname}:${proxy.externalPort}`;
+  const serverName = proxy.namedServerKey
+    ? (servers.find(s => s.key === proxy.namedServerKey)?.name ?? proxy.namedServerKey)
+    : null;
 
   return (
     <DataListItem aria-labelledby={`proxy-${proxy.id}`}>
@@ -160,6 +171,16 @@ function ProxyRow({ proxy, onEdit, onDelete, onDuplicate, probeStatuses }: {
               >
                 :{proxy.externalPort}
               </a>
+              {serverName && (
+                <Label
+                  isCompact
+                  color="green"
+                  variant="outline"
+                  style={{ marginLeft: "0.35rem", fontSize: "0.75em", verticalAlign: "middle" }}
+                >
+                  {serverName}
+                </Label>
+              )}
             </DataListCell>,
             <DataListCell key="target" width={2}>
               {proxy.redirect ? (
@@ -241,7 +262,12 @@ interface Props {
 export function ProxyList({ onViewLogs }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
-  const { proxies, loading, error, refresh, addProxy, editProxy, deleteProxy, needsMigration, migrate } = useProxies();
+  const {
+    proxies, servers, loading, error, refresh,
+    addProxy, editProxy, deleteProxy,
+    addServer, editServer, deleteServer,
+    needsMigration, migrate,
+  } = useProxies();
   const [probeEnabled, setProbeEnabled] = useLocalStorage<boolean>("cockpit-caddy:probe", false, {
     serialize: v => v ? "1" : "0",
     deserialize: r => r === "1",
@@ -263,12 +289,19 @@ export function ProxyList({ onViewLogs }: Props) {
   }
   const [layout, setLayout] = useLayout<ProxyLayout>("cockpit-caddy:proxy-layout", "list", ["list", "card"]);
   const [search, setSearch] = useState("");
+  const [activeTab, setActiveTab] = useLocalStorage<string>("cockpit-caddy:server-tab", "all");
   const [showAdd, setShowAdd] = useState(false);
   const [showAddRedirect, setShowAddRedirect] = useState(false);
   const [showAddStatic, setShowAddStatic] = useState(false);
   const [showAddRespond, setShowAddRespond] = useState(false);
   const [editing, setEditing] = useState<ProxyEntry | null>(null);
   const [duplicating, setDuplicating] = useState<ProxyEntry | null>(null);
+
+  const [showAddServer, setShowAddServer] = useState(false);
+  const [editingServer, setEditingServer] = useState<ServerDef | null>(null);
+  const [deletingServer, setDeletingServer] = useState<ServerDef | null>(null);
+  const [isDeletingServer, setIsDeletingServer] = useState(false);
+  const [deleteServerError, setDeleteServerError] = useState<string | null>(null);
 
   const [apiError, setApiError] = useState<ApiError | null>(null);
 
@@ -284,6 +317,13 @@ export function ProxyList({ onViewLogs }: Props) {
   const [deletingProxy, setDeletingProxy] = useState<ProxyEntry | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const activeServerDef = servers.find(s => s.key === activeTab) ?? null;
+  // Pre-select the active server tab in Add dialogs as a convenience
+  const initialServerKey = activeServerDef?.key;
+  // Only standalone proxy ports count for "port already in use" validation.
+  // Named-server routes share the server's listen port — conflicts are caught by addProxy.
+  const standaloneExistingPorts = proxies.filter(p => !p.namedServerKey).map(p => p.externalPort);
 
   // Attempt an action — intercept with gate when migration is needed
   function tryAdd() {
@@ -324,7 +364,7 @@ export function ProxyList({ onViewLogs }: Props) {
     setIsDeleting(true);
     setDeleteError(null);
     try {
-      await deleteProxy(deletingProxy.serverKey);
+      await deleteProxy(deletingProxy.id);
       toast.success(t("toast.proxy_deleted", { port: deletingProxy.externalPort }));
       setDeletingProxy(null);
     } catch (e) {
@@ -333,6 +373,23 @@ export function ProxyList({ onViewLogs }: Props) {
       toast.error(t("proxies.load_failed"), msg);
     } finally {
       setIsDeleting(false);
+    }
+  }
+
+  async function handleDeleteServerConfirm() {
+    if (!deletingServer) return;
+    setIsDeletingServer(true);
+    setDeleteServerError(null);
+    try {
+      await deleteServer(deletingServer.key);
+      toast.success(t("toast.server_deleted", { name: deletingServer.name }));
+      setDeletingServer(null);
+      if (activeTab === deletingServer.key) setActiveTab("all");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : t("proxies.load_failed");
+      setDeleteServerError(msg);
+    } finally {
+      setIsDeletingServer(false);
     }
   }
 
@@ -369,7 +426,16 @@ export function ProxyList({ onViewLogs }: Props) {
     }
   }
 
-  const filtered = proxies.filter(p => {
+  // Filter proxies based on active tab
+  function filterByTab(list: typeof proxies) {
+    if (activeTab === "all") return list;
+    if (activeTab === "ungrouped") return list.filter(p => !p.namedServerKey);
+    // Named server tab: if the server def isn't loaded yet, fall back to showing all
+    if (!activeServerDef) return list;
+    return list.filter(p => p.namedServerKey === activeTab);
+  }
+
+  const filtered = filterByTab(proxies).filter(p => {
     const q = search.toLowerCase();
     return (
       String(p.externalPort).includes(q) ||
@@ -379,9 +445,13 @@ export function ProxyList({ onViewLogs }: Props) {
     );
   });
 
+  const ungroupedCount = proxies.filter(p => !p.namedServerKey).length;
+
   if (loading) {
     return <Spinner />;
   }
+
+  const hasTabs = servers.length > 0;
 
   return (
     <>
@@ -459,6 +529,7 @@ export function ProxyList({ onViewLogs }: Props) {
         <StackItem>
           <Toolbar>
             <ToolbarContent>
+              {/* Route-add buttons — context-aware: when on a server tab they add to that server */}
               <ToolbarItem>
                 <Button variant="primary" onClick={tryAdd}>
                   {t("proxies.add_proxy")}
@@ -477,6 +548,12 @@ export function ProxyList({ onViewLogs }: Props) {
               <ToolbarItem>
                 <Button variant="secondary" onClick={() => setShowAddRespond(true)}>
                   {t("proxies.add_respond")}
+                </Button>
+              </ToolbarItem>
+              <ToolbarItem variant="separator" />
+              <ToolbarItem>
+                <Button variant="tertiary" onClick={() => setShowAddServer(true)}>
+                  {t("servers.add_server")}
                 </Button>
               </ToolbarItem>
               <ToolbarItem>
@@ -509,8 +586,54 @@ export function ProxyList({ onViewLogs }: Props) {
           </Toolbar>
         </StackItem>
 
+        {hasTabs && (
+          <StackItem>
+            <Tabs
+              activeKey={activeTab}
+              onSelect={(_e, key) => setActiveTab(String(key))}
+              aria-label="Server tabs"
+            >
+              <Tab eventKey="all" title={<TabTitleText>{t("servers.tab_all")}</TabTitleText>} />
+              {ungroupedCount > 0 || activeTab === "ungrouped" ? (
+                <Tab
+                  eventKey="ungrouped"
+                  title={<TabTitleText>{t("servers.tab_ungrouped")} ({ungroupedCount})</TabTitleText>}
+                />
+              ) : null}
+              {servers.map(def => (
+                <Tab
+                  key={def.key}
+                  eventKey={def.key}
+                  title={
+                    <TabTitleText>
+                      {def.name}
+                      <span style={{ marginLeft: "0.4rem", fontSize: "0.8em", color: "var(--pf-t--global--text--color--subtle)", fontFamily: "monospace" }}>
+                        {def.listenAddresses[0] ?? ""}
+                      </span>
+                    </TabTitleText>
+                  }
+                />
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              )) as any}
+            </Tabs>
+
+            </StackItem>
+        )}
+
         <StackItem isFilled>
-          {filtered.length === 0 && !error ? (
+          {activeServerDef ? (
+            <ServerDetailPanel
+              server={activeServerDef}
+              routes={filtered}
+              onEditServer={() => setEditingServer(activeServerDef)}
+              onDeleteServer={() => { setDeleteServerError(null); setDeletingServer(activeServerDef); }}
+              onEdit={tryEdit}
+              onDelete={tryDelete}
+              onDuplicate={tryDuplicate}
+              onAddProxy={tryAdd}
+              probeStatuses={probeStatuses}
+            />
+          ) : filtered.length === 0 && !error ? (
             <EmptyState>
               <EmptyStateBody>
                 {proxies.length === 0 ? t("proxies.empty_body") : t("proxies.empty_title")}
@@ -547,6 +670,7 @@ export function ProxyList({ onViewLogs }: Props) {
                   onDelete={tryDelete}
                   onDuplicate={tryDuplicate}
                   probeStatuses={probeStatuses}
+                  servers={servers}
                 />
               ))}
             </DataList>
@@ -618,45 +742,57 @@ export function ProxyList({ onViewLogs }: Props) {
 
       {showAdd && (
         <AddProxyDialog
-          existingPorts={proxies.map(p => p.externalPort)}
+          existingPorts={standaloneExistingPorts}
           onAdd={addProxy}
           onClose={() => setShowAdd(false)}
           onApiError={msg => setApiError({ message: msg, search: extractLogsSearch(msg), action: "add" })}
+          servers={servers}
+          initialServerKey={initialServerKey}
         />
       )}
 
       {duplicating && (duplicating.redirect ? (
         <AddRedirectDialog
-          existingPorts={proxies.map(p => p.externalPort)}
+          existingPorts={standaloneExistingPorts}
           onAdd={addProxy}
           onClose={() => setDuplicating(null)}
+          servers={servers}
+          initialServerKey={duplicating.namedServerKey}
           initialValues={{
-            port: "",
+            port: duplicating.namedServerKey ? "" : String(duplicating.externalPort),
             to: duplicating.redirect.to,
             code: duplicating.redirect.code,
             label: duplicating.label ? `${duplicating.label} (copy)` : "",
           }}
+          initialMatchers={duplicating.matchers}
+          initialHandlePath={duplicating.handlePath}
         />
       ) : duplicating.staticResponse ? (
         <AddRespondDialog
-          existingPorts={proxies.map(p => p.externalPort)}
+          existingPorts={standaloneExistingPorts}
           onAdd={addProxy}
           onClose={() => setDuplicating(null)}
+          servers={servers}
+          initialServerKey={duplicating.namedServerKey}
           initialValues={{
-            port: "",
+            port: duplicating.namedServerKey ? "" : String(duplicating.externalPort),
             statusCode: String(duplicating.staticResponse.statusCode),
             body: duplicating.staticResponse.body ?? "",
             close: duplicating.staticResponse.close ?? false,
             label: duplicating.label ? `${duplicating.label} (copy)` : "",
           }}
+          initialMatchers={duplicating.matchers}
+          initialHandlePath={duplicating.handlePath}
         />
       ) : duplicating.fileServer ? (
         <AddStaticDialog
-          existingPorts={proxies.map(p => p.externalPort)}
+          existingPorts={standaloneExistingPorts}
           onAdd={addProxy}
           onClose={() => setDuplicating(null)}
+          servers={servers}
+          initialServerKey={duplicating.namedServerKey}
           initialValues={{
-            port: "",
+            port: duplicating.namedServerKey ? "" : String(duplicating.externalPort),
             root: duplicating.fileServer.root,
             browse: duplicating.fileServer.browse,
             tls: duplicating.tls,
@@ -676,16 +812,20 @@ export function ProxyList({ onViewLogs }: Props) {
           }}
           initialErrorHandlers={duplicating.errorHandlers}
           initialTlsValues={tlsConfigToValues(duplicating.tlsAdvanced, duplicating.mtls)}
+          initialMatchers={duplicating.matchers}
+          initialHandlePath={duplicating.handlePath}
         />
       ) : (
         <AddProxyDialog
-          existingPorts={proxies.map(p => p.externalPort)}
+          existingPorts={standaloneExistingPorts}
           onAdd={addProxy}
           onClose={() => setDuplicating(null)}
           onApiError={msg => setApiError({ message: msg, search: extractLogsSearch(msg), action: "add" })}
+          servers={servers}
+          initialServerKey={duplicating.namedServerKey}
           initialValues={{
-            externalScheme: duplicating.externalScheme ?? "",
-            externalHost: duplicating.externalHost ?? "",
+            externalScheme: duplicating.namedServerKey ? "" : (duplicating.externalScheme ?? ""),
+            externalHost: duplicating.namedServerKey ? "" : (duplicating.externalHost ?? ""),
             externalPort: "",
             targetHost: duplicating.targetHost,
             targetPort: String(duplicating.targetPort),
@@ -716,58 +856,68 @@ export function ProxyList({ onViewLogs }: Props) {
           initialErrorHandlers={duplicating.errorHandlers}
           initialForwardAuth={duplicating.forwardAuth}
           initialTlsValues={tlsConfigToValues(duplicating.tlsAdvanced, duplicating.mtls)}
+          initialMatchers={duplicating.matchers}
+          initialHandlePath={duplicating.handlePath}
+          initialIsNamedRoute={duplicating.isNamedRoute}
+          initialNamedRouteName={duplicating.namedRouteName}
         />
       ))}
 
       {showAddRedirect && (
         <AddRedirectDialog
-          existingPorts={proxies.map(p => p.externalPort)}
+          existingPorts={standaloneExistingPorts}
           onAdd={addProxy}
           onClose={() => setShowAddRedirect(false)}
+          servers={servers}
+          initialServerKey={initialServerKey}
         />
       )}
 
       {showAddStatic && (
         <AddStaticDialog
-          existingPorts={proxies.map(p => p.externalPort)}
+          existingPorts={standaloneExistingPorts}
           onAdd={addProxy}
           onClose={() => setShowAddStatic(false)}
+          servers={servers}
+          initialServerKey={initialServerKey}
         />
       )}
 
       {showAddRespond && (
         <AddRespondDialog
-          existingPorts={proxies.map(p => p.externalPort)}
+          existingPorts={standaloneExistingPorts}
           onAdd={addProxy}
           onClose={() => setShowAddRespond(false)}
+          servers={servers}
+          initialServerKey={initialServerKey}
         />
       )}
 
       {editing && (editing.redirect ? (
         <EditRedirectDialog
           proxy={editing}
-          existingPorts={proxies.filter(p => p.id !== editing.id).map(p => p.externalPort)}
+          existingPorts={proxies.filter(p => p.id !== editing.id && !p.namedServerKey).map(p => p.externalPort)}
           onSave={editProxy}
           onClose={() => setEditing(null)}
         />
       ) : editing.staticResponse ? (
         <EditRespondDialog
           proxy={editing}
-          existingPorts={proxies.filter(p => p.id !== editing.id).map(p => p.externalPort)}
+          existingPorts={proxies.filter(p => p.id !== editing.id && !p.namedServerKey).map(p => p.externalPort)}
           onSave={editProxy}
           onClose={() => setEditing(null)}
         />
       ) : editing.fileServer ? (
         <EditStaticDialog
           proxy={editing}
-          existingPorts={proxies.filter(p => p.id !== editing.id).map(p => p.externalPort)}
+          existingPorts={proxies.filter(p => p.id !== editing.id && !p.namedServerKey).map(p => p.externalPort)}
           onSave={editProxy}
           onClose={() => setEditing(null)}
         />
       ) : (
         <EditProxyDialog
           proxy={editing}
-          existingPorts={proxies.filter(p => p.id !== editing.id).map(p => p.externalPort)}
+          existingPorts={proxies.filter(p => p.id !== editing.id && !p.namedServerKey).map(p => p.externalPort)}
           onSave={editProxy}
           onClose={() => setEditing(null)}
           onApiError={msg => setApiError({ message: msg, search: extractLogsSearch(msg), action: "edit" })}
@@ -808,6 +958,56 @@ export function ProxyList({ onViewLogs }: Props) {
             {t("proxies.delete_confirm_button")}
           </Button>
           <Button variant="link" onClick={() => setDeletingProxy(null)} isDisabled={isDeleting}>
+            {t("common.cancel")}
+          </Button>
+        </ModalFooter>
+      </Modal>
+
+      {/* Add Server dialog */}
+      {showAddServer && (
+        <AddServerDialog
+          existingKeys={servers.map(s => s.key)}
+          onAdd={async (def) => { await addServer(def); setActiveTab(def.key); }}
+          onClose={() => setShowAddServer(false)}
+        />
+      )}
+
+      {/* Edit Server dialog */}
+      {editingServer && (
+        <EditServerDialog
+          def={editingServer}
+          onSave={editServer}
+          onClose={() => setEditingServer(null)}
+        />
+      )}
+
+      {/* Delete Server modal */}
+      <Modal
+        isOpen={deletingServer !== null}
+        variant="small"
+        onClose={() => !isDeletingServer && setDeletingServer(null)}
+        aria-labelledby="delete-server-title"
+      >
+        <ModalHeader
+          title={t("servers.delete_confirm_title", { name: deletingServer?.name })}
+          labelId="delete-server-title"
+        />
+        <ModalBody>
+          <Content>{t("servers.delete_confirm_body")}</Content>
+          {deleteServerError && (
+            <Alert variant="danger" isInline title={deleteServerError} style={{ marginTop: "var(--pf-v6-global--spacer--md)" }} />
+          )}
+        </ModalBody>
+        <ModalFooter>
+          <Button
+            variant="danger"
+            onClick={() => void handleDeleteServerConfirm()}
+            isLoading={isDeletingServer}
+            isDisabled={isDeletingServer}
+          >
+            {t("servers.delete_server")}
+          </Button>
+          <Button variant="link" onClick={() => setDeletingServer(null)} isDisabled={isDeletingServer}>
             {t("common.cancel")}
           </Button>
         </ModalFooter>

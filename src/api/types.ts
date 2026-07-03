@@ -23,6 +23,7 @@ export interface CaddyReverseProxyHandler {
 export type CaddyHandler = CaddyReverseProxyHandler | { handler: string; [key: string]: unknown };
 
 export interface CaddyRoute {
+  match?: Array<Record<string, unknown>>;
   handle: CaddyHandler[];
   terminal?: boolean;
   [key: string]: unknown;
@@ -47,6 +48,45 @@ export interface CaddyTLSConnectionPolicy {
 
 export type TlsProtocolVersion = "tls1.2" | "tls1.3";
 export type MtlsMode = "request" | "require" | "verify_if_given" | "require_and_verify";
+
+// ---------------------------------------------------------------------------
+// Route Matchers — #48
+// ---------------------------------------------------------------------------
+
+/** Request matcher conditions for a route. Multiple keys = AND logic. */
+export interface RouteMatch {
+  path?: string[];
+  host?: string[];
+  method?: string[];
+  /** Header name → list of value patterns (empty list = header must be present). */
+  header?: Record<string, string[]>;
+  /** Query param name → list of value patterns. */
+  query?: Record<string, string[]>;
+  remote_ip?: { ranges: string[] };
+}
+
+// ---------------------------------------------------------------------------
+// Named Server — #49
+// ---------------------------------------------------------------------------
+
+/** A user-defined Caddy server with explicit listen addresses and multiple routes. */
+export interface ServerDef {
+  key: string;
+  name: string;
+  listenAddresses: string[];
+  tls: boolean;
+  tlsAdvanced?: TlsAdvancedConfig;
+  mtls?: MtlsConfig;
+  serverReadTimeout?: string;
+  serverReadHeaderTimeout?: string;
+  serverWriteTimeout?: string;
+  serverIdleTimeout?: string;
+  maxHeaderBytes?: number;
+  accessLog?: AccessLogConfig;
+  errorHandlers?: ErrorHandlerConfig[];
+  /** Route display labels keyed by route id. */
+  routeLabels?: Record<string, string>;
+}
 
 export interface TlsAdvancedConfig {
   protocolMin?: TlsProtocolVersion;
@@ -224,6 +264,19 @@ export interface ProxyEntry {
   tlsAdvanced?: TlsAdvancedConfig;
   /** Mutual TLS / client certificate authentication */
   mtls?: MtlsConfig;
+  // ---------------------------------------------------------------------------
+  // Routing extensions (#48, #49, #50)
+  // ---------------------------------------------------------------------------
+  /** Route matchers (#48). When set, only matching requests are handled by this route. */
+  matchers?: RouteMatch;
+  /** Use handle_path semantics: strip the matched path prefix before forwarding (#50). */
+  handlePath?: boolean;
+  /** Register this route as a named/reusable route via invoke (#50). */
+  isNamedRoute?: boolean;
+  /** The name for the named route (required when isNamedRoute is true) (#50). */
+  namedRouteName?: string;
+  /** When set, this route belongs to the named ServerDef with this key (#49). */
+  namedServerKey?: string;
 }
 
 export type { ServiceStatus } from "@rxtx4816/cockpit-plugin-base-react/systemd";
