@@ -12,8 +12,11 @@ import {
   surgicallyRemoveBlock,
   surgicallyWriteProxy,
   parseGlobalOptions,
+  serverDefToBlock,
+  surgicallyWriteServerBlock,
+  surgicallyRemoveServerBlock,
 } from "./caddy";
-import type { CaddyConfig, ProxyEntry } from "./types";
+import type { CaddyConfig, ProxyEntry, RouteMatch, ServerDef } from "./types";
 
 // ---------------------------------------------------------------------------
 // Test fixtures
@@ -1193,5 +1196,238 @@ describe("parseGlobalOptions — on-demand TLS", () => {
   it("does not set onDemandEnabled when block absent", () => {
     const opts = parseGlobalOptions(makeOpts("\temail admin@example.com"));
     expect(opts.onDemandEnabled).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Route matchers — #48
+// ---------------------------------------------------------------------------
+
+describe("proxyToBlock — matchers", () => {
+  it("emits named matcher block + handle wrapper when matchers set", () => {
+    const m: RouteMatch = { path: ["/api/*"] };
+    const result = proxyToBlock(proxy({ matchers: m }));
+    expect(result).toContain("@m7700 {");
+    expect(result).toContain("path /api/*");
+    expect(result).toContain("handle @m7700 {");
+    expect(result).toContain("\t\treverse_proxy");
+  });
+
+  it("emits handle_path when path-only matcher + handlePath=true", () => {
+    const m: RouteMatch = { path: ["/api/*"] };
+    const result = proxyToBlock(proxy({ matchers: m, handlePath: true }));
+    expect(result).toContain("handle_path /api/*");
+    expect(result).not.toContain("@m7700");
+  });
+
+  it("does NOT use handle_path when multiple matcher types set", () => {
+    const m: RouteMatch = { path: ["/api/*"], host: ["example.com"] };
+    const result = proxyToBlock(proxy({ matchers: m, handlePath: true }));
+    expect(result).toContain("@m7700 {");
+    expect(result).not.toContain("handle_path");
+  });
+
+  it("emits multi-key matcher (AND logic) as single @name block", () => {
+    const m: RouteMatch = { path: ["/api/*"], method: ["GET", "POST"] };
+    const result = proxyToBlock(proxy({ matchers: m }));
+    expect(result).toContain("path /api/*");
+    expect(result).toContain("method GET POST");
+  });
+
+  it("no handle wrapper when no matchers", () => {
+    const result = proxyToBlock(proxy());
+    expect(result).not.toContain("handle @");
+  });
+});
+
+describe("buildServerEntry — matchers", () => {
+  it("adds match array when matchers set", () => {
+    const m: RouteMatch = { path: ["/api/*"] };
+    const entry = buildServerEntry(proxy({ matchers: m }));
+    expect(entry.routes[0].match).toBeDefined();
+    expect(entry.routes[0].match?.[0]).toMatchObject({ path: ["/api/*"] });
+  });
+
+  it("terminal: false when matcher route, terminal: true when no matcher", () => {
+    const m: RouteMatch = { path: ["/api/*"] };
+    const withMatcher = buildServerEntry(proxy({ matchers: m }));
+    expect(withMatcher.routes[0].terminal).not.toBe(true);
+
+    const noMatcher = buildServerEntry(proxy());
+    expect(noMatcher.routes[0].terminal).toBe(true);
+  });
+
+  it("encodes remote_ip matcher", () => {
+    const m: RouteMatch = { remote_ip: { ranges: ["10.0.0.0/8"] } };
+    const entry = buildServerEntry(proxy({ matchers: m }));
+    expect(entry.routes[0].match?.[0]).toMatchObject({ remote_ip: { ranges: ["10.0.0.0/8"] } });
+  });
+});
+
+describe("parseProxies — named server post-reload compatibility", () => {
+  const serverDef: ServerDef = { key: "testsrv", name: "Test", listenAddresses: [":6464"], tls: true };
+
+  it("recognises named server by listen address when Caddy assigns a different key", () => {
+    // After Caddy reloads from Caddyfile it assigns its own key (srv0) not our stored key
+    const config: CaddyConfig = {
+      apps: { http: { servers: {
+        srv0: {
+          listen: [":6464"],
+          routes: [{ handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:3000" }] }], terminal: true }],
+        },
+      } } },
+    };
+    const proxies = parseProxies(config, [serverDef]);
+    expect(proxies).toHaveLength(1);
+    expect(proxies[0].namedServerKey).toBe("testsrv");
+    expect(proxies[0].id).toBe("testsrv:0");
+  });
+
+  it("unwraps subroute handlers produced by Caddyfile adapter", () => {
+    // Caddy's Caddyfile adapter wraps `handle { reverse_proxy ... }` in a subroute
+    const config: CaddyConfig = {
+      apps: { http: { servers: {
+        srv0: {
+          listen: [":6464"],
+          routes: [{
+            handle: [{
+              handler: "subroute",
+              routes: [{ handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:3000" }] }] }],
+            }],
+          }],
+        },
+      } } },
+    };
+    const proxies = parseProxies(config, [serverDef]);
+    expect(proxies).toHaveLength(1);
+    expect(proxies[0].targetPort).toBe(3000);
+    expect(proxies[0].namedServerKey).toBe("testsrv");
+  });
+
+  it("keeps standalone proxies as standalone even when serverDefs present", () => {
+    const config: CaddyConfig = {
+      apps: { http: { servers: {
+        srv7700: {
+          listen: [":7700"],
+          routes: [{ handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:7701" }] }], terminal: true }],
+        },
+      } } },
+    };
+    const proxies = parseProxies(config, [serverDef]);
+    expect(proxies[0].namedServerKey).toBeUndefined();
+  });
+});
+
+describe("parseProxies — matchers round-trip", () => {
+  it("restores path matcher from JSON", () => {
+    const config: CaddyConfig = {
+      apps: { http: { servers: {
+        srv7700: {
+          listen: [":7700"],
+          routes: [{
+            match: [{ path: ["/api/*"] }],
+            handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:7701" }] }],
+          }],
+        },
+      } } },
+    };
+    const proxies = parseProxies(config);
+    expect(proxies[0].matchers).toMatchObject({ path: ["/api/*"] });
+  });
+
+  it("restores multi-key matcher", () => {
+    const config: CaddyConfig = {
+      apps: { http: { servers: {
+        srv7700: {
+          listen: [":7700"],
+          routes: [{
+            match: [{ path: ["/api/*"], method: ["GET"] }],
+            handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:7701" }] }],
+          }],
+        },
+      } } },
+    };
+    const proxies = parseProxies(config);
+    expect(proxies[0].matchers?.method).toEqual(["GET"]);
+    expect(proxies[0].matchers?.path).toEqual(["/api/*"]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Named server — #49
+// ---------------------------------------------------------------------------
+
+const testDef: ServerDef = {
+  key: "pub",
+  name: "Public HTTPS",
+  listenAddresses: [":443"],
+  tls: true,
+};
+
+describe("serverDefToBlock", () => {
+  it("emits server key comment and listen address", () => {
+    const routes: ProxyEntry[] = [proxy({ matchers: undefined })];
+    const { block } = serverDefToBlock(testDef, routes);
+    expect(block).toContain("# server: pub");
+    expect(block).toContain(":443 {");
+    expect(block).toContain("tls internal");
+  });
+
+  it("puts matcher routes before catch-all", () => {
+    const r1 = proxy({ id: "pub:0", matchers: { path: ["/api/*"] } });
+    const r2 = proxy({ id: "pub:1" });
+    const { block } = serverDefToBlock(testDef, [r1, r2]);
+    const apiPos = block.indexOf("path /api/*");
+    const catchPos = block.indexOf("handle {");
+    expect(apiPos).toBeGreaterThan(-1);
+    expect(catchPos).toBeGreaterThan(-1);
+    expect(apiPos).toBeLessThan(catchPos);
+  });
+
+  it("emits preamble snippet for named route", () => {
+    const r = proxy({ id: "pub:0", isNamedRoute: true, namedRouteName: "auth" });
+    const { preamble } = serverDefToBlock(testDef, [r]);
+    expect(preamble).toContain("&(auth) {");
+  });
+});
+
+describe("surgicallyWriteServerBlock", () => {
+  it("inserts new server block into empty content", () => {
+    const routes: ProxyEntry[] = [proxy()];
+    const result = surgicallyWriteServerBlock("", testDef, routes);
+    expect(result).toContain("# server: pub");
+    expect(result).toContain(":443 {");
+  });
+
+  it("replaces existing server block identified by key comment", () => {
+    const initial = "# server: pub\n:443 {\n\ttls internal\n\treverse_proxy http://localhost:7701\n}\n";
+    const routes: ProxyEntry[] = [proxy({ tls: true })];
+    const result = surgicallyWriteServerBlock(initial, testDef, routes);
+    expect(result.split("# server: pub").length).toBe(2); // only one occurrence
+  });
+
+  it("replaces existing block that has embedded # serverdef: comment without duplicating", () => {
+    // The # serverdef: comment must NOT clear the pending serverKey in findBlockPositions.
+    // If it does, the block is not found and a duplicate is appended → ambiguous site definition.
+    const initial = "# server: pub\n# serverdef: {\"name\":\"pub\",\"tls\":true}\n:443 {\n\ttls internal\n}\n";
+    const routes: ProxyEntry[] = [proxy({ tls: true })];
+    const result = surgicallyWriteServerBlock(initial, testDef, routes);
+    expect(result.split("# server: pub").length).toBe(2); // exactly one — no duplicate
+    expect(result.split(":443 {").length).toBe(2); // exactly one :443 block
+  });
+});
+
+describe("surgicallyRemoveServerBlock", () => {
+  it("removes a server block by key", () => {
+    const content = "# server: pub\n:443 {\n\ttls internal\n}\n\n# label: other\n:80 {\n\treverse_proxy http://localhost:8080\n}\n";
+    const result = surgicallyRemoveServerBlock(content, "pub");
+    expect(result).not.toContain("# server: pub");
+    expect(result).toContain("# label: other");
+  });
+
+  it("returns unchanged content when key not found", () => {
+    const content = "# label: other\n:80 {\n\treverse_proxy http://localhost:8080\n}\n";
+    const result = surgicallyRemoveServerBlock(content, "nonexistent");
+    expect(result).toBe(content);
   });
 });

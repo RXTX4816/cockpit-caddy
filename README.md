@@ -17,11 +17,21 @@ https://192.168.1.100:8444  →  localhost:3000
 https://192.168.1.100:8445  →  10.0.0.5:9000 
 ```
 
+Or use a **named virtual server** to serve multiple services on a single port with route matchers:
+
+```
+https://192.168.1.100:443/api/*   →  localhost:3000  (API, path stripped)
+https://192.168.1.100:443/*       →  localhost:4000  (Frontend, catch-all)
+```
+
 Caddy handles TLS automatically via its internal CA (`tls internal`). No DNS, no subdomains, no Let's Encrypt required.
 
 ## Features
 
 - Reverse proxy rules — add / edit / delete with optional load balancing, forward auth, rewrites, request/response headers, and custom error handlers
+- **Named virtual servers** — group multiple routes under one port with per-route matchers (path, host, method, header, query, remote IP)
+- **Route matchers** — restrict which requests a route handles; catch-all routes handle the rest
+- **Strip path prefix** (`handle_path`) — remove the matched path prefix before forwarding to the upstream
 - Static file servers — serve directories with optional browse, basic auth, and access logs
 - Redirects and static HTTP responses
 - Start, stop, restart, and reload the Caddy service
@@ -148,7 +158,7 @@ The UI language follows Cockpit's language setting.
 | Coverage | Languages |
 |---|---|
 | 100% | English (`en`) — source |
-| 16% | `ar`, `cs`, `de`, `es`, `fi`, `fr`, `he`, `id`, `it`, `ja`, `ka`, `ko`, `nl`, `pl`, `pt-BR`, `ro`, `ru`, `sk`, `sv`, `tr`, `uk`, `zh-CN`, `zh-TW` |
+| 14% | `ar`, `cs`, `de`, `es`, `fi`, `fr`, `he`, `id`, `it`, `ja`, `ka`, `ko`, `nl`, `pl`, `pt-BR`, `ro`, `ru`, `sk`, `sv`, `tr`, `uk`, `zh-CN`, `zh-TW` |
 <!-- i18n-coverage-end -->
 
 To add or improve a translation, copy `src/i18n/locales/en.json`, translate the values, and open a PR.

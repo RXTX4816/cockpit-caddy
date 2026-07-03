@@ -4,6 +4,9 @@
     "require": {
         "cockpit": "300"
     },
+    "superuser": {
+        "default": "try"
+    },
     "menu": {
         "caddy": {
             "label": "Caddy",

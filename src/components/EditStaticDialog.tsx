@@ -19,7 +19,8 @@ import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { CaddyApiError } from "../api";
 import { SectionActions } from "./SectionActions";
-import type { ProxyEntry, ErrorHandlerConfig } from "../api";
+import type { ProxyEntry, ErrorHandlerConfig, RouteMatch } from "../api";
+import { RouteMatchersSection } from "./RouteMatchersSection";
 import { BasicAuthSection, resolveBasicAuth, type AuthEntry } from "./BasicAuthSection";
 import { ResponseHeadersSection } from "./ResponseHeadersSection";
 import { RequestHeadersSection } from "./RequestHeadersSection";
@@ -61,6 +62,8 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
   });
   const [errorHandlers, setErrorHandlers] = useState<ErrorHandlerConfig[]>(proxy.errorHandlers ?? []);
   const [tlsValues, setTlsValues] = useState<TlsValues>(tlsConfigToValues(proxy.tlsAdvanced, proxy.mtls));
+  const [matchers, setMatchers] = useState<RouteMatch | undefined>(proxy.matchers);
+  const [handlePath, setHandlePath] = useState(proxy.handlePath ?? false);
   const [portErr, setPortErr] = useState<string | null>(null);
   const [rootErr, setRootErr] = useState<string | null>(null);
 
@@ -189,6 +192,17 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
           onChange={v => setResponseHeaders(v ?? [])}
           isDisabled={isLocked}
         />
+        <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!v?.path?.length) setHandlePath(false); }} isDisabled={isLocked} />
+        {matchers?.path?.length && !matchers.host?.length && !matchers.method?.length && !matchers.header && !matchers.query && !matchers.remote_ip && (
+          <Checkbox
+            id="edit-static-handle-path"
+            label={t("handle_path.label")}
+            isChecked={handlePath}
+            onChange={(_e, v) => setHandlePath(v)}
+            isDisabled={isLocked}
+            style={{ marginLeft: "1rem", marginBottom: "0.5rem" }}
+          />
+        )}
 
         {confirmAction.error && (
           <Alert variant="danger" isInline title={confirmAction.error} style={{ marginTop: "var(--pf-v6-global--spacer--md)" }} />
@@ -223,6 +237,8 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
                     maxHeaderBytes: serverTimeouts.maxHeaderBytes.trim() ? parseInt(serverTimeouts.maxHeaderBytes, 10) : undefined,
                     tlsAdvanced: tlsValuesToAdvanced(tlsValues),
                     mtls: tlsValuesToMtls(tlsValues),
+                    matchers: matchers ?? undefined,
+                    handlePath: handlePath || undefined,
                   });
                 } catch (e) {
                   if (e instanceof CaddyApiError) {

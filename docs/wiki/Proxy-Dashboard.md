@@ -8,7 +8,20 @@ The page is divided into three areas:
 
 1. **Tab bar** — switches between Proxies, Logs, Caddyfile, and Settings tabs.
 2. **Service Control bar** — shows the Caddy service status (running/stopped) and action buttons (Start, Stop, Restart, Reload). See [Service Control](Service-Control).
-3. **Entry list** — a table of all configured rules.
+3. **Entry list** — entries grouped by server tabs (see below).
+
+## Server tabs
+
+The entry list is split into tabs:
+
+| Tab | What it shows |
+|---|---|
+| **All** | Every entry across all servers and standalone rules |
+| **[Server name]** | Routes belonging to a specific named server — one tab per server |
+
+The **All** tab shows standalone entries and all named-server routes in a flat list with a server badge on each row that belongs to a named server.
+
+Each named-server tab shows a **server info card** at the top (listen addresses as clickable links, TLS state, timeouts) followed by a routes table with matcher, label, type, target, and a clickable port/path link per route.
 
 ## Entry types
 
@@ -19,32 +32,48 @@ The page is divided into three areas:
 | **Redirect** | Issues an HTTP redirect to another URL |
 | **Respond** | Returns a static HTTP response (status code + optional body) |
 
-## Entry list columns
+## All-tab columns
 
 | Column | Description |
 |---|---|
 | Label | Optional human-readable name for the rule |
-| Port | The external port Caddy listens on (e.g. `8443`) |
+| Port | The external port Caddy listens on — click to open the URL in a new tab |
 | Type | Proxy, Static, Redirect, or Respond |
 | Target / Root | Upstream address (proxy) or root directory (static) |
 | TLS | Whether Caddy's internal CA is used |
-| Flags | Active optional features (compress, auth, access log, timeouts, …) |
+| Flags | Active optional features (compress, auth, access log, handle_path, …) |
 | Actions | Edit, duplicate, and delete buttons |
+
+## Server-tab route columns
+
+| Column | Description |
+|---|---|
+| Matcher | Path, host, method, or other matchers — empty means catch-all |
+| Label | Optional human-readable name |
+| Type | Proxy, Static, Redirect, or Respond |
+| Target | Upstream address or response details |
+| Actions | Port/path link (opens URL), Edit, Duplicate, Delete |
 
 ## Search and filter
 
-The search bar filters entries in real time across port, target/root, label, and type.
+The search bar in the All tab filters entries in real time across port, target/root, label, and type.
 
 ## Adding entries
 
-The toolbar has four **Add** buttons:
+### Standalone entries
+
+The toolbar has four **Add** buttons in the All tab:
 
 - **Add Proxy** — reverse proxy to an upstream service
 - **Add Static** — static file server from a directory
 - **Add Redirect** — HTTP redirect rule
 - **Add Respond** — static HTTP response
 
-Each opens a dialog. See [Managing Entries](Managing-Proxies) for field details.
+### Named servers
+
+Click **Add Server** to create a named virtual server (owns a port, contains multiple routes). Once created, open the server's tab and use the Add buttons there to add routes.
+
+See [Managing Entries](Managing-Proxies) for field details.
 
 ## Other tabs
 

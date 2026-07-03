@@ -21,7 +21,9 @@ import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast, ExternalAddressInput } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { readProxyConf, parseConfExternalAddresses, CaddyApiError, CaddyfileError } from "../api";
-import type { ProxyEntry, RewriteConfig, HeaderOperation } from "../api";
+import type { ProxyEntry, RewriteConfig, HeaderOperation, RouteMatch, ServerDef } from "../api";
+import { RouteMatchersSection } from "./RouteMatchersSection";
+import { parseListenPort } from "./AddServerDialog";
 import { RewriteSection } from "./RewriteSection";
 import { RequestHeadersSection } from "./RequestHeadersSection";
 import { ResponseHeadersSection } from "./ResponseHeadersSection";
@@ -35,6 +37,11 @@ import { UpstreamsSection, validateUpstreams, type ExtraUpstream } from "./Upstr
 import { TlsSection, type TlsValues, tlsValuesToAdvanced, tlsValuesToMtls, tlsConfigToValues } from "./TlsSection";
 import type { ErrorHandlerConfig, ForwardAuthConfig, LbPolicy } from "../api";
 import { SectionActions } from "./SectionActions";
+import type { ServerContext } from "./AddRedirectDialog";
+import {
+  FormSelect,
+  FormSelectOption,
+} from "@patternfly/react-core";
 
 interface FormState {
   externalScheme: string;
@@ -69,9 +76,15 @@ interface Props {
   initialErrorHandlers?: ErrorHandlerConfig[];
   initialForwardAuth?: ForwardAuthConfig;
   initialTlsValues?: TlsValues;
+  initialMatchers?: RouteMatch;
+  initialHandlePath?: boolean;
+  initialIsNamedRoute?: boolean;
+  initialNamedRouteName?: string;
+  servers?: ServerDef[];
+  initialServerKey?: string;
 }
 
-export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, initialValues, initialRewrite, initialRequestHeaders, initialResponseHeaders, initialTransport, initialBasicAuth, initialExtraUpstreams, initialLbPolicy, initialServerTimeouts, initialAccessLog, initialErrorHandlers, initialForwardAuth, initialTlsValues }: Props) {
+export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, initialValues, initialRewrite, initialRequestHeaders, initialResponseHeaders, initialTransport, initialBasicAuth, initialExtraUpstreams, initialLbPolicy, initialServerTimeouts, initialAccessLog, initialErrorHandlers, initialForwardAuth, initialTlsValues, initialMatchers, initialHandlePath, initialIsNamedRoute, initialNamedRouteName, servers, initialServerKey }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
   const confirmAction = useConfirmAction();
@@ -101,7 +114,19 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
   const [extraUpstreams, setExtraUpstreams] = useState<ExtraUpstream[]>(initialExtraUpstreams ?? []);
   const [lbPolicy, setLbPolicy] = useState<LbPolicy | "">(initialLbPolicy ?? "");
   const [tlsValues, setTlsValues] = useState<TlsValues>(initialTlsValues ?? tlsConfigToValues(undefined, undefined));
+  const [matchers, setMatchers] = useState<RouteMatch | undefined>(initialMatchers);
+  const [handlePath, setHandlePath] = useState(initialHandlePath ?? false);
+  const [isNamedRoute, setIsNamedRoute] = useState(initialIsNamedRoute ?? false);
+  const [namedRouteName, setNamedRouteName] = useState(initialNamedRouteName ?? "");
+  const [selectedServerKey, setSelectedServerKey] = useState(initialServerKey ?? "");
   const [extraSchemes, setExtraSchemes] = useState<string[]>([]);
+
+  const selectedServer = servers?.find(s => s.key === selectedServerKey);
+  const serverCtx: ServerContext | undefined = selectedServer ? {
+    serverKey: selectedServer.key,
+    serverName: selectedServer.name,
+    port: parseListenPort(selectedServer.listenAddresses[0] ?? ":443"),
+  } : undefined;
 
   useEffect(() => {
     void readProxyConf().then(content => {
@@ -115,11 +140,13 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
 
   function validate(): FormErrors {
     const errs: FormErrors = {};
-    const port = parseInt(form.externalPort, 10);
-    if (!form.externalPort) errs.externalPort = t("add_proxy.validation_port_required");
-    else if (isNaN(port)) errs.externalPort = t("add_proxy.validation_port_number");
-    else if (port < 1 || port > 65535) errs.externalPort = t("add_proxy.validation_port_range");
-    else if (existingPorts.includes(port)) errs.externalPort = t("add_proxy.validation_port_duplicate", { port });
+    if (!serverCtx) {
+      const port = parseInt(form.externalPort, 10);
+      if (!form.externalPort) errs.externalPort = t("add_proxy.validation_port_required");
+      else if (isNaN(port)) errs.externalPort = t("add_proxy.validation_port_number");
+      else if (port < 1 || port > 65535) errs.externalPort = t("add_proxy.validation_port_range");
+      else if (existingPorts.includes(port)) errs.externalPort = t("add_proxy.validation_port_duplicate", { port });
+    }
     if (form.externalScheme && !form.externalHost.trim()) {
       errs.externalHost = t("add_proxy.validation_ext_host_required_with_scheme");
     }
@@ -199,38 +226,60 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
             />
           </FormGroup>
 
-          <FormGroup label={t("add_proxy.field_external_address")} fieldId="external-port" isRequired>
-            <ExternalAddressInput
-              scheme={form.externalScheme}
-              onSchemeChange={v => set("externalScheme", v)}
-              host={form.externalHost}
-              onHostChange={v => set("externalHost", v)}
-              port={form.externalPort}
-              onPortChange={v => set("externalPort", v)}
-              suggestedSchemes={extraSchemes}
-              isDisabled={isLocked}
-              hostValidated={errors.externalHost ? "error" : "default"}
-              portValidated={errors.externalPort ? "error" : "default"}
-              portPlaceholder="8443"
-              hostPlaceholder={t("add_proxy.ext_host_placeholder")}
-              schemeNoneLabel={t("add_proxy.ext_scheme_none")}
-              schemeCustomLabel={t("add_proxy.ext_scheme_custom")}
-            />
-            {(errors.externalPort || errors.externalHost) && (
-              <FormHelperText>
-                <HelperText>
-                  <HelperTextItem variant="error">{errors.externalHost ?? errors.externalPort}</HelperTextItem>
-                </HelperText>
-              </FormHelperText>
-            )}
-            {!errors.externalPort && !errors.externalHost && (
-              <FormHelperText>
-                <HelperText>
-                  <HelperTextItem>{t("add_proxy.field_external_address_help")}</HelperTextItem>
-                </HelperText>
-              </FormHelperText>
-            )}
-          </FormGroup>
+          {servers && servers.length > 0 && (
+            <FormGroup label={t("servers.selector_label")} fieldId="proxy-server">
+              <FormSelect
+                id="proxy-server"
+                value={selectedServerKey}
+                onChange={(_e, v) => { setSelectedServerKey(v); setErrors(prev => ({ ...prev, externalPort: undefined })); }}
+                isDisabled={isLocked}
+              >
+                <FormSelectOption value="" label={t("servers.selector_none")} />
+                {servers.map(s => (
+                  <FormSelectOption key={s.key} value={s.key} label={`${s.name} (${s.listenAddresses[0] ?? ""})`} />
+                ))}
+              </FormSelect>
+            </FormGroup>
+          )}
+
+          {serverCtx ? (
+            <FormGroup label={t("add_proxy.field_external_address")} fieldId="external-port">
+              <Label isCompact color="blue">{serverCtx.serverName} (:{serverCtx.port})</Label>
+            </FormGroup>
+          ) : (
+            <FormGroup label={t("add_proxy.field_external_address")} fieldId="external-port" isRequired>
+              <ExternalAddressInput
+                scheme={form.externalScheme}
+                onSchemeChange={v => set("externalScheme", v)}
+                host={form.externalHost}
+                onHostChange={v => set("externalHost", v)}
+                port={form.externalPort}
+                onPortChange={v => set("externalPort", v)}
+                suggestedSchemes={extraSchemes}
+                isDisabled={isLocked}
+                hostValidated={errors.externalHost ? "error" : "default"}
+                portValidated={errors.externalPort ? "error" : "default"}
+                portPlaceholder="8443"
+                hostPlaceholder={t("add_proxy.ext_host_placeholder")}
+                schemeNoneLabel={t("add_proxy.ext_scheme_none")}
+                schemeCustomLabel={t("add_proxy.ext_scheme_custom")}
+              />
+              {(errors.externalPort || errors.externalHost) && (
+                <FormHelperText>
+                  <HelperText>
+                    <HelperTextItem variant="error">{errors.externalHost ?? errors.externalPort}</HelperTextItem>
+                  </HelperText>
+                </FormHelperText>
+              )}
+              {!errors.externalPort && !errors.externalHost && (
+                <FormHelperText>
+                  <HelperText>
+                    <HelperTextItem>{t("add_proxy.field_external_address_help")}</HelperTextItem>
+                  </HelperText>
+                </FormHelperText>
+              )}
+            </FormGroup>
+          )}
 
           <FormGroup label={t("add_proxy.field_target_host")} fieldId="target-host" isRequired>
             <InputGroup>
@@ -332,6 +381,37 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
           onChange={(u, p) => { setExtraUpstreams(u); setLbPolicy(p); }}
           isDisabled={isLocked}
         />
+        <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!v?.path?.length) setHandlePath(false); }} isDisabled={isLocked} />
+        {matchers?.path?.length && !matchers.host?.length && !matchers.method?.length && !matchers.header && !matchers.query && !matchers.remote_ip && (
+          <Checkbox
+            id="add-proxy-handle-path"
+            label={t("handle_path.label")}
+            isChecked={handlePath}
+            onChange={(_e, v) => setHandlePath(v)}
+            isDisabled={isLocked}
+            style={{ marginLeft: "1rem", marginBottom: "0.5rem" }}
+          />
+        )}
+        <div style={{ marginLeft: "1rem", marginBottom: "0.5rem", display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+          <Checkbox
+            id="add-proxy-named-route"
+            label={t("named_route.toggle_label")}
+            isChecked={isNamedRoute}
+            onChange={(_e, v) => { setIsNamedRoute(v); if (!v) setNamedRouteName(""); }}
+            isDisabled={isLocked}
+          />
+          {isNamedRoute && (
+            <TextInput
+              id="add-proxy-named-route-name"
+              aria-label={t("named_route.name_label")}
+              placeholder={t("named_route.name_placeholder")}
+              value={namedRouteName}
+              onChange={(_e, v) => setNamedRouteName(v)}
+              isDisabled={isLocked}
+              style={{ maxWidth: "20rem" }}
+            />
+          )}
+        </div>
 
         {confirmAction.error && (
           <Alert variant="danger" isInline title={confirmAction.error} style={{ marginTop: "var(--pf-v6-global--spacer--md)" }} />
@@ -345,9 +425,9 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
               onClick={() => void confirmAction.submit(async () => {
                 try {
                   await onAdd({
-                    externalScheme: form.externalScheme || undefined,
-                    externalHost: form.externalHost.trim() || undefined,
-                    externalPort: parseInt(form.externalPort, 10),
+                    externalScheme: serverCtx ? undefined : (form.externalScheme || undefined),
+                    externalHost: serverCtx ? undefined : (form.externalHost.trim() || undefined),
+                    externalPort: serverCtx ? serverCtx.port : parseInt(form.externalPort, 10),
                     targetHost: form.targetHost.trim(),
                     targetPort: parseInt(form.targetPort, 10),
                     targetScheme: form.targetScheme,
@@ -375,6 +455,11 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
                     maxHeaderBytes: serverTimeouts.maxHeaderBytes.trim() ? parseInt(serverTimeouts.maxHeaderBytes, 10) : undefined,
                     tlsAdvanced: tlsValuesToAdvanced(tlsValues),
                     mtls: tlsValuesToMtls(tlsValues),
+                    matchers: matchers ?? undefined,
+                    handlePath: handlePath || undefined,
+                    isNamedRoute: isNamedRoute || undefined,
+                    namedRouteName: (isNamedRoute && namedRouteName.trim()) ? namedRouteName.trim() : undefined,
+                    namedServerKey: serverCtx?.serverKey,
                   });
                 } catch (e) {
                   if (e instanceof CaddyfileError) {
@@ -388,7 +473,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
                   }
                   throw e;
                 }
-                toast.success(t("toast.proxy_added", { port: form.externalPort }));
+                toast.success(t("toast.proxy_added", { port: serverCtx ? serverCtx.port : form.externalPort }));
                 onClose();
               })}
               isLoading={isSaving}

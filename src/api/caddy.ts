@@ -1,4 +1,4 @@
-import type { CaddyConfig, CaddyHandler, CaddyReverseProxyHandler, CaddyServer, CaddyTLSClientAuthentication, CaddyTLSConnectionPolicy, ProxyEntry } from "./types";
+import type { CaddyConfig, CaddyHandler, CaddyReverseProxyHandler, CaddyRoute, CaddyServer, CaddyTLSClientAuthentication, CaddyTLSConnectionPolicy, ProxyEntry } from "./types";
 import { readFile as fsReadFile, writeFile as fsWriteFile } from "@rxtx4816/cockpit-plugin-base-react/lib/cockpit-fs";
 
 /**
@@ -239,6 +239,23 @@ export async function writeRawProxyConf(content: string): Promise<void> {
 }
 
 /**
+ * Writes conf.d, then validates the full Caddyfile (which imports conf.d).
+ * Reverts conf.d and throws CaddyfileError if validation fails.
+ * Use this for named-server operations where a bad block (e.g. port conflict)
+ * would make the Caddyfile invalid.
+ */
+export async function writeRawProxyConfValidated(content: string): Promise<void> {
+  const original = await readProxyConf();
+  await fsWriteFile(PROXY_CONF_PATH, content, "try");
+  try {
+    await runCaddyValidate();
+  } catch (e) {
+    await fsWriteFile(PROXY_CONF_PATH, original, "try");
+    throw e;
+  }
+}
+
+/**
  * Parses labels from the legacy Caddyfile format where the label is a comment
  * inside the block (e.g. "# homarr" as first comment inside ":PORT {").
  */
@@ -427,6 +444,97 @@ function regexReplaceToCaddy(replace: string): string {
   return replace.replace(/\$(\d+)/g, "{re.rw.$1}");
 }
 
+// ---------------------------------------------------------------------------
+// Route Matcher helpers — #48
+// ---------------------------------------------------------------------------
+
+/**
+ * Generates named-matcher lines for a Caddyfile block.
+ * Uses block form `@name { ... }` always (more stable for round-trips than inline form).
+ */
+function buildMatcherCaddyLines(m: import("./types").RouteMatch, name: string, indent: string): string[] {
+  const lines: string[] = [`${indent}@${name} {`];
+  if (m.path?.length) lines.push(`${indent}\tpath ${m.path.join(" ")}`);
+  if (m.host?.length) lines.push(`${indent}\thost ${m.host.join(" ")}`);
+  if (m.method?.length) lines.push(`${indent}\tmethod ${m.method.join(" ")}`);
+  if (m.header) {
+    for (const [hdr, vals] of Object.entries(m.header)) {
+      lines.push(vals.length ? `${indent}\theader ${hdr} ${vals.join(" ")}` : `${indent}\theader ${hdr}`);
+    }
+  }
+  if (m.query) {
+    for (const [param, vals] of Object.entries(m.query)) {
+      lines.push(vals.length ? `${indent}\tquery ${param} ${vals.join(" ")}` : `${indent}\tquery ${param}`);
+    }
+  }
+  if (m.remote_ip?.ranges.length) {
+    lines.push(`${indent}\tremote_ip ${m.remote_ip.ranges.join(" ")}`);
+  }
+  lines.push(`${indent}}`);
+  return lines;
+}
+
+/** Converts RouteMatch to Caddy JSON match object. */
+function buildMatcherJson(m: import("./types").RouteMatch): Record<string, unknown> {
+  const obj: Record<string, unknown> = {};
+  if (m.path?.length) obj.path = m.path;
+  if (m.host?.length) obj.host = m.host;
+  if (m.method?.length) obj.method = m.method;
+  if (m.header && Object.keys(m.header).length) {
+    const h: Record<string, string[]> = {};
+    for (const [k, v] of Object.entries(m.header)) h[k] = v;
+    obj.header = h;
+  }
+  if (m.query && Object.keys(m.query).length) {
+    const q: Record<string, string[]> = {};
+    for (const [k, v] of Object.entries(m.query)) q[k] = v;
+    obj.query = q;
+  }
+  if (m.remote_ip?.ranges.length) obj.remote_ip = { ranges: m.remote_ip.ranges };
+  return obj;
+}
+
+/** Parses a Caddy JSON match object back to RouteMatch. Returns undefined if empty/missing. */
+function parseMatcherJson(match: Record<string, unknown> | undefined): import("./types").RouteMatch | undefined {
+  if (!match || !Object.keys(match).length) return undefined;
+  const m: import("./types").RouteMatch = {};
+  if (Array.isArray(match.path) && match.path.length) m.path = match.path as string[];
+  if (Array.isArray(match.host) && match.host.length) m.host = match.host as string[];
+  if (Array.isArray(match.method) && match.method.length) m.method = match.method as string[];
+  if (match.header && typeof match.header === "object") {
+    const h = match.header as Record<string, string[]>;
+    if (Object.keys(h).length) m.header = h;
+  }
+  if (match.query && typeof match.query === "object") {
+    const q = match.query as Record<string, string[]>;
+    if (Object.keys(q).length) m.query = q;
+  }
+  if (match.remote_ip && typeof match.remote_ip === "object") {
+    const ri = (match.remote_ip as { ranges?: string[] }).ranges;
+    if (ri?.length) m.remote_ip = { ranges: ri };
+  }
+  return Object.keys(m).length ? m : undefined;
+}
+
+/** Returns true when only path matchers are set (needed for handle_path eligibility). */
+function isPathOnlyMatcher(m: import("./types").RouteMatch): boolean {
+  return !!(m.path?.length) && !m.host && !m.method && !m.header && !m.query && !m.remote_ip;
+}
+
+/** Derives the strip-prefix value from the first path pattern, e.g. "/api/*" → "/api". */
+function handlePathStripPrefix(matchers: import("./types").RouteMatch | undefined): string | undefined {
+  if (!matchers?.path?.length || !isPathOnlyMatcher(matchers)) return undefined;
+  const prefix = matchers.path[0].replace(/\/\*$/, "").replace(/\*$/, "");
+  return prefix || undefined;
+}
+
+/** Builds the rewrite handler that strip_path_prefix uses for handle_path semantics. */
+function buildHandlePathRewriteJson(matchers: import("./types").RouteMatch | undefined): CaddyHandler | undefined {
+  const prefix = handlePathStripPrefix(matchers);
+  if (!prefix) return undefined;
+  return { handler: "rewrite", strip_path_prefix: prefix } as CaddyHandler;
+}
+
 
 // ---------------------------------------------------------------------------
 // Forward authentication helpers
@@ -603,12 +711,12 @@ function parseRewriteFromHandle(h: AnyHandler): import("./types").RewriteConfig 
   return undefined;
 }
 
-function buildRewriteCaddyLines(rewrite: import("./types").RewriteConfig, port: number): string[] {
-  if (rewrite.type === "strip_prefix") return [`\turi strip_prefix ${rewrite.value}`];
-  if (rewrite.type === "add_prefix") return [`\trewrite ${rewrite.value}{uri}`];
+function buildRewriteCaddyLines(rewrite: import("./types").RewriteConfig, port: number, indent = "\t"): string[] {
+  if (rewrite.type === "strip_prefix") return [`${indent}uri strip_prefix ${rewrite.value}`];
+  if (rewrite.type === "add_prefix") return [`${indent}rewrite ${rewrite.value}{uri}`];
   return [
-    `\t@rw${port} path_regexp rw ${rewrite.find}`,
-    `\trewrite @rw${port} ${regexReplaceToCaddy(rewrite.replace)}`,
+    `${indent}@rw${port} path_regexp rw ${rewrite.find}`,
+    `${indent}rewrite @rw${port} ${regexReplaceToCaddy(rewrite.replace)}`,
   ];
 }
 
@@ -795,6 +903,63 @@ function buildTlsCaddyLines(p: Pick<ProxyEntry, "tls" | "tlsAdvanced" | "mtls">)
   return lines;
 }
 
+/** Builds handler lines for a route, at the given indent level (default single-tab). */
+function buildRouteHandlerLines(p: ProxyEntry, indent: string): string[] {
+  const lines: string[] = [];
+  if (p.staticResponse) {
+    const { statusCode, body, close } = p.staticResponse;
+    if (body && close) {
+      lines.push(`${indent}respond "${body}" ${statusCode} {`);
+      lines.push(`${indent}\tclose`);
+      lines.push(`${indent}}`);
+    } else if (body) {
+      lines.push(`${indent}respond "${body}" ${statusCode}`);
+    } else if (close) {
+      lines.push(`${indent}respond ${statusCode} {`);
+      lines.push(`${indent}\tclose`);
+      lines.push(`${indent}}`);
+    } else {
+      lines.push(`${indent}respond ${statusCode}`);
+    }
+  } else if (p.redirect) {
+    lines.push(`${indent}redir ${p.redirect.to} ${p.redirect.code}`);
+  } else if (p.fileServer) {
+    if (p.compress) lines.push(`${indent}encode gzip zstd`);
+    if (p.basicAuth?.length) {
+      lines.push(`${indent}basic_auth {`);
+      for (const a of p.basicAuth) lines.push(`${indent}\t${a.username} ${a.passwordHash}`);
+      lines.push(`${indent}}`);
+    }
+    for (const h of p.responseHeaders ?? []) {
+      if (h.op === "delete") lines.push(`${indent}header -${h.name}`);
+      else if (h.op === "add") lines.push(`${indent}header +${h.name} ${h.value ?? ""}`);
+      else lines.push(`${indent}header ${h.name} "${h.value ?? ""}"`);
+    }
+    lines.push(`${indent}root * ${p.fileServer.root}`);
+    lines.push(p.fileServer.browse ? `${indent}file_server browse` : `${indent}file_server`);
+  } else {
+    if (p.compress) lines.push(`${indent}encode gzip zstd`);
+    if (p.basicAuth?.length) {
+      lines.push(`${indent}basic_auth {`);
+      for (const a of p.basicAuth) lines.push(`${indent}\t${a.username} ${a.passwordHash}`);
+      lines.push(`${indent}}`);
+    }
+    for (const h of p.responseHeaders ?? []) {
+      if (h.op === "delete") lines.push(`${indent}header -${h.name}`);
+      else if (h.op === "add") lines.push(`${indent}header +${h.name} ${h.value ?? ""}`);
+      else lines.push(`${indent}header ${h.name} "${h.value ?? ""}"`);
+    }
+    if (p.rewrite) lines.push(...buildRewriteCaddyLines(p.rewrite, p.externalPort, indent));
+    if (p.forwardAuth) {
+      // forward_auth needs slightly adjusted indentation relative to base
+      const faLines = buildForwardAuthCaddyLines(p.forwardAuth).map(l => indent + l.replace(/^\t/, ""));
+      lines.push(...faLines);
+    }
+    lines.push(...buildReverseProxyLines(p, p.errorHandlers).map(l => indent + l.replace(/^\t/, "")));
+  }
+  return lines;
+}
+
 export function proxyToBlock(p: ProxyEntry): string {
   // Plain-port redirect/respond blocks must use http:// prefix to avoid Caddy TLS automation policy conflicts
   // when other unnamed blocks use `tls internal` (which creates a catch-all InternalIssuer policy).
@@ -802,51 +967,83 @@ export function proxyToBlock(p: ProxyEntry): string {
   const rawAddr = buildExternalAddress(p);
   const header = isPlainHttp ? `http://${rawAddr}` : rawAddr;
   const lines = p.label ? [`# label: ${p.label}`, `${header} {`] : [`${header} {`];
-  if (p.staticResponse) {
-    if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
-    const { statusCode, body, close } = p.staticResponse;
-    if (body && close) {
-      lines.push(`\trespond "${body}" ${statusCode} {`);
-      lines.push("\t\tclose");
-      lines.push("\t}");
-    } else if (body) {
-      lines.push(`\trespond "${body}" ${statusCode}`);
-    } else if (close) {
-      lines.push(`\trespond ${statusCode} {`);
-      lines.push("\t\tclose");
-      lines.push("\t}");
+
+  if (p.matchers && Object.keys(buildMatcherJson(p.matchers)).length > 0) {
+    const matcherName = `m${p.externalPort}`;
+    const useHandlePath = p.handlePath && isPathOnlyMatcher(p.matchers) && !!(p.matchers.path?.length);
+
+    if (useHandlePath) {
+      // handle_path strips the matched prefix automatically — no explicit matcher declaration needed
+      const paths = p.matchers.path!.join(" ");
+      if (p.staticResponse) {
+        if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
+        lines.push(`\thandle_path ${paths} {`);
+        lines.push(...buildRouteHandlerLines(p, "\t\t"));
+        lines.push("\t}");
+      } else if (p.redirect) {
+        if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
+        lines.push(`\thandle_path ${paths} {`);
+        lines.push(...buildRouteHandlerLines(p, "\t\t"));
+        lines.push("\t}");
+      } else if (p.fileServer) {
+        lines.push(...buildTlsCaddyLines(p));
+        if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
+        lines.push(`\thandle_path ${paths} {`);
+        lines.push(...buildRouteHandlerLines(p, "\t\t"));
+        lines.push("\t}");
+      } else {
+        lines.push(...buildTlsCaddyLines(p));
+        if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
+        lines.push(`\thandle_path ${paths} {`);
+        lines.push(...buildRouteHandlerLines(p, "\t\t"));
+        lines.push("\t}");
+      }
     } else {
-      lines.push(`\trespond ${statusCode}`);
+      // Standard named matcher + handle block
+      lines.push(...buildMatcherCaddyLines(p.matchers, matcherName, "\t"));
+      if (p.staticResponse) {
+        if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
+        lines.push(`\thandle @${matcherName} {`);
+        lines.push(...buildRouteHandlerLines(p, "\t\t"));
+        lines.push("\t}");
+      } else if (p.redirect) {
+        if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
+        lines.push(`\thandle @${matcherName} {`);
+        lines.push(...buildRouteHandlerLines(p, "\t\t"));
+        lines.push("\t}");
+      } else if (p.fileServer) {
+        lines.push(...buildTlsCaddyLines(p));
+        if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
+        lines.push(`\thandle @${matcherName} {`);
+        lines.push(...buildRouteHandlerLines(p, "\t\t"));
+        lines.push("\t}");
+      } else {
+        lines.push(...buildTlsCaddyLines(p));
+        if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
+        lines.push(`\thandle @${matcherName} {`);
+        lines.push(...buildRouteHandlerLines(p, "\t\t"));
+        lines.push("\t}");
+      }
     }
-  } else if (p.redirect) {
-    if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
-    lines.push(`\tredir ${p.redirect.to} ${p.redirect.code}`);
-  } else if (p.fileServer) {
-    lines.push(...buildTlsCaddyLines(p));
-    if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
-    if (p.compress) lines.push("\tencode gzip zstd");
-    if (p.basicAuth?.length) lines.push(...buildBasicAuthCaddyLines(p.basicAuth));
-    for (const h of p.responseHeaders ?? []) {
-      if (h.op === "delete") lines.push(`\theader -${h.name}`);
-      else if (h.op === "add") lines.push(`\theader +${h.name} ${h.value ?? ""}`);
-      else lines.push(`\theader ${h.name} "${h.value ?? ""}"`);
-    }
-    lines.push(`\troot * ${p.fileServer.root}`);
-    lines.push(p.fileServer.browse ? "\tfile_server browse" : "\tfile_server");
   } else {
-    lines.push(...buildTlsCaddyLines(p));
-    if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
-    if (p.compress) lines.push("\tencode gzip zstd");
-    if (p.basicAuth?.length) lines.push(...buildBasicAuthCaddyLines(p.basicAuth));
-    for (const h of p.responseHeaders ?? []) {
-      if (h.op === "delete") lines.push(`\theader -${h.name}`);
-      else if (h.op === "add") lines.push(`\theader +${h.name} ${h.value ?? ""}`);
-      else lines.push(`\theader ${h.name} "${h.value ?? ""}"`);
+    // No matchers — original flat structure
+    if (p.staticResponse) {
+      if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
+      lines.push(...buildRouteHandlerLines(p, "\t"));
+    } else if (p.redirect) {
+      if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
+      lines.push(...buildRouteHandlerLines(p, "\t"));
+    } else if (p.fileServer) {
+      lines.push(...buildTlsCaddyLines(p));
+      if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
+      lines.push(...buildRouteHandlerLines(p, "\t"));
+    } else {
+      lines.push(...buildTlsCaddyLines(p));
+      if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
+      lines.push(...buildRouteHandlerLines(p, "\t"));
     }
-    if (p.rewrite) lines.push(...buildRewriteCaddyLines(p.rewrite, p.externalPort));
-    if (p.forwardAuth) lines.push(...buildForwardAuthCaddyLines(p.forwardAuth));
-    lines.push(...buildReverseProxyLines(p, p.errorHandlers));
   }
+
   if (p.errorHandlers?.length) lines.push(...buildErrorHandlerCaddyLines(p.errorHandlers));
   lines.push("}");
   return lines.join("\n");
@@ -977,8 +1174,9 @@ export function surgicallyWriteProxy(content: string, proxy: ProxyEntry): string
 
   const start = pos.labelLine ?? pos.headerLine;
   const headerLine = lines[pos.headerLine].trim();
-  const isPluginFormat = new RegExp(`^:${proxy.externalPort}[\\s{]`).test(headerLine)
-    || headerLine === `:${proxy.externalPort}{`;
+  const isPluginFormat = new RegExp(`^(?:http://)?:${proxy.externalPort}[\\s{]`).test(headerLine)
+    || headerLine === `:${proxy.externalPort}{`
+    || headerLine === `http://:${proxy.externalPort}{`;
 
   let body: string;
   if (isPluginFormat) {
@@ -1006,16 +1204,20 @@ export function proxiesToCaddyfile(proxies: ProxyEntry[]): string {
 // ---------------------------------------------------------------------------
 
 interface BlockPosition {
-  labelLine: number | null; // index of the "# label:" line above this block, if any
-  headerLine: number;       // index of the block opener line
-  closingLine: number;      // index of the closing "}"
+  labelLine: number | null;     // index of the "# label:" line above this block, if any
+  serverKeyLine: number | null; // index of the "# server: key" comment line (#49)
+  headerLine: number;           // index of the block opener line
+  closingLine: number;          // index of the closing "}"
   port: number;
+  serverKey: string | null;     // set when a "# server: key" comment precedes this block (#49)
 }
 
 function findBlockPositions(lines: string[]): BlockPosition[] {
   const positions: BlockPosition[] = [];
   let i = 0;
   let pendingLabelLine: number | null = null;
+  let pendingServerKeyLine: number | null = null;
+  let pendingServerKey: string | null = null;
 
   while (i < lines.length) {
     const trimmed = lines[i].trim();
@@ -1026,15 +1228,26 @@ function findBlockPositions(lines: string[]): BlockPosition[] {
       pendingLabelLine = i; i++; continue;
     }
 
+    if (trimmed.match(/^#\s*server:/)) {
+      pendingServerKey = trimmed.replace(/^#\s*server:\s*/, "").trim() || null;
+      pendingServerKeyLine = i;
+      i++; continue;
+    }
+
+    // # serverdef: is a continuation annotation for the server block — don't clear pending state
+    if (trimmed.match(/^#\s*serverdef:/)) {
+      i++; continue;
+    }
+
     if (!trimmed.endsWith("{")) {
-      // Any non-empty non-opener line (including other comments) clears the pending label
-      pendingLabelLine = null; i++; continue;
+      // Any non-empty non-opener line (including other comments) clears pending state
+      pendingLabelLine = null; pendingServerKey = null; pendingServerKeyLine = null; i++; continue;
     }
 
     const portMatch = trimmed.match(/:(\d+)[^{]*\{$/);
     if (!portMatch) {
-      // Non-port block (e.g. global options) — skip entire block
-      pendingLabelLine = null;
+      // Non-port block (e.g. global options or snippet) — skip entire block
+      pendingLabelLine = null; pendingServerKey = null; pendingServerKeyLine = null;
       let depth = (trimmed.match(/\{/g) ?? []).length - (trimmed.match(/\}/g) ?? []).length;
       i++;
       while (i < lines.length && depth > 0) {
@@ -1057,9 +1270,11 @@ function findBlockPositions(lines: string[]): BlockPosition[] {
     const closingLine = i - 1;
 
     if (!isNaN(port)) {
-      positions.push({ labelLine: pendingLabelLine, headerLine, closingLine, port });
+      positions.push({ labelLine: pendingLabelLine, serverKeyLine: pendingServerKeyLine, headerLine, closingLine, port, serverKey: pendingServerKey });
     }
     pendingLabelLine = null;
+    pendingServerKey = null;
+    pendingServerKeyLine = null;
   }
 
   return positions;
@@ -1136,7 +1351,214 @@ function findReverseProxy(handles: AnyHandler[]): CaddyReverseProxyHandler | und
   return undefined;
 }
 
-export function parseProxies(config: CaddyConfig): ProxyEntry[] {
+/** Parse a single Caddy route + server context into a ProxyEntry. Returns undefined if unrecognized. */
+function parseRouteToEntry(
+  route: CaddyRoute,
+  key: string,
+  externalPort: number,
+  externalHost: string | undefined,
+  server: CaddyServer,
+  accessLog: import("./types").AccessLogConfig | undefined,
+  serverReadTimeout: string | undefined,
+  serverReadHeaderTimeout: string | undefined,
+  serverWriteTimeout: string | undefined,
+  serverIdleTimeout: string | undefined,
+  maxHeaderBytes: number | undefined,
+  routeId: string,
+  namedServerKey: string | undefined,
+): ProxyEntry | undefined {
+  const handles = (route.handle ?? []) as AnyHandler[];
+  const matchers = route.match?.[0] ? parseMatcherJson(route.match[0]) : undefined;
+
+  // Unwrap subroute handlers emitted by Caddy's Caddyfile adapter.
+  // When Caddy reloads from Caddyfile, `handle { ... }` blocks become:
+  //   { handler: "subroute", routes: [{ handle: [...actual handlers...] }] }
+  const subrouteH = handles.find(h => h.handler === "subroute") as
+    { handler: string; routes?: Array<{ handle?: AnyHandler[] }> } | undefined;
+  const effectiveHandles: AnyHandler[] = subrouteH?.routes?.length
+    ? subrouteH.routes.flatMap(r => (r.handle ?? []) as AnyHandler[])
+    : handles;
+
+  // Detect redirect (static_response with Location header)
+  const staticResp = effectiveHandles.find(h => h.handler === "static_response") as
+    { handler: string; headers?: Record<string, string[]>; status_code?: number; body?: string; close?: boolean } | undefined;
+  const locationHeader = staticResp?.headers?.["Location"]?.[0];
+  if (staticResp && locationHeader) {
+    const code = (staticResp.status_code ?? 302) as 301 | 302 | 307 | 308;
+    return {
+      id: routeId,
+      externalPort,
+      externalHost,
+      targetHost: "localhost",
+      targetPort: 0,
+      targetScheme: "http",
+      tls: false,
+      tlsSkipVerify: false,
+      serverKey: key,
+      namedServerKey,
+      redirect: { to: jsonPlaceholderToCaddy(locationHeader), code },
+      matchers,
+      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, accessLog,
+      errorHandlers: parseErrorHandlers(server),
+    };
+  }
+
+  // Detect static response (static_response without Location header)
+  if (staticResp && !locationHeader) {
+    return {
+      id: routeId,
+      externalPort,
+      externalHost,
+      targetHost: "localhost",
+      targetPort: 0,
+      targetScheme: "http",
+      tls: false,
+      tlsSkipVerify: false,
+      serverKey: key,
+      namedServerKey,
+      staticResponse: {
+        statusCode: staticResp.status_code ?? 200,
+        body: staticResp.body || undefined,
+        close: staticResp.close || undefined,
+      },
+      matchers,
+      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, accessLog,
+      errorHandlers: parseErrorHandlers(server),
+    };
+  }
+
+  // Detect file_server
+  const fsHandle = effectiveHandles.find(h => h.handler === "file_server") as
+    { handler: string; root?: string; browse?: Record<string, unknown> } | undefined;
+  if (fsHandle) {
+    const fsCompress = effectiveHandles.some(h => h.handler === "encode");
+    const fsAuthHandle = effectiveHandles.find(h => h.handler === "authentication");
+    const fsBasicAuth = fsAuthHandle ? parseBasicAuthJson(fsAuthHandle) : undefined;
+    const fsHeadersHandle = effectiveHandles.find(h => h.handler === "headers");
+    const fsResponseHeaders = fsHeadersHandle ? parseResponseHeadersJson(fsHeadersHandle) : [];
+    const fsTls = Array.isArray(server.tls_connection_policies) && server.tls_connection_policies.length > 0;
+    const fsTlsPolicy = fsTls ? server.tls_connection_policies![0] : undefined;
+    return {
+      id: routeId,
+      externalPort,
+      externalHost,
+      targetHost: "localhost",
+      targetPort: 0,
+      targetScheme: "http",
+      tls: fsTls,
+      tlsSkipVerify: false,
+      serverKey: key,
+      namedServerKey,
+      fileServer: { root: fsHandle.root ?? "/", browse: fsHandle.browse !== undefined },
+      compress: fsCompress || undefined,
+      basicAuth: fsBasicAuth?.length ? fsBasicAuth : undefined,
+      responseHeaders: fsResponseHeaders.length ? fsResponseHeaders : undefined,
+      matchers,
+      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, accessLog,
+      errorHandlers: parseErrorHandlers(server),
+      tlsAdvanced: fsTlsPolicy ? parseTlsAdvanced(fsTlsPolicy) : undefined,
+      mtls: fsTlsPolicy ? parseMtls(fsTlsPolicy) : undefined,
+    };
+  }
+
+  // Detect invoke (named route call)
+  const invokeHandle = effectiveHandles.find(h => h.handler === "invoke") as
+    { handler: string; name?: string } | undefined;
+  if (invokeHandle?.name) {
+    return {
+      id: routeId,
+      externalPort,
+      externalHost,
+      targetHost: "localhost",
+      targetPort: 0,
+      targetScheme: "http",
+      tls: false,
+      tlsSkipVerify: false,
+      serverKey: key,
+      namedServerKey,
+      isNamedRoute: true,
+      namedRouteName: invokeHandle.name,
+      matchers,
+      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, accessLog,
+    };
+  }
+
+  const forwardAuth = detectForwardAuth(effectiveHandles);
+  const rp = findReverseProxy(effectiveHandles);
+  if (!rp) return undefined;
+
+  const dial = rp.upstreams?.[0]?.dial ?? "";
+  const lastColon = dial.lastIndexOf(":");
+  const targetHost = lastColon > 0 ? dial.slice(0, lastColon) : dial;
+  const targetPort = lastColon > 0 ? parseInt(dial.slice(lastColon + 1), 10) : 80;
+
+  const extraUpstreams = (rp.upstreams ?? []).slice(1).map(u => {
+    const d = u.dial ?? "";
+    const c = d.lastIndexOf(":");
+    return { host: c > 0 ? d.slice(0, c) : d, port: c > 0 ? parseInt(d.slice(c + 1), 10) : 80 };
+  });
+  const lbRaw = (rp.load_balancing as { selection_policy?: { policy?: string } } | undefined)?.selection_policy?.policy;
+  const lbPolicy = (lbRaw && lbRaw in LB_POLICY_MAP) ? lbRaw as import("./types").LbPolicy : undefined;
+
+  const targetScheme: "http" | "https" = rp.transport?.tls !== undefined ? "https" : "http";
+  const tlsSkipVerify = rp.transport?.tls?.insecure_skip_verify ?? false;
+  const dialTimeout = parseDuration(rp.transport?.dial_timeout);
+  const responseHeaderTimeout = parseDuration(rp.transport?.response_header_timeout);
+
+  const tls = Array.isArray(server.tls_connection_policies) && server.tls_connection_policies.length > 0;
+  const tlsPolicy = tls ? server.tls_connection_policies![0] : undefined;
+
+  const compress = effectiveHandles.some(h => h.handler === "encode");
+  const authHandle = effectiveHandles.find(h => h.handler === "authentication");
+  const basicAuth = authHandle ? parseBasicAuthJson(authHandle) : undefined;
+  const rewriteHandle = effectiveHandles.find(h => h.handler === "rewrite");
+  const rewrite = rewriteHandle ? parseRewriteFromHandle(rewriteHandle) : undefined;
+  const headersHandle = effectiveHandles.find(h => h.handler === "headers");
+  const responseHeadersParsed = headersHandle ? parseResponseHeadersJson(headersHandle) : [];
+  const requestHeaders = parseRequestHeadersJson(rp.headers as Record<string, unknown> | undefined);
+
+  // Detect handle_path pattern: a strip_prefix rewrite whose value matches the path matcher prefix
+  let handlePath: true | undefined;
+  let finalRewrite = rewrite;
+  if (rewrite?.type === "strip_prefix" && matchers?.path?.length && isPathOnlyMatcher(matchers)) {
+    const expectedPrefix = handlePathStripPrefix(matchers);
+    if (expectedPrefix && rewrite.value === expectedPrefix) {
+      handlePath = true;
+      finalRewrite = undefined;
+    }
+  }
+
+  return {
+    id: routeId,
+    externalPort,
+    externalHost,
+    targetHost: targetHost || "localhost",
+    targetPort: isNaN(targetPort) ? 80 : targetPort,
+    targetScheme,
+    tls,
+    tlsSkipVerify,
+    serverKey: key,
+    namedServerKey,
+    compress: compress || undefined,
+    basicAuth: basicAuth?.length ? basicAuth : undefined,
+    dialTimeout: dialTimeout || undefined,
+    responseHeaderTimeout: responseHeaderTimeout || undefined,
+    rewrite: finalRewrite,
+    requestHeaders: requestHeaders.length ? requestHeaders : undefined,
+    responseHeaders: responseHeadersParsed.length ? responseHeadersParsed : undefined,
+    extraUpstreams: extraUpstreams.length ? extraUpstreams : undefined,
+    lbPolicy,
+    matchers,
+    handlePath,
+    serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
+    errorHandlers: parseErrorHandlers(server),
+    forwardAuth,
+    tlsAdvanced: tlsPolicy ? parseTlsAdvanced(tlsPolicy) : undefined,
+    mtls: tlsPolicy ? parseMtls(tlsPolicy) : undefined,
+  };
+}
+
+export function parseProxies(config: CaddyConfig, serverDefs?: import("./types").ServerDef[]): ProxyEntry[] {
   const servers = config.apps?.http?.servers ?? {};
   const proxies: ProxyEntry[] = [];
 
@@ -1175,155 +1597,56 @@ export function parseProxies(config: CaddyConfig): ProxyEntry[] {
       }
     }
 
-    const allHandles = (server.routes ?? []).flatMap(r => (r.handle ?? []) as AnyHandler[]);
+    const routes = server.routes ?? [];
 
-    // Detect redirect (static_response with Location header)
-    const staticResp = allHandles.find(h => h.handler === "static_response") as
-      { handler: string; headers?: Record<string, string[]>; status_code?: number; body?: string; close?: boolean } | undefined;
-    const locationHeader = staticResp?.headers?.["Location"]?.[0];
-    if (staticResp && locationHeader) {
-      const code = (staticResp.status_code ?? 302) as 301 | 302 | 307 | 308;
-      proxies.push({
-        id: String(externalPort),
-        externalPort,
-        externalHost,
-        targetHost: "localhost",
-        targetPort: 0,
-        targetScheme: "http",
-        tls: false,
-        tlsSkipVerify: false,
-        serverKey: key,
-        redirect: { to: jsonPlaceholderToCaddy(locationHeader), code },
-        serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, accessLog,
-        errorHandlers: parseErrorHandlers(server),
-      });
-      continue;
-    }
-
-    // Detect static response (static_response without Location header)
-    if (staticResp && !locationHeader) {
-      proxies.push({
-        id: String(externalPort),
-        externalPort,
-        externalHost,
-        targetHost: "localhost",
-        targetPort: 0,
-        targetScheme: "http",
-        tls: false,
-        tlsSkipVerify: false,
-        serverKey: key,
-        staticResponse: {
-          statusCode: staticResp.status_code ?? 200,
-          body: staticResp.body || undefined,
-          close: staticResp.close || undefined,
-        },
-        serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, accessLog,
-        errorHandlers: parseErrorHandlers(server),
-      });
-      continue;
-    }
-
-    // Detect file_server
-    const fsHandle = allHandles.find(h => h.handler === "file_server") as
-      { handler: string; root?: string; browse?: Record<string, unknown> } | undefined;
-    if (fsHandle) {
-      const fsCompress = allHandles.some(h => h.handler === "encode");
-      const fsAuthHandle = allHandles.find(h => h.handler === "authentication");
-      const fsBasicAuth = fsAuthHandle ? parseBasicAuthJson(fsAuthHandle) : undefined;
-      const fsHeadersHandle = allHandles.find(h => h.handler === "headers");
-      const fsResponseHeaders = fsHeadersHandle ? parseResponseHeadersJson(fsHeadersHandle) : [];
-      const fsTls = Array.isArray(server.tls_connection_policies) && server.tls_connection_policies.length > 0;
-      const fsTlsPolicy = fsTls ? server.tls_connection_policies![0] : undefined;
-      proxies.push({
-        id: String(externalPort),
-        externalPort,
-        externalHost,
-        targetHost: "localhost",
-        targetPort: 0,
-        targetScheme: "http",
-        tls: fsTls,
-        tlsSkipVerify: false,
-        serverKey: key,
-        fileServer: { root: fsHandle.root ?? "/", browse: fsHandle.browse !== undefined },
-        compress: fsCompress || undefined,
-        basicAuth: fsBasicAuth?.length ? fsBasicAuth : undefined,
-        responseHeaders: fsResponseHeaders.length ? fsResponseHeaders : undefined,
-        serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, accessLog,
-        errorHandlers: parseErrorHandlers(server),
-        tlsAdvanced: fsTlsPolicy ? parseTlsAdvanced(fsTlsPolicy) : undefined,
-        mtls: fsTlsPolicy ? parseMtls(fsTlsPolicy) : undefined,
-      });
-      continue;
-    }
-
-    const forwardAuth = detectForwardAuth(allHandles);
-
-    const rp = findReverseProxy(allHandles);
-    if (!rp) continue;
-
-    const dial = rp.upstreams?.[0]?.dial ?? "";
-    const lastColon = dial.lastIndexOf(":");
-    const targetHost = lastColon > 0 ? dial.slice(0, lastColon) : dial;
-    const targetPort = lastColon > 0 ? parseInt(dial.slice(lastColon + 1), 10) : 80;
-
-    const extraUpstreams = (rp.upstreams ?? []).slice(1).map(u => {
-      const d = u.dial ?? "";
-      const c = d.lastIndexOf(":");
-      return { host: c > 0 ? d.slice(0, c) : d, port: c > 0 ? parseInt(d.slice(c + 1), 10) : 80 };
+    // Determine whether this is a named server (multiple content routes, not from named_routes)
+    // Skip routes that come from the `named_routes` map (invoke placeholders are already loaded)
+    const contentRoutes = routes.filter(r => {
+      const handles = (r.handle ?? []) as AnyHandler[];
+      return handles.length > 0;
     });
-    const lbRaw = (rp.load_balancing as { selection_policy?: { policy?: string } } | undefined)?.selection_policy?.policy;
-    const lbPolicy = (lbRaw && lbRaw in LB_POLICY_MAP) ? lbRaw as import("./types").LbPolicy : undefined;
 
-    // Transport presence means HTTPS upstream
-    const targetScheme: "http" | "https" = rp.transport?.tls !== undefined ? "https" : "http";
-    const tlsSkipVerify = rp.transport?.tls?.insecure_skip_verify ?? false;
-    const dialTimeout = parseDuration(rp.transport?.dial_timeout);
-    const responseHeaderTimeout = parseDuration(rp.transport?.response_header_timeout);
+    // Identify a matching ServerDef — first by JSON key, then by listen address.
+    // After Caddy reloads from Caddyfile it reassigns its own server keys (e.g. "srv0")
+    // so key-only matching would misclassify named-server routes as standalone.
+    const listenAddrs = server.listen ?? [];
+    const defByKey = serverDefs?.find(s => s.key === key);
+    const defByAddr = (!defByKey && serverDefs?.length)
+      ? serverDefs.find(s => s.listenAddresses.some(a => listenAddrs.includes(a)))
+      : undefined;
+    const namedDef = defByKey ?? defByAddr;
+    const isNamedServer = !key.includes(":") && (
+      serverDefs ? namedDef != null : contentRoutes.length > 1
+    );
+    const namedServerKey = isNamedServer ? namedDef!.key : undefined;
 
-    const tls = Array.isArray(server.tls_connection_policies) && server.tls_connection_policies.length > 0;
-    const tlsPolicy = tls ? server.tls_connection_policies![0] : undefined;
-
-    const compress = allHandles.some(h => h.handler === "encode");
-
-    const authHandle = allHandles.find(h => h.handler === "authentication");
-    const basicAuth = authHandle ? parseBasicAuthJson(authHandle) : undefined;
-
-    const rewriteHandle = allHandles.find(h => h.handler === "rewrite");
-    const rewrite = rewriteHandle ? parseRewriteFromHandle(rewriteHandle) : undefined;
-
-    const headersHandle = allHandles.find(h => h.handler === "headers");
-    const responseHeadersParsed = headersHandle ? parseResponseHeadersJson(headersHandle) : [];
-
-    const requestHeaders = parseRequestHeadersJson(rp.headers as Record<string, unknown> | undefined);
-
-    proxies.push({
-      id: String(externalPort),
-      externalPort,
-      externalHost,
-      targetHost: targetHost || "localhost",
-      targetPort: isNaN(targetPort) ? 80 : targetPort,
-      targetScheme,
-      tls,
-      tlsSkipVerify,
-      serverKey: key,
-      compress: compress || undefined,
-      basicAuth: basicAuth?.length ? basicAuth : undefined,
-      dialTimeout: dialTimeout || undefined,
-      responseHeaderTimeout: responseHeaderTimeout || undefined,
-      rewrite,
-      requestHeaders: requestHeaders.length ? requestHeaders : undefined,
-      responseHeaders: responseHeadersParsed.length ? responseHeadersParsed : undefined,
-      extraUpstreams: extraUpstreams.length ? extraUpstreams : undefined,
-      lbPolicy,
-      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
-      errorHandlers: parseErrorHandlers(server),
-      forwardAuth,
-      tlsAdvanced: tlsPolicy ? parseTlsAdvanced(tlsPolicy) : undefined,
-      mtls: tlsPolicy ? parseMtls(tlsPolicy) : undefined,
-    });
+    if (!isNamedServer) {
+      // Standalone single-route server (the common case)
+      const route = contentRoutes[0];
+      if (!route) continue;
+      const entry = parseRouteToEntry(
+        route, key, externalPort, externalHost, server, accessLog,
+        serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
+        String(externalPort), undefined,
+      );
+      if (entry) proxies.push(entry);
+    } else {
+      // Named server (#49) — use def.key for IDs so they stay consistent after Caddy key changes
+      for (let i = 0; i < contentRoutes.length; i++) {
+        const entry = parseRouteToEntry(
+          contentRoutes[i], key, externalPort, externalHost, server, accessLog,
+          serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
+          `${namedDef!.key}:${i}`, namedServerKey,
+        );
+        if (entry) proxies.push(entry);
+      }
+    }
   }
 
-  return proxies.sort((a, b) => a.externalPort - b.externalPort);
+  return proxies.sort((a, b) => {
+    if (a.externalPort !== b.externalPort) return a.externalPort - b.externalPort;
+    return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -1610,6 +1933,10 @@ function applyErrorHandlers(server: CaddyServer, proxy: { errorHandlers?: import
 
 export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): CaddyServer {
   const listenAddr = buildListenAddr(proxy);
+  const matchArr = proxy.matchers ? [buildMatcherJson(proxy.matchers)] : undefined;
+  // A route with matchers is NOT terminal — allow fallthrough to subsequent routes.
+  const isTerminal = !matchArr;
+
   if (proxy.staticResponse) {
     const h: Record<string, unknown> = {
       handler: "static_response",
@@ -1617,26 +1944,24 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
     };
     if (proxy.staticResponse.body) h.body = proxy.staticResponse.body;
     if (proxy.staticResponse.close) h.close = true;
-    const server: CaddyServer = {
-      listen: [listenAddr],
-      routes: [{ handle: [h as CaddyHandler], terminal: true }],
-    };
+    const route: CaddyRoute = { handle: [h as CaddyHandler], terminal: isTerminal };
+    if (matchArr) route.match = matchArr;
+    const server: CaddyServer = { listen: [listenAddr], routes: [route] };
     applyAccessLog(server, proxy);
     applyErrorHandlers(server, proxy);
     return applyServerTimeouts(server, proxy);
   }
   if (proxy.redirect) {
-    const server: CaddyServer = {
-      listen: [listenAddr],
-      routes: [{
-        handle: [{
-          handler: "static_response",
-          headers: { Location: [caddyPlaceholderToJson(proxy.redirect.to)] },
-          status_code: proxy.redirect.code,
-        }],
-        terminal: true,
+    const route: CaddyRoute = {
+      handle: [{
+        handler: "static_response",
+        headers: { Location: [caddyPlaceholderToJson(proxy.redirect.to)] },
+        status_code: proxy.redirect.code,
       }],
+      terminal: isTerminal,
     };
+    if (matchArr) route.match = matchArr;
+    const server: CaddyServer = { listen: [listenAddr], routes: [route] };
     applyAccessLog(server, proxy);
     applyErrorHandlers(server, proxy);
     return applyServerTimeouts(server, proxy);
@@ -1649,16 +1974,17 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
     const fsHandler: Record<string, unknown> = { handler: "file_server", root: proxy.fileServer.root };
     if (proxy.fileServer.browse) fsHandler["browse"] = {};
     fsHandles.push(fsHandler as CaddyHandler);
-    const server: CaddyServer = {
-      listen: [listenAddr],
-      routes: [{ handle: fsHandles, terminal: true }],
-    };
+    const route: CaddyRoute = { handle: fsHandles, terminal: isTerminal };
+    if (matchArr) route.match = matchArr;
+    const server: CaddyServer = { listen: [listenAddr], routes: [route] };
     if (proxy.tls) server.tls_connection_policies = [buildTlsPolicy(proxy)];
     applyAccessLog(server, proxy);
     applyErrorHandlers(server, proxy);
     return applyServerTimeouts(server, proxy);
   }
   const handles: CaddyHandler[] = [];
+  const handlePathRwSingle = proxy.handlePath ? buildHandlePathRewriteJson(proxy.matchers) : undefined;
+  if (handlePathRwSingle) handles.push(handlePathRwSingle);
   if (proxy.compress) handles.push(buildEncodeHandler());
   if (proxy.basicAuth?.length) handles.push(buildBasicAuthHandler(proxy.basicAuth));
   if (proxy.responseHeaders?.length) handles.push(buildResponseHeadersHandler(proxy.responseHeaders));
@@ -1668,13 +1994,10 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
     if (faH) handles.push(faH);
   }
   handles.push(buildReverseProxyHandler(proxy, proxy.errorHandlers));
-  const server: CaddyServer = {
-    listen: [listenAddr],
-    routes: [{ handle: handles, terminal: true }],
-  };
-  if (proxy.tls) {
-    server.tls_connection_policies = [buildTlsPolicy(proxy)];
-  }
+  const route: CaddyRoute = { handle: handles, terminal: isTerminal };
+  if (matchArr) route.match = matchArr;
+  const server: CaddyServer = { listen: [listenAddr], routes: [route] };
+  if (proxy.tls) server.tls_connection_policies = [buildTlsPolicy(proxy)];
   applyAccessLog(server, proxy);
   applyErrorHandlers(server, proxy);
   return applyServerTimeouts(server, proxy);
@@ -1891,6 +2214,443 @@ export function removeProxy(config: CaddyConfig, serverKey: string): CaddyConfig
 }
 
 // ---------------------------------------------------------------------------
+// Named Server storage & generation — #49
+// ---------------------------------------------------------------------------
+
+const SERVERS_CONF_PATH = "/etc/caddy/conf.d/cockpit-caddy-servers.json";
+
+export async function readServerDefs(): Promise<import("./types").ServerDef[]> {
+  try {
+    const raw = await fsReadFile(SERVERS_CONF_PATH, "try");
+    if (!raw) return [];
+    return JSON.parse(raw) as import("./types").ServerDef[];
+  } catch {
+    return [];
+  }
+}
+
+export async function writeServerDefs(defs: import("./types").ServerDef[]): Promise<void> {
+  await cockpit.spawn(["mkdir", "-p", "/etc/caddy/conf.d"], { superuser: "try" });
+  await fsWriteFile(SERVERS_CONF_PATH, JSON.stringify(defs, null, 2), "try");
+}
+
+/**
+ * Parses ServerDef objects from conf.d content by reading embedded `# serverdef: {...}` comments.
+ * Falls back to a minimal def (key + listen addresses only) for legacy blocks that predate the
+ * embedded-comment format. This is the primary source of server defs — no separate file needed.
+ */
+export function parseServerDefsFromConf(content: string): import("./types").ServerDef[] {
+  const defs: import("./types").ServerDef[] = [];
+  const lines = content.split("\n");
+  for (let i = 0; i < lines.length; i++) {
+    const keyMatch = lines[i].match(/^# server: (.+)$/);
+    if (!keyMatch) continue;
+    const key = keyMatch[1].trim();
+
+    // Optional embedded serverdef comment on the very next line
+    const nextLine = lines[i + 1] ?? "";
+    const defMatch = nextLine.match(/^# serverdef: (.+)$/);
+
+    // Resolve listen addresses from the first non-comment, non-blank block header line
+    const listenAddresses: string[] = [];
+    const scanFrom = defMatch ? i + 2 : i + 1;
+    for (let j = scanFrom; j < lines.length; j++) {
+      const line = lines[j].trim();
+      if (!line || line.startsWith("#")) continue;
+      const m = line.match(/^(.+?)\s*\{/);
+      if (m) {
+        const parts = m[1].trim().split(/\s+/);
+        listenAddresses.push(...parts.filter(p => /:\d+/.test(p)));
+      }
+      break;
+    }
+
+    if (defMatch) {
+      try {
+        const p = JSON.parse(defMatch[1]) as Partial<import("./types").ServerDef>;
+        defs.push({
+          key,
+          name: p.name ?? key,
+          listenAddresses,
+          tls: p.tls ?? false,
+          tlsAdvanced: p.tlsAdvanced,
+          mtls: p.mtls,
+          serverReadTimeout: p.serverReadTimeout,
+          serverReadHeaderTimeout: p.serverReadHeaderTimeout,
+          serverWriteTimeout: p.serverWriteTimeout,
+          serverIdleTimeout: p.serverIdleTimeout,
+          maxHeaderBytes: p.maxHeaderBytes,
+          accessLog: p.accessLog,
+          errorHandlers: p.errorHandlers,
+          routeLabels: p.routeLabels,
+        });
+      } catch {
+        defs.push({ key, name: key, listenAddresses, tls: false });
+      }
+    } else {
+      // Legacy block without embedded comment — minimal def
+      defs.push({ key, name: key, listenAddresses, tls: false });
+    }
+  }
+  return defs;
+}
+
+/** Builds a single route's handler lines for use inside a server block (at depth-2). */
+function buildRouteBodyForServer(route: ProxyEntry): string[] {
+  return buildRouteHandlerLines(route, "\t\t");
+}
+
+/**
+ * Generates the complete Caddyfile block for a named multi-route server.
+ * Returns the block string (including `# server: key` comment header).
+ * Named routes (isNamedRoute=true) are also emitted as snippet preamble.
+ */
+export function serverDefToBlock(def: import("./types").ServerDef, routes: ProxyEntry[]): { preamble: string; block: string } {
+  const snippets: string[] = [];
+  const namedRoutes = routes.filter(r => r.isNamedRoute && r.namedRouteName);
+  const normalRoutes = routes.filter(r => !r.isNamedRoute);
+
+  // Snippets go before the server block in the conf.d file
+  for (const nr of namedRoutes) {
+    snippets.push(`&(${nr.namedRouteName!}) {`);
+    snippets.push(...buildRouteBodyForServer(nr));
+    snippets.push("}");
+  }
+
+  if (def.listenAddresses.length === 0) {
+    throw new Error(`Server '${def.key}' has no listen addresses — cannot generate Caddyfile block`);
+  }
+  const addr = def.listenAddresses.join(" ");
+  // Embed server def as a comment so syncConf can reconstruct it without a separate JSON file.
+  // Keys with undefined values are omitted by JSON.stringify.
+  const defPayload = {
+    name: def.name,
+    tls: def.tls || undefined,
+    tlsAdvanced: def.tlsAdvanced,
+    mtls: def.mtls,
+    serverReadTimeout: def.serverReadTimeout,
+    serverReadHeaderTimeout: def.serverReadHeaderTimeout,
+    serverWriteTimeout: def.serverWriteTimeout,
+    serverIdleTimeout: def.serverIdleTimeout,
+    maxHeaderBytes: def.maxHeaderBytes,
+    accessLog: def.accessLog,
+    errorHandlers: def.errorHandlers?.length ? def.errorHandlers : undefined,
+    routeLabels: def.routeLabels && Object.keys(def.routeLabels).length ? def.routeLabels : undefined,
+  };
+  const lines: string[] = [`# server: ${def.key}`, `# serverdef: ${JSON.stringify(defPayload)}`, `${addr} {`];
+
+  // Server-level TLS
+  if (def.tls) {
+    const tlsMock = { tls: def.tls, tlsAdvanced: def.tlsAdvanced, mtls: def.mtls };
+    lines.push(...buildTlsCaddyLines(tlsMock));
+  }
+  // Server-level access log
+  if (def.accessLog) lines.push(...buildLogCaddyLines(def.accessLog));
+
+  // Routes: matcher routes first, catch-all last
+  const matcherRoutes = normalRoutes.filter(r => r.matchers && Object.keys(buildMatcherJson(r.matchers)).length > 0);
+  const catchAllRoutes = normalRoutes.filter(r => !r.matchers || !Object.keys(buildMatcherJson(r.matchers)).length);
+
+  for (let i = 0; i < matcherRoutes.length; i++) {
+    const route = matcherRoutes[i];
+    const matcherName = `r${i}`;
+    const useHandlePath = route.handlePath && isPathOnlyMatcher(route.matchers!) && !!(route.matchers!.path?.length);
+    if (useHandlePath) {
+      const paths = route.matchers!.path!.join(" ");
+      lines.push(`\thandle_path ${paths} {`);
+      lines.push(...buildRouteBodyForServer(route));
+      lines.push("\t}");
+    } else {
+      lines.push(...buildMatcherCaddyLines(route.matchers!, matcherName, "\t"));
+      lines.push(`\thandle @${matcherName} {`);
+      lines.push(...buildRouteBodyForServer(route));
+      lines.push("\t}");
+    }
+  }
+
+  for (const route of catchAllRoutes) {
+    lines.push("\thandle {");
+    lines.push(...buildRouteBodyForServer(route));
+    lines.push("\t}");
+  }
+
+  // Named-route invoke directives
+  for (const nr of namedRoutes) {
+    if (nr.matchers && Object.keys(buildMatcherJson(nr.matchers)).length > 0) {
+      const matcherName = `nr_${nr.namedRouteName!}`;
+      lines.push(...buildMatcherCaddyLines(nr.matchers, matcherName, "\t"));
+      lines.push(`\thandle @${matcherName} {`);
+      lines.push(`\t\tinvoke ${nr.namedRouteName!}`);
+      lines.push("\t}");
+    } else {
+      lines.push(`\tinvoke ${nr.namedRouteName!}`);
+    }
+  }
+
+  // Server-level error handlers
+  if (def.errorHandlers?.length) lines.push(...buildErrorHandlerCaddyLines(def.errorHandlers));
+
+  lines.push("}");
+
+  return {
+    preamble: snippets.join("\n"),
+    block: lines.join("\n"),
+  };
+}
+
+/**
+ * Finds the block for a named server (identified by `# server: key` comment).
+ * Returns undefined if not found.
+ */
+export function findServerBlock(lines: string[], serverKey: string): BlockPosition | undefined {
+  const positions = findBlockPositions(lines);
+  return positions.find(p => p.serverKey === serverKey);
+}
+
+/**
+ * Writes (inserts or replaces) a named server block in conf.d content.
+ * Removes ALL existing blocks for the key first (deduplicates from past append bugs),
+ * then appends the freshly generated block.
+ */
+export function surgicallyWriteServerBlock(content: string, def: import("./types").ServerDef, routes: ProxyEntry[]): string {
+  const { preamble, block } = serverDefToBlock(def, routes);
+  const fullBlock = preamble ? `${preamble}\n\n${block}` : block;
+
+  // Remove every existing block for this key so we never produce duplicates
+  let cleaned = content;
+  while (findServerBlock(cleaned.split("\n"), def.key)) {
+    cleaned = surgicallyRemoveServerBlock(cleaned, def.key);
+  }
+
+  const base = cleaned.trim() ? cleaned.trimEnd() : CONF_HEADER;
+  return base + "\n\n" + fullBlock + "\n";
+}
+
+/**
+ * Removes duplicate named server blocks from conf.d content.
+ * When the old append bug caused multiple blocks for the same key, this removes all but the last.
+ * Returns the cleaned content and a flag indicating whether any changes were made.
+ */
+export function deduplicateServerBlocks(content: string): { content: string; changed: boolean } {
+  const lines = content.split("\n");
+  const positions = findBlockPositions(lines);
+
+  const counts = new Map<string, number>();
+  for (const pos of positions) {
+    if (pos.serverKey) counts.set(pos.serverKey, (counts.get(pos.serverKey) ?? 0) + 1);
+  }
+
+  let cleaned = content;
+  let changed = false;
+  for (const [key, count] of counts) {
+    if (count > 1) {
+      for (let i = 0; i < count - 1; i++) {
+        const next = surgicallyRemoveServerBlock(cleaned, key);
+        if (next !== cleaned) { cleaned = next; changed = true; }
+      }
+    }
+  }
+  return { content: cleaned, changed };
+}
+
+/**
+ * Removes a named server block from conf.d content, identified by `# server: key` comment.
+ */
+export function surgicallyRemoveServerBlock(content: string, serverKey: string): string {
+  const lines = content.split("\n");
+  const pos = findServerBlock(lines, serverKey);
+  if (!pos) return content;
+
+  const start = pos.serverKeyLine ?? pos.labelLine ?? pos.headerLine;
+  let end = pos.closingLine;
+  while (end + 1 < lines.length && lines[end + 1].trim() === "") end++;
+  return [...lines.slice(0, start), ...lines.slice(end + 1)].join("\n");
+}
+
+/**
+ * Builds/patches the Caddy JSON config for a named server (multiple routes).
+ * All routes belonging to the same namedServerKey are combined into one CaddyServer entry.
+ */
+export function mergeNamedServer(
+  config: CaddyConfig,
+  def: import("./types").ServerDef,
+  routes: ProxyEntry[],
+): CaddyConfig {
+  const servers = { ...(config.apps?.http?.servers ?? {}) };
+
+  const caddyRoutes: CaddyRoute[] = [];
+  const namedRoutesMap: Record<string, { handle: CaddyHandler[] }> = {};
+  const normalRoutes = routes.filter(r => !r.isNamedRoute);
+  const namedRoutes = routes.filter(r => r.isNamedRoute && r.namedRouteName);
+
+  // Named routes go into named_routes map; their server route just invokes
+  for (const nr of namedRoutes) {
+    const handles = buildRouteHandlesForEntry(nr);
+    namedRoutesMap[nr.namedRouteName!] = { handle: handles };
+    const invokeRoute: CaddyRoute = { handle: [{ handler: "invoke", name: nr.namedRouteName! }] };
+    if (nr.matchers) invokeRoute.match = [buildMatcherJson(nr.matchers)];
+    caddyRoutes.push(invokeRoute);
+  }
+
+  // Sort normal routes: matcher routes first, catch-all last
+  const matcherRoutes = normalRoutes.filter(r => r.matchers && Object.keys(buildMatcherJson(r.matchers)).length > 0);
+  const catchAllRoutes = normalRoutes.filter(r => !r.matchers || !Object.keys(buildMatcherJson(r.matchers)).length);
+
+  for (const route of [...matcherRoutes, ...catchAllRoutes]) {
+    const handles = buildRouteHandlesForEntry(route);
+    const cRoute: CaddyRoute = { handle: handles, terminal: !route.matchers };
+    if (route.matchers) cRoute.match = [buildMatcherJson(route.matchers)];
+    caddyRoutes.push(cRoute);
+  }
+
+  const listenAddrs = def.listenAddresses.length ? def.listenAddresses : [`:${routes[0]?.externalPort ?? 80}`];
+
+  const server: CaddyServer = {
+    listen: listenAddrs,
+    routes: caddyRoutes,
+  };
+  if (def.tls) server.tls_connection_policies = [buildTlsPolicy(def)];
+  if (Object.keys(namedRoutesMap).length) {
+    (server as Record<string, unknown>).named_routes = namedRoutesMap;
+  }
+
+  // Apply server-level settings from ServerDef
+  if (def.serverReadTimeout) server.read_timeout = def.serverReadTimeout;
+  if (def.serverReadHeaderTimeout) server.read_header_timeout = def.serverReadHeaderTimeout;
+  if (def.serverWriteTimeout) server.write_timeout = def.serverWriteTimeout;
+  if (def.serverIdleTimeout) server.idle_timeout = def.serverIdleTimeout;
+  if (def.maxHeaderBytes) server.max_header_bytes = def.maxHeaderBytes;
+
+  if (def.accessLog) {
+    const loggerName = `cockpit-server-${def.key}`;
+    (server as Record<string, unknown>).logs = { default_logger_name: loggerName };
+  }
+
+  if (def.errorHandlers?.length) {
+    const built = buildErrorRoutes(def.errorHandlers);
+    if (built) (server as Record<string, unknown>).errors = built;
+  }
+
+  servers[def.key] = server;
+
+  const hasTls = Object.values(servers).some(
+    s => Array.isArray(s.tls_connection_policies) && s.tls_connection_policies.length > 0,
+  );
+
+  // Build access log config entry
+  let logging = config.logging;
+  if (def.accessLog) {
+    const loggerName = `cockpit-server-${def.key}`;
+    const existingLogs = { ...(config.logging?.logs ?? {}) };
+    existingLogs[loggerName] = {
+      writer: buildLoggingWriter(def.accessLog),
+      ...(def.accessLog.format ? { encoder: { format: def.accessLog.format } } : {}),
+      ...(def.accessLog.level ? { level: def.accessLog.level } : {}),
+    };
+    const defExcludes = new Set<string>(existingLogs.default?.exclude ?? []);
+    defExcludes.add(`http.log.access.${loggerName}`);
+    existingLogs.default = { ...(existingLogs.default ?? {}), exclude: [...defExcludes] };
+    logging = { logs: existingLogs };
+  }
+
+  return {
+    ...config,
+    logging,
+    apps: {
+      ...config.apps,
+      http: { ...config.apps?.http, servers },
+      tls: hasTls
+        ? { automation: { policies: [{ issuers: [{ module: "internal" }] }] } }
+        : config.apps?.tls,
+    },
+  };
+}
+
+/** Removes a named server and all its routes from the JSON config. */
+export function removeNamedServer(config: CaddyConfig, serverKey: string): CaddyConfig {
+  const servers = { ...(config.apps?.http?.servers ?? {}) };
+  delete servers[serverKey];
+  const hasTls = Object.values(servers).some(
+    s => Array.isArray(s.tls_connection_policies) && s.tls_connection_policies.length > 0,
+  );
+  const loggerName = `cockpit-server-${serverKey}`;
+  let logging = config.logging;
+  if (config.logging?.logs) {
+    const logs = { ...config.logging.logs };
+    delete logs[loggerName];
+    const excKey = `http.log.access.${loggerName}`;
+    if (logs.default?.exclude) {
+      const filtered = logs.default.exclude.filter(e => e !== excKey);
+      logs.default = filtered.length
+        ? { ...logs.default, exclude: filtered }
+        : Object.fromEntries(Object.entries(logs.default).filter(([k]) => k !== "exclude")) as typeof logs.default;
+      if (logs.default && !Object.keys(logs.default).length) delete logs.default;
+    }
+    logging = Object.keys(logs).length > 0 ? { logs } : undefined;
+  }
+  return {
+    ...config,
+    logging,
+    apps: {
+      ...config.apps,
+      http: { ...config.apps?.http, servers },
+      tls: hasTls ? config.apps?.tls : undefined,
+    },
+  };
+}
+
+/** Builds the CaddyHandler list for a single ProxyEntry (used by mergeNamedServer). */
+function buildRouteHandlesForEntry(proxy: ProxyEntry): CaddyHandler[] {
+  const handlePathRw = proxy.handlePath ? buildHandlePathRewriteJson(proxy.matchers) : undefined;
+
+  if (proxy.staticResponse) {
+    const h: Record<string, unknown> = {
+      handler: "static_response",
+      status_code: proxy.staticResponse.statusCode,
+    };
+    if (proxy.staticResponse.body) h.body = proxy.staticResponse.body;
+    if (proxy.staticResponse.close) h.close = true;
+    const result: CaddyHandler[] = [];
+    if (handlePathRw) result.push(handlePathRw);
+    result.push(h as CaddyHandler);
+    return result;
+  }
+  if (proxy.redirect) {
+    const result: CaddyHandler[] = [];
+    if (handlePathRw) result.push(handlePathRw);
+    result.push({
+      handler: "static_response",
+      headers: { Location: [caddyPlaceholderToJson(proxy.redirect.to)] },
+      status_code: proxy.redirect.code,
+    });
+    return result;
+  }
+  if (proxy.fileServer) {
+    const handles: CaddyHandler[] = [];
+    if (handlePathRw) handles.push(handlePathRw);
+    if (proxy.compress) handles.push(buildEncodeHandler());
+    if (proxy.basicAuth?.length) handles.push(buildBasicAuthHandler(proxy.basicAuth));
+    if (proxy.responseHeaders?.length) handles.push(buildResponseHeadersHandler(proxy.responseHeaders));
+    const fsH: Record<string, unknown> = { handler: "file_server", root: proxy.fileServer.root };
+    if (proxy.fileServer.browse) fsH["browse"] = {};
+    handles.push(fsH as CaddyHandler);
+    return handles;
+  }
+  const handles: CaddyHandler[] = [];
+  if (handlePathRw) handles.push(handlePathRw);
+  if (proxy.compress) handles.push(buildEncodeHandler());
+  if (proxy.basicAuth?.length) handles.push(buildBasicAuthHandler(proxy.basicAuth));
+  if (proxy.responseHeaders?.length) handles.push(buildResponseHeadersHandler(proxy.responseHeaders));
+  if (proxy.rewrite) handles.push(buildRewriteHandler(proxy.rewrite));
+  if (proxy.forwardAuth) {
+    const faH = buildForwardAuthHandler(proxy.forwardAuth);
+    if (faH) handles.push(faH);
+  }
+  handles.push(buildReverseProxyHandler(proxy, proxy.errorHandlers));
+  return handles;
+}
+
+// ---------------------------------------------------------------------------
 // Main Caddyfile global options — server-level timeouts & request limits
 // ---------------------------------------------------------------------------
 
@@ -1944,10 +2704,11 @@ function findGlobalBlock(content: string): { open: number; close: number } | nul
   return null;
 }
 
-/** Build the `servers :PORT { timeouts { ... } }` blocks for proxies that have timeouts set. */
+/** Build the `servers :PORT { timeouts { ... } }` blocks for proxies that have timeouts set.
+ * Proxies belonging to a named ServerDef are excluded — their timeouts are in the ServerDef block. */
 function buildManagedServersBlocks(proxies: ProxyEntry[]): string {
   return proxies
-    .filter(p => p.serverReadTimeout || p.serverReadHeaderTimeout || p.serverWriteTimeout || p.serverIdleTimeout || p.maxHeaderBytes)
+    .filter(p => !p.namedServerKey && (p.serverReadTimeout || p.serverReadHeaderTimeout || p.serverWriteTimeout || p.serverIdleTimeout || p.maxHeaderBytes))
     .map(p => {
       const lines = [`\tservers :${p.externalPort} {`];
       const tLines: string[] = [];

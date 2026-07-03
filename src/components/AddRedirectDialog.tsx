@@ -2,11 +2,15 @@ import { useState } from "react";
 import {
   Alert,
   Button,
+  Checkbox,
   Form,
   FormGroup,
   FormHelperText,
+  FormSelect,
+  FormSelectOption,
   HelperText,
   HelperTextItem,
+  Label,
   Modal,
   ModalBody,
   ModalFooter,
@@ -17,7 +21,9 @@ import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { CaddyApiError } from "../api";
-import type { ProxyEntry } from "../api";
+import type { ProxyEntry, RouteMatch, ServerDef } from "../api";
+import { RouteMatchersSection } from "./RouteMatchersSection";
+import { parseListenPort } from "./AddServerDialog";
 
 const REDIRECT_CODES = [301, 302, 307, 308] as const;
 
@@ -28,14 +34,24 @@ interface InitialValues {
   label?: string;
 }
 
+export interface ServerContext {
+  serverKey: string;
+  serverName: string;
+  port: number;
+}
+
 interface Props {
   existingPorts: number[];
   onAdd: (entry: Omit<ProxyEntry, "id" | "serverKey">) => Promise<void>;
   onClose: () => void;
   initialValues?: InitialValues;
+  initialMatchers?: RouteMatch;
+  initialHandlePath?: boolean;
+  servers?: ServerDef[];
+  initialServerKey?: string;
 }
 
-export function AddRedirectDialog({ existingPorts, onAdd, onClose, initialValues }: Props) {
+export function AddRedirectDialog({ existingPorts, onAdd, onClose, initialValues, initialMatchers, initialHandlePath, servers, initialServerKey }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
   const confirmAction = useConfirmAction();
@@ -44,25 +60,38 @@ export function AddRedirectDialog({ existingPorts, onAdd, onClose, initialValues
   const [to, setTo] = useState(initialValues?.to ?? "");
   const [code, setCode] = useState<301 | 302 | 307 | 308>(initialValues?.code ?? 308);
   const [label, setLabel] = useState(initialValues?.label ?? "");
+  const [matchers, setMatchers] = useState<RouteMatch | undefined>(initialMatchers);
+  const [handlePath, setHandlePath] = useState(initialHandlePath ?? false);
+  const [selectedServerKey, setSelectedServerKey] = useState(initialServerKey ?? "");
   const [portErr, setPortErr] = useState<string | null>(null);
   const [toErr, setToErr] = useState<string | null>(null);
+
+  const selectedServer = servers?.find(s => s.key === selectedServerKey);
+  const serverCtx: ServerContext | undefined = selectedServer ? {
+    serverKey: selectedServer.key,
+    serverName: selectedServer.name,
+    port: parseListenPort(selectedServer.listenAddresses[0] ?? ":443"),
+  } : undefined;
 
   function applyHttpsShortcut() {
     setPort("80");
     setTo("https://{host}{uri}");
     setCode(308);
+    setSelectedServerKey("");
     setPortErr(null);
     setToErr(null);
   }
 
   function validate(): boolean {
     let ok = true;
-    const n = parseInt(port, 10);
-    if (!port) { setPortErr(t("add_redirect.validation_port_required")); ok = false; }
-    else if (isNaN(n)) { setPortErr(t("add_redirect.validation_port_number")); ok = false; }
-    else if (n < 1 || n > 65535) { setPortErr(t("add_redirect.validation_port_range")); ok = false; }
-    else if (existingPorts.includes(n)) { setPortErr(t("add_redirect.validation_port_duplicate", { port: n })); ok = false; }
-    else setPortErr(null);
+    if (!serverCtx) {
+      const n = parseInt(port, 10);
+      if (!port) { setPortErr(t("add_redirect.validation_port_required")); ok = false; }
+      else if (isNaN(n)) { setPortErr(t("add_redirect.validation_port_number")); ok = false; }
+      else if (n < 1 || n > 65535) { setPortErr(t("add_redirect.validation_port_range")); ok = false; }
+      else if (existingPorts.includes(n)) { setPortErr(t("add_redirect.validation_port_duplicate", { port: n })); ok = false; }
+      else setPortErr(null);
+    }
 
     if (!to.trim()) { setToErr(t("add_redirect.validation_to_required")); ok = false; }
     else setToErr(null);
@@ -85,7 +114,7 @@ export function AddRedirectDialog({ existingPorts, onAdd, onClose, initialValues
           <Alert
             variant="warning"
             isInline
-            title={t("add_redirect.confirm_body", { port, to, code })}
+            title={t("add_redirect.confirm_body", { port: serverCtx ? serverCtx.port : port, to, code })}
             style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}
           />
         )}
@@ -110,22 +139,44 @@ export function AddRedirectDialog({ existingPorts, onAdd, onClose, initialValues
             />
           </FormGroup>
 
-          <FormGroup label={t("add_redirect.field_from_port")} fieldId="redirect-port" isRequired>
-            <TextInput
-              id="redirect-port"
-              type="number"
-              value={port}
-              onChange={(_e, v) => { setPort(v); setPortErr(null); }}
-              placeholder="80"
-              isDisabled={isLocked}
-              validated={portErr ? "error" : "default"}
-            />
-            {portErr && (
-              <FormHelperText>
-                <HelperText><HelperTextItem variant="error">{portErr}</HelperTextItem></HelperText>
-              </FormHelperText>
-            )}
-          </FormGroup>
+          {servers && servers.length > 0 && (
+            <FormGroup label={t("servers.selector_label")} fieldId="redirect-server">
+              <FormSelect
+                id="redirect-server"
+                value={selectedServerKey}
+                onChange={(_e, v) => { setSelectedServerKey(v); setPortErr(null); }}
+                isDisabled={isLocked}
+              >
+                <FormSelectOption value="" label={t("servers.selector_none")} />
+                {servers.map(s => (
+                  <FormSelectOption key={s.key} value={s.key} label={`${s.name} (${s.listenAddresses[0] ?? ""})`} />
+                ))}
+              </FormSelect>
+            </FormGroup>
+          )}
+
+          {serverCtx ? (
+            <FormGroup label={t("add_redirect.field_from_port")} fieldId="redirect-port">
+              <Label isCompact color="blue">{serverCtx.serverName} (:{serverCtx.port})</Label>
+            </FormGroup>
+          ) : (
+            <FormGroup label={t("add_redirect.field_from_port")} fieldId="redirect-port" isRequired>
+              <TextInput
+                id="redirect-port"
+                type="number"
+                value={port}
+                onChange={(_e, v) => { setPort(v); setPortErr(null); }}
+                placeholder="80"
+                isDisabled={isLocked}
+                validated={portErr ? "error" : "default"}
+              />
+              {portErr && (
+                <FormHelperText>
+                  <HelperText><HelperTextItem variant="error">{portErr}</HelperTextItem></HelperText>
+                </FormHelperText>
+              )}
+            </FormGroup>
+          )}
 
           <FormGroup label={t("add_redirect.field_to_url")} fieldId="redirect-to" isRequired>
             <TextInput
@@ -163,6 +214,17 @@ export function AddRedirectDialog({ existingPorts, onAdd, onClose, initialValues
             </div>
           </FormGroup>
         </Form>
+        <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!v?.path?.length) setHandlePath(false); }} isDisabled={isLocked} />
+        {matchers?.path?.length && !matchers.host?.length && !matchers.method?.length && !matchers.header && !matchers.query && !matchers.remote_ip && (
+          <Checkbox
+            id="add-redirect-handle-path"
+            label={t("handle_path.label")}
+            isChecked={handlePath}
+            onChange={(_e, v) => setHandlePath(v)}
+            isDisabled={isLocked}
+            style={{ marginLeft: "1rem", marginBottom: "0.5rem" }}
+          />
+        )}
 
         {confirmAction.error && (
           <Alert variant="danger" isInline title={confirmAction.error} style={{ marginTop: "var(--pf-v6-global--spacer--md)" }} />
@@ -178,7 +240,7 @@ export function AddRedirectDialog({ existingPorts, onAdd, onClose, initialValues
               onClick={() => void confirmAction.submit(async () => {
                 try {
                   await onAdd({
-                    externalPort: parseInt(port, 10),
+                    externalPort: serverCtx ? serverCtx.port : parseInt(port, 10),
                     externalScheme: undefined,
                     externalHost: undefined,
                     targetHost: "localhost",
@@ -188,6 +250,9 @@ export function AddRedirectDialog({ existingPorts, onAdd, onClose, initialValues
                     tlsSkipVerify: false,
                     label: label.trim() || undefined,
                     redirect: { to: to.trim(), code },
+                    matchers: matchers ?? undefined,
+                    handlePath: handlePath || undefined,
+                    namedServerKey: serverCtx?.serverKey,
                   });
                 } catch (e) {
                   if (e instanceof CaddyApiError) {
@@ -197,7 +262,7 @@ export function AddRedirectDialog({ existingPorts, onAdd, onClose, initialValues
                   }
                   throw e;
                 }
-                toast.success(t("toast.proxy_added", { port }));
+                toast.success(t("toast.proxy_added", { port: serverCtx ? serverCtx.port : port }));
                 onClose();
               })}
             >
