@@ -169,7 +169,7 @@ function ProxyRow({ proxy, onEdit, onDelete, onDuplicate, probeStatuses, servers
                 id={`proxy-${proxy.id}`}
                 style={{ fontFamily: "monospace", fontWeight: "bold" }}
               >
-                :{proxy.externalPort}
+                {proxy.externalHost ? `${proxy.externalHost}:${proxy.externalPort}` : `:${proxy.externalPort}`}
               </a>
               {serverName && (
                 <Label

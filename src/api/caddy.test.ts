@@ -3,6 +3,7 @@ import {
   parseLabelsFromCaddyfile,
   parseLegacyLabelsFromCaddyfile,
   parseConfTlsMap,
+  parseConfExternalAddresses,
   extractRawBlocksFromCaddyfile,
   buildMigratedConfContent,
   proxyToBlock,
@@ -68,12 +69,12 @@ const proxy = (overrides: Partial<ProxyEntry> = {}): ProxyEntry => ({
 
 describe("parseLabelsFromCaddyfile", () => {
   it("reads labels above :PORT blocks", () => {
-    expect(parseLabelsFromCaddyfile(SIMPLE_CONF)).toEqual({ 7700: "homarr", 8096: "jellyfin" });
+    expect(parseLabelsFromCaddyfile(SIMPLE_CONF)).toEqual({ ":7700": "homarr", ":8096": "jellyfin" });
   });
 
   it("reads labels above https://host:PORT blocks", () => {
     const conf = `# label: myapp\nhttps://host.lan:7700 {\n\treverse_proxy localhost:8080\n}\n`;
-    expect(parseLabelsFromCaddyfile(conf)).toEqual({ 7700: "myapp" });
+    expect(parseLabelsFromCaddyfile(conf)).toEqual({ "https://host.lan:7700": "myapp" });
   });
 
   it("ignores blocks without a label comment", () => {
@@ -85,7 +86,12 @@ describe("parseLabelsFromCaddyfile", () => {
     // Parser is lenient: blank lines do not clear the pending label since we
     // never generate blank lines between label and block header ourselves.
     const conf = `# label: orphan\n\n:7700 {\n\treverse_proxy http://localhost:8080\n}\n`;
-    expect(parseLabelsFromCaddyfile(conf)).toEqual({ 7700: "orphan" });
+    expect(parseLabelsFromCaddyfile(conf)).toEqual({ ":7700": "orphan" });
+  });
+
+  it("reads labels above a bare-hostname block with no port (#95)", () => {
+    const conf = `# label: git\ngit.example.com {\n\treverse_proxy localhost:4732\n}\n`;
+    expect(parseLabelsFromCaddyfile(conf)).toEqual({ "git.example.com": "git" });
   });
 });
 
@@ -96,7 +102,7 @@ describe("parseLabelsFromCaddyfile", () => {
 describe("parseLegacyLabelsFromCaddyfile", () => {
   it("reads inline label comment inside block", () => {
     const conf = `https://host.lan:7700 {\n\t# homarr\n\ttls internal\n\treverse_proxy localhost:8998\n}\n`;
-    expect(parseLegacyLabelsFromCaddyfile(conf)).toEqual({ 7700: "homarr" });
+    expect(parseLegacyLabelsFromCaddyfile(conf)).toEqual({ "https://host.lan:7700": "homarr" });
   });
 
   it("returns empty when no inline comments", () => {
@@ -111,31 +117,57 @@ describe("parseLegacyLabelsFromCaddyfile", () => {
 describe("parseConfTlsMap", () => {
   it("detects tls from https:// block header", () => {
     const conf = `https://host.lan:7700 {\n\treverse_proxy localhost:8998\n}\n`;
-    expect(parseConfTlsMap(conf)).toEqual({ 7700: true });
+    expect(parseConfTlsMap(conf)).toEqual({ "https://host.lan:7700": true });
   });
 
   it("detects tls internal directive", () => {
     const conf = `:7700 {\n\ttls internal\n\treverse_proxy http://localhost:8998\n}\n`;
-    expect(parseConfTlsMap(conf)).toEqual({ 7700: true });
+    expect(parseConfTlsMap(conf)).toEqual({ ":7700": true });
   });
 
   it("detects tls with email argument", () => {
     const conf = `:7700 {\n\ttls admin@example.com\n\treverse_proxy http://localhost:8998\n}\n`;
-    expect(parseConfTlsMap(conf)).toEqual({ 7700: true });
+    expect(parseConfTlsMap(conf)).toEqual({ ":7700": true });
   });
 
   it("does not flag tls off as enabled", () => {
     const conf = `:7700 {\n\ttls off\n\treverse_proxy http://localhost:8998\n}\n`;
-    expect(parseConfTlsMap(conf)).toEqual({ 7700: false });
+    expect(parseConfTlsMap(conf)).toEqual({ ":7700": false });
   });
 
   it("does not confuse tls_ prefixed directives", () => {
     const conf = `:7700 {\n\treverse_proxy http://localhost:8998 {\n\t\ttransport http {\n\t\t\ttls_insecure_skip_verify\n\t\t}\n\t}\n}\n`;
-    expect(parseConfTlsMap(conf)).toEqual({ 7700: false });
+    expect(parseConfTlsMap(conf)).toEqual({ ":7700": false });
   });
 
   it("handles mixed blocks", () => {
-    expect(parseConfTlsMap(MIGRATED_CONF)).toEqual({ 7700: true, 8096: false });
+    expect(parseConfTlsMap(MIGRATED_CONF)).toEqual({ "https://jellyfin.speedport.ip:7700": true, ":8096": false });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// parseConfExternalAddresses
+// ---------------------------------------------------------------------------
+
+describe("parseConfExternalAddresses", () => {
+  it("extracts scheme and host from scheme://host:PORT", () => {
+    const conf = `https://host.lan:7700 {\n\treverse_proxy localhost:8998\n}\n`;
+    expect(parseConfExternalAddresses(conf)).toEqual({ "https://host.lan:7700": { scheme: "https", host: "host.lan" } });
+  });
+
+  it("extracts host from host:PORT", () => {
+    const conf = `host.lan:7700 {\n\treverse_proxy localhost:8998\n}\n`;
+    expect(parseConfExternalAddresses(conf)).toEqual({ "host.lan:7700": { host: "host.lan" } });
+  });
+
+  it("records nothing for a bare :PORT block", () => {
+    const conf = `:7700 {\n\treverse_proxy localhost:8998\n}\n`;
+    expect(parseConfExternalAddresses(conf)).toEqual({});
+  });
+
+  it("extracts host from a bare hostname with no port (#95)", () => {
+    const conf = `git.example.com {\n\treverse_proxy localhost:4732\n}\n`;
+    expect(parseConfExternalAddresses(conf)).toEqual({ "git.example.com": { host: "git.example.com" } });
   });
 });
 
@@ -152,11 +184,20 @@ describe("extractRawBlocksFromCaddyfile", () => {
     expect(blocks[0].raw).toBe(`https://host.lan:7700 {\n\ttls internal\n\treverse_proxy localhost:8998\n}`);
   });
 
-  it("skips global option blocks (no port match)", () => {
+  it("skips the global options block (bare `{`)", () => {
     const conf = `{\n\tadmin off\n}\n:7700 {\n\treverse_proxy http://localhost:8080\n}\n`;
     const blocks = extractRawBlocksFromCaddyfile(conf);
     expect(blocks).toHaveLength(1);
     expect(blocks[0].port).toBe(7700);
+  });
+
+  it("does not drop a bare-hostname block with no port (#95)", () => {
+    const conf = `git.example.com {\n\treverse_proxy localhost:4732\n}\n`;
+    const blocks = extractRawBlocksFromCaddyfile(conf);
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0].address).toBe("git.example.com");
+    expect(blocks[0].port).toBeUndefined();
+    expect(blocks[0].raw).toContain("reverse_proxy localhost:4732");
   });
 
   it("extracts inline label from first comment line inside block", () => {
@@ -199,6 +240,14 @@ describe("buildMigratedConfContent", () => {
     // Block header must be the full https://host:PORT form, not simplified to :PORT
     expect(result).not.toMatch(/^:7700\s*\{/m);
     expect(result).toContain("https://host.lan:7700 {");
+  });
+
+  it("does not produce an empty conf.d for a bare-hostname site block (#95)", () => {
+    const conf = `git.example.com {\n\treverse_proxy localhost:4732\n}\n`;
+    const blocks = extractRawBlocksFromCaddyfile(conf);
+    const result = buildMigratedConfContent(blocks);
+    expect(result).toContain("git.example.com {");
+    expect(result).toContain("reverse_proxy localhost:4732");
   });
 });
 
@@ -461,6 +510,62 @@ function makeConfig(handles: Record<string, unknown>[]): CaddyConfig {
     },
   };
 }
+
+describe("parseProxies — bare-hostname sites sharing an implicit-port server (#95)", () => {
+  it("shows a single bare-hostname route as its own proxy with externalHost set", () => {
+    const config: CaddyConfig = {
+      apps: {
+        http: {
+          servers: {
+            srv0: {
+              listen: [":443"],
+              routes: [{
+                match: [{ host: ["git.example.com"] }],
+                handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:4732" }] }] as import("./types").CaddyHandler[],
+                terminal: true,
+              }],
+            },
+          },
+        },
+      },
+    };
+    const [p] = parseProxies(config);
+    expect(p.externalHost).toBe("git.example.com");
+    expect(p.externalPort).toBe(443);
+    expect(p.targetPort).toBe(4732);
+    expect(p.matchers).toBeUndefined();
+  });
+
+  it("does not drop routes beyond the first when multiple subdomains share one server (#95)", () => {
+    const config: CaddyConfig = {
+      apps: {
+        http: {
+          servers: {
+            srv0: {
+              listen: [":443"],
+              routes: [
+                {
+                  match: [{ host: ["a.example.com"] }],
+                  handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:1111" }] }] as import("./types").CaddyHandler[],
+                  terminal: true,
+                },
+                {
+                  match: [{ host: ["b.example.com"] }],
+                  handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:2222" }] }] as import("./types").CaddyHandler[],
+                  terminal: true,
+                },
+              ],
+            },
+          },
+        },
+      },
+    };
+    const proxies = parseProxies(config);
+    expect(proxies).toHaveLength(2);
+    expect(proxies.map(p => p.externalHost).sort()).toEqual(["a.example.com", "b.example.com"]);
+    expect(proxies.map(p => p.targetPort).sort()).toEqual([1111, 2222]);
+  });
+});
 
 describe("buildServerEntry — rewrite", () => {
   it("prepends strip_path_prefix handler for strip_prefix", () => {

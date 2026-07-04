@@ -11,7 +11,7 @@ import {
   readServerDefs, writeServerDefs, parseServerDefsFromConf,
   surgicallyWriteServerBlock, surgicallyRemoveServerBlock,
   mergeNamedServer, removeNamedServer,
-  deduplicateServerBlocks,
+  deduplicateServerBlocks, proxyAddressKeys, findGlobalBlock,
 } from "../api";
 import type { ProxyEntry, ServerDef } from "../api";
 import { useCaddyConfig } from "./useCaddyConfig";
@@ -65,11 +65,11 @@ function checkServerPortConflicts(
 
 export function useProxies() {
   const { config, loading, error, refresh, update } = useCaddyConfig();
-  const [labels, setLabels] = useState<Record<number, string>>({});
-  const [confTls, setConfTls] = useState<Record<number, boolean>>({});
-  const [confExternal, setConfExternal] = useState<Record<number, { scheme?: string; host?: string }>>({});
-  const [confAccessLog, setConfAccessLog] = useState<Record<number, import("../api").AccessLogConfig>>({});
-  const [confForwardAuth, setConfForwardAuth] = useState<Record<number, import("../api").ForwardAuthConfig>>({});
+  const [labels, setLabels] = useState<Record<string, string>>({});
+  const [confTls, setConfTls] = useState<Record<string, boolean>>({});
+  const [confExternal, setConfExternal] = useState<Record<string, { scheme?: string; host?: string }>>({});
+  const [confAccessLog, setConfAccessLog] = useState<Record<string, import("../api").AccessLogConfig>>({});
+  const [confForwardAuth, setConfForwardAuth] = useState<Record<string, import("../api").ForwardAuthConfig>>({});
   const [caddyfileContent, setCaddyfileContent] = useState<string>("");
   const [servers, setServers] = useState<ServerDef[]>([]);
   // Guards proxies memo from running before the first conf.d read completes.
@@ -124,8 +124,11 @@ export function useProxies() {
   // Poll conf.d and Caddyfile every 3s (pauses when tab hidden)
   useAutoRefresh(() => { syncConf(); syncCaddyfile(); }, 3000);
 
+  // Any site-address block left in the main Caddyfile means migration is needed —
+  // whether it's a legacy file with no conf.d import at all, or one that already
+  // imports conf.d but also has extra hand-added blocks sitting alongside it.
   const needsMigration = useMemo(
-    () => !caddyfileContent.includes("conf.d") && caddyfileContent.includes("reverse_proxy"),
+    () => extractRawBlocksFromCaddyfile(caddyfileContent).length > 0,
     [caddyfileContent],
   );
 
@@ -135,17 +138,25 @@ export function useProxies() {
         const def = servers.find(s => s.key === p.namedServerKey);
         return { ...p, label: def?.routeLabels?.[p.id] };
       }
+      // A bare-hostname conf.d block has no explicit port, so its on-disk address
+      // key won't match buildExternalAddress(p) (which always includes the port) —
+      // try each candidate key (host:port, then bare host) in turn.
+      const keys = proxyAddressKeys(p);
+      const lookup = <T,>(map: Record<string, T>): T | undefined => {
+        for (const k of keys) if (k in map) return map[k];
+        return undefined;
+      };
       return {
         ...p,
-        label: labels[p.externalPort],
-        tls: p.tls || (confTls[p.externalPort] ?? false),
-        externalScheme: p.externalScheme ?? confExternal[p.externalPort]?.scheme,
-        externalHost: p.externalHost ?? confExternal[p.externalPort]?.host,
+        label: lookup(labels),
+        tls: p.tls || (lookup(confTls) ?? false),
+        externalScheme: p.externalScheme ?? lookup(confExternal)?.scheme,
+        externalHost: p.externalHost ?? lookup(confExternal)?.host,
         // Fallback: if the JSON API config doesn't have server.logs (was last pushed by
         // older code), read access log config from the Caddyfile conf.d directly.
-        accessLog: p.accessLog ?? confAccessLog[p.externalPort],
+        accessLog: p.accessLog ?? lookup(confAccessLog),
         // Fallback: read forward_auth config from conf.d when JSON detection is insufficient.
-        forwardAuth: p.forwardAuth ?? confForwardAuth[p.externalPort],
+        forwardAuth: p.forwardAuth ?? lookup(confForwardAuth),
       };
     }),
     [config, labels, confTls, confExternal, confAccessLog, confForwardAuth, servers, serversLoaded],
@@ -210,16 +221,17 @@ export function useProxies() {
         readProxyConf(),
       ]);
       await writeRawProxyConfValidated(surgicallyWriteProxy(current, newProxy));
+      const newProxyKey = proxyAddressKeys(newProxy)[0];
       setLabels(prev => {
         const n = { ...prev };
-        if (newProxy.label) n[newProxy.externalPort] = newProxy.label;
-        else delete n[newProxy.externalPort];
+        if (newProxy.label) n[newProxyKey] = newProxy.label;
+        else delete n[newProxyKey];
         return n;
       });
-      setConfTls(prev => ({ ...prev, [newProxy.externalPort]: newProxy.tls }));
+      setConfTls(prev => ({ ...prev, [newProxyKey]: newProxy.tls }));
       setConfExternal(prev => ({
         ...prev,
-        [newProxy.externalPort]: { scheme: newProxy.externalScheme, host: newProxy.externalHost },
+        [newProxyKey]: { scheme: newProxy.externalScheme, host: newProxy.externalHost },
       }));
       await update(mergeProxy(config, newProxy));
     },
@@ -254,8 +266,10 @@ export function useProxies() {
         return;
       }
 
-      const originalPort = proxies.find(p => p.serverKey === entry.serverKey)?.externalPort
-        ?? entry.externalPort;
+      const originalProxy = proxies.find(p => p.serverKey === entry.serverKey);
+      const originalPort = originalProxy?.externalPort ?? entry.externalPort;
+      const originalKey = originalProxy ? proxyAddressKeys(originalProxy)[0] : proxyAddressKeys(entry)[0];
+      const entryKey = proxyAddressKeys(entry)[0];
 
       // Validate + persist server-level timeouts in global Caddyfile first; throws CaddyfileError on failure.
       const afterProxies = [...proxies.filter(p => p.serverKey !== entry.serverKey), entry];
@@ -275,21 +289,21 @@ export function useProxies() {
 
       setLabels(prev => {
         const n = { ...prev };
-        delete n[originalPort];
-        if (entry.label) n[entry.externalPort] = entry.label;
-        else delete n[entry.externalPort];
+        delete n[originalKey];
+        if (entry.label) n[entryKey] = entry.label;
+        else delete n[entryKey];
         return n;
       });
       setConfTls(prev => {
         const n = { ...prev };
-        delete n[originalPort];
-        n[entry.externalPort] = entry.tls;
+        delete n[originalKey];
+        n[entryKey] = entry.tls;
         return n;
       });
       setConfExternal(prev => {
         const n = { ...prev };
-        delete n[originalPort];
-        n[entry.externalPort] = { scheme: entry.externalScheme, host: entry.externalHost };
+        delete n[originalKey];
+        n[entryKey] = { scheme: entry.externalScheme, host: entry.externalHost };
         return n;
       });
       await update(mergeProxy(config, entry));
@@ -344,9 +358,10 @@ export function useProxies() {
       await syncGlobalTimeouts(proxies.filter(p => p.serverKey !== proxy.serverKey));
       const current = await readProxyConf();
       await writeRawProxyConf(surgicallyRemoveBlock(current, proxy.externalPort));
-      setLabels(prev => { const n = { ...prev }; delete n[proxy.externalPort]; return n; });
-      setConfTls(prev => { const n = { ...prev }; delete n[proxy.externalPort]; return n; });
-      setConfExternal(prev => { const n = { ...prev }; delete n[proxy.externalPort]; return n; });
+      const proxyKey = proxyAddressKeys(proxy)[0];
+      setLabels(prev => { const n = { ...prev }; delete n[proxyKey]; return n; });
+      setConfTls(prev => { const n = { ...prev }; delete n[proxyKey]; return n; });
+      setConfExternal(prev => { const n = { ...prev }; delete n[proxyKey]; return n; });
       await update(removeProxy(config, proxy.serverKey));
     },
     [config, proxies, servers, update],
@@ -393,26 +408,37 @@ export function useProxies() {
   );
 
   const migrate = useCallback(async () => {
-    const blocks = extractRawBlocksFromCaddyfile(caddyfileContent);
+    // Merge with whatever conf.d already manages — migration must be additive,
+    // not destructive, when the user already has proxies set up there.
+    const newBlocks = extractRawBlocksFromCaddyfile(caddyfileContent);
+    const existingBlocks = extractRawBlocksFromCaddyfile(await readProxyConf());
+    const blocks = [...existingBlocks, ...newBlocks];
     const content = buildMigratedConfContent(blocks);
+
+    // Preserve the original global options block (admin, email, acme_ca, etc.) —
+    // migration should only move site blocks to conf.d, not discard global settings.
+    const gb = findGlobalBlock(caddyfileContent);
+    const globalBlock = gb ? caddyfileContent.slice(gb.open, gb.close + 1) : null;
+    const newCaddyfile = globalBlock ? `${globalBlock}\n\n${CONF_D_GLOB}\n` : `${CONF_D_GLOB}\n`;
 
     await writeFile(CADDYFILE_BAK, caddyfileContent);
     await cockpit.spawn(["mkdir", "-p", "/etc/caddy/conf.d"], { superuser: "try" });
     await writeRawProxyConf(content);
-    await writeCaddyfile(CONF_D_GLOB + "\n");
+    await writeCaddyfile(newCaddyfile);
     await reloadService("caddy");
 
     await delay(500);
 
-    const newLabels: Record<number, string> = {};
-    const newConfTls: Record<number, boolean> = {};
+    const newLabels: Record<string, string> = {};
+    const newConfTlsMap = parseConfTlsMap(content);
+    const newConfTls: Record<string, boolean> = {};
     for (const b of blocks) {
-      if (b.label) newLabels[b.port] = b.label;
-      newConfTls[b.port] = parseConfTlsMap(content)[b.port] ?? false;
+      if (b.label) newLabels[b.address] = b.label;
+      newConfTls[b.address] = newConfTlsMap[b.address] ?? false;
     }
     setLabels(newLabels);
     setConfTls(newConfTls);
-    setCaddyfileContent(CONF_D_GLOB + "\n");
+    setCaddyfileContent(newCaddyfile);
     await refresh();
   }, [caddyfileContent, refresh]);
 
