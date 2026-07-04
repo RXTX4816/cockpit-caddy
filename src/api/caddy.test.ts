@@ -22,7 +22,7 @@ import type { CaddyConfig, ProxyEntry, RouteMatch, ServerDef } from "./types";
 // Test fixtures
 // ---------------------------------------------------------------------------
 
-const SIMPLE_CONF = `# Managed by cockpit-caddy - do not edit manually
+const SIMPLE_CONF = `# Managed by cockpit-caddy - edits to this file may be overwritten by user plugin actions
 
 # label: homarr
 :7700 {
