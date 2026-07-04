@@ -2872,14 +2872,19 @@ export interface GlobalOptions {
   onDemandBurst?: number;
 }
 
-/** Parse global options from the cockpit-caddy:opts managed section in a Caddyfile string. */
-export function parseGlobalOptions(content: string): GlobalOptions {
-  const bi = content.indexOf(GLOBAL_OPTS_BEGIN);
-  const ei = content.indexOf(GLOBAL_OPTS_END);
-  if (bi === -1 || ei === -1) return {};
-  const section = content.slice(bi + GLOBAL_OPTS_BEGIN.length, ei);
+/**
+ * Directive keywords recognized by parseOptionLines/buildGlobalOptionsLines.
+ * Used to strip pre-existing top-level directives before inserting the managed
+ * section for the first time, so a save never produces duplicate directives.
+ */
+const KNOWN_GLOBAL_OPTION_KEYS = new Set([
+  "http_port", "https_port", "debug", "grace_period", "shutdown_delay",
+  "email", "acme_ca", "acme_ca_root", "acme_eab", "on_demand_tls",
+]);
+
+/** Parse the recognized global option directives out of a block of Caddyfile lines. */
+function parseOptionLines(lines: string[]): GlobalOptions {
   const opts: GlobalOptions = {};
-  const lines = section.split("\n");
   let i = 0;
   while (i < lines.length) {
     const line = lines[i].trim();
@@ -2926,6 +2931,59 @@ export function parseGlobalOptions(content: string): GlobalOptions {
   return opts;
 }
 
+/**
+ * Parse global options from a Caddyfile string. Prefers the cockpit-caddy:opts
+ * managed section; if absent, falls back to scanning the real top-level global
+ * options block so pre-existing/hand-written directives (or directives from a
+ * Caddyfile that predates the plugin) are still reflected instead of showing
+ * as blank.
+ */
+export function parseGlobalOptions(content: string): GlobalOptions {
+  const bi = content.indexOf(GLOBAL_OPTS_BEGIN);
+  const ei = content.indexOf(GLOBAL_OPTS_END);
+  if (bi !== -1 && ei !== -1) {
+    const section = content.slice(bi + GLOBAL_OPTS_BEGIN.length, ei);
+    return parseOptionLines(section.split("\n"));
+  }
+  const gb = findGlobalBlock(content);
+  if (!gb) return {};
+  return parseOptionLines(content.slice(gb.open + 1, gb.close).split("\n"));
+}
+
+/**
+ * Removes any top-level directives matching KNOWN_GLOBAL_OPTION_KEYS (single-line
+ * or brace-delimited) from a global options block's inner content. Used before
+ * inserting the managed opts section for the first time, so directives that
+ * already exist outside the markers aren't duplicated (which `caddy validate`
+ * would reject).
+ */
+function stripKnownGlobalOptionLines(blockInner: string): string {
+  const lines = blockInner.split("\n");
+  const out: string[] = [];
+  let i = 0;
+  while (i < lines.length) {
+    const trimmed = lines[i].trim();
+    const key = trimmed.split(/\s+/)[0];
+    if (KNOWN_GLOBAL_OPTION_KEYS.has(key)) {
+      if (trimmed.endsWith("{")) {
+        let depth = 1;
+        i++;
+        while (i < lines.length && depth > 0) {
+          const t = lines[i].trim();
+          depth += (t.match(/\{/g) ?? []).length - (t.match(/\}/g) ?? []).length;
+          i++;
+        }
+      } else {
+        i++;
+      }
+      continue;
+    }
+    out.push(lines[i]);
+    i++;
+  }
+  return out.join("\n");
+}
+
 function buildGlobalOptionsLines(opts: GlobalOptions): string {
   const lines: string[] = [];
   if (opts.httpPort) lines.push(`\thttp_port ${opts.httpPort}`);
@@ -2956,17 +3014,36 @@ function buildGlobalOptionsLines(opts: GlobalOptions): string {
  * Writes global Caddy options into the main Caddyfile's managed opts section,
  * validates, and restores on failure. Throws CaddyfileError on validation failure.
  */
-export async function syncGlobalOptions(opts: GlobalOptions): Promise<void> {
+/**
+ * Pure function: computes the patched main Caddyfile content for the given
+ * global options. If the managed section doesn't exist yet, pre-existing
+ * top-level directives for the same keys are stripped first, so the first
+ * save doesn't produce duplicate global options (which caddy validate rejects).
+ */
+export function buildGlobalOptionsPatch(diskContent: string, opts: GlobalOptions): string {
   const body = buildGlobalOptionsLines(opts);
-  const original = (await fsReadFile(MAIN_CADDYFILE, "try")) ?? "";
-  const patched = patchManagedSection(original, GLOBAL_OPTS_BEGIN, GLOBAL_OPTS_END, body);
-  if (patched === original) return;
+  let base = diskContent;
+  const hasMarkers = diskContent.includes(GLOBAL_OPTS_BEGIN) && diskContent.includes(GLOBAL_OPTS_END);
+  if (!hasMarkers) {
+    const gb = findGlobalBlock(diskContent);
+    if (gb) {
+      const inner = stripKnownGlobalOptionLines(diskContent.slice(gb.open + 1, gb.close));
+      base = diskContent.slice(0, gb.open + 1) + inner + diskContent.slice(gb.close);
+    }
+  }
+  return patchManagedSection(base, GLOBAL_OPTS_BEGIN, GLOBAL_OPTS_END, body);
+}
+
+export async function syncGlobalOptions(opts: GlobalOptions): Promise<void> {
+  const diskContent = (await fsReadFile(MAIN_CADDYFILE, "try")) ?? "";
+  const patched = buildGlobalOptionsPatch(diskContent, opts);
+  if (patched === diskContent) return;
 
   await fsWriteFile(MAIN_CADDYFILE, patched, "try");
   try {
     await runCaddyValidate();
   } catch (e) {
-    await fsWriteFile(MAIN_CADDYFILE, original, "try");
+    await fsWriteFile(MAIN_CADDYFILE, diskContent, "try");
     throw e;
   }
 }

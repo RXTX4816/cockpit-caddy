@@ -12,6 +12,7 @@ import {
   surgicallyRemoveBlock,
   surgicallyWriteProxy,
   parseGlobalOptions,
+  buildGlobalOptionsPatch,
   serverDefToBlock,
   surgicallyWriteServerBlock,
   surgicallyRemoveServerBlock,
@@ -1196,6 +1197,51 @@ describe("parseGlobalOptions — on-demand TLS", () => {
   it("does not set onDemandEnabled when block absent", () => {
     const opts = parseGlobalOptions(makeOpts("\temail admin@example.com"));
     expect(opts.onDemandEnabled).toBeUndefined();
+  });
+});
+
+describe("parseGlobalOptions — #96 unmanaged directives fallback", () => {
+  it("reads email/acme_ca from a hand-written global block with no managed markers", () => {
+    const content = "{\n\temail admin@example.com\n\tacme_ca https://acme-staging-v02.api.letsencrypt.org/directory\n}\n";
+    const opts = parseGlobalOptions(content);
+    expect(opts.email).toBe("admin@example.com");
+    expect(opts.acmeCA).toBe("https://acme-staging-v02.api.letsencrypt.org/directory");
+  });
+
+  it("returns empty object when there is no global block at all (zero-config automatic HTTPS)", () => {
+    expect(parseGlobalOptions("git.example.com {\n\treverse_proxy localhost:3000\n}\n")).toEqual({});
+  });
+
+  it("prefers the managed section over unmanaged directives when both exist", () => {
+    const content = `{\n${OPTS_BEGIN}\n\temail managed@example.com\n${OPTS_END}\n}\n`;
+    const opts = parseGlobalOptions(content);
+    expect(opts.email).toBe("managed@example.com");
+  });
+});
+
+describe("buildGlobalOptionsPatch — #96 no duplicate directives on first save", () => {
+  it("removes a pre-existing unmanaged email directive before inserting the managed section", () => {
+    const content = "{\n\temail old@example.com\n}\n";
+    const patched = buildGlobalOptionsPatch(content, { email: "new@example.com" });
+    const emailMatches = patched.match(/^\s*email /gm) ?? [];
+    expect(emailMatches).toHaveLength(1);
+    expect(patched).toContain("email new@example.com");
+    expect(patched).not.toContain("old@example.com");
+  });
+
+  it("leaves other unmanaged directives (e.g. admin off) untouched", () => {
+    const content = "{\n\tadmin off\n\temail old@example.com\n}\n";
+    const patched = buildGlobalOptionsPatch(content, { email: "new@example.com" });
+    expect(patched).toContain("admin off");
+    expect(patched).toContain("email new@example.com");
+  });
+
+  it("does not duplicate directives on a second save once the managed section exists", () => {
+    const first = buildGlobalOptionsPatch("{\n\temail old@example.com\n}\n", { email: "new@example.com" });
+    const second = buildGlobalOptionsPatch(first, { email: "second@example.com" });
+    const emailMatches = second.match(/^\s*email /gm) ?? [];
+    expect(emailMatches).toHaveLength(1);
+    expect(second).toContain("email second@example.com");
   });
 });
 
