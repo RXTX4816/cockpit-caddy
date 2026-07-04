@@ -234,7 +234,7 @@
     "status_error": "Probe error (curl not available?)",
     "toggle_label": "Health Monitor",
     "confirm_title": "Enable upstream health monitor?",
-    "confirm_body": "Every 30 seconds, cockpit-caddy will probe each proxy's upstream with an HTTP request (5 s connect timeout, 10 s max). Any HTTP response — even 4xx/5xx — counts as reachable; connection refused or timeout shows the upstream as down. Probing stops as soon as you disable the toggle.",
+    "confirm_body": "Every 5 seconds, cockpit-caddy will probe each proxy's upstream with an HTTP request (5 s connect timeout, 10 s max). Any HTTP response — even 4xx/5xx — counts as reachable; connection refused or timeout shows the upstream as down. Probing stops as soon as you disable the toggle.",
     "confirm_enable": "Enable",
     "confirm_cancel": "Cancel"
   },
