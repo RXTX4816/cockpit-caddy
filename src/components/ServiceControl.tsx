@@ -1,7 +1,6 @@
 import { type ReactNode } from "react";
-import { ServiceControl as BaseServiceControl } from "@rxtx4816/cockpit-plugin-base-react/systemd";
+import { ServiceControl as BaseServiceControl, ServiceStatusBadge } from "@rxtx4816/cockpit-plugin-base-react/systemd";
 import { useTranslation } from "react-i18next";
-import { StatusBadge } from "./StatusBadge";
 import type { ServiceStatus } from "../api";
 
 interface Props {
@@ -20,7 +19,7 @@ export function ServiceControl({ status, loading, onRefresh, extraActions }: Pro
       status={status}
       loading={loading}
       onRefresh={onRefresh}
-      statusBadge={<StatusBadge status={status} />}
+      statusBadge={<ServiceStatusBadge status={status} />}
       extraActions={extraActions}
       labels={{
         start: t("service.start"),
