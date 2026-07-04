@@ -9,7 +9,7 @@ import { addProxy, spawnCmd } from './helpers';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
   await dismissAdminBanner(page);
-  await page.getByRole('button', { name: /add proxy/i }).waitFor({ state: 'visible', timeout: 15000 });
+  await page.getByRole('button', { name: /add proxy/i }).first().waitFor({ state: 'visible', timeout: 15000 });
 }
 
 async function startListener(page: import('@playwright/test').Page, port: number): Promise<void> {

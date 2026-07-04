@@ -18,7 +18,7 @@ const CONF_HEADER = '# Managed by cockpit-caddy - edits to this file may be over
 // Low-level cockpit helpers (run inside the plugin page's browser context)
 // ---------------------------------------------------------------------------
 
-function writeFile(page: Page, path: string, content: string): Promise<void> {
+export function writeFile(page: Page, path: string, content: string): Promise<void> {
   return page.evaluate(
     ([p, c]) =>
       new Promise<void>((resolve, reject) =>
