@@ -228,7 +228,7 @@ export function extractRawBlocksFromCaddyfile(content: string): RawBlock[] {
 
 /** Builds the conf.d file content from raw blocks, preserving all original syntax. */
 export function buildMigratedConfContent(blocks: RawBlock[]): string {
-  const header = "# Managed by cockpit-caddy - do not edit manually\n";
+  const header = "# Managed by cockpit-caddy - edits to this file may be overwritten by user plugin actions\n";
   if (blocks.length === 0) return header + "\n";
   const parts = blocks.map(b => (b.label ? `# label: ${b.label}\n` : "") + b.raw);
   return header + "\n" + parts.join("\n\n") + "\n";
@@ -419,7 +419,7 @@ export async function readProxyConf(): Promise<string> {
   }
 }
 
-const CONF_HEADER = "# Managed by cockpit-caddy - do not edit manually";
+const CONF_HEADER = "# Managed by cockpit-caddy - edits to this file may be overwritten by user plugin actions";
 
 /** Converts Caddyfile short placeholders to JSON API long form. */
 function caddyPlaceholderToJson(s: string): string {

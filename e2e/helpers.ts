@@ -12,7 +12,7 @@ import type { Page } from '@playwright/test';
 export const PROXY_CONF_PATH = '/etc/caddy/conf.d/cockpit-caddy.conf';
 export const SERVERS_CONF_PATH = '/etc/caddy/conf.d/cockpit-caddy-servers.json';
 const CADDYFILE_PATH = '/etc/caddy/Caddyfile';
-const CONF_HEADER = '# Managed by cockpit-caddy - do not edit manually';
+const CONF_HEADER = '# Managed by cockpit-caddy - edits to this file may be overwritten by user plugin actions';
 
 // ---------------------------------------------------------------------------
 // Low-level cockpit helpers (run inside the plugin page's browser context)
