@@ -173,6 +173,8 @@ Pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for commit con
 
 Found a security vulnerability? Please report it privately following our [Security Policy](SECURITY.md) rather than opening a public issue.
 
+This repository has GitHub secret scanning and push protection enabled — do not commit secrets (API keys, tokens, passwords, `.env` files with real credentials, etc.). See [SECURITY.md](SECURITY.md) for the bypass process if a push is blocked by mistake.
+
 ## License
 
 MIT

@@ -43,4 +43,19 @@ Please include as much of the following as you can:
 - Once a fix is released, we will publish a security advisory and credit the
   reporter, unless anonymity is requested.
 
+## Secret Scanning and Push Protection
+
+This repository has **GitHub secret scanning** and **push protection** enabled.
+Push protection blocks pushes that contain patterns matching known secret
+formats (API keys, tokens, Caddy admin API credentials, etc.) before they ever
+reach the remote history.
+
+If a push is blocked and you believe the detected pattern is a false positive
+(e.g. test fixture data, an example credential, or a non-sensitive value),
+follow GitHub's [push protection bypass
+guide](https://docs.github.com/en/code-security/secret-scanning/working-with-secret-scanning-and-push-protection/working-with-push-protection-from-the-command-line)
+to resolve it from the command line, or use the bypass option presented in the
+GitHub UI and select the reason that matches your case (test data, false
+positive, etc.). Bypassed pushes are still logged for maintainers to review.
+
 Thank you for helping keep `cockpit-caddy` and its users safe.
