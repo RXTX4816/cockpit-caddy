@@ -29,7 +29,7 @@ export function ProxyCard({ proxy, onEdit, onDelete, onDuplicate, probeStatuses 
 
   const portLink = (
     <a href={url} target="_blank" rel="noopener noreferrer" style={{ fontFamily: "monospace", fontWeight: "bold" }}>
-      :{proxy.externalPort}
+      {proxy.externalHost ? `${proxy.externalHost}:${proxy.externalPort}` : `:${proxy.externalPort}`}
     </a>
   );
 

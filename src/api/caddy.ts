@@ -166,13 +166,23 @@ const PROXY_CONF_PATH = "/etc/caddy/conf.d/cockpit-caddy.conf";
 export interface RawBlock {
   /** The complete original block text, header line through closing brace. */
   raw: string;
-  port: number;
+  /**
+   * Full trimmed header text before the opening brace, e.g. ":8080",
+   * "https://host.example.com:8080", or a bare hostname like "git.example.com".
+   * Unique per top-level block — use this as the block's key, not `port`.
+   */
+  address: string;
+  /** Parsed port, if the header contains one. Bare-hostname addresses have no port. */
+  port?: number;
   label: string | null;
 }
 
 /**
- * Extracts top-level port-based blocks from a Caddyfile verbatim.
- * Global-options blocks and non-port blocks are skipped.
+ * Extracts top-level site-address blocks from a Caddyfile verbatim.
+ * Only the global options block (a bare `{` with nothing before it) is skipped —
+ * any other non-empty header text is a valid Caddyfile site address (port,
+ * `ip:port`, `scheme://host[:port]`, bare host, or comma-separated list), with
+ * or without a port.
  * Labels are taken from the first `# comment` line found inside each block.
  */
 export function extractRawBlocksFromCaddyfile(content: string): RawBlock[] {
@@ -189,10 +199,9 @@ export function extractRawBlocksFromCaddyfile(content: string): RawBlock[] {
       continue;
     }
 
-    const portMatch = trimmed.match(/:(\d+)[^{]*\{$/);
-    if (!portMatch) {
-      // Non-port block (global options, etc.) — consume and skip
-      let depth = (trimmed.match(/\{/g) ?? []).length - (trimmed.match(/\}/g) ?? []).length;
+    if (trimmed === "{") {
+      // Global options block — consume and skip
+      let depth = 1;
       i++;
       while (i < lines.length && depth > 0) {
         const t = lines[i].trim();
@@ -202,7 +211,9 @@ export function extractRawBlocksFromCaddyfile(content: string): RawBlock[] {
       continue;
     }
 
-    const port = parseInt(portMatch[1], 10);
+    const address = trimmed.slice(0, -1).trim();
+    const portMatch = trimmed.match(/:(\d+)[^{]*\{$/);
+    const port = portMatch ? parseInt(portMatch[1], 10) : undefined;
     const blockLines: string[] = [line];
     let depth = 1;
     let label: string | null = null;
@@ -220,7 +231,7 @@ export function extractRawBlocksFromCaddyfile(content: string): RawBlock[] {
       i++;
     }
 
-    if (!isNaN(port)) blocks.push({ raw: blockLines.join("\n"), port, label });
+    blocks.push({ raw: blockLines.join("\n"), address, port, label });
   }
 
   return blocks;
@@ -257,76 +268,58 @@ export async function writeRawProxyConfValidated(content: string): Promise<void>
 
 /**
  * Parses labels from the legacy Caddyfile format where the label is a comment
- * inside the block (e.g. "# homarr" as first comment inside ":PORT {").
+ * inside the block (e.g. "# homarr" as first comment inside the block).
+ * Keyed by the block's full address (see RawBlock.address).
  */
-export function parseLegacyLabelsFromCaddyfile(content: string): Record<number, string> {
-  const labels: Record<number, string> = {};
-  const lines = content.split("\n");
-  let i = 0;
-
-  while (i < lines.length) {
-    const line = lines[i].trim();
-    // Match any block opener that contains a port: :PORT {, host:PORT {, https://...:PORT {
-    const portMatch = line.match(/:(\d+)[^{]*\{$/);
-
-    if (portMatch) {
-      const port = parseInt(portMatch[1], 10);
-      let depth = 1;
-      let label: string | null = null;
-      i++;
-
-      while (i < lines.length && depth > 0) {
-        const inner = lines[i].trim();
-        depth += (inner.match(/\{/g) ?? []).length - (inner.match(/\}/g) ?? []).length;
-        if (label === null && depth > 0 && inner.startsWith("#")) {
-          const text = inner.slice(1).trim();
-          if (text) label = text;
-        }
-        i++;
-      }
-
-      if (!isNaN(port) && label) labels[port] = label;
-    } else {
-      i++;
-    }
+export function parseLegacyLabelsFromCaddyfile(content: string): Record<string, string> {
+  const labels: Record<string, string> = {};
+  for (const block of extractRawBlocksFromCaddyfile(content)) {
+    if (block.label) labels[block.address] = block.label;
   }
-
   return labels;
 }
 
 /**
  * Parses externalScheme and externalHost from block headers in the conf.d content.
- * Handles:
+ * Keyed by the block's full address (see RawBlock.address). Handles:
  *   scheme://host:PORT {   → { scheme, host }
  *   host:PORT {            → { host }
+ *   host {                 → { host }  (bare hostname, no port)
  *   :PORT {                → {}
  */
-export function parseConfExternalAddresses(content: string): Record<number, { scheme?: string; host?: string }> {
-  const result: Record<number, { scheme?: string; host?: string }> = {};
+export function parseConfExternalAddresses(content: string): Record<string, { scheme?: string; host?: string }> {
+  const result: Record<string, { scheme?: string; host?: string }> = {};
   for (const block of extractRawBlocksFromCaddyfile(content)) {
-    const firstLine = block.raw.split("\n")[0].trim();
-    const schemeHostMatch = firstLine.match(/^(\w[\w+\-.]*):\/\/([^:/\s]+):/);
+    const address = block.address;
+    const schemeHostMatch = address.match(/^(\w[\w+\-.]*):\/\/([^:/\s]+)/);
     if (schemeHostMatch) {
-      result[block.port] = { scheme: schemeHostMatch[1], host: schemeHostMatch[2] };
-    } else {
-      const hostMatch = firstLine.match(/^([^:/\s]+):/);
-      if (hostMatch) result[block.port] = { host: hostMatch[1] };
+      result[address] = { scheme: schemeHostMatch[1], host: schemeHostMatch[2] };
+      continue;
+    }
+    const hostPortMatch = address.match(/^([^:/\s]+):\d/);
+    if (hostPortMatch) {
+      result[address] = { host: hostPortMatch[1] };
+      continue;
+    }
+    // Bare hostname with no port and no scheme (e.g. "git.example.com {")
+    if (address !== "" && !address.startsWith(":")) {
+      const bareHost = address.split(",")[0].trim();
+      if (bareHost) result[address] = { host: bareHost };
     }
   }
   return result;
 }
 
 /**
- * Returns a port → tls map by reading raw block content from the conf.d file.
+ * Returns an address → tls map by reading raw block content from the conf.d file.
  * Detects TLS via `https://` block header or a `tls` directive (not `tls off`).
  * Used to supplement the JSON API when Caddy hasn't finished applying TLS
  * automation after a reload (race condition on hostname-based blocks).
  */
-export function parseConfTlsMap(content: string): Record<number, boolean> {
-  const result: Record<number, boolean> = {};
+export function parseConfTlsMap(content: string): Record<string, boolean> {
+  const result: Record<string, boolean> = {};
   for (const block of extractRawBlocksFromCaddyfile(content)) {
-    const firstLine = block.raw.split("\n")[0].trim();
-    let hasTls = firstLine.startsWith("https://");
+    let hasTls = block.address.startsWith("https://");
     if (!hasTls) {
       for (const line of block.raw.split("\n").slice(1)) {
         const t = line.trim();
@@ -336,18 +329,18 @@ export function parseConfTlsMap(content: string): Record<number, boolean> {
         }
       }
     }
-    result[block.port] = hasTls;
+    result[block.address] = hasTls;
   }
   return result;
 }
 
 /**
- * Returns port → AccessLogConfig by reading `log { }` blocks from the conf.d
+ * Returns address → AccessLogConfig by reading `log { }` blocks from the conf.d
  * site blocks. Used as a fallback when the JSON API config was last pushed by
  * older code that didn't include the logging section.
  */
-export function parseConfAccessLogMap(content: string): Record<number, import("./types").AccessLogConfig> {
-  const result: Record<number, import("./types").AccessLogConfig> = {};
+export function parseConfAccessLogMap(content: string): Record<string, import("./types").AccessLogConfig> {
+  const result: Record<string, import("./types").AccessLogConfig> = {};
   for (const block of extractRawBlocksFromCaddyfile(content)) {
     const lines = block.raw.split("\n");
     let inLog = false;
@@ -387,13 +380,14 @@ export function parseConfAccessLogMap(content: string): Record<number, import(".
         level = val.trim() as import("./types").AccessLogLevel;
       }
     }
-    result[block.port] = { output, filePath, format, level };
+    result[block.address] = { output, filePath, format, level };
   }
   return result;
 }
 
-export function parseLabelsFromCaddyfile(content: string): Record<number, string> {
-  const labels: Record<number, string> = {};
+/** Parses `# label: X` comments preceding a block header. Keyed by the block's full address. */
+export function parseLabelsFromCaddyfile(content: string): Record<string, string> {
+  const labels: Record<string, string> = {};
   let pendingLabel: string | null = null;
   for (const line of content.split("\n")) {
     const labelMatch = line.match(/^#\s*label:\s*(.+)$/);
@@ -401,12 +395,12 @@ export function parseLabelsFromCaddyfile(content: string): Record<number, string
       pendingLabel = labelMatch[1].trim();
       continue;
     }
-    // Match :PORT anywhere in the line — handles both `:PORT {` and `host:PORT {`
-    const portMatch = line.match(/:(\d+)[^{]*\{/);
-    if (portMatch && pendingLabel !== null) {
-      labels[parseInt(portMatch[1], 10)] = pendingLabel;
+    const trimmed = line.trim();
+    // Any block header (not the bare global-options `{`) counts as an addressable block.
+    if (trimmed.endsWith("{") && trimmed !== "{" && pendingLabel !== null) {
+      labels[trimmed.slice(0, -1).trim()] = pendingLabel;
     }
-    if (line.trim() !== "") pendingLabel = null;
+    if (trimmed !== "") pendingLabel = null;
   }
   return labels;
 }
@@ -650,12 +644,12 @@ function parseForwardAuthFromBlockRaw(raw: string): import("./types").ForwardAut
   return upstreamUrl ? { upstreamUrl, uri, copyHeaders } : undefined;
 }
 
-/** Returns a port → ForwardAuthConfig map by scanning conf.d site blocks. */
-export function parseConfForwardAuthMap(content: string): Record<number, import("./types").ForwardAuthConfig> {
-  const result: Record<number, import("./types").ForwardAuthConfig> = {};
+/** Returns an address → ForwardAuthConfig map by scanning conf.d site blocks. */
+export function parseConfForwardAuthMap(content: string): Record<string, import("./types").ForwardAuthConfig> {
+  const result: Record<string, import("./types").ForwardAuthConfig> = {};
   for (const block of extractRawBlocksFromCaddyfile(content)) {
     const fa = parseForwardAuthFromBlockRaw(block.raw);
-    if (fa) result[block.port] = fa;
+    if (fa) result[block.address] = fa;
   }
   return result;
 }
@@ -804,6 +798,19 @@ function buildExternalAddress(p: Pick<ProxyEntry, "externalPort" | "externalSche
   if (p.externalScheme && p.externalHost) return `${p.externalScheme}://${p.externalHost}:${p.externalPort}`;
   if (p.externalHost) return `${p.externalHost}:${p.externalPort}`;
   return `:${p.externalPort}`;
+}
+
+/**
+ * Candidate on-disk conf.d address keys for a proxy, used to correlate a
+ * JSON-API-parsed ProxyEntry with text-derived metadata maps (labels, TLS,
+ * external address, access log, forward-auth — all keyed by RawBlock.address).
+ * A bare-hostname Caddyfile block (e.g. from a migrated config) has no explicit
+ * port, so the plain host is tried in addition to the canonical `host:port` form.
+ */
+export function proxyAddressKeys(p: Pick<ProxyEntry, "externalPort" | "externalScheme" | "externalHost">): string[] {
+  const keys = [buildExternalAddress(p)];
+  if (p.externalHost) keys.push(p.externalHost);
+  return keys;
 }
 
 /**
@@ -1368,7 +1375,17 @@ function parseRouteToEntry(
   namedServerKey: string | undefined,
 ): ProxyEntry | undefined {
   const handles = (route.handle ?? []) as AnyHandler[];
-  const matchers = route.match?.[0] ? parseMatcherJson(route.match[0]) : undefined;
+  let matchers = route.match?.[0] ? parseMatcherJson(route.match[0]) : undefined;
+
+  // A route whose only matcher is a single host is how Caddy represents a
+  // hostname-only Caddyfile site block (no explicit port) sharing an implicit
+  // :443/:80 server with other sites. Promote it to externalHost so the UI shows
+  // the real address instead of a blank host with an opaque matcher chip.
+  if (!externalHost && matchers?.host?.length === 1
+    && !matchers.path && !matchers.method && !matchers.header && !matchers.query && !matchers.remote_ip) {
+    externalHost = matchers.host[0];
+    matchers = undefined;
+  }
 
   // Unwrap subroute handlers emitted by Caddy's Caddyfile adapter.
   // When Caddy reloads from Caddyfile, `handle { ... }` blocks become:
@@ -1615,12 +1632,19 @@ export function parseProxies(config: CaddyConfig, serverDefs?: import("./types")
       ? serverDefs.find(s => s.listenAddresses.some(a => listenAddrs.includes(a)))
       : undefined;
     const namedDef = defByKey ?? defByAddr;
-    const isNamedServer = !key.includes(":") && (
-      serverDefs ? namedDef != null : contentRoutes.length > 1
-    );
-    const namedServerKey = isNamedServer ? namedDef!.key : undefined;
+    const isNamedServer = !key.includes(":") && namedDef != null;
 
-    if (!isNamedServer) {
+    if (namedDef) {
+      // Named server (#49) — use def.key for IDs so they stay consistent after Caddy key changes
+      for (let i = 0; i < contentRoutes.length; i++) {
+        const entry = parseRouteToEntry(
+          contentRoutes[i], key, externalPort, externalHost, server, accessLog,
+          serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
+          `${namedDef.key}:${i}`, isNamedServer ? namedDef.key : undefined,
+        );
+        if (entry) proxies.push(entry);
+      }
+    } else if (contentRoutes.length <= 1) {
       // Standalone single-route server (the common case)
       const route = contentRoutes[0];
       if (!route) continue;
@@ -1631,12 +1655,17 @@ export function parseProxies(config: CaddyConfig, serverDefs?: import("./types")
       );
       if (entry) proxies.push(entry);
     } else {
-      // Named server (#49) — use def.key for IDs so they stay consistent after Caddy key changes
+      // Multiple content routes sharing one implicit-port server with no matching
+      // ServerDef — e.g. several hostname-only Caddyfile site blocks (no explicit
+      // port) that Caddy automatically groups onto the same shared :443/:80 server.
+      // Each route is its own independent proxy; key by its host matcher when
+      // present so the id stays stable across Caddy's own server-key reassignment.
       for (let i = 0; i < contentRoutes.length; i++) {
+        const routeHost = (contentRoutes[i].match?.[0]?.host as string[] | undefined)?.[0];
         const entry = parseRouteToEntry(
           contentRoutes[i], key, externalPort, externalHost, server, accessLog,
           serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
-          `${namedDef!.key}:${i}`, namedServerKey,
+          routeHost ? `host:${routeHost}` : `${key}:${i}`, undefined,
         );
         if (entry) proxies.push(entry);
       }
@@ -2685,7 +2714,7 @@ async function runCaddyValidate(): Promise<void> {
  * Returns the indices of the opening and closing braces, or null if absent.
  * The global options block must be the first non-comment, non-whitespace token.
  */
-function findGlobalBlock(content: string): { open: number; close: number } | null {
+export function findGlobalBlock(content: string): { open: number; close: number } | null {
   let i = 0;
   while (i < content.length) {
     const ch = content[i];
