@@ -55,7 +55,7 @@ export async function readServersJson(page: Page): Promise<object[]> {
   return raw ? JSON.parse(raw) : [];
 }
 
-function spawnCmd(page: Page, args: string[]): Promise<string> {
+export function spawnCmd(page: Page, args: string[]): Promise<string> {
   return page.evaluate(
     ([cmd]) =>
       new Promise<string>((resolve, reject) => {

@@ -273,7 +273,7 @@ export function ProxyList({ onViewLogs }: Props) {
     deserialize: r => r === "1",
   });
   const [probeConfirming, setProbeConfirming] = useState(false);
-  const probeStatuses = useUpstreamProbe(proxies, probeEnabled);
+  const { statuses: probeStatuses, refresh: refreshProbe } = useUpstreamProbe(proxies, probeEnabled);
 
   function handleProbeToggle(_e: unknown, checked: boolean) {
     if (checked) {
@@ -579,7 +579,11 @@ export function ProxyList({ onViewLogs }: Props) {
                     onLayoutChange={setLayout}
                     layouts={PROXY_LAYOUTS}
                   />
-                  <Button variant="plain" onClick={refresh} aria-label={t("common.refresh")}>↺</Button>
+                  <Button
+                    variant="plain"
+                    onClick={() => { refresh(); refreshProbe(); }}
+                    aria-label={t("common.refresh")}
+                  >↺</Button>
                 </div>
               </ToolbarItem>
             </ToolbarContent>

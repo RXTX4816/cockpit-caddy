@@ -48,12 +48,18 @@ function runProbeTargets(
   }
 }
 
+export interface UpstreamProbeResult {
+  statuses: Map<ProbeKey, ProbeStatus>;
+  /** Forces an immediate re-probe of all upstreams, bypassing the periodic interval. */
+  refresh: () => void;
+}
+
 /**
- * Probes all proxy upstreams from the host via curl every 30 seconds.
+ * Probes all proxy upstreams from the host via curl every 5 seconds.
  * Dots appear immediately as "pending" on enable; update to up/down after each curl.
  * File servers and redirects are excluded (no upstream to probe).
  */
-export function useUpstreamProbe(proxies: ProxyEntry[], enabled: boolean): Map<ProbeKey, ProbeStatus> {
+export function useUpstreamProbe(proxies: ProxyEntry[], enabled: boolean): UpstreamProbeResult {
   const [statuses, setStatuses] = useState<Map<ProbeKey, ProbeStatus>>(new Map());
 
   // Stable string key — re-triggers the effect when the upstream set changes
@@ -85,7 +91,7 @@ export function useUpstreamProbe(proxies: ProxyEntry[], enabled: boolean): Map<P
     runProbeTargets(collectTargets(proxiesRef.current), setStatuses);
   }, [enabled]);
 
-  useAutoRefresh(periodicProbe, 30_000);
+  useAutoRefresh(periodicProbe, 5_000);
 
-  return statuses;
+  return { statuses, refresh: periodicProbe };
 }
