@@ -177,8 +177,9 @@ function AppInner() {
 }
 
 export function App() {
+  const { t } = useTranslation();
   return (
-    <ErrorBoundary fallbackTitle="Error loading Caddy plugin">
+    <ErrorBoundary fallbackTitle={t("error_boundary.load_error")}>
       <ToastProvider>
         <AppInner />
       </ToastProvider>
