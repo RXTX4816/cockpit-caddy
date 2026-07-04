@@ -415,6 +415,7 @@
   "global_opts": {
     "title": "Global Caddy options",
     "caddyfile_note": "These settings are written to the global options block in /etc/caddy/Caddyfile. Caddy is reloaded automatically on save.",
+    "unmanaged_hint": "No explicit global options are set — Caddy is using its automatic HTTPS defaults (including Let's Encrypt when a proxy has a public hostname). The fields below are empty because nothing needs to be configured, not because anything is broken.",
     "http_port": "HTTP port",
     "https_port": "HTTPS port",
     "grace_period": "Grace period",

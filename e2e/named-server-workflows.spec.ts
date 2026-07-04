@@ -10,7 +10,7 @@ import { addServer, addProxy, readConf } from './helpers';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
   await dismissAdminBanner(page);
-  await page.getByRole('button', { name: /add proxy/i }).waitFor({ state: 'visible', timeout: 15000 });
+  await page.getByRole('button', { name: /add proxy/i }).first().waitFor({ state: 'visible', timeout: 15000 });
 }
 
 /**
@@ -192,7 +192,7 @@ test('port conflict: cannot add standalone proxy on a named server\'s port', asy
   await srvTablist.getByRole('tab', { name: /e2e server/i }).waitFor({ timeout: 10000 });
 
   // Try to add a standalone proxy on the same port
-  await page.getByRole('button', { name: /add proxy/i }).click();
+  await page.getByRole('button', { name: /add proxy/i }).first().click();
   const modal = page.getByRole('dialog');
   await modal.getByLabel('External port').fill('19305');
   await modal.getByLabel(/target host/i).fill('localhost');

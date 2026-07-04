@@ -33,6 +33,7 @@ export function GlobalOptionsTab() {
   const [reloadOk, setReloadOk] = useState(false);
   const [reloadError, setReloadError] = useState<string | null>(null);
   const [saveOk, setSaveOk] = useState(false);
+  const [hasAnyOption, setHasAnyOption] = useState(true);
 
   const [httpPort, setHttpPort] = useState("");
   const [httpsPort, setHttpsPort] = useState("");
@@ -54,6 +55,7 @@ export function GlobalOptionsTab() {
     setLoadError(null);
     readGlobalOptions()
       .then(opts => {
+        setHasAnyOption(Object.keys(opts).length > 0);
         setHttpPort(opts.httpPort != null ? String(opts.httpPort) : "");
         setHttpsPort(opts.httpsPort != null ? String(opts.httpsPort) : "");
         setDebug(opts.debug ?? false);
@@ -152,6 +154,15 @@ export function GlobalOptionsTab() {
       )}
 
       <Alert variant="info" isInline title={t("global_opts.caddyfile_note")} style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }} />
+
+      {!hasAnyOption && (
+        <Alert
+          variant="info"
+          isInline
+          title={t("global_opts.unmanaged_hint")}
+          style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}
+        />
+      )}
 
       <Form>
         {isConfirming && (
@@ -430,6 +441,7 @@ export function GlobalOptionsTab() {
                   await syncGlobalOptions(opts).catch(e => {
                     throw e instanceof Error ? e : new Error(String(e));
                   });
+                  setHasAnyOption(Object.values(opts).some(v => v !== undefined));
                   setNeedsReload(true);
                   setSaveOk(true);
                   setTimeout(() => setSaveOk(false), 4000);

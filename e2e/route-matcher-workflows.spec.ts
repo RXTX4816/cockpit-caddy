@@ -12,12 +12,12 @@ import { readConf } from './helpers';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
   await dismissAdminBanner(page);
-  await page.getByRole('button', { name: /add proxy/i }).waitFor({ state: 'visible', timeout: 15000 });
+  await page.getByRole('button', { name: /add proxy/i }).first().waitFor({ state: 'visible', timeout: 15000 });
 }
 
 /** Opens Add Proxy dialog with matchers section expanded, ready for matcher input. */
 async function openAddProxyWithMatchers(page: import('@playwright/test').Page, port: number, target: { host: string; port: number }) {
-  await page.getByRole('button', { name: /add proxy/i }).click();
+  await page.getByRole('button', { name: /add proxy/i }).first().click();
   const modal = page.getByRole('dialog');
   await modal.getByLabel('External port').fill(String(port));
   await modal.getByLabel(/target host/i).fill(target.host);
@@ -158,7 +158,7 @@ test('edit proxy: add path matcher to existing plain proxy regenerates block wit
   await waitForToolbar(page);
 
   // Create a plain proxy first
-  await page.getByRole('button', { name: /add proxy/i }).click();
+  await page.getByRole('button', { name: /add proxy/i }).first().click();
   let modal = page.getByRole('dialog');
   await modal.getByLabel('External port').fill('19207');
   await modal.getByLabel(/target host/i).fill('localhost');
