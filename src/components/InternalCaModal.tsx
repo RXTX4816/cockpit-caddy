@@ -16,7 +16,7 @@ import {
   Spinner,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
-import { fetchPkiCa, parseCertDetails } from "../api";
+import { fetchPkiCa, parseCertDetails, fetchCaddyConfig } from "../api";
 import type { PkiCaInfo, CertDetails } from "../api";
 import { readFile as fsReadFile, writeFile as fsWriteFile } from "@rxtx4816/cockpit-plugin-base-react/lib/cockpit-fs";
 
@@ -33,9 +33,11 @@ export function InternalCaModal({ onClose }: Props) {
   const [ca, setCa] = useState<PkiCaInfo | null>(null);
   const [details, setDetails] = useState<CertDetails | null>(null);
   const [copied, setCopied] = useState(false);
+  const [copiedIntermediate, setCopiedIntermediate] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedPath, setSavedPath] = useState<{ path: string; overwritten: boolean } | null>(null);
   const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [usesInternalCa, setUsesInternalCa] = useState(true);
 
   useEffect(() => {
     fetchPkiCa()
@@ -48,10 +50,21 @@ export function InternalCaModal({ onClose }: Props) {
         }
       })
       .catch(e => setError(e instanceof Error ? e.message : String(e)));
+
+    // The internal CA is only used as the leaf-cert issuer when at least one
+    // proxy has "Self-signed" TLS enabled (mergeProxy sets this app-wide policy).
+    // Otherwise public sites get their certs from Let's Encrypt/ACME instead,
+    // so this modal's cert doesn't correspond to what visitors actually see.
+    fetchCaddyConfig()
+      .then(config => {
+        const inUse = (config.apps?.tls?.automation?.policies ?? [])
+          .some(p => (p.issuers ?? []).some(i => i.module === "internal"));
+        setUsesInternalCa(inUse);
+      })
+      .catch(() => {});
   }, []);
 
-  const downloadPem = useCallback(async () => {
-    if (!ca) return;
+  const downloadCert = useCallback(async (pem: string, filename: string) => {
     setSavedPath(null);
     setDownloadError(null);
 
@@ -60,11 +73,11 @@ export function InternalCaModal({ onClose }: Props) {
     if ("showSaveFilePicker" in window) {
       try {
         const handle = await (window as Window & { showSaveFilePicker: ShowSaveFilePicker }).showSaveFilePicker({
-          suggestedName: "caddy-root-ca.pem",
+          suggestedName: filename,
           types: [{ description: "PEM certificate", accept: { "application/x-pem-file": [".pem"] } }],
         });
         const writable = await handle.createWritable();
-        await writable.write(ca.rootPem);
+        await writable.write(pem);
         await writable.close();
         return;
       } catch (e) {
@@ -77,15 +90,21 @@ export function InternalCaModal({ onClose }: Props) {
     // Write the file to ~/Downloads/ on the server instead.
     try {
       const user = await cockpit.user();
-      const savePath = `${user.home}/Downloads/caddy-root-ca.pem`;
+      const savePath = `${user.home}/Downloads/${filename}`;
       await cockpit.spawn(["mkdir", "-p", "--", `${user.home}/Downloads`], { err: "message" });
       const existing = await fsReadFile(savePath);
-      await fsWriteFile(savePath, ca.rootPem);
+      await fsWriteFile(savePath, pem);
       setSavedPath({ path: savePath, overwritten: existing !== null });
     } catch (err) {
       setDownloadError((err as { message?: string })?.message ?? String(err));
     }
-  }, [ca]);
+  }, []);
+
+  const downloadPem = useCallback(() => downloadCert(ca?.rootPem ?? "", "caddy-root-ca.pem"), [ca, downloadCert]);
+  const downloadIntermediatePem = useCallback(
+    () => downloadCert(ca?.intermediatePem ?? "", "caddy-intermediate-ca.pem"),
+    [ca, downloadCert],
+  );
 
   function copyPem() {
     if (!ca) return;
@@ -95,11 +114,29 @@ export function InternalCaModal({ onClose }: Props) {
     });
   }
 
+  function copyIntermediatePem() {
+    if (!ca) return;
+    void navigator.clipboard.writeText(ca.intermediatePem).then(() => {
+      setCopiedIntermediate(true);
+      setTimeout(() => setCopiedIntermediate(false), 2000);
+    });
+  }
+
   return (
     <Modal isOpen onClose={onClose} aria-label={t("ca.title")} variant="medium">
       <ModalHeader title={t("ca.title")} />
       <ModalBody>
         {error && <Alert variant="danger" isInline title={t("ca.load_error")}>{error}</Alert>}
+        {ca && !usesInternalCa && (
+          <Alert
+            variant="warning"
+            isInline
+            title={t("ca.not_in_use_title")}
+            style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}
+          >
+            {t("ca.not_in_use_body")}
+          </Alert>
+        )}
         {!ca && !error && (
           <div style={{ display: "flex", justifyContent: "center", padding: "2rem" }}>
             <Spinner size="lg" />
@@ -155,6 +192,31 @@ export function InternalCaModal({ onClose }: Props) {
                 {copied ? t("ca.copied_tip") : t("ca.copy_tip")}
               </Button>
             </div>
+
+            <ExpandableSection toggleText={t("ca.intermediate_cn")} isIndented style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}>
+              <pre style={{
+                fontFamily: "monospace",
+                fontSize: "0.78rem",
+                background: "var(--pf-t--global--background--color--secondary--default)",
+                padding: "0.75rem",
+                borderRadius: "var(--pf-t--global--border--radius--100, 4px)",
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-all",
+                maxHeight: "12rem",
+                overflowY: "auto",
+                margin: 0,
+                marginBottom: "0.5rem",
+                border: "1px solid var(--pf-t--global--border--color--default)",
+              }}>{ca.intermediatePem.trim()}</pre>
+              <div style={{ display: "flex", gap: "0.5rem" }}>
+                <Button variant="secondary" size="sm" onClick={copyIntermediatePem}>
+                  {copiedIntermediate ? t("ca.copied_tip") : t("ca.copy_intermediate_tip")}
+                </Button>
+                <Button variant="secondary" size="sm" onClick={() => void downloadIntermediatePem()}>
+                  {t("ca.download_intermediate_button")}
+                </Button>
+              </div>
+            </ExpandableSection>
 
             {savedPath && (
               <Alert
