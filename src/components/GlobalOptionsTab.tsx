@@ -18,9 +18,22 @@ import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { readGlobalOptions, syncGlobalOptions, reloadService } from "../api";
 import type { GlobalOptions } from "../api";
+import { CertLifetimeSelect } from "./CertLifetimeSelect";
 
 function isDuration(v: string): boolean {
   return !v || /^\d+(\.\d+)?(ns|us|ms|s|m|h)$/.test(v.trim());
+}
+
+// Caddy's internal-issuer `lifetime` accepts Go's standard duration units plus "d",
+// but rejects "y" ("unknown unit y") — express a year as 365d instead.
+function isCertLifetimeDuration(v: string): boolean {
+  return !v || /^\d+(\.\d+)?(ns|us|ms|s|m|h|d)$/.test(v.trim());
+}
+
+function isRatio(v: string): boolean {
+  if (!v) return true;
+  const n = Number(v.trim());
+  return !isNaN(n) && n > 0 && n < 1;
 }
 
 export function GlobalOptionsTab() {
@@ -49,6 +62,8 @@ export function GlobalOptionsTab() {
   const [onDemandAsk, setOnDemandAsk] = useState("");
   const [onDemandInterval, setOnDemandInterval] = useState("");
   const [onDemandBurst, setOnDemandBurst] = useState("");
+  const [internalCertLifetime, setInternalCertLifetime] = useState("");
+  const [renewalWindowRatio, setRenewalWindowRatio] = useState("");
 
   const load = useCallback(() => {
     setLoading(true);
@@ -70,6 +85,8 @@ export function GlobalOptionsTab() {
         setOnDemandAsk(opts.onDemandAsk ?? "");
         setOnDemandInterval(opts.onDemandInterval ?? "");
         setOnDemandBurst(opts.onDemandBurst != null ? String(opts.onDemandBurst) : "");
+        setInternalCertLifetime(opts.internalCertLifetime ?? "");
+        setRenewalWindowRatio(opts.renewalWindowRatio != null ? String(opts.renewalWindowRatio) : "");
       })
       .catch(e => setLoadError(e instanceof Error ? e.message : String(e)))
       .finally(() => setLoading(false));
@@ -91,7 +108,12 @@ export function GlobalOptionsTab() {
   const onDemandBurstErr = onDemandBurst && (isNaN(parseInt(onDemandBurst, 10)) || parseInt(onDemandBurst, 10) < 1)
     ? t("global_opts.validation_burst") : null;
   const onDemandIntervalErr = onDemandInterval && !isDuration(onDemandInterval) ? t("global_opts.validation_duration") : null;
-  const hasErrors = !!(httpPortErr || httpsPortErr || gracePeriodErr || shutdownDelayErr || onDemandBurstErr || onDemandIntervalErr);
+  const internalCertLifetimeErr = !isCertLifetimeDuration(internalCertLifetime) ? t("global_opts.validation_cert_lifetime") : null;
+  const renewalWindowRatioErr = !isRatio(renewalWindowRatio) ? t("global_opts.validation_ratio") : null;
+  const hasErrors = !!(
+    httpPortErr || httpsPortErr || gracePeriodErr || shutdownDelayErr || onDemandBurstErr || onDemandIntervalErr
+    || internalCertLifetimeErr || renewalWindowRatioErr
+  );
 
   const isConfirming = confirm.step !== "idle";
   const isSaving = confirm.step === "submitting";
@@ -405,6 +427,59 @@ export function GlobalOptionsTab() {
           </>
         )}
 
+        <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
+
+        <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+          {t("global_opts.internal_tls_title")}
+        </Title>
+        <Alert variant="info" isInline title={t("global_opts.internal_tls_note")} style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }} />
+
+        <FormGroup label={t("global_opts.internal_cert_lifetime")} fieldId="go-internal-cert-lifetime">
+          <CertLifetimeSelect
+            value={internalCertLifetime}
+            onChange={setInternalCertLifetime}
+            isDisabled={isConfirming}
+          />
+          <TextInput
+            id="go-internal-cert-lifetime"
+            value={internalCertLifetime}
+            onChange={(_e, v) => setInternalCertLifetime(v)}
+            placeholder="90d"
+            validated={internalCertLifetimeErr ? "error" : "default"}
+            isDisabled={isConfirming}
+            style={{ marginTop: "0.4rem" }}
+          />
+          {internalCertLifetimeErr ? (
+            <FormHelperText>
+              <HelperText><HelperTextItem variant="error">{internalCertLifetimeErr}</HelperTextItem></HelperText>
+            </FormHelperText>
+          ) : (
+            <FormHelperText>
+              <HelperText><HelperTextItem>{t("global_opts.internal_cert_lifetime_help")}</HelperTextItem></HelperText>
+            </FormHelperText>
+          )}
+        </FormGroup>
+
+        <FormGroup label={t("global_opts.renewal_window_ratio")} fieldId="go-renewal-window-ratio">
+          <TextInput
+            id="go-renewal-window-ratio"
+            value={renewalWindowRatio}
+            onChange={(_e, v) => setRenewalWindowRatio(v)}
+            placeholder="0.33"
+            validated={renewalWindowRatioErr ? "error" : "default"}
+            isDisabled={isConfirming}
+          />
+          {renewalWindowRatioErr ? (
+            <FormHelperText>
+              <HelperText><HelperTextItem variant="error">{renewalWindowRatioErr}</HelperTextItem></HelperText>
+            </FormHelperText>
+          ) : (
+            <FormHelperText>
+              <HelperText><HelperTextItem>{t("global_opts.renewal_window_ratio_help")}</HelperTextItem></HelperText>
+            </FormHelperText>
+          )}
+        </FormGroup>
+
         {confirm.error != null && (
           <Alert variant="danger" isInline title={t("global_opts.save_error")}>
             {confirm.error || t("global_opts.save_error_unknown")}
@@ -437,6 +512,8 @@ export function GlobalOptionsTab() {
                     onDemandAsk: onDemandEnabled ? (onDemandAsk.trim() || undefined) : undefined,
                     onDemandInterval: onDemandEnabled ? (onDemandInterval.trim() || undefined) : undefined,
                     onDemandBurst: onDemandEnabled && onDemandBurst.trim() ? parseInt(onDemandBurst, 10) : undefined,
+                    internalCertLifetime: internalCertLifetime.trim() || undefined,
+                    renewalWindowRatio: renewalWindowRatio.trim() ? Number(renewalWindowRatio.trim()) : undefined,
                   };
                   await syncGlobalOptions(opts).catch(e => {
                     throw e instanceof Error ? e : new Error(String(e));

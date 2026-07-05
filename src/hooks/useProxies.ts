@@ -12,6 +12,8 @@ import {
   surgicallyWriteServerBlock, surgicallyRemoveServerBlock,
   mergeNamedServer, removeNamedServer,
   deduplicateServerBlocks, deduplicateManagedHeader, proxyAddressKeys, findGlobalBlock,
+  resolveInternalIssuerSettings, readGlobalOptions,
+  applyGlobalInternalLifetimeToProxy, applyGlobalInternalLifetimeToServer,
 } from "../api";
 import type { ProxyEntry, ServerDef } from "../api";
 import { useCaddyConfig } from "./useCaddyConfig";
@@ -148,12 +150,29 @@ export function useProxies() {
         for (const k of keys) if (k in map) return map[k];
         return undefined;
       };
+      const tls = p.tls || (lookup(confTls) ?? false);
+      const externalHost = p.externalHost ?? lookup(confExternal)?.host;
+      // parseProxies resolves tlsAdvanced.certLifetime/renewalWindowRatio using whatever
+      // host it could see in the live JSON route (often none — a server that's the sole
+      // occupant of its port has no host matcher at all, since there's nothing else on
+      // that listener to disambiguate). externalHost above may have just been recovered
+      // from the conf.d fallback instead, so re-resolve with the corrected host and layer
+      // it over the already-parsed tlsAdvanced (which still has protocol/cipher/curves).
+      const resolved = tls ? resolveInternalIssuerSettings(config, externalHost) : {};
+      const tlsAdvanced = (p.tlsAdvanced || resolved.certLifetime !== undefined || resolved.renewalWindowRatio !== undefined)
+        ? {
+            ...p.tlsAdvanced,
+            ...(resolved.certLifetime !== undefined ? { certLifetime: resolved.certLifetime } : {}),
+            ...(resolved.renewalWindowRatio !== undefined ? { renewalWindowRatio: resolved.renewalWindowRatio } : {}),
+          }
+        : undefined;
       return {
         ...p,
         label: lookup(labels),
-        tls: p.tls || (lookup(confTls) ?? false),
+        tls,
         externalScheme: p.externalScheme ?? lookup(confExternal)?.scheme,
-        externalHost: p.externalHost ?? lookup(confExternal)?.host,
+        externalHost,
+        tlsAdvanced,
         // Fallback: if the JSON API config doesn't have server.logs (was last pushed by
         // older code), read access log config from the Caddyfile conf.d directly.
         accessLog: p.accessLog ?? lookup(confAccessLog),
@@ -196,11 +215,17 @@ export function useProxies() {
         return;
       }
 
-      const newProxy: ProxyEntry = {
+      let newProxy: ProxyEntry = {
         ...entry,
         id: String(entry.externalPort),
         serverKey: `srv${entry.externalPort}`,
       };
+      // Every hostless proxy/server must carry the identical internal-cert lifetime, or
+      // Caddy refuses to reload — see applyGlobalInternalLifetimeToProxy.
+      if (newProxy.tls) {
+        const globalOpts = await readGlobalOptions();
+        newProxy = { ...newProxy, tlsAdvanced: applyGlobalInternalLifetimeToProxy(newProxy, globalOpts.internalCertLifetime) };
+      }
       // Reject ports already owned by a named server — Caddy cannot have two servers
       // sharing the same listen address.
       const serverConflict = servers.find(s =>
@@ -268,6 +293,13 @@ export function useProxies() {
         return;
       }
 
+      // Every hostless proxy/server must carry the identical internal-cert lifetime, or
+      // Caddy refuses to reload — see applyGlobalInternalLifetimeToProxy.
+      if (entry.tls) {
+        const globalOpts = await readGlobalOptions();
+        entry = { ...entry, tlsAdvanced: applyGlobalInternalLifetimeToProxy(entry, globalOpts.internalCertLifetime) };
+      }
+
       const originalProxy = proxies.find(p => p.serverKey === entry.serverKey);
       const originalPort = originalProxy?.externalPort ?? entry.externalPort;
       const originalKey = originalProxy ? proxyAddressKeys(originalProxy)[0] : proxyAddressKeys(entry)[0];
@@ -287,7 +319,7 @@ export function useProxies() {
         updated = surgicallyRemoveBlock(updated, originalPort);
       }
       updated = surgicallyWriteProxy(updated, entry);
-      await writeRawProxyConf(updated);
+      await writeRawProxyConfValidated(updated);
 
       setLabels(prev => {
         const n = { ...prev };
@@ -372,6 +404,12 @@ export function useProxies() {
   const addServer = useCallback(
     async (def: ServerDef) => {
       checkServerPortConflicts(def, proxies, null);
+      // Every hostless proxy/server must carry the identical internal-cert lifetime, or
+      // Caddy refuses to reload — see applyGlobalInternalLifetimeToServer.
+      if (def.tls) {
+        const globalOpts = await readGlobalOptions();
+        def = { ...def, tlsAdvanced: applyGlobalInternalLifetimeToServer(def, globalOpts.internalCertLifetime) };
+      }
       await ensureConfDImported();
       await cockpit.spawn(["mkdir", "-p", "/etc/caddy/conf.d"], { superuser: "try" });
       const current = await readProxyConf();
@@ -385,6 +423,10 @@ export function useProxies() {
   const editServer = useCallback(
     async (def: ServerDef) => {
       checkServerPortConflicts(def, proxies, def.key);
+      if (def.tls) {
+        const globalOpts = await readGlobalOptions();
+        def = { ...def, tlsAdvanced: applyGlobalInternalLifetimeToServer(def, globalOpts.internalCertLifetime) };
+      }
       const routes = proxies.filter(p => p.namedServerKey === def.key);
       const current = await readProxyConf();
       await writeRawProxyConfValidated(surgicallyWriteServerBlock(current, def, routes));

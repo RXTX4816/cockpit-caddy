@@ -21,13 +21,13 @@ import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast, ExternalAddressInput } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { readProxyConf, parseConfExternalAddresses, CaddyApiError, CaddyfileError } from "../api";
-import type { ProxyEntry, RewriteConfig, HeaderOperation, RouteMatch } from "../api";
+import type { ProxyEntry, RewriteConfig, HeaderOperation, RouteMatch, ServerDef } from "../api";
 import { RouteMatchersSection } from "./RouteMatchersSection";
 import { RewriteSection } from "./RewriteSection";
 import { RequestHeadersSection } from "./RequestHeadersSection";
 import { ResponseHeadersSection } from "./ResponseHeadersSection";
 import { TransportSection, type TransportValues } from "./TransportSection";
-import { TlsSection, type TlsValues, tlsValuesToAdvanced, tlsValuesToMtls, tlsConfigToValues } from "./TlsSection";
+import { TlsSection, type TlsValues, tlsValuesToAdvanced, tlsValuesToMtls, tlsConfigToValues, tlsValuesHaveErrors } from "./TlsSection";
 import { ServerTimeoutsSection, type ServerTimeoutValues } from "./ServerTimeoutsSection";
 import { AccessLogSection, type AccessLogValues, accessLogValuesToConfig, accessLogConfigToValues } from "./AccessLogSection";
 import { BasicAuthSection, resolveBasicAuth, type AuthEntry } from "./BasicAuthSection";
@@ -43,9 +43,11 @@ interface Props {
   onSave: (entry: ProxyEntry) => Promise<void>;
   onClose: () => void;
   onApiError?: (message: string) => void;
+  servers?: ServerDef[];
 }
 
-export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiError }: Props) {
+export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiError, servers }: Props) {
+  const namedServer = proxy.namedServerKey ? servers?.find(s => s.key === proxy.namedServerKey) : undefined;
   const { t } = useTranslation();
   const toast = useToast();
   const saveConfirm = useConfirmAction();
@@ -116,6 +118,13 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
       setExtHostErr(t("add_proxy.validation_ext_host_required_with_scheme"));
       return;
     }
+    // "https://" in the address triggers Caddy's automatic HTTPS on its own, regardless
+    // of the TLS toggle below — letting this combination through would silently create
+    // TLS behavior this app doesn't know about and isn't tracking.
+    if (externalScheme === "https" && !tls) {
+      setExtHostErr(t("add_proxy.validation_https_requires_tls"));
+      return;
+    }
     if (validateUpstreams(extraUpstreams)) return;
     if (forwardAuthErr) return;
     setExtHostErr(null);
@@ -180,29 +189,37 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
             />
           </FormGroup>
 
-          <FormGroup label={t("add_proxy.field_external_address")} fieldId="edit-external-port" isRequired>
-            <ExternalAddressInput
-              scheme={externalScheme}
-              onSchemeChange={v => { setExternalScheme(v); setExtHostErr(null); }}
-              host={externalHost}
-              onHostChange={v => { setExternalHost(v); setExtHostErr(null); }}
-              port={externalPort}
-              onPortChange={setExternalPort}
-              suggestedSchemes={extraSchemes}
-              isDisabled={isConfirming}
-              hostValidated={extHostErr ? "error" : "default"}
-              portValidated={portErr ? "error" : "default"}
-              portPlaceholder="8443"
-              hostPlaceholder={t("add_proxy.ext_host_placeholder")}
-              schemeNoneLabel={t("add_proxy.ext_scheme_none")}
-              schemeCustomLabel={t("add_proxy.ext_scheme_custom")}
-            />
-            {(portErr || extHostErr) && (
-              <FormHelperText>
-                <HelperText><HelperTextItem variant="error">{extHostErr ?? portErr}</HelperTextItem></HelperText>
-              </FormHelperText>
-            )}
-          </FormGroup>
+          {proxy.namedServerKey ? (
+            <FormGroup label={t("add_proxy.field_external_address")} fieldId="edit-external-port">
+              <Label isCompact color="blue">
+                {namedServer ? `${namedServer.name} (:${proxy.externalPort})` : `:${proxy.externalPort}`}
+              </Label>
+            </FormGroup>
+          ) : (
+            <FormGroup label={t("add_proxy.field_external_address")} fieldId="edit-external-port" isRequired>
+              <ExternalAddressInput
+                scheme={externalScheme}
+                onSchemeChange={v => { setExternalScheme(v); setExtHostErr(null); }}
+                host={externalHost}
+                onHostChange={v => { setExternalHost(v); setExtHostErr(null); }}
+                port={externalPort}
+                onPortChange={setExternalPort}
+                suggestedSchemes={extraSchemes}
+                isDisabled={isConfirming}
+                hostValidated={extHostErr ? "error" : "default"}
+                portValidated={portErr ? "error" : "default"}
+                portPlaceholder="8443"
+                hostPlaceholder={t("add_proxy.ext_host_placeholder")}
+                schemeNoneLabel={t("add_proxy.ext_scheme_none")}
+                schemeCustomLabel={t("add_proxy.ext_scheme_custom")}
+              />
+              {(portErr || extHostErr) && (
+                <FormHelperText>
+                  <HelperText><HelperTextItem variant="error">{extHostErr ?? portErr}</HelperTextItem></HelperText>
+                </FormHelperText>
+              )}
+            </FormGroup>
+          )}
 
           <FormGroup label={t("add_proxy.field_target_host")} fieldId="edit-target-host" isRequired>
             <InputGroup>
@@ -251,16 +268,18 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
             )}
           </FormGroup>
 
-          <FormGroup label={t("add_proxy.field_tls")} fieldId="edit-tls">
-            <Checkbox
-              id="edit-tls"
-              label={t("add_proxy.field_tls_short")}
-              isChecked={tls}
-              onChange={(_e, checked) => setTls(checked)}
-              isDisabled={isConfirming}
-            />
-            <SectionActions onDefaults={() => setTls(true)} isDisabled={isConfirming} />
-          </FormGroup>
+          {!proxy.namedServerKey && (
+            <FormGroup label={t("add_proxy.field_tls")} fieldId="edit-tls">
+              <Checkbox
+                id="edit-tls"
+                label={t("add_proxy.field_tls_short")}
+                isChecked={tls}
+                onChange={(_e, checked) => setTls(checked)}
+                isDisabled={isConfirming}
+              />
+              <SectionActions onDefaults={() => setTls(true)} isDisabled={isConfirming} />
+            </FormGroup>
+          )}
 
           <FormGroup label={t("add_proxy.field_compress")} fieldId="edit-compress">
             <Checkbox
@@ -273,7 +292,9 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
           </FormGroup>
         </Form>
         <TransportSection value={transport} onChange={setTransport} isDisabled={isConfirming} />
-        <TlsSection value={tlsValues} onChange={setTlsValues} isDisabled={isConfirming} />
+        {!proxy.namedServerKey && (
+          <TlsSection value={tlsValues} onChange={setTlsValues} isDisabled={isConfirming} hostless={!externalHost.trim()} />
+        )}
         <AccessLogSection value={accessLog} onChange={setAccessLog} isDisabled={isConfirming} />
         <ErrorHandlersSection value={errorHandlers} onChange={setErrorHandlers} isDisabled={isConfirming} />
         <ForwardAuthSection
@@ -401,7 +422,7 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
           </>
         ) : (
           <>
-            <Button variant="primary" onClick={validateAndConfirm} isDisabled={!!portErr || !!forwardAuthErr}>
+            <Button variant="primary" onClick={validateAndConfirm} isDisabled={!!portErr || !!forwardAuthErr || tlsValuesHaveErrors(tlsValues)}>
               {t("edit_proxy.save_button")}
             </Button>
             <Button variant="link" onClick={onClose}>{t("common.cancel")}</Button>

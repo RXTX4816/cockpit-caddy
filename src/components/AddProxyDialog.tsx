@@ -34,7 +34,7 @@ import { BasicAuthSection, resolveBasicAuth, type AuthEntry } from "./BasicAuthS
 import { ErrorHandlersSection } from "./ErrorHandlersSection";
 import { ForwardAuthSection, validateForwardAuth } from "./ForwardAuthSection";
 import { UpstreamsSection, validateUpstreams, type ExtraUpstream } from "./UpstreamsSection";
-import { TlsSection, type TlsValues, tlsValuesToAdvanced, tlsValuesToMtls, tlsConfigToValues } from "./TlsSection";
+import { TlsSection, type TlsValues, tlsValuesToAdvanced, tlsValuesToMtls, tlsConfigToValues, tlsValuesHaveErrors } from "./TlsSection";
 import type { ErrorHandlerConfig, ForwardAuthConfig, LbPolicy } from "../api";
 import { SectionActions } from "./SectionActions";
 import type { ServerContext } from "./AddRedirectDialog";
@@ -150,6 +150,12 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
     if (form.externalScheme && !form.externalHost.trim()) {
       errs.externalHost = t("add_proxy.validation_ext_host_required_with_scheme");
     }
+    // "https://" in the address triggers Caddy's automatic HTTPS on its own, regardless
+    // of the TLS toggle below — letting this combination through would silently create
+    // TLS behavior this app doesn't know about and isn't tracking.
+    if (form.externalScheme === "https" && !form.tls) {
+      errs.externalScheme = t("add_proxy.validation_https_requires_tls");
+    }
     if (!form.targetHost.trim()) errs.targetHost = t("add_proxy.validation_target_host_required");
     const tport = parseInt(form.targetPort, 10);
     if (!form.targetPort) errs.targetPort = t("add_proxy.validation_target_port_required");
@@ -264,14 +270,14 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
                 schemeNoneLabel={t("add_proxy.ext_scheme_none")}
                 schemeCustomLabel={t("add_proxy.ext_scheme_custom")}
               />
-              {(errors.externalPort || errors.externalHost) && (
+              {(errors.externalPort || errors.externalHost || errors.externalScheme) && (
                 <FormHelperText>
                   <HelperText>
-                    <HelperTextItem variant="error">{errors.externalHost ?? errors.externalPort}</HelperTextItem>
+                    <HelperTextItem variant="error">{errors.externalHost ?? errors.externalScheme ?? errors.externalPort}</HelperTextItem>
                   </HelperText>
                 </FormHelperText>
               )}
-              {!errors.externalPort && !errors.externalHost && (
+              {!errors.externalPort && !errors.externalHost && !errors.externalScheme && (
                 <FormHelperText>
                   <HelperText>
                     <HelperTextItem>{t("add_proxy.field_external_address_help")}</HelperTextItem>
@@ -339,16 +345,18 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
             )}
           </FormGroup>
 
-          <FormGroup label={t("add_proxy.field_tls")} fieldId="tls">
-            <Checkbox
-              id="tls"
-              label={t("add_proxy.field_tls_short")}
-              isChecked={form.tls}
-              onChange={(_e, checked) => set("tls", checked)}
-              isDisabled={isLocked}
-            />
-            <SectionActions onDefaults={() => set("tls", true)} isDisabled={isLocked} />
-          </FormGroup>
+          {!serverCtx && (
+            <FormGroup label={t("add_proxy.field_tls")} fieldId="tls">
+              <Checkbox
+                id="tls"
+                label={t("add_proxy.field_tls_short")}
+                isChecked={form.tls}
+                onChange={(_e, checked) => set("tls", checked)}
+                isDisabled={isLocked}
+              />
+              <SectionActions onDefaults={() => set("tls", true)} isDisabled={isLocked} />
+            </FormGroup>
+          )}
 
           <FormGroup label={t("add_proxy.field_compress")} fieldId="compress">
             <Checkbox
@@ -361,7 +369,9 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
           </FormGroup>
         </Form>
         <TransportSection value={transport} onChange={setTransport} isDisabled={isLocked} />
-        <TlsSection value={tlsValues} onChange={setTlsValues} isDisabled={isLocked} />
+        {!serverCtx && (
+          <TlsSection value={tlsValues} onChange={setTlsValues} isDisabled={isLocked} hostless={!form.externalHost.trim()} />
+        )}
         <AccessLogSection value={accessLog} onChange={setAccessLog} isDisabled={isLocked} />
         <ErrorHandlersSection value={errorHandlers} onChange={setErrorHandlers} isDisabled={isLocked} />
         <ForwardAuthSection
@@ -483,7 +493,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
           </>
         ) : (
           <>
-            <Button variant="primary" onClick={handleAddClick} isDisabled={!!forwardAuthErr}>{t("add_proxy.add_button")}</Button>
+            <Button variant="primary" onClick={handleAddClick} isDisabled={!!forwardAuthErr || tlsValuesHaveErrors(tlsValues)}>{t("add_proxy.add_button")}</Button>
             <Button variant="link" onClick={onClose}>{t("common.cancel")}</Button>
           </>
         )}

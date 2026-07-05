@@ -101,6 +101,7 @@
     "ext_scheme_custom": "Custom…",
     "ext_host_placeholder": "hostname (optional)",
     "validation_ext_host_required_with_scheme": "Hostname is required when a protocol is set",
+    "validation_https_requires_tls": "The \"https\" protocol requires TLS to be enabled below — Caddy would otherwise manage HTTPS on its own, ungoverned by this app's settings. Enable TLS or choose a different protocol.",
     "field_target_host": "Target Host",
     "field_target_host_placeholder": "localhost",
     "field_target_port": "Target Port",
@@ -414,6 +415,18 @@
     "level_ERROR": "ERROR",
     "indicator": "Logging"
   },
+  "config_check": {
+    "button": "Check Config",
+    "title": "Check Config",
+    "intro": "This scans the Caddyfile and conf.d for known-stale configuration shapes — each one traced to a specific reason Caddy would refuse to reload. Review each finding's before/after and explanation, then choose which fixes to apply. This is safe to run at any time, including while the config is currently broken.",
+    "load_error": "Could not read the current configuration.",
+    "no_issues": "No issues found — the configuration looks correct.",
+    "before": "Before",
+    "after": "After",
+    "apply_button": "Apply {{count}} selected",
+    "apply_error": "Failed to apply — changes not saved",
+    "apply_ok": "Fixes applied. Reload Caddy for them to take effect."
+  },
   "global_opts": {
     "title": "Global Caddy options",
     "caddyfile_note": "These settings are written to the global options block in /etc/caddy/Caddyfile. Caddy is reloaded automatically on save.",
@@ -459,7 +472,15 @@
     "on_demand_interval": "Rate limit interval",
     "on_demand_burst": "Rate limit burst",
     "on_demand_burst_help": "Maximum certificates issued per interval. Leave both blank for no rate limit (not recommended).",
-    "validation_burst": "Must be a positive integer"
+    "validation_burst": "Must be a positive integer",
+    "internal_tls_title": "Internal TLS (hostless proxies)",
+    "internal_tls_note": "Caddy can only scope a certificate policy by hostname. Proxies/servers with no hostname all share this one setting — there's no way to give two hostless proxies different lifetimes. Proxies with a real hostname can still set their own in the TLS Policy section of their edit dialog.",
+    "internal_cert_lifetime": "Internal certificate lifetime",
+    "internal_cert_lifetime_help": "How long internal-issuer certificates on hostless proxies/servers stay valid before renewal (Caddy default: 12h). Use a Caddy duration, e.g. 90d, 365d (Caddy doesn't support \"y\" for this field).",
+    "validation_cert_lifetime": "Enter a Caddy duration such as 90d or 2160h (\"y\" is not supported here)",
+    "renewal_window_ratio": "Renewal window ratio",
+    "renewal_window_ratio_help": "Fraction of the certificate's lifetime that must remain before Caddy attempts renewal (0-1, default ~0.33). Applies globally, including to hostname-scoped proxies that don't set their own.",
+    "validation_ratio": "Enter a number between 0 and 1 (exclusive)"
   },
   "ca": {
     "title": "Internal Certificate Authority",
@@ -533,6 +554,19 @@
     "client_auth_require_and_verify": "require and verify",
     "trusted_ca_file": "Trusted CA certificate file",
     "trusted_ca_file_help": "Path to a PEM file containing the CA certificate(s) used to verify client certificates (e.g. /etc/caddy/certs/ca.pem).",
+    "cert_lifetime": "Certificate lifetime",
+    "cert_lifetime_help": "How long internal-issuer certificates stay valid before renewal (default 12h). Use a Caddy duration, e.g. 90d, 365d (Caddy doesn't support \"y\" for this field).",
+    "cert_lifetime_placeholder": "90d",
+    "renewal_window_ratio": "Renewal window ratio",
+    "renewal_window_ratio_help": "Fraction of the certificate's lifetime that must remain before Caddy attempts renewal (0-1, default ~0.33).",
+    "validation_duration": "Enter a Caddy duration such as 90d or 2160h (\"y\" is not supported here)",
+    "validation_ratio": "Enter a number between 0 and 1 (exclusive)",
+    "hostless_global_only_note": "This proxy has no hostname, so Caddy can't scope a certificate policy to it alone. Set the certificate lifetime and renewal window for hostless proxies once, for all of them, in the Global Options tab under \"Internal TLS (hostless proxies)\".",
+    "lifetime_preset_default": "Default (12h)",
+    "lifetime_preset_90d": "90 days",
+    "lifetime_preset_180d": "180 days",
+    "lifetime_preset_1y": "1 year",
+    "lifetime_preset_custom": "Custom",
     "indicator_mtls": "mTLS",
     "indicator_advanced": "TLS policy"
   },
