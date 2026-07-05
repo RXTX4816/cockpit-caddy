@@ -23,6 +23,7 @@ import { useTranslation } from "react-i18next";
 import type { ProxyEntry, RouteMatch, ServerDef } from "../api";
 import { UpstreamStatusDot } from "./UpstreamStatusDot";
 import { parseListenPort } from "./AddServerDialog";
+import { buildRouteUrl } from "./routeUrl";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -99,15 +100,6 @@ function FlagChips({ proxy, t }: { proxy: ProxyEntry; t: (k: string) => string }
 // ---------------------------------------------------------------------------
 // Route row
 // ---------------------------------------------------------------------------
-
-function buildRouteUrl(proto: string, port: number, proxy: ProxyEntry): string {
-  const base = `${proto}://${window.location.hostname}:${port}`;
-  const firstPath = proxy.matchers?.path?.[0];
-  if (!firstPath) return base + "/";
-  // Strip trailing wildcard: /api/* → /api/  (the prefix the browser navigates to)
-  const clean = firstPath.replace(/\/\*$/, "/").replace(/\*$/, "");
-  return base + (clean.startsWith("/") ? clean : "/" + clean);
-}
 
 function ServerRouteRow({ proxy, serverTls, serverPort, onEdit, onDelete, onDuplicate, probeStatuses }: {
   proxy: ProxyEntry;

@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 import type { ProxyEntry } from "../api";
 import type { ProbeStatus } from "../api/probe";
 import { UpstreamStatusDot } from "./UpstreamStatusDot";
+import { buildRouteUrl } from "./routeUrl";
 
 interface Props {
   proxy: ProxyEntry;
@@ -25,11 +26,12 @@ const chipRow = { display: "flex", gap: "0.2rem", flexWrap: "wrap" } as const;
 export function ProxyCard({ proxy, onEdit, onDelete, onDuplicate, probeStatuses }: Props) {
   const { t } = useTranslation();
   const proto = proxy.tls ? "https" : "http";
-  const url = `${proto}://${window.location.hostname}:${proxy.externalPort}`;
+  const url = buildRouteUrl(proto, proxy.externalPort, proxy);
 
   const portLink = (
     <a href={url} target="_blank" rel="noopener noreferrer" style={{ fontFamily: "monospace", fontWeight: "bold" }}>
       {proxy.externalHost ? `${proxy.externalHost}:${proxy.externalPort}` : `:${proxy.externalPort}`}
+      {proxy.matchers?.path?.[0] ? proxy.matchers.path[0].replace(/\*$/, "…") : ""}
     </a>
   );
 
