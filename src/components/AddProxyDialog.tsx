@@ -24,6 +24,7 @@ import { readProxyConf, parseConfExternalAddresses, CaddyApiError, CaddyfileErro
 import type { ProxyEntry, RewriteConfig, HeaderOperation, RouteMatch, ServerDef } from "../api";
 import { RouteMatchersSection } from "./RouteMatchersSection";
 import { parseListenPort } from "./AddServerDialog";
+import { EXTERNAL_ADDRESS_BUILTIN_SCHEMES } from "./externalAddressSchemes";
 import { RewriteSection } from "./RewriteSection";
 import { RequestHeadersSection } from "./RequestHeadersSection";
 import { ResponseHeadersSection } from "./ResponseHeadersSection";
@@ -261,6 +262,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
                 onHostChange={v => set("externalHost", v)}
                 port={form.externalPort}
                 onPortChange={v => set("externalPort", v)}
+                builtinSchemes={EXTERNAL_ADDRESS_BUILTIN_SCHEMES}
                 suggestedSchemes={extraSchemes}
                 isDisabled={isLocked}
                 hostValidated={errors.externalHost ? "error" : "default"}

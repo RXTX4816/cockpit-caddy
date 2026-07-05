@@ -21,6 +21,7 @@ import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast, ExternalAddressInput } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { readProxyConf, parseConfExternalAddresses, CaddyApiError, CaddyfileError } from "../api";
+import { EXTERNAL_ADDRESS_BUILTIN_SCHEMES } from "./externalAddressSchemes";
 import type { ProxyEntry, RewriteConfig, HeaderOperation, RouteMatch, ServerDef } from "../api";
 import { RouteMatchersSection } from "./RouteMatchersSection";
 import { RewriteSection } from "./RewriteSection";
@@ -204,6 +205,7 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
                 onHostChange={v => { setExternalHost(v); setExtHostErr(null); }}
                 port={externalPort}
                 onPortChange={setExternalPort}
+                builtinSchemes={EXTERNAL_ADDRESS_BUILTIN_SCHEMES}
                 suggestedSchemes={extraSchemes}
                 isDisabled={isConfirming}
                 hostValidated={extHostErr ? "error" : "default"}
