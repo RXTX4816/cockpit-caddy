@@ -6,6 +6,8 @@ import {
   parseConfExternalAddresses,
   extractRawBlocksFromCaddyfile,
   buildMigratedConfContent,
+  mergeMigratedConfContent,
+  deduplicateManagedHeader,
   proxyToBlock,
   buildServerEntry,
   parseProxies,
@@ -17,6 +19,7 @@ import {
   serverDefToBlock,
   surgicallyWriteServerBlock,
   surgicallyRemoveServerBlock,
+  mergeNamedServer,
 } from "./caddy";
 import type { CaddyConfig, ProxyEntry, RouteMatch, ServerDef } from "./types";
 
@@ -248,6 +251,82 @@ describe("buildMigratedConfContent", () => {
     const result = buildMigratedConfContent(blocks);
     expect(result).toContain("git.example.com {");
     expect(result).toContain("reverse_proxy localhost:4732");
+  });
+});
+
+describe("mergeMigratedConfContent — preserves existing conf.d annotations", () => {
+  it("keeps a preceding # label: comment on an existing standalone route", () => {
+    const existing = "# label: homarr\n:8080 {\n\treverse_proxy localhost:8998\n}\n";
+    const newBlocks = extractRawBlocksFromCaddyfile("git.example.com {\n\treverse_proxy localhost:4732\n}\n");
+    const result = mergeMigratedConfContent(existing, newBlocks);
+    expect(result).toContain("# label: homarr");
+    expect(result).toContain(":8080 {");
+    expect(result).toContain("git.example.com {");
+  });
+
+  it("keeps # server: and # serverdef: comments on an existing named server block", () => {
+    const existing = '# server: pub\n# serverdef: {"name":"Public","tls":true}\n:443 {\n\ttls internal\n\treverse_proxy localhost:7701\n}\n';
+    const result = mergeMigratedConfContent(existing, []);
+    expect(result).toContain("# server: pub");
+    expect(result).toContain('# serverdef: {"name":"Public","tls":true}');
+    expect(result).toContain(":443 {");
+  });
+
+  it("falls back to the fresh-migration header when conf.d was empty", () => {
+    const newBlocks = extractRawBlocksFromCaddyfile("git.example.com {\n\treverse_proxy localhost:4732\n}\n");
+    const result = mergeMigratedConfContent("", newBlocks);
+    expect(result).toContain("# Managed by cockpit-caddy");
+    expect(result).toContain("git.example.com {");
+  });
+
+  it("does not duplicate the managed-by header across repeated migrations", () => {
+    let content = mergeMigratedConfContent("", extractRawBlocksFromCaddyfile(":3333 {\n\treverse_proxy localhost:3000\n}\n"));
+    content = mergeMigratedConfContent(content, extractRawBlocksFromCaddyfile(":3334 {\n\treverse_proxy localhost:3000\n}\n"));
+    content = mergeMigratedConfContent(content, extractRawBlocksFromCaddyfile(":3335 {\n\treverse_proxy localhost:3000\n}\n"));
+    expect(content.match(/# Managed by cockpit-caddy/g)).toHaveLength(1);
+    expect(content).toContain(":3333 {");
+    expect(content).toContain(":3334 {");
+    expect(content).toContain(":3335 {");
+  });
+});
+
+describe("deduplicateManagedHeader", () => {
+  it("collapses repeated header comments left by older migrations, keeping the first", () => {
+    const content = [
+      "# Managed by cockpit-caddy - edits to this file may be overwritten by user plugin actions",
+      "",
+      "# label: test",
+      ":3333 {",
+      "\treverse_proxy localhost:3000",
+      "}",
+      "",
+      "# Managed by cockpit-caddy - edits to this file may be overwritten by user plugin actions",
+      "",
+      ":3334 {",
+      "\treverse_proxy localhost:3000",
+      "}",
+      "",
+      "# Managed by cockpit-caddy - edits to this file may be overwritten by user plugin actions",
+      "",
+      ":3335 {",
+      "\treverse_proxy localhost:3000",
+      "}",
+    ].join("\n") + "\n";
+
+    const { content: result, changed } = deduplicateManagedHeader(content);
+    expect(changed).toBe(true);
+    expect(result.match(/# Managed by cockpit-caddy/g)).toHaveLength(1);
+    expect(result).toContain("# label: test");
+    expect(result).toContain(":3333 {");
+    expect(result).toContain(":3334 {");
+    expect(result).toContain(":3335 {");
+  });
+
+  it("reports no change when there is only one header", () => {
+    const content = "# Managed by cockpit-caddy - edits to this file may be overwritten by user plugin actions\n\n:3333 {\n\treverse_proxy localhost:3000\n}\n";
+    const { content: result, changed } = deduplicateManagedHeader(content);
+    expect(changed).toBe(false);
+    expect(result).toBe(content);
   });
 });
 
@@ -1580,5 +1659,48 @@ describe("surgicallyRemoveServerBlock", () => {
     const content = "# label: other\n:80 {\n\treverse_proxy http://localhost:8080\n}\n";
     const result = surgicallyRemoveServerBlock(content, "nonexistent");
     expect(result).toBe(content);
+  });
+});
+
+describe("mergeNamedServer — post-reload key collision (#129)", () => {
+  it("drops a stale Caddy-auto-named entry sharing the same listen address", () => {
+    // Caddy reloaded from the Caddyfile at some point and assigned its own
+    // key (srv3) to this server instead of the plugin's stored key. Pushing
+    // a live JSON update under the stored key must replace that entry, not
+    // add a second server claiming the same port.
+    const config: CaddyConfig = {
+      apps: { http: { servers: {
+        srv3: {
+          listen: [":7878"],
+          routes: [{ handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:3000" }] }], terminal: true }],
+        },
+      } } },
+    };
+    const def: ServerDef = { key: "uzuzuzuz", name: "Test", listenAddresses: [":7878"], tls: false };
+    const routes: ProxyEntry[] = [proxy({ id: "uzuzuzuz:0", matchers: { path: ["/a"] } })];
+
+    const result = mergeNamedServer(config, def, routes);
+    const servers = result.apps!.http!.servers!;
+
+    expect(Object.keys(servers)).toEqual(["uzuzuzuz"]);
+    expect(servers.uzuzuzuz.listen).toEqual([":7878"]);
+  });
+
+  it("leaves other servers on different listen addresses untouched", () => {
+    const config: CaddyConfig = {
+      apps: { http: { servers: {
+        srv0: {
+          listen: [":9999"],
+          routes: [{ handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:4000" }] }], terminal: true }],
+        },
+      } } },
+    };
+    const def: ServerDef = { key: "uzuzuzuz", name: "Test", listenAddresses: [":7878"], tls: false };
+    const routes: ProxyEntry[] = [proxy({ id: "uzuzuzuz:0", matchers: undefined })];
+
+    const result = mergeNamedServer(config, def, routes);
+    const servers = result.apps!.http!.servers!;
+
+    expect(Object.keys(servers).sort()).toEqual(["srv0", "uzuzuzuz"]);
   });
 });

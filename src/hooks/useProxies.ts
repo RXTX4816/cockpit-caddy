@@ -5,13 +5,13 @@ import {
   readCaddyfile, writeCaddyfile, readProxyConf,
   parseLabelsFromCaddyfile, parseConfTlsMap, parseConfExternalAddresses, parseConfAccessLogMap, parseConfForwardAuthMap,
   surgicallyWriteProxy, surgicallyRemoveBlock,
-  extractRawBlocksFromCaddyfile, buildMigratedConfContent, writeRawProxyConf, writeRawProxyConfValidated,
+  extractRawBlocksFromCaddyfile, mergeMigratedConfContent, writeRawProxyConf, writeRawProxyConfValidated,
   CaddyfileError,
   writeFile, reloadService, syncGlobalTimeouts,
   readServerDefs, writeServerDefs, parseServerDefsFromConf,
   surgicallyWriteServerBlock, surgicallyRemoveServerBlock,
   mergeNamedServer, removeNamedServer,
-  deduplicateServerBlocks, proxyAddressKeys, findGlobalBlock,
+  deduplicateServerBlocks, deduplicateManagedHeader, proxyAddressKeys, findGlobalBlock,
 } from "../api";
 import type { ProxyEntry, ServerDef } from "../api";
 import { useCaddyConfig } from "./useCaddyConfig";
@@ -84,11 +84,13 @@ export function useProxies() {
   const syncConf = useCallback(() => {
     const syncStart = Date.now();
     void readProxyConf().then(async c => {
-      // One-time repair: remove duplicate server blocks left by the old append bug.
+      // One-time repair: remove duplicate server blocks and header comments
+      // left by older append/migration bugs.
       if (!confdRepairedRef.current) {
         confdRepairedRef.current = true;
-        const { content: repaired, changed } = deduplicateServerBlocks(c);
-        if (changed) {
+        const { content: dedupedServers, changed: serversChanged } = deduplicateServerBlocks(c);
+        const { content: repaired, changed: headerChanged } = deduplicateManagedHeader(dedupedServers);
+        if (serversChanged || headerChanged) {
           await writeRawProxyConf(repaired);
           return; // let next auto-refresh cycle pick up the repaired state
         }
@@ -409,11 +411,12 @@ export function useProxies() {
 
   const migrate = useCallback(async () => {
     // Merge with whatever conf.d already manages — migration must be additive,
-    // not destructive, when the user already has proxies set up there.
+    // not destructive, when the user already has proxies set up there. The
+    // existing conf.d content is kept verbatim (see mergeMigratedConfContent)
+    // so its `# label:`/`# server:`/`# serverdef:` comments survive.
     const newBlocks = extractRawBlocksFromCaddyfile(caddyfileContent);
-    const existingBlocks = extractRawBlocksFromCaddyfile(await readProxyConf());
-    const blocks = [...existingBlocks, ...newBlocks];
-    const content = buildMigratedConfContent(blocks);
+    const existingConfD = await readProxyConf();
+    const content = mergeMigratedConfContent(existingConfD, newBlocks);
 
     // Preserve the original global options block (admin, email, acme_ca, etc.) —
     // migration should only move site blocks to conf.d, not discard global settings.
@@ -429,10 +432,12 @@ export function useProxies() {
 
     await delay(500);
 
-    const newLabels: Record<string, string> = {};
+    // Existing conf.d entries (labels, TLS) are untouched by the merge — only
+    // layer in the newly migrated blocks on top of what's already tracked.
     const newConfTlsMap = parseConfTlsMap(content);
-    const newConfTls: Record<string, boolean> = {};
-    for (const b of blocks) {
+    const newLabels: Record<string, string> = { ...labels };
+    const newConfTls: Record<string, boolean> = { ...confTls };
+    for (const b of newBlocks) {
       if (b.label) newLabels[b.address] = b.label;
       newConfTls[b.address] = newConfTlsMap[b.address] ?? false;
     }
@@ -440,7 +445,7 @@ export function useProxies() {
     setConfTls(newConfTls);
     setCaddyfileContent(newCaddyfile);
     await refresh();
-  }, [caddyfileContent, refresh]);
+  }, [caddyfileContent, labels, confTls, refresh]);
 
   return {
     proxies, servers, loading, error, refresh,
