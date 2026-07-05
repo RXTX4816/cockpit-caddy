@@ -129,7 +129,10 @@ function AppInner() {
                 <Tab eventKey={0} title={<TabTitleText>{t("tabs.proxy_list")}</TabTitleText>}>
                   <PageSection hasBodyWrapper={false}>
                     {adminApiOk ? (
-                      <ProxyList onViewLogs={(search) => { setLogsSearch(search); setActiveTab(2); }} />
+                      <ProxyList
+                        onViewLogs={(search) => { setLogsSearch(search); setActiveTab(2); }}
+                        onOpenBackup={() => modals.open("backup")}
+                      />
                     ) : (
                       <EmptyState>
                         <EmptyStateBody>{t("proxies.service_not_running")}</EmptyStateBody>

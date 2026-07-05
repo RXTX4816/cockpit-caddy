@@ -337,7 +337,9 @@
     "gate_body": "Your proxies are defined directly in /etc/caddy/Caddyfile. This plugin writes to /etc/caddy/conf.d — without migrating first, Caddy may see duplicate server entries and reject the configuration.",
     "gate_migrate": "Migrate first",
     "gate_continue": "Continue anyway",
-    "gate_continue_warning": "Continuing without migration may cause Caddy to reject the configuration due to duplicate entries."
+    "gate_continue_warning": "Continuing without migration may cause Caddy to reject the configuration due to duplicate entries.",
+    "backup_warning_title": "Back up your configuration first",
+    "backup_warning_body": "Migration only backs up the Caddyfile itself. Create a full config backup so you can restore everything if something goes wrong."
   },
   "backup": {
     "button": "Backup",

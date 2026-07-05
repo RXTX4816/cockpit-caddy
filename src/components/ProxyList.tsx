@@ -257,9 +257,10 @@ function ProxyRow({ proxy, onEdit, onDelete, onDuplicate, probeStatuses, servers
 
 interface Props {
   onViewLogs?: (search: string) => void;
+  onOpenBackup?: () => void;
 }
 
-export function ProxyList({ onViewLogs }: Props) {
+export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
   const {
@@ -463,9 +464,16 @@ export function ProxyList({ onViewLogs }: Props) {
               isInline
               title={t("migration.banner_title")}
               actionLinks={
-                <Button variant="warning" size="sm" onClick={() => setShowMigrateConfirm(true)}>
-                  {t("migration.button")}
-                </Button>
+                <>
+                  <Button variant="warning" size="sm" onClick={() => setShowMigrateConfirm(true)}>
+                    {t("migration.button")}
+                  </Button>
+                  {onOpenBackup && (
+                    <Button variant="link" size="sm" isInline onClick={onOpenBackup}>
+                      {t("backup.button")}
+                    </Button>
+                  )}
+                </>
               }
             >
               {t("migration.banner_body")}
@@ -723,6 +731,19 @@ export function ProxyList({ onViewLogs }: Props) {
         <ModalHeader title={t("migration.confirm_title")} labelId="migrate-confirm-title" />
         <ModalBody>
           <Content>{t("migration.confirm_body")}</Content>
+          <Alert
+            variant="warning"
+            isInline
+            title={t("migration.backup_warning_title")}
+            style={{ marginTop: "var(--pf-v6-global--spacer--md)" }}
+            actionLinks={onOpenBackup && (
+              <Button variant="link" isInline onClick={onOpenBackup}>
+                {t("backup.button")}
+              </Button>
+            )}
+          >
+            {t("migration.backup_warning_body")}
+          </Alert>
           {migrateError && (
             <Alert variant="danger" isInline title={t("migration.error")} style={{ marginTop: "var(--pf-v6-global--spacer--md)" }}>
               {migrateError}
