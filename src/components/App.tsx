@@ -7,7 +7,6 @@ import {
   EmptyState,
   EmptyStateBody,
   Label,
-  Page,
   PageSection,
   Spinner,
   Stack,
@@ -19,7 +18,7 @@ import {
 } from "@patternfly/react-core";
 import CogIcon from "@patternfly/react-icons/dist/esm/icons/cog-icon";
 import WrenchIcon from "@patternfly/react-icons/dist/esm/icons/wrench-icon";
-import { ErrorBoundary, ToastProvider, PluginFooter } from "@rxtx4816/cockpit-plugin-base-react/components";
+import { PluginPage, PluginFooter } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { useAdminMode, useDialogState } from "@rxtx4816/cockpit-plugin-base-react";
 import pkg from "../../package.json";
 
@@ -57,139 +56,133 @@ function AppInner() {
   const showAdminWarning = adminAllowed === false && !adminBypass;
 
   return (
-    <Page className="pf-m-no-sidebar">
-      <PageSection hasBodyWrapper={false} isFilled>
-        <Stack hasGutter>
-          <StackItem>
-            <Stack hasGutter>
-              <StackItem>
-                <Title headingLevel="h1">{t("app.title")}</Title>
-              </StackItem>
-              <StackItem>
-                <ServiceControl
-                  status={status}
-                  loading={loading}
-                  onRefresh={refresh}
-                  extraActions={
-                    <div style={{ display: "flex", gap: "0.5rem" }}>
-                      <Button variant="secondary" size="sm" icon={<WrenchIcon />} onClick={() => modals.open("configCheck")}>{t("config_check.button")}</Button>
-                      <Button variant="secondary" size="sm" onClick={() => modals.open("backup")}>{t("backup.button")}</Button>
-                      <Button variant="secondary" size="sm" onClick={() => modals.open("restore")}>{t("restore.button")}</Button>
-                      <Button variant="secondary" size="sm" onClick={() => modals.open("ca")}>{t("ca.button")}</Button>
-                      <Button variant="plain" size="sm" aria-label={t("admin_address.title")} onClick={() => modals.open("adminAddress")}><CogIcon /></Button>
-                    </div>
-                  }
-                />
-              </StackItem>
-            </Stack>
-          </StackItem>
-
-          {showAdminWarning && (
+    <PluginPage
+      fallbackTitle={t("error_boundary.load_error")}
+      footer={
+        <PluginFooter
+          version={pkg.version}
+          links={[
+            { label: t("footer.help"), href: (pkg.homepage as string) + "/wiki" },
+            { label: t("footer.feedback"), href: (pkg.homepage as string) + "/issues/new/choose" },
+          ]}
+        >
+          {caddyVersion && (
+            <Label isCompact color="blue">{t("footer.caddy_version", { version: caddyVersion })}</Label>
+          )}
+        </PluginFooter>
+      }
+    >
+      <Stack hasGutter>
+        <StackItem>
+          <Stack hasGutter>
             <StackItem>
-              <Alert
-                variant="warning"
-                isInline
-                title={t("admin.warning_title")}
-                actionLinks={
-                  <Button variant="link" isInline onClick={() => setAdminBypass(true)}>
-                    {t("admin.continue_button")}
-                  </Button>
+              <Title headingLevel="h1">{t("app.title")}</Title>
+            </StackItem>
+            <StackItem>
+              <ServiceControl
+                status={status}
+                loading={loading}
+                onRefresh={refresh}
+                extraActions={
+                  <div style={{ display: "flex", gap: "0.5rem" }}>
+                    <Button variant="secondary" size="sm" icon={<WrenchIcon />} onClick={() => modals.open("configCheck")}>{t("config_check.button")}</Button>
+                    <Button variant="secondary" size="sm" onClick={() => modals.open("backup")}>{t("backup.button")}</Button>
+                    <Button variant="secondary" size="sm" onClick={() => modals.open("restore")}>{t("restore.button")}</Button>
+                    <Button variant="secondary" size="sm" onClick={() => modals.open("ca")}>{t("ca.button")}</Button>
+                    <Button variant="plain" size="sm" aria-label={t("admin_address.title")} onClick={() => modals.open("adminAddress")}><CogIcon /></Button>
+                  </div>
                 }
-              >
-                <Content component="p">{t("admin.warning_body")}</Content>
-              </Alert>
+              />
             </StackItem>
-          )}
+          </Stack>
+        </StackItem>
 
-          {status === "not-installed" && (
-            <StackItem>
-              <Alert variant="warning" title={t("service.not_installed")}>
-                <Content component="p">{t("service.not_installed_body")}</Content>
-              </Alert>
-            </StackItem>
-          )}
-
-          {apiUnreachable && (
-            <StackItem>
-              <Alert variant="warning" title={t("service.api_unreachable")}>
-                <Content component="p">{t("service.api_unreachable_body")}</Content>
-              </Alert>
-            </StackItem>
-          )}
-
-
-          <StackItem isFilled>
-            {loading ? (
-              <EmptyState>
-                <Spinner size="xl" />
-                <EmptyStateBody>{t("app.loading")}</EmptyStateBody>
-              </EmptyState>
-            ) : (
-              <Tabs
-                activeKey={activeTab}
-                onSelect={(_e, k) => setActiveTab(Number(k))}
-              >
-                <Tab eventKey={0} title={<TabTitleText>{t("tabs.proxy_list")}</TabTitleText>}>
-                  <PageSection hasBodyWrapper={false}>
-                    {adminApiOk ? (
-                      <ProxyList
-                        onViewLogs={(search) => { setLogsSearch(search); setActiveTab(2); }}
-                        onOpenBackup={() => modals.open("backup")}
-                      />
-                    ) : (
-                      <EmptyState>
-                        <EmptyStateBody>{t("proxies.service_not_running")}</EmptyStateBody>
-                      </EmptyState>
-                    )}
-                  </PageSection>
-                </Tab>
-                <Tab eventKey={1} title={<TabTitleText>{t("tabs.caddyfile")}</TabTitleText>}>
-                  <PageSection hasBodyWrapper={false}>
-                    <CaddyfileEditor />
-                  </PageSection>
-                </Tab>
-                <Tab eventKey={2} title={<TabTitleText>{t("tabs.logs")}</TabTitleText>}>
-                  <PageSection hasBodyWrapper={false}>
-                    <LogsViewer filterValue={logsSearch} onFilterChange={setLogsSearch} />
-                  </PageSection>
-                </Tab>
-                <Tab eventKey={3} title={<TabTitleText>{t("tabs.settings")}</TabTitleText>}>
-                  <PageSection hasBodyWrapper={false}>
-                    <GlobalOptionsTab />
-                  </PageSection>
-                </Tab>
-              </Tabs>
-            )}
+        {showAdminWarning && (
+          <StackItem>
+            <Alert
+              variant="warning"
+              isInline
+              title={t("admin.warning_title")}
+              actionLinks={
+                <Button variant="link" isInline onClick={() => setAdminBypass(true)}>
+                  {t("admin.continue_button")}
+                </Button>
+              }
+            >
+              <Content component="p">{t("admin.warning_body")}</Content>
+            </Alert>
           </StackItem>
-        </Stack>
-      </PageSection>
+        )}
+
+        {status === "not-installed" && (
+          <StackItem>
+            <Alert variant="warning" title={t("service.not_installed")}>
+              <Content component="p">{t("service.not_installed_body")}</Content>
+            </Alert>
+          </StackItem>
+        )}
+
+        {apiUnreachable && (
+          <StackItem>
+            <Alert variant="warning" title={t("service.api_unreachable")}>
+              <Content component="p">{t("service.api_unreachable_body")}</Content>
+            </Alert>
+          </StackItem>
+        )}
+
+        <StackItem isFilled>
+          {loading ? (
+            <EmptyState>
+              <Spinner size="xl" />
+              <EmptyStateBody>{t("app.loading")}</EmptyStateBody>
+            </EmptyState>
+          ) : (
+            <Tabs
+              activeKey={activeTab}
+              onSelect={(_e, k) => setActiveTab(Number(k))}
+            >
+              <Tab eventKey={0} title={<TabTitleText>{t("tabs.proxy_list")}</TabTitleText>}>
+                <PageSection hasBodyWrapper={false}>
+                  {adminApiOk ? (
+                    <ProxyList
+                      onViewLogs={(search) => { setLogsSearch(search); setActiveTab(2); }}
+                      onOpenBackup={() => modals.open("backup")}
+                    />
+                  ) : (
+                    <EmptyState>
+                      <EmptyStateBody>{t("proxies.service_not_running")}</EmptyStateBody>
+                    </EmptyState>
+                  )}
+                </PageSection>
+              </Tab>
+              <Tab eventKey={1} title={<TabTitleText>{t("tabs.caddyfile")}</TabTitleText>}>
+                <PageSection hasBodyWrapper={false}>
+                  <CaddyfileEditor />
+                </PageSection>
+              </Tab>
+              <Tab eventKey={2} title={<TabTitleText>{t("tabs.logs")}</TabTitleText>}>
+                <PageSection hasBodyWrapper={false}>
+                  <LogsViewer filterValue={logsSearch} onFilterChange={setLogsSearch} />
+                </PageSection>
+              </Tab>
+              <Tab eventKey={3} title={<TabTitleText>{t("tabs.settings")}</TabTitleText>}>
+                <PageSection hasBodyWrapper={false}>
+                  <GlobalOptionsTab />
+                </PageSection>
+              </Tab>
+            </Tabs>
+          )}
+        </StackItem>
+      </Stack>
       {modals.isOpen("backup") && <BackupDialog onClose={() => modals.close("backup")} />}
       {modals.isOpen("restore") && <RestoreDialog onClose={() => modals.close("restore")} />}
       {modals.isOpen("adminAddress") && <AdminAddressDialog onClose={() => modals.close("adminAddress")} />}
       {modals.isOpen("ca") && <InternalCaModal onClose={() => modals.close("ca")} />}
       {modals.isOpen("configCheck") && <ConfigCheckModal onClose={() => modals.close("configCheck")} />}
-      <PluginFooter
-        version={pkg.version}
-        links={[
-          { label: t("footer.help"), href: (pkg.homepage as string) + "/wiki" },
-          { label: t("footer.feedback"), href: (pkg.homepage as string) + "/issues/new/choose" },
-        ]}
-      >
-        {caddyVersion && (
-          <Label isCompact color="blue">{t("footer.caddy_version", { version: caddyVersion })}</Label>
-        )}
-      </PluginFooter>
-    </Page>
+    </PluginPage>
   );
 }
 
 export function App() {
-  const { t } = useTranslation();
-  return (
-    <ErrorBoundary fallbackTitle={t("error_boundary.load_error")}>
-      <ToastProvider>
-        <AppInner />
-      </ToastProvider>
-    </ErrorBoundary>
-  );
+  return <AppInner />;
 }

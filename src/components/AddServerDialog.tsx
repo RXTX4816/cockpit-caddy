@@ -19,6 +19,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
+import { parseHostPort } from "@rxtx4816/cockpit-plugin-base-react/lib/uri";
 import type { ServerDef, ErrorHandlerConfig } from "../api";
 import { namedServerIsHostless } from "../api";
 import { TlsSection, type TlsValues, tlsValuesToAdvanced, tlsValuesToMtls, tlsConfigToValues, tlsValuesHaveErrors } from "./TlsSection";
@@ -37,8 +38,7 @@ function toSlug(s: string): string {
 }
 
 function parseListenPort(addr: string): number {
-  const m = addr.match(/:(\d+)$/);
-  return m ? parseInt(m[1], 10) : 443;
+  return parseHostPort(addr)?.port ?? 443;
 }
 
 export { parseListenPort };

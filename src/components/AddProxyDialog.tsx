@@ -24,6 +24,8 @@ import { readProxyConf, parseConfExternalAddresses, CaddyApiError, CaddyfileErro
 import type { ProxyEntry, RewriteConfig, HeaderOperation, RouteMatch, ServerDef } from "../api";
 import { RouteMatchersSection } from "./RouteMatchersSection";
 import { parseListenPort } from "./AddServerDialog";
+import { EXTERNAL_ADDRESS_BUILTIN_SCHEMES } from "./externalAddressSchemes";
+import { isValidPort } from "@rxtx4816/cockpit-plugin-base-react/lib/uri";
 import { RewriteSection } from "./RewriteSection";
 import { RequestHeadersSection } from "./RequestHeadersSection";
 import { ResponseHeadersSection } from "./ResponseHeadersSection";
@@ -144,7 +146,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
       const port = parseInt(form.externalPort, 10);
       if (!form.externalPort) errs.externalPort = t("add_proxy.validation_port_required");
       else if (isNaN(port)) errs.externalPort = t("add_proxy.validation_port_number");
-      else if (port < 1 || port > 65535) errs.externalPort = t("add_proxy.validation_port_range");
+      else if (!isValidPort(port)) errs.externalPort = t("add_proxy.validation_port_range");
       else if (existingPorts.includes(port)) errs.externalPort = t("add_proxy.validation_port_duplicate", { port });
     }
     if (form.externalScheme && !form.externalHost.trim()) {
@@ -159,7 +161,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
     if (!form.targetHost.trim()) errs.targetHost = t("add_proxy.validation_target_host_required");
     const tport = parseInt(form.targetPort, 10);
     if (!form.targetPort) errs.targetPort = t("add_proxy.validation_target_port_required");
-    else if (isNaN(tport) || tport < 1 || tport > 65535) errs.targetPort = t("add_proxy.validation_target_port_range");
+    else if (isNaN(tport) || !isValidPort(tport)) errs.targetPort = t("add_proxy.validation_target_port_range");
     return errs;
   }
 
@@ -261,6 +263,7 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
                 onHostChange={v => set("externalHost", v)}
                 port={form.externalPort}
                 onPortChange={v => set("externalPort", v)}
+                builtinSchemes={EXTERNAL_ADDRESS_BUILTIN_SCHEMES}
                 suggestedSchemes={extraSchemes}
                 isDisabled={isLocked}
                 hostValidated={errors.externalHost ? "error" : "default"}
