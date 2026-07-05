@@ -53,6 +53,7 @@ import { ProxyCard } from "./ProxyCard";
 import { useProxies } from "../hooks/useProxies";
 import { useUpstreamProbe } from "../hooks/useUpstreamProbe";
 import { UpstreamStatusDot } from "./UpstreamStatusDot";
+import { buildRouteUrl } from "./routeUrl";
 import type { ProxyEntry, ServerDef } from "../api";
 import { accessLogConfigToValues } from "./AccessLogSection";
 import { tlsConfigToValues } from "./TlsSection";
@@ -143,7 +144,7 @@ function ProxyRow({ proxy, onEdit, onDelete, onDuplicate, probeStatuses, servers
 }) {
   const { t } = useTranslation();
   const proto = proxy.tls ? "https" : "http";
-  const url = `${proto}://${window.location.hostname}:${proxy.externalPort}`;
+  const url = buildRouteUrl(proto, proxy.externalPort, proxy);
   const serverName = proxy.namedServerKey
     ? (servers.find(s => s.key === proxy.namedServerKey)?.name ?? proxy.namedServerKey)
     : null;
@@ -170,6 +171,7 @@ function ProxyRow({ proxy, onEdit, onDelete, onDuplicate, probeStatuses, servers
                 style={{ fontFamily: "monospace", fontWeight: "bold" }}
               >
                 {proxy.externalHost ? `${proxy.externalHost}:${proxy.externalPort}` : `:${proxy.externalPort}`}
+                {proxy.matchers?.path?.[0] ? proxy.matchers.path[0].replace(/\*$/, "…") : ""}
               </a>
               {serverName && (
                 <Label
