@@ -239,10 +239,56 @@ export function extractRawBlocksFromCaddyfile(content: string): RawBlock[] {
 
 /** Builds the conf.d file content from raw blocks, preserving all original syntax. */
 export function buildMigratedConfContent(blocks: RawBlock[]): string {
-  const header = "# Managed by cockpit-caddy - edits to this file may be overwritten by user plugin actions\n";
+  const header = CONF_HEADER + "\n";
   if (blocks.length === 0) return header + "\n";
   const parts = blocks.map(b => (b.label ? `# label: ${b.label}\n` : "") + b.raw);
   return header + "\n" + parts.join("\n\n") + "\n";
+}
+
+/**
+ * Merges newly-extracted main-Caddyfile blocks into whatever conf.d already
+ * manages, for the "Migrate" action. The existing conf.d content is kept
+ * verbatim rather than round-tripped through extractRawBlocksFromCaddyfile:
+ * that parser only understands the legacy inline-first-line label format
+ * used for hand-authored blocks in the main Caddyfile, so re-parsing conf.d's
+ * own `# label:`, `# server:`, and `# serverdef:` comments — which always
+ * precede the block header, not follow it — through it would silently drop
+ * them, deleting labels and de-registering named servers on migration.
+ *
+ * Appends only the new blocks' body (no extra header line) since the existing
+ * content already carries one — otherwise repeated migrations pile up a fresh
+ * "# Managed by cockpit-caddy" comment every time.
+ */
+export function mergeMigratedConfContent(existingConfD: string, newBlocks: RawBlock[]): string {
+  const trimmedExisting = existingConfD.trim();
+  if (!trimmedExisting) return buildMigratedConfContent(newBlocks);
+  if (newBlocks.length === 0) return `${trimmedExisting}\n`;
+  const parts = newBlocks.map(b => (b.label ? `# label: ${b.label}\n` : "") + b.raw);
+  return `${trimmedExisting}\n\n${parts.join("\n\n")}\n`;
+}
+
+/**
+ * Collapses repeated "# Managed by cockpit-caddy" header comments left behind
+ * by migrations that ran before mergeMigratedConfContent stopped appending a
+ * fresh one each time. Keeps only the first occurrence.
+ */
+export function deduplicateManagedHeader(content: string): { content: string; changed: boolean } {
+  const lines = content.split("\n");
+  let seenHeader = false;
+  let changed = false;
+  const result: string[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].trim() === CONF_HEADER) {
+      if (seenHeader) {
+        changed = true;
+        if (lines[i + 1]?.trim() === "") i++; // also drop the blank line that follows it
+        continue;
+      }
+      seenHeader = true;
+    }
+    result.push(lines[i]);
+  }
+  return { content: result.join("\n"), changed };
 }
 
 export async function writeRawProxyConf(content: string): Promise<void> {
@@ -2533,6 +2579,17 @@ export function mergeNamedServer(
   }
 
   const listenAddrs = def.listenAddresses.length ? def.listenAddresses : [`:${routes[0]?.externalPort ?? 80}`];
+
+  // Caddy assigns its own generated names (srv0, srv1, ...) to servers it loads
+  // straight from the Caddyfile on disk. If this named server's first live JSON
+  // push happens after such a reload, the auto-generated entry for the same
+  // block is still sitting in `servers` under a different key and claims the
+  // same listen address — drop it so the two don't collide (#129).
+  for (const [otherKey, otherServer] of Object.entries(servers)) {
+    if (otherKey !== def.key && otherServer.listen?.some(addr => listenAddrs.includes(addr))) {
+      delete servers[otherKey];
+    }
+  }
 
   const server: CaddyServer = {
     listen: listenAddrs,
