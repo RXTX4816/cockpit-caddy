@@ -22,6 +22,7 @@ import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast, ExternalAddressInput } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { readProxyConf, parseConfExternalAddresses, CaddyApiError, CaddyfileError } from "../api";
 import { EXTERNAL_ADDRESS_BUILTIN_SCHEMES } from "./externalAddressSchemes";
+import { isValidPort } from "@rxtx4816/cockpit-plugin-base-react/lib/uri";
 import type { ProxyEntry, RewriteConfig, HeaderOperation, RouteMatch, ServerDef } from "../api";
 import { RouteMatchersSection } from "./RouteMatchersSection";
 import { RewriteSection } from "./RewriteSection";
@@ -107,7 +108,7 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
   function portError(): string | null {
     const n = parseInt(externalPort, 10);
     if (!externalPort || isNaN(n)) return t("add_proxy.validation_port_number");
-    if (n < 1 || n > 65535) return t("add_proxy.validation_port_range");
+    if (!isValidPort(n)) return t("add_proxy.validation_port_range");
     if (existingPorts.includes(n)) return t("add_proxy.validation_port_duplicate", { port: n });
     return null;
   }
