@@ -39,6 +39,24 @@ function parseDuration(val: unknown): string | undefined {
   return undefined;
 }
 
+/**
+ * Like parseDuration, but prefers day granularity first — certificate lifetimes
+ * are commonly entered as "90d", and converting straight to hours (e.g. "2160h")
+ * after a Caddyfile reload, while technically equivalent, doesn't match what the
+ * user actually typed. Caddy's internal-issuer `lifetime` only accepts Go's
+ * standard duration units (ns/us/ms/s/m/h) plus "d" — NOT "y" ("unknown unit y"),
+ * so a year has to be expressed as days.
+ */
+function parseCertLifetimeDuration(val: unknown): string | undefined {
+  if (typeof val === "string") return val || undefined;
+  if (typeof val === "number" && val > 0) {
+    const s = val / 1_000_000_000;
+    if (s % 86_400 === 0) return `${s / 86_400}d`;
+    return parseDuration(val);
+  }
+  return undefined;
+}
+
 // The admin API is either on TCP (default :2019) or a Unix socket (Arch default).
 // Both transports use curl via cockpit.spawn — cockpit.http() proved unreliable across
 // distros (IPv4/IPv6 resolution differences). curl is available on all supported distros.
@@ -162,6 +180,26 @@ export async function pushCaddyConfig(config: CaddyConfig): Promise<void> {
 }
 
 const PROXY_CONF_PATH = "/etc/caddy/conf.d/cockpit-caddy.conf";
+
+/**
+ * Extracts the trailing `:PORT` from a block address, if any. Used to add a
+ * port-keyed fallback entry to conf.d-derived metadata maps, since a proxy
+ * that's the sole occupant of its port loses its host/scheme info once
+ * round-tripped through Caddy's JSON config (Caddy omits the host matcher
+ * when there's nothing else on that port to disambiguate) — the exact
+ * `scheme://host:port` address key then no longer matches anything.
+ */
+function addressPortKey(address: string): string | undefined {
+  const m = address.match(/:(\d+)$/);
+  return m ? m[1] : undefined;
+}
+
+/** Stores `value` under a block's address key, plus a port-number fallback key (see addressPortKey). */
+function setBlockResult<T>(result: Record<string, T>, block: RawBlock, value: T): void {
+  result[block.address] = value;
+  const portKey = block.port !== undefined ? String(block.port) : addressPortKey(block.address);
+  if (portKey && !(portKey in result)) result[portKey] = value;
+}
 
 export interface RawBlock {
   /** The complete original block text, header line through closing brace. */
@@ -339,18 +377,18 @@ export function parseConfExternalAddresses(content: string): Record<string, { sc
     const address = block.address;
     const schemeHostMatch = address.match(/^(\w[\w+\-.]*):\/\/([^:/\s]+)/);
     if (schemeHostMatch) {
-      result[address] = { scheme: schemeHostMatch[1], host: schemeHostMatch[2] };
+      setBlockResult(result, block, { scheme: schemeHostMatch[1], host: schemeHostMatch[2] });
       continue;
     }
     const hostPortMatch = address.match(/^([^:/\s]+):\d/);
     if (hostPortMatch) {
-      result[address] = { host: hostPortMatch[1] };
+      setBlockResult(result, block, { host: hostPortMatch[1] });
       continue;
     }
     // Bare hostname with no port and no scheme (e.g. "git.example.com {")
     if (address !== "" && !address.startsWith(":")) {
       const bareHost = address.split(",")[0].trim();
-      if (bareHost) result[address] = { host: bareHost };
+      if (bareHost) setBlockResult(result, block, { host: bareHost });
     }
   }
   return result;
@@ -375,7 +413,7 @@ export function parseConfTlsMap(content: string): Record<string, boolean> {
         }
       }
     }
-    result[block.address] = hasTls;
+    setBlockResult(result, block, hasTls);
   }
   return result;
 }
@@ -426,7 +464,7 @@ export function parseConfAccessLogMap(content: string): Record<string, import(".
         level = val.trim() as import("./types").AccessLogLevel;
       }
     }
-    result[block.address] = { output, filePath, format, level };
+    setBlockResult(result, block, { output, filePath, format, level });
   }
   return result;
 }
@@ -444,7 +482,10 @@ export function parseLabelsFromCaddyfile(content: string): Record<string, string
     const trimmed = line.trim();
     // Any block header (not the bare global-options `{`) counts as an addressable block.
     if (trimmed.endsWith("{") && trimmed !== "{" && pendingLabel !== null) {
-      labels[trimmed.slice(0, -1).trim()] = pendingLabel;
+      const address = trimmed.slice(0, -1).trim();
+      labels[address] = pendingLabel;
+      const portKey = addressPortKey(address);
+      if (portKey && !(portKey in labels)) labels[portKey] = pendingLabel;
     }
     if (trimmed !== "") pendingLabel = null;
   }
@@ -695,7 +736,7 @@ export function parseConfForwardAuthMap(content: string): Record<string, import(
   const result: Record<string, import("./types").ForwardAuthConfig> = {};
   for (const block of extractRawBlocksFromCaddyfile(content)) {
     const fa = parseForwardAuthFromBlockRaw(block.raw);
-    if (fa) result[block.address] = fa;
+    if (fa) setBlockResult(result, block, fa);
   }
   return result;
 }
@@ -840,7 +881,27 @@ function buildReverseProxyLines(
   return [`\treverse_proxy ${upstreams.join(" ")} {`, ...lbLines, ...transportLines, ...headerLines, ...errorPassthroughLines, "\t}"];
 }
 
-function buildExternalAddress(p: Pick<ProxyEntry, "externalPort" | "externalScheme" | "externalHost">): string {
+/**
+ * `https://` (or any scheme implying TLS) in a Caddyfile site address triggers Caddy's
+ * automatic HTTPS on its own, independent of anything else in the block — so a proxy
+ * with externalScheme="https" but tls=false would still get an implicit, ungoverned
+ * internal-issuer policy from Caddy, which then conflicts with any hostless proxy that
+ * *does* have an explicit shared lifetime ("automation policy from site block is also
+ * default/catch-all policy ... in conflict"). Only honor the scheme when TLS is
+ * actually enabled, so the address never implies more than our own config does.
+ *
+ * Conversely, a TLS-disabled site with NO scheme prefix at all is *also* not safe:
+ * Caddy's own `isAllHTTP()` check (caddyconfig/httpcaddyfile/directives.go) only skips
+ * automation-policy handling for a site when its address explicitly says `http://` —
+ * a bare `:port` with no scheme still counts as eligible for automatic HTTPS and can
+ * silently claim the shared catch-all policy with no issuer configured at all, which
+ * then conflicts with any other hostless site that has an explicit custom lifetime.
+ * So TLS-disabled sites always get an explicit `http://`, never a bare address.
+ */
+function buildExternalAddress(p: Pick<ProxyEntry, "externalPort" | "externalScheme" | "externalHost" | "tls">): string {
+  if (!p.tls) {
+    return p.externalHost ? `http://${p.externalHost}:${p.externalPort}` : `http://:${p.externalPort}`;
+  }
   if (p.externalScheme && p.externalHost) return `${p.externalScheme}://${p.externalHost}:${p.externalPort}`;
   if (p.externalHost) return `${p.externalHost}:${p.externalPort}`;
   return `:${p.externalPort}`;
@@ -849,13 +910,18 @@ function buildExternalAddress(p: Pick<ProxyEntry, "externalPort" | "externalSche
 /**
  * Candidate on-disk conf.d address keys for a proxy, used to correlate a
  * JSON-API-parsed ProxyEntry with text-derived metadata maps (labels, TLS,
- * external address, access log, forward-auth — all keyed by RawBlock.address).
+ * external address, access log, forward-auth — all keyed by RawBlock.address,
+ * plus a port-number fallback key, see setBlockResult/addressPortKey).
  * A bare-hostname Caddyfile block (e.g. from a migrated config) has no explicit
  * port, so the plain host is tried in addition to the canonical `host:port` form.
+ * The plain port is tried last: when a proxy is the sole occupant of its port,
+ * Caddy's JSON config omits the host matcher entirely, so parseProxies can't
+ * recover externalHost/externalScheme — the port-keyed fallback bridges that gap.
  */
-export function proxyAddressKeys(p: Pick<ProxyEntry, "externalPort" | "externalScheme" | "externalHost">): string[] {
+export function proxyAddressKeys(p: Pick<ProxyEntry, "externalPort" | "externalScheme" | "externalHost" | "tls">): string[] {
   const keys = [buildExternalAddress(p)];
   if (p.externalHost) keys.push(p.externalHost);
+  keys.push(String(p.externalPort));
   return keys;
 }
 
@@ -922,15 +988,48 @@ function buildLogCaddyLines(log: import("./types").AccessLogConfig): string[] {
   return lines;
 }
 
-function buildTlsCaddyLines(p: Pick<ProxyEntry, "tls" | "tlsAdvanced" | "mtls">): string[] {
+/**
+ * Builds the per-site `tls { }` Caddyfile block.
+ *
+ * `certLifetime` for a HOSTLESS proxy/server must always be the exact same value
+ * across every hostless site in the whole Caddyfile — Caddy forces every hostless
+ * site's automation policy to be the same object as the shared catch-all, then
+ * rejects the config if a site's own (freshly-parsed) issuer isn't `reflect.DeepEqual`
+ * to what's already there, even for a bare `tls internal` with no lifetime of its own
+ * ("automation policy from site block is also default/catch-all policy ... in
+ * conflict"). Callers (useProxies.ts) are responsible for stamping the current shared
+ * value (from GlobalOptions.internalCertLifetime) onto every hostless proxy/server's
+ * tlsAdvanced before calling this — this function just emits whatever it's given.
+ *
+ * `renewalWindowRatio` has no such conflict (Caddy applies it unconditionally, last
+ * write wins, no error) but is still suppressed here for hostless proxies to avoid
+ * that silent, order-dependent overwrite — hostless renewal window only comes from
+ * the real global `renewal_window_ratio` Caddyfile option instead.
+ */
+function buildTlsCaddyLines(p: Pick<ProxyEntry, "tls" | "tlsAdvanced" | "mtls">, hostless: boolean): string[] {
   if (!p.tls) return [];
   const adv = p.tlsAdvanced;
   const mtls = p.mtls;
-  const hasAdvanced = adv && (adv.protocolMin || adv.protocolMax || adv.cipherSuites?.length || adv.curves?.length);
+  const certLifetime = adv?.certLifetime;
+  const renewalWindowRatio = hostless ? undefined : adv?.renewalWindowRatio;
+  const hasAdvanced = adv && (
+    adv.protocolMin || adv.protocolMax || adv.cipherSuites?.length || adv.curves?.length
+    || certLifetime || renewalWindowRatio !== undefined
+  );
   const hasMtls = mtls?.mode;
   if (!hasAdvanced && !hasMtls) return ["\ttls internal"];
 
-  const lines: string[] = ["\ttls {", "\t\tissuer internal"];
+  const lines: string[] = ["\ttls {"];
+  if (certLifetime) {
+    lines.push("\t\tissuer internal {");
+    lines.push(`\t\t\tlifetime ${certLifetime}`);
+    lines.push("\t\t}");
+  } else {
+    lines.push("\t\tissuer internal");
+  }
+  if (renewalWindowRatio !== undefined) {
+    lines.push(`\t\trenewal_window_ratio ${renewalWindowRatio}`);
+  }
   if (adv?.protocolMin) {
     lines.push(adv.protocolMax
       ? `\t\tprotocols ${adv.protocolMin} ${adv.protocolMax}`
@@ -1014,9 +1113,12 @@ function buildRouteHandlerLines(p: ProxyEntry, indent: string): string[] {
 }
 
 export function proxyToBlock(p: ProxyEntry): string {
-  // Plain-port redirect/respond blocks must use http:// prefix to avoid Caddy TLS automation policy conflicts
-  // when other unnamed blocks use `tls internal` (which creates a catch-all InternalIssuer policy).
-  const isPlainHttp = !p.externalScheme && !p.externalHost && (p.redirect || p.staticResponse);
+  // Plain-port redirect/respond blocks force http:// even when tls is on, since a
+  // redirect/static response has no need for its own cert. buildExternalAddress already
+  // forces http:// unconditionally whenever tls is off, so this only needs to handle the
+  // tls-on case here — applying it regardless of p.tls would double up the prefix.
+  const isPlainHttp = p.tls && !p.externalScheme && !p.externalHost && (p.redirect || p.staticResponse);
+  const hostless = !tlsSubjectHost(p.externalHost);
   const rawAddr = buildExternalAddress(p);
   const header = isPlainHttp ? `http://${rawAddr}` : rawAddr;
   const lines = p.label ? [`# label: ${p.label}`, `${header} {`] : [`${header} {`];
@@ -1039,13 +1141,13 @@ export function proxyToBlock(p: ProxyEntry): string {
         lines.push(...buildRouteHandlerLines(p, "\t\t"));
         lines.push("\t}");
       } else if (p.fileServer) {
-        lines.push(...buildTlsCaddyLines(p));
+        lines.push(...buildTlsCaddyLines(p, hostless));
         if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
         lines.push(`\thandle_path ${paths} {`);
         lines.push(...buildRouteHandlerLines(p, "\t\t"));
         lines.push("\t}");
       } else {
-        lines.push(...buildTlsCaddyLines(p));
+        lines.push(...buildTlsCaddyLines(p, hostless));
         if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
         lines.push(`\thandle_path ${paths} {`);
         lines.push(...buildRouteHandlerLines(p, "\t\t"));
@@ -1065,13 +1167,13 @@ export function proxyToBlock(p: ProxyEntry): string {
         lines.push(...buildRouteHandlerLines(p, "\t\t"));
         lines.push("\t}");
       } else if (p.fileServer) {
-        lines.push(...buildTlsCaddyLines(p));
+        lines.push(...buildTlsCaddyLines(p, hostless));
         if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
         lines.push(`\thandle @${matcherName} {`);
         lines.push(...buildRouteHandlerLines(p, "\t\t"));
         lines.push("\t}");
       } else {
-        lines.push(...buildTlsCaddyLines(p));
+        lines.push(...buildTlsCaddyLines(p, hostless));
         if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
         lines.push(`\thandle @${matcherName} {`);
         lines.push(...buildRouteHandlerLines(p, "\t\t"));
@@ -1087,11 +1189,11 @@ export function proxyToBlock(p: ProxyEntry): string {
       if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
       lines.push(...buildRouteHandlerLines(p, "\t"));
     } else if (p.fileServer) {
-      lines.push(...buildTlsCaddyLines(p));
+      lines.push(...buildTlsCaddyLines(p, hostless));
       if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
       lines.push(...buildRouteHandlerLines(p, "\t"));
     } else {
-      lines.push(...buildTlsCaddyLines(p));
+      lines.push(...buildTlsCaddyLines(p, hostless));
       if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
       lines.push(...buildRouteHandlerLines(p, "\t"));
     }
@@ -1187,7 +1289,7 @@ function patchRawBlock(raw: string, proxy: ProxyEntry): string {
   }
 
   // Re-add updated directives before closing brace
-  kept.push(...buildTlsCaddyLines(proxy));
+  kept.push(...buildTlsCaddyLines(proxy, !tlsSubjectHost(proxy.externalHost)));
   if (proxy.fileServer) {
     if (proxy.compress) kept.push("\tencode gzip zstd");
     if (proxy.basicAuth?.length) kept.push(...buildBasicAuthCaddyLines(proxy.basicAuth));
@@ -1227,9 +1329,12 @@ export function surgicallyWriteProxy(content: string, proxy: ProxyEntry): string
 
   const start = pos.labelLine ?? pos.headerLine;
   const headerLine = lines[pos.headerLine].trim();
-  const isPluginFormat = new RegExp(`^(?:http://)?:${proxy.externalPort}[\\s{]`).test(headerLine)
-    || headerLine === `:${proxy.externalPort}{`
-    || headerLine === `http://:${proxy.externalPort}{`;
+  // Recognizes every shape buildExternalAddress can produce for this port — bare
+  // `:PORT`, `http://:PORT`, `host:PORT`, and `scheme://host:PORT` — so a header
+  // the plugin previously wrote with a hostname/scheme is still safe to fully
+  // regenerate (needed to let a later edit clear the hostname/scheme again;
+  // otherwise it looked like a hand-edited block and was preserved verbatim).
+  const isPluginFormat = new RegExp(`^(?:[\\w+.-]+://)?[^\\s{:]*:${proxy.externalPort}\\s*\\{?$`).test(headerLine);
 
   let body: string;
   if (isPluginFormat) {
@@ -1419,6 +1524,7 @@ function parseRouteToEntry(
   maxHeaderBytes: number | undefined,
   routeId: string,
   namedServerKey: string | undefined,
+  automationPolicies: import("./types").CaddyAutomationPolicy[] | undefined,
 ): ProxyEntry | undefined {
   const handles = (route.handle ?? []) as AnyHandler[];
   let matchers = route.match?.[0] ? parseMatcherJson(route.match[0]) : undefined;
@@ -1519,7 +1625,7 @@ function parseRouteToEntry(
       matchers,
       serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, accessLog,
       errorHandlers: parseErrorHandlers(server),
-      tlsAdvanced: fsTlsPolicy ? parseTlsAdvanced(fsTlsPolicy) : undefined,
+      tlsAdvanced: fsTlsPolicy ? parseTlsAdvanced(fsTlsPolicy, automationPolicies, tlsSubjectHost(externalHost)) : undefined,
       mtls: fsTlsPolicy ? parseMtls(fsTlsPolicy) : undefined,
     };
   }
@@ -1616,13 +1722,14 @@ function parseRouteToEntry(
     serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
     errorHandlers: parseErrorHandlers(server),
     forwardAuth,
-    tlsAdvanced: tlsPolicy ? parseTlsAdvanced(tlsPolicy) : undefined,
+    tlsAdvanced: tlsPolicy ? parseTlsAdvanced(tlsPolicy, automationPolicies, tlsSubjectHost(externalHost)) : undefined,
     mtls: tlsPolicy ? parseMtls(tlsPolicy) : undefined,
   };
 }
 
 export function parseProxies(config: CaddyConfig, serverDefs?: import("./types").ServerDef[]): ProxyEntry[] {
   const servers = config.apps?.http?.servers ?? {};
+  const automationPolicies = config.apps?.tls?.automation?.policies;
   const proxies: ProxyEntry[] = [];
 
   for (const [key, server] of Object.entries(servers)) {
@@ -1686,7 +1793,7 @@ export function parseProxies(config: CaddyConfig, serverDefs?: import("./types")
         const entry = parseRouteToEntry(
           contentRoutes[i], key, externalPort, externalHost, server, accessLog,
           serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
-          `${namedDef.key}:${i}`, isNamedServer ? namedDef.key : undefined,
+          `${namedDef.key}:${i}`, isNamedServer ? namedDef.key : undefined, automationPolicies,
         );
         if (entry) proxies.push(entry);
       }
@@ -1697,7 +1804,7 @@ export function parseProxies(config: CaddyConfig, serverDefs?: import("./types")
       const entry = parseRouteToEntry(
         route, key, externalPort, externalHost, server, accessLog,
         serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
-        String(externalPort), undefined,
+        String(externalPort), undefined, automationPolicies,
       );
       if (entry) proxies.push(entry);
     } else {
@@ -1711,7 +1818,7 @@ export function parseProxies(config: CaddyConfig, serverDefs?: import("./types")
         const entry = parseRouteToEntry(
           contentRoutes[i], key, externalPort, externalHost, server, accessLog,
           serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
-          routeHost ? `host:${routeHost}` : `${key}:${i}`, undefined,
+          routeHost ? `host:${routeHost}` : `${key}:${i}`, undefined, automationPolicies,
         );
         if (entry) proxies.push(entry);
       }
@@ -1850,6 +1957,55 @@ function buildListenAddr(proxy: { externalHost?: string; externalPort: number })
     : `:${proxy.externalPort}`;
 }
 
+/**
+ * Mirrors certmagic.SubjectIsInternal (github.com/caddyserver/certmagic), which Caddy
+ * itself uses to decide whether a hostname can get its own scoped automation policy.
+ * Hosts that match this are folded into the shared catch-all/default policy no matter
+ * what — giving them a `subjects`-scoped policy of our own would fight Caddy's own
+ * classification and produce "automation policy from site block is also default/
+ * catch-all policy ... in conflict" at reload. localhost/.local/.internal/.home.arpa
+ * and private IPs all count, not just literal IP addresses.
+ */
+function isCaddyInternalSubject(host: string): boolean {
+  const h = host.toLowerCase().replace(/\.$/, "");
+  return h === "localhost"
+    || h.endsWith(".localhost")
+    || h.endsWith(".local")
+    || h.endsWith(".internal")
+    || h.endsWith(".home.arpa")
+    || isIpAddress(h);
+}
+
+/** A hostname usable as an automation-policy `subjects` entry — a real public-looking domain. */
+export function tlsSubjectHost(host: string | undefined): string | undefined {
+  return host && !isCaddyInternalSubject(host) ? host : undefined;
+}
+
+/**
+ * Exact membership check for a `subjects` list. Written as `.some(s => s === host)` rather
+ * than `.includes(host)` — both are equivalent here (subjects is a plain string[], not a URL
+ * being substring-matched), but static analysis tools that flag "incomplete URL substring
+ * sanitization" on any `.includes()` call don't distinguish the two, so this form avoids
+ * tripping that check entirely.
+ */
+function subjectsInclude(subjects: string[] | undefined, host: string): boolean {
+  return !!subjects?.some(s => s === host);
+}
+
+/** Extracts a usable subject hostname from a named server's first listen address, if any (e.g. "example.com:443"). */
+function namedServerSubjectHost(def: { listenAddresses: string[] }): string | undefined {
+  const addr = def.listenAddresses[0];
+  if (!addr) return undefined;
+  const colonIdx = addr.lastIndexOf(":");
+  const host = colonIdx > 0 ? addr.slice(0, colonIdx) : "";
+  return tlsSubjectHost(host || undefined);
+}
+
+/** True if none of a named server's listen addresses have a real (non-IP) hostname. Used by the TLS UI to warn that a lifetime/renewal-window setting is shared across every hostless internal-TLS proxy/server. */
+export function namedServerIsHostless(listenAddresses: string[]): boolean {
+  return !namedServerSubjectHost({ listenAddresses });
+}
+
 /** Stable logger name for a proxy's access log, keyed by port. */
 function accessLoggerName(port: number): string {
   return `cockpit-access-${port}`;
@@ -1879,13 +2035,61 @@ function flattenErrorHandles(handles: Array<Record<string, unknown>>): Array<Rec
   return result;
 }
 
-function parseTlsAdvanced(policy: CaddyTLSConnectionPolicy): import("./types").TlsAdvancedConfig | undefined {
+/**
+ * Finds the automation policy that governs certs for this hostname: the policy
+ * whose `subjects` includes it, falling back to the shared subject-less policy
+ * (Caddy allows at most one policy with no subjects; it's the catch-all default).
+ * With no host (this app addresses most servers by port, not domain), only the
+ * default policy can apply — Caddy has no other way to scope automation policies.
+ */
+function findAutomationPolicy(
+  automationPolicies: import("./types").CaddyAutomationPolicy[] | undefined,
+  host: string | undefined,
+): import("./types").CaddyAutomationPolicy | undefined {
+  if (!automationPolicies) return undefined;
+  if (host) {
+    const scoped = automationPolicies.find(p => subjectsInclude(p.subjects, host));
+    if (scoped) return scoped;
+  }
+  return automationPolicies.find(p => !p.subjects?.length);
+}
+
+/**
+ * Resolves a server's internal-issuer lifetime/renewal-window settings given its
+ * *actual* hostname. Exported separately from parseProxies/parseTlsAdvanced because
+ * a server that's the sole occupant of its port has no host matcher in the live
+ * JSON config at all (Caddy omits it — nothing else on that listener to
+ * disambiguate), so parseProxies can't resolve the host at the point it parses
+ * tlsAdvanced. Callers that separately recover the host via a conf.d text fallback
+ * (see useProxies.ts) should re-resolve with this function afterward, using the
+ * corrected host, and merge the result into the already-parsed tlsAdvanced.
+ */
+export function resolveInternalIssuerSettings(
+  config: CaddyConfig,
+  host: string | undefined,
+): { certLifetime?: string; renewalWindowRatio?: number } {
+  const policy = findAutomationPolicy(config.apps?.tls?.automation?.policies, tlsSubjectHost(host));
+  return {
+    certLifetime: parseCertLifetimeDuration(policy?.issuers?.[0]?.lifetime),
+    renewalWindowRatio: policy?.renewal_window_ratio,
+  };
+}
+
+function parseTlsAdvanced(
+  policy: CaddyTLSConnectionPolicy,
+  automationPolicies: import("./types").CaddyAutomationPolicy[] | undefined,
+  host: string | undefined,
+): import("./types").TlsAdvancedConfig | undefined {
   const cfg: import("./types").TlsAdvancedConfig = {};
   let hasData = false;
   if (policy.protocol_min) { cfg.protocolMin = policy.protocol_min as import("./types").TlsProtocolVersion; hasData = true; }
   if (policy.protocol_max) { cfg.protocolMax = policy.protocol_max as import("./types").TlsProtocolVersion; hasData = true; }
   if (Array.isArray(policy.cipher_suites) && policy.cipher_suites.length) { cfg.cipherSuites = policy.cipher_suites as string[]; hasData = true; }
   if (Array.isArray(policy.curves) && policy.curves.length) { cfg.curves = policy.curves as string[]; hasData = true; }
+  const automationPolicy = findAutomationPolicy(automationPolicies, host);
+  const lifetime = parseCertLifetimeDuration(automationPolicy?.issuers?.[0]?.lifetime);
+  if (lifetime) { cfg.certLifetime = lifetime; hasData = true; }
+  if (automationPolicy?.renewal_window_ratio !== undefined) { cfg.renewalWindowRatio = automationPolicy.renewal_window_ratio; hasData = true; }
   return hasData ? cfg : undefined;
 }
 
@@ -1896,7 +2100,49 @@ function parseMtls(policy: CaddyTLSConnectionPolicy): import("./types").MtlsConf
   return { mode: ca.mode as import("./types").MtlsMode, trustedCaFile };
 }
 
-function buildTlsPolicy(proxy: { tlsAdvanced?: import("./types").TlsAdvancedConfig; mtls?: import("./types").MtlsConfig }): CaddyTLSConnectionPolicy {
+function hasCustomInternalIssuer(adv: import("./types").TlsAdvancedConfig | undefined): boolean {
+  return !!(adv?.certLifetime || adv?.renewalWindowRatio !== undefined);
+}
+
+/**
+ * Forces tlsAdvanced.certLifetime to the shared internal-cert lifetime for a hostless
+ * proxy/server, clearing any per-site renewalWindowRatio (hostless renewal window only
+ * comes from the real global `renewal_window_ratio` option, never per-site — see
+ * buildTlsCaddyLines). Hostname-scoped entries are returned unchanged: they get their
+ * own independently-scoped policy and may set their own lifetime/ratio freely.
+ * Every hostless proxy/server MUST go through this before being written, or their
+ * automation policies will disagree and Caddy will refuse to reload.
+ */
+function forceHostlessLifetime(
+  tlsAdvanced: import("./types").TlsAdvancedConfig | undefined,
+  isHostless: boolean,
+  internalCertLifetime: string | undefined,
+): import("./types").TlsAdvancedConfig | undefined {
+  if (!isHostless) return tlsAdvanced;
+  const certLifetime = internalCertLifetime || undefined;
+  if (!certLifetime && !tlsAdvanced) return undefined;
+  return { ...tlsAdvanced, certLifetime, renewalWindowRatio: undefined };
+}
+
+/** Applies forceHostlessLifetime to a proxy, using its externalHost to determine hostlessness. */
+export function applyGlobalInternalLifetimeToProxy(
+  proxy: { externalHost?: string; tlsAdvanced?: import("./types").TlsAdvancedConfig },
+  internalCertLifetime: string | undefined,
+): import("./types").TlsAdvancedConfig | undefined {
+  return forceHostlessLifetime(proxy.tlsAdvanced, !tlsSubjectHost(proxy.externalHost), internalCertLifetime);
+}
+
+/** Applies forceHostlessLifetime to a named server, using its listen addresses to determine hostlessness. */
+export function applyGlobalInternalLifetimeToServer(
+  def: { listenAddresses: string[]; tlsAdvanced?: import("./types").TlsAdvancedConfig },
+  internalCertLifetime: string | undefined,
+): import("./types").TlsAdvancedConfig | undefined {
+  return forceHostlessLifetime(def.tlsAdvanced, namedServerIsHostless(def.listenAddresses), internalCertLifetime);
+}
+
+function buildTlsPolicy(
+  proxy: { tlsAdvanced?: import("./types").TlsAdvancedConfig; mtls?: import("./types").MtlsConfig },
+): CaddyTLSConnectionPolicy {
   const policy: CaddyTLSConnectionPolicy = {};
   if (proxy.tlsAdvanced) {
     if (proxy.tlsAdvanced.protocolMin) policy.protocol_min = proxy.tlsAdvanced.protocolMin;
@@ -1912,6 +2158,68 @@ function buildTlsPolicy(proxy: { tlsAdvanced?: import("./types").TlsAdvancedConf
     policy.client_authentication = ca;
   }
   return policy;
+}
+
+/**
+ * Rebuilds apps.tls.automation.policies after a single server (identified by
+ * changedServerKey, addressed by changedHost if it has a real hostname) was
+ * added/edited.
+ *
+ * Caddy can only scope an automation policy by `subjects` (hostnames) — there
+ * is no "tags"-style field for arbitrary per-server scoping. So:
+ *  - A server with a real (non-IP) hostname gets its own policy scoped by
+ *    `subjects: [host]`, independent of every other server.
+ *  - A hostless server (the common case here, since this app addresses most
+ *    proxies by port) has no way to get its own distinct policy — Caddy allows
+ *    only one policy without subjects. Its custom lifetime/ratio is merged
+ *    directly into that single shared default policy instead; if more than one
+ *    hostless server customizes it, the most recently saved one wins.
+ */
+function rebuildTlsAutomationPolicies(
+  config: CaddyConfig,
+  servers: Record<string, { tls_connection_policies?: CaddyTLSConnectionPolicy[] }>,
+  changedServerKey: string,
+  changedAdv: import("./types").TlsAdvancedConfig | undefined,
+  changedHost: string | undefined,
+): import("./types").CaddyTlsApp | undefined {
+  const hasTls = Object.values(servers).some(
+    s => Array.isArray(s.tls_connection_policies) && s.tls_connection_policies.length > 0,
+  );
+  if (!hasTls) return undefined;
+
+  const isChangedServerLive = !!servers[changedServerKey]?.tls_connection_policies?.length;
+  const existing = config.apps?.tls?.automation?.policies ?? [];
+  const otherSubjectPolicies = existing.filter(p => p.subjects?.length && !(changedHost && subjectsInclude(p.subjects, changedHost)));
+
+  // A hostless proxy/server always carries the current shared internal-cert lifetime
+  // in its own tlsAdvanced by the time it reaches here (useProxies.ts stamps it on
+  // before every write — see GlobalOptions.internalCertLifetime), so it's safe to
+  // apply directly to the shared default policy: every hostless site is guaranteed to
+  // agree on the same value by construction, unlike a raw per-proxy field would be.
+  // renewal_window_ratio is deliberately left alone here — it comes only from the
+  // real global `renewal_window_ratio` Caddyfile option, which the next reload applies.
+  let defaultPolicy: import("./types").CaddyAutomationPolicy =
+    existing.find(p => !p.subjects?.length) ?? { issuers: [{ module: "internal" }] };
+
+  if (!changedHost && isChangedServerLive) {
+    const issuer: { module: string; lifetime?: string } = { module: "internal" };
+    if (changedAdv?.certLifetime) issuer.lifetime = changedAdv.certLifetime;
+    defaultPolicy = { ...defaultPolicy, issuers: [issuer] };
+  }
+
+  const policies: import("./types").CaddyAutomationPolicy[] = [defaultPolicy, ...otherSubjectPolicies];
+
+  if (changedHost && isChangedServerLive && hasCustomInternalIssuer(changedAdv)) {
+    const issuer: { module: string; lifetime?: string } = { module: "internal" };
+    if (changedAdv?.certLifetime) issuer.lifetime = changedAdv.certLifetime;
+    policies.push({
+      subjects: [changedHost],
+      issuers: [issuer],
+      ...(changedAdv?.renewalWindowRatio !== undefined ? { renewal_window_ratio: changedAdv.renewalWindowRatio } : {}),
+    });
+  }
+
+  return { automation: { policies } };
 }
 
 function parseErrorHandlers(server: CaddyServer): import("./types").ErrorHandlerConfig[] | undefined {
@@ -2212,10 +2520,6 @@ export function mergeProxy(config: CaddyConfig, proxy: ProxyEntry): CaddyConfig 
   const original = servers[proxy.serverKey];
   servers[proxy.serverKey] = (original && !proxy.redirect && !proxy.staticResponse) ? patchServer(original, proxy) : buildServerEntry(proxy);
 
-  const hasTls = Object.values(servers).some(
-    s => Array.isArray(s.tls_connection_policies) && s.tls_connection_policies.length > 0,
-  );
-
   const logging = patchLoggingLogs(config, original, proxy);
 
   return {
@@ -2224,9 +2528,7 @@ export function mergeProxy(config: CaddyConfig, proxy: ProxyEntry): CaddyConfig 
     apps: {
       ...config.apps,
       http: { ...config.apps?.http, servers },
-      tls: hasTls
-        ? { automation: { policies: [{ issuers: [{ module: "internal" }] }] } }
-        : config.apps?.tls,
+      tls: rebuildTlsAutomationPolicies(config, servers, proxy.serverKey, proxy.tlsAdvanced, tlsSubjectHost(proxy.externalHost)),
     },
   };
 }
@@ -2334,7 +2636,9 @@ export function parseServerDefsFromConf(content: string): import("./types").Serv
       if (!line || line.startsWith("#")) continue;
       const m = line.match(/^(.+?)\s*\{/);
       if (m) {
-        const parts = m[1].trim().split(/\s+/);
+        // Strip the http:// forced onto a TLS-disabled server's addresses (see
+        // serverDefToBlock) — listenAddresses itself never carries a scheme.
+        const parts = m[1].trim().split(/\s+/).map(p => p.replace(/^https?:\/\//, ""));
         listenAddresses.push(...parts.filter(p => /:\d+/.test(p)));
       }
       break;
@@ -2395,7 +2699,14 @@ export function serverDefToBlock(def: import("./types").ServerDef, routes: Proxy
   if (def.listenAddresses.length === 0) {
     throw new Error(`Server '${def.key}' has no listen addresses — cannot generate Caddyfile block`);
   }
-  const addr = def.listenAddresses.join(" ");
+  // A schemeless address with TLS off is still eligible for Caddy's automatic HTTPS
+  // (only an explicit http:// scheme is excluded — see buildExternalAddress), so it can
+  // silently claim the shared internal-issuer catch-all policy and conflict with any
+  // other hostless site that has an explicit custom lifetime. Force http:// on every
+  // listen address when TLS is disabled, same as buildExternalAddress does for proxies.
+  const addr = def.tls
+    ? def.listenAddresses.join(" ")
+    : def.listenAddresses.map(a => `http://${a}`).join(" ");
   // Embed server def as a comment so syncConf can reconstruct it without a separate JSON file.
   // Keys with undefined values are omitted by JSON.stringify.
   const defPayload = {
@@ -2417,7 +2728,7 @@ export function serverDefToBlock(def: import("./types").ServerDef, routes: Proxy
   // Server-level TLS
   if (def.tls) {
     const tlsMock = { tls: def.tls, tlsAdvanced: def.tlsAdvanced, mtls: def.mtls };
-    lines.push(...buildTlsCaddyLines(tlsMock));
+    lines.push(...buildTlsCaddyLines(tlsMock, namedServerIsHostless(def.listenAddresses)));
   }
   // Server-level access log
   if (def.accessLog) lines.push(...buildLogCaddyLines(def.accessLog));
@@ -2619,10 +2930,6 @@ export function mergeNamedServer(
 
   servers[def.key] = server;
 
-  const hasTls = Object.values(servers).some(
-    s => Array.isArray(s.tls_connection_policies) && s.tls_connection_policies.length > 0,
-  );
-
   // Build access log config entry
   let logging = config.logging;
   if (def.accessLog) {
@@ -2645,9 +2952,7 @@ export function mergeNamedServer(
     apps: {
       ...config.apps,
       http: { ...config.apps?.http, servers },
-      tls: hasTls
-        ? { automation: { policies: [{ issuers: [{ module: "internal" }] }] } }
-        : config.apps?.tls,
+      tls: rebuildTlsAutomationPolicies(config, servers, def.key, def.tlsAdvanced, namedServerSubjectHost(def)),
     },
   };
 }
@@ -2956,6 +3261,16 @@ export interface GlobalOptions {
   onDemandInterval?: string;
   /** Maximum certificates that may be issued per rate-limit interval */
   onDemandBurst?: number;
+  /**
+   * Validity duration for internal-issuer certificates on hostless proxies/servers
+   * (Caddy duration, e.g. "90d"). Stored as a comment marker (not a real Caddy
+   * directive) and stamped identically onto every hostless proxy/server's own
+   * `tls { issuer internal { lifetime } } }` block — see applyHostlessLifetime and
+   * the comment on INTERNAL_LIFETIME_MARKER for why it can't be a real global option.
+   */
+  internalCertLifetime?: string;
+  /** Global `renewal_window_ratio` (0-1): fraction of lifetime remaining before Caddy renews. */
+  renewalWindowRatio?: number;
 }
 
 /**
@@ -2966,7 +3281,23 @@ export interface GlobalOptions {
 const KNOWN_GLOBAL_OPTION_KEYS = new Set([
   "http_port", "https_port", "debug", "grace_period", "shutdown_delay",
   "email", "acme_ca", "acme_ca_root", "acme_eab", "on_demand_tls",
+  "renewal_window_ratio",
 ]);
+
+/**
+ * Comment marker for the shared hostless-proxy cert lifetime. This is deliberately
+ * NOT a real Caddy directive (unlike the rest of GlobalOptions): Caddy's Caddyfile
+ * adapter forces every hostless site's own `tls internal` onto the same catch-all
+ * automation policy object as a global `cert_issuer` option, then rejects the config
+ * if that site's (freshly-parsed, lifetime-less) issuer doesn't exactly equal the
+ * global one — unconditionally, even for a bare `tls internal` with no lifetime of
+ * its own ("automation policy from site block is also default/catch-all policy...
+ * in conflict"). The only way to share one lifetime across hostless proxies without
+ * hitting that is to stamp the *identical* `tls { issuer internal { lifetime } } }`
+ * onto every hostless proxy/server's own block — this comment is just where that
+ * shared value is stored so it can be applied uniformly (see applyHostlessLifetime).
+ */
+const INTERNAL_LIFETIME_MARKER = "# cockpit-caddy:internal-cert-lifetime";
 
 /** Parse the recognized global option directives out of a block of Caddyfile lines. */
 function parseOptionLines(lines: string[]): GlobalOptions {
@@ -3011,6 +3342,11 @@ function parseOptionLines(lines: string[]): GlobalOptions {
         }
         i++;
       }
+    } else if (line.startsWith(INTERNAL_LIFETIME_MARKER)) {
+      const marked = line.slice(INTERNAL_LIFETIME_MARKER.length).trim();
+      if (marked) opts.internalCertLifetime = marked;
+    } else if (key === "renewal_window_ratio" && val) {
+      opts.renewalWindowRatio = parseFloat(val);
     }
     i++;
   }
@@ -3093,6 +3429,10 @@ function buildGlobalOptionsLines(opts: GlobalOptions): string {
     if (opts.onDemandBurst) lines.push(`\t\tburst ${opts.onDemandBurst}`);
     lines.push("\t}");
   }
+  if (opts.internalCertLifetime) {
+    lines.push(`\t${INTERNAL_LIFETIME_MARKER} ${opts.internalCertLifetime}`);
+  }
+  if (opts.renewalWindowRatio !== undefined) lines.push(`\trenewal_window_ratio ${opts.renewalWindowRatio}`);
   return lines.join("\n");
 }
 
@@ -3120,16 +3460,56 @@ export function buildGlobalOptionsPatch(diskContent: string, opts: GlobalOptions
   return patchManagedSection(base, GLOBAL_OPTS_BEGIN, GLOBAL_OPTS_END, body);
 }
 
+/**
+ * Rewrites every hostless proxy/server's own tls block so its internal-issuer
+ * lifetime matches the shared value exactly — every hostless site must carry
+ * byte-for-byte identical issuer config or Caddy refuses to reload (see
+ * buildTlsCaddyLines/forceHostlessLifetime). Hostname-scoped proxies/servers are
+ * left untouched; they scope their own lifetime independently. If Caddy's admin
+ * API isn't reachable, hostnames can't be resolved from the live config, so this
+ * skips propagation entirely — existing hostless proxies keep their previous
+ * lifetime until their next individual edit re-applies the current shared value.
+ */
+async function applyInternalLifetimeToProxyConf(content: string, internalCertLifetime: string | undefined): Promise<string> {
+  let config: CaddyConfig;
+  try {
+    config = await fetchCaddyConfig();
+  } catch {
+    return content;
+  }
+
+  const serverDefs = parseServerDefsFromConf(content);
+  const proxies = parseProxies(config, serverDefs);
+
+  let updated = content;
+  for (const p of proxies) {
+    if (!p.tls || p.namedServerKey) continue;
+    updated = surgicallyWriteProxy(updated, { ...p, tlsAdvanced: applyGlobalInternalLifetimeToProxy(p, internalCertLifetime) });
+  }
+  for (const def of serverDefs) {
+    if (!def.tls) continue;
+    const routes = proxies.filter(p => p.namedServerKey === def.key);
+    updated = surgicallyWriteServerBlock(updated, { ...def, tlsAdvanced: applyGlobalInternalLifetimeToServer(def, internalCertLifetime) }, routes);
+  }
+  return updated;
+}
+
 export async function syncGlobalOptions(opts: GlobalOptions): Promise<void> {
   const diskContent = (await fsReadFile(MAIN_CADDYFILE, "try")) ?? "";
   const patched = buildGlobalOptionsPatch(diskContent, opts);
-  if (patched === diskContent) return;
+
+  const proxyConfDisk = (await fsReadFile(PROXY_CONF_PATH, "try")) ?? "";
+  const proxyConfPatched = await applyInternalLifetimeToProxyConf(proxyConfDisk, opts.internalCertLifetime);
+
+  if (patched === diskContent && proxyConfPatched === proxyConfDisk) return;
 
   await fsWriteFile(MAIN_CADDYFILE, patched, "try");
+  if (proxyConfPatched !== proxyConfDisk) await fsWriteFile(PROXY_CONF_PATH, proxyConfPatched, "try");
   try {
     await runCaddyValidate();
   } catch (e) {
     await fsWriteFile(MAIN_CADDYFILE, diskContent, "try");
+    if (proxyConfPatched !== proxyConfDisk) await fsWriteFile(PROXY_CONF_PATH, proxyConfDisk, "try");
     throw e;
   }
 }
@@ -3138,4 +3518,179 @@ export async function syncGlobalOptions(opts: GlobalOptions): Promise<void> {
 export async function readGlobalOptions(): Promise<GlobalOptions> {
   const content = (await fsReadFile(MAIN_CADDYFILE, "try")) ?? "";
   return parseGlobalOptions(content);
+}
+
+// ---------------------------------------------------------------------------
+// Config health check ("Fix Config" maintenance action)
+// ---------------------------------------------------------------------------
+
+export interface ConfigFinding {
+  id: string;
+  title: string;
+  explanation: string;
+  before: string;
+  after: string;
+  /** Applies just this one finding. Pure — callers chain these over the current file contents. */
+  fix: (main: string, proxyConf: string) => { main: string; proxyConf: string };
+}
+
+/** Strips a leading "http://"/"https://" (or any scheme://) from an address, if present. */
+function stripScheme(addr: string): string {
+  return addr.replace(/^\w[\w+.-]*:\/\//, "");
+}
+
+/** Replaces just the header line of a raw block/section, preserving everything after it. */
+function replaceHeaderLine(raw: string, newHeaderLine: string): string {
+  const idx = raw.indexOf("\n");
+  return idx === -1 ? newHeaderLine : newHeaderLine + raw.slice(idx);
+}
+
+/**
+ * Scans the current Caddyfile + conf.d for known-stale configuration shapes left over
+ * by older versions of this plugin (or hand-editing), each traced to a specific Caddy
+ * reload failure this app has hit in the past. Detection and fixes are both pure text
+ * operations — no live Caddy connection required — so this works even when the config
+ * is currently broken and Caddy won't reload at all.
+ */
+export function scanConfigIssues(mainContent: string, proxyConfContent: string): ConfigFinding[] {
+  const findings: ConfigFinding[] = [];
+
+  // --- Stale literal `cert_issuer internal { lifetime X }` global directive ---
+  // Caddy rejects this the moment any hostless proxy also sets its own TLS lifetime,
+  // since it sees two different definitions of the same default certificate policy.
+  const certIssuerMatch = mainContent.match(/[ \t]*cert_issuer\s+internal\s*\{\s*\n[ \t]*lifetime\s+(\S+)\s*\n[ \t]*\}\n?/);
+  let effectiveLifetime = parseGlobalOptions(mainContent).internalCertLifetime;
+  if (certIssuerMatch) {
+    const lifetime = certIssuerMatch[1];
+    effectiveLifetime = lifetime;
+    findings.push({
+      id: "stale-cert-issuer-directive",
+      title: "Replace the old global certificate-lifetime directive",
+      explanation: `An older version of this plugin wrote the shared internal-issuer lifetime as a real Caddy directive (\`cert_issuer\`). Caddy rejects that as soon as any proxy without a hostname also sets its own certificate lifetime — it sees two different definitions of the same default certificate policy and refuses to reload ("automation policy from site block is also default/catch-all policy ... in conflict"). The value (${lifetime}) is kept, just stored safely as a comment instead, which Caddy ignores.`,
+      before: certIssuerMatch[0].trim(),
+      after: `${INTERNAL_LIFETIME_MARKER} ${lifetime}`,
+      fix: (main, proxyConf) => {
+        const stripped = main.replace(certIssuerMatch[0], "");
+        const opts = { ...parseGlobalOptions(stripped), internalCertLifetime: lifetime };
+        return { main: buildGlobalOptionsPatch(stripped, opts), proxyConf };
+      },
+    });
+  }
+
+  const serverDefs = parseServerDefsFromConf(proxyConfContent);
+  const serverKeyByPort = new Map<string, string>();
+  for (const def of serverDefs) {
+    for (const addr of def.listenAddresses) {
+      const port = addr.match(/:(\d+)$/)?.[1];
+      if (port) serverKeyByPort.set(port, def.key);
+    }
+  }
+  const defByKey = new Map(serverDefs.map(d => [d.key, d]));
+  const externalMap = parseConfExternalAddresses(proxyConfContent);
+
+  // Unlike parseConfTlsMap, this does NOT treat an "https://" address as TLS-enabled —
+  // that shortcut is exactly wrong for detecting the bug this check exists to find (an
+  // https:// address with no actual tls directive backing it, which used to happen
+  // whenever the protocol dropdown and the TLS toggle disagreed).
+  function hasExplicitTlsDirective(raw: string): boolean {
+    for (const line of raw.split("\n").slice(1)) {
+      const t = line.trim();
+      if (t === "tls" || (t.startsWith("tls ") && !t.startsWith("tls off"))) return true;
+    }
+    return false;
+  }
+
+  // Applies both checks (missing http:// scheme, hostless lifetime drift) to a single raw
+  // block — used for both standalone proxy blocks and named-server blocks alike, since a
+  // named server's block is textually the same shape, just with a `# server:` key.
+  function checkBlock(block: RawBlock, tlsEnabled: boolean, isHostless: boolean, label: string, idSuffix: string) {
+    if (!tlsEnabled && !block.address.startsWith("http://")) {
+      const newHeaderLine = `http://${stripScheme(block.address)} {`;
+      findings.push({
+        id: `missing-http-scheme:${idSuffix}`,
+        title: `Mark ${label} as explicitly plain HTTP`,
+        explanation: "Caddy only excludes a site from its automatic-HTTPS bookkeeping when the address explicitly says \"http://\" — a bare address is still eligible even with TLS off in this app, and can silently claim the shared internal-issuer policy with no certificate settings at all, which then conflicts with any other hostless proxy that has an explicit lifetime.",
+        before: `${block.address} {`,
+        after: newHeaderLine,
+        fix: (main, proxyConf) => ({
+          main,
+          proxyConf: proxyConf.replace(block.raw, replaceHeaderLine(block.raw, newHeaderLine)),
+        }),
+      });
+    }
+
+    if (tlsEnabled && isHostless) {
+      const lifetimeMatch = block.raw.match(/issuer internal \{\s*\n[ \t]*lifetime\s+(\S+)/);
+      const current = lifetimeMatch?.[1];
+      if ((current ?? "") !== (effectiveLifetime ?? "")) {
+        const fixedRaw = effectiveLifetime
+          ? (lifetimeMatch
+            ? block.raw.replace(/(issuer internal \{\s*\n[ \t]*lifetime\s+)(\S+)/, `$1${effectiveLifetime}`)
+            : block.raw.replace(/\bissuer internal\b(?!\s*\{)/, `issuer internal {\n\t\t\tlifetime ${effectiveLifetime}\n\t\t}`))
+          : block.raw.replace(/issuer internal \{\s*\n[ \t]*lifetime\s+\S+\s*\n[ \t]*\}/, "issuer internal");
+        findings.push({
+          id: `lifetime-drift:${idSuffix}`,
+          title: `Sync ${label} to the shared certificate lifetime`,
+          explanation: `This has no hostname, so it must use the exact same internal-issuer lifetime as every other hostless proxy/server — Caddy allows only one shared policy for all of them. It currently has ${current ? `"${current}"` : "no explicit lifetime (Caddy's 12h default)"}, but the shared value is ${effectiveLifetime ? `"${effectiveLifetime}"` : "unset (Caddy's 12h default)"}.`,
+          before: current ? `lifetime ${current}` : "(no explicit lifetime)",
+          after: effectiveLifetime ? `lifetime ${effectiveLifetime}` : "(no explicit lifetime)",
+          fix: (main, proxyConf) => ({ main, proxyConf: proxyConf.replace(block.raw, fixedRaw) }),
+        });
+      }
+    }
+  }
+
+  for (const block of extractRawBlocksFromCaddyfile(proxyConfContent)) {
+    const serverKey = block.port !== undefined ? serverKeyByPort.get(String(block.port)) : undefined;
+    if (serverKey) {
+      const def = defByKey.get(serverKey);
+      if (def) checkBlock(block, def.tls, namedServerIsHostless(def.listenAddresses), `server "${def.name}"`, `server:${def.key}`);
+      continue;
+    }
+    const tlsEnabled = hasExplicitTlsDirective(block.raw);
+    const host = externalMap[block.address]?.host;
+    checkBlock(block, tlsEnabled, !tlsSubjectHost(host), `"${block.address}"`, block.address);
+  }
+
+  return findings;
+}
+
+/** Applies the selected findings (by id) in sequence, starting from the given file contents. */
+export function applyConfigFindings(
+  findings: ConfigFinding[],
+  selectedIds: Set<string>,
+  mainContent: string,
+  proxyConfContent: string,
+): { main: string; proxyConf: string } {
+  let main = mainContent;
+  let proxyConf = proxyConfContent;
+  for (const finding of findings) {
+    if (!selectedIds.has(finding.id)) continue;
+    ({ main, proxyConf } = finding.fix(main, proxyConf));
+  }
+  return { main, proxyConf };
+}
+
+/**
+ * Runs scanConfigIssues against the files on disk, applies the selected findings,
+ * validates, and writes both files atomically — reverting both on validation failure.
+ */
+export async function runConfigFixes(selectedIds: Set<string>): Promise<ConfigFinding[]> {
+  const mainDisk = (await fsReadFile(MAIN_CADDYFILE, "try")) ?? "";
+  const proxyConfDisk = (await fsReadFile(PROXY_CONF_PATH, "try")) ?? "";
+  const findings = scanConfigIssues(mainDisk, proxyConfDisk);
+  const { main, proxyConf } = applyConfigFindings(findings, selectedIds, mainDisk, proxyConfDisk);
+
+  if (main === mainDisk && proxyConf === proxyConfDisk) return findings;
+
+  await fsWriteFile(MAIN_CADDYFILE, main, "try");
+  await fsWriteFile(PROXY_CONF_PATH, proxyConf, "try");
+  try {
+    await runCaddyValidate();
+  } catch (e) {
+    await fsWriteFile(MAIN_CADDYFILE, mainDisk, "try");
+    await fsWriteFile(PROXY_CONF_PATH, proxyConfDisk, "try");
+    throw e;
+  }
+  return findings;
 }

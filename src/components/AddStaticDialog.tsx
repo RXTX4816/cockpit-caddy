@@ -201,16 +201,18 @@ export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues, 
             />
           </FormGroup>
 
-          <FormGroup fieldId="static-tls">
-            <Checkbox
-              id="static-tls"
-              label={t("add_proxy.field_tls_short")}
-              isChecked={tls}
-              onChange={(_e, v) => setTls(v)}
-              isDisabled={isLocked}
-            />
-            <SectionActions onDefaults={() => setTls(true)} isDisabled={isLocked} />
-          </FormGroup>
+          {!serverCtx && (
+            <FormGroup fieldId="static-tls">
+              <Checkbox
+                id="static-tls"
+                label={t("add_proxy.field_tls_short")}
+                isChecked={tls}
+                onChange={(_e, v) => setTls(v)}
+                isDisabled={isLocked}
+              />
+              <SectionActions onDefaults={() => setTls(true)} isDisabled={isLocked} />
+            </FormGroup>
+          )}
 
           <FormGroup fieldId="static-compress">
             <Checkbox
@@ -223,7 +225,9 @@ export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues, 
           </FormGroup>
         </Form>
 
-        <TlsSection value={tlsValues} onChange={setTlsValues} isDisabled={isLocked} />
+        {!serverCtx && (
+          <TlsSection value={tlsValues} onChange={setTlsValues} isDisabled={isLocked} />
+        )}
         <AccessLogSection value={accessLog} onChange={setAccessLog} isDisabled={isLocked} />
         <ErrorHandlersSection value={errorHandlers} onChange={setErrorHandlers} isDisabled={isLocked} />
         <ServerTimeoutsSection value={serverTimeouts} onChange={setServerTimeouts} isDisabled={isLocked} />

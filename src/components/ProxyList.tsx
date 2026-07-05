@@ -948,6 +948,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
           onSave={editProxy}
           onClose={() => setEditing(null)}
           onApiError={msg => setApiError({ message: msg, search: extractLogsSearch(msg), action: "edit" })}
+          servers={servers}
         />
       ))}
 

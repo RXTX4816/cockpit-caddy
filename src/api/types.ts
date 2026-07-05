@@ -93,6 +93,10 @@ export interface TlsAdvancedConfig {
   protocolMax?: TlsProtocolVersion;
   cipherSuites?: string[];
   curves?: string[];
+  /** Validity duration for internal-issuer leaf certificates, e.g. "90d", "2160h" (Caddy duration string) */
+  certLifetime?: string;
+  /** Fraction (0-1) of certificate lifetime remaining before Caddy attempts renewal */
+  renewalWindowRatio?: number;
 }
 
 export interface MtlsConfig {
@@ -125,20 +129,26 @@ export interface CaddyLoggerConfig {
   exclude?: string[];
 }
 
+export interface CaddyAutomationPolicy {
+  /** Hostnames this policy applies to. Omit for the shared catch-all policy (only one may lack subjects). */
+  subjects?: string[];
+  /** `lifetime` may come back as a number (nanoseconds) after a Caddyfile reload rather than the original duration string. */
+  issuers?: Array<{ module: string; lifetime?: string | number; [key: string]: unknown }>;
+  renewal_window_ratio?: number;
+}
+
+export interface CaddyTlsApp {
+  automation?: {
+    policies?: CaddyAutomationPolicy[];
+  };
+}
+
 export interface CaddyConfig {
   apps?: {
     http?: {
       servers?: Record<string, CaddyServer>;
     };
-    tls?: {
-      automation?: {
-        policies?: Array<{
-          subjects?: string[];
-          issuers?: Array<{ module: string }>;
-          tags?: string[];
-        }>;
-      };
-    };
+    tls?: CaddyTlsApp;
     [key: string]: unknown;
   };
   logging?: {

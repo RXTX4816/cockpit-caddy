@@ -20,6 +20,15 @@ import {
   surgicallyWriteServerBlock,
   surgicallyRemoveServerBlock,
   mergeNamedServer,
+  mergeProxy,
+  proxyAddressKeys,
+  resolveInternalIssuerSettings,
+  namedServerIsHostless,
+  applyGlobalInternalLifetimeToProxy,
+  applyGlobalInternalLifetimeToServer,
+  parseServerDefsFromConf,
+  scanConfigIssues,
+  applyConfigFindings,
 } from "./caddy";
 import type { CaddyConfig, ProxyEntry, RouteMatch, ServerDef } from "./types";
 
@@ -72,12 +81,12 @@ const proxy = (overrides: Partial<ProxyEntry> = {}): ProxyEntry => ({
 
 describe("parseLabelsFromCaddyfile", () => {
   it("reads labels above :PORT blocks", () => {
-    expect(parseLabelsFromCaddyfile(SIMPLE_CONF)).toEqual({ ":7700": "homarr", ":8096": "jellyfin" });
+    expect(parseLabelsFromCaddyfile(SIMPLE_CONF)).toEqual({ ":7700": "homarr", "7700": "homarr", ":8096": "jellyfin", "8096": "jellyfin" });
   });
 
   it("reads labels above https://host:PORT blocks", () => {
     const conf = `# label: myapp\nhttps://host.lan:7700 {\n\treverse_proxy localhost:8080\n}\n`;
-    expect(parseLabelsFromCaddyfile(conf)).toEqual({ "https://host.lan:7700": "myapp" });
+    expect(parseLabelsFromCaddyfile(conf)).toEqual({ "https://host.lan:7700": "myapp", "7700": "myapp" });
   });
 
   it("ignores blocks without a label comment", () => {
@@ -89,7 +98,7 @@ describe("parseLabelsFromCaddyfile", () => {
     // Parser is lenient: blank lines do not clear the pending label since we
     // never generate blank lines between label and block header ourselves.
     const conf = `# label: orphan\n\n:7700 {\n\treverse_proxy http://localhost:8080\n}\n`;
-    expect(parseLabelsFromCaddyfile(conf)).toEqual({ ":7700": "orphan" });
+    expect(parseLabelsFromCaddyfile(conf)).toEqual({ ":7700": "orphan", "7700": "orphan" });
   });
 
   it("reads labels above a bare-hostname block with no port (#95)", () => {
@@ -120,31 +129,34 @@ describe("parseLegacyLabelsFromCaddyfile", () => {
 describe("parseConfTlsMap", () => {
   it("detects tls from https:// block header", () => {
     const conf = `https://host.lan:7700 {\n\treverse_proxy localhost:8998\n}\n`;
-    expect(parseConfTlsMap(conf)).toEqual({ "https://host.lan:7700": true });
+    expect(parseConfTlsMap(conf)).toEqual({ "https://host.lan:7700": true, "7700": true });
   });
 
   it("detects tls internal directive", () => {
     const conf = `:7700 {\n\ttls internal\n\treverse_proxy http://localhost:8998\n}\n`;
-    expect(parseConfTlsMap(conf)).toEqual({ ":7700": true });
+    expect(parseConfTlsMap(conf)).toEqual({ ":7700": true, "7700": true });
   });
 
   it("detects tls with email argument", () => {
     const conf = `:7700 {\n\ttls admin@example.com\n\treverse_proxy http://localhost:8998\n}\n`;
-    expect(parseConfTlsMap(conf)).toEqual({ ":7700": true });
+    expect(parseConfTlsMap(conf)).toEqual({ ":7700": true, "7700": true });
   });
 
   it("does not flag tls off as enabled", () => {
     const conf = `:7700 {\n\ttls off\n\treverse_proxy http://localhost:8998\n}\n`;
-    expect(parseConfTlsMap(conf)).toEqual({ ":7700": false });
+    expect(parseConfTlsMap(conf)).toEqual({ ":7700": false, "7700": false });
   });
 
   it("does not confuse tls_ prefixed directives", () => {
     const conf = `:7700 {\n\treverse_proxy http://localhost:8998 {\n\t\ttransport http {\n\t\t\ttls_insecure_skip_verify\n\t\t}\n\t}\n}\n`;
-    expect(parseConfTlsMap(conf)).toEqual({ ":7700": false });
+    expect(parseConfTlsMap(conf)).toEqual({ ":7700": false, "7700": false });
   });
 
   it("handles mixed blocks", () => {
-    expect(parseConfTlsMap(MIGRATED_CONF)).toEqual({ "https://jellyfin.speedport.ip:7700": true, ":8096": false });
+    expect(parseConfTlsMap(MIGRATED_CONF)).toEqual({
+      "https://jellyfin.speedport.ip:7700": true, "7700": true,
+      ":8096": false, "8096": false,
+    });
   });
 });
 
@@ -155,17 +167,42 @@ describe("parseConfTlsMap", () => {
 describe("parseConfExternalAddresses", () => {
   it("extracts scheme and host from scheme://host:PORT", () => {
     const conf = `https://host.lan:7700 {\n\treverse_proxy localhost:8998\n}\n`;
-    expect(parseConfExternalAddresses(conf)).toEqual({ "https://host.lan:7700": { scheme: "https", host: "host.lan" } });
+    expect(parseConfExternalAddresses(conf)).toEqual({
+      "https://host.lan:7700": { scheme: "https", host: "host.lan" },
+      "7700": { scheme: "https", host: "host.lan" },
+    });
   });
 
   it("extracts host from host:PORT", () => {
     const conf = `host.lan:7700 {\n\treverse_proxy localhost:8998\n}\n`;
-    expect(parseConfExternalAddresses(conf)).toEqual({ "host.lan:7700": { host: "host.lan" } });
+    expect(parseConfExternalAddresses(conf)).toEqual({
+      "host.lan:7700": { host: "host.lan" },
+      "7700": { host: "host.lan" },
+    });
   });
 
   it("records nothing for a bare :PORT block", () => {
     const conf = `:7700 {\n\treverse_proxy localhost:8998\n}\n`;
     expect(parseConfExternalAddresses(conf)).toEqual({});
+  });
+
+  // Regression: when a proxy is the sole occupant of its port, Caddy's JSON config
+  // omits the host matcher entirely, so parseProxies can't recover externalHost/
+  // externalScheme and the JSON-derived ProxyEntry has neither set. The exact
+  // "scheme://host:port" address key then no longer matches anything, so the
+  // port-only fallback key (added by setBlockResult) is what useProxies.ts relies
+  // on to still resolve the label/scheme/host/tls from the on-disk Caddyfile.
+  it("port-only fallback key resolves scheme/host for a JSON-derived proxy missing both", () => {
+    const conf = `# label: test\nhttps://localhost:3333 {\n\ttls internal\n\treverse_proxy http://localhost:3000\n}\n`;
+    const confExternal = parseConfExternalAddresses(conf);
+    const labels = parseLabelsFromCaddyfile(conf);
+    const jsonDerivedProxy = { externalPort: 3333, externalScheme: undefined, externalHost: undefined, tls: true };
+    const keys = proxyAddressKeys(jsonDerivedProxy);
+    expect(keys).toEqual([":3333", "3333"]);
+    const found = keys.map(k => confExternal[k]).find(Boolean);
+    expect(found).toEqual({ scheme: "https", host: "localhost" });
+    const label = keys.map(k => labels[k]).find(Boolean);
+    expect(label).toBe("test");
   });
 
   it("extracts host from a bare hostname with no port (#95)", () => {
@@ -345,7 +382,38 @@ describe("proxyToBlock", () => {
 
   it("omits label line when no label", () => {
     const result = proxyToBlock(proxy());
-    expect(result.split("\n")[0]).toBe(":7700 {");
+    expect(result.split("\n")[0]).toBe("http://:7700 {");
+  });
+
+  // Regression: "https://" in the address alone triggers Caddy's automatic HTTPS,
+  // independent of our own tls flag — a proxy with externalScheme="https" but tls=false
+  // produced an address that silently implied TLS Caddy would manage on its own,
+  // ungoverned by anything in this app, which then conflicted with other proxies'
+  // explicit internal-issuer config at reload.
+  it("never emits https:// scheme in the address when tls is disabled", () => {
+    const result = proxyToBlock(proxy({ tls: false, externalScheme: "https", externalHost: "example.com" }));
+    expect(result.split("\n")[0]).toBe("http://example.com:7700 {");
+    expect(result).not.toContain("https://");
+  });
+
+  // Regression: a bare, schemeless address with TLS off is STILL eligible for Caddy's
+  // automatic HTTPS (only an explicit "http://" scheme opts a site out — see
+  // buildExternalAddress) — it can silently claim the shared internal-issuer catch-all
+  // policy with no issuer configured at all, conflicting with any other hostless site
+  // that has an explicit custom lifetime ("... is also default/catch-all policy ...").
+  it("always forces an explicit http:// scheme when tls is disabled, even with no host", () => {
+    const result = proxyToBlock(proxy({ tls: false }));
+    expect(result.split("\n")[0]).toBe("http://:7700 {");
+  });
+
+  it("does not double up the http:// prefix for a plain redirect with tls disabled", () => {
+    const result = proxyToBlock(proxy({ tls: false, redirect: { to: "https://example.com", code: 301 } }));
+    expect(result.split("\n")[0]).toBe("http://:7700 {");
+  });
+
+  it("emits https:// scheme in the address when tls is enabled", () => {
+    const result = proxyToBlock(proxy({ tls: true, externalScheme: "https", externalHost: "example.com" }));
+    expect(result.split("\n")[0]).toBe("https://example.com:7700 {");
   });
 
   it("uses https upstream when targetScheme is https", () => {
@@ -406,6 +474,105 @@ describe("proxyToBlock", () => {
     expect(result).toContain("client_auth {");
     expect(result).toContain("mode require_and_verify");
     expect(result).toContain("trusted_ca_cert_file /etc/caddy/ca.pem");
+  });
+
+  // certLifetime/renewalWindowRatio only take effect for a proxy with a real hostname —
+  // Caddy can scope that proxy's own automation policy by `subjects: [host]`. A hostless
+  // proxy has no such hostname, so Caddy allows only one shared/catch-all policy; writing
+  // a per-site `lifetime` there would conflict with every other plain `tls internal` site
+  // at reload (see the "ignores ... for a hostless proxy" tests below).
+  it("writes nested issuer block with lifetime when certLifetime set on a hostname-addressed proxy", () => {
+    const result = proxyToBlock(proxy({ tls: true, externalHost: "sub.example.com", tlsAdvanced: { certLifetime: "90d" } }));
+    expect(result).toContain("issuer internal {");
+    expect(result).toContain("lifetime 90d");
+    expect(result).not.toContain("tls internal\n");
+  });
+
+  it("writes renewal_window_ratio as a sibling of the issuer block on a hostname-addressed proxy", () => {
+    const result = proxyToBlock(proxy({ tls: true, externalHost: "sub.example.com", tlsAdvanced: { renewalWindowRatio: 0.25 } }));
+    expect(result).toContain("issuer internal");
+    expect(result).toContain("renewal_window_ratio 0.25");
+  });
+
+  it("combines lifetime, renewal window, and protocol settings in one tls block on a hostname-addressed proxy", () => {
+    const result = proxyToBlock(proxy({
+      tls: true,
+      externalHost: "sub.example.com",
+      tlsAdvanced: { certLifetime: "2160h", renewalWindowRatio: 0.5, protocolMin: "tls1.3" },
+    }));
+    expect(result).toContain("lifetime 2160h");
+    expect(result).toContain("renewal_window_ratio 0.5");
+    expect(result).toContain("protocols tls1.3");
+  });
+
+  // renewalWindowRatio is still suppressed per-site for hostless proxies (unlike
+  // certLifetime): Caddy applies it unconditionally with no conflict check, so it's
+  // merely silently order-dependent rather than a hard error — safer to source it only
+  // from the real global `renewal_window_ratio` Caddyfile option for hostless proxies.
+  it("ignores renewalWindowRatio (but not certLifetime) for a hostless proxy", () => {
+    const result = proxyToBlock(proxy({ tls: true, tlsAdvanced: { certLifetime: "90d", renewalWindowRatio: 0.25 } }));
+    expect(result).toContain("lifetime 90d");
+    expect(result).not.toContain("renewal_window_ratio");
+  });
+
+  it("still emits protocol/cipher settings for a hostless proxy alongside the shared lifetime", () => {
+    const result = proxyToBlock(proxy({
+      tls: true,
+      tlsAdvanced: { certLifetime: "90d", protocolMin: "tls1.3" },
+    }));
+    expect(result).toContain("issuer internal {");
+    expect(result).toContain("lifetime 90d");
+    expect(result).toContain("protocols tls1.3");
+  });
+
+  it("emits certLifetime for a hostless proxy too, since callers must keep it in sync (see applyGlobalInternalLifetimeToProxy)", () => {
+    const result = proxyToBlock(proxy({ tls: true, tlsAdvanced: { certLifetime: "90d" } }));
+    expect(result).toContain("lifetime 90d");
+  });
+
+  it("still scopes a genuine public-looking hostname independently", () => {
+    const result = proxyToBlock(proxy({ tls: true, externalHost: "sub.example.com", tlsAdvanced: { certLifetime: "90d" } }));
+    expect(result).toContain("lifetime 90d");
+  });
+});
+
+// Regression: Caddy's own SubjectIsInternal classifier folds "localhost", *.local,
+// *.internal, *.home.arpa, and IPs into the shared catch-all policy regardless of
+// hostname — giving any of these their own per-site lifetime conflicts with the
+// global default at reload ("... is also default/catch-all policy ... in conflict").
+// Every hostless proxy/server must be forced onto the identical shared value before
+// it's ever written to the Caddyfile — that's what these functions guarantee.
+describe("applyGlobalInternalLifetimeToProxy / applyGlobalInternalLifetimeToServer", () => {
+  it.each([
+    ["localhost"], ["foo.localhost"], ["bar.local"], ["baz.internal"], ["qux.home.arpa"], ["192.168.1.5"],
+  ])("forces %s onto the shared lifetime regardless of its own tlsAdvanced", (host) => {
+    const result = applyGlobalInternalLifetimeToProxy({ externalHost: host, tlsAdvanced: { certLifetime: "45d" } }, "90d");
+    expect(result?.certLifetime).toBe("90d");
+  });
+
+  it("clears renewalWindowRatio for hostless proxies even if previously set", () => {
+    const result = applyGlobalInternalLifetimeToProxy({ tlsAdvanced: { renewalWindowRatio: 0.5 } }, "90d");
+    expect(result?.renewalWindowRatio).toBeUndefined();
+  });
+
+  it("leaves a genuine public hostname's tlsAdvanced untouched", () => {
+    const result = applyGlobalInternalLifetimeToProxy({ externalHost: "sub.example.com", tlsAdvanced: { certLifetime: "45d" } }, "90d");
+    expect(result?.certLifetime).toBe("45d");
+  });
+
+  it("clears certLifetime for a hostless proxy when the shared value is cleared", () => {
+    const result = applyGlobalInternalLifetimeToProxy({ tlsAdvanced: { certLifetime: "90d" } }, undefined);
+    expect(result?.certLifetime).toBeUndefined();
+  });
+
+  it("forces a hostless named server onto the shared lifetime", () => {
+    const result = applyGlobalInternalLifetimeToServer({ listenAddresses: [":443"], tlsAdvanced: { certLifetime: "45d" } }, "90d");
+    expect(result?.certLifetime).toBe("90d");
+  });
+
+  it("leaves a hostname-addressed named server's tlsAdvanced untouched", () => {
+    const result = applyGlobalInternalLifetimeToServer({ listenAddresses: ["sub.example.com:443"], tlsAdvanced: { certLifetime: "45d" } }, "90d");
+    expect(result?.certLifetime).toBe("45d");
   });
 });
 
@@ -480,31 +647,37 @@ describe("surgicallyWriteProxy", () => {
     expect(result).not.toContain("# label: homarr");
   });
 
-  it("patches a migrated block in-place, preserving header", () => {
-    const p = proxy({ tls: true, targetPort: 9999, label: "homarr" });
+  it("patches a migrated block in-place when the entry still carries the migrated host/scheme", () => {
+    // The entry must retain the host/scheme for it to be preserved — surgicallyWriteProxy
+    // trusts the entry it's given rather than guessing from the on-disk header (see the
+    // "regenerates the header" tests below for what happens when the entry omits them).
+    const p = proxy({
+      tls: true, targetPort: 9999, label: "homarr",
+      externalScheme: "https", externalHost: "jellyfin.speedport.ip",
+    });
     const result = surgicallyWriteProxy(MIGRATED_CONF, p);
-    // original header preserved
     expect(result).toContain("https://jellyfin.speedport.ip:7700 {");
-    // not converted to :PORT format
     expect(result).not.toContain("\n:7700 {");
-    // reverse_proxy updated
     expect(result).toContain("reverse_proxy http://localhost:9999");
-    // tls preserved
     expect(result).toContain("tls internal");
-    // comment inside block preserved
-    expect(result).toContain("# homarr");
   });
 
-  it("patches a migrated block: removes tls when disabled", () => {
-    const p = proxy({ tls: false, targetPort: 8998 });
+  // Regression: "https://" in a site address triggers Caddy's automatic HTTPS on its
+  // own, regardless of our own tls flag — a proxy with tls=false but scheme="https"
+  // still got an implicit, ungoverned internal-issuer policy from Caddy, which then
+  // conflicted with any hostless proxy carrying an explicit shared lifetime. The
+  // scheme must never be honored when TLS is actually disabled.
+  it("patches a migrated block: removes tls when disabled, downgrading the address to drop the https:// scheme", () => {
+    const p = proxy({ tls: false, targetPort: 8998, externalScheme: "https", externalHost: "jellyfin.speedport.ip" });
     const result = surgicallyWriteProxy(MIGRATED_CONF, p);
-    expect(result).toContain("https://jellyfin.speedport.ip:7700 {");
+    expect(result).toContain("jellyfin.speedport.ip:7700 {");
+    expect(result).not.toContain("https://jellyfin.speedport.ip");
     expect(result).not.toContain("tls internal");
     expect(result).toContain("reverse_proxy http://localhost:8998");
   });
 
   it("does not touch other blocks when patching", () => {
-    const p = proxy({ tls: true, targetPort: 9999 });
+    const p = proxy({ tls: true, targetPort: 9999, externalScheme: "https", externalHost: "jellyfin.speedport.ip" });
     const result = surgicallyWriteProxy(MIGRATED_CONF, p);
     expect(result).toContain(":8096 {");
     expect(result).toContain("reverse_proxy http://localhost:8097");
@@ -520,17 +693,30 @@ describe("surgicallyWriteProxy", () => {
   });
 
   it("updates label comment on a migrated block", () => {
-    const p = proxy({ tls: true, targetPort: 8998, label: "new-label" });
+    const p = proxy({ tls: true, targetPort: 8998, label: "new-label", externalScheme: "https", externalHost: "jellyfin.speedport.ip" });
     const result = surgicallyWriteProxy(MIGRATED_CONF, p);
     expect(result).toContain("# label: new-label");
   });
 
   it("removes label comment on a migrated block when label cleared", () => {
     const confWithLabel = `# label: old\nhttps://host.lan:7700 {\n\ttls internal\n\treverse_proxy localhost:8998\n}\n`;
-    const p = proxy({ tls: true, targetPort: 8998, label: undefined });
+    const p = proxy({ tls: true, targetPort: 8998, label: undefined, externalScheme: "https", externalHost: "host.lan" });
     const result = surgicallyWriteProxy(confWithLabel, p);
     expect(result).not.toContain("# label: old");
     expect(result).toContain("https://host.lan:7700 {");
+  });
+
+  // Regression: clearing protocol/hostname on an edit used to have no effect, because the
+  // header-preservation check only recognized bare ":PORT" headers as "safe to regenerate" —
+  // once a header had a scheme+host (which the plugin itself writes when the user sets those
+  // fields), further edits silently kept the old header forever, even if the entry no longer
+  // carried a host/scheme.
+  it("regenerates the header as a bare :PORT block when protocol/hostname are cleared", () => {
+    const p = proxy({ tls: true, targetPort: 9999, label: "homarr" });
+    const result = surgicallyWriteProxy(MIGRATED_CONF, p);
+    expect(result).toContain("\n:7700 {");
+    expect(result).not.toContain("https://jellyfin.speedport.ip");
+    expect(result).toContain("reverse_proxy http://localhost:9999");
   });
 });
 
@@ -643,6 +829,289 @@ describe("parseProxies — bare-hostname sites sharing an implicit-port server (
     expect(proxies).toHaveLength(2);
     expect(proxies.map(p => p.externalHost).sort()).toEqual(["a.example.com", "b.example.com"]);
     expect(proxies.map(p => p.targetPort).sort()).toEqual([1111, 2222]);
+  });
+});
+
+describe("mergeProxy — internal TLS automation policies", () => {
+  // A hostless proxy has no hostname to scope its own automation policy by, and Caddy
+  // allows only one policy without subjects — so a hostless proxy's certLifetime always
+  // applies straight to the shared default policy. This is safe (unlike a raw per-proxy
+  // field) because useProxies.ts forces every hostless proxy/server onto the identical
+  // shared value (GlobalOptions.internalCertLifetime) before it's ever written — see
+  // applyGlobalInternalLifetimeToProxy/Server — so they can never disagree.
+  it("applies a hostless proxy's certLifetime to the shared default policy", () => {
+    const config: CaddyConfig = { apps: { http: { servers: {} } } };
+    const result = mergeProxy(config, proxy({ tls: true, tlsAdvanced: { certLifetime: "90d" } }));
+    const policies = result.apps?.tls?.automation?.policies ?? [];
+    expect(policies).toEqual([{ issuers: [{ module: "internal", lifetime: "90d" }] }]);
+  });
+
+  it("resets the shared default policy to plain when a hostless proxy's certLifetime is cleared", () => {
+    const config: CaddyConfig = {
+      apps: {
+        http: { servers: {} },
+        tls: { automation: { policies: [{ issuers: [{ module: "internal", lifetime: "70d" }] }] } },
+      },
+    };
+    const result = mergeProxy(config, proxy({ tls: true, tlsAdvanced: undefined }));
+    const policies = result.apps?.tls?.automation?.policies ?? [];
+    expect(policies).toEqual([{ issuers: [{ module: "internal" }] }]);
+  });
+
+  it("keeps only the default policy when no server customizes the internal issuer", () => {
+    const config: CaddyConfig = { apps: { http: { servers: {} } } };
+    const result = mergeProxy(config, proxy({ tls: true }));
+    const policies = result.apps?.tls?.automation?.policies ?? [];
+    expect(policies).toEqual([{ issuers: [{ module: "internal" }] }]);
+  });
+
+  it("scopes a hostname-addressed proxy's custom lifetime to its own subjects-based policy", () => {
+    const config: CaddyConfig = { apps: { http: { servers: {} } } };
+    const result = mergeProxy(config, proxy({
+      tls: true, externalHost: "sub.example.com", tlsAdvanced: { certLifetime: "90d" },
+    }));
+    const policies = result.apps?.tls?.automation?.policies ?? [];
+    expect(policies).toContainEqual({ issuers: [{ module: "internal" }] });
+    const scoped = policies.find(p => p.subjects?.some(s => s === "sub.example.com"));
+    expect(scoped?.issuers?.[0]).toEqual({ module: "internal", lifetime: "90d" });
+  });
+
+  it("preserves another server's subjects-scoped policy when merging an unrelated hostless server", () => {
+    const config: CaddyConfig = {
+      apps: {
+        http: {
+          servers: {
+            srv1: { listen: [":9000"], routes: [], tls_connection_policies: [{}] },
+          },
+        },
+        tls: {
+          automation: {
+            policies: [
+              { issuers: [{ module: "internal" }] },
+              { subjects: ["other.example.com"], issuers: [{ module: "internal", lifetime: "30d" }] },
+            ],
+          },
+        },
+      },
+    };
+    const result = mergeProxy(config, proxy({ tls: true, tlsAdvanced: { certLifetime: "90d" } }));
+    const policies = result.apps?.tls?.automation?.policies ?? [];
+    expect(policies.find(p => p.subjects?.some(s => s === "other.example.com"))?.issuers?.[0]?.lifetime).toBe("30d");
+    expect(policies.find(p => !p.subjects?.length)?.issuers?.[0]?.lifetime).toBe("90d");
+  });
+});
+
+describe("parseProxies — internal TLS lifetime/renewal round-trip", () => {
+  it("parses certLifetime and renewalWindowRatio from the shared default policy for a hostless proxy", () => {
+    const config: CaddyConfig = {
+      apps: {
+        http: {
+          servers: {
+            srv0: {
+              listen: [":7700"],
+              tls_connection_policies: [{}],
+              routes: [{
+                handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:7701" }] }] as import("./types").CaddyHandler[],
+                terminal: true,
+              }],
+            },
+          },
+        },
+        tls: {
+          automation: {
+            policies: [
+              { issuers: [{ module: "internal", lifetime: "90d" }], renewal_window_ratio: 0.25 },
+            ],
+          },
+        },
+      },
+    };
+    const [p] = parseProxies(config);
+    expect(p.tlsAdvanced?.certLifetime).toBe("90d");
+    expect(p.tlsAdvanced?.renewalWindowRatio).toBe(0.25);
+  });
+
+  it("parses certLifetime from a subjects-scoped policy matching the proxy's hostname", () => {
+    const config: CaddyConfig = {
+      apps: {
+        http: {
+          servers: {
+            srv0: {
+              listen: [":7700"],
+              tls_connection_policies: [{}],
+              routes: [{
+                match: [{ host: ["sub.example.com"] }],
+                handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:7701" }] }] as import("./types").CaddyHandler[],
+                terminal: true,
+              }],
+            },
+          },
+        },
+        tls: {
+          automation: {
+            policies: [
+              { issuers: [{ module: "internal" }] },
+              { subjects: ["sub.example.com"], issuers: [{ module: "internal", lifetime: "90d" }] },
+            ],
+          },
+        },
+      },
+    };
+    const [p] = parseProxies(config);
+    expect(p.externalHost).toBe("sub.example.com");
+    expect(p.tlsAdvanced?.certLifetime).toBe("90d");
+  });
+
+  it("normalizes a numeric (nanoseconds) lifetime into a duration string", () => {
+    const config: CaddyConfig = {
+      apps: {
+        http: {
+          servers: {
+            srv0: {
+              listen: [":7700"],
+              tls_connection_policies: [{}],
+              routes: [{
+                handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:7701" }] }] as import("./types").CaddyHandler[],
+                terminal: true,
+              }],
+            },
+          },
+        },
+        tls: { automation: { policies: [{ issuers: [{ module: "internal", lifetime: 7776000000000000 }] }] } },
+      },
+    };
+    const [p] = parseProxies(config);
+    expect(p.tlsAdvanced?.certLifetime).toBe("90d");
+    expect(typeof p.tlsAdvanced?.certLifetime).toBe("string");
+  });
+
+  it("leaves certLifetime/renewalWindowRatio undefined when the default policy has no custom settings", () => {
+    const config: CaddyConfig = {
+      apps: {
+        http: {
+          servers: {
+            srv0: {
+              listen: [":7700"],
+              tls_connection_policies: [{}],
+              routes: [{
+                handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:7701" }] }] as import("./types").CaddyHandler[],
+                terminal: true,
+              }],
+            },
+          },
+        },
+        tls: { automation: { policies: [{ issuers: [{ module: "internal" }] }] } },
+      },
+    };
+    const [p] = parseProxies(config);
+    expect(p.tlsAdvanced).toBeUndefined();
+  });
+});
+
+// Regression: a server that's the sole occupant of its port has no host matcher at all in
+// the live JSON config (nothing else on that listener to disambiguate by), so parseProxies
+// can't resolve its hostname and therefore can't find a subjects-scoped automation policy
+// at parse time — the edit/duplicate dialogs showed a blank lifetime/ratio even though the
+// site clearly has one. useProxies.ts recovers the true host from the conf.d text fallback
+// and re-resolves with this function using that corrected host.
+describe("resolveInternalIssuerSettings", () => {
+  it("resolves lifetime/ratio from a subjects-scoped policy given the correct host", () => {
+    const config: CaddyConfig = {
+      apps: {
+        tls: {
+          automation: {
+            policies: [
+              { issuers: [{ module: "internal" }] },
+              { subjects: ["sub.example.com"], issuers: [{ module: "internal", lifetime: "90d" }], renewal_window_ratio: 0.25 },
+            ],
+          },
+        },
+      },
+    };
+    expect(resolveInternalIssuerSettings(config, "sub.example.com")).toEqual({ certLifetime: "90d", renewalWindowRatio: 0.25 });
+  });
+
+  // Regression: Caddy's own SubjectIsInternal classifier (certmagic) folds localhost,
+  // *.local/*.internal/*.home.arpa, and private IPs into the shared catch-all policy no
+  // matter what — it never gives them their own `subjects` entry. If our code treated
+  // "localhost" as a real scopable hostname, it would try to give it an independent
+  // policy that conflicts with the global default at reload ("... is also default/
+  // catch-all policy ... in conflict").
+  it("treats localhost as internal/hostless, ignoring any subjects entry for it", () => {
+    const config: CaddyConfig = {
+      apps: {
+        tls: {
+          automation: {
+            policies: [
+              { issuers: [{ module: "internal", lifetime: "90d" }] },
+              { subjects: ["localhost"], issuers: [{ module: "internal", lifetime: "30d" }] },
+            ],
+          },
+        },
+      },
+    };
+    expect(resolveInternalIssuerSettings(config, "localhost")).toEqual({ certLifetime: "90d", renewalWindowRatio: undefined });
+  });
+
+  it("falls back to the shared default policy when no host is given", () => {
+    const config: CaddyConfig = {
+      apps: { tls: { automation: { policies: [{ issuers: [{ module: "internal", lifetime: "90d" }] }] } } },
+    };
+    expect(resolveInternalIssuerSettings(config, undefined)).toEqual({ certLifetime: "90d", renewalWindowRatio: undefined });
+  });
+
+  it("returns nothing when the host matches no subjects-scoped policy and the default has no custom settings", () => {
+    const config: CaddyConfig = {
+      apps: { tls: { automation: { policies: [{ issuers: [{ module: "internal" }] }] } } },
+    };
+    expect(resolveInternalIssuerSettings(config, "localhost")).toEqual({ certLifetime: undefined, renewalWindowRatio: undefined });
+  });
+
+  // Regression: after a Caddyfile reload, Caddy returns `lifetime` as raw nanoseconds
+  // (a number) instead of the original duration string. TlsValues.certLifetime is a plain
+  // string that later gets `.trim()`-ed by the UI's validation — passing a number through
+  // unconverted crashed the whole plugin with "t.trim is not a function" on every render.
+  it("normalizes a numeric (nanoseconds) lifetime into a duration string", () => {
+    const config: CaddyConfig = {
+      apps: { tls: { automation: { policies: [{ issuers: [{ module: "internal", lifetime: 7776000000000000 }] }] } } },
+    };
+    const result = resolveInternalIssuerSettings(config, undefined);
+    expect(result.certLifetime).toBe("90d");
+    expect(typeof result.certLifetime).toBe("string");
+  });
+
+  // Caddy's internal-issuer lifetime rejects "y" ("unknown unit y") — a year-scale value
+  // must normalize to days, not years, even though it divides evenly into 365.
+  it("normalizes a year-scale value to days rather than 'y' (Caddy rejects the y unit)", () => {
+    const config: CaddyConfig = {
+      apps: { tls: { automation: { policies: [{ issuers: [{ module: "internal", lifetime: 31_536_000_000_000_000 }] }] } } },
+    };
+    expect(resolveInternalIssuerSettings(config, undefined).certLifetime).toBe("365d");
+  });
+
+  it("falls back to hour granularity when not evenly divisible by a day", () => {
+    const config: CaddyConfig = {
+      apps: { tls: { automation: { policies: [{ issuers: [{ module: "internal", lifetime: 12 * 3_600_000_000_000 }] }] } } },
+    };
+    expect(resolveInternalIssuerSettings(config, undefined).certLifetime).toBe("12h");
+  });
+});
+
+describe("namedServerIsHostless", () => {
+  it("is true for a bare :PORT listen address", () => {
+    expect(namedServerIsHostless([":3333"])).toBe(true);
+  });
+
+  it("is true for an IP:PORT listen address", () => {
+    expect(namedServerIsHostless(["192.168.1.1:3333"])).toBe(true);
+  });
+
+  it("is false when the first listen address has a real hostname", () => {
+    expect(namedServerIsHostless(["sub.example.com:443"])).toBe(false);
+  });
+
+  it("is true when there are no listen addresses", () => {
+    expect(namedServerIsHostless([])).toBe(true);
   });
 });
 
@@ -1384,6 +1853,42 @@ describe("parseGlobalOptions — on-demand TLS", () => {
   });
 });
 
+describe("parseGlobalOptions — internal TLS (hostless proxies)", () => {
+  // internalCertLifetime is stored as a comment, not a real `cert_issuer` directive —
+  // see INTERNAL_LIFETIME_MARKER for why a real global cert_issuer option is unsafe.
+  it("parses the internal-cert-lifetime comment marker and renewal_window_ratio", () => {
+    const body = [
+      "\t# cockpit-caddy:internal-cert-lifetime 90d",
+      "\trenewal_window_ratio 0.25",
+    ].join("\n");
+    const opts = parseGlobalOptions(makeOpts(body));
+    expect(opts.internalCertLifetime).toBe("90d");
+    expect(opts.renewalWindowRatio).toBe(0.25);
+  });
+
+  it("leaves internalCertLifetime/renewalWindowRatio undefined when absent", () => {
+    const opts = parseGlobalOptions(makeOpts("\temail admin@example.com"));
+    expect(opts.internalCertLifetime).toBeUndefined();
+    expect(opts.renewalWindowRatio).toBeUndefined();
+  });
+});
+
+describe("buildGlobalOptionsPatch — internal TLS (hostless proxies)", () => {
+  it("emits the internal-cert-lifetime comment marker and renewal_window_ratio", () => {
+    const patched = buildGlobalOptionsPatch("", { internalCertLifetime: "90d", renewalWindowRatio: 0.25 });
+    expect(patched).toContain("# cockpit-caddy:internal-cert-lifetime 90d");
+    expect(patched).toContain("renewal_window_ratio 0.25");
+    expect(patched).not.toContain("cert_issuer");
+  });
+
+  it("round-trips through parseGlobalOptions", () => {
+    const patched = buildGlobalOptionsPatch("", { internalCertLifetime: "90d", renewalWindowRatio: 0.25 });
+    const opts = parseGlobalOptions(patched);
+    expect(opts.internalCertLifetime).toBe("90d");
+    expect(opts.renewalWindowRatio).toBe(0.25);
+  });
+});
+
 describe("parseGlobalOptions — #96 unmanaged directives fallback", () => {
   it("reads email/acme_ca from a hand-written global block with no managed markers", () => {
     const content = "{\n\temail admin@example.com\n\tacme_ca https://acme-staging-v02.api.letsencrypt.org/directory\n}\n";
@@ -1619,6 +2124,37 @@ describe("serverDefToBlock", () => {
     const { preamble } = serverDefToBlock(testDef, [r]);
     expect(preamble).toContain("&(auth) {");
   });
+
+  // Regression: a schemeless listen address with TLS off is still eligible for Caddy's
+  // automatic HTTPS (only an explicit "http://" scheme opts a site out — see
+  // buildExternalAddress) — it can silently claim the shared internal-issuer catch-all
+  // policy with no issuer configured, conflicting with any other hostless site that has
+  // an explicit custom lifetime ("... is also default/catch-all policy ... in conflict").
+  it("forces http:// on every listen address when TLS is disabled", () => {
+    const def: ServerDef = { key: "srvA", name: "Test", listenAddresses: [":8080", ":8081"], tls: false };
+    const { block } = serverDefToBlock(def, [proxy({ id: "srvA:0", matchers: undefined })]);
+    expect(block).toContain("http://:8080 http://:8081 {");
+  });
+
+  it("does not force http:// when TLS is enabled", () => {
+    const { block } = serverDefToBlock(testDef, [proxy({ matchers: undefined })]);
+    expect(block.split("\n").find(l => l.trim().endsWith("{") && l.includes(":443"))).toBe(":443 {");
+  });
+});
+
+describe("parseServerDefsFromConf — http:// round-trip", () => {
+  it("strips the http:// forced onto TLS-disabled listen addresses back out", () => {
+    const def: ServerDef = { key: "srvA", name: "Test", listenAddresses: [":8080", ":8081"], tls: false };
+    const { block } = serverDefToBlock(def, [proxy({ id: "srvA:0", matchers: undefined })]);
+    const [parsed] = parseServerDefsFromConf(block);
+    expect(parsed.listenAddresses).toEqual([":8080", ":8081"]);
+  });
+
+  it("leaves TLS-enabled listen addresses untouched", () => {
+    const { block } = serverDefToBlock(testDef, [proxy({ matchers: undefined })]);
+    const [parsed] = parseServerDefsFromConf(block);
+    expect(parsed.listenAddresses).toEqual([":443"]);
+  });
 });
 
 describe("surgicallyWriteServerBlock", () => {
@@ -1702,5 +2238,221 @@ describe("mergeNamedServer — post-reload key collision (#129)", () => {
     const servers = result.apps!.http!.servers!;
 
     expect(Object.keys(servers).sort()).toEqual(["srv0", "uzuzuzuz"]);
+  });
+});
+
+describe("mergeNamedServer — internal TLS automation policies", () => {
+  it("applies a hostless named server's certLifetime to the shared default policy", () => {
+    const config: CaddyConfig = { apps: { http: { servers: {} } } };
+    const def: ServerDef = {
+      key: "srvA", name: "Test", listenAddresses: [":7878"], tls: true,
+      tlsAdvanced: { certLifetime: "90d" },
+    };
+    const routes: ProxyEntry[] = [proxy({ id: "srvA:0", serverKey: "srvA", matchers: undefined })];
+    const result = mergeNamedServer(config, def, routes);
+    const policies = result.apps?.tls?.automation?.policies ?? [];
+    expect(policies).toEqual([{ issuers: [{ module: "internal", lifetime: "90d" }] }]);
+  });
+
+  it("scopes a hostname-addressed named server's custom lifetime to its own subjects-based policy", () => {
+    const config: CaddyConfig = { apps: { http: { servers: {} } } };
+    const def: ServerDef = {
+      key: "srvA", name: "Test", listenAddresses: ["sub.example.com:443"], tls: true,
+      tlsAdvanced: { certLifetime: "90d" },
+    };
+    const routes: ProxyEntry[] = [proxy({ id: "srvA:0", serverKey: "srvA", matchers: undefined })];
+    const result = mergeNamedServer(config, def, routes);
+    const policies = result.apps?.tls?.automation?.policies ?? [];
+    expect(policies).toContainEqual({ issuers: [{ module: "internal" }] });
+    const scoped = policies.find(p => p.subjects?.some(s => s === "sub.example.com"));
+    expect(scoped?.issuers?.[0]).toEqual({ module: "internal", lifetime: "90d" });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// scanConfigIssues / applyConfigFindings — "Fix Config" maintenance action
+// ---------------------------------------------------------------------------
+
+describe("scanConfigIssues — stale cert_issuer directive", () => {
+  it("finds and removes a stale global cert_issuer directive, preserving the lifetime", () => {
+    const main = [
+      "{",
+      "# cockpit-caddy:opts:begin",
+      "\tcert_issuer internal {",
+      "\t\tlifetime 90d",
+      "\t}",
+      "# cockpit-caddy:opts:end",
+      "}",
+      "import /etc/caddy/conf.d/*.conf",
+    ].join("\n");
+    const findings = scanConfigIssues(main, "");
+    const finding = findings.find(f => f.id === "stale-cert-issuer-directive");
+    expect(finding).toBeDefined();
+    const { main: fixedMain } = applyConfigFindings(findings, new Set([finding!.id]), main, "");
+    expect(fixedMain).not.toContain("cert_issuer");
+    expect(fixedMain).toContain("# cockpit-caddy:internal-cert-lifetime 90d");
+  });
+
+  it("finds nothing when there is no stale directive", () => {
+    const main = "{\n# cockpit-caddy:opts:begin\n\t# cockpit-caddy:internal-cert-lifetime 90d\n# cockpit-caddy:opts:end\n}\n";
+    const findings = scanConfigIssues(main, "");
+    expect(findings.find(f => f.id === "stale-cert-issuer-directive")).toBeUndefined();
+  });
+});
+
+describe("scanConfigIssues — missing http:// scheme on TLS-disabled sites", () => {
+  it("flags a bare hostless block with TLS off", () => {
+    const proxyConf = "# Managed by cockpit-caddy\n\n:4343 {\n\treverse_proxy http://localhost:3000\n}\n";
+    const findings = scanConfigIssues("", proxyConf);
+    const finding = findings.find(f => f.id === "missing-http-scheme::4343");
+    expect(finding).toBeDefined();
+    const { proxyConf: fixed } = applyConfigFindings(findings, new Set([finding!.id]), "", proxyConf);
+    expect(fixed).toContain("http://:4343 {");
+  });
+
+  it("flags an https:// block with TLS off", () => {
+    const proxyConf = "# Managed by cockpit-caddy\n\nhttps://localhost:5454 {\n\treverse_proxy http://localhost:3000\n}\n";
+    const findings = scanConfigIssues("", proxyConf);
+    const finding = findings.find(f => f.id === "missing-http-scheme:https://localhost:5454");
+    expect(finding).toBeDefined();
+    const { proxyConf: fixed } = applyConfigFindings(findings, new Set([finding!.id]), "", proxyConf);
+    expect(fixed).toContain("http://localhost:5454 {");
+    expect(fixed).not.toContain("https://");
+  });
+
+  it("does not flag a block that already has an explicit http:// scheme", () => {
+    const proxyConf = "# Managed by cockpit-caddy\n\nhttp://:4343 {\n\treverse_proxy http://localhost:3000\n}\n";
+    const findings = scanConfigIssues("", proxyConf);
+    expect(findings.find(f => f.id.startsWith("missing-http-scheme"))).toBeUndefined();
+  });
+
+  it("flags a hostless named server with TLS off and missing http://", () => {
+    const proxyConf = [
+      "# server: uzuzuzuz",
+      '# serverdef: {"name":"uzuzuzuz","tls":false}',
+      ":7878 {",
+      "\treverse_proxy http://localhost:3000",
+      "}",
+      "",
+    ].join("\n");
+    const findings = scanConfigIssues("", proxyConf);
+    const finding = findings.find(f => f.id === "missing-http-scheme:server:uzuzuzuz");
+    expect(finding).toBeDefined();
+    const { proxyConf: fixed } = applyConfigFindings(findings, new Set([finding!.id]), "", proxyConf);
+    expect(fixed).toContain("http://:7878 {");
+  });
+});
+
+describe("scanConfigIssues — hostless lifetime drift", () => {
+  it("flags a hostless proxy whose lifetime differs from the shared value", () => {
+    const main = "{\n# cockpit-caddy:opts:begin\n\t# cockpit-caddy:internal-cert-lifetime 180d\n# cockpit-caddy:opts:end\n}\n";
+    const proxyConf = [
+      "# Managed by cockpit-caddy",
+      "",
+      ":4333 {",
+      "\ttls {",
+      "\t\tissuer internal {",
+      "\t\t\tlifetime 90d",
+      "\t\t}",
+      "\t}",
+      "\treverse_proxy http://localhost:3000",
+      "}",
+      "",
+    ].join("\n");
+    const findings = scanConfigIssues(main, proxyConf);
+    const finding = findings.find(f => f.id === "lifetime-drift::4333");
+    expect(finding).toBeDefined();
+    const { proxyConf: fixed } = applyConfigFindings(findings, new Set([finding!.id]), main, proxyConf);
+    expect(fixed).toContain("lifetime 180d");
+    expect(fixed).not.toContain("lifetime 90d");
+  });
+
+  it("does not flag a hostless proxy already matching the shared value", () => {
+    const main = "{\n# cockpit-caddy:opts:begin\n\t# cockpit-caddy:internal-cert-lifetime 180d\n# cockpit-caddy:opts:end\n}\n";
+    const proxyConf = [
+      "# Managed by cockpit-caddy",
+      "",
+      ":4333 {",
+      "\ttls {",
+      "\t\tissuer internal {",
+      "\t\t\tlifetime 180d",
+      "\t\t}",
+      "\t}",
+      "\treverse_proxy http://localhost:3000",
+      "}",
+      "",
+    ].join("\n");
+    const findings = scanConfigIssues(main, proxyConf);
+    expect(findings.find(f => f.id.startsWith("lifetime-drift"))).toBeUndefined();
+  });
+
+  it("does not flag a hostname-addressed proxy with an independent lifetime", () => {
+    const main = "{\n# cockpit-caddy:opts:begin\n\t# cockpit-caddy:internal-cert-lifetime 180d\n# cockpit-caddy:opts:end\n}\n";
+    const proxyConf = [
+      "# Managed by cockpit-caddy",
+      "",
+      "sub.example.com:4333 {",
+      "\ttls {",
+      "\t\tissuer internal {",
+      "\t\t\tlifetime 45d",
+      "\t\t}",
+      "\t}",
+      "\treverse_proxy http://localhost:3000",
+      "}",
+      "",
+    ].join("\n");
+    const findings = scanConfigIssues(main, proxyConf);
+    expect(findings.find(f => f.id.startsWith("lifetime-drift"))).toBeUndefined();
+  });
+
+  it("flags a hostless named server whose declared lifetime differs from the shared value", () => {
+    const main = "{\n# cockpit-caddy:opts:begin\n\t# cockpit-caddy:internal-cert-lifetime 180d\n# cockpit-caddy:opts:end\n}\n";
+    const proxyConf = [
+      "# server: uzuzuzuz",
+      '# serverdef: {"name":"uzuzuzuz","tls":true,"tlsAdvanced":{"certLifetime":"90d"}}',
+      ":7878 {",
+      "\ttls {",
+      "\t\tissuer internal {",
+      "\t\t\tlifetime 90d",
+      "\t\t}",
+      "\t}",
+      "\treverse_proxy http://localhost:3000",
+      "}",
+      "",
+    ].join("\n");
+    const findings = scanConfigIssues(main, proxyConf);
+    const finding = findings.find(f => f.id === "lifetime-drift:server:uzuzuzuz");
+    expect(finding).toBeDefined();
+    const { proxyConf: fixed } = applyConfigFindings(findings, new Set([finding!.id]), main, proxyConf);
+    expect(fixed).toContain("lifetime 180d");
+  });
+});
+
+describe("applyConfigFindings", () => {
+  it("only applies selected findings, leaving others untouched", () => {
+    const main = "{\n# cockpit-caddy:opts:begin\n\t# cockpit-caddy:internal-cert-lifetime 180d\n# cockpit-caddy:opts:end\n}\n";
+    const proxyConf = [
+      "# Managed by cockpit-caddy",
+      "",
+      ":4343 {",
+      "\treverse_proxy http://localhost:3000",
+      "}",
+      "",
+      ":4333 {",
+      "\ttls {",
+      "\t\tissuer internal {",
+      "\t\t\tlifetime 90d",
+      "\t\t}",
+      "\t}",
+      "\treverse_proxy http://localhost:3000",
+      "}",
+      "",
+    ].join("\n");
+    const findings = scanConfigIssues(main, proxyConf);
+    expect(findings.length).toBeGreaterThanOrEqual(2);
+    const onlyOne = findings.find(f => f.id === "missing-http-scheme::4343")!;
+    const { proxyConf: fixed } = applyConfigFindings(findings, new Set([onlyOne.id]), main, proxyConf);
+    expect(fixed).toContain("http://:4343 {");
+    expect(fixed).toContain("lifetime 90d"); // the other finding was not selected, so left as-is
   });
 });

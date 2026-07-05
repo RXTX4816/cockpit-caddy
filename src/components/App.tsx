@@ -18,6 +18,7 @@ import {
   Title,
 } from "@patternfly/react-core";
 import CogIcon from "@patternfly/react-icons/dist/esm/icons/cog-icon";
+import WrenchIcon from "@patternfly/react-icons/dist/esm/icons/wrench-icon";
 import { ErrorBoundary, ToastProvider, PluginFooter } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { useAdminMode, useDialogState } from "@rxtx4816/cockpit-plugin-base-react";
 import pkg from "../../package.json";
@@ -30,6 +31,7 @@ import { BackupDialog } from "./BackupDialog";
 import { RestoreDialog } from "./RestoreDialog";
 import { AdminAddressDialog } from "./AdminAddressDialog";
 import { InternalCaModal } from "./InternalCaModal";
+import { ConfigCheckModal } from "./ConfigCheckModal";
 import { GlobalOptionsTab } from "./GlobalOptionsTab";
 import { useCaddyStatus } from "../hooks/useCaddyStatus";
 import { applyStoredAdminAddress } from "../hooks/useAdminAddress";
@@ -40,8 +42,8 @@ function AppInner() {
   const { status, adminApiOk, loading, refresh } = useCaddyStatus();
   const adminAllowed = useAdminMode();
   const caddyVersion = useCaddyVersion();
-  type AppModals = { backup: undefined; restore: undefined; adminAddress: undefined; ca: undefined };
-  const modals = useDialogState<AppModals>(["backup", "restore", "adminAddress", "ca"]);
+  type AppModals = { backup: undefined; restore: undefined; adminAddress: undefined; ca: undefined; configCheck: undefined };
+  const modals = useDialogState<AppModals>(["backup", "restore", "adminAddress", "ca", "configCheck"]);
 
   const [activeTab, setActiveTab] = useState(0);
   const [adminBypass, setAdminBypass] = useState(false);
@@ -70,6 +72,7 @@ function AppInner() {
                   onRefresh={refresh}
                   extraActions={
                     <div style={{ display: "flex", gap: "0.5rem" }}>
+                      <Button variant="secondary" size="sm" icon={<WrenchIcon />} onClick={() => modals.open("configCheck")}>{t("config_check.button")}</Button>
                       <Button variant="secondary" size="sm" onClick={() => modals.open("backup")}>{t("backup.button")}</Button>
                       <Button variant="secondary" size="sm" onClick={() => modals.open("restore")}>{t("restore.button")}</Button>
                       <Button variant="secondary" size="sm" onClick={() => modals.open("ca")}>{t("ca.button")}</Button>
@@ -164,6 +167,7 @@ function AppInner() {
       {modals.isOpen("restore") && <RestoreDialog onClose={() => modals.close("restore")} />}
       {modals.isOpen("adminAddress") && <AdminAddressDialog onClose={() => modals.close("adminAddress")} />}
       {modals.isOpen("ca") && <InternalCaModal onClose={() => modals.close("ca")} />}
+      {modals.isOpen("configCheck") && <ConfigCheckModal onClose={() => modals.close("configCheck")} />}
       <PluginFooter
         version={pkg.version}
         links={[

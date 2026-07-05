@@ -20,7 +20,8 @@ import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
 import type { ServerDef, ErrorHandlerConfig } from "../api";
-import { TlsSection, type TlsValues, tlsValuesToAdvanced, tlsValuesToMtls, tlsConfigToValues } from "./TlsSection";
+import { namedServerIsHostless } from "../api";
+import { TlsSection, type TlsValues, tlsValuesToAdvanced, tlsValuesToMtls, tlsConfigToValues, tlsValuesHaveErrors } from "./TlsSection";
 import { ServerTimeoutsSection, type ServerTimeoutValues } from "./ServerTimeoutsSection";
 import { AccessLogSection, type AccessLogValues, accessLogValuesToConfig, accessLogConfigToValues } from "./AccessLogSection";
 import { ErrorHandlersSection } from "./ErrorHandlersSection";
@@ -188,7 +189,7 @@ export function EditServerDialog({ def, onSave, onClose }: Props) {
           </FormGroup>
         </Form>
 
-        <TlsSection value={tlsValues} onChange={setTlsValues} isDisabled={isLocked} />
+        <TlsSection value={tlsValues} onChange={setTlsValues} isDisabled={isLocked} hostless={namedServerIsHostless(listenAddresses)} />
         <AccessLogSection value={accessLog} onChange={setAccessLog} isDisabled={isLocked} />
         <ErrorHandlersSection value={errorHandlers} onChange={setErrorHandlers} isDisabled={isLocked} />
         <ServerTimeoutsSection value={serverTimeouts} onChange={setServerTimeouts} isDisabled={isLocked} />
@@ -240,7 +241,7 @@ export function EditServerDialog({ def, onSave, onClose }: Props) {
           </>
         ) : (
           <>
-            <Button variant="primary" onClick={handleSaveClick}>
+            <Button variant="primary" onClick={handleSaveClick} isDisabled={tlsValuesHaveErrors(tlsValues)}>
               {t("common.save")}
             </Button>
             <Button variant="link" onClick={onClose}>

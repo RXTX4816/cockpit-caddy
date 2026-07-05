@@ -155,16 +155,18 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
             />
           </FormGroup>
 
-          <FormGroup fieldId="static-edit-tls">
-            <Checkbox
-              id="static-edit-tls"
-              label={t("add_proxy.field_tls_short")}
-              isChecked={tls}
-              onChange={(_e, v) => setTls(v)}
-              isDisabled={isLocked}
-            />
-            <SectionActions onDefaults={() => setTls(true)} isDisabled={isLocked} />
-          </FormGroup>
+          {!proxy.namedServerKey && (
+            <FormGroup fieldId="static-edit-tls">
+              <Checkbox
+                id="static-edit-tls"
+                label={t("add_proxy.field_tls_short")}
+                isChecked={tls}
+                onChange={(_e, v) => setTls(v)}
+                isDisabled={isLocked}
+              />
+              <SectionActions onDefaults={() => setTls(true)} isDisabled={isLocked} />
+            </FormGroup>
+          )}
 
           <FormGroup fieldId="static-edit-compress">
             <Checkbox
@@ -177,7 +179,9 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
           </FormGroup>
         </Form>
 
-        <TlsSection value={tlsValues} onChange={setTlsValues} isDisabled={isLocked} />
+        {!proxy.namedServerKey && (
+          <TlsSection value={tlsValues} onChange={setTlsValues} isDisabled={isLocked} />
+        )}
         <AccessLogSection value={accessLog} onChange={setAccessLog} isDisabled={isLocked} />
         <ErrorHandlersSection value={errorHandlers} onChange={setErrorHandlers} isDisabled={isLocked} />
         <ServerTimeoutsSection value={serverTimeouts} onChange={setServerTimeouts} isDisabled={isLocked} />
