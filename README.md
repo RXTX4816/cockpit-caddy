@@ -60,26 +60,27 @@ paru -S cockpit-caddy
 
 ### Fedora / RHEL / CentOS Stream / openSUSE
 
-Download the `.rpm` from the [Releases](https://github.com/RXTX4816/cockpit-caddy/releases) page:
+Every release publishes a `-latest.rpm` alias alongside the versioned one, so you can always grab the newest build without checking the [Releases](https://github.com/RXTX4816/cockpit-caddy/releases) page for a version number:
 
 ```bash
-sudo rpm -i cockpit-caddy-X.Y.Z-1.noarch.rpm
+curl -LO https://github.com/RXTX4816/cockpit-caddy/releases/latest/download/cockpit-caddy-latest.rpm
+sudo rpm -i cockpit-caddy-latest.rpm
 ```
 
 ### Debian / Ubuntu / Linux Mint / Pop!\_OS
 
-Download the `.deb` from the [Releases](https://github.com/RXTX4816/cockpit-caddy/releases) page:
-
 ```bash
-sudo apt install ./cockpit-caddy_X.Y.Z-1_all.deb
+curl -LO https://github.com/RXTX4816/cockpit-caddy/releases/latest/download/cockpit-caddy-latest.deb
+sudo apt install ./cockpit-caddy-latest.deb
 ```
 
 ### Manual
 
-Download the latest release tarball from the [Releases](https://github.com/RXTX4816/cockpit-caddy/releases) page:
-
 ```bash
-tar -xzf cockpit-caddy-X.Y.Z.tar.gz
+curl -LO https://github.com/RXTX4816/cockpit-caddy/releases/latest/download/cockpit-caddy-latest.tar.gz
+curl -LO https://github.com/RXTX4816/cockpit-caddy/releases/latest/download/cockpit-caddy-latest.tar.gz.sha256
+sha256sum -c cockpit-caddy-latest.tar.gz.sha256
+tar -xzf cockpit-caddy-latest.tar.gz
 sudo mkdir -p /usr/share/cockpit/cockpit-caddy
 sudo cp -r cockpit-caddy/* /usr/share/cockpit/cockpit-caddy/
 ```
