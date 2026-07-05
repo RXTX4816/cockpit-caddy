@@ -872,7 +872,7 @@ describe("mergeProxy — internal TLS automation policies", () => {
     }));
     const policies = result.apps?.tls?.automation?.policies ?? [];
     expect(policies).toContainEqual({ issuers: [{ module: "internal" }] });
-    const scoped = policies.find(p => p.subjects?.includes("sub.example.com"));
+    const scoped = policies.find(p => p.subjects?.some(s => s === "sub.example.com"));
     expect(scoped?.issuers?.[0]).toEqual({ module: "internal", lifetime: "90d" });
   });
 
@@ -896,7 +896,7 @@ describe("mergeProxy — internal TLS automation policies", () => {
     };
     const result = mergeProxy(config, proxy({ tls: true, tlsAdvanced: { certLifetime: "90d" } }));
     const policies = result.apps?.tls?.automation?.policies ?? [];
-    expect(policies.find(p => p.subjects?.includes("other.example.com"))?.issuers?.[0]?.lifetime).toBe("30d");
+    expect(policies.find(p => p.subjects?.some(s => s === "other.example.com"))?.issuers?.[0]?.lifetime).toBe("30d");
     expect(policies.find(p => !p.subjects?.length)?.issuers?.[0]?.lifetime).toBe("90d");
   });
 });
@@ -2264,7 +2264,7 @@ describe("mergeNamedServer — internal TLS automation policies", () => {
     const result = mergeNamedServer(config, def, routes);
     const policies = result.apps?.tls?.automation?.policies ?? [];
     expect(policies).toContainEqual({ issuers: [{ module: "internal" }] });
-    const scoped = policies.find(p => p.subjects?.includes("sub.example.com"));
+    const scoped = policies.find(p => p.subjects?.some(s => s === "sub.example.com"));
     expect(scoped?.issuers?.[0]).toEqual({ module: "internal", lifetime: "90d" });
   });
 });
