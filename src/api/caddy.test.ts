@@ -29,6 +29,9 @@ import {
   parseServerDefsFromConf,
   scanConfigIssues,
   applyConfigFindings,
+  routeHosts,
+  hostsConflict,
+  standaloneProxyId,
 } from "./caddy";
 import type { CaddyConfig, ProxyEntry, RouteMatch, ServerDef } from "./types";
 
@@ -717,6 +720,106 @@ describe("surgicallyWriteProxy", () => {
     expect(result).toContain("\n:7700 {");
     expect(result).not.toContain("https://jellyfin.speedport.ip");
     expect(result).toContain("reverse_proxy http://localhost:9999");
+  });
+
+  // #139 — two standalone proxies sharing a port via distinct subdomains must land as
+  // two separate host-qualified blocks, not clobber each other.
+  it("writes a second host-qualified block on a port already used by a different host, without touching it", () => {
+    const confWithHostA = `a.example.com:443 {\n\treverse_proxy localhost:8001\n}\n`;
+    const p = proxy({
+      id: "host:b.example.com", externalPort: 443, targetPort: 8002,
+      tls: true, externalHost: "b.example.com",
+    });
+    const result = surgicallyWriteProxy(confWithHostA, p);
+    expect(result).toContain("a.example.com:443 {");
+    expect(result).toContain("reverse_proxy localhost:8001");
+    expect(result).toContain("b.example.com:443 {");
+    expect(result).toContain("reverse_proxy http://localhost:8002");
+  });
+
+  it("patches only the matching host's block when two blocks share a port", () => {
+    const twoHosts = `a.example.com:443 {\n\treverse_proxy localhost:8001\n}\n\nb.example.com:443 {\n\treverse_proxy localhost:8002\n}\n`;
+    const p = proxy({
+      id: "host:b.example.com", externalPort: 443, targetPort: 9999,
+      tls: true, externalHost: "b.example.com",
+    });
+    const result = surgicallyWriteProxy(twoHosts, p);
+    expect(result).toContain("a.example.com:443 {");
+    expect(result).toContain("reverse_proxy localhost:8001");
+    expect(result).toContain("b.example.com:443 {");
+    expect(result).toContain("reverse_proxy http://localhost:9999");
+    expect(result).not.toContain("reverse_proxy localhost:8002");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// surgicallyRemoveBlock with a shared port (#139)
+// ---------------------------------------------------------------------------
+
+describe("surgicallyRemoveBlock — shared port (#139)", () => {
+  const twoHosts = `a.example.com:443 {\n\treverse_proxy localhost:8001\n}\n\nb.example.com:443 {\n\treverse_proxy localhost:8002\n}\n`;
+
+  it("removes only the matching host's block, leaving the sibling intact", () => {
+    const result = surgicallyRemoveBlock(twoHosts, 443, "a.example.com");
+    expect(result).not.toContain("a.example.com:443 {");
+    expect(result).not.toContain("reverse_proxy localhost:8001");
+    expect(result).toContain("b.example.com:443 {");
+    expect(result).toContain("reverse_proxy localhost:8002");
+  });
+
+  it("is a no-op when the host doesn't match either block", () => {
+    const result = surgicallyRemoveBlock(twoHosts, 443, "c.example.com");
+    expect(result).toBe(twoHosts);
+  });
+
+  it("still removes by port alone when only one block occupies it (pre-#139 behavior)", () => {
+    const result = surgicallyRemoveBlock(SIMPLE_CONF, 7700);
+    expect(result).not.toContain(":7700 {");
+    expect(result).toContain(":8096 {");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// routeHosts / hostsConflict / standaloneProxyId (#139)
+// ---------------------------------------------------------------------------
+
+describe("routeHosts", () => {
+  it("returns the Host matcher when set, taking priority over externalHost", () => {
+    expect(routeHosts({ externalHost: "a.example.com", matchers: { host: ["b.example.com"] } })).toEqual(["b.example.com"]);
+  });
+
+  it("falls back to externalHost as a single-item list", () => {
+    expect(routeHosts({ externalHost: "a.example.com" })).toEqual(["a.example.com"]);
+  });
+
+  it("returns undefined when neither is set", () => {
+    expect(routeHosts({})).toBeUndefined();
+  });
+});
+
+describe("hostsConflict", () => {
+  it("is a conflict when either side has no host restriction", () => {
+    expect(hostsConflict(undefined, ["a.example.com"])).toBe(true);
+    expect(hostsConflict(["a.example.com"], undefined)).toBe(true);
+    expect(hostsConflict(undefined, undefined)).toBe(true);
+  });
+
+  it("is not a conflict when hosts are distinct", () => {
+    expect(hostsConflict(["a.example.com"], ["b.example.com"])).toBe(false);
+  });
+
+  it("is a conflict when hosts overlap", () => {
+    expect(hostsConflict(["a.example.com", "b.example.com"], ["b.example.com"])).toBe(true);
+  });
+});
+
+describe("standaloneProxyId", () => {
+  it("uses the bare port when hostless", () => {
+    expect(standaloneProxyId({ externalPort: 443 })).toBe("443");
+  });
+
+  it("uses host:<host> when a host is set, matching parseProxies' shared-port convention", () => {
+    expect(standaloneProxyId({ externalPort: 443, externalHost: "a.example.com" })).toBe("host:a.example.com");
   });
 });
 

@@ -14,6 +14,7 @@ import {
   deduplicateServerBlocks, deduplicateManagedHeader, proxyAddressKeys, findGlobalBlock,
   resolveInternalIssuerSettings, readGlobalOptions,
   applyGlobalInternalLifetimeToProxy, applyGlobalInternalLifetimeToServer,
+  routeHosts, hostsConflict, standaloneProxyId,
 } from "../api";
 import type { ProxyEntry, ServerDef } from "../api";
 import { useCaddyConfig } from "./useCaddyConfig";
@@ -63,6 +64,26 @@ function checkServerPortConflicts(
       throw new CaddyfileError(`Port ${port} is already used by server "${otherServer.namedServerKey}".`);
     }
   }
+}
+
+/**
+ * True when `entry`'s port is also claimed by another standalone proxy in `proxies`
+ * with a distinct, non-conflicting host (#139) — i.e. two+ sites legitimately sharing
+ * one Caddy listener by Host/SNI. In that case the fast "instant apply" path (pushing
+ * a hand-built single-route JSON server straight to the Admin API — see mergeProxy/
+ * buildServerEntry) cannot represent the shared listener correctly: it always builds
+ * exactly one route per port. Only Caddy's own Caddyfile-adapter (triggered by a
+ * service reload) knows how to merge multiple host-matched routes onto one listener,
+ * so callers must skip the instant JSON push and prompt a reload instead.
+ */
+function sharesPortWithOtherHost(
+  proxies: ProxyEntry[],
+  entry: Pick<ProxyEntry, "id" | "externalPort" | "externalHost" | "matchers">,
+): boolean {
+  return proxies.some(p =>
+    p.id !== entry.id && !p.namedServerKey && p.externalPort === entry.externalPort &&
+    !hostsConflict(routeHosts(p), routeHosts(entry))
+  );
 }
 
 export function useProxies() {
@@ -217,7 +238,7 @@ export function useProxies() {
 
       let newProxy: ProxyEntry = {
         ...entry,
-        id: String(entry.externalPort),
+        id: standaloneProxyId(entry),
         serverKey: `srv${entry.externalPort}`,
       };
       // Every hostless proxy/server must carry the identical internal-cert lifetime, or
@@ -239,8 +260,14 @@ export function useProxies() {
           `Port ${newProxy.externalPort} is already used by server "${serverConflict.name}". Add routes to that server tab instead.`
         );
       }
+      // Only drop existing proxies that genuinely conflict with the new one (#139) — a
+      // standalone proxy already coexisting on this port via a distinct host must stay in
+      // the timeout-sync input, or its own settings would be silently dropped.
+      const afterProxies = [
+        ...proxies.filter(p => !(p.externalPort === newProxy.externalPort && hostsConflict(routeHosts(p), routeHosts(newProxy)))),
+        newProxy,
+      ];
       // Validate + persist server-level timeouts in global Caddyfile first; throws CaddyfileError on failure.
-      const afterProxies = [...proxies.filter(p => p.externalPort !== newProxy.externalPort), newProxy];
       await syncGlobalTimeouts(afterProxies);
       const [, , current] = await Promise.all([
         ensureConfDImported(),
@@ -260,9 +287,18 @@ export function useProxies() {
         ...prev,
         [newProxyKey]: { scheme: newProxy.externalScheme, host: newProxy.externalHost },
       }));
+      // A hand-built single-route JSON push can't represent a listener shared by
+      // multiple hosts (#139) — only Caddy's own Caddyfile adapter can build that
+      // correctly, so reload instead of pushing a JSON patch that would silently
+      // misrepresent (or clobber) the shared listener.
+      if (sharesPortWithOtherHost(afterProxies, newProxy)) {
+        await reloadService("caddy");
+        await refresh();
+        return;
+      }
       await update(mergeProxy(config, newProxy));
     },
-    [config, proxies, servers, update],
+    [config, proxies, servers, update, refresh],
   );
 
   const editProxy = useCallback(
@@ -300,13 +336,31 @@ export function useProxies() {
         entry = { ...entry, tlsAdvanced: applyGlobalInternalLifetimeToProxy(entry, globalOpts.internalCertLifetime) };
       }
 
-      const originalProxy = proxies.find(p => p.serverKey === entry.serverKey);
+      // entry.id still holds the *original* id at this point — EditProxyDialog deliberately
+      // doesn't recompute it — so this always finds the exact proxy being edited, even when
+      // sibling proxies share a port with different hosts (#139) and would make a serverKey-
+      // based lookup ambiguous (serverKey isn't unique per route once Caddy assigns its own
+      // shared JSON server key across those routes on reload).
+      const originalProxy = proxies.find(p => p.id === entry.id);
       const originalPort = originalProxy?.externalPort ?? entry.externalPort;
+      const originalHost = originalProxy ? routeHosts(originalProxy)?.[0] : undefined;
+
+      // Recompute id for the post-edit host/port now that the original has been located
+      // above. serverKey is deliberately left untouched (still the original proxy's key,
+      // via the ...proxy spread in EditProxyDialog) — mergeProxy indexes the live JSON
+      // server object by serverKey, and keeping it stable is what lets patchServer move
+      // the *same* server object to its new listen address in place. Recomputing it here
+      // would instead create a second, orphaned server object under the old key.
+      entry = { ...entry, id: standaloneProxyId(entry) };
+
       const originalKey = originalProxy ? proxyAddressKeys(originalProxy)[0] : proxyAddressKeys(entry)[0];
       const entryKey = proxyAddressKeys(entry)[0];
 
+      // Only drop the proxy actually being edited (by its original id) — a standalone sibling
+      // coexisting on the same port via a distinct host (#139) must stay in the timeout-sync
+      // input, or its own settings would be silently dropped.
+      const afterProxies = [...proxies.filter(p => p.id !== originalProxy?.id), entry];
       // Validate + persist server-level timeouts in global Caddyfile first; throws CaddyfileError on failure.
-      const afterProxies = [...proxies.filter(p => p.serverKey !== entry.serverKey), entry];
       await syncGlobalTimeouts(afterProxies);
 
       const [, current] = await Promise.all([
@@ -315,8 +369,9 @@ export function useProxies() {
       ]);
 
       let updated = current;
-      if (originalPort !== entry.externalPort) {
-        updated = surgicallyRemoveBlock(updated, originalPort);
+      const newHost = routeHosts(entry)?.[0];
+      if (originalPort !== entry.externalPort || originalHost !== newHost) {
+        updated = surgicallyRemoveBlock(updated, originalPort, originalHost);
       }
       updated = surgicallyWriteProxy(updated, entry);
       await writeRawProxyConfValidated(updated);
@@ -340,9 +395,17 @@ export function useProxies() {
         n[entryKey] = { scheme: entry.externalScheme, host: entry.externalHost };
         return n;
       });
+      // See addProxy: a hand-built single-route JSON push can't represent a listener
+      // shared by multiple hosts (#139) — reload instead so Caddy's own Caddyfile
+      // adapter builds the correct merged multi-route server.
+      if (sharesPortWithOtherHost(afterProxies, entry)) {
+        await reloadService("caddy");
+        await refresh();
+        return;
+      }
       await update(mergeProxy(config, entry));
     },
-    [config, proxies, servers, update],
+    [config, proxies, servers, update, refresh],
   );
 
   const deleteProxy = useCallback(
@@ -389,16 +452,25 @@ export function useProxies() {
       }
 
       // Standalone route
-      await syncGlobalTimeouts(proxies.filter(p => p.serverKey !== proxy.serverKey));
+      const remainingProxies = proxies.filter(p => p.id !== proxy.id);
+      await syncGlobalTimeouts(remainingProxies);
       const current = await readProxyConf();
-      await writeRawProxyConf(surgicallyRemoveBlock(current, proxy.externalPort));
+      await writeRawProxyConf(surgicallyRemoveBlock(current, proxy.externalPort, routeHosts(proxy)?.[0]));
       const proxyKey = proxyAddressKeys(proxy)[0];
       setLabels(prev => { const n = { ...prev }; delete n[proxyKey]; return n; });
       setConfTls(prev => { const n = { ...prev }; delete n[proxyKey]; return n; });
       setConfExternal(prev => { const n = { ...prev }; delete n[proxyKey]; return n; });
+      // A shared listener's live JSON server object holds every sibling's route (#139) —
+      // removing it by serverKey would delete a still-live sibling too. Reload instead so
+      // Caddy's own Caddyfile adapter rebuilds the listener from the (now-correct) text.
+      if (sharesPortWithOtherHost(proxies, proxy)) {
+        await reloadService("caddy");
+        await refresh();
+        return;
+      }
       await update(removeProxy(config, proxy.serverKey));
     },
-    [config, proxies, servers, update],
+    [config, proxies, servers, update, refresh],
   );
 
   const addServer = useCallback(

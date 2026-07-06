@@ -20,7 +20,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast, ExternalAddressInput } from "@rxtx4816/cockpit-plugin-base-react/components";
-import { readProxyConf, parseConfExternalAddresses, CaddyApiError, CaddyfileError } from "../api";
+import { readProxyConf, parseConfExternalAddresses, CaddyApiError, CaddyfileError, routeHosts, hostsConflict } from "../api";
 import type { ProxyEntry, RewriteConfig, HeaderOperation, RouteMatch, ServerDef } from "../api";
 import { RouteMatchersSection } from "./RouteMatchersSection";
 import { parseListenPort } from "./AddServerDialog";
@@ -61,7 +61,14 @@ interface FormState {
 type FormErrors = Partial<Record<keyof FormState, string>>;
 
 interface Props {
-  existingPorts: number[];
+  /**
+   * Other standalone proxies to check the new port against. A conflict is only raised
+   * when ports match *and* hosts collide (#139) — two proxies on the same port with
+   * distinct, non-overlapping hosts coexist fine in Caddy (ordinary Host/SNI-based
+   * virtual hosting), the same way multiple site blocks in a plain Caddyfile share a
+   * port by subdomain.
+   */
+  existingRoutes: Pick<ProxyEntry, "externalPort" | "externalHost" | "matchers">[];
   onAdd: (entry: Omit<ProxyEntry, "id" | "serverKey">) => Promise<void>;
   onClose: () => void;
   onApiError?: (message: string) => void;
@@ -86,7 +93,7 @@ interface Props {
   initialServerKey?: string;
 }
 
-export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, initialValues, initialRewrite, initialRequestHeaders, initialResponseHeaders, initialTransport, initialBasicAuth, initialExtraUpstreams, initialLbPolicy, initialServerTimeouts, initialAccessLog, initialErrorHandlers, initialForwardAuth, initialTlsValues, initialMatchers, initialHandlePath, initialIsNamedRoute, initialNamedRouteName, servers, initialServerKey }: Props) {
+export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, initialValues, initialRewrite, initialRequestHeaders, initialResponseHeaders, initialTransport, initialBasicAuth, initialExtraUpstreams, initialLbPolicy, initialServerTimeouts, initialAccessLog, initialErrorHandlers, initialForwardAuth, initialTlsValues, initialMatchers, initialHandlePath, initialIsNamedRoute, initialNamedRouteName, servers, initialServerKey }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
   const confirmAction = useConfirmAction();
@@ -147,7 +154,10 @@ export function AddProxyDialog({ existingPorts, onAdd, onClose, onApiError, init
       if (!form.externalPort) errs.externalPort = t("add_proxy.validation_port_required");
       else if (isNaN(port)) errs.externalPort = t("add_proxy.validation_port_number");
       else if (!isValidPort(port)) errs.externalPort = t("add_proxy.validation_port_range");
-      else if (existingPorts.includes(port)) errs.externalPort = t("add_proxy.validation_port_duplicate", { port });
+      else if (existingRoutes.some(r =>
+        r.externalPort === port &&
+        hostsConflict(routeHosts(r), routeHosts({ externalHost: form.externalHost.trim() || undefined, matchers }))
+      )) errs.externalPort = t("add_proxy.validation_port_duplicate", { port });
     }
     if (form.externalScheme && !form.externalHost.trim()) {
       errs.externalHost = t("add_proxy.validation_ext_host_required_with_scheme");

@@ -326,7 +326,8 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
   const initialServerKey = activeServerDef?.key;
   // Only standalone proxy ports count for "port already in use" validation.
   // Named-server routes share the server's listen port — conflicts are caught by addProxy.
-  const standaloneExistingPorts = proxies.filter(p => !p.namedServerKey).map(p => p.externalPort);
+  const standaloneProxies = proxies.filter(p => !p.namedServerKey);
+  const standaloneExistingPorts = standaloneProxies.map(p => p.externalPort);
 
   // Attempt an action — intercept with gate when migration is needed
   function tryAdd() {
@@ -769,7 +770,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
 
       {showAdd && (
         <AddProxyDialog
-          existingPorts={standaloneExistingPorts}
+          existingRoutes={standaloneProxies}
           onAdd={addProxy}
           onClose={() => setShowAdd(false)}
           onApiError={msg => setApiError({ message: msg, search: extractLogsSearch(msg), action: "add" })}
@@ -844,7 +845,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
         />
       ) : (
         <AddProxyDialog
-          existingPorts={standaloneExistingPorts}
+          existingRoutes={standaloneProxies}
           onAdd={addProxy}
           onClose={() => setDuplicating(null)}
           onApiError={msg => setApiError({ message: msg, search: extractLogsSearch(msg), action: "add" })}
@@ -944,7 +945,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
       ) : (
         <EditProxyDialog
           proxy={editing}
-          existingPorts={proxies.filter(p => p.id !== editing.id && !p.namedServerKey).map(p => p.externalPort)}
+          existingRoutes={proxies.filter(p => p.id !== editing.id && !p.namedServerKey)}
           onSave={editProxy}
           onClose={() => setEditing(null)}
           onApiError={msg => setApiError({ message: msg, search: extractLogsSearch(msg), action: "edit" })}
