@@ -290,8 +290,11 @@ export function useProxies() {
       // A hand-built single-route JSON push can't represent a listener shared by
       // multiple hosts (#139) — only Caddy's own Caddyfile adapter can build that
       // correctly, so reload instead of pushing a JSON patch that would silently
-      // misrepresent (or clobber) the shared listener.
-      if (sharesPortWithOtherHost(afterProxies, newProxy)) {
+      // misrepresent (or clobber) the shared listener. php_fastcgi (#35) is a Caddyfile
+      // macro that expands into four separate JSON routes (vars/redirect/rewrite/
+      // reverse_proxy) with no single-handler equivalent — mergeProxy can't construct
+      // that either, so it always needs the same reload-from-Caddyfile path.
+      if (sharesPortWithOtherHost(afterProxies, newProxy) || newProxy.phpFastcgi) {
         await reloadService("caddy");
         await refresh();
         return;
@@ -396,9 +399,9 @@ export function useProxies() {
         return n;
       });
       // See addProxy: a hand-built single-route JSON push can't represent a listener
-      // shared by multiple hosts (#139) — reload instead so Caddy's own Caddyfile
-      // adapter builds the correct merged multi-route server.
-      if (sharesPortWithOtherHost(afterProxies, entry)) {
+      // shared by multiple hosts (#139), nor a php_fastcgi route's four-route Caddyfile
+      // macro expansion (#35) — reload instead so Caddy's own Caddyfile adapter builds it.
+      if (sharesPortWithOtherHost(afterProxies, entry) || entry.phpFastcgi) {
         await reloadService("caddy");
         await refresh();
         return;

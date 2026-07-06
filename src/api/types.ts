@@ -198,6 +198,20 @@ export interface FileServerConfig {
   browse?: boolean;
 }
 
+export interface PhpFastcgiConfig {
+  /** FastCGI upstream: a Unix socket ("unix//run/php-fpm.sock") or "host:port" */
+  upstream: string;
+  /** Root directory PHP files are served from */
+  root: string;
+  /** Directory index filename. Omit for Caddy's own default ("index.php"). */
+  index?: string;
+  /** Extensions used to split the URI into script path + path info (Caddy's `split` sub-directive).
+   *  Omit for Caddy's own default ([".php"]). */
+  splitPath?: string[];
+  /** Extra environment variables passed to the FastCGI process. */
+  env?: Record<string, string>;
+}
+
 export interface StaticResponseConfig {
   statusCode: number;
   body?: string;
@@ -255,6 +269,7 @@ export interface ProxyEntry {
   redirect?: RedirectConfig;
   fileServer?: FileServerConfig;
   staticResponse?: StaticResponseConfig;
+  phpFastcgi?: PhpFastcgiConfig;
   rewrite?: RewriteConfig;
   requestHeaders?: HeaderOperation[];
   responseHeaders?: HeaderOperation[];

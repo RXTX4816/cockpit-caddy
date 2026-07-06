@@ -42,10 +42,13 @@ import { AddProxyDialog } from "./AddProxyDialog";
 import { AddRedirectDialog } from "./AddRedirectDialog";
 import { AddStaticDialog } from "./AddStaticDialog";
 import { AddRespondDialog } from "./AddRespondDialog";
+import { AddPhpFastcgiDialog } from "./AddPhpFastcgiDialog";
 import { EditProxyDialog } from "./EditProxyDialog";
 import { EditRedirectDialog } from "./EditRedirectDialog";
 import { EditStaticDialog } from "./EditStaticDialog";
 import { EditRespondDialog } from "./EditRespondDialog";
+import { EditPhpFastcgiDialog } from "./EditPhpFastcgiDialog";
+import { envRecordToEntries } from "./PhpFastcgiEnvSection";
 import { AddServerDialog } from "./AddServerDialog";
 import { EditServerDialog } from "./EditServerDialog";
 import { ServerDetailPanel } from "./ServerDetailPanel";
@@ -80,6 +83,7 @@ function entryType(proxy: ProxyEntry, t: (k: string) => string): EntryType {
   if (proxy.redirect) return { label: t("proxies.type_redirect"), color: "purple" };
   if (proxy.fileServer) return { label: t("proxies.type_static"), color: "green" };
   if (proxy.staticResponse) return { label: t("proxies.type_respond"), color: "orange" };
+  if (proxy.phpFastcgi) return { label: t("proxies.type_php"), color: "teal" };
   return { label: t("proxies.type_proxy"), color: "blue" };
 }
 
@@ -191,6 +195,8 @@ function ProxyRow({ proxy, onEdit, onDelete, onDuplicate, probeStatuses, servers
                 <code style={{ fontSize: "0.85em" }}>{proxy.staticResponse.statusCode}{proxy.staticResponse.body ? ` "${proxy.staticResponse.body.slice(0, 30)}${proxy.staticResponse.body.length > 30 ? "…" : ""}"` : ""}</code>
               ) : proxy.fileServer ? (
                 <code style={{ fontSize: "0.85em" }}>{proxy.fileServer.root}</code>
+              ) : proxy.phpFastcgi ? (
+                <code style={{ fontSize: "0.85em" }}>{proxy.phpFastcgi.upstream}</code>
               ) : (
                 <span style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", flexWrap: "wrap" }}>
                   {(() => {
@@ -297,6 +303,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
   const [showAddRedirect, setShowAddRedirect] = useState(false);
   const [showAddStatic, setShowAddStatic] = useState(false);
   const [showAddRespond, setShowAddRespond] = useState(false);
+  const [showAddPhp, setShowAddPhp] = useState(false);
   const [editing, setEditing] = useState<ProxyEntry | null>(null);
   const [duplicating, setDuplicating] = useState<ProxyEntry | null>(null);
 
@@ -561,6 +568,13 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
                   {t("proxies.add_respond")}
                 </Button>
               </ToolbarItem>
+              {!initialServerKey && (
+                <ToolbarItem>
+                  <Button variant="secondary" onClick={() => setShowAddPhp(true)}>
+                    {t("proxies.add_php")}
+                  </Button>
+                </ToolbarItem>
+              )}
               <ToolbarItem variant="separator" />
               <ToolbarItem>
                 <Button variant="tertiary" onClick={() => setShowAddServer(true)}>
@@ -844,6 +858,39 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
           initialMatchers={duplicating.matchers}
           initialHandlePath={duplicating.handlePath}
         />
+      ) : duplicating.phpFastcgi ? (
+        <AddPhpFastcgiDialog
+          existingPorts={standaloneExistingPorts}
+          onAdd={addProxy}
+          onClose={() => setDuplicating(null)}
+          initialValues={{
+            port: String(duplicating.externalPort),
+            upstream: duplicating.phpFastcgi.upstream,
+            root: duplicating.phpFastcgi.root,
+            index: duplicating.phpFastcgi.index ?? "",
+            splitPath: duplicating.phpFastcgi.splitPath?.join(" ") ?? "",
+            tls: duplicating.tls,
+            compress: duplicating.compress ?? false,
+            label: duplicating.label ? `${duplicating.label} (copy)` : "",
+          }}
+          initialEnv={envRecordToEntries(duplicating.phpFastcgi.env)}
+          initialBasicAuth={(duplicating.basicAuth ?? []).map(a => ({ username: a.username, password: "", existingHash: a.passwordHash }))}
+          initialResponseHeaders={duplicating.responseHeaders}
+          initialRequestHeaders={duplicating.requestHeaders}
+          initialAccessLog={duplicating.accessLog ? accessLogConfigToValues(duplicating.accessLog) : undefined}
+          initialServerTimeouts={{
+            readTimeout: duplicating.serverReadTimeout ?? "",
+            readHeaderTimeout: duplicating.serverReadHeaderTimeout ?? "",
+            writeTimeout: duplicating.serverWriteTimeout ?? "",
+            idleTimeout: duplicating.serverIdleTimeout ?? "",
+            maxHeaderBytes: duplicating.maxHeaderBytes != null ? String(duplicating.maxHeaderBytes) : "",
+            disableHttp3: duplicating.disableHttp3 ?? false,
+          }}
+          initialErrorHandlers={duplicating.errorHandlers}
+          initialTlsValues={tlsConfigToValues(duplicating.tlsAdvanced, duplicating.mtls)}
+          initialMatchers={duplicating.matchers}
+          initialHandlePath={duplicating.handlePath}
+        />
       ) : (
         <AddProxyDialog
           existingRoutes={standaloneProxies}
@@ -923,6 +970,14 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
         />
       )}
 
+      {showAddPhp && (
+        <AddPhpFastcgiDialog
+          existingPorts={standaloneExistingPorts}
+          onAdd={addProxy}
+          onClose={() => setShowAddPhp(false)}
+        />
+      )}
+
       {editing && (editing.redirect ? (
         <EditRedirectDialog
           proxy={editing}
@@ -939,6 +994,13 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
         />
       ) : editing.fileServer ? (
         <EditStaticDialog
+          proxy={editing}
+          existingPorts={proxies.filter(p => p.id !== editing.id && !p.namedServerKey).map(p => p.externalPort)}
+          onSave={editProxy}
+          onClose={() => setEditing(null)}
+        />
+      ) : editing.phpFastcgi ? (
+        <EditPhpFastcgiDialog
           proxy={editing}
           existingPorts={proxies.filter(p => p.id !== editing.id && !p.namedServerKey).map(p => p.externalPort)}
           onSave={editProxy}
