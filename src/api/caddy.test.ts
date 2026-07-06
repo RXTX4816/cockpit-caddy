@@ -33,6 +33,8 @@ import {
   hostsConflict,
   standaloneProxyId,
   classifyAcmeHosts,
+  buildMetricsSiteBlock,
+  parseMetricsSiteBlock,
 } from "./caddy";
 import type { CaddyConfig, CaddyServer, ProxyEntry, RouteMatch, ServerDef } from "./types";
 
@@ -2199,6 +2201,72 @@ describe("storage backend config (#46)", () => {
   it("omits the storage directive entirely when storagePath is unset (Caddy's own default applies)", () => {
     const patched = buildGlobalOptionsPatch("", { email: "admin@example.com" });
     expect(patched).not.toContain("storage");
+  });
+});
+
+describe("Prometheus metrics endpoint (#43)", () => {
+  it("parses a bare global metrics option", () => {
+    const opts = parseGlobalOptions(makeOpts("\tmetrics"));
+    expect(opts.metricsEnabled).toBe(true);
+  });
+
+  it("leaves metricsEnabled undefined when absent", () => {
+    const opts = parseGlobalOptions(makeOpts("\temail admin@example.com"));
+    expect(opts.metricsEnabled).toBeUndefined();
+  });
+
+  it("buildGlobalOptionsPatch emits a bare metrics line", () => {
+    const patched = buildGlobalOptionsPatch("", { metricsEnabled: true });
+    expect(patched).toContain("metrics");
+    expect(patched).not.toMatch(/^[ \t]*metrics[ \t]+\S/m); // bare directive, no trailing args on that line
+  });
+
+  it("omits metrics entirely when disabled", () => {
+    const patched = buildGlobalOptionsPatch("", { email: "admin@example.com" });
+    expect(patched).not.toContain("metrics");
+  });
+
+  it("buildMetricsSiteBlock returns empty when disabled or missing a listen address", () => {
+    expect(buildMetricsSiteBlock({})).toBe("");
+    expect(buildMetricsSiteBlock({ metricsEnabled: true })).toBe("");
+    expect(buildMetricsSiteBlock({ metricsListenAddress: ":2019" })).toBe("");
+  });
+
+  it("buildMetricsSiteBlock writes an explicit path so the endpoint isn't exposed on every path", () => {
+    // A bare `metrics` directive with no matcher matches every path on that listener
+    // (verified against a live Caddy instance) — the path must always be written
+    // explicitly so the dedicated site only ever exposes the one intended path.
+    const block = buildMetricsSiteBlock({ metricsEnabled: true, metricsListenAddress: ":2019" });
+    expect(block).toContain(":2019 {");
+    expect(block).toContain("metrics /metrics");
+  });
+
+  it("buildMetricsSiteBlock respects a custom path", () => {
+    const block = buildMetricsSiteBlock({ metricsEnabled: true, metricsListenAddress: ":2019", metricsPath: "/custom-metrics" });
+    expect(block).toContain("metrics /custom-metrics");
+  });
+
+  it("buildMetricsSiteBlock nests disable_openmetrics under the metrics directive when set", () => {
+    const block = buildMetricsSiteBlock({ metricsEnabled: true, metricsListenAddress: ":2019", metricsPlainFormat: true });
+    expect(block).toContain("metrics /metrics {");
+    expect(block).toContain("disable_openmetrics");
+  });
+
+  it("parseMetricsSiteBlock round-trips listen address, path, and plain format", () => {
+    const block = buildMetricsSiteBlock({ metricsEnabled: true, metricsListenAddress: "127.0.0.1:2019", metricsPath: "/custom-metrics", metricsPlainFormat: true });
+    const content = [
+      "# cockpit-caddy:metrics:begin",
+      block,
+      "# cockpit-caddy:metrics:end",
+    ].join("\n");
+    const parsed = parseMetricsSiteBlock(content);
+    expect(parsed.metricsListenAddress).toBe("127.0.0.1:2019");
+    expect(parsed.metricsPath).toBe("/custom-metrics");
+    expect(parsed.metricsPlainFormat).toBe(true);
+  });
+
+  it("parseMetricsSiteBlock returns empty object when markers are absent", () => {
+    expect(parseMetricsSiteBlock("")).toEqual({});
   });
 });
 

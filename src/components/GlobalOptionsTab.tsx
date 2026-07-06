@@ -40,6 +40,19 @@ function isRatio(v: string): boolean {
   return !isNaN(n) && n > 0 && n < 1;
 }
 
+function isListenAddress(v: string): boolean {
+  return !v || /^[\w.-]*:\d{1,5}$/.test(v.trim());
+}
+
+/** Builds a clickable URL for the metrics listen address — a bind-all address
+ *  (e.g. ":2019") has no usable host of its own, so falls back to the current page's. */
+function metricsLinkUrl(listenAddress: string, path: string): string | null {
+  const m = listenAddress.trim().match(/^([\w.-]*):(\d{1,5})$/);
+  if (!m) return null;
+  const host = m[1] || window.location.hostname;
+  return `http://${host}:${m[2]}${path.trim() || "/metrics"}`;
+}
+
 export function GlobalOptionsTab() {
   const { t } = useTranslation();
   const confirm = useConfirmAction();
@@ -71,6 +84,10 @@ export function GlobalOptionsTab() {
   const [storagePath, setStoragePath] = useState("");
   const [storageInfo, setStorageInfo] = useState<StorageInfo | null>(null);
   const [storageInfoError, setStorageInfoError] = useState<string | null>(null);
+  const [metricsEnabled, setMetricsEnabled] = useState(false);
+  const [metricsListenAddress, setMetricsListenAddress] = useState("");
+  const [metricsPath, setMetricsPath] = useState("");
+  const [metricsPlainFormat, setMetricsPlainFormat] = useState(false);
 
   const loadStorageInfo = useCallback((configuredPath: string | undefined) => {
     setStorageInfo(null);
@@ -104,6 +121,10 @@ export function GlobalOptionsTab() {
         setRenewalWindowRatio(opts.renewalWindowRatio != null ? String(opts.renewalWindowRatio) : "");
         setStoragePath(opts.storagePath ?? "");
         loadStorageInfo(opts.storagePath);
+        setMetricsEnabled(opts.metricsEnabled ?? false);
+        setMetricsListenAddress(opts.metricsListenAddress ?? "");
+        setMetricsPath(opts.metricsPath ?? "");
+        setMetricsPlainFormat(opts.metricsPlainFormat ?? false);
       })
       .catch(e => setLoadError(e instanceof Error ? e.message : String(e)))
       .finally(() => setLoading(false));
@@ -127,9 +148,13 @@ export function GlobalOptionsTab() {
   const onDemandIntervalErr = onDemandInterval && !isDuration(onDemandInterval) ? t("global_opts.validation_duration") : null;
   const internalCertLifetimeErr = !isCertLifetimeDuration(internalCertLifetime) ? t("global_opts.validation_cert_lifetime") : null;
   const renewalWindowRatioErr = !isRatio(renewalWindowRatio) ? t("global_opts.validation_ratio") : null;
+  const metricsListenAddressErr = metricsEnabled && !metricsListenAddress.trim()
+    ? t("global_opts.metrics_listen_address_required")
+    : !isListenAddress(metricsListenAddress) ? t("global_opts.metrics_listen_address_invalid") : null;
+  const metricsPathErr = metricsPath.trim() && !metricsPath.trim().startsWith("/") ? t("global_opts.metrics_path_invalid") : null;
   const hasErrors = !!(
     httpPortErr || httpsPortErr || gracePeriodErr || shutdownDelayErr || onDemandBurstErr || onDemandIntervalErr
-    || internalCertLifetimeErr || renewalWindowRatioErr
+    || internalCertLifetimeErr || renewalWindowRatioErr || metricsListenAddressErr || metricsPathErr
   );
 
   const isConfirming = confirm.step !== "idle";
@@ -548,6 +573,87 @@ export function GlobalOptionsTab() {
           </FormHelperText>
         </FormGroup>
 
+        <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
+
+        <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+          {t("global_opts.metrics_title")}
+        </Title>
+
+        <FormGroup fieldId="go-metrics-enabled">
+          <Checkbox
+            id="go-metrics-enabled"
+            label={t("global_opts.metrics_enabled")}
+            description={t("global_opts.metrics_enabled_help")}
+            isChecked={metricsEnabled}
+            onChange={(_e, v) => setMetricsEnabled(v)}
+            isDisabled={isConfirming}
+          />
+        </FormGroup>
+
+        {metricsEnabled && (
+          <>
+            <FormGroup label={t("global_opts.metrics_listen_address")} fieldId="go-metrics-listen-address">
+              <TextInput
+                id="go-metrics-listen-address"
+                value={metricsListenAddress}
+                onChange={(_e, v) => setMetricsListenAddress(v)}
+                placeholder=":2019"
+                validated={metricsListenAddressErr ? "error" : "default"}
+                isDisabled={isConfirming}
+              />
+              {metricsListenAddressErr ? (
+                <FormHelperText>
+                  <HelperText><HelperTextItem variant="error">{metricsListenAddressErr}</HelperTextItem></HelperText>
+                </FormHelperText>
+              ) : (
+                <FormHelperText>
+                  <HelperText><HelperTextItem>{t("global_opts.metrics_listen_address_help")}</HelperTextItem></HelperText>
+                </FormHelperText>
+              )}
+            </FormGroup>
+
+            <FormGroup label={t("global_opts.metrics_path")} fieldId="go-metrics-path">
+              <TextInput
+                id="go-metrics-path"
+                value={metricsPath}
+                onChange={(_e, v) => setMetricsPath(v)}
+                placeholder="/metrics"
+                validated={metricsPathErr ? "error" : "default"}
+                isDisabled={isConfirming}
+              />
+              {metricsPathErr ? (
+                <FormHelperText>
+                  <HelperText><HelperTextItem variant="error">{metricsPathErr}</HelperTextItem></HelperText>
+                </FormHelperText>
+              ) : (
+                <FormHelperText>
+                  <HelperText><HelperTextItem>{t("global_opts.metrics_path_help")}</HelperTextItem></HelperText>
+                </FormHelperText>
+              )}
+            </FormGroup>
+
+            <FormGroup fieldId="go-metrics-plain-format">
+              <Checkbox
+                id="go-metrics-plain-format"
+                label={t("global_opts.metrics_plain_format")}
+                description={t("global_opts.metrics_plain_format_help")}
+                isChecked={metricsPlainFormat}
+                onChange={(_e, v) => setMetricsPlainFormat(v)}
+                isDisabled={isConfirming}
+              />
+            </FormGroup>
+
+            {!metricsListenAddressErr && metricsListenAddress.trim() && (() => {
+              const url = metricsLinkUrl(metricsListenAddress, metricsPath);
+              return url ? (
+                <FormGroup fieldId="go-metrics-link">
+                  <a href={url} target="_blank" rel="noreferrer">{t("global_opts.metrics_link")}</a>
+                </FormGroup>
+              ) : null;
+            })()}
+          </>
+        )}
+
         {confirm.error != null && (
           <Alert variant="danger" isInline title={t("global_opts.save_error")}>
             {confirm.error || t("global_opts.save_error_unknown")}
@@ -583,6 +689,10 @@ export function GlobalOptionsTab() {
                     internalCertLifetime: internalCertLifetime.trim() || undefined,
                     renewalWindowRatio: renewalWindowRatio.trim() ? Number(renewalWindowRatio.trim()) : undefined,
                     storagePath: storagePath.trim() || undefined,
+                    metricsEnabled: metricsEnabled || undefined,
+                    metricsListenAddress: metricsEnabled ? (metricsListenAddress.trim() || undefined) : undefined,
+                    metricsPath: metricsEnabled ? (metricsPath.trim() || undefined) : undefined,
+                    metricsPlainFormat: metricsEnabled ? (metricsPlainFormat || undefined) : undefined,
                   };
                   // An unwritable storage path isn't caught by Caddy's own config
                   // validation (it only checks config shape, not whether the process can

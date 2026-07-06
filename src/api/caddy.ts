@@ -3657,6 +3657,27 @@ export interface GlobalOptions {
   /** Custom root path for the `file_system` certificate/config storage backend (#46).
    *  Unset means Caddy's own default ($XDG_DATA_HOME/caddy, /var/lib/caddy under systemd). */
   storagePath?: string;
+  /**
+   * Prometheus-compatible metrics endpoint (#43). Enabling this writes two things: the
+   * global `metrics` option (turns on request-level `caddy_http_*` instrumentation across
+   * every server — without it, `/metrics` only ever shows admin/Go-runtime metrics, not
+   * anything about actual proxied traffic) and a small dedicated site block exposing the
+   * endpoint at `metricsListenAddress`. A listen address is required whenever this is
+   * enabled: the admin API here runs on a Unix socket, so metrics can't "share the admin
+   * port" the way they could if admin were on TCP.
+   */
+  metricsEnabled?: boolean;
+  /** Listen address for the dedicated metrics site, e.g. ":2019" or "127.0.0.1:2019". */
+  metricsListenAddress?: string;
+  /** Path the metrics endpoint is served at. Defaults to "/metrics" when unset. */
+  metricsPath?: string;
+  /**
+   * Maps to Caddy's `disable_openmetrics` on the `metrics` handler — switches the response
+   * from OpenMetrics format to plain Prometheus text exposition format. Doesn't remove any
+   * metrics (Go runtime/process metrics are always included; Caddy has no toggle for
+   * those), just a slightly less verbose wire format.
+   */
+  metricsPlainFormat?: boolean;
 }
 
 /**
@@ -3667,7 +3688,7 @@ export interface GlobalOptions {
 const KNOWN_GLOBAL_OPTION_KEYS = new Set([
   "http_port", "https_port", "debug", "grace_period", "shutdown_delay",
   "email", "acme_ca", "acme_ca_root", "acme_eab", "on_demand_tls",
-  "renewal_window_ratio", "storage",
+  "renewal_window_ratio", "storage", "metrics",
 ]);
 
 /**
@@ -3741,6 +3762,12 @@ function parseOptionLines(lines: string[]): GlobalOptions {
         const im = inner.match(/^(\S+)\s+(.+)$/);
         if (im && im[1] === "root") opts.storagePath = im[2];
         i++;
+      }
+    } else if (key === "metrics") {
+      opts.metricsEnabled = true;
+      if (line.endsWith("{")) {
+        i++;
+        while (i < lines.length && lines[i].trim() !== "}") i++;
       }
     }
     i++;
@@ -3833,6 +3860,11 @@ function buildGlobalOptionsLines(opts: GlobalOptions): string {
     lines.push(`\t\troot ${opts.storagePath}`);
     lines.push("\t}");
   }
+  // Turns on request-level `caddy_http_*` instrumentation across every server — the
+  // dedicated site block that actually exposes /metrics is written separately into
+  // conf.d (see buildMetricsSiteBlock), since a bare global option can't also declare
+  // a listener. per_host/observe_catchall_hosts/otlp sub-options aren't exposed here.
+  if (opts.metricsEnabled) lines.push("\tmetrics");
   return lines.join("\n");
 }
 
@@ -3899,12 +3931,77 @@ async function applyInternalLifetimeToProxyConf(content: string, internalCertLif
   return updated;
 }
 
+const METRICS_SITE_BEGIN = "# cockpit-caddy:metrics:begin";
+const METRICS_SITE_END = "# cockpit-caddy:metrics:end";
+
+/**
+ * Builds the dedicated site block that exposes the Prometheus metrics endpoint (#43).
+ * A bare `metrics` directive with no path matcher matches *every* path on that listener
+ * (verified against a live instance — it's the sole unmatched route on the block), so the
+ * path is always written explicitly to keep the endpoint scoped to just that one path.
+ */
+export function buildMetricsSiteBlock(opts: GlobalOptions): string {
+  if (!opts.metricsEnabled || !opts.metricsListenAddress) return "";
+  const path = opts.metricsPath || "/metrics";
+  const lines = [`${opts.metricsListenAddress} {`];
+  if (opts.metricsPlainFormat) {
+    lines.push(`\tmetrics ${path} {`, "\t\tdisable_openmetrics", "\t}");
+  } else {
+    lines.push(`\tmetrics ${path}`);
+  }
+  lines.push("}");
+  return lines.join("\n");
+}
+
+/** Reads the metrics site block's listen address/path/format back out of conf.d content. */
+export function parseMetricsSiteBlock(content: string): Pick<GlobalOptions, "metricsListenAddress" | "metricsPath" | "metricsPlainFormat"> {
+  const bi = content.indexOf(METRICS_SITE_BEGIN);
+  const ei = content.indexOf(METRICS_SITE_END);
+  if (bi === -1 || ei === -1) return {};
+  const lines = content.slice(bi + METRICS_SITE_BEGIN.length, ei).split("\n").map(l => l.trim()).filter(Boolean);
+  const headerLine = lines.find(l => l.endsWith("{") && !l.startsWith("metrics"));
+  if (!headerLine) return {};
+  const metricsLine = lines.find(l => l.startsWith("metrics "));
+  if (!metricsLine) return { metricsListenAddress: headerLine.slice(0, -1).trim() };
+  const path = metricsLine.replace(/^metrics\s+/, "").replace(/\s*\{$/, "").trim();
+  return {
+    metricsListenAddress: headerLine.slice(0, -1).trim(),
+    metricsPath: path,
+    metricsPlainFormat: lines.includes("disable_openmetrics") || undefined,
+  };
+}
+
+/**
+ * Generic pure helper: inserts/replaces/removes a marked section delimited by
+ * `beginMarker`/`endMarker` at the top level of a conf.d file (i.e. not nested inside the
+ * main Caddyfile's `{ }` global options block, unlike patchManagedSection). `body` is the
+ * new content between the markers (empty string = remove the section).
+ */
+function patchTopLevelMarkedSection(content: string, beginMarker: string, endMarker: string, body: string): string {
+  const bi = content.indexOf(beginMarker);
+  const ei = content.indexOf(endMarker);
+
+  if (bi !== -1 && ei !== -1) {
+    if (!body) {
+      const before = content.slice(0, bi).replace(/\n[ \t]*\n?$/, "\n");
+      const after = content.slice(ei + endMarker.length).replace(/^[ \t]*\n/, "");
+      return before.trimEnd() + "\n\n" + after.trimStart();
+    }
+    return content.slice(0, bi + beginMarker.length) + "\n" + body + "\n" + content.slice(ei);
+  }
+
+  if (!body) return content;
+  const base = content.trim() ? content.trimEnd() : CONF_HEADER;
+  return base + "\n\n" + beginMarker + "\n" + body + "\n" + endMarker + "\n";
+}
+
 export async function syncGlobalOptions(opts: GlobalOptions): Promise<void> {
   const diskContent = (await fsReadFile(MAIN_CADDYFILE, "try")) ?? "";
   const patched = buildGlobalOptionsPatch(diskContent, opts);
 
   const proxyConfDisk = (await fsReadFile(PROXY_CONF_PATH, "try")) ?? "";
-  const proxyConfPatched = await applyInternalLifetimeToProxyConf(proxyConfDisk, opts.internalCertLifetime);
+  let proxyConfPatched = await applyInternalLifetimeToProxyConf(proxyConfDisk, opts.internalCertLifetime);
+  proxyConfPatched = patchTopLevelMarkedSection(proxyConfPatched, METRICS_SITE_BEGIN, METRICS_SITE_END, buildMetricsSiteBlock(opts));
 
   if (patched === diskContent && proxyConfPatched === proxyConfDisk) return;
 
@@ -3919,10 +4016,13 @@ export async function syncGlobalOptions(opts: GlobalOptions): Promise<void> {
   }
 }
 
-/** Read current global options from the main Caddyfile. */
+/** Read current global options from the main Caddyfile, merged with the metrics site
+ *  block's own listen address/path/format read back out of conf.d. */
 export async function readGlobalOptions(): Promise<GlobalOptions> {
   const content = (await fsReadFile(MAIN_CADDYFILE, "try")) ?? "";
-  return parseGlobalOptions(content);
+  const opts = parseGlobalOptions(content);
+  const proxyConf = (await fsReadFile(PROXY_CONF_PATH, "try")) ?? "";
+  return { ...opts, ...parseMetricsSiteBlock(proxyConf) };
 }
 
 // ---------------------------------------------------------------------------
