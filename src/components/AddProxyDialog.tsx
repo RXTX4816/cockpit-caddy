@@ -115,7 +115,7 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
   const [requestHeaders, setRequestHeaders] = useState<HeaderOperation[] | undefined>(initialRequestHeaders);
   const [responseHeaders, setResponseHeaders] = useState<HeaderOperation[] | undefined>(initialResponseHeaders);
   const [transport, setTransport] = useState<TransportValues>(initialTransport ?? { dialTimeout: "", responseHeaderTimeout: "" });
-  const [serverTimeouts, setServerTimeouts] = useState<ServerTimeoutValues>(initialServerTimeouts ?? { readTimeout: "", readHeaderTimeout: "", writeTimeout: "", idleTimeout: "", maxHeaderBytes: "" });
+  const [serverTimeouts, setServerTimeouts] = useState<ServerTimeoutValues>(initialServerTimeouts ?? { readTimeout: "", readHeaderTimeout: "", writeTimeout: "", idleTimeout: "", maxHeaderBytes: "", disableHttp3: false });
   const [accessLog, setAccessLog] = useState<AccessLogValues>(initialAccessLog ?? accessLogConfigToValues(undefined));
   const [errorHandlers, setErrorHandlers] = useState<ErrorHandlerConfig[]>(initialErrorHandlers ?? []);
   const [forwardAuth, setForwardAuth] = useState<ForwardAuthConfig | undefined>(initialForwardAuth);
@@ -494,6 +494,7 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
                     serverWriteTimeout: serverTimeouts.writeTimeout.trim() || undefined,
                     serverIdleTimeout: serverTimeouts.idleTimeout.trim() || undefined,
                     maxHeaderBytes: serverTimeouts.maxHeaderBytes.trim() ? parseInt(serverTimeouts.maxHeaderBytes, 10) : undefined,
+                    disableHttp3: serverTimeouts.disableHttp3 || undefined,
                     tlsAdvanced: tlsValuesToAdvanced(tlsValues),
                     mtls: tlsValuesToMtls(tlsValues),
                     matchers: matchers ?? undefined,

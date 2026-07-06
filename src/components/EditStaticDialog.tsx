@@ -59,6 +59,7 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
     writeTimeout: proxy.serverWriteTimeout ?? "",
     idleTimeout: proxy.serverIdleTimeout ?? "",
     maxHeaderBytes: proxy.maxHeaderBytes != null ? String(proxy.maxHeaderBytes) : "",
+    disableHttp3: proxy.disableHttp3 ?? false,
   });
   const [errorHandlers, setErrorHandlers] = useState<ErrorHandlerConfig[]>(proxy.errorHandlers ?? []);
   const [tlsValues, setTlsValues] = useState<TlsValues>(tlsConfigToValues(proxy.tlsAdvanced, proxy.mtls));
@@ -239,6 +240,7 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
                     serverWriteTimeout: serverTimeouts.writeTimeout.trim() || undefined,
                     serverIdleTimeout: serverTimeouts.idleTimeout.trim() || undefined,
                     maxHeaderBytes: serverTimeouts.maxHeaderBytes.trim() ? parseInt(serverTimeouts.maxHeaderBytes, 10) : undefined,
+                    disableHttp3: serverTimeouts.disableHttp3 || undefined,
                     tlsAdvanced: tlsValuesToAdvanced(tlsValues),
                     mtls: tlsValuesToMtls(tlsValues),
                     matchers: matchers ?? undefined,

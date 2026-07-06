@@ -1587,6 +1587,10 @@ function parseRouteToEntry(
     matchers = undefined;
   }
 
+  // #51 — Caddy enables h1/h2/h3 by default; an explicit protocols list omitting h3 is
+  // how a user opted out of HTTP/3.
+  const disableHttp3 = Array.isArray(server.protocols) && !server.protocols.includes("h3") || undefined;
+
   // Unwrap subroute handlers emitted by Caddy's Caddyfile adapter.
   // When Caddy reloads from Caddyfile, `handle { ... }` blocks become:
   //   { handler: "subroute", routes: [{ handle: [...actual handlers...] }] }
@@ -1615,7 +1619,7 @@ function parseRouteToEntry(
       namedServerKey,
       redirect: { to: jsonPlaceholderToCaddy(locationHeader), code },
       matchers,
-      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, accessLog,
+      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, accessLog,
       errorHandlers: parseErrorHandlers(server),
     };
   }
@@ -1639,7 +1643,7 @@ function parseRouteToEntry(
         close: staticResp.close || undefined,
       },
       matchers,
-      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, accessLog,
+      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, accessLog,
       errorHandlers: parseErrorHandlers(server),
     };
   }
@@ -1671,7 +1675,7 @@ function parseRouteToEntry(
       basicAuth: fsBasicAuth?.length ? fsBasicAuth : undefined,
       responseHeaders: fsResponseHeaders.length ? fsResponseHeaders : undefined,
       matchers,
-      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, accessLog,
+      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, accessLog,
       errorHandlers: parseErrorHandlers(server),
       tlsAdvanced: fsTlsPolicy ? parseTlsAdvanced(fsTlsPolicy, automationPolicies, tlsSubjectHost(externalHost)) : undefined,
       mtls: fsTlsPolicy ? parseMtls(fsTlsPolicy) : undefined,
@@ -1696,7 +1700,7 @@ function parseRouteToEntry(
       isNamedRoute: true,
       namedRouteName: invokeHandle.name,
       matchers,
-      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, accessLog,
+      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, accessLog,
     };
   }
 
@@ -1767,7 +1771,7 @@ function parseRouteToEntry(
     lbPolicy,
     matchers,
     handlePath,
-    serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
+    serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3,
     errorHandlers: parseErrorHandlers(server),
     forwardAuth,
     tlsAdvanced: tlsPolicy ? parseTlsAdvanced(tlsPolicy, automationPolicies, tlsSubjectHost(externalHost)) : undefined,
@@ -1978,7 +1982,7 @@ function buildReverseProxyHandler(
   return rp;
 }
 
-type TimeoutProxy = Pick<ProxyEntry, "serverReadTimeout" | "serverReadHeaderTimeout" | "serverWriteTimeout" | "serverIdleTimeout" | "maxHeaderBytes">;
+type TimeoutProxy = Pick<ProxyEntry, "serverReadTimeout" | "serverReadHeaderTimeout" | "serverWriteTimeout" | "serverIdleTimeout" | "maxHeaderBytes" | "disableHttp3">;
 
 function applyServerTimeouts(server: CaddyServer, proxy: TimeoutProxy): CaddyServer {
   if (proxy.serverReadTimeout) server.read_timeout = proxy.serverReadTimeout;
@@ -1991,6 +1995,9 @@ function applyServerTimeouts(server: CaddyServer, proxy: TimeoutProxy): CaddySer
   else delete server.idle_timeout;
   if (proxy.maxHeaderBytes) server.max_header_bytes = proxy.maxHeaderBytes;
   else delete server.max_header_bytes;
+  // #51 — Caddy enables h1/h2/h3 by default; explicitly list h1+h2 only to opt out of h3.
+  if (proxy.disableHttp3) server.protocols = ["h1", "h2"];
+  else delete server.protocols;
   return server;
 }
 
@@ -2830,6 +2837,7 @@ export function parseServerDefsFromConf(content: string): import("./types").Serv
           serverWriteTimeout: p.serverWriteTimeout,
           serverIdleTimeout: p.serverIdleTimeout,
           maxHeaderBytes: p.maxHeaderBytes,
+          disableHttp3: p.disableHttp3,
           accessLog: p.accessLog,
           errorHandlers: p.errorHandlers,
           routeLabels: p.routeLabels,
@@ -2890,6 +2898,7 @@ export function serverDefToBlock(def: import("./types").ServerDef, routes: Proxy
     serverWriteTimeout: def.serverWriteTimeout,
     serverIdleTimeout: def.serverIdleTimeout,
     maxHeaderBytes: def.maxHeaderBytes,
+    disableHttp3: def.disableHttp3 || undefined,
     accessLog: def.accessLog,
     errorHandlers: def.errorHandlers?.length ? def.errorHandlers : undefined,
     routeLabels: def.routeLabels && Object.keys(def.routeLabels).length ? def.routeLabels : undefined,
@@ -3088,6 +3097,8 @@ export function mergeNamedServer(
   if (def.serverWriteTimeout) server.write_timeout = def.serverWriteTimeout;
   if (def.serverIdleTimeout) server.idle_timeout = def.serverIdleTimeout;
   if (def.maxHeaderBytes) server.max_header_bytes = def.maxHeaderBytes;
+  // #51 — Caddy enables h1/h2/h3 by default; explicitly list h1+h2 only to opt out of h3.
+  if (def.disableHttp3) server.protocols = ["h1", "h2"];
 
   if (def.accessLog) {
     const loggerName = `cockpit-server-${def.key}`;
@@ -3266,20 +3277,54 @@ export function findGlobalBlock(content: string): { open: number; close: number 
   return null;
 }
 
-/** Build the `servers :PORT { timeouts { ... } }` blocks for proxies that have timeouts set.
- * Proxies belonging to a named ServerDef are excluded — their timeouts are in the ServerDef block. */
+/**
+ * Build the `servers :PORT { timeouts { ... } protocols h1 h2 }` blocks for ports that
+ * have timeouts, header limits, and/or HTTP/3 (#51) explicitly set on any of their
+ * proxies. Proxies belonging to a named ServerDef are excluded — their timeouts are in
+ * the ServerDef block.
+ *
+ * Grouped by port, not one block per proxy: Caddy rejects the global `servers` options
+ * with "duplicate listener addresses" the moment two blocks name the same `:PORT` — which
+ * happens the instant two standalone proxies share a port via distinct subdomains (#139)
+ * and each independently has some server-level setting. Since these settings are
+ * inherently per-listener in Caddy (shared by every host on that port, not scoped to one),
+ * the merge take the first non-empty value per timeout field across the group, and
+ * disables HTTP/3 for the whole port if *any* proxy on it asked to — an explicit opt-out
+ * from one host is honored for the shared listener rather than silently dropped.
+ */
 function buildManagedServersBlocks(proxies: ProxyEntry[]): string {
-  return proxies
-    .filter(p => !p.namedServerKey && (p.serverReadTimeout || p.serverReadHeaderTimeout || p.serverWriteTimeout || p.serverIdleTimeout || p.maxHeaderBytes))
-    .map(p => {
-      const lines = [`\tservers :${p.externalPort} {`];
+  const relevant = proxies.filter(p => !p.namedServerKey &&
+    (p.serverReadTimeout || p.serverReadHeaderTimeout || p.serverWriteTimeout || p.serverIdleTimeout || p.maxHeaderBytes || p.disableHttp3));
+
+  const byPort = new Map<number, ProxyEntry[]>();
+  for (const p of relevant) {
+    const group = byPort.get(p.externalPort);
+    if (group) group.push(p);
+    else byPort.set(p.externalPort, [p]);
+  }
+
+  const ports = [...byPort.keys()].sort((a, b) => a - b);
+  return ports
+    .map(port => {
+      const group = byPort.get(port)!;
+      const readTimeout = group.find(p => p.serverReadTimeout)?.serverReadTimeout;
+      const readHeaderTimeout = group.find(p => p.serverReadHeaderTimeout)?.serverReadHeaderTimeout;
+      const writeTimeout = group.find(p => p.serverWriteTimeout)?.serverWriteTimeout;
+      const idleTimeout = group.find(p => p.serverIdleTimeout)?.serverIdleTimeout;
+      const maxHeaderBytes = group.find(p => p.maxHeaderBytes)?.maxHeaderBytes;
+      const disableHttp3 = group.some(p => p.disableHttp3);
+
+      const lines = [`\tservers :${port} {`];
       const tLines: string[] = [];
-      if (p.serverReadTimeout) tLines.push(`\t\t\tread_body ${p.serverReadTimeout}`);
-      if (p.serverReadHeaderTimeout) tLines.push(`\t\t\tread_header ${p.serverReadHeaderTimeout}`);
-      if (p.serverWriteTimeout) tLines.push(`\t\t\twrite ${p.serverWriteTimeout}`);
-      if (p.serverIdleTimeout) tLines.push(`\t\t\tidle ${p.serverIdleTimeout}`);
+      if (readTimeout) tLines.push(`\t\t\tread_body ${readTimeout}`);
+      if (readHeaderTimeout) tLines.push(`\t\t\tread_header ${readHeaderTimeout}`);
+      if (writeTimeout) tLines.push(`\t\t\twrite ${writeTimeout}`);
+      if (idleTimeout) tLines.push(`\t\t\tidle ${idleTimeout}`);
       if (tLines.length) lines.push("\t\ttimeouts {", ...tLines, "\t\t}");
-      if (p.maxHeaderBytes) lines.push(`\t\tmax_header_size ${p.maxHeaderBytes}`);
+      if (maxHeaderBytes) lines.push(`\t\tmax_header_size ${maxHeaderBytes}`);
+      // #51 — Caddy enables h1/h2/h3 by default; explicitly list h1+h2 only to opt out of
+      // h3. `protocols` is only valid inside this global `servers` block, not per-site.
+      if (disableHttp3) lines.push("\t\tprotocols h1 h2");
       lines.push("\t}");
       return lines.join("\n");
     })

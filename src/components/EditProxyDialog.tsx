@@ -78,6 +78,7 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
     writeTimeout: proxy.serverWriteTimeout ?? "",
     idleTimeout: proxy.serverIdleTimeout ?? "",
     maxHeaderBytes: proxy.maxHeaderBytes != null ? String(proxy.maxHeaderBytes) : "",
+    disableHttp3: proxy.disableHttp3 ?? false,
   });
   const [basicAuth, setBasicAuth] = useState<AuthEntry[]>(
     (proxy.basicAuth ?? []).map(a => ({ username: a.username, password: "", existingHash: a.passwordHash }))
@@ -417,6 +418,7 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
                   serverWriteTimeout: serverTimeouts.writeTimeout.trim() || undefined,
                   serverIdleTimeout: serverTimeouts.idleTimeout.trim() || undefined,
                   maxHeaderBytes: serverTimeouts.maxHeaderBytes.trim() ? parseInt(serverTimeouts.maxHeaderBytes, 10) : undefined,
+                  disableHttp3: serverTimeouts.disableHttp3 || undefined,
                   tlsAdvanced: tlsValuesToAdvanced(tlsValues),
                   mtls: tlsValuesToMtls(tlsValues),
                   matchers: matchers ?? undefined,

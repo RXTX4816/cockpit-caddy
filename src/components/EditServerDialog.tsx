@@ -48,6 +48,7 @@ export function EditServerDialog({ def, onSave, onClose }: Props) {
     writeTimeout: def.serverWriteTimeout ?? "",
     idleTimeout: def.serverIdleTimeout ?? "",
     maxHeaderBytes: def.maxHeaderBytes != null ? String(def.maxHeaderBytes) : "",
+    disableHttp3: def.disableHttp3 ?? false,
   });
   const [accessLog, setAccessLog] = useState<AccessLogValues>(accessLogConfigToValues(def.accessLog));
   const [errorHandlers, setErrorHandlers] = useState<ErrorHandlerConfig[]>(def.errorHandlers ?? []);
@@ -225,6 +226,7 @@ export function EditServerDialog({ def, onSave, onClose }: Props) {
                   maxHeaderBytes: serverTimeouts.maxHeaderBytes.trim()
                     ? parseInt(serverTimeouts.maxHeaderBytes, 10)
                     : undefined,
+                  disableHttp3: serverTimeouts.disableHttp3 || undefined,
                   accessLog: accessLogValuesToConfig(accessLog),
                   errorHandlers: errorHandlers.length ? errorHandlers : undefined,
                   routeLabels: def.routeLabels,
