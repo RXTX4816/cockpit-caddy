@@ -213,6 +213,9 @@
     "idle_timeout": "Idle timeout",
     "max_header_bytes": "Max header size (bytes)",
     "max_header_bytes_help": "Maximum request header size in bytes (default: 1 MB = 1048576)",
+    "http3_label": "HTTP/3 (QUIC)",
+    "http3_checkbox": "Disable HTTP/3",
+    "http3_help": "Caddy enables HTTP/1.1, HTTP/2, and HTTP/3 by default whenever TLS is configured. HTTP/3 runs over UDP on the same port as HTTPS — if UDP is blocked by your firewall, disabling it here falls back to HTTP/1.1 and HTTP/2 only.",
     "indicator": "Limits"
   },
   "rewrite": {

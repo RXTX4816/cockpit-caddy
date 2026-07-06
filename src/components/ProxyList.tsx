@@ -837,6 +837,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
             writeTimeout: duplicating.serverWriteTimeout ?? "",
             idleTimeout: duplicating.serverIdleTimeout ?? "",
             maxHeaderBytes: duplicating.maxHeaderBytes != null ? String(duplicating.maxHeaderBytes) : "",
+            disableHttp3: duplicating.disableHttp3 ?? false,
           }}
           initialErrorHandlers={duplicating.errorHandlers}
           initialTlsValues={tlsConfigToValues(duplicating.tlsAdvanced, duplicating.mtls)}
@@ -879,6 +880,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
             writeTimeout: duplicating.serverWriteTimeout ?? "",
             idleTimeout: duplicating.serverIdleTimeout ?? "",
             maxHeaderBytes: duplicating.maxHeaderBytes != null ? String(duplicating.maxHeaderBytes) : "",
+            disableHttp3: duplicating.disableHttp3 ?? false,
           }}
           initialAccessLog={duplicating.accessLog ? accessLogConfigToValues(duplicating.accessLog) : undefined}
           initialErrorHandlers={duplicating.errorHandlers}

@@ -56,7 +56,7 @@ export function AddServerDialog({ existingKeys, onAdd, onClose }: Props) {
   const [tls, setTls] = useState(true);
   const [tlsValues, setTlsValues] = useState<TlsValues>(tlsConfigToValues(undefined, undefined));
   const [serverTimeouts, setServerTimeouts] = useState<ServerTimeoutValues>({
-    readTimeout: "", readHeaderTimeout: "", writeTimeout: "", idleTimeout: "", maxHeaderBytes: "",
+    readTimeout: "", readHeaderTimeout: "", writeTimeout: "", idleTimeout: "", maxHeaderBytes: "", disableHttp3: false,
   });
   const [accessLog, setAccessLog] = useState<AccessLogValues>(accessLogConfigToValues(undefined));
   const [errorHandlers, setErrorHandlers] = useState<ErrorHandlerConfig[]>([]);
@@ -263,6 +263,7 @@ export function AddServerDialog({ existingKeys, onAdd, onClose }: Props) {
                   maxHeaderBytes: serverTimeouts.maxHeaderBytes.trim()
                     ? parseInt(serverTimeouts.maxHeaderBytes, 10)
                     : undefined,
+                  disableHttp3: serverTimeouts.disableHttp3 || undefined,
                   accessLog: accessLogValuesToConfig(accessLog),
                   errorHandlers: errorHandlers.length ? errorHandlers : undefined,
                 });

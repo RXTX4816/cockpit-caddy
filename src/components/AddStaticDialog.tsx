@@ -68,7 +68,7 @@ export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues, 
   const [responseHeaders, setResponseHeaders] = useState<HeaderOperation[]>(initialResponseHeaders ?? []);
   const [requestHeaders, setRequestHeaders] = useState<HeaderOperation[] | undefined>(initialRequestHeaders);
   const [accessLog, setAccessLog] = useState<AccessLogValues>(initialAccessLog ?? accessLogConfigToValues(undefined));
-  const [serverTimeouts, setServerTimeouts] = useState<ServerTimeoutValues>(initialServerTimeouts ?? { readTimeout: "", readHeaderTimeout: "", writeTimeout: "", idleTimeout: "", maxHeaderBytes: "" });
+  const [serverTimeouts, setServerTimeouts] = useState<ServerTimeoutValues>(initialServerTimeouts ?? { readTimeout: "", readHeaderTimeout: "", writeTimeout: "", idleTimeout: "", maxHeaderBytes: "", disableHttp3: false });
   const [errorHandlers, setErrorHandlers] = useState<ErrorHandlerConfig[]>(initialErrorHandlers ?? []);
   const [tlsValues, setTlsValues] = useState<TlsValues>(initialTlsValues ?? tlsConfigToValues(undefined, undefined));
   const [matchers, setMatchers] = useState<RouteMatch | undefined>(initialMatchers);
@@ -290,6 +290,7 @@ export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues, 
                     serverWriteTimeout: serverTimeouts.writeTimeout.trim() || undefined,
                     serverIdleTimeout: serverTimeouts.idleTimeout.trim() || undefined,
                     maxHeaderBytes: serverTimeouts.maxHeaderBytes.trim() ? parseInt(serverTimeouts.maxHeaderBytes, 10) : undefined,
+                    disableHttp3: serverTimeouts.disableHttp3 || undefined,
                     tlsAdvanced: tlsValuesToAdvanced(tlsValues),
                     mtls: tlsValuesToMtls(tlsValues),
                     matchers: matchers ?? undefined,

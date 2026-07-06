@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  Checkbox,
   ExpandableSection,
   FormGroup,
   FormHelperText,
@@ -16,6 +17,8 @@ export interface ServerTimeoutValues {
   writeTimeout: string;
   idleTimeout: string;
   maxHeaderBytes: string;
+  /** Explicitly restrict to HTTP/1.1 + HTTP/2, opting out of Caddy's default HTTP/3 (#51). */
+  disableHttp3: boolean;
 }
 
 const TIMEOUTS_DEFAULTS: ServerTimeoutValues = {
@@ -24,6 +27,7 @@ const TIMEOUTS_DEFAULTS: ServerTimeoutValues = {
   writeTimeout: "10s",
   idleTimeout: "5m",
   maxHeaderBytes: "1048576",
+  disableHttp3: false,
 };
 const TIMEOUTS_EMPTY: ServerTimeoutValues = {
   readTimeout: "",
@@ -31,6 +35,7 @@ const TIMEOUTS_EMPTY: ServerTimeoutValues = {
   writeTimeout: "",
   idleTimeout: "",
   maxHeaderBytes: "",
+  disableHttp3: false,
 };
 
 interface Props {
@@ -41,10 +46,13 @@ interface Props {
 
 export function ServerTimeoutsSection({ value, onChange, isDisabled }: Props) {
   const { t } = useTranslation();
-  const hasValues = !!(value.readTimeout || value.readHeaderTimeout || value.writeTimeout || value.idleTimeout || value.maxHeaderBytes);
+  const hasValues = !!(value.readTimeout || value.readHeaderTimeout || value.writeTimeout || value.idleTimeout || value.maxHeaderBytes || value.disableHttp3);
   const [expanded, setExpanded] = useState(hasValues);
 
   function set(key: keyof ServerTimeoutValues, v: string) {
+    onChange({ ...value, [key]: v });
+  }
+  function setBool(key: keyof ServerTimeoutValues, v: boolean) {
     onChange({ ...value, [key]: v });
   }
 
@@ -113,6 +121,20 @@ export function ServerTimeoutsSection({ value, onChange, isDisabled }: Props) {
           </FormHelperText>
         </FormGroup>
       </div>
+      <FormGroup label={t("server_timeouts.http3_label")} fieldId="st-disable-http3" style={{ marginTop: "0.6rem" }}>
+        <Checkbox
+          id="st-disable-http3"
+          label={t("server_timeouts.http3_checkbox")}
+          isChecked={value.disableHttp3}
+          onChange={(_e, checked) => setBool("disableHttp3", checked)}
+          isDisabled={isDisabled}
+        />
+        <FormHelperText>
+          <HelperText>
+            <HelperTextItem>{t("server_timeouts.http3_help")}</HelperTextItem>
+          </HelperText>
+        </FormHelperText>
+      </FormGroup>
     </ExpandableSection>
   );
 }

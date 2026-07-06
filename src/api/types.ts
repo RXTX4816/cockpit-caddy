@@ -86,6 +86,9 @@ export interface ServerDef {
   errorHandlers?: ErrorHandlerConfig[];
   /** Route display labels keyed by route id. */
   routeLabels?: Record<string, string>;
+  /** When true, explicitly restricts this server to HTTP/1.1 and HTTP/2 (writes
+   *  `protocols h1 h2`), opting out of Caddy's default HTTP/3 (QUIC) support (#51). */
+  disableHttp3?: boolean;
 }
 
 export interface TlsAdvancedConfig {
@@ -112,6 +115,9 @@ export interface CaddyServer {
   /** Hosts Caddy's Caddyfile adapter explicitly excludes from automatic HTTPS (#141) —
    *  e.g. a site whose address used an explicit `http://` scheme. */
   automatic_https?: { skip?: string[]; skip_certificates?: string[] };
+  /** HTTP protocol versions this server accepts. Omit for Caddy's default (h1, h2, h3);
+   *  `["h1", "h2"]` opts out of HTTP/3 (#51). */
+  protocols?: string[];
   [key: string]: unknown;
 }
 
@@ -267,6 +273,9 @@ export interface ProxyEntry {
   serverIdleTimeout?: string;
   /** Maximum size of incoming request headers in bytes */
   maxHeaderBytes?: number;
+  /** When true, explicitly restricts this server to HTTP/1.1 and HTTP/2 (writes
+   *  `protocols h1 h2`), opting out of Caddy's default HTTP/3 (QUIC) support (#51). */
+  disableHttp3?: boolean;
   /** Per-server access log configuration */
   accessLog?: AccessLogConfig;
   /** Per-server error handlers (server.errors.routes) */

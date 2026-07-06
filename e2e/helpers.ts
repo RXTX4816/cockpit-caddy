@@ -11,7 +11,7 @@ import type { Page } from '@playwright/test';
 
 export const PROXY_CONF_PATH = '/etc/caddy/conf.d/cockpit-caddy.conf';
 export const SERVERS_CONF_PATH = '/etc/caddy/conf.d/cockpit-caddy-servers.json';
-const CADDYFILE_PATH = '/etc/caddy/Caddyfile';
+export const CADDYFILE_PATH = '/etc/caddy/Caddyfile';
 const CONF_HEADER = '# Managed by cockpit-caddy - edits to this file may be overwritten by user plugin actions';
 
 // ---------------------------------------------------------------------------
@@ -83,6 +83,14 @@ async function reloadCaddy(page: Page): Promise<void> {
 export async function resetConfig(page: Page): Promise<void> {
   await writeFile(page, PROXY_CONF_PATH, `${CONF_HEADER}\n`);
   await writeFile(page, SERVERS_CONF_PATH, '[]');
+  // Standalone proxies' server-level timeouts/header limits/HTTP-3 opt-out (#51) live in
+  // a managed section of the *main* Caddyfile (`# cockpit-caddy:begin`/`:end`), not
+  // conf.d — strip any leftover section from a previous test so it doesn't leak into
+  // this one (e.g. a stale `servers :PORT { protocols h1 h2 }` for a port this test
+  // never touches).
+  const mainConf = await readFile(page, CADDYFILE_PATH);
+  const stripped = mainConf.replace(/[ \t]*# cockpit-caddy:begin[\s\S]*?# cockpit-caddy:end\n?/, '');
+  if (stripped !== mainConf) await writeFile(page, CADDYFILE_PATH, stripped);
   await reloadCaddy(page);
   await page.reload({ waitUntil: 'networkidle' });
 }

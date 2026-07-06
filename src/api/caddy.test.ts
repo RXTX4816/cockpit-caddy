@@ -540,6 +540,95 @@ describe("proxyToBlock", () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// HTTP/3 (QUIC) toggle (#51)
+// ---------------------------------------------------------------------------
+
+describe("HTTP/3 toggle (#51)", () => {
+  // Regression: `protocols` is only valid inside the top-level global `servers { }`
+  // options block — Caddy rejects it as an "unrecognized directive" at the per-site
+  // level (verified against a live instance). Standalone proxy timeouts/limits already
+  // use that same global-block mechanism (buildManagedServersBlocks/syncGlobalTimeouts);
+  // disableHttp3 must go through it too, never as a per-site proxyToBlock line.
+  it("proxyToBlock never emits a per-site protocols line, even when disableHttp3 is set", () => {
+    const result = proxyToBlock(proxy({ disableHttp3: true }));
+    expect(result).not.toContain("protocols");
+  });
+
+  it("buildServerEntry sets server.protocols to [h1, h2] when disableHttp3 is set", () => {
+    const server = buildServerEntry(proxy({ disableHttp3: true }));
+    expect(server.protocols).toEqual(["h1", "h2"]);
+  });
+
+  it("buildServerEntry omits protocols by default", () => {
+    const server = buildServerEntry(proxy());
+    expect(server.protocols).toBeUndefined();
+  });
+
+  it("parseProxies reads disableHttp3 back from a live server.protocols restriction", () => {
+    const config: CaddyConfig = {
+      apps: {
+        http: {
+          servers: {
+            srv0: {
+              listen: [":7700"],
+              protocols: ["h1", "h2"],
+              routes: [{
+                handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:7701" }] }] as import("./types").CaddyHandler[],
+                terminal: true,
+              }],
+            },
+          },
+        },
+      },
+    };
+    const [p] = parseProxies(config);
+    expect(p.disableHttp3).toBe(true);
+  });
+
+  it("parseProxies leaves disableHttp3 undefined when protocols includes h3 or is absent", () => {
+    const config: CaddyConfig = {
+      apps: {
+        http: {
+          servers: {
+            srv0: {
+              listen: [":7700"],
+              routes: [{
+                handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:7701" }] }] as import("./types").CaddyHandler[],
+                terminal: true,
+              }],
+            },
+          },
+        },
+      },
+    };
+    const [p] = parseProxies(config);
+    expect(p.disableHttp3).toBeUndefined();
+  });
+
+  // Named-server disableHttp3 round-trips via the embedded `# serverdef:` JSON comment
+  // (like its timeouts/maxHeaderBytes siblings) rather than a real Caddyfile directive —
+  // `protocols` isn't valid at the per-site level (see note above).
+  it("round-trips disableHttp3 through serverDefToBlock/parseServerDefsFromConf for named servers", () => {
+    const def: ServerDef = {
+      key: "srvA", name: "My Server", listenAddresses: [":8443"], tls: false, disableHttp3: true,
+    };
+    const { block } = serverDefToBlock(def, []);
+    expect(block).not.toContain("protocols");
+    expect(block).toContain('"disableHttp3":true');
+    const parsed = parseServerDefsFromConf(block);
+    expect(parsed[0]?.disableHttp3).toBe(true);
+  });
+
+  it("mergeNamedServer sets server.protocols on the live JSON server object", () => {
+    const def: ServerDef = {
+      key: "srvA", name: "My Server", listenAddresses: [":8443"], tls: false, disableHttp3: true,
+    };
+    const config = mergeNamedServer({}, def, []);
+    expect(config.apps?.http?.servers?.srvA?.protocols).toEqual(["h1", "h2"]);
+  });
+});
+
 // Regression: Caddy's own SubjectIsInternal classifier folds "localhost", *.local,
 // *.internal, *.home.arpa, and IPs into the shared catch-all policy regardless of
 // hostname — giving any of these their own per-site lifetime conflicts with the
