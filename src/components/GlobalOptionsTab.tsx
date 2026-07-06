@@ -4,6 +4,10 @@ import {
   Alert,
   Button,
   Checkbox,
+  DescriptionList,
+  DescriptionListDescription,
+  DescriptionListGroup,
+  DescriptionListTerm,
   Divider,
   Form,
   FormGroup,
@@ -16,8 +20,8 @@ import {
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
-import { readGlobalOptions, syncGlobalOptions, reloadService } from "../api";
-import type { GlobalOptions } from "../api";
+import { readGlobalOptions, syncGlobalOptions, reloadService, fetchStorageInfo, checkStoragePathWritable } from "../api";
+import type { GlobalOptions, StorageInfo } from "../api";
 import { CertLifetimeSelect } from "./CertLifetimeSelect";
 
 function isDuration(v: string): boolean {
@@ -64,6 +68,17 @@ export function GlobalOptionsTab() {
   const [onDemandBurst, setOnDemandBurst] = useState("");
   const [internalCertLifetime, setInternalCertLifetime] = useState("");
   const [renewalWindowRatio, setRenewalWindowRatio] = useState("");
+  const [storagePath, setStoragePath] = useState("");
+  const [storageInfo, setStorageInfo] = useState<StorageInfo | null>(null);
+  const [storageInfoError, setStorageInfoError] = useState<string | null>(null);
+
+  const loadStorageInfo = useCallback((configuredPath: string | undefined) => {
+    setStorageInfo(null);
+    setStorageInfoError(null);
+    fetchStorageInfo(configuredPath)
+      .then(setStorageInfo)
+      .catch(e => setStorageInfoError(e instanceof Error ? e.message : String(e)));
+  }, []);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -87,10 +102,12 @@ export function GlobalOptionsTab() {
         setOnDemandBurst(opts.onDemandBurst != null ? String(opts.onDemandBurst) : "");
         setInternalCertLifetime(opts.internalCertLifetime ?? "");
         setRenewalWindowRatio(opts.renewalWindowRatio != null ? String(opts.renewalWindowRatio) : "");
+        setStoragePath(opts.storagePath ?? "");
+        loadStorageInfo(opts.storagePath);
       })
       .catch(e => setLoadError(e instanceof Error ? e.message : String(e)))
       .finally(() => setLoading(false));
-  }, []);
+  }, [loadStorageInfo]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -480,6 +497,57 @@ export function GlobalOptionsTab() {
           )}
         </FormGroup>
 
+        <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
+
+        <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+          {t("global_opts.storage_title")}
+        </Title>
+
+        {storageInfoError && (
+          <Alert variant="danger" isInline title={t("global_opts.storage_info_error")} style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+            {storageInfoError}
+          </Alert>
+        )}
+        {!storageInfo && !storageInfoError && (
+          <div style={{ display: "flex", justifyContent: "center", padding: "1rem" }}>
+            <Spinner size="md" />
+          </div>
+        )}
+        {storageInfo && (
+          <DescriptionList isHorizontal isCompact style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+            <DescriptionListGroup>
+              <DescriptionListTerm>{t("global_opts.storage_path")}</DescriptionListTerm>
+              <DescriptionListDescription>
+                <code>{storageInfo.path}</code>
+                {storageInfo.isDefault && ` (${t("global_opts.storage_path_default_tag")})`}
+              </DescriptionListDescription>
+            </DescriptionListGroup>
+            <DescriptionListGroup>
+              <DescriptionListTerm>{t("global_opts.storage_disk_usage")}</DescriptionListTerm>
+              <DescriptionListDescription>{storageInfo.diskUsage ?? t("global_opts.storage_unknown")}</DescriptionListDescription>
+            </DescriptionListGroup>
+            <DescriptionListGroup>
+              <DescriptionListTerm>{t("global_opts.storage_cert_count")}</DescriptionListTerm>
+              <DescriptionListDescription>
+                {storageInfo.certificateCount ?? t("global_opts.storage_unknown")}
+              </DescriptionListDescription>
+            </DescriptionListGroup>
+          </DescriptionList>
+        )}
+
+        <FormGroup label={t("global_opts.storage_root")} fieldId="go-storage-root">
+          <TextInput
+            id="go-storage-root"
+            value={storagePath}
+            onChange={(_e, v) => setStoragePath(v)}
+            placeholder="/var/lib/caddy"
+            isDisabled={isConfirming}
+          />
+          <FormHelperText>
+            <HelperText><HelperTextItem>{t("global_opts.storage_root_help")}</HelperTextItem></HelperText>
+          </FormHelperText>
+        </FormGroup>
+
         {confirm.error != null && (
           <Alert variant="danger" isInline title={t("global_opts.save_error")}>
             {confirm.error || t("global_opts.save_error_unknown")}
@@ -514,7 +582,17 @@ export function GlobalOptionsTab() {
                     onDemandBurst: onDemandEnabled && onDemandBurst.trim() ? parseInt(onDemandBurst, 10) : undefined,
                     internalCertLifetime: internalCertLifetime.trim() || undefined,
                     renewalWindowRatio: renewalWindowRatio.trim() ? Number(renewalWindowRatio.trim()) : undefined,
+                    storagePath: storagePath.trim() || undefined,
                   };
+                  // An unwritable storage path isn't caught by Caddy's own config
+                  // validation (it only checks config shape, not whether the process can
+                  // actually provision its PKI app there) — checked separately so a bad
+                  // path is refused now instead of only failing the next time Caddy starts
+                  // or reloads, at which point it can no longer provision anything at all.
+                  if (opts.storagePath) {
+                    const writeErr = await checkStoragePathWritable(opts.storagePath);
+                    if (writeErr) throw new Error(t("global_opts.storage_not_writable", { error: writeErr }));
+                  }
                   await syncGlobalOptions(opts).catch(e => {
                     throw e instanceof Error ? e : new Error(String(e));
                   });
@@ -522,6 +600,7 @@ export function GlobalOptionsTab() {
                   setNeedsReload(true);
                   setSaveOk(true);
                   setTimeout(() => setSaveOk(false), 4000);
+                  loadStorageInfo(opts.storagePath);
                 })}
               >
                 {t("service.confirm_action")}

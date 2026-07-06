@@ -2172,6 +2172,36 @@ describe("buildGlobalOptionsPatch — internal TLS (hostless proxies)", () => {
   });
 });
 
+describe("storage backend config (#46)", () => {
+  it("parses storage file_system root", () => {
+    const body = ["\tstorage file_system {", "\t\troot /custom/caddy-data", "\t}"].join("\n");
+    const opts = parseGlobalOptions(makeOpts(body));
+    expect(opts.storagePath).toBe("/custom/caddy-data");
+  });
+
+  it("leaves storagePath undefined when absent", () => {
+    const opts = parseGlobalOptions(makeOpts("\temail admin@example.com"));
+    expect(opts.storagePath).toBeUndefined();
+  });
+
+  it("buildGlobalOptionsPatch emits storage file_system block", () => {
+    const patched = buildGlobalOptionsPatch("", { storagePath: "/custom/caddy-data" });
+    expect(patched).toContain("storage file_system {");
+    expect(patched).toContain("root /custom/caddy-data");
+  });
+
+  it("round-trips storagePath through parseGlobalOptions", () => {
+    const patched = buildGlobalOptionsPatch("", { storagePath: "/custom/caddy-data" });
+    const opts = parseGlobalOptions(patched);
+    expect(opts.storagePath).toBe("/custom/caddy-data");
+  });
+
+  it("omits the storage directive entirely when storagePath is unset (Caddy's own default applies)", () => {
+    const patched = buildGlobalOptionsPatch("", { email: "admin@example.com" });
+    expect(patched).not.toContain("storage");
+  });
+});
+
 describe("parseGlobalOptions — #96 unmanaged directives fallback", () => {
   it("reads email/acme_ca from a hand-written global block with no managed markers", () => {
     const content = "{\n\temail admin@example.com\n\tacme_ca https://acme-staging-v02.api.letsencrypt.org/directory\n}\n";

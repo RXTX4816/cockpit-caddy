@@ -3450,6 +3450,173 @@ export async function parseCertDetails(pem: string): Promise<CertDetails> {
 }
 
 // ---------------------------------------------------------------------------
+// Storage backend info (#46)
+// ---------------------------------------------------------------------------
+
+export interface StorageInfo {
+  /** The effective storage root — the configured override, or Caddy's own default. */
+  path: string;
+  /** Whether `path` came from an explicit config override vs. Caddy's own default. */
+  isDefault: boolean;
+  /** Human-readable disk usage (e.g. "24M"), or undefined if it couldn't be determined
+   *  (path doesn't exist yet, `du` unavailable, permission denied, etc). */
+  diskUsage?: string;
+  /** Number of `*.crt` files found under `<path>/certificates`, or undefined if that
+   *  directory doesn't exist (e.g. no certificates issued yet). */
+  certificateCount?: number;
+}
+
+/**
+ * Caddy's own default storage root when nothing overrides it: `/var/lib/caddy` when
+ * running under systemd with `StateDirectory=caddy` (the standard distro package
+ * layout), otherwise `$XDG_DATA_HOME/caddy` / `$HOME/.local/share/caddy`.
+ */
+async function detectDefaultStoragePath(): Promise<string> {
+  try {
+    await cockpit.spawn(["test", "-d", "/var/lib/caddy"], { superuser: "try", err: "ignore" });
+    return "/var/lib/caddy";
+  } catch {
+    // Not running under the systemd StateDirectory layout — fall through to the
+    // user-data-dir default.
+  }
+  const user = await cockpit.user();
+  return `${user.home}/.local/share/caddy`;
+}
+
+/**
+ * Resolves the effective storage path and best-effort disk usage/certificate count for
+ * the "Storage" panel (#46). Every probe is independently best-effort: an unreachable or
+ * not-yet-created path (e.g. Caddy has never issued a certificate) is a normal state,
+ * not an error, so failures there are swallowed rather than surfaced as load errors.
+ */
+export async function fetchStorageInfo(configuredPath: string | undefined): Promise<StorageInfo> {
+  const path = configuredPath || await detectDefaultStoragePath();
+  const info: StorageInfo = { path, isDefault: !configuredPath };
+
+  try {
+    const du = await cockpit.spawn(["du", "-sh", path], { superuser: "try", err: "ignore" });
+    info.diskUsage = du.trim().split(/\s+/)[0];
+  } catch {
+    // Path doesn't exist yet, or du/permissions unavailable — leave undefined.
+  }
+
+  try {
+    // Plain argv (no shell), so a user-supplied path can never be interpreted as a
+    // shell command — path is joined into a single argument, not string-interpolated.
+    const found = await cockpit.spawn(["find", `${path}/certificates`, "-name", "*.crt"], { superuser: "try", err: "ignore" });
+    const trimmed = found.trim();
+    info.certificateCount = trimmed ? trimmed.split("\n").length : 0;
+  } catch {
+    // No certificates directory yet — leave undefined.
+  }
+
+  return info;
+}
+
+/**
+ * Reads the caddy.service unit's systemd `ReadWritePaths=` — when the service is sandboxed
+ * with `ProtectSystem=strict`, the whole filesystem is read-only to the caddy process
+ * *except* these explicitly listed paths, regardless of ordinary Unix permissions. Returns
+ * `null` if this can't be determined (not systemd-managed, `systemctl` unavailable, etc.),
+ * meaning the sandbox check should be skipped rather than treated as "no restrictions."
+ */
+async function getCaddyReadWritePaths(): Promise<string[] | null> {
+  try {
+    const out = await cockpit.spawn(
+      ["systemctl", "show", "caddy", "--property=ReadWritePaths", "--value"],
+      { superuser: "try", err: "ignore" }
+    );
+    const trimmed = out.trim();
+    return trimmed ? trimmed.split(/\s+/) : [];
+  } catch {
+    return null;
+  }
+}
+
+function isPathWithin(path: string, prefix: string): boolean {
+  return path === prefix || path.startsWith(prefix.endsWith("/") ? prefix : `${prefix}/`);
+}
+
+/**
+ * Reads the caddy.service unit's `User=`/`Group=` — a path created fresh via `mkdir -p` as
+ * root is root-owned (mode 755), which the service's actual, unprivileged user can't write
+ * into even though the directory sits inside an allowed `ReadWritePaths=` prefix. Returns
+ * `null` when the unit runs as root (`User=` unset) or this can't be determined, meaning no
+ * chown/impersonated probe is needed.
+ */
+async function getCaddyServiceUser(): Promise<{ user: string; group: string } | null> {
+  try {
+    const out = await cockpit.spawn(
+      ["systemctl", "show", "caddy", "--property=User", "--property=Group", "--value"],
+      { superuser: "try", err: "ignore" }
+    );
+    const [user, group] = out.trim().split("\n");
+    if (!user) return null;
+    return { user, group: group || user };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Checks that Caddy could actually write to a custom storage root before ever saving it
+ * (#46). This matters because an unwritable path isn't caught by `caddy validate` —
+ * validate only checks config *shape*, not whether the process can provision its PKI app
+ * at that path — so a bad path would otherwise save successfully and only fail the next
+ * time Caddy actually starts or reloads, by which point it can no longer provision
+ * *anything* (breaking the whole service, not just one proxy) and the broken path is
+ * already the only copy on disk. Returns an error message, or null if the path is usable.
+ *
+ * Ordinary Unix write-permission probes aren't enough: this check runs via `cockpit.spawn`
+ * as root, which is not confined by the caddy.service's own systemd sandbox. A hardened
+ * unit (`ProtectSystem=strict` + `ReadWritePaths=...`) makes the rest of the filesystem
+ * read-only to the *actual* caddy process no matter what Unix permissions say — a probe
+ * that mkdir/touch's successfully as root can still describe a path Caddy itself can never
+ * write to. So the allowed `ReadWritePaths=` prefixes are checked first, before ever
+ * touching disk.
+ *
+ * A second, subtler gap: even a path inside an allowed prefix can still be unusable if it's
+ * freshly created by this root-run `mkdir -p`, since that leaves it root-owned — the
+ * service's actual `User=`/`Group=` (e.g. a dedicated `caddy` user) then has no write access
+ * to it despite the sandbox allowing the location. `chown` the directory to that user/group
+ * after creating it, and probe the write itself via `runuser` as that same user rather than
+ * as root, so the probe reflects exactly what the real caddy process can do.
+ */
+export async function checkStoragePathWritable(path: string): Promise<string | null> {
+  const readWritePaths = await getCaddyReadWritePaths();
+  if (readWritePaths && readWritePaths.length > 0 && !readWritePaths.some(p => isPathWithin(path, p))) {
+    return `The caddy service is sandboxed (systemd ReadWritePaths=) to only: ${readWritePaths.join(", ")}. ` +
+      `"${path}" falls outside all of them, so Caddy would never be able to write there regardless of ` +
+      `file permissions — choose a path under one of the allowed directories, or add this path to the ` +
+      `unit's ReadWritePaths= via "systemctl edit caddy".`;
+  }
+  try {
+    await cockpit.spawn(["mkdir", "-p", path], { superuser: "try", err: "message" });
+  } catch (e) {
+    return e instanceof Error ? e.message : String(e);
+  }
+  const serviceUser = await getCaddyServiceUser();
+  if (serviceUser) {
+    try {
+      await cockpit.spawn(["chown", "-R", `${serviceUser.user}:${serviceUser.group}`, path], { superuser: "try", err: "message" });
+    } catch (e) {
+      return e instanceof Error ? e.message : String(e);
+    }
+  }
+  const probeFile = `${path}/.cockpit-caddy-write-test`;
+  const touchArgv = serviceUser
+    ? ["runuser", "-u", serviceUser.user, "--", "touch", probeFile]
+    : ["touch", probeFile];
+  try {
+    await cockpit.spawn(touchArgv, { superuser: "try", err: "message" });
+  } catch (e) {
+    return e instanceof Error ? e.message : String(e);
+  }
+  await cockpit.spawn(["rm", "-f", probeFile], { superuser: "try", err: "ignore" }).catch(() => {});
+  return null;
+}
+
+// ---------------------------------------------------------------------------
 // Global Caddy options (http_port, https_port, debug, grace_period, shutdown_delay)
 // ---------------------------------------------------------------------------
 
@@ -3487,6 +3654,9 @@ export interface GlobalOptions {
   internalCertLifetime?: string;
   /** Global `renewal_window_ratio` (0-1): fraction of lifetime remaining before Caddy renews. */
   renewalWindowRatio?: number;
+  /** Custom root path for the `file_system` certificate/config storage backend (#46).
+   *  Unset means Caddy's own default ($XDG_DATA_HOME/caddy, /var/lib/caddy under systemd). */
+  storagePath?: string;
 }
 
 /**
@@ -3497,7 +3667,7 @@ export interface GlobalOptions {
 const KNOWN_GLOBAL_OPTION_KEYS = new Set([
   "http_port", "https_port", "debug", "grace_period", "shutdown_delay",
   "email", "acme_ca", "acme_ca_root", "acme_eab", "on_demand_tls",
-  "renewal_window_ratio",
+  "renewal_window_ratio", "storage",
 ]);
 
 /**
@@ -3563,6 +3733,15 @@ function parseOptionLines(lines: string[]): GlobalOptions {
       if (marked) opts.internalCertLifetime = marked;
     } else if (key === "renewal_window_ratio" && val) {
       opts.renewalWindowRatio = parseFloat(val);
+    } else if (key === "storage" && val?.startsWith("file_system") && line.endsWith("{")) {
+      i++;
+      while (i < lines.length) {
+        const inner = lines[i].trim();
+        if (inner === "}") break;
+        const im = inner.match(/^(\S+)\s+(.+)$/);
+        if (im && im[1] === "root") opts.storagePath = im[2];
+        i++;
+      }
     }
     i++;
   }
@@ -3649,6 +3828,11 @@ function buildGlobalOptionsLines(opts: GlobalOptions): string {
     lines.push(`\t${INTERNAL_LIFETIME_MARKER} ${opts.internalCertLifetime}`);
   }
   if (opts.renewalWindowRatio !== undefined) lines.push(`\trenewal_window_ratio ${opts.renewalWindowRatio}`);
+  if (opts.storagePath) {
+    lines.push("\tstorage file_system {");
+    lines.push(`\t\troot ${opts.storagePath}`);
+    lines.push("\t}");
+  }
   return lines.join("\n");
 }
 
@@ -3696,11 +3880,16 @@ async function applyInternalLifetimeToProxyConf(content: string, internalCertLif
 
   const serverDefs = parseServerDefsFromConf(content);
   const proxies = parseProxies(config, serverDefs);
+  // parseProxies never populates .label (that's a UI-layer merge over `# label:` comments,
+  // done in useProxies) — without re-attaching it here, rewriting a standalone proxy's
+  // block below would silently drop its label comment.
+  const labels = parseLabelsFromCaddyfile(content);
 
   let updated = content;
   for (const p of proxies) {
     if (!p.tls || p.namedServerKey) continue;
-    updated = surgicallyWriteProxy(updated, { ...p, tlsAdvanced: applyGlobalInternalLifetimeToProxy(p, internalCertLifetime) });
+    const label = proxyAddressKeys(p).map(k => labels[k]).find(Boolean);
+    updated = surgicallyWriteProxy(updated, { ...p, label, tlsAdvanced: applyGlobalInternalLifetimeToProxy(p, internalCertLifetime) });
   }
   for (const def of serverDefs) {
     if (!def.tls) continue;
