@@ -486,7 +486,17 @@
     "validation_cert_lifetime": "Enter a Caddy duration such as 90d or 2160h (\"y\" is not supported here)",
     "renewal_window_ratio": "Renewal window ratio",
     "renewal_window_ratio_help": "Fraction of the certificate's lifetime that must remain before Caddy attempts renewal (0-1, default ~0.33). Applies globally, including to hostname-scoped proxies that don't set their own.",
-    "validation_ratio": "Enter a number between 0 and 1 (exclusive)"
+    "validation_ratio": "Enter a number between 0 and 1 (exclusive)",
+    "storage_title": "Storage",
+    "storage_info_error": "Failed to read storage info",
+    "storage_path": "Effective path",
+    "storage_path_default_tag": "Caddy default",
+    "storage_disk_usage": "Disk usage",
+    "storage_cert_count": "Managed certificates",
+    "storage_unknown": "Unknown",
+    "storage_root": "Custom storage root (optional)",
+    "storage_root_help": "Overrides where Caddy stores certificates and other TLS state. Leave blank to use Caddy's own default ($XDG_DATA_HOME/caddy, or /var/lib/caddy under systemd). Changing this does not move existing certificates — Caddy will re-request them at the new path.",
+    "storage_not_writable": "This path isn't writable by Caddy, so it was not saved: {{error}}"
   },
   "ca": {
     "title": "Internal Certificate Authority",
