@@ -20,8 +20,8 @@ import {
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast, ExternalAddressInput } from "@rxtx4816/cockpit-plugin-base-react/components";
-import { readProxyConf, parseConfExternalAddresses, CaddyApiError, CaddyfileError, routeHosts, hostsConflict } from "../api";
-import type { ProxyEntry, RewriteConfig, HeaderOperation, RouteMatch, ServerDef } from "../api";
+import { readProxyConf, parseConfExternalAddresses, CaddyApiError, CaddyfileError, routeHosts, hostsConflict, fetchCaddyConfig, classifyAcmeHosts } from "../api";
+import type { ProxyEntry, RewriteConfig, HeaderOperation, RouteMatch, ServerDef, AcmeHostStatus } from "../api";
 import { RouteMatchersSection } from "./RouteMatchersSection";
 import { parseListenPort } from "./AddServerDialog";
 import { EXTERNAL_ADDRESS_BUILTIN_SCHEMES } from "./externalAddressSchemes";
@@ -129,6 +129,7 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
   const [namedRouteName, setNamedRouteName] = useState(initialNamedRouteName ?? "");
   const [selectedServerKey, setSelectedServerKey] = useState(initialServerKey ?? "");
   const [extraSchemes, setExtraSchemes] = useState<string[]>([]);
+  const [acmeHosts, setAcmeHosts] = useState<AcmeHostStatus[]>([]);
 
   const selectedServer = servers?.find(s => s.key === selectedServerKey);
   const serverCtx: ServerContext | undefined = selectedServer ? {
@@ -145,7 +146,13 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
         .filter((s): s is string => !!s);
       setExtraSchemes([...new Set(schemes)]);
     }).catch(() => {});
+    // #141: warn if this host is already getting a cert from ACME (explicit or Caddy's
+    // own automatic-HTTPS default) — enabling self-signed/internal TLS here wouldn't
+    // actually take effect over that.
+    void fetchCaddyConfig().then(config => setAcmeHosts(classifyAcmeHosts(config))).catch(() => {});
   }, []);
+
+  const acmeStatus = acmeHosts.find(h => h.host === form.externalHost.trim());
 
   function validate(): FormErrors {
     const errs: FormErrors = {};
@@ -368,6 +375,17 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
                 isDisabled={isLocked}
               />
               <SectionActions onDefaults={() => set("tls", true)} isDisabled={isLocked} />
+              {acmeStatus?.issuer === "acme" && (
+                <Alert
+                  variant="info"
+                  isInline
+                  isPlain
+                  title={t("add_proxy.acme_note_title")}
+                  style={{ marginTop: "0.4rem" }}
+                >
+                  {t("add_proxy.acme_note_body")}
+                </Alert>
+              )}
             </FormGroup>
           )}
 

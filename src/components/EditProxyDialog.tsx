@@ -20,10 +20,10 @@ import {
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast, ExternalAddressInput } from "@rxtx4816/cockpit-plugin-base-react/components";
-import { readProxyConf, parseConfExternalAddresses, CaddyApiError, CaddyfileError, routeHosts, hostsConflict } from "../api";
+import { readProxyConf, parseConfExternalAddresses, CaddyApiError, CaddyfileError, routeHosts, hostsConflict, fetchCaddyConfig, classifyAcmeHosts } from "../api";
 import { EXTERNAL_ADDRESS_BUILTIN_SCHEMES } from "./externalAddressSchemes";
 import { isValidPort } from "@rxtx4816/cockpit-plugin-base-react/lib/uri";
-import type { ProxyEntry, RewriteConfig, HeaderOperation, RouteMatch, ServerDef } from "../api";
+import type { ProxyEntry, RewriteConfig, HeaderOperation, RouteMatch, ServerDef, AcmeHostStatus } from "../api";
 import { RouteMatchersSection } from "./RouteMatchersSection";
 import { RewriteSection } from "./RewriteSection";
 import { RequestHeadersSection } from "./RequestHeadersSection";
@@ -95,6 +95,7 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
   const [namedRouteName, setNamedRouteName] = useState(proxy.namedRouteName ?? "");
   const [extraSchemes, setExtraSchemes] = useState<string[]>([]);
   const [extHostErr, setExtHostErr] = useState<string | null>(null);
+  const [acmeHosts, setAcmeHosts] = useState<AcmeHostStatus[]>([]);
 
   useEffect(() => {
     void readProxyConf().then(content => {
@@ -104,7 +105,13 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
         .filter((s): s is string => !!s);
       setExtraSchemes([...new Set(schemes)]);
     }).catch(() => {});
+    // #141: warn if this host is already getting a cert from ACME (explicit or Caddy's
+    // own automatic-HTTPS default) — enabling self-signed/internal TLS here wouldn't
+    // actually take effect over that.
+    void fetchCaddyConfig().then(config => setAcmeHosts(classifyAcmeHosts(config))).catch(() => {});
   }, []);
+
+  const acmeStatus = acmeHosts.find(h => h.host === externalHost.trim());
 
   function portError(): string | null {
     const n = parseInt(externalPort, 10);
@@ -285,6 +292,17 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
                 isDisabled={isConfirming}
               />
               <SectionActions onDefaults={() => setTls(true)} isDisabled={isConfirming} />
+              {acmeStatus?.issuer === "acme" && (
+                <Alert
+                  variant="info"
+                  isInline
+                  isPlain
+                  title={t("add_proxy.acme_note_title")}
+                  style={{ marginTop: "0.4rem" }}
+                >
+                  {t("add_proxy.acme_note_body")}
+                </Alert>
+              )}
             </FormGroup>
           )}
 
