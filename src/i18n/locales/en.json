@@ -496,7 +496,20 @@
     "storage_unknown": "Unknown",
     "storage_root": "Custom storage root (optional)",
     "storage_root_help": "Overrides where Caddy stores certificates and other TLS state. Leave blank to use Caddy's own default ($XDG_DATA_HOME/caddy, or /var/lib/caddy under systemd). Changing this does not move existing certificates — Caddy will re-request them at the new path.",
-    "storage_not_writable": "This path isn't writable by Caddy, so it was not saved: {{error}}"
+    "storage_not_writable": "This path isn't writable by Caddy, so it was not saved: {{error}}",
+    "metrics_title": "Prometheus metrics",
+    "metrics_enabled": "Expose a Prometheus metrics endpoint",
+    "metrics_enabled_help": "Turns on request-level metrics (requests, status codes, durations) across every proxy, plus a small dedicated site that serves them. Go runtime/process metrics are always included by Caddy — there's no toggle to remove those.",
+    "metrics_listen_address": "Listen address",
+    "metrics_listen_address_help": "Where the metrics endpoint is served, e.g. \":2019\" (all interfaces) or \"127.0.0.1:2019\" (localhost only). The admin API here runs on a Unix socket, so metrics can't share it — pick a free TCP port.",
+    "metrics_listen_address_required": "A listen address is required while metrics are enabled",
+    "metrics_listen_address_invalid": "Enter a listen address like \":2019\" or \"127.0.0.1:2019\"",
+    "metrics_path": "Path",
+    "metrics_path_help": "Defaults to /metrics if left blank.",
+    "metrics_path_invalid": "Path must start with /",
+    "metrics_plain_format": "Use plain Prometheus format instead of OpenMetrics",
+    "metrics_plain_format_help": "Maps to Caddy's disable_openmetrics option. Slightly less verbose output — doesn't remove any metrics.",
+    "metrics_link": "Open metrics endpoint"
   },
   "ca": {
     "title": "Internal Certificate Authority",
