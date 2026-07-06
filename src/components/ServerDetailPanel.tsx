@@ -23,7 +23,7 @@ import { useTranslation } from "react-i18next";
 import type { ProxyEntry, RouteMatch, ServerDef } from "../api";
 import { UpstreamStatusDot } from "./UpstreamStatusDot";
 import { parseListenPort } from "./AddServerDialog";
-import { buildRouteUrl } from "./routeUrl";
+import { buildRouteUrl, resolveRouteHost } from "./routeUrl";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -200,12 +200,18 @@ function ServerRouteRow({ proxy, serverTls, serverPort, onEdit, onDelete, onDupl
 // Server info card
 // ---------------------------------------------------------------------------
 
-function ServerInfoCard({ server, onEdit, onDelete }: {
+function ServerInfoCard({ server, routes, onEdit, onDelete }: {
   server: ServerDef;
+  routes: ProxyEntry[];
   onEdit: () => void;
   onDelete: () => void;
 }) {
   const { t } = useTranslation();
+  // Use the first route's public hostname (Host matcher or bind address) instead of
+  // window.location.hostname, so the link is correct when Cockpit itself is viewed
+  // via SSH port-forward (window.location.hostname would then be localhost).
+  const firstRouteWithHost = routes.find(r => r.matchers?.host?.[0] || r.externalHost);
+  const serverHost = firstRouteWithHost ? resolveRouteHost(firstRouteWithHost) : window.location.hostname;
   const adv = server.tlsAdvanced;
   const hasTimeouts = !!(
     server.serverReadTimeout || server.serverReadHeaderTimeout ||
@@ -246,7 +252,7 @@ function ServerInfoCard({ server, onEdit, onDelete }: {
                       <Label key={a} isCompact color="blue" variant="outline" style={{ fontFamily: "monospace" }}>{a}</Label>
                     );
                     const proto = server.tls ? "https" : "http";
-                    const url = `${proto}://${window.location.hostname}:${portMatch[1]}/`;
+                    const url = `${proto}://${serverHost}:${portMatch[1]}/`;
                     return (
                       <a key={a} href={url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
                         <Label isCompact color="blue" variant="outline" style={{ fontFamily: "monospace", cursor: "pointer" }}>{a} ↗</Label>
@@ -399,7 +405,7 @@ export function ServerDetailPanel({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--pf-v6-global--spacer--lg)" }}>
-      <ServerInfoCard server={server} onEdit={onEditServer} onDelete={onDeleteServer} />
+      <ServerInfoCard server={server} routes={routes} onEdit={onEditServer} onDelete={onDeleteServer} />
 
       {/* Routes section */}
       <div>
