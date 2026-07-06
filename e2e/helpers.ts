@@ -92,6 +92,8 @@ export interface ProxyOpts {
   target: string;
   label?: string;
   tls?: 'none' | 'self-signed' | 'internal' | 'acme';
+  /** External hostname/subdomain (bind address) — omit to bind all interfaces on the bare port. */
+  host?: string;
 }
 
 /**
@@ -100,9 +102,15 @@ export interface ProxyOpts {
  */
 export async function addProxy(page: Page, opts: ProxyOpts): Promise<void> {
   const tlsLine = opts.tls && opts.tls !== 'none' ? `  tls ${opts.tls}\n` : '';
+  // Mirrors buildExternalAddress in src/api/caddy.ts: a bare port when hostless,
+  // `http://host:port` when a host is set without TLS (so it stays HTTP, not
+  // eligible for automatic HTTPS), matching what the plugin itself would write.
+  const address = opts.host
+    ? (opts.tls && opts.tls !== 'none' ? `${opts.host}:${opts.port}` : `http://${opts.host}:${opts.port}`)
+    : `:${opts.port}`;
   const block = [
     opts.label ? `# label: ${opts.label}` : null,
-    `:${opts.port} {`,
+    `${address} {`,
     tlsLine || null,
     `  reverse_proxy ${opts.target}`,
     `}`,
