@@ -32,8 +32,9 @@ import {
   routeHosts,
   hostsConflict,
   standaloneProxyId,
+  classifyAcmeHosts,
 } from "./caddy";
-import type { CaddyConfig, ProxyEntry, RouteMatch, ServerDef } from "./types";
+import type { CaddyConfig, CaddyServer, ProxyEntry, RouteMatch, ServerDef } from "./types";
 
 // ---------------------------------------------------------------------------
 // Test fixtures
@@ -1197,6 +1198,96 @@ describe("resolveInternalIssuerSettings", () => {
       apps: { tls: { automation: { policies: [{ issuers: [{ module: "internal", lifetime: 12 * 3_600_000_000_000 }] }] } } },
     };
     expect(resolveInternalIssuerSettings(config, undefined).certLifetime).toBe("12h");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// classifyAcmeHosts (#141)
+// ---------------------------------------------------------------------------
+
+describe("classifyAcmeHosts", () => {
+  function server(host: string): CaddyServer {
+    return {
+      listen: [":443"],
+      routes: [{ handle: [{ handler: "reverse_proxy" }], match: [{ host: [host] }] }],
+    };
+  }
+
+  it("classifies a bare host with no automation policy as Caddy-default ACME", () => {
+    const config: CaddyConfig = {
+      apps: { http: { servers: { srv0: server("bare.example.com") } } },
+    };
+    expect(classifyAcmeHosts(config)).toEqual([
+      { host: "bare.example.com", issuer: "acme", source: "caddy-default" },
+    ]);
+  });
+
+  it("classifies a host with an internal-issuer policy as Internal CA / explicit policy", () => {
+    const config: CaddyConfig = {
+      apps: {
+        http: { servers: { srv0: server("internal.example.com") } },
+        tls: { automation: { policies: [{ subjects: ["internal.example.com"], issuers: [{ module: "internal" }] }] } },
+      },
+    };
+    expect(classifyAcmeHosts(config)).toEqual([
+      { host: "internal.example.com", issuer: "internal", source: "explicit-policy" },
+    ]);
+  });
+
+  it("classifies a host in automatic_https.skip as No TLS / explicitly disabled", () => {
+    const config: CaddyConfig = {
+      apps: {
+        http: {
+          servers: {
+            srv0: { listen: [":19502"], automatic_https: { skip: ["plain.example.com"] },
+              routes: [{ handle: [{ handler: "reverse_proxy" }], match: [{ host: ["plain.example.com"] }] }] },
+          },
+        },
+      },
+    };
+    expect(classifyAcmeHosts(config)).toEqual([
+      { host: "plain.example.com", issuer: "none", source: "explicit-skip" },
+    ]);
+  });
+
+  // Regression: once any host has a customized automation policy, Caddy's adapter must
+  // explicitly enumerate every other host too so it isn't accidentally caught by that
+  // policy's scope — a subjects-only entry with no issuers array is just that
+  // bookkeeping and must still classify as Caddy-default ACME, not "explicit policy".
+  it("treats a subjects-only policy entry (no issuers) as still Caddy-default", () => {
+    const config: CaddyConfig = {
+      apps: {
+        http: {
+          servers: {
+            srv0: server("default-acme.example.com"),
+            srv1: server("internal.example.com"),
+          },
+        },
+        tls: {
+          automation: {
+            policies: [
+              { subjects: ["default-acme.example.com"] },
+              { subjects: ["internal.example.com"], issuers: [{ module: "internal" }] },
+            ],
+          },
+        },
+      },
+    };
+    expect(classifyAcmeHosts(config)).toEqual([
+      { host: "default-acme.example.com", issuer: "acme", source: "caddy-default" },
+      { host: "internal.example.com", issuer: "internal", source: "explicit-policy" },
+    ]);
+  });
+
+  it("ignores internal-looking hosts (localhost, IPs, .local) entirely", () => {
+    const config: CaddyConfig = {
+      apps: { http: { servers: { srv0: server("localhost"), srv1: server("192.168.1.1") } } },
+    };
+    expect(classifyAcmeHosts(config)).toEqual([]);
+  });
+
+  it("returns an empty list when there are no servers", () => {
+    expect(classifyAcmeHosts({})).toEqual([]);
   });
 });
 

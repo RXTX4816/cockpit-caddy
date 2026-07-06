@@ -109,6 +109,9 @@ export interface CaddyServer {
   listen: string[];
   routes: CaddyRoute[];
   tls_connection_policies?: CaddyTLSConnectionPolicy[];
+  /** Hosts Caddy's Caddyfile adapter explicitly excludes from automatic HTTPS (#141) —
+   *  e.g. a site whose address used an explicit `http://` scheme. */
+  automatic_https?: { skip?: string[]; skip_certificates?: string[] };
   [key: string]: unknown;
 }
 

@@ -2029,6 +2029,75 @@ export function tlsSubjectHost(host: string | undefined): string | undefined {
   return host && !isCaddyInternalSubject(host) ? host : undefined;
 }
 
+/** Per-hostname ACME/TLS issuer status (#141), derived from the live Caddy config. */
+export interface AcmeHostStatus {
+  host: string;
+  /** Which issuer actually certifies this host, or "none" if TLS is explicitly disabled. */
+  issuer: "internal" | "acme" | "none";
+  /** Whether this came from an explicit apps.tls.automation.policies entry, or is
+   *  inferred because Caddy's automatic HTTPS is on by default for public hostnames
+   *  and nothing says otherwise. */
+  source: "explicit-policy" | "caddy-default" | "explicit-skip";
+}
+
+/**
+ * Classifies every public-looking hostname in the live config by how it actually gets
+ * its TLS certificate (#141) — "ACME not extracted in webui": Caddy's automatic HTTPS
+ * needs zero configuration, so a route with no explicit `tls`/email/CA setting is not
+ * "not using TLS" — it's silently getting a Let's Encrypt cert from Caddy's built-in
+ * defaults, and today there's no way to see that in this app at all.
+ *
+ * Three cases, in priority order:
+ * 1. The host is in some server's `automatic_https.skip` list — Caddy's Caddyfile
+ *    adapter emits this when a site's address used an explicit `http://` scheme
+ *    (see buildExternalAddress) — TLS is genuinely, deliberately off.
+ * 2. The host is named in an `apps.tls.automation.policies` entry's `subjects` — an
+ *    explicit choice was made (internal issuer, or a custom ACME CA/email/EAB).
+ * 3. Neither — the host is getting Caddy's default automatic HTTPS (a Let's Encrypt
+ *    production cert with account defaults) with nothing in config to show for it.
+ */
+export function classifyAcmeHosts(config: CaddyConfig): AcmeHostStatus[] {
+  const servers = config.apps?.http?.servers ?? {};
+  const automationPolicies = config.apps?.tls?.automation?.policies;
+  const hosts = new Map<string, AcmeHostStatus>();
+
+  for (const server of Object.values(servers)) {
+    const skip = new Set(server.automatic_https?.skip ?? []);
+    const serverHosts = new Set<string>();
+    for (const route of server.routes ?? []) {
+      const match = route.match?.[0] as { host?: string[] } | undefined;
+      match?.host?.forEach(h => serverHosts.add(h));
+    }
+    const listenAddr = server.listen?.[0] ?? "";
+    const colonIdx = listenAddr.lastIndexOf(":");
+    const rawHost = colonIdx > 0 ? listenAddr.slice(0, colonIdx) : "";
+    if (rawHost) serverHosts.add(rawHost);
+
+    for (const rawSubject of serverHosts) {
+      const host = tlsSubjectHost(rawSubject);
+      if (!host || hosts.has(host)) continue;
+
+      if (skip.has(host)) {
+        hosts.set(host, { host, issuer: "none", source: "explicit-skip" });
+        continue;
+      }
+      // Once any host in the Caddyfile has a customized policy, Caddy's adapter must
+      // explicitly enumerate every other host too, so it isn't accidentally caught by
+      // that policy's scope — but a subjects-only entry with no issuers array is just
+      // that bookkeeping, not an actual customization, and still means "default ACME".
+      const policy = automationPolicies?.find(p => subjectsInclude(p.subjects, host));
+      const module = policy?.issuers?.length ? policy.issuers[0].module : undefined;
+      if (module) {
+        hosts.set(host, { host, issuer: module === "internal" ? "internal" : "acme", source: "explicit-policy" });
+      } else {
+        hosts.set(host, { host, issuer: "acme", source: "caddy-default" });
+      }
+    }
+  }
+
+  return [...hosts.values()].sort((a, b) => a.host.localeCompare(b.host));
+}
+
 /**
  * The hostname(s) a proxy actually answers on: its Host matcher (#48) if one was set
  * explicitly, otherwise its externalHost (the bind address typed into Add/Edit Proxy).

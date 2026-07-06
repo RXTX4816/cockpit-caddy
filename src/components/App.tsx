@@ -30,6 +30,7 @@ import { BackupDialog } from "./BackupDialog";
 import { RestoreDialog } from "./RestoreDialog";
 import { AdminAddressDialog } from "./AdminAddressDialog";
 import { InternalCaModal } from "./InternalCaModal";
+import { AcmeStatusModal } from "./AcmeStatusModal";
 import { ConfigCheckModal } from "./ConfigCheckModal";
 import { GlobalOptionsTab } from "./GlobalOptionsTab";
 import { useCaddyStatus } from "../hooks/useCaddyStatus";
@@ -41,8 +42,8 @@ function AppInner() {
   const { status, adminApiOk, loading, refresh } = useCaddyStatus();
   const adminAllowed = useAdminMode();
   const caddyVersion = useCaddyVersion();
-  type AppModals = { backup: undefined; restore: undefined; adminAddress: undefined; ca: undefined; configCheck: undefined };
-  const modals = useDialogState<AppModals>(["backup", "restore", "adminAddress", "ca", "configCheck"]);
+  type AppModals = { backup: undefined; restore: undefined; adminAddress: undefined; ca: undefined; acme: undefined; configCheck: undefined };
+  const modals = useDialogState<AppModals>(["backup", "restore", "adminAddress", "ca", "acme", "configCheck"]);
 
   const [activeTab, setActiveTab] = useState(0);
   const [adminBypass, setAdminBypass] = useState(false);
@@ -89,6 +90,7 @@ function AppInner() {
                     <Button variant="secondary" size="sm" onClick={() => modals.open("backup")}>{t("backup.button")}</Button>
                     <Button variant="secondary" size="sm" onClick={() => modals.open("restore")}>{t("restore.button")}</Button>
                     <Button variant="secondary" size="sm" onClick={() => modals.open("ca")}>{t("ca.button")}</Button>
+                    <Button variant="secondary" size="sm" onClick={() => modals.open("acme")}>{t("acme.button")}</Button>
                     <Button variant="plain" size="sm" aria-label={t("admin_address.title")} onClick={() => modals.open("adminAddress")}><CogIcon /></Button>
                   </div>
                 }
@@ -178,6 +180,7 @@ function AppInner() {
       {modals.isOpen("restore") && <RestoreDialog onClose={() => modals.close("restore")} />}
       {modals.isOpen("adminAddress") && <AdminAddressDialog onClose={() => modals.close("adminAddress")} />}
       {modals.isOpen("ca") && <InternalCaModal onClose={() => modals.close("ca")} />}
+      {modals.isOpen("acme") && <AcmeStatusModal onClose={() => modals.close("acme")} />}
       {modals.isOpen("configCheck") && <ConfigCheckModal onClose={() => modals.close("configCheck")} />}
     </PluginPage>
   );
