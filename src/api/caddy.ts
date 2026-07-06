@@ -1103,6 +1103,30 @@ function buildRouteHandlerLines(p: ProxyEntry, indent: string): string[] {
     }
     lines.push(`${indent}root * ${p.fileServer.root}`);
     lines.push(p.fileServer.browse ? `${indent}file_server browse` : `${indent}file_server`);
+  } else if (p.phpFastcgi) {
+    if (p.compress) lines.push(`${indent}encode gzip zstd`);
+    if (p.basicAuth?.length) {
+      lines.push(`${indent}basic_auth {`);
+      for (const a of p.basicAuth) lines.push(`${indent}\t${a.username} ${a.passwordHash}`);
+      lines.push(`${indent}}`);
+    }
+    for (const h of p.responseHeaders ?? []) {
+      if (h.op === "delete") lines.push(`${indent}header -${h.name}`);
+      else if (h.op === "add") lines.push(`${indent}header +${h.name} ${h.value ?? ""}`);
+      else lines.push(`${indent}header ${h.name} "${h.value ?? ""}"`);
+    }
+    lines.push(`${indent}root * ${p.phpFastcgi.root}`);
+    const { upstream, index, splitPath, env } = p.phpFastcgi;
+    const envEntries = env ? Object.entries(env) : [];
+    if (index || splitPath?.length || envEntries.length) {
+      lines.push(`${indent}php_fastcgi ${upstream} {`);
+      if (index) lines.push(`${indent}\tindex ${index}`);
+      if (splitPath?.length) lines.push(`${indent}\tsplit ${splitPath.join(" ")}`);
+      for (const [k, v] of envEntries) lines.push(`${indent}\tenv ${k} ${v}`);
+      lines.push(`${indent}}`);
+    } else {
+      lines.push(`${indent}php_fastcgi ${upstream}`);
+    }
   } else {
     if (p.compress) lines.push(`${indent}encode gzip zstd`);
     if (p.basicAuth?.length) {
@@ -1535,6 +1559,44 @@ export async function writeProxyConf(proxies: ProxyEntry[]): Promise<void> {
 
 type AnyHandler = { handler: string; routes?: Array<{ handle?: AnyHandler[]; [key: string]: unknown }>; [key: string]: unknown };
 
+/**
+ * Detects Caddy's `php_fastcgi` Caddyfile-macro expansion from a group of routes (#35).
+ * The macro isn't a single JSON handler — it expands into up to four separate routes
+ * (a `vars` handler setting root, a trailing-slash redirect, a `rewrite`, and finally a
+ * `reverse_proxy` with a `fastcgi` transport), verified empirically via `caddy adapt`
+ * against a live instance. `routes` should be either a server's own top-level routes (the
+ * hostless `:PORT { php_fastcgi ... }` case, where Caddy emits these 4 routes directly on
+ * the server) or a `subroute` handler's inner routes (the host-matched case, where Caddy
+ * wraps the same 4 routes in one subroute) — either shape preserves each route's own
+ * `match`, which the generic subroute-flattening elsewhere in this file (which only
+ * collects `.handle` arrays) would otherwise discard, losing the custom index filename.
+ */
+function detectPhpFastcgiFromRoutes(
+  routes: Array<{ match?: Array<Record<string, unknown>>; handle?: AnyHandler[] }>,
+): import("./types").PhpFastcgiConfig | undefined {
+  const allHandles = routes.flatMap(r => (r.handle ?? []) as AnyHandler[]);
+  const rp = allHandles.find(h => h.handler === "reverse_proxy" && (h.transport as { protocol?: string } | undefined)?.protocol === "fastcgi");
+  if (!rp) return undefined;
+
+  const varsH = allHandles.find(h => h.handler === "vars" && typeof h.root === "string");
+  const rewriteRoute = routes.find(r => (r.handle ?? []).some(h => h.handler === "rewrite"));
+  const tryFiles = (rewriteRoute?.match?.[0]?.file as { try_files?: string[] } | undefined)?.try_files;
+  const index = tryFiles?.length ? tryFiles[tryFiles.length - 1] : undefined;
+
+  const transport = rp.transport as { split_path?: string[]; env?: Record<string, string> } | undefined;
+  const splitPath = transport?.split_path;
+  const isDefaultSplit = Array.isArray(splitPath) && splitPath.length === 1 && splitPath[0] === ".php";
+  const env = transport?.env;
+
+  return {
+    upstream: (rp.upstreams as Array<{ dial?: string }> | undefined)?.[0]?.dial ?? "",
+    root: (varsH?.root as string | undefined) ?? "/",
+    index: index && index !== "index.php" ? index : undefined,
+    splitPath: Array.isArray(splitPath) && !isDefaultSplit ? splitPath : undefined,
+    env: env && Object.keys(env).length ? env : undefined,
+  };
+}
+
 function findReverseProxy(handles: AnyHandler[]): CaddyReverseProxyHandler | undefined {
   for (const h of handles) {
     if (h.handler === "reverse_proxy") {
@@ -1599,6 +1661,35 @@ function parseRouteToEntry(
   const effectiveHandles: AnyHandler[] = subrouteH?.routes?.length
     ? subrouteH.routes.flatMap(r => (r.handle ?? []) as AnyHandler[])
     : handles;
+
+  // Detect php_fastcgi (#35) — must run before the redirect/static_response checks below,
+  // since php_fastcgi's own trailing-slash-redirect route is itself a static_response with
+  // a Location header and would otherwise be misdetected as a plain redirect proxy. Uses
+  // the subroute's own inner routes (not effectiveHandles) so each route's `match` survives
+  // long enough to recover a custom index filename — see detectPhpFastcgiFromRoutes.
+  const phpFastcgi = detectPhpFastcgiFromRoutes(subrouteH?.routes?.length ? subrouteH.routes : [route]);
+  if (phpFastcgi) {
+    const phpTls = serverHasTls(server, automationPolicies, externalHost);
+    const phpTlsPolicy = Array.isArray(server.tls_connection_policies) ? server.tls_connection_policies[0] : undefined;
+    return {
+      id: routeId,
+      externalPort,
+      externalHost,
+      targetHost: "localhost",
+      targetPort: 0,
+      targetScheme: "http",
+      tls: phpTls,
+      tlsSkipVerify: false,
+      serverKey: key,
+      namedServerKey,
+      phpFastcgi,
+      matchers,
+      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, accessLog,
+      errorHandlers: parseErrorHandlers(server),
+      tlsAdvanced: phpTlsPolicy ? parseTlsAdvanced(phpTlsPolicy, automationPolicies, tlsSubjectHost(externalHost)) : undefined,
+      mtls: phpTlsPolicy ? parseMtls(phpTlsPolicy) : undefined,
+    };
+  }
 
   // Detect redirect (static_response with Location header)
   const staticResp = effectiveHandles.find(h => h.handler === "static_response") as
@@ -1838,6 +1929,37 @@ export function parseProxies(config: CaddyConfig, serverDefs?: import("./types")
       : undefined;
     const namedDef = defByKey ?? defByAddr;
     const isNamedServer = !key.includes(":") && namedDef != null;
+
+    // Detect a hostless `:PORT { php_fastcgi ... }` standalone site (#35) before the
+    // generic branching below — Caddy expands that Caddyfile macro into up to 4 separate
+    // top-level routes directly on the server (no host matcher to wrap them in a single
+    // subroute, unlike the host-matched case which parseRouteToEntry already handles),
+    // so contentRoutes.length is never <= 1 for it and it would otherwise be misparsed as
+    // several unrelated, broken partial routes by the "multiple content routes" branch.
+    // A hostless proxy is always the sole occupant of its port (two can't coexist per
+    // #139), so grouping all of contentRoutes together here is safe and unambiguous.
+    const phpFastcgiGroup = !namedDef && contentRoutes.length > 1 ? detectPhpFastcgiFromRoutes(contentRoutes) : undefined;
+    if (phpFastcgiGroup) {
+      // #51 — Caddy enables h1/h2/h3 by default; an explicit protocols list omitting h3 is
+      // how a user opted out of HTTP/3.
+      const phpDisableHttp3 = Array.isArray(server.protocols) && !server.protocols.includes("h3") || undefined;
+      proxies.push({
+        id: String(externalPort),
+        externalPort,
+        externalHost,
+        targetHost: "localhost",
+        targetPort: 0,
+        targetScheme: "http",
+        tls: serverHasTls(server, automationPolicies, externalHost),
+        tlsSkipVerify: false,
+        serverKey: key,
+        phpFastcgi: phpFastcgiGroup,
+        serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
+        disableHttp3: phpDisableHttp3, accessLog,
+        errorHandlers: parseErrorHandlers(server),
+      });
+      continue;
+    }
 
     if (namedDef) {
       // Named server (#49) — use def.key for IDs so they stay consistent after Caddy key changes

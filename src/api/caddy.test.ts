@@ -1974,6 +1974,177 @@ describe("parseProxies — fileServer compress/auth round-trip", () => {
   });
 });
 
+describe("proxyToBlock — phpFastcgi (#35)", () => {
+  it("generates a bare php_fastcgi directive with no options", () => {
+    const result = proxyToBlock(proxy({
+      phpFastcgi: { upstream: "unix//run/php-fpm.sock", root: "/var/www/html" },
+      tls: false, targetHost: "localhost", targetPort: 0,
+    }));
+    expect(result).toContain("root * /var/www/html");
+    expect(result).toContain("php_fastcgi unix//run/php-fpm.sock");
+    expect(result).not.toContain("php_fastcgi unix//run/php-fpm.sock {");
+    expect(result).not.toContain("reverse_proxy");
+    expect(result).not.toContain("file_server");
+  });
+
+  it("emits index/split/env inside a block when any option is set", () => {
+    const result = proxyToBlock(proxy({
+      phpFastcgi: {
+        upstream: "127.0.0.1:9000",
+        root: "/srv/app/public",
+        index: "custom.php",
+        splitPath: [".php"],
+        env: { APP_ENV: "production" },
+      },
+      tls: false, targetHost: "localhost", targetPort: 0,
+    }));
+    expect(result).toContain("php_fastcgi 127.0.0.1:9000 {");
+    expect(result).toContain("index custom.php");
+    expect(result).toContain("split .php");
+    expect(result).toContain("env APP_ENV production");
+  });
+
+  it("includes tls internal when tls is true", () => {
+    const result = proxyToBlock(proxy({
+      phpFastcgi: { upstream: "unix//run/php-fpm.sock", root: "/var/www" },
+      tls: true, targetHost: "localhost", targetPort: 0,
+    }));
+    expect(result).toContain("tls internal");
+  });
+
+  it("includes label comment", () => {
+    const result = proxyToBlock(proxy({
+      phpFastcgi: { upstream: "unix//run/php-fpm.sock", root: "/var/www" },
+      tls: false, targetHost: "localhost", targetPort: 0, label: "my-app",
+    }));
+    expect(result.split("\n")[0]).toBe("# label: my-app");
+  });
+});
+
+// Realistic JSON shapes below are transcribed from `caddy adapt --pretty` run against a
+// live Caddy v2.11 instance for the equivalent Caddyfile — php_fastcgi is a macro with no
+// single-handler JSON form, so parseProxies must recognize this exact multi-route shape.
+describe("parseProxies — phpFastcgi round-trip, hostless standalone site (#35)", () => {
+  function phpFastcgiRoutes(opts: { dial?: string; root?: string; index?: string; splitPath?: string[]; env?: Record<string, string> } = {}) {
+    const index = opts.index ?? "index.php";
+    const splitPath = opts.splitPath ?? [".php"];
+    return [
+      { handle: [{ handler: "vars", root: opts.root ?? "/var/www/html" }] },
+      {
+        match: [{ file: { try_files: [`{http.request.uri.path}/${index}`] }, not: [{ path: ["*/"] }] }],
+        handle: [{ handler: "static_response", headers: { Location: ["{http.request.orig_uri.path}/{http.request.orig_uri.prefixed_query}"] }, status_code: 308 }],
+      },
+      {
+        match: [{ file: { try_files: [`{http.request.uri.path}`, `{http.request.uri.path}/${index}`, index], try_policy: "first_exist_fallback", split_path: splitPath } }],
+        handle: [{ handler: "rewrite", uri: "{http.matchers.file.relative}" }],
+      },
+      {
+        match: [{ path: ["*.php"] }],
+        handle: [{
+          handler: "reverse_proxy",
+          transport: { protocol: "fastcgi", split_path: splitPath, ...(opts.env ? { env: opts.env } : {}) },
+          upstreams: [{ dial: opts.dial ?? "unix//run/php-fpm.sock" }],
+        }],
+      },
+    ] as unknown as import("./types").CaddyRoute[];
+  }
+
+  function makePhpConfig(routes: import("./types").CaddyRoute[]): CaddyConfig {
+    return { apps: { http: { servers: { srv0: { listen: [":9199"], routes } } } } };
+  }
+
+  it("collapses the 4-route expansion into a single phpFastcgi proxy", () => {
+    const config = makePhpConfig(phpFastcgiRoutes());
+    const proxies = parseProxies(config);
+    expect(proxies).toHaveLength(1);
+    expect(proxies[0].phpFastcgi).toEqual({ upstream: "unix//run/php-fpm.sock", root: "/var/www/html" });
+    expect(proxies[0].externalPort).toBe(9199);
+  });
+
+  it("recovers a non-default upstream, root, and custom index", () => {
+    const config = makePhpConfig(phpFastcgiRoutes({ dial: "127.0.0.1:9000", root: "/srv/app/public", index: "custom.php" }));
+    const [p] = parseProxies(config);
+    expect(p.phpFastcgi?.upstream).toBe("127.0.0.1:9000");
+    expect(p.phpFastcgi?.root).toBe("/srv/app/public");
+    expect(p.phpFastcgi?.index).toBe("custom.php");
+  });
+
+  it("omits index when it's Caddy's own default (index.php)", () => {
+    const config = makePhpConfig(phpFastcgiRoutes({ index: "index.php" }));
+    const [p] = parseProxies(config);
+    expect(p.phpFastcgi?.index).toBeUndefined();
+  });
+
+  it("recovers a non-default split path", () => {
+    const config = makePhpConfig(phpFastcgiRoutes({ splitPath: [".php", ".phtml"] }));
+    const [p] = parseProxies(config);
+    expect(p.phpFastcgi?.splitPath).toEqual([".php", ".phtml"]);
+  });
+
+  it("omits splitPath when it's Caddy's own default ([.php])", () => {
+    const config = makePhpConfig(phpFastcgiRoutes({ splitPath: [".php"] }));
+    const [p] = parseProxies(config);
+    expect(p.phpFastcgi?.splitPath).toBeUndefined();
+  });
+
+  it("recovers environment variables", () => {
+    const config = makePhpConfig(phpFastcgiRoutes({ env: { APP_ENV: "production" } }));
+    const [p] = parseProxies(config);
+    expect(p.phpFastcgi?.env).toEqual({ APP_ENV: "production" });
+  });
+});
+
+describe("parseProxies — phpFastcgi round-trip, host-matched subroute-wrapped site (#35)", () => {
+  it("collapses a php_fastcgi site sharing a port via host matcher alongside another site", () => {
+    const config: CaddyConfig = {
+      apps: {
+        http: {
+          servers: {
+            srv0: {
+              listen: [":443"],
+              routes: [
+                {
+                  match: [{ host: ["other.example.test"] }],
+                  handle: [{ handler: "subroute", routes: [{ handle: [{ handler: "static_response", body: "hi" }] }] }],
+                  terminal: true,
+                } as unknown as import("./types").CaddyRoute,
+                {
+                  match: [{ host: ["php.example.test"] }],
+                  handle: [{
+                    handler: "subroute",
+                    routes: [
+                      { handle: [{ handler: "vars", root: "/var/www/html" }] },
+                      {
+                        match: [{ file: { try_files: ["{http.request.uri.path}/index.php"] }, not: [{ path: ["*/"] }] }],
+                        handle: [{ handler: "static_response", headers: { Location: ["x"] }, status_code: 308 }],
+                      },
+                      {
+                        match: [{ file: { try_files: ["{http.request.uri.path}", "{http.request.uri.path}/index.php", "index.php"], try_policy: "first_exist_fallback", split_path: [".php"] } }],
+                        handle: [{ handler: "rewrite", uri: "{http.matchers.file.relative}" }],
+                      },
+                      {
+                        match: [{ path: ["*.php"] }],
+                        handle: [{ handler: "reverse_proxy", transport: { protocol: "fastcgi", split_path: [".php"] }, upstreams: [{ dial: "unix//run/php-fpm.sock" }] }],
+                      },
+                    ],
+                  }],
+                  terminal: true,
+                } as unknown as import("./types").CaddyRoute,
+              ],
+            },
+          },
+        },
+      },
+    };
+    const proxies = parseProxies(config);
+    expect(proxies).toHaveLength(2);
+    const php = proxies.find(p => p.externalHost === "php.example.test");
+    expect(php?.phpFastcgi).toEqual({ upstream: "unix//run/php-fpm.sock", root: "/var/www/html" });
+    const other = proxies.find(p => p.externalHost === "other.example.test");
+    expect(other?.phpFastcgi).toBeUndefined();
+  });
+});
+
 describe("proxyToBlock — multiple upstreams", () => {
   it("emits all upstreams on the reverse_proxy line", () => {
     const result = proxyToBlock(proxy({
