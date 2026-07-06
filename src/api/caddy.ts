@@ -914,13 +914,27 @@ function buildExternalAddress(p: Pick<ProxyEntry, "externalPort" | "externalSche
  * plus a port-number fallback key, see setBlockResult/addressPortKey).
  * A bare-hostname Caddyfile block (e.g. from a migrated config) has no explicit
  * port, so the plain host is tried in addition to the canonical `host:port` form.
+ *
+ * When the host *is* already known (recovered from the live JSON's Host matcher,
+ * e.g. multiple routes sharing a port — #139) but the scheme isn't, every scheme
+ * shape is tried against that host before ever falling back to the bare port key:
+ * the saved Caddyfile address may carry an explicit scheme prefix (`https://host:port`)
+ * that buildExternalAddress can't reproduce without already knowing the scheme, and
+ * the port-only fallback key is ambiguous the moment a second host shares that port.
+ *
  * The plain port is tried last: when a proxy is the sole occupant of its port,
  * Caddy's JSON config omits the host matcher entirely, so parseProxies can't
- * recover externalHost/externalScheme — the port-keyed fallback bridges that gap.
+ * recover externalHost/externalScheme at all — the port-keyed fallback bridges
+ * that gap, and is safe there precisely because nothing else could be using the port.
  */
 export function proxyAddressKeys(p: Pick<ProxyEntry, "externalPort" | "externalScheme" | "externalHost" | "tls">): string[] {
   const keys = [buildExternalAddress(p)];
-  if (p.externalHost) keys.push(p.externalHost);
+  if (p.externalHost) {
+    keys.push(`${p.externalHost}:${p.externalPort}`);
+    keys.push(`http://${p.externalHost}:${p.externalPort}`);
+    keys.push(`https://${p.externalHost}:${p.externalPort}`);
+    keys.push(p.externalHost);
+  }
   keys.push(String(p.externalPort));
   return keys;
 }
@@ -1320,7 +1334,7 @@ function patchRawBlock(raw: string, proxy: ProxyEntry): string {
  */
 export function surgicallyWriteProxy(content: string, proxy: ProxyEntry): string {
   const lines = content.split("\n");
-  const pos = findBlockPositions(lines).find(p => p.port === proxy.externalPort);
+  const pos = findMatchingBlock(findBlockPositions(lines), proxy.externalPort, proxy.externalHost);
 
   if (!pos) {
     const base = content.trim() ? content.trimEnd() : CONF_HEADER;
@@ -1367,7 +1381,35 @@ interface BlockPosition {
   headerLine: number;           // index of the block opener line
   closingLine: number;          // index of the closing "}"
   port: number;
+  host: string | undefined;     // hostname portion of the block's address, if any (#139)
   serverKey: string | null;     // set when a "# server: key" comment precedes this block (#49)
+}
+
+/**
+ * Picks the block that a write/remove targeting (port, host) should act on. An exact
+ * (port, host) match is always preferred — needed once multiple blocks share a port with
+ * different hosts (#139), so a write for one host never touches another's block.
+ *
+ * When no exact match exists but exactly one block occupies that port, fall back to it
+ * ONLY if that block's host would actually conflict with the new one (hostsConflict) —
+ * i.e. this looks like the same logical site being renamed/rescoped (a host clear, scheme
+ * toggle, or hostname change on an existing single-occupant port), preserving pre-#139
+ * behavior for edits. If the lone existing block's host is genuinely distinct and would
+ * coexist fine (no conflict), this is a *new*, different site joining the port — falling
+ * back would silently clobber it instead of adding a second block, exactly the #139 bug.
+ * With multiple blocks already on the port and no exact host match, there's no safe single
+ * block to guess either way — return undefined so the caller appends/no-ops instead.
+ */
+function findMatchingBlock(positions: BlockPosition[], port: number, host: string | undefined): BlockPosition | undefined {
+  const portMatches = positions.filter(p => p.port === port);
+  if (portMatches.length === 0) return undefined;
+  const exact = portMatches.find(p => (p.host || undefined) === (host || undefined));
+  if (exact) return exact;
+  if (portMatches.length !== 1) return undefined;
+  const onlyMatch = portMatches[0];
+  const existingHosts = onlyMatch.host ? [onlyMatch.host] : undefined;
+  const newHosts = host ? [host] : undefined;
+  return hostsConflict(existingHosts, newHosts) ? onlyMatch : undefined;
 }
 
 function findBlockPositions(lines: string[]): BlockPosition[] {
@@ -1417,6 +1459,11 @@ function findBlockPositions(lines: string[]): BlockPosition[] {
     }
 
     const port = parseInt(portMatch[1], 10);
+    // Recognizes every shape buildExternalAddress can produce: bare `:PORT`, `http://:PORT`,
+    // `host:PORT`, and `scheme://host:PORT` — the same set surgicallyWriteProxy's
+    // isPluginFormat check recognizes. An empty capture means a hostless block.
+    const hostMatch = trimmed.match(/^(?:[\w+.-]+:\/\/)?([^\s{:]*):\d+[^{]*\{$/);
+    const host = hostMatch?.[1] || undefined;
     const headerLine = i;
     let depth = 1;
     i++;
@@ -1428,7 +1475,7 @@ function findBlockPositions(lines: string[]): BlockPosition[] {
     const closingLine = i - 1;
 
     if (!isNaN(port)) {
-      positions.push({ labelLine: pendingLabelLine, serverKeyLine: pendingServerKeyLine, headerLine, closingLine, port, serverKey: pendingServerKey });
+      positions.push({ labelLine: pendingLabelLine, serverKeyLine: pendingServerKeyLine, headerLine, closingLine, port, host, serverKey: pendingServerKey });
     }
     pendingLabelLine = null;
     pendingServerKey = null;
@@ -1461,11 +1508,12 @@ export function surgicallyReplaceBlock(content: string, port: number, newBlock: 
 
 /**
  * Removes the block for `port` (and its preceding label comment) from the content,
- * preserving all other blocks verbatim.
+ * preserving all other blocks verbatim. Pass `host` when the port may be shared by
+ * multiple blocks with different hosts (#139), so only the matching one is removed.
  */
-export function surgicallyRemoveBlock(content: string, port: number): string {
+export function surgicallyRemoveBlock(content: string, port: number, host?: string): string {
   const lines = content.split("\n");
-  const pos = findBlockPositions(lines).find(p => p.port === port);
+  const pos = findMatchingBlock(findBlockPositions(lines), port, host);
   if (!pos) return content;
 
   const start = pos.labelLine ?? pos.headerLine;
@@ -1605,8 +1653,8 @@ function parseRouteToEntry(
     const fsBasicAuth = fsAuthHandle ? parseBasicAuthJson(fsAuthHandle) : undefined;
     const fsHeadersHandle = effectiveHandles.find(h => h.handler === "headers");
     const fsResponseHeaders = fsHeadersHandle ? parseResponseHeadersJson(fsHeadersHandle) : [];
-    const fsTls = Array.isArray(server.tls_connection_policies) && server.tls_connection_policies.length > 0;
-    const fsTlsPolicy = fsTls ? server.tls_connection_policies![0] : undefined;
+    const fsTls = serverHasTls(server, automationPolicies, externalHost);
+    const fsTlsPolicy = Array.isArray(server.tls_connection_policies) ? server.tls_connection_policies[0] : undefined;
     return {
       id: routeId,
       externalPort,
@@ -1674,8 +1722,8 @@ function parseRouteToEntry(
   const dialTimeout = parseDuration(rp.transport?.dial_timeout);
   const responseHeaderTimeout = parseDuration(rp.transport?.response_header_timeout);
 
-  const tls = Array.isArray(server.tls_connection_policies) && server.tls_connection_policies.length > 0;
-  const tlsPolicy = tls ? server.tls_connection_policies![0] : undefined;
+  const tls = serverHasTls(server, automationPolicies, externalHost);
+  const tlsPolicy = Array.isArray(server.tls_connection_policies) ? server.tls_connection_policies[0] : undefined;
 
   const compress = effectiveHandles.some(h => h.handler === "encode");
   const authHandle = effectiveHandles.find(h => h.handler === "authentication");
@@ -1982,6 +2030,42 @@ export function tlsSubjectHost(host: string | undefined): string | undefined {
 }
 
 /**
+ * The hostname(s) a proxy actually answers on: its Host matcher (#48) if one was set
+ * explicitly, otherwise its externalHost (the bind address typed into Add/Edit Proxy).
+ * Returns undefined when the proxy has no host restriction at all — it then catches
+ * every request on its port, same as a bare `:port` Caddyfile block.
+ */
+export function routeHosts(p: Pick<ProxyEntry, "externalHost" | "matchers">): string[] | undefined {
+  if (p.matchers?.host?.length) return p.matchers.host;
+  return p.externalHost ? [p.externalHost] : undefined;
+}
+
+/**
+ * True when two routes claiming the same port would collide in Caddy. Two routes with
+ * distinct, non-overlapping hosts on the same port coexist fine (ordinary SNI/Host-header
+ * virtual hosting — the same thing Caddy does for any two site blocks sharing a port in a
+ * plain Caddyfile). A route with no host restriction is a real conflict against anything
+ * else on the port, since it would catch all of that port's traffic itself (today's
+ * pre-#139 behavior, unchanged for the common single-route-per-port case).
+ */
+export function hostsConflict(existingHosts: string[] | undefined, newHosts: string[] | undefined): boolean {
+  if (!existingHosts?.length || !newHosts?.length) return true;
+  return existingHosts.some(h => newHosts.includes(h));
+}
+
+/**
+ * Stable id for a standalone proxy: `host:<host>` when a hostname/subdomain is set,
+ * matching the id parseProxies already assigns when re-reading multiple host-matched
+ * routes sharing one port after a reload (#139) — keeps the id from changing out from
+ * under the UI once the config round-trips. Bare `String(port)` otherwise, unchanged
+ * from before #139 (the single-route-per-port case parseProxies also expects).
+ */
+export function standaloneProxyId(entry: Pick<ProxyEntry, "externalPort" | "externalHost" | "matchers">): string {
+  const host = routeHosts(entry)?.[0];
+  return host ? `host:${host}` : String(entry.externalPort);
+}
+
+/**
  * Exact membership check for a `subjects` list. Written as `.some(s => s === host)` rather
  * than `.includes(host)` — both are equivalent here (subjects is a plain string[], not a URL
  * being substring-matched), but static analysis tools that flag "incomplete URL substring
@@ -1990,6 +2074,24 @@ export function tlsSubjectHost(host: string | undefined): string | undefined {
  */
 function subjectsInclude(subjects: string[] | undefined, host: string): boolean {
   return !!subjects?.some(s => s === host);
+}
+
+/**
+ * Whether a route's server actually has TLS enabled. Usually determined by the
+ * presence of `tls_connection_policies` on the server — but a server shared by
+ * multiple hosts with identical TLS settings (#139, e.g. two subdomains both using
+ * `tls internal` with no advanced options) doesn't get an explicit connection
+ * policy from Caddy's Caddyfile adapter; each host is simply listed as a `subjects`
+ * entry in a shared `apps.tls.automation.policies` policy instead. Fall back to
+ * that so shared-listener routes aren't misdetected as plain HTTP.
+ */
+function serverHasTls(
+  server: { tls_connection_policies?: CaddyTLSConnectionPolicy[] },
+  automationPolicies: import("./types").CaddyAutomationPolicy[] | undefined,
+  externalHost: string | undefined,
+): boolean {
+  if (Array.isArray(server.tls_connection_policies) && server.tls_connection_policies.length > 0) return true;
+  return !!externalHost && !!automationPolicies?.some(p => subjectsInclude(p.subjects, externalHost));
 }
 
 /** Extracts a usable subject hostname from a named server's first listen address, if any (e.g. "example.com:443"). */

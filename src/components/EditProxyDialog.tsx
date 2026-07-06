@@ -20,7 +20,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast, ExternalAddressInput } from "@rxtx4816/cockpit-plugin-base-react/components";
-import { readProxyConf, parseConfExternalAddresses, CaddyApiError, CaddyfileError } from "../api";
+import { readProxyConf, parseConfExternalAddresses, CaddyApiError, CaddyfileError, routeHosts, hostsConflict } from "../api";
 import { EXTERNAL_ADDRESS_BUILTIN_SCHEMES } from "./externalAddressSchemes";
 import { isValidPort } from "@rxtx4816/cockpit-plugin-base-react/lib/uri";
 import type { ProxyEntry, RewriteConfig, HeaderOperation, RouteMatch, ServerDef } from "../api";
@@ -41,14 +41,15 @@ import { SectionActions } from "./SectionActions";
 
 interface Props {
   proxy: ProxyEntry;
-  existingPorts: number[];
+  /** See AddProxyDialog's existingRoutes: a conflict requires both a port and a host match (#139). */
+  existingRoutes: Pick<ProxyEntry, "externalPort" | "externalHost" | "matchers">[];
   onSave: (entry: ProxyEntry) => Promise<void>;
   onClose: () => void;
   onApiError?: (message: string) => void;
   servers?: ServerDef[];
 }
 
-export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiError, servers }: Props) {
+export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiError, servers }: Props) {
   const namedServer = proxy.namedServerKey ? servers?.find(s => s.key === proxy.namedServerKey) : undefined;
   const { t } = useTranslation();
   const toast = useToast();
@@ -109,7 +110,10 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
     const n = parseInt(externalPort, 10);
     if (!externalPort || isNaN(n)) return t("add_proxy.validation_port_number");
     if (!isValidPort(n)) return t("add_proxy.validation_port_range");
-    if (existingPorts.includes(n)) return t("add_proxy.validation_port_duplicate", { port: n });
+    if (existingRoutes.some(r =>
+      r.externalPort === n &&
+      hostsConflict(routeHosts(r), routeHosts({ externalHost: externalHost.trim() || undefined, matchers }))
+    )) return t("add_proxy.validation_port_duplicate", { port: n });
     return null;
   }
 
@@ -367,7 +371,9 @@ export function EditProxyDialog({ proxy, existingPorts, onSave, onClose, onApiEr
                   externalScheme: externalScheme || undefined,
                   externalHost: externalHost.trim() || undefined,
                   externalPort: port,
-                  id: proxy.namedServerKey ? proxy.id : String(port),
+                  // id is intentionally left as proxy.id (via the ...proxy spread) — it still
+                  // identifies *which* existing proxy this is even if the host/port changed as
+                  // part of this edit. useProxies.editProxy recomputes the post-edit id itself.
                   targetScheme,
                   targetHost: targetHost.trim(),
                   targetPort: parseInt(targetPort, 10),

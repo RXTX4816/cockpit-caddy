@@ -125,3 +125,118 @@ test('duplicate proxy opens prefilled dialog that creates a distinct new entry',
   expect(conf).toContain(':19106');
   expect(conf).toContain(':19107');
 });
+
+// ---------------------------------------------------------------------------
+// #139 — port conflict falsely triggered across subdomains
+//
+// Regression test: adding a second standalone proxy on an already-used port,
+// distinguished only by a different External host/subdomain, used to be
+// rejected with "port already in use" even though Caddy has no problem
+// serving multiple sites on one port via Host/SNI-based virtual hosting —
+// the same way multiple site blocks in a plain Caddyfile share a port by
+// subdomain. Two hostless proxies on the same port must still conflict.
+// ---------------------------------------------------------------------------
+
+test('two standalone proxies can share a port via distinct subdomains', async ({ pluginPage: page }) => {
+  await waitForToolbar(page);
+
+  await page.getByRole('button', { name: /add proxy/i }).first().click();
+  let modal = page.getByRole('dialog');
+  await modal.locator('#label').fill('Route A');
+  await modal.getByLabel('External port').fill('19110');
+  await modal.getByLabel(/external host/i).fill('a.example.test');
+  await modal.getByLabel(/target host/i).fill('localhost');
+  await modal.locator('#target-port').fill('3010');
+  await modal.getByRole('button', { name: /add proxy/i }).click();
+  await modal.getByRole('button', { name: /^confirm$/i }).click();
+  await expect(modal).not.toBeVisible({ timeout: 15000 });
+  // The external host is recovered from the conf.d text via a 3s-interval fallback sync
+  // (the live JSON push has no host on a lone port's route — see useProxies.ts syncConf) —
+  // wait for it to catch up so the second add's host-aware validation sees proxy A's host.
+  await page.waitForTimeout(3500);
+
+  await page.getByRole('button', { name: /add proxy/i }).first().click();
+  modal = page.getByRole('dialog');
+  await modal.locator('#label').fill('Route B');
+  await modal.getByLabel('External port').fill('19110');
+  await modal.getByLabel(/external host/i).fill('b.example.test');
+  await modal.getByLabel(/target host/i).fill('localhost');
+  await modal.locator('#target-port').fill('3011');
+  await modal.getByRole('button', { name: /add proxy/i }).click();
+  // No "port already in use" validation error should block confirmation.
+  await expect(modal.getByText(/port.*already/i)).not.toBeVisible();
+  await modal.getByRole('button', { name: /^confirm$/i }).click();
+  await expect(modal).not.toBeVisible({ timeout: 15000 });
+
+  // The second proxy shares its port with a different host (#139): a hand-built
+  // single-route JSON push can't represent that shared listener, so useProxies
+  // automatically reloads Caddy instead (Caddy's own adapter then builds the
+  // correct merged multi-route server) — no manual step, both appear right away.
+  const conf = await readConf(page);
+  expect(conf).toContain('a.example.test:19110');
+  expect(conf).toContain('b.example.test:19110');
+  await expect(page.getByRole('link', { name: 'a.example.test:19110' })).toBeVisible({ timeout: 10000 });
+  await expect(page.getByRole('link', { name: 'b.example.test:19110' })).toBeVisible({ timeout: 10000 });
+
+  // Regression: labels (and TLS/external-address state) must not bleed between two
+  // routes sharing a port — each is keyed by its own host-qualified address, not the
+  // ambiguous bare-port fallback key.
+  const rowA = page.locator('li').filter({ hasText: 'a.example.test:19110' });
+  const rowB = page.locator('li').filter({ hasText: 'b.example.test:19110' });
+  await expect(rowA).toContainText('Route A');
+  await expect(rowB).toContainText('Route B');
+});
+
+// Regression: a hand-written (or migrated) Caddyfile with an explicit `https://`
+// scheme prefix on two host-qualified blocks sharing a port used to have its
+// labels bleed together — buildExternalAddress can't reproduce the scheme until
+// it's already been recovered, so the exact-match lookup key missed and both
+// routes fell back to the same ambiguous bare-port cache key.
+test('two proxies with explicit https:// scheme sharing a port keep distinct labels', async ({ pluginPage: page }) => {
+  await waitForToolbar(page);
+
+  const conf = [
+    '# Managed by cockpit-caddy - edits to this file may be overwritten by user plugin actions',
+    '',
+    '# label: 139test1',
+    'https://test.speedport.ip:19300 {',
+    '\ttls internal',
+    '\treverse_proxy http://localhost:3000',
+    '}',
+    '',
+    '# label: jellyfin',
+    'https://jellyfin.speedport.ip:19300 {',
+    '\ttls internal',
+    '\treverse_proxy http://localhost:8096',
+    '}',
+    '',
+  ].join('\n');
+  await page.evaluate(([c]) =>
+    new Promise<void>((resolve, reject) =>
+      (window as any).cockpit.file('/etc/caddy/conf.d/cockpit-caddy.conf', { superuser: 'try' }).replace(c)
+        .then(resolve).catch(reject)), [conf] as [string]);
+  await page.evaluate(() =>
+    new Promise<void>((resolve, reject) =>
+      (window as any).cockpit.spawn(['caddy', 'reload', '--config', '/etc/caddy/Caddyfile'], { superuser: 'try' })
+        .then(resolve).catch(reject)));
+  await page.reload({ waitUntil: 'networkidle' });
+  await waitForToolbar(page);
+
+  const rowA = page.locator('li').filter({ hasText: 'test.speedport.ip:19300' });
+  const rowB = page.locator('li').filter({ hasText: 'jellyfin.speedport.ip:19300' });
+  await expect(rowA).toContainText('139test1');
+  await expect(rowB).toContainText('jellyfin');
+});
+
+test('two hostless proxies on the same port still conflict', async ({ pluginPage: page }) => {
+  await waitForToolbar(page);
+  await addProxyViaUI(page, 19111, { host: 'localhost', port: 3012 });
+
+  await page.getByRole('button', { name: /add proxy/i }).first().click();
+  const modal = page.getByRole('dialog');
+  await modal.getByLabel('External port').fill('19111');
+  await modal.getByLabel(/target host/i).fill('localhost');
+  await modal.locator('#target-port').fill('3013');
+  await modal.getByRole('button', { name: /add proxy/i }).click();
+  await expect(modal.getByText(/port.*already/i)).toBeVisible({ timeout: 5000 });
+});
