@@ -2719,6 +2719,68 @@ describe("runtime / error log global option (#158)", () => {
   });
 });
 
+// buildManagedServersBlocks (the per-port merge half of #153) isn't exported/unit-tested
+// directly, same as #51's HTTP/3 toggle before it — verified against a live instance
+// instead (see e2e). These tests cover the global (portless) `servers { trusted_proxies }`
+// block, which is fully unit-testable pure text round-trip.
+describe("trusted proxies global option (#153)", () => {
+  it("parses ranges from a bare global servers block", () => {
+    const body = ["\tservers {", "\t\ttrusted_proxies static 10.0.0.0/8 192.168.0.0/16", "\t}"].join("\n");
+    const opts = parseGlobalOptions(makeOpts(body));
+    expect(opts.trustedProxies).toEqual({ ranges: ["10.0.0.0/8", "192.168.0.0/16"] });
+  });
+
+  it("parses strict mode and client_ip_headers", () => {
+    const body = [
+      "\tservers {",
+      "\t\ttrusted_proxies static private_ranges",
+      "\t\ttrusted_proxies_strict",
+      "\t\tclient_ip_headers X-Forwarded-For X-Real-IP",
+      "\t}",
+    ].join("\n");
+    const opts = parseGlobalOptions(makeOpts(body));
+    expect(opts.trustedProxies).toEqual({
+      ranges: ["private_ranges"],
+      strict: true,
+      headers: ["X-Forwarded-For", "X-Real-IP"],
+    });
+  });
+
+  it("does not misparse a per-port servers :PORT block as the global trusted_proxies block", () => {
+    const body = ["\tservers :8443 {", "\t\tprotocols h1 h2", "\t}"].join("\n");
+    const opts = parseGlobalOptions(makeOpts(body));
+    expect(opts.trustedProxies).toBeUndefined();
+  });
+
+  it("leaves trustedProxies undefined when no servers block is present", () => {
+    const opts = parseGlobalOptions(makeOpts("\temail admin@example.com"));
+    expect(opts.trustedProxies).toBeUndefined();
+  });
+
+  it("buildGlobalOptionsPatch emits a global servers block with all fields", () => {
+    const patched = buildGlobalOptionsPatch("", {
+      trustedProxies: { ranges: ["10.0.0.0/8"], strict: true, headers: ["X-Real-IP"] },
+    });
+    expect(patched).toContain("servers {");
+    expect(patched).toContain("trusted_proxies static 10.0.0.0/8");
+    expect(patched).toContain("trusted_proxies_strict");
+    expect(patched).toContain("client_ip_headers X-Real-IP");
+  });
+
+  it("round-trips through parseGlobalOptions", () => {
+    const patched = buildGlobalOptionsPatch("", {
+      trustedProxies: { ranges: ["private_ranges", "203.0.113.0/24"], strict: false, headers: undefined },
+    });
+    const opts = parseGlobalOptions(patched);
+    expect(opts.trustedProxies).toEqual({ ranges: ["private_ranges", "203.0.113.0/24"] });
+  });
+
+  it("omits the servers block entirely when trustedProxies has no ranges", () => {
+    const patched = buildGlobalOptionsPatch("", { email: "admin@example.com" });
+    expect(patched).not.toContain("servers {");
+  });
+});
+
 describe("parseGlobalOptions — #96 unmanaged directives fallback", () => {
   it("reads email/acme_ca from a hand-written global block with no managed markers", () => {
     const content = "{\n\temail admin@example.com\n\tacme_ca https://acme-staging-v02.api.letsencrypt.org/directory\n}\n";

@@ -90,6 +90,10 @@ export function GlobalOptionsTab() {
   const [metricsPath, setMetricsPath] = useState("");
   const [metricsPlainFormat, setMetricsPlainFormat] = useState(false);
   const [runtimeLog, setRuntimeLog] = useState<AccessLogValues>(accessLogConfigToValues(undefined));
+  const [trustedProxiesEnabled, setTrustedProxiesEnabled] = useState(false);
+  const [trustedProxiesRanges, setTrustedProxiesRanges] = useState("");
+  const [trustedProxiesStrict, setTrustedProxiesStrict] = useState(false);
+  const [trustedProxiesHeaders, setTrustedProxiesHeaders] = useState("");
 
   const loadStorageInfo = useCallback((configuredPath: string | undefined) => {
     setStorageInfo(null);
@@ -128,6 +132,10 @@ export function GlobalOptionsTab() {
         setMetricsPath(opts.metricsPath ?? "");
         setMetricsPlainFormat(opts.metricsPlainFormat ?? false);
         setRuntimeLog(accessLogConfigToValues(opts.runtimeLog));
+        setTrustedProxiesEnabled(!!opts.trustedProxies);
+        setTrustedProxiesRanges(opts.trustedProxies?.ranges.join(" ") ?? "");
+        setTrustedProxiesStrict(opts.trustedProxies?.strict ?? false);
+        setTrustedProxiesHeaders(opts.trustedProxies?.headers?.join(" ") ?? "");
       })
       .catch(e => setLoadError(e instanceof Error ? e.message : String(e)))
       .finally(() => setLoading(false));
@@ -155,9 +163,11 @@ export function GlobalOptionsTab() {
     ? t("global_opts.metrics_listen_address_required")
     : !isListenAddress(metricsListenAddress) ? t("global_opts.metrics_listen_address_invalid") : null;
   const metricsPathErr = metricsPath.trim() && !metricsPath.trim().startsWith("/") ? t("global_opts.metrics_path_invalid") : null;
+  const trustedProxiesRangesErr = trustedProxiesEnabled && !trustedProxiesRanges.trim();
   const hasErrors = !!(
     httpPortErr || httpsPortErr || gracePeriodErr || shutdownDelayErr || onDemandBurstErr || onDemandIntervalErr
     || internalCertLifetimeErr || renewalWindowRatioErr || metricsListenAddressErr || metricsPathErr
+    || trustedProxiesRangesErr
   );
 
   const isConfirming = confirm.step !== "idle";
@@ -674,6 +684,81 @@ export function GlobalOptionsTab() {
           isDisabled={isConfirming}
         />
 
+        <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
+
+        <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+          {t("global_opts.trusted_proxies_title")}
+        </Title>
+        <Alert variant="info" isInline title={t("global_opts.trusted_proxies_note")} style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }} />
+
+        <FormGroup fieldId="go-trusted-proxies-enabled">
+          <Checkbox
+            id="go-trusted-proxies-enabled"
+            label={t("global_opts.trusted_proxies_enable")}
+            isChecked={trustedProxiesEnabled}
+            onChange={(_e, v) => setTrustedProxiesEnabled(v)}
+            isDisabled={isConfirming}
+          />
+        </FormGroup>
+
+        {trustedProxiesEnabled && (
+          <>
+            <FormGroup label={t("global_opts.trusted_proxies_ranges")} fieldId="go-trusted-proxies-ranges" isRequired>
+              <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap", marginBottom: "0.4rem" }}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setTrustedProxiesRanges(prev => prev.trim() ? `${prev.trim()} private_ranges` : "private_ranges")}
+                  isDisabled={isConfirming}
+                >
+                  {t("global_opts.trusted_proxies_private_ranges_button")}
+                </Button>
+              </div>
+              <TextInput
+                id="go-trusted-proxies-ranges"
+                value={trustedProxiesRanges}
+                onChange={(_e, v) => setTrustedProxiesRanges(v)}
+                placeholder="private_ranges 203.0.113.0/24"
+                validated={trustedProxiesEnabled && !trustedProxiesRanges.trim() ? "error" : "default"}
+                isDisabled={isConfirming}
+              />
+              <FormHelperText>
+                <HelperText>
+                  <HelperTextItem variant={trustedProxiesEnabled && !trustedProxiesRanges.trim() ? "error" : "default"}>
+                    {trustedProxiesEnabled && !trustedProxiesRanges.trim()
+                      ? t("global_opts.trusted_proxies_ranges_required")
+                      : t("global_opts.trusted_proxies_ranges_help")}
+                  </HelperTextItem>
+                </HelperText>
+              </FormHelperText>
+            </FormGroup>
+
+            <FormGroup label={t("global_opts.trusted_proxies_headers")} fieldId="go-trusted-proxies-headers">
+              <TextInput
+                id="go-trusted-proxies-headers"
+                value={trustedProxiesHeaders}
+                onChange={(_e, v) => setTrustedProxiesHeaders(v)}
+                placeholder="X-Forwarded-For"
+                isDisabled={isConfirming}
+              />
+              <FormHelperText>
+                <HelperText><HelperTextItem>{t("global_opts.trusted_proxies_headers_help")}</HelperTextItem></HelperText>
+              </FormHelperText>
+            </FormGroup>
+
+            <FormGroup fieldId="go-trusted-proxies-strict">
+              <Checkbox
+                id="go-trusted-proxies-strict"
+                label={t("global_opts.trusted_proxies_strict")}
+                description={t("global_opts.trusted_proxies_strict_help")}
+                isChecked={trustedProxiesStrict}
+                onChange={(_e, v) => setTrustedProxiesStrict(v)}
+                isDisabled={isConfirming}
+              />
+            </FormGroup>
+          </>
+        )}
+
         {confirm.error != null && (
           <Alert variant="danger" isInline title={t("global_opts.save_error")}>
             {confirm.error || t("global_opts.save_error_unknown")}
@@ -714,6 +799,11 @@ export function GlobalOptionsTab() {
                     metricsPath: metricsEnabled ? (metricsPath.trim() || undefined) : undefined,
                     metricsPlainFormat: metricsEnabled ? (metricsPlainFormat || undefined) : undefined,
                     runtimeLog: accessLogValuesToConfig(runtimeLog),
+                    trustedProxies: trustedProxiesEnabled && trustedProxiesRanges.trim() ? {
+                      ranges: trustedProxiesRanges.trim().split(/\s+/),
+                      strict: trustedProxiesStrict || undefined,
+                      headers: trustedProxiesHeaders.trim() ? trustedProxiesHeaders.trim().split(/\s+/) : undefined,
+                    } : undefined,
                   };
                   // An unwritable storage path isn't caught by Caddy's own config
                   // validation (it only checks config shape, not whether the process can
