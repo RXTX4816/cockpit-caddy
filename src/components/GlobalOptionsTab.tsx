@@ -719,13 +719,13 @@ export function GlobalOptionsTab() {
                 value={trustedProxiesRanges}
                 onChange={(_e, v) => setTrustedProxiesRanges(v)}
                 placeholder="private_ranges 203.0.113.0/24"
-                validated={trustedProxiesEnabled && !trustedProxiesRanges.trim() ? "error" : "default"}
+                validated={trustedProxiesRangesErr ? "error" : "default"}
                 isDisabled={isConfirming}
               />
               <FormHelperText>
                 <HelperText>
-                  <HelperTextItem variant={trustedProxiesEnabled && !trustedProxiesRanges.trim() ? "error" : "default"}>
-                    {trustedProxiesEnabled && !trustedProxiesRanges.trim()
+                  <HelperTextItem variant={trustedProxiesRangesErr ? "error" : "default"}>
+                    {trustedProxiesRangesErr
                       ? t("global_opts.trusted_proxies_ranges_required")
                       : t("global_opts.trusted_proxies_ranges_help")}
                   </HelperTextItem>
