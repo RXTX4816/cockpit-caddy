@@ -341,12 +341,50 @@ export async function writeRawProxyConf(content: string): Promise<void> {
  */
 export async function writeRawProxyConfValidated(content: string): Promise<void> {
   const original = await readProxyConf();
+  // Catches an unwritable log file path *before* ever saving it — see
+  // checkLogFileWritable for why `caddy validate` succeeding isn't enough on its own.
+  for (const logPath of new Set(extractLogFilePaths(content))) {
+    const err = await checkLogFileWritable(logPath);
+    if (err) throw new CaddyfileError(`Log file "${logPath}" isn't writable by Caddy: ${err}`);
+  }
   await fsWriteFile(PROXY_CONF_PATH, content, "try");
   try {
     await runCaddyValidate();
   } catch (e) {
     await fsWriteFile(PROXY_CONF_PATH, original, "try");
     throw e;
+  }
+  await fixAccessLogFileOwnership(content);
+}
+
+/** Every `output file <path>` target referenced anywhere in Caddyfile content, covering
+ *  both the single-line and rotation-block (#155) forms. */
+export function extractLogFilePaths(content: string): string[] {
+  const paths: string[] = [];
+  const re = /output\s+file\s+(\S+)/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(content))) paths.push(m[1]);
+  return paths;
+}
+
+/**
+ * `caddy validate` (run as root by runCaddyValidate, since it's a plain CLI invocation
+ * via cockpit.spawn) fully provisions the app as a side effect of validating — including
+ * opening any configured file-based access log — even though it's only meant to check
+ * config *shape*. Verified against a live instance: validating a config with a brand-new
+ * log file path creates that file as root:root mode 600, which then permanently blocks
+ * the real caddy.service (running as its own unprivileged, systemd-confined user) from
+ * ever writing to it on the actual reload that follows — the exact failure a user hit in
+ * production. Chowning any referenced log file back to the service's real user/group
+ * after every successful validate undoes this; a no-op when the file doesn't exist yet
+ * or is already owned correctly.
+ */
+async function fixAccessLogFileOwnership(proxyConfContent: string): Promise<void> {
+  const serviceUser = await getCaddyServiceUser();
+  if (!serviceUser) return;
+  const paths = new Set(extractLogFilePaths(proxyConfContent));
+  for (const path of paths) {
+    await cockpit.spawn(["chown", `${serviceUser.user}:${serviceUser.group}`, path], { superuser: "try", err: "ignore" }).catch(() => {});
   }
 }
 
@@ -446,15 +484,23 @@ export function parseConfAccessLogMap(content: string): Record<string, import(".
     let filePath: string | undefined;
     let format: import("./types").AccessLogFormat | undefined;
     let level: import("./types").AccessLogLevel | undefined;
+    let rollSizeMb: number | undefined;
+    let rollKeepCount: number | undefined;
+    let rollKeepDays: number | undefined;
+    let rollCompress: boolean | undefined;
 
     for (const line of logLines) {
+      if (line === "roll_uncompressed") { rollCompress = false; continue; }
       const m = line.match(/^(\w+)\s+(.*)/);
       if (!m) continue;
       const [, key, val] = m;
       if (key === "output") {
         if (val.startsWith("file ")) {
           output = "file";
-          filePath = val.slice(5).trim();
+          // Strips a trailing "{" from the block form ("output file <path> {") — the
+          // roll_* sub-directives are separate top-level lines within logLines already
+          // (brace depth is tracked across the whole log block, not per output line).
+          filePath = val.slice(5).replace(/\s*\{$/, "").trim();
         } else {
           output = val.trim() as import("./types").AccessLogOutput;
         }
@@ -462,9 +508,17 @@ export function parseConfAccessLogMap(content: string): Record<string, import(".
         format = val.trim() as import("./types").AccessLogFormat;
       } else if (key === "level") {
         level = val.trim() as import("./types").AccessLogLevel;
+      } else if (key === "roll_size") {
+        const mb = val.trim().match(/^(\d+(?:\.\d+)?)MiB$/i);
+        if (mb) rollSizeMb = Math.round(parseFloat(mb[1]));
+      } else if (key === "roll_keep") {
+        rollKeepCount = parseInt(val.trim(), 10);
+      } else if (key === "roll_keep_for") {
+        const hrs = val.trim().match(/^(\d+(?:\.\d+)?)h$/);
+        if (hrs) rollKeepDays = Math.round(parseFloat(hrs[1]) / 24);
       }
     }
-    setBlockResult(result, block, { output, filePath, format, level });
+    setBlockResult(result, block, { output, filePath, format, level, rollSizeMb, rollKeepCount, rollKeepDays, rollCompress });
   }
   return result;
 }
@@ -995,10 +1049,29 @@ function buildErrorHandlerCaddyLines(handlers: import("./types").ErrorHandlerCon
 }
 
 /** Generates the Caddyfile block for a single proxy (label comment + block body). */
+/**
+ * Rotation sub-directives (#155) — only meaningful for a file output. `roll_size` takes an
+ * explicit MiB unit since a bare number is parsed as *bytes*, not megabytes (verified
+ * against a live instance: `roll_size 100` produced `roll_size_mb: 1`, not 100).
+ */
+function buildLogRollLines(log: import("./types").AccessLogConfig, indent: string): string[] {
+  const lines: string[] = [];
+  if (log.rollSizeMb) lines.push(`${indent}roll_size ${log.rollSizeMb}MiB`);
+  if (log.rollKeepCount) lines.push(`${indent}roll_keep ${log.rollKeepCount}`);
+  if (log.rollKeepDays) lines.push(`${indent}roll_keep_for ${log.rollKeepDays * 24}h`);
+  if (log.rollCompress === false) lines.push(`${indent}roll_uncompressed`);
+  return lines;
+}
+
 function buildLogCaddyLines(log: import("./types").AccessLogConfig): string[] {
   const lines = ["\tlog {"];
+  const rollLines = log.output === "file" ? buildLogRollLines(log, "\t\t\t") : [];
   if (log.output === "file" && log.filePath) {
-    lines.push(`\t\toutput file ${log.filePath}`);
+    if (rollLines.length) {
+      lines.push(`\t\toutput file ${log.filePath} {`, ...rollLines, "\t\t}");
+    } else {
+      lines.push(`\t\toutput file ${log.filePath}`);
+    }
   } else {
     lines.push(`\t\toutput ${log.output}`);
   }
@@ -1882,7 +1955,7 @@ function parseRouteToEntry(
     lbPolicy,
     matchers,
     handlePath,
-    serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3,
+    serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, accessLog,
     errorHandlers: parseErrorHandlers(server),
     forwardAuth,
     tlsAdvanced: tlsPolicy ? parseTlsAdvanced(tlsPolicy, automationPolicies, tlsSubjectHost(externalHost)) : undefined,
@@ -1926,6 +1999,10 @@ export function parseProxies(config: CaddyConfig, serverDefs?: import("./types")
           filePath: loggerCfg.writer?.filename,
           format: loggerCfg.encoder?.format as import("./types").AccessLogFormat | undefined,
           level: loggerCfg.level as import("./types").AccessLogLevel | undefined,
+          rollSizeMb: loggerCfg.writer?.roll_size_mb,
+          rollKeepCount: loggerCfg.writer?.roll_keep,
+          rollKeepDays: loggerCfg.writer?.roll_keep_days,
+          rollCompress: loggerCfg.writer?.roll_gzip === false ? false : undefined,
         };
       }
     }
@@ -2795,9 +2872,13 @@ function patchServer(original: CaddyServer, proxy: ProxyEntry): CaddyServer {
 }
 
 function buildLoggingWriter(accessLog: import("./types").AccessLogConfig): import("./types").CaddyLogWriter {
-  return accessLog.output === "file" && accessLog.filePath
-    ? { output: "file", filename: accessLog.filePath }
-    : { output: accessLog.output };
+  if (accessLog.output !== "file" || !accessLog.filePath) return { output: accessLog.output };
+  const writer: import("./types").CaddyLogWriter = { output: "file", filename: accessLog.filePath };
+  if (accessLog.rollSizeMb) writer.roll_size_mb = accessLog.rollSizeMb;
+  if (accessLog.rollKeepCount) writer.roll_keep = accessLog.rollKeepCount;
+  if (accessLog.rollKeepDays) writer.roll_keep_days = accessLog.rollKeepDays;
+  if (accessLog.rollCompress === false) writer.roll_gzip = false;
+  return writer;
 }
 
 /** Update config.logging.logs: swap out the old logger for this proxy (if any) and add/remove the new one. */
@@ -3765,6 +3846,57 @@ export async function checkStoragePathWritable(path: string): Promise<string | n
   return null;
 }
 
+/**
+ * Same check as checkStoragePathWritable, adapted for a log *file* path rather than a
+ * directory (#155/#158): `caddy validate` runs as root and silently provisions a brand-new
+ * file-based log as a side effect, creating it root-owned — which then permanently blocks
+ * the real (unprivileged, sandboxed) caddy.service from writing to it on the actual reload
+ * that follows. Reproduced against a real production Caddyfile, not just the test VM. This
+ * checks the log file's *parent directory* against ReadWritePaths= and mkdir's/chowns that
+ * directory (not the file itself, and not recursively — an existing log directory may
+ * already contain other files this shouldn't touch), then probes writing the exact target
+ * file as the caddy service user.
+ */
+export async function checkLogFileWritable(filePath: string): Promise<string | null> {
+  const lastSlash = filePath.lastIndexOf("/");
+  const dir = lastSlash > 0 ? filePath.slice(0, lastSlash) : "/";
+
+  const readWritePaths = await getCaddyReadWritePaths();
+  if (readWritePaths && readWritePaths.length > 0 && !readWritePaths.some(p => isPathWithin(filePath, p))) {
+    return `The caddy service is sandboxed (systemd ReadWritePaths=) to only: ${readWritePaths.join(", ")}. ` +
+      `"${filePath}" falls outside all of them, so Caddy would never be able to write there regardless of ` +
+      `file permissions — choose a path under one of the allowed directories, or add this path to the ` +
+      `unit's ReadWritePaths= via "systemctl edit caddy".`;
+  }
+  try {
+    await cockpit.spawn(["mkdir", "-p", dir], { superuser: "try", err: "message" });
+  } catch (e) {
+    return e instanceof Error ? e.message : String(e);
+  }
+  const serviceUser = await getCaddyServiceUser();
+  if (serviceUser) {
+    try {
+      await cockpit.spawn(["chown", `${serviceUser.user}:${serviceUser.group}`, dir], { superuser: "try", err: "message" });
+    } catch (e) {
+      return e instanceof Error ? e.message : String(e);
+    }
+  }
+  const touchArgv = serviceUser
+    ? ["runuser", "-u", serviceUser.user, "--", "touch", filePath]
+    : ["touch", filePath];
+  try {
+    await cockpit.spawn(touchArgv, { superuser: "try", err: "message" });
+  } catch (e) {
+    return e instanceof Error ? e.message : String(e);
+  }
+  // Ensure the just-created (or already-existing but possibly root-owned from a prior
+  // poisoned validate) file itself is owned by the service user, not whoever ran the probe.
+  if (serviceUser) {
+    await cockpit.spawn(["chown", `${serviceUser.user}:${serviceUser.group}`, filePath], { superuser: "try", err: "ignore" }).catch(() => {});
+  }
+  return null;
+}
+
 // ---------------------------------------------------------------------------
 // Global Caddy options (http_port, https_port, debug, grace_period, shutdown_delay)
 // ---------------------------------------------------------------------------
@@ -4154,6 +4286,12 @@ export async function syncGlobalOptions(opts: GlobalOptions): Promise<void> {
 
   if (patched === diskContent && proxyConfPatched === proxyConfDisk) return;
 
+  if (proxyConfPatched !== proxyConfDisk) {
+    for (const logPath of new Set(extractLogFilePaths(proxyConfPatched))) {
+      const err = await checkLogFileWritable(logPath);
+      if (err) throw new CaddyfileError(`Log file "${logPath}" isn't writable by Caddy: ${err}`);
+    }
+  }
   await fsWriteFile(MAIN_CADDYFILE, patched, "try");
   if (proxyConfPatched !== proxyConfDisk) await fsWriteFile(PROXY_CONF_PATH, proxyConfPatched, "try");
   try {
@@ -4163,6 +4301,7 @@ export async function syncGlobalOptions(opts: GlobalOptions): Promise<void> {
     if (proxyConfPatched !== proxyConfDisk) await fsWriteFile(PROXY_CONF_PATH, proxyConfDisk, "try");
     throw e;
   }
+  await fixAccessLogFileOwnership(proxyConfPatched);
 }
 
 /** Read current global options from the main Caddyfile, merged with the metrics site
@@ -4337,6 +4476,12 @@ export async function runConfigFixes(selectedIds: Set<string>): Promise<ConfigFi
 
   if (main === mainDisk && proxyConf === proxyConfDisk) return findings;
 
+  if (proxyConf !== proxyConfDisk) {
+    for (const logPath of new Set(extractLogFilePaths(proxyConf))) {
+      const err = await checkLogFileWritable(logPath);
+      if (err) throw new CaddyfileError(`Log file "${logPath}" isn't writable by Caddy: ${err}`);
+    }
+  }
   await fsWriteFile(MAIN_CADDYFILE, main, "try");
   await fsWriteFile(PROXY_CONF_PATH, proxyConf, "try");
   try {
@@ -4346,5 +4491,6 @@ export async function runConfigFixes(selectedIds: Set<string>): Promise<ConfigFi
     await fsWriteFile(PROXY_CONF_PATH, proxyConfDisk, "try");
     throw e;
   }
+  await fixAccessLogFileOwnership(proxyConf);
   return findings;
 }

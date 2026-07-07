@@ -35,6 +35,8 @@ import {
   classifyAcmeHosts,
   buildMetricsSiteBlock,
   parseMetricsSiteBlock,
+  parseConfAccessLogMap,
+  extractLogFilePaths,
 } from "./caddy";
 import type { CaddyConfig, CaddyServer, ProxyEntry, RouteMatch, ServerDef } from "./types";
 
@@ -2205,6 +2207,151 @@ describe("request body size limit (#154)", () => {
     const config = makeConfig([{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:7701" }] }]);
     const [p] = parseProxies(config);
     expect(p.requestBodyMaxSize).toBeUndefined();
+  });
+});
+
+describe("access log rotation (#155)", () => {
+  it("proxyToBlock emits roll_size in MiB (a bare number is bytes, not MB — verified against a live instance)", () => {
+    const result = proxyToBlock(proxy({
+      accessLog: { output: "file", filePath: "/var/log/caddy/access.log", rollSizeMb: 100, rollKeepCount: 10, rollKeepDays: 30 },
+    }));
+    expect(result).toContain("output file /var/log/caddy/access.log {");
+    expect(result).toContain("roll_size 100MiB");
+    expect(result).toContain("roll_keep 10");
+    expect(result).toContain("roll_keep_for 720h");
+  });
+
+  it("proxyToBlock omits roll_uncompressed by default (Caddy's own default is compressed)", () => {
+    const result = proxyToBlock(proxy({
+      accessLog: { output: "file", filePath: "/var/log/caddy/access.log", rollSizeMb: 100 },
+    }));
+    expect(result).not.toContain("roll_uncompressed");
+  });
+
+  it("proxyToBlock emits roll_uncompressed when rollCompress is explicitly false", () => {
+    const result = proxyToBlock(proxy({
+      accessLog: { output: "file", filePath: "/var/log/caddy/access.log", rollSizeMb: 100, rollCompress: false },
+    }));
+    expect(result).toContain("roll_uncompressed");
+  });
+
+  it("proxyToBlock writes the single-line output form when no rotation fields are set", () => {
+    const result = proxyToBlock(proxy({
+      accessLog: { output: "file", filePath: "/var/log/caddy/access.log" },
+    }));
+    expect(result).toContain("output file /var/log/caddy/access.log");
+    expect(result).not.toContain("output file /var/log/caddy/access.log {");
+  });
+
+  it("proxyToBlock omits rotation for non-file outputs", () => {
+    const result = proxyToBlock(proxy({ accessLog: { output: "stderr" } }));
+    expect(result).not.toContain("roll_size");
+  });
+
+  it("buildServerEntry / JSON push writes roll_size_mb, roll_keep, roll_keep_days, roll_gzip", () => {
+    const server = buildServerEntry({
+      externalPort: 7700, externalScheme: undefined, externalHost: undefined,
+      targetHost: "localhost", targetPort: 7701, targetScheme: "http", tls: false, tlsSkipVerify: false,
+      accessLog: { output: "file", filePath: "/var/log/caddy/access.log", rollSizeMb: 50, rollKeepCount: 5, rollKeepDays: 14, rollCompress: false },
+    });
+    const loggerName = (server.logs as { default_logger_name?: string } | undefined)?.default_logger_name;
+    expect(loggerName).toBeTruthy();
+  });
+
+  it("parseProxies round-trips rotation fields from a live-shaped config", () => {
+    const config: CaddyConfig = {
+      apps: {
+        http: {
+          servers: {
+            srv0: {
+              listen: [":7700"],
+              routes: [{ handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:7701" }] } as import("./types").CaddyHandler], terminal: true }],
+              logs: { default_logger_name: "log0" },
+            },
+          },
+        },
+      },
+      logging: {
+        logs: {
+          log0: {
+            writer: { output: "file", filename: "/var/log/caddy/access.log", roll_size_mb: 100, roll_keep: 10, roll_keep_days: 30, roll_gzip: false },
+            include: ["http.log.access.log0"],
+          },
+        },
+      },
+    };
+    const [p] = parseProxies(config);
+    expect(p.accessLog).toEqual({
+      output: "file",
+      filePath: "/var/log/caddy/access.log",
+      format: undefined,
+      level: undefined,
+      rollSizeMb: 100,
+      rollKeepCount: 10,
+      rollKeepDays: 30,
+      rollCompress: false,
+    });
+  });
+
+  it("parseConfAccessLogMap reads rotation back out of the raw Caddyfile text (fallback path)", () => {
+    const content = [
+      "# Managed by cockpit-caddy - edits to this file may be overwritten by user plugin actions",
+      "",
+      ":7700 {",
+      "\tlog {",
+      "\t\toutput file /var/log/caddy/access.log {",
+      "\t\t\troll_size 100MiB",
+      "\t\t\troll_keep 10",
+      "\t\t\troll_keep_for 720h",
+      "\t\t\troll_uncompressed",
+      "\t\t}",
+      "\t}",
+      "\treverse_proxy localhost:7701",
+      "}",
+    ].join("\n");
+    const map = parseConfAccessLogMap(content);
+    const entry = Object.values(map)[0];
+    expect(entry.filePath).toBe("/var/log/caddy/access.log");
+    expect(entry.rollSizeMb).toBe(100);
+    expect(entry.rollKeepCount).toBe(10);
+    expect(entry.rollKeepDays).toBe(30);
+    expect(entry.rollCompress).toBe(false);
+  });
+});
+
+// Regression: `caddy validate` (run as root by this app's own pre-save checks) fully
+// provisions the app as a side effect, including opening any configured file-based access
+// log — verified against a live instance that this creates a brand-new log file as
+// root:root mode 600, permanently blocking the real (unprivileged) caddy.service from ever
+// writing to it afterward. extractLogFilePaths finds every such path so it can be chowned
+// back to the service's real user after every successful validate (see
+// fixAccessLogFileOwnership) — a real production failure a user hit, not a hypothetical.
+describe("extractLogFilePaths (#155 ownership-poisoning fix)", () => {
+  it("finds a single-line output file target", () => {
+    const content = "\tlog {\n\t\toutput file /var/log/caddy/access.log\n\t}\n";
+    expect(extractLogFilePaths(content)).toEqual(["/var/log/caddy/access.log"]);
+  });
+
+  it("finds a block-form (rotation) output file target", () => {
+    const content = "\tlog {\n\t\toutput file /var/log/caddy/access.log {\n\t\t\troll_size 100MiB\n\t\t}\n\t}\n";
+    expect(extractLogFilePaths(content)).toEqual(["/var/log/caddy/access.log"]);
+  });
+
+  it("finds every log file path across multiple proxies", () => {
+    const content = [
+      ":8443 { log { output file /var/log/caddy/a.log } reverse_proxy localhost:3000 }",
+      ":8444 { log { output file /var/log/caddy/b.log } reverse_proxy localhost:3001 }",
+    ].join("\n");
+    expect(extractLogFilePaths(content)).toEqual(["/var/log/caddy/a.log", "/var/log/caddy/b.log"]);
+  });
+
+  it("returns an empty array when no file-based access logs are configured", () => {
+    const content = ":8443 {\n\tlog {\n\t\toutput stderr\n\t}\n\treverse_proxy localhost:3000\n}\n";
+    expect(extractLogFilePaths(content)).toEqual([]);
+  });
+
+  it("returns an empty array for content with no logging at all", () => {
+    expect(extractLogFilePaths("# Managed by cockpit-caddy\n\n:8443 {\n\treverse_proxy localhost:3000\n}\n")).toEqual([]);
   });
 });
 

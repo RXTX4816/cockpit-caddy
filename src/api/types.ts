@@ -124,6 +124,12 @@ export interface CaddyServer {
 export interface CaddyLogWriter {
   output: string;
   filename?: string;
+  /** Log rotation (#155) — only meaningful when output === "file". */
+  roll_size_mb?: number;
+  roll_keep?: number;
+  roll_keep_days?: number;
+  /** Caddy compresses rolled files by default; false means `roll_uncompressed` was set. */
+  roll_gzip?: boolean;
 }
 
 export interface CaddyLogEncoder {
@@ -175,6 +181,16 @@ export interface AccessLogConfig {
   filePath?: string;
   format?: AccessLogFormat;
   level?: AccessLogLevel;
+  /** Log rotation (#155) — only applicable when output === "file". Max size in MiB
+   *  before rolling to a new file. */
+  rollSizeMb?: number;
+  /** Number of rolled (old) files to keep. */
+  rollKeepCount?: number;
+  /** Max age of rolled files, in days. */
+  rollKeepDays?: number;
+  /** Compress rolled files with gzip. Caddy's own default is true when rotation is
+   *  configured at all; only written as `roll_uncompressed` when explicitly false. */
+  rollCompress?: boolean;
 }
 
 export interface HeaderOperation {
