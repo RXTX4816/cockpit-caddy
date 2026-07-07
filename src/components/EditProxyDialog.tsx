@@ -40,6 +40,8 @@ import { UpstreamsSection, validateUpstreams, type ExtraUpstream } from "./Upstr
 import { LbRetrySection, validateLbRetry, lbRetryValuesToConfig, lbRetryConfigToValues, type LbRetryValues } from "./LbRetrySection";
 import type { ErrorHandlerConfig, ForwardAuthConfig, LbPolicy } from "../api";
 import { SectionActions } from "./SectionActions";
+import { sectionAccordionProps } from "./sectionAccordion";
+import { AccordionRow } from "./AccordionRow";
 
 interface Props {
   proxy: ProxyEntry;
@@ -94,6 +96,7 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
   const [errorHandlers, setErrorHandlers] = useState<ErrorHandlerConfig[]>(proxy.errorHandlers ?? []);
   const [forwardAuth, setForwardAuth] = useState<ForwardAuthConfig | undefined>(proxy.forwardAuth);
   const [tlsValues, setTlsValues] = useState<TlsValues>(tlsConfigToValues(proxy.tlsAdvanced, proxy.mtls, proxy.customTls));
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [matchers, setMatchers] = useState<RouteMatch | undefined>(proxy.matchers);
   const [handlePath, setHandlePath] = useState(proxy.handlePath ?? false);
   const [isNamedRoute, setIsNamedRoute] = useState(proxy.isNamedRoute ?? false);
@@ -321,33 +324,72 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
               isDisabled={isConfirming}
             />
           </FormGroup>
+          <RequestBodyLimitField value={requestBodyMaxSize} onChange={setRequestBodyMaxSize} isDisabled={isConfirming} idPrefix="edit-proxy" />
         </Form>
-        <TransportSection value={transport} onChange={setTransport} isDisabled={isConfirming} />
-        {!proxy.namedServerKey && (
-          <TlsSection value={tlsValues} onChange={setTlsValues} isDisabled={isConfirming} hostless={!externalHost.trim()} />
-        )}
-        <AccessLogSection value={accessLog} onChange={setAccessLog} isDisabled={isConfirming} />
-        <ErrorHandlersSection value={errorHandlers} onChange={setErrorHandlers} isDisabled={isConfirming} />
-        <ForwardAuthSection
-          value={forwardAuth}
-          onChange={setForwardAuth}
-          isDisabled={isConfirming}
-          uriError={forwardAuthErr ?? undefined}
-        />
-        <ServerTimeoutsSection value={serverTimeouts} onChange={setServerTimeouts} isDisabled={isConfirming} />
-        <RequestBodyLimitField value={requestBodyMaxSize} onChange={setRequestBodyMaxSize} isDisabled={isConfirming} idPrefix="edit-proxy" />
-        <BasicAuthSection value={basicAuth} onChange={setBasicAuth} isDisabled={isConfirming} />
-        <RewriteSection value={rewrite} onChange={setRewrite} isDisabled={isConfirming} />
-        <RequestHeadersSection value={requestHeaders} onChange={setRequestHeaders} isDisabled={isConfirming} />
-        <ResponseHeadersSection value={responseHeaders} onChange={setResponseHeaders} isDisabled={isConfirming} />
-        <UpstreamsSection
-          value={extraUpstreams}
-          lbPolicy={lbPolicy}
-          onChange={(u, p) => { setExtraUpstreams(u); setLbPolicy(p); }}
-          isDisabled={isConfirming}
-        />
-        <LbRetrySection value={lbRetry} onChange={setLbRetry} isDisabled={isConfirming} />
-        <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!v?.path?.length) setHandlePath(false); }} isDisabled={isConfirming} />
+        <div
+          style={{
+            border: "1px solid var(--pf-t--global--border--color--default)",
+            borderRadius: "var(--pf-t--global--border--radius--small)",
+            padding: "0 0.75rem",
+            marginTop: "var(--pf-v6-global--spacer--md)",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <AccordionRow>
+            <TransportSection value={transport} onChange={setTransport} isDisabled={isConfirming} {...sectionAccordionProps("transport", expandedSection, setExpandedSection)} />
+          </AccordionRow>
+          {!proxy.namedServerKey && (
+            <AccordionRow>
+              <TlsSection value={tlsValues} onChange={setTlsValues} isDisabled={isConfirming} hostless={!externalHost.trim()} {...sectionAccordionProps("tls", expandedSection, setExpandedSection)} />
+            </AccordionRow>
+          )}
+          <AccordionRow>
+            <AccessLogSection value={accessLog} onChange={setAccessLog} isDisabled={isConfirming} {...sectionAccordionProps("accessLog", expandedSection, setExpandedSection)} />
+          </AccordionRow>
+          <AccordionRow>
+            <ErrorHandlersSection value={errorHandlers} onChange={setErrorHandlers} isDisabled={isConfirming} {...sectionAccordionProps("errorHandlers", expandedSection, setExpandedSection)} />
+          </AccordionRow>
+          <AccordionRow>
+            <ForwardAuthSection
+              value={forwardAuth}
+              onChange={setForwardAuth}
+              isDisabled={isConfirming}
+              uriError={forwardAuthErr ?? undefined}
+              {...sectionAccordionProps("forwardAuth", expandedSection, setExpandedSection)}
+            />
+          </AccordionRow>
+          <AccordionRow>
+            <ServerTimeoutsSection value={serverTimeouts} onChange={setServerTimeouts} isDisabled={isConfirming} {...sectionAccordionProps("serverTimeouts", expandedSection, setExpandedSection)} />
+          </AccordionRow>
+          <AccordionRow>
+            <BasicAuthSection value={basicAuth} onChange={setBasicAuth} isDisabled={isConfirming} {...sectionAccordionProps("basicAuth", expandedSection, setExpandedSection)} />
+          </AccordionRow>
+          <AccordionRow>
+            <RewriteSection value={rewrite} onChange={setRewrite} isDisabled={isConfirming} {...sectionAccordionProps("rewrite", expandedSection, setExpandedSection)} />
+          </AccordionRow>
+          <AccordionRow>
+            <RequestHeadersSection value={requestHeaders} onChange={setRequestHeaders} isDisabled={isConfirming} {...sectionAccordionProps("requestHeaders", expandedSection, setExpandedSection)} />
+          </AccordionRow>
+          <AccordionRow>
+            <ResponseHeadersSection value={responseHeaders} onChange={setResponseHeaders} isDisabled={isConfirming} {...sectionAccordionProps("responseHeaders", expandedSection, setExpandedSection)} />
+          </AccordionRow>
+          <AccordionRow>
+            <UpstreamsSection
+              value={extraUpstreams}
+              lbPolicy={lbPolicy}
+              onChange={(u, p) => { setExtraUpstreams(u); setLbPolicy(p); }}
+              isDisabled={isConfirming}
+              {...sectionAccordionProps("upstreams", expandedSection, setExpandedSection)}
+            />
+          </AccordionRow>
+          <AccordionRow>
+            <LbRetrySection value={lbRetry} onChange={setLbRetry} isDisabled={isConfirming} {...sectionAccordionProps("lbRetry", expandedSection, setExpandedSection)} />
+          </AccordionRow>
+          <AccordionRow last>
+            <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!v?.path?.length) setHandlePath(false); }} isDisabled={isConfirming} {...sectionAccordionProps("routeMatchers", expandedSection, setExpandedSection)} />
+          </AccordionRow>
+        </div>
         {matchers?.path?.length && !matchers.host?.length && !matchers.method?.length && !matchers.header && !matchers.query && !matchers.remote_ip && (
           <Checkbox
             id="edit-proxy-handle-path"

@@ -13,11 +13,16 @@ import {
 import { useTranslation } from "react-i18next";
 import type { RouteMatch } from "../api";
 import { SectionActions } from "./SectionActions";
+import { SectionConfiguredDot } from "./SectionConfiguredDot";
 
 interface Props {
   value: RouteMatch | undefined;
   onChange: (v: RouteMatch | undefined) => void;
   isDisabled?: boolean;
+  /** Controlled expand state, e.g. from a parent accordion coordinating single-open-at-a-time
+   *  across sections. Falls back to internal state when omitted. */
+  isExpanded?: boolean;
+  onToggleExpanded?: (v: boolean) => void;
 }
 
 const HTTP_METHODS = ["GET", "HEAD", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"] as const;
@@ -46,9 +51,11 @@ function patch(current: RouteMatch | undefined, update: Partial<RouteMatch>): Ro
   return Object.keys(merged).length ? merged : undefined;
 }
 
-export function RouteMatchersSection({ value, onChange, isDisabled }: Props) {
+export function RouteMatchersSection({ value, onChange, isDisabled, isExpanded: isExpandedProp, onToggleExpanded }: Props) {
   const { t } = useTranslation();
-  const [expanded, setExpanded] = useState(hasAnyMatcher(value));
+  const [internalExpanded, setInternalExpanded] = useState(hasAnyMatcher(value));
+  const expanded = isExpandedProp ?? internalExpanded;
+  const setExpanded = onToggleExpanded ?? setInternalExpanded;
 
   // Local add-row state for each type
   const [newPath, setNewPath] = useState("");
@@ -151,7 +158,7 @@ export function RouteMatchersSection({ value, onChange, isDisabled }: Props) {
 
   return (
     <ExpandableSection
-      toggleText={t("matchers.section_title")}
+      toggleContent={<>{t("matchers.section_title")}{hasAnyMatcher(value) && <SectionConfiguredDot />}</>}
       isIndented
       isExpanded={expanded}
       onToggle={(_e, v) => setExpanded(v)}

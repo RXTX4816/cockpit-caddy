@@ -10,6 +10,7 @@ import {
 import { useTranslation } from "react-i18next";
 import type { LbRetryConfig } from "../api";
 import { SectionActions } from "./SectionActions";
+import { SectionConfiguredDot } from "./SectionConfiguredDot";
 
 export interface LbRetryValues {
   retries: string;
@@ -58,6 +59,10 @@ interface Props {
   value: LbRetryValues;
   onChange: (v: LbRetryValues) => void;
   isDisabled?: boolean;
+  /** Controlled expand state, e.g. from a parent accordion coordinating single-open-at-a-time
+   *  across sections. Falls back to internal state when omitted. */
+  isExpanded?: boolean;
+  onToggleExpanded?: (v: boolean) => void;
 }
 
 export function validateLbRetry(v: LbRetryValues): string | null {
@@ -68,10 +73,12 @@ export function validateLbRetry(v: LbRetryValues): string | null {
   return null;
 }
 
-export function LbRetrySection({ value, onChange, isDisabled }: Props) {
+export function LbRetrySection({ value, onChange, isDisabled, isExpanded: isExpandedProp, onToggleExpanded }: Props) {
   const { t } = useTranslation();
   const hasValues = !!(value.retries || value.tryDuration || value.tryInterval || value.unhealthyStatus);
-  const [expanded, setExpanded] = useState(hasValues);
+  const [internalExpanded, setInternalExpanded] = useState(hasValues);
+  const expanded = isExpandedProp ?? internalExpanded;
+  const setExpanded = onToggleExpanded ?? setInternalExpanded;
 
   function set(key: keyof LbRetryValues, v: string) {
     onChange({ ...value, [key]: v });
@@ -84,7 +91,7 @@ export function LbRetrySection({ value, onChange, isDisabled }: Props) {
 
   return (
     <ExpandableSection
-      toggleText={t("lb_retry.section_title")}
+      toggleContent={<>{t("lb_retry.section_title")}{hasValues && <SectionConfiguredDot />}</>}
       isIndented
       isExpanded={expanded}
       onToggle={(_e, v) => setExpanded(v)}

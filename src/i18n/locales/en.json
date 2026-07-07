@@ -475,8 +475,7 @@
     "after": "After",
     "apply_button": "Apply {{count}} selected",
     "apply_error": "Failed to apply — changes not saved",
-    "apply_ok": "Fixes applied. Reload Caddy for them to take effect.",
-    "reload_hint": "Reload picks up any Caddyfile changes not yet reflected in the running config — e.g. after adding a proxy that shares a port with another hostname."
+    "apply_ok": "Fixes applied. Reload Caddy for them to take effect."
   },
   "global_opts": {
     "title": "Global Caddy options",

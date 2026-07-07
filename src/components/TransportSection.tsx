@@ -6,6 +6,7 @@ import {
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import { SectionActions } from "./SectionActions";
+import { SectionConfiguredDot } from "./SectionConfiguredDot";
 
 export interface TransportValues {
   dialTimeout: string;
@@ -19,12 +20,18 @@ interface Props {
   value: TransportValues;
   onChange: (v: TransportValues) => void;
   isDisabled?: boolean;
+  /** Controlled expand state, e.g. from a parent accordion coordinating single-open-at-a-time
+   *  across sections. Falls back to internal state when omitted. */
+  isExpanded?: boolean;
+  onToggleExpanded?: (v: boolean) => void;
 }
 
-export function TransportSection({ value, onChange, isDisabled }: Props) {
+export function TransportSection({ value, onChange, isDisabled, isExpanded: isExpandedProp, onToggleExpanded }: Props) {
   const { t } = useTranslation();
   const hasValues = !!(value.dialTimeout || value.responseHeaderTimeout);
-  const [expanded, setExpanded] = useState(hasValues);
+  const [internalExpanded, setInternalExpanded] = useState(hasValues);
+  const expanded = isExpandedProp ?? internalExpanded;
+  const setExpanded = onToggleExpanded ?? setInternalExpanded;
 
   function set(key: keyof TransportValues, v: string) {
     onChange({ ...value, [key]: v });
@@ -32,7 +39,7 @@ export function TransportSection({ value, onChange, isDisabled }: Props) {
 
   return (
     <ExpandableSection
-      toggleText={t("transport.section_title")}
+      toggleContent={<>{t("transport.section_title")}{hasValues && <SectionConfiguredDot />}</>}
       isIndented
       isExpanded={expanded}
       onToggle={(_e, v) => setExpanded(v)}
