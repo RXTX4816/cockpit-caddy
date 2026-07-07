@@ -457,6 +457,26 @@ export function parseConfTlsMap(content: string): Record<string, boolean> {
 }
 
 /**
+ * Returns address → CA bundle path by reading `# tls_ca_bundle: <path>` comments (#152)
+ * from conf.d site blocks. Caddy has no field for this on a manually-loaded certificate —
+ * it's stored as a comment purely so the UI can show it back to the user, the same way
+ * `# label:` comments round-trip route labels that aren't part of Caddy's own JSON model.
+ */
+export function parseConfCustomTlsCaMap(content: string): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (const block of extractRawBlocksFromCaddyfile(content)) {
+    for (const line of block.raw.split("\n").slice(1)) {
+      const m = line.trim().match(/^# tls_ca_bundle: (.+)$/);
+      if (m) {
+        setBlockResult(result, block, m[1].trim());
+        break;
+      }
+    }
+  }
+  return result;
+}
+
+/**
  * Returns address → AccessLogConfig by reading `log { }` blocks from the conf.d
  * site blocks. Used as a fallback when the JSON API config was last pushed by
  * older code that didn't include the logging section.
@@ -1124,17 +1144,38 @@ function buildLogCaddyLines(log: import("./types").AccessLogConfig): string[] {
  * that silent, order-dependent overwrite — hostless renewal window only comes from
  * the real global `renewal_window_ratio` Caddyfile option instead.
  */
-function buildTlsCaddyLines(p: Pick<ProxyEntry, "tls" | "tlsAdvanced" | "mtls">, hostless: boolean): string[] {
+function buildTlsCaddyLines(p: Pick<ProxyEntry, "tls" | "tlsAdvanced" | "mtls" | "customTls">, hostless: boolean): string[] {
   if (!p.tls) return [];
   const adv = p.tlsAdvanced;
   const mtls = p.mtls;
-  const certLifetime = adv?.certLifetime;
-  const renewalWindowRatio = hostless ? undefined : adv?.renewalWindowRatio;
+  const custom = p.customTls;
+  const hasCustomCert = !!(custom?.certFile?.trim() && custom?.keyFile?.trim());
+
+  // A manually-loaded certificate (#152) has no issuer of its own — protocols/ciphers/
+  // curves/client_auth still apply to the connection, but certLifetime/renewalWindowRatio
+  // (internal-issuer-only settings) never do, so they're deliberately excluded here.
+  const certLifetime = hasCustomCert ? undefined : adv?.certLifetime;
+  const renewalWindowRatio = (hostless || hasCustomCert) ? undefined : adv?.renewalWindowRatio;
   const hasAdvanced = adv && (
     adv.protocolMin || adv.protocolMax || adv.cipherSuites?.length || adv.curves?.length
     || certLifetime || renewalWindowRatio !== undefined
   );
   const hasMtls = mtls?.mode;
+
+  if (hasCustomCert) {
+    const certLine = `\ttls ${custom!.certFile.trim()} ${custom!.keyFile.trim()}`;
+    // Caddy has no field for a separate CA bundle/intermediate chain on a manually-loaded
+    // certificate — stash the path in a comment (like route labels) purely so the UI can
+    // show it back to the user; it plays no role in Caddy's own TLS behavior.
+    const caComment = custom!.caFile?.trim() ? [`\t# tls_ca_bundle: ${custom!.caFile.trim()}`] : [];
+    if (!hasAdvanced && !hasMtls) return [certLine, ...caComment];
+    const lines: string[] = [`${certLine} {`];
+    lines.push(...buildTlsPolicyBlockLines(adv, mtls));
+    lines.push("\t}");
+    lines.push(...caComment);
+    return lines;
+  }
+
   if (!hasAdvanced && !hasMtls) return ["\ttls internal"];
 
   const lines: string[] = ["\ttls {"];
@@ -1148,6 +1189,18 @@ function buildTlsCaddyLines(p: Pick<ProxyEntry, "tls" | "tlsAdvanced" | "mtls">,
   if (renewalWindowRatio !== undefined) {
     lines.push(`\t\trenewal_window_ratio ${renewalWindowRatio}`);
   }
+  lines.push(...buildTlsPolicyBlockLines(adv, mtls));
+  lines.push("\t}");
+  return lines;
+}
+
+/** Shared protocols/ciphers/curves/client_auth sub-directive lines, used inside both the
+ *  internal-issuer `tls { }` block and the custom-certificate `tls cert key { }` block. */
+function buildTlsPolicyBlockLines(
+  adv: import("./types").TlsAdvancedConfig | undefined,
+  mtls: import("./types").MtlsConfig | undefined,
+): string[] {
+  const lines: string[] = [];
   if (adv?.protocolMin) {
     lines.push(adv.protocolMax
       ? `\t\tprotocols ${adv.protocolMin} ${adv.protocolMax}`
@@ -1169,7 +1222,6 @@ function buildTlsCaddyLines(p: Pick<ProxyEntry, "tls" | "tlsAdvanced" | "mtls">,
     }
     lines.push("\t\t}");
   }
-  lines.push("\t}");
   return lines;
 }
 
@@ -1764,6 +1816,7 @@ function parseRouteToEntry(
   routeId: string,
   namedServerKey: string | undefined,
   automationPolicies: import("./types").CaddyAutomationPolicy[] | undefined,
+  certLoadFiles: import("./types").CaddyCertLoadFile[] | undefined,
 ): ProxyEntry | undefined {
   const handles = (route.handle ?? []) as AnyHandler[];
   let matchers = route.match?.[0] ? parseMatcherJson(route.match[0]) : undefined;
@@ -1951,6 +2004,7 @@ function parseRouteToEntry(
 
   const tls = serverHasTls(server, automationPolicies, externalHost);
   const tlsPolicy = Array.isArray(server.tls_connection_policies) ? server.tls_connection_policies[0] : undefined;
+  const customTls = parseCustomTls(tlsPolicy, certLoadFiles);
 
   const compress = effectiveHandles.some(h => h.handler === "encode");
   const authHandle = effectiveHandles.find(h => h.handler === "authentication");
@@ -2001,12 +2055,14 @@ function parseRouteToEntry(
     forwardAuth,
     tlsAdvanced: tlsPolicy ? parseTlsAdvanced(tlsPolicy, automationPolicies, tlsSubjectHost(externalHost)) : undefined,
     mtls: tlsPolicy ? parseMtls(tlsPolicy) : undefined,
+    customTls,
   };
 }
 
 export function parseProxies(config: CaddyConfig, serverDefs?: import("./types").ServerDef[]): ProxyEntry[] {
   const servers = config.apps?.http?.servers ?? {};
   const automationPolicies = config.apps?.tls?.automation?.policies;
+  const certLoadFiles = config.apps?.tls?.certificates?.load_files;
   const proxies: ProxyEntry[] = [];
 
   for (const [key, server] of Object.entries(servers)) {
@@ -2106,7 +2162,7 @@ export function parseProxies(config: CaddyConfig, serverDefs?: import("./types")
         const entry = parseRouteToEntry(
           contentRoutes[i], key, externalPort, externalHost, server, accessLog,
           serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
-          `${namedDef.key}:${i}`, isNamedServer ? namedDef.key : undefined, automationPolicies,
+          `${namedDef.key}:${i}`, isNamedServer ? namedDef.key : undefined, automationPolicies, certLoadFiles,
         );
         if (entry) proxies.push(entry);
       }
@@ -2117,7 +2173,7 @@ export function parseProxies(config: CaddyConfig, serverDefs?: import("./types")
       const entry = parseRouteToEntry(
         route, key, externalPort, externalHost, server, accessLog,
         serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
-        String(externalPort), undefined, automationPolicies,
+        String(externalPort), undefined, automationPolicies, certLoadFiles,
       );
       if (entry) proxies.push(entry);
     } else {
@@ -2131,7 +2187,7 @@ export function parseProxies(config: CaddyConfig, serverDefs?: import("./types")
         const entry = parseRouteToEntry(
           contentRoutes[i], key, externalPort, externalHost, server, accessLog,
           serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
-          routeHost ? `host:${routeHost}` : `${key}:${i}`, undefined, automationPolicies,
+          routeHost ? `host:${routeHost}` : `${key}:${i}`, undefined, automationPolicies, certLoadFiles,
         );
         if (entry) proxies.push(entry);
       }
@@ -2551,6 +2607,21 @@ function parseMtls(policy: CaddyTLSConnectionPolicy): import("./types").MtlsConf
   return { mode: ca.mode as import("./types").MtlsMode, trustedCaFile };
 }
 
+/** Resolves a manually-loaded certificate (#152) from a connection policy's
+ *  `certificate_selection.any_tag` reference into `apps.tls.certificates.load_files`.
+ *  caFile isn't part of Caddy's JSON model at all — it's recovered separately from a
+ *  Caddyfile comment fallback (see parseConfCustomTlsCaMap) and layered on in useProxies. */
+function parseCustomTls(
+  policy: CaddyTLSConnectionPolicy | undefined,
+  certLoadFiles: import("./types").CaddyCertLoadFile[] | undefined,
+): import("./types").CustomTlsConfig | undefined {
+  const tag = policy?.certificate_selection?.any_tag?.[0];
+  if (!tag) return undefined;
+  const entry = certLoadFiles?.find(f => f.tags?.includes(tag));
+  if (!entry) return undefined;
+  return { certFile: entry.certificate, keyFile: entry.key };
+}
+
 function hasCustomInternalIssuer(adv: import("./types").TlsAdvancedConfig | undefined): boolean {
   return !!(adv?.certLifetime || adv?.renewalWindowRatio !== undefined);
 }
@@ -2591,8 +2662,22 @@ export function applyGlobalInternalLifetimeToServer(
   return forceHostlessLifetime(def.tlsAdvanced, namedServerIsHostless(def.listenAddresses), internalCertLifetime);
 }
 
+/** Stable tag identifying a proxy's manually-loaded certificate (#152) in
+ *  apps.tls.certificates.load_files — derived the same way as the proxy's own identity
+ *  (host, or port when hostless) so it survives edits to unrelated fields. */
+function customCertTag(proxy: Pick<ProxyEntry, "externalPort" | "externalHost" | "matchers">): string {
+  return `custom:${standaloneProxyId(proxy)}`;
+}
+
 function buildTlsPolicy(
-  proxy: { tlsAdvanced?: import("./types").TlsAdvancedConfig; mtls?: import("./types").MtlsConfig },
+  proxy: {
+    tlsAdvanced?: import("./types").TlsAdvancedConfig;
+    mtls?: import("./types").MtlsConfig;
+    customTls?: import("./types").CustomTlsConfig;
+    externalPort?: number;
+    externalHost?: string;
+    matchers?: import("./types").RouteMatch;
+  },
 ): CaddyTLSConnectionPolicy {
   const policy: CaddyTLSConnectionPolicy = {};
   if (proxy.tlsAdvanced) {
@@ -2607,6 +2692,11 @@ function buildTlsPolicy(
       ca.trusted_ca_certs_pem_files = [proxy.mtls.trustedCaFile.trim()];
     }
     policy.client_authentication = ca;
+  }
+  if (proxy.customTls?.certFile?.trim() && proxy.customTls?.keyFile?.trim() && proxy.externalPort !== undefined) {
+    policy.certificate_selection = {
+      any_tag: [customCertTag({ externalPort: proxy.externalPort, externalHost: proxy.externalHost, matchers: proxy.matchers })],
+    };
   }
   return policy;
 }
@@ -2976,12 +3066,35 @@ function patchLoggingLogs(
   return Object.keys(existingLogs).length > 0 ? { logs: existingLogs } : undefined;
 }
 
+/**
+ * Rebuilds apps.tls.certificates.load_files after a single proxy was added/edited —
+ * mirrors rebuildTlsAutomationPolicies's "filter out this proxy's old entry, re-add if
+ * still applicable" pattern, keyed by the proxy's own stable identity tag rather than by
+ * cert content, so switching to a different cert file (or disabling TLS/reverting to
+ * ACME/internal) cleanly replaces or drops the old load_files entry instead of leaking it.
+ */
+function rebuildTlsCertificates(
+  config: CaddyConfig,
+  proxy: Pick<ProxyEntry, "tls" | "customTls" | "externalPort" | "externalHost" | "matchers">,
+): Pick<import("./types").CaddyTlsApp, "certificates"> | undefined {
+  const tag = customCertTag(proxy);
+  const existing = config.apps?.tls?.certificates?.load_files ?? [];
+  const filtered = existing.filter(e => !e.tags?.includes(tag));
+  const custom = proxy.tls ? proxy.customTls : undefined;
+  const loadFiles = (custom?.certFile?.trim() && custom?.keyFile?.trim())
+    ? [...filtered, { certificate: custom.certFile.trim(), key: custom.keyFile.trim(), tags: [tag] }]
+    : filtered;
+  return loadFiles.length ? { certificates: { load_files: loadFiles } } : undefined;
+}
+
 export function mergeProxy(config: CaddyConfig, proxy: ProxyEntry): CaddyConfig {
   const servers = { ...(config.apps?.http?.servers ?? {}) };
   const original = servers[proxy.serverKey];
   servers[proxy.serverKey] = (original && !proxy.redirect && !proxy.staticResponse) ? patchServer(original, proxy) : buildServerEntry(proxy);
 
   const logging = patchLoggingLogs(config, original, proxy);
+  const automation = rebuildTlsAutomationPolicies(config, servers, proxy.serverKey, proxy.tlsAdvanced, tlsSubjectHost(proxy.externalHost));
+  const certificates = rebuildTlsCertificates(config, proxy);
 
   return {
     ...config,
@@ -2989,7 +3102,7 @@ export function mergeProxy(config: CaddyConfig, proxy: ProxyEntry): CaddyConfig 
     apps: {
       ...config.apps,
       http: { ...config.apps?.http, servers },
-      tls: rebuildTlsAutomationPolicies(config, servers, proxy.serverKey, proxy.tlsAdvanced, tlsSubjectHost(proxy.externalHost)),
+      tls: (automation || certificates) ? { ...automation, ...certificates } : undefined,
     },
   };
 }

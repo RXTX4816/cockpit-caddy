@@ -3,7 +3,7 @@ import { useAutoRefresh } from "@rxtx4816/cockpit-plugin-base-react";
 import {
   parseProxies, mergeProxy, removeProxy,
   readCaddyfile, writeCaddyfile, readProxyConf,
-  parseLabelsFromCaddyfile, parseConfTlsMap, parseConfExternalAddresses, parseConfAccessLogMap, parseConfForwardAuthMap,
+  parseLabelsFromCaddyfile, parseConfTlsMap, parseConfExternalAddresses, parseConfAccessLogMap, parseConfForwardAuthMap, parseConfCustomTlsCaMap,
   surgicallyWriteProxy, surgicallyRemoveBlock,
   extractRawBlocksFromCaddyfile, mergeMigratedConfContent, writeRawProxyConf, writeRawProxyConfValidated,
   CaddyfileError,
@@ -93,6 +93,7 @@ export function useProxies() {
   const [confExternal, setConfExternal] = useState<Record<string, { scheme?: string; host?: string }>>({});
   const [confAccessLog, setConfAccessLog] = useState<Record<string, import("../api").AccessLogConfig>>({});
   const [confForwardAuth, setConfForwardAuth] = useState<Record<string, import("../api").ForwardAuthConfig>>({});
+  const [confCustomTlsCa, setConfCustomTlsCa] = useState<Record<string, string>>({});
   const [caddyfileContent, setCaddyfileContent] = useState<string>("");
   const [servers, setServers] = useState<ServerDef[]>([]);
   // Guards proxies memo from running before the first conf.d read completes.
@@ -124,6 +125,7 @@ export function useProxies() {
       setConfExternal(parseConfExternalAddresses(c));
       setConfAccessLog(parseConfAccessLogMap(c));
       setConfForwardAuth(parseConfForwardAuthMap(c));
+      setConfCustomTlsCa(parseConfCustomTlsCaMap(c));
       // Primary: parse server defs from embedded # serverdef: comments in conf.d.
       // Fallback: read old JSON file for blocks that predate the embedded-comment format.
       let defs = parseServerDefsFromConf(c);
@@ -199,9 +201,12 @@ export function useProxies() {
         accessLog: p.accessLog ?? lookup(confAccessLog),
         // Fallback: read forward_auth config from conf.d when JSON detection is insufficient.
         forwardAuth: p.forwardAuth ?? lookup(confForwardAuth),
+        // The CA bundle path (#152) isn't part of Caddy's own JSON model at all — it only
+        // ever lives in the Caddyfile comment, so always layer it in from there.
+        customTls: p.customTls ? { ...p.customTls, caFile: lookup(confCustomTlsCa) } : undefined,
       };
     }),
-    [config, labels, confTls, confExternal, confAccessLog, confForwardAuth, servers, serversLoaded],
+    [config, labels, confTls, confExternal, confAccessLog, confForwardAuth, confCustomTlsCa, servers, serversLoaded],
   );
 
   const addProxy = useCallback(

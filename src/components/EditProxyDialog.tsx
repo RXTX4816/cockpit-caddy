@@ -29,7 +29,7 @@ import { RewriteSection } from "./RewriteSection";
 import { RequestHeadersSection } from "./RequestHeadersSection";
 import { ResponseHeadersSection } from "./ResponseHeadersSection";
 import { TransportSection, type TransportValues } from "./TransportSection";
-import { TlsSection, type TlsValues, tlsValuesToAdvanced, tlsValuesToMtls, tlsConfigToValues, tlsValuesHaveErrors } from "./TlsSection";
+import { TlsSection, type TlsValues, tlsValuesToAdvanced, tlsValuesToMtls, tlsValuesToCustomTls, tlsConfigToValues, tlsValuesHaveErrors } from "./TlsSection";
 import { ServerTimeoutsSection, type ServerTimeoutValues } from "./ServerTimeoutsSection";
 import { RequestBodyLimitField } from "./RequestBodyLimitField";
 import { AccessLogSection, type AccessLogValues, accessLogValuesToConfig, accessLogConfigToValues } from "./AccessLogSection";
@@ -93,7 +93,7 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
   const [lbRetry, setLbRetry] = useState<LbRetryValues>(lbRetryConfigToValues(proxy.lbRetry));
   const [errorHandlers, setErrorHandlers] = useState<ErrorHandlerConfig[]>(proxy.errorHandlers ?? []);
   const [forwardAuth, setForwardAuth] = useState<ForwardAuthConfig | undefined>(proxy.forwardAuth);
-  const [tlsValues, setTlsValues] = useState<TlsValues>(tlsConfigToValues(proxy.tlsAdvanced, proxy.mtls));
+  const [tlsValues, setTlsValues] = useState<TlsValues>(tlsConfigToValues(proxy.tlsAdvanced, proxy.mtls, proxy.customTls));
   const [matchers, setMatchers] = useState<RouteMatch | undefined>(proxy.matchers);
   const [handlePath, setHandlePath] = useState(proxy.handlePath ?? false);
   const [isNamedRoute, setIsNamedRoute] = useState(proxy.isNamedRoute ?? false);
@@ -430,6 +430,7 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
                   requestBodyMaxSize: requestBodyMaxSize.trim() ? parseInt(requestBodyMaxSize, 10) : undefined,
                   tlsAdvanced: tlsValuesToAdvanced(tlsValues),
                   mtls: tlsValuesToMtls(tlsValues),
+                  customTls: tlsValuesToCustomTls(tlsValues),
                   matchers: matchers ?? undefined,
                   handlePath: handlePath || undefined,
                   isNamedRoute: isNamedRoute || undefined,

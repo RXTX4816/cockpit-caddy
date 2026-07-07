@@ -108,6 +108,23 @@ export interface MtlsConfig {
   trustedCaFile?: string;
 }
 
+/** Bring-your-own TLS certificate (#152) — points at existing PEM files on disk instead
+ *  of Caddy issuing one itself (ACME or internal CA). */
+export interface CustomTlsConfig {
+  /** Path to the certificate PEM file (should contain the full chain — leaf + any
+   *  intermediates — since Caddy has no separate slot for a CA bundle on a manually
+   *  loaded certificate). */
+  certFile: string;
+  /** Path to the private key PEM file. */
+  keyFile: string;
+  /** Optional CA bundle / intermediate chain file path — validated for existence and
+   *  readability and shown for reference (subject/expiry) in the UI, but not written into
+   *  Caddy's config: Caddy has no field for it on a manually-loaded certificate, so any
+   *  intermediates must already be concatenated into certFile itself. Persisted via a
+   *  Caddyfile comment (like route labels) since it's not part of Caddy's own JSON model. */
+  caFile?: string;
+}
+
 export interface CaddyServer {
   listen: string[];
   routes: CaddyRoute[];
@@ -152,9 +169,21 @@ export interface CaddyAutomationPolicy {
   renewal_window_ratio?: number;
 }
 
+export interface CaddyCertLoadFile {
+  certificate: string;
+  key: string;
+  tags?: string[];
+}
+
 export interface CaddyTlsApp {
   automation?: {
     policies?: CaddyAutomationPolicy[];
+  };
+  /** Manually-loaded (bring-your-own) certificates (#152), referenced from a connection
+   *  policy's `certificate_selection.any_tag` — distinct from `automation`, which is only
+   *  for certs Caddy itself issues (ACME/internal). */
+  certificates?: {
+    load_files?: CaddyCertLoadFile[];
   };
 }
 
@@ -357,6 +386,9 @@ export interface ProxyEntry {
   tlsAdvanced?: TlsAdvancedConfig;
   /** Mutual TLS / client certificate authentication */
   mtls?: MtlsConfig;
+  /** Bring-your-own TLS certificate (#152) — when set (and tls is true), Caddy loads this
+   *  certificate/key pair directly instead of issuing one itself (ACME or internal CA). */
+  customTls?: CustomTlsConfig;
   // ---------------------------------------------------------------------------
   // Routing extensions (#48, #49, #50)
   // ---------------------------------------------------------------------------

@@ -856,7 +856,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
           }}
           initialRequestBodyMaxSize={duplicating.requestBodyMaxSize != null ? String(duplicating.requestBodyMaxSize) : ""}
           initialErrorHandlers={duplicating.errorHandlers}
-          initialTlsValues={tlsConfigToValues(duplicating.tlsAdvanced, duplicating.mtls)}
+          initialTlsValues={tlsConfigToValues(duplicating.tlsAdvanced, duplicating.mtls, duplicating.customTls)}
           initialMatchers={duplicating.matchers}
           initialHandlePath={duplicating.handlePath}
         />
@@ -890,7 +890,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
           }}
           initialRequestBodyMaxSize={duplicating.requestBodyMaxSize != null ? String(duplicating.requestBodyMaxSize) : ""}
           initialErrorHandlers={duplicating.errorHandlers}
-          initialTlsValues={tlsConfigToValues(duplicating.tlsAdvanced, duplicating.mtls)}
+          initialTlsValues={tlsConfigToValues(duplicating.tlsAdvanced, duplicating.mtls, duplicating.customTls)}
           initialMatchers={duplicating.matchers}
           initialHandlePath={duplicating.handlePath}
         />
@@ -937,7 +937,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
           initialAccessLog={duplicating.accessLog ? accessLogConfigToValues(duplicating.accessLog) : undefined}
           initialErrorHandlers={duplicating.errorHandlers}
           initialForwardAuth={duplicating.forwardAuth}
-          initialTlsValues={tlsConfigToValues(duplicating.tlsAdvanced, duplicating.mtls)}
+          initialTlsValues={tlsConfigToValues(duplicating.tlsAdvanced, duplicating.mtls, duplicating.customTls)}
           initialMatchers={duplicating.matchers}
           initialHandlePath={duplicating.handlePath}
           initialIsNamedRoute={duplicating.isNamedRoute}
