@@ -9,6 +9,7 @@ import {
 import { useTranslation } from "react-i18next";
 import type { RewriteConfig } from "../api";
 import { SectionActions } from "./SectionActions";
+import { SectionConfiguredDot } from "./SectionConfiguredDot";
 
 type RewriteType = "none" | RewriteConfig["type"];
 
@@ -16,12 +17,18 @@ interface Props {
   value: RewriteConfig | undefined;
   onChange: (v: RewriteConfig | undefined) => void;
   isDisabled?: boolean;
+  /** Controlled expand state, e.g. from a parent accordion coordinating single-open-at-a-time
+   *  across sections. Falls back to internal state when omitted. */
+  isExpanded?: boolean;
+  onToggleExpanded?: (v: boolean) => void;
 }
 
-export function RewriteSection({ value, onChange, isDisabled }: Props) {
+export function RewriteSection({ value, onChange, isDisabled, isExpanded: isExpandedProp, onToggleExpanded }: Props) {
   const { t } = useTranslation();
   const type: RewriteType = value?.type ?? "none";
-  const [expanded, setExpanded] = useState(type !== "none");
+  const [internalExpanded, setInternalExpanded] = useState(type !== "none");
+  const expanded = isExpandedProp ?? internalExpanded;
+  const setExpanded = onToggleExpanded ?? setInternalExpanded;
   const bottomRef = useRef<HTMLDivElement>(null);
 
   function scrollToBottom() {
@@ -52,7 +59,7 @@ export function RewriteSection({ value, onChange, isDisabled }: Props) {
 
   return (
     <ExpandableSection
-      toggleText={t("rewrite.section_title")}
+      toggleContent={<>{t("rewrite.section_title")}{type !== "none" && <SectionConfiguredDot />}</>}
       isIndented
       isExpanded={expanded}
       onToggle={(_e, v) => handleToggleExpand(v)}

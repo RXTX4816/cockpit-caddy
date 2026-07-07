@@ -84,6 +84,10 @@ interface Props {
    * other hostless proxy too — not just this one.
    */
   hostless?: boolean;
+  /** Controlled expand state, e.g. from a parent accordion coordinating single-open-at-a-time
+   *  across sections. Falls back to internal state when omitted. */
+  isExpanded?: boolean;
+  onToggleExpanded?: (v: boolean) => void;
 }
 
 function isConfigured(v: TlsValues): boolean {
@@ -172,9 +176,11 @@ function FileCheckStatus({ state }: { state: FileCheckState }) {
   );
 }
 
-export function TlsSection({ value, onChange, isDisabled, hostless }: Props) {
+export function TlsSection({ value, onChange, isDisabled, hostless, isExpanded: isExpandedProp, onToggleExpanded }: Props) {
   const { t } = useTranslation();
-  const [expanded, setExpanded] = useState(isConfigured(value));
+  const [internalExpanded, setInternalExpanded] = useState(isConfigured(value));
+  const expanded = isExpandedProp ?? internalExpanded;
+  const setExpanded = onToggleExpanded ?? setInternalExpanded;
 
   function set(patch: Partial<TlsValues>) {
     onChange({ ...value, ...patch });

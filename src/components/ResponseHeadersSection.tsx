@@ -10,11 +10,16 @@ import {
 import { useTranslation } from "react-i18next";
 import type { HeaderOperation } from "../api";
 import { SectionActions } from "./SectionActions";
+import { SectionConfiguredDot } from "./SectionConfiguredDot";
 
 interface Props {
   value: HeaderOperation[] | undefined;
   onChange: (v: HeaderOperation[] | undefined) => void;
   isDisabled?: boolean;
+  /** Controlled expand state, e.g. from a parent accordion coordinating single-open-at-a-time
+   *  across sections. Falls back to internal state when omitted. */
+  isExpanded?: boolean;
+  onToggleExpanded?: (v: boolean) => void;
 }
 
 const PRESETS: Array<{ labelKey: string; op: HeaderOperation }> = [
@@ -25,13 +30,15 @@ const PRESETS: Array<{ labelKey: string; op: HeaderOperation }> = [
   { labelKey: "preset_remove_server",op: { op: "delete", name: "Server" } },
 ];
 
-export function ResponseHeadersSection({ value, onChange, isDisabled }: Props) {
+export function ResponseHeadersSection({ value, onChange, isDisabled, isExpanded: isExpandedProp, onToggleExpanded }: Props) {
   const { t } = useTranslation();
   const ops = value ?? [];
   const [op, setOp] = useState<HeaderOperation["op"]>("set");
   const [name, setName] = useState("");
   const [val, setVal] = useState("");
-  const [expanded, setExpanded] = useState(ops.length > 0);
+  const [internalExpanded, setInternalExpanded] = useState(ops.length > 0);
+  const expanded = isExpandedProp ?? internalExpanded;
+  const setExpanded = onToggleExpanded ?? setInternalExpanded;
   const bottomRef = useRef<HTMLDivElement>(null);
 
   function scrollToBottom() {
@@ -73,7 +80,7 @@ export function ResponseHeadersSection({ value, onChange, isDisabled }: Props) {
 
   return (
     <ExpandableSection
-      toggleText={t("response_headers.section_title")}
+      toggleContent={<>{t("response_headers.section_title")}{ops.length > 0 && <SectionConfiguredDot />}</>}
       isIndented
       isExpanded={expanded}
       onToggle={(_e, v) => handleToggleExpand(v)}

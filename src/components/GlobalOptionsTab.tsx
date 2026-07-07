@@ -213,7 +213,7 @@ export function GlobalOptionsTab() {
   }
 
   return (
-    <div style={{ maxWidth: "36rem" }}>
+    <div style={{ maxWidth: "56rem" }}>
       <Title headingLevel="h3" style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}>
         {t("global_opts.title")}
       </Title>
@@ -258,69 +258,71 @@ export function GlobalOptionsTab() {
           />
         )}
 
-        <FormGroup label={t("global_opts.http_port")} fieldId="go-http-port">
-          <TextInput
-            id="go-http-port"
-            value={httpPort}
-            onChange={(_e, v) => setHttpPort(v)}
-            placeholder="80"
-            validated={httpPortErr ? "error" : "default"}
-            isDisabled={isConfirming}
-          />
-          {httpPortErr && (
-            <FormHelperText>
-              <HelperText><HelperTextItem variant="error">{httpPortErr}</HelperTextItem></HelperText>
-            </FormHelperText>
-          )}
-        </FormGroup>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
+          <FormGroup label={t("global_opts.http_port")} fieldId="go-http-port" style={{ flex: "1 1 10rem" }}>
+            <TextInput
+              id="go-http-port"
+              value={httpPort}
+              onChange={(_e, v) => setHttpPort(v)}
+              placeholder="80"
+              validated={httpPortErr ? "error" : "default"}
+              isDisabled={isConfirming}
+            />
+            {httpPortErr && (
+              <FormHelperText>
+                <HelperText><HelperTextItem variant="error">{httpPortErr}</HelperTextItem></HelperText>
+              </FormHelperText>
+            )}
+          </FormGroup>
 
-        <FormGroup label={t("global_opts.https_port")} fieldId="go-https-port">
-          <TextInput
-            id="go-https-port"
-            value={httpsPort}
-            onChange={(_e, v) => setHttpsPort(v)}
-            placeholder="443"
-            validated={httpsPortErr ? "error" : "default"}
-            isDisabled={isConfirming}
-          />
-          {httpsPortErr && (
-            <FormHelperText>
-              <HelperText><HelperTextItem variant="error">{httpsPortErr}</HelperTextItem></HelperText>
-            </FormHelperText>
-          )}
-        </FormGroup>
+          <FormGroup label={t("global_opts.https_port")} fieldId="go-https-port" style={{ flex: "1 1 10rem" }}>
+            <TextInput
+              id="go-https-port"
+              value={httpsPort}
+              onChange={(_e, v) => setHttpsPort(v)}
+              placeholder="443"
+              validated={httpsPortErr ? "error" : "default"}
+              isDisabled={isConfirming}
+            />
+            {httpsPortErr && (
+              <FormHelperText>
+                <HelperText><HelperTextItem variant="error">{httpsPortErr}</HelperTextItem></HelperText>
+              </FormHelperText>
+            )}
+          </FormGroup>
 
-        <FormGroup label={t("global_opts.grace_period")} fieldId="go-grace-period">
-          <TextInput
-            id="go-grace-period"
-            value={gracePeriod}
-            onChange={(_e, v) => setGracePeriod(v)}
-            placeholder={t("global_opts.duration_placeholder")}
-            validated={gracePeriodErr ? "error" : "default"}
-            isDisabled={isConfirming}
-          />
-          {gracePeriodErr && (
-            <FormHelperText>
-              <HelperText><HelperTextItem variant="error">{gracePeriodErr}</HelperTextItem></HelperText>
-            </FormHelperText>
-          )}
-        </FormGroup>
+          <FormGroup label={t("global_opts.grace_period")} fieldId="go-grace-period" style={{ flex: "1 1 10rem" }}>
+            <TextInput
+              id="go-grace-period"
+              value={gracePeriod}
+              onChange={(_e, v) => setGracePeriod(v)}
+              placeholder={t("global_opts.duration_placeholder")}
+              validated={gracePeriodErr ? "error" : "default"}
+              isDisabled={isConfirming}
+            />
+            {gracePeriodErr && (
+              <FormHelperText>
+                <HelperText><HelperTextItem variant="error">{gracePeriodErr}</HelperTextItem></HelperText>
+              </FormHelperText>
+            )}
+          </FormGroup>
 
-        <FormGroup label={t("global_opts.shutdown_delay")} fieldId="go-shutdown-delay">
-          <TextInput
-            id="go-shutdown-delay"
-            value={shutdownDelay}
-            onChange={(_e, v) => setShutdownDelay(v)}
-            placeholder={t("global_opts.duration_placeholder")}
-            validated={shutdownDelayErr ? "error" : "default"}
-            isDisabled={isConfirming}
-          />
-          {shutdownDelayErr && (
-            <FormHelperText>
-              <HelperText><HelperTextItem variant="error">{shutdownDelayErr}</HelperTextItem></HelperText>
-            </FormHelperText>
-          )}
-        </FormGroup>
+          <FormGroup label={t("global_opts.shutdown_delay")} fieldId="go-shutdown-delay" style={{ flex: "1 1 10rem" }}>
+            <TextInput
+              id="go-shutdown-delay"
+              value={shutdownDelay}
+              onChange={(_e, v) => setShutdownDelay(v)}
+              placeholder={t("global_opts.duration_placeholder")}
+              validated={shutdownDelayErr ? "error" : "default"}
+              isDisabled={isConfirming}
+            />
+            {shutdownDelayErr && (
+              <FormHelperText>
+                <HelperText><HelperTextItem variant="error">{shutdownDelayErr}</HelperTextItem></HelperText>
+              </FormHelperText>
+            )}
+          </FormGroup>
+        </div>
 
         <FormGroup fieldId="go-debug">
           <Checkbox
@@ -396,28 +398,30 @@ export function GlobalOptionsTab() {
           </FormHelperText>
         </FormGroup>
 
-        <FormGroup label={t("global_opts.acme_eab_key_id")} fieldId="go-eab-key-id">
-          <TextInput
-            id="go-eab-key-id"
-            value={acmeEabKeyId}
-            onChange={(_e, v) => setAcmeEabKeyId(v)}
-            placeholder={t("global_opts.acme_eab_placeholder")}
-            isDisabled={isConfirming}
-          />
-        </FormGroup>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
+          <FormGroup label={t("global_opts.acme_eab_key_id")} fieldId="go-eab-key-id" style={{ flex: "1 1 16rem" }}>
+            <TextInput
+              id="go-eab-key-id"
+              value={acmeEabKeyId}
+              onChange={(_e, v) => setAcmeEabKeyId(v)}
+              placeholder={t("global_opts.acme_eab_placeholder")}
+              isDisabled={isConfirming}
+            />
+          </FormGroup>
 
-        <FormGroup label={t("global_opts.acme_eab_mac_key")} fieldId="go-eab-mac-key">
-          <TextInput
-            id="go-eab-mac-key"
-            value={acmeEabMacKey}
-            onChange={(_e, v) => setAcmeEabMacKey(v)}
-            placeholder={t("global_opts.acme_eab_placeholder")}
-            isDisabled={isConfirming}
-          />
-          <FormHelperText>
-            <HelperText><HelperTextItem>{t("global_opts.acme_eab_help")}</HelperTextItem></HelperText>
-          </FormHelperText>
-        </FormGroup>
+          <FormGroup label={t("global_opts.acme_eab_mac_key")} fieldId="go-eab-mac-key" style={{ flex: "1 1 16rem" }}>
+            <TextInput
+              id="go-eab-mac-key"
+              value={acmeEabMacKey}
+              onChange={(_e, v) => setAcmeEabMacKey(v)}
+              placeholder={t("global_opts.acme_eab_placeholder")}
+              isDisabled={isConfirming}
+            />
+            <FormHelperText>
+              <HelperText><HelperTextItem>{t("global_opts.acme_eab_help")}</HelperTextItem></HelperText>
+            </FormHelperText>
+          </FormGroup>
+        </div>
 
         <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
 
@@ -453,39 +457,41 @@ export function GlobalOptionsTab() {
                 <HelperText><HelperTextItem>{t("global_opts.on_demand_ask_help")}</HelperTextItem></HelperText>
               </FormHelperText>
             </FormGroup>
-            <FormGroup label={t("global_opts.on_demand_interval")} fieldId="go-on-demand-interval">
-              <TextInput
-                id="go-on-demand-interval"
-                value={onDemandInterval}
-                onChange={(_e, v) => setOnDemandInterval(v)}
-                placeholder={t("global_opts.duration_placeholder")}
-                validated={onDemandIntervalErr ? "error" : "default"}
-                isDisabled={isConfirming}
-              />
-              {onDemandIntervalErr && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
+              <FormGroup label={t("global_opts.on_demand_interval")} fieldId="go-on-demand-interval" style={{ flex: "1 1 12rem" }}>
+                <TextInput
+                  id="go-on-demand-interval"
+                  value={onDemandInterval}
+                  onChange={(_e, v) => setOnDemandInterval(v)}
+                  placeholder={t("global_opts.duration_placeholder")}
+                  validated={onDemandIntervalErr ? "error" : "default"}
+                  isDisabled={isConfirming}
+                />
+                {onDemandIntervalErr && (
+                  <FormHelperText>
+                    <HelperText><HelperTextItem variant="error">{onDemandIntervalErr}</HelperTextItem></HelperText>
+                  </FormHelperText>
+                )}
+              </FormGroup>
+              <FormGroup label={t("global_opts.on_demand_burst")} fieldId="go-on-demand-burst" style={{ flex: "1 1 12rem" }}>
+                <TextInput
+                  id="go-on-demand-burst"
+                  value={onDemandBurst}
+                  onChange={(_e, v) => setOnDemandBurst(v)}
+                  placeholder="5"
+                  validated={onDemandBurstErr ? "error" : "default"}
+                  isDisabled={isConfirming}
+                />
+                {onDemandBurstErr && (
+                  <FormHelperText>
+                    <HelperText><HelperTextItem variant="error">{onDemandBurstErr}</HelperTextItem></HelperText>
+                  </FormHelperText>
+                )}
                 <FormHelperText>
-                  <HelperText><HelperTextItem variant="error">{onDemandIntervalErr}</HelperTextItem></HelperText>
+                  <HelperText><HelperTextItem>{t("global_opts.on_demand_burst_help")}</HelperTextItem></HelperText>
                 </FormHelperText>
-              )}
-            </FormGroup>
-            <FormGroup label={t("global_opts.on_demand_burst")} fieldId="go-on-demand-burst">
-              <TextInput
-                id="go-on-demand-burst"
-                value={onDemandBurst}
-                onChange={(_e, v) => setOnDemandBurst(v)}
-                placeholder="5"
-                validated={onDemandBurstErr ? "error" : "default"}
-                isDisabled={isConfirming}
-              />
-              {onDemandBurstErr && (
-                <FormHelperText>
-                  <HelperText><HelperTextItem variant="error">{onDemandBurstErr}</HelperTextItem></HelperText>
-                </FormHelperText>
-              )}
-              <FormHelperText>
-                <HelperText><HelperTextItem>{t("global_opts.on_demand_burst_help")}</HelperTextItem></HelperText>
-              </FormHelperText>
-            </FormGroup>
+              </FormGroup>
+            </div>
           </>
         )}
 
@@ -612,45 +618,47 @@ export function GlobalOptionsTab() {
 
         {metricsEnabled && (
           <>
-            <FormGroup label={t("global_opts.metrics_listen_address")} fieldId="go-metrics-listen-address">
-              <TextInput
-                id="go-metrics-listen-address"
-                value={metricsListenAddress}
-                onChange={(_e, v) => setMetricsListenAddress(v)}
-                placeholder=":2019"
-                validated={metricsListenAddressErr ? "error" : "default"}
-                isDisabled={isConfirming}
-              />
-              {metricsListenAddressErr ? (
-                <FormHelperText>
-                  <HelperText><HelperTextItem variant="error">{metricsListenAddressErr}</HelperTextItem></HelperText>
-                </FormHelperText>
-              ) : (
-                <FormHelperText>
-                  <HelperText><HelperTextItem>{t("global_opts.metrics_listen_address_help")}</HelperTextItem></HelperText>
-                </FormHelperText>
-              )}
-            </FormGroup>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
+              <FormGroup label={t("global_opts.metrics_listen_address")} fieldId="go-metrics-listen-address" style={{ flex: "1 1 14rem" }}>
+                <TextInput
+                  id="go-metrics-listen-address"
+                  value={metricsListenAddress}
+                  onChange={(_e, v) => setMetricsListenAddress(v)}
+                  placeholder=":2019"
+                  validated={metricsListenAddressErr ? "error" : "default"}
+                  isDisabled={isConfirming}
+                />
+                {metricsListenAddressErr ? (
+                  <FormHelperText>
+                    <HelperText><HelperTextItem variant="error">{metricsListenAddressErr}</HelperTextItem></HelperText>
+                  </FormHelperText>
+                ) : (
+                  <FormHelperText>
+                    <HelperText><HelperTextItem>{t("global_opts.metrics_listen_address_help")}</HelperTextItem></HelperText>
+                  </FormHelperText>
+                )}
+              </FormGroup>
 
-            <FormGroup label={t("global_opts.metrics_path")} fieldId="go-metrics-path">
-              <TextInput
-                id="go-metrics-path"
-                value={metricsPath}
-                onChange={(_e, v) => setMetricsPath(v)}
-                placeholder="/metrics"
-                validated={metricsPathErr ? "error" : "default"}
-                isDisabled={isConfirming}
-              />
-              {metricsPathErr ? (
-                <FormHelperText>
-                  <HelperText><HelperTextItem variant="error">{metricsPathErr}</HelperTextItem></HelperText>
-                </FormHelperText>
-              ) : (
-                <FormHelperText>
-                  <HelperText><HelperTextItem>{t("global_opts.metrics_path_help")}</HelperTextItem></HelperText>
-                </FormHelperText>
-              )}
-            </FormGroup>
+              <FormGroup label={t("global_opts.metrics_path")} fieldId="go-metrics-path" style={{ flex: "1 1 14rem" }}>
+                <TextInput
+                  id="go-metrics-path"
+                  value={metricsPath}
+                  onChange={(_e, v) => setMetricsPath(v)}
+                  placeholder="/metrics"
+                  validated={metricsPathErr ? "error" : "default"}
+                  isDisabled={isConfirming}
+                />
+                {metricsPathErr ? (
+                  <FormHelperText>
+                    <HelperText><HelperTextItem variant="error">{metricsPathErr}</HelperTextItem></HelperText>
+                  </FormHelperText>
+                ) : (
+                  <FormHelperText>
+                    <HelperText><HelperTextItem>{t("global_opts.metrics_path_help")}</HelperTextItem></HelperText>
+                  </FormHelperText>
+                )}
+              </FormGroup>
+            </div>
 
             <FormGroup fieldId="go-metrics-plain-format">
               <Checkbox
@@ -785,36 +793,38 @@ export function GlobalOptionsTab() {
 
         {proxyProtocolEnabled && (
           <>
-            <FormGroup label={t("global_opts.proxy_protocol_allow")} fieldId="go-proxy-protocol-allow">
-              <TextInput
-                id="go-proxy-protocol-allow"
-                value={proxyProtocolAllow}
-                onChange={(_e, v) => setProxyProtocolAllow(v)}
-                placeholder="10.0.0.0/8 192.168.1.1/32"
-                isDisabled={isConfirming}
-              />
-              <FormHelperText>
-                <HelperText><HelperTextItem>{t("global_opts.proxy_protocol_allow_help")}</HelperTextItem></HelperText>
-              </FormHelperText>
-            </FormGroup>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
+              <FormGroup label={t("global_opts.proxy_protocol_allow")} fieldId="go-proxy-protocol-allow" style={{ flex: "2 1 16rem" }}>
+                <TextInput
+                  id="go-proxy-protocol-allow"
+                  value={proxyProtocolAllow}
+                  onChange={(_e, v) => setProxyProtocolAllow(v)}
+                  placeholder="10.0.0.0/8 192.168.1.1/32"
+                  isDisabled={isConfirming}
+                />
+                <FormHelperText>
+                  <HelperText><HelperTextItem>{t("global_opts.proxy_protocol_allow_help")}</HelperTextItem></HelperText>
+                </FormHelperText>
+              </FormGroup>
 
-            <FormGroup label={t("global_opts.proxy_protocol_timeout")} fieldId="go-proxy-protocol-timeout">
-              <TextInput
-                id="go-proxy-protocol-timeout"
-                value={proxyProtocolTimeout}
-                onChange={(_e, v) => setProxyProtocolTimeout(v)}
-                placeholder="2s"
-                validated={proxyProtocolTimeoutErr ? "error" : "default"}
-                isDisabled={isConfirming}
-              />
-              <FormHelperText>
-                <HelperText>
-                  <HelperTextItem variant={proxyProtocolTimeoutErr ? "error" : "default"}>
-                    {proxyProtocolTimeoutErr ?? t("global_opts.proxy_protocol_timeout_help")}
-                  </HelperTextItem>
-                </HelperText>
-              </FormHelperText>
-            </FormGroup>
+              <FormGroup label={t("global_opts.proxy_protocol_timeout")} fieldId="go-proxy-protocol-timeout" style={{ flex: "1 1 10rem" }}>
+                <TextInput
+                  id="go-proxy-protocol-timeout"
+                  value={proxyProtocolTimeout}
+                  onChange={(_e, v) => setProxyProtocolTimeout(v)}
+                  placeholder="2s"
+                  validated={proxyProtocolTimeoutErr ? "error" : "default"}
+                  isDisabled={isConfirming}
+                />
+                <FormHelperText>
+                  <HelperText>
+                    <HelperTextItem variant={proxyProtocolTimeoutErr ? "error" : "default"}>
+                      {proxyProtocolTimeoutErr ?? t("global_opts.proxy_protocol_timeout_help")}
+                    </HelperTextItem>
+                  </HelperText>
+                </FormHelperText>
+              </FormGroup>
+            </div>
           </>
         )}
 

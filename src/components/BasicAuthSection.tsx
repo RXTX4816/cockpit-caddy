@@ -8,6 +8,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { hashPassword } from "../api";
 import { SectionActions } from "./SectionActions";
+import { SectionConfiguredDot } from "./SectionConfiguredDot";
 
 export interface AuthEntry {
   username: string;
@@ -32,11 +33,17 @@ interface Props {
   value: AuthEntry[];
   onChange: (v: AuthEntry[]) => void;
   isDisabled?: boolean;
+  /** Controlled expand state, e.g. from a parent accordion coordinating single-open-at-a-time
+   *  across sections. Falls back to internal state when omitted. */
+  isExpanded?: boolean;
+  onToggleExpanded?: (v: boolean) => void;
 }
 
-export function BasicAuthSection({ value, onChange, isDisabled }: Props) {
+export function BasicAuthSection({ value, onChange, isDisabled, isExpanded: isExpandedProp, onToggleExpanded }: Props) {
   const { t } = useTranslation();
-  const [expanded, setExpanded] = useState(value.length > 0);
+  const [internalExpanded, setInternalExpanded] = useState(value.length > 0);
+  const expanded = isExpandedProp ?? internalExpanded;
+  const setExpanded = onToggleExpanded ?? setInternalExpanded;
 
   function update(idx: number, patch: Partial<AuthEntry>) {
     onChange(value.map((e, i) => i === idx ? { ...e, ...patch } : e));
@@ -53,7 +60,7 @@ export function BasicAuthSection({ value, onChange, isDisabled }: Props) {
 
   return (
     <ExpandableSection
-      toggleText={t("basic_auth.section_title")}
+      toggleContent={<>{t("basic_auth.section_title")}{value.length > 0 && <SectionConfiguredDot />}</>}
       isIndented
       isExpanded={expanded}
       onToggle={(_e, v) => setExpanded(v)}

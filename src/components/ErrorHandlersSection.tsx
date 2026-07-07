@@ -16,6 +16,10 @@ interface Props {
   value: ErrorHandlerConfig[];
   onChange: (v: ErrorHandlerConfig[]) => void;
   isDisabled?: boolean;
+  /** Controlled expand state, e.g. from a parent accordion coordinating single-open-at-a-time
+   *  across sections. Falls back to internal state when omitted. */
+  isExpanded?: boolean;
+  onToggleExpanded?: (v: boolean) => void;
 }
 
 const MATCH_TYPES: ErrorMatchType[] = ["specific", "4xx", "5xx", "all"];
@@ -34,9 +38,11 @@ function parseCodes(raw: string): number[] {
   return raw.split(/[\s,]+/).map(s => parseInt(s, 10)).filter(n => !isNaN(n) && n >= 100 && n <= 599);
 }
 
-export function ErrorHandlersSection({ value, onChange, isDisabled }: Props) {
+export function ErrorHandlersSection({ value, onChange, isDisabled, isExpanded: isExpandedProp, onToggleExpanded }: Props) {
   const { t } = useTranslation();
-  const [expanded, setExpanded] = useState(value.length > 0);
+  const [internalExpanded, setInternalExpanded] = useState(value.length > 0);
+  const expanded = isExpandedProp ?? internalExpanded;
+  const setExpanded = onToggleExpanded ?? setInternalExpanded;
 
   function update(idx: number, patch: Partial<ErrorHandlerConfig>) {
     onChange(value.map((h, i) => i === idx ? { ...h, ...patch } : h));

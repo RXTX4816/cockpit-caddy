@@ -25,6 +25,8 @@ import { TlsSection, type TlsValues, tlsValuesToAdvanced, tlsValuesToMtls, tlsCo
 import { ServerTimeoutsSection, type ServerTimeoutValues } from "./ServerTimeoutsSection";
 import { AccessLogSection, type AccessLogValues, accessLogValuesToConfig, accessLogConfigToValues } from "./AccessLogSection";
 import { ErrorHandlersSection } from "./ErrorHandlersSection";
+import { sectionAccordionProps } from "./sectionAccordion";
+import { AccordionRow } from "./AccordionRow";
 
 interface Props {
   def: ServerDef;
@@ -55,6 +57,7 @@ export function EditServerDialog({ def, onSave, onClose }: Props) {
 
   const [nameErr, setNameErr] = useState<string | null>(null);
   const [addrErr, setAddrErr] = useState<string | null>(null);
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
   function addAddress() {
     const n = parseInt(newPort.trim(), 10);
@@ -190,10 +193,29 @@ export function EditServerDialog({ def, onSave, onClose }: Props) {
           </FormGroup>
         </Form>
 
-        <TlsSection value={tlsValues} onChange={setTlsValues} isDisabled={isLocked} hostless={namedServerIsHostless(listenAddresses)} />
-        <AccessLogSection value={accessLog} onChange={setAccessLog} isDisabled={isLocked} />
-        <ErrorHandlersSection value={errorHandlers} onChange={setErrorHandlers} isDisabled={isLocked} />
-        <ServerTimeoutsSection value={serverTimeouts} onChange={setServerTimeouts} isDisabled={isLocked} />
+        <div
+          style={{
+            border: "1px solid var(--pf-t--global--border--color--default)",
+            borderRadius: "var(--pf-t--global--border--radius--small)",
+            padding: "0 0.75rem",
+            marginTop: "var(--pf-v6-global--spacer--md)",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <AccordionRow>
+            <TlsSection value={tlsValues} onChange={setTlsValues} isDisabled={isLocked} hostless={namedServerIsHostless(listenAddresses)} {...sectionAccordionProps("tls", expandedSection, setExpandedSection)} />
+          </AccordionRow>
+          <AccordionRow>
+            <AccessLogSection value={accessLog} onChange={setAccessLog} isDisabled={isLocked} {...sectionAccordionProps("accessLog", expandedSection, setExpandedSection)} />
+          </AccordionRow>
+          <AccordionRow>
+            <ErrorHandlersSection value={errorHandlers} onChange={setErrorHandlers} isDisabled={isLocked} {...sectionAccordionProps("errorHandlers", expandedSection, setExpandedSection)} />
+          </AccordionRow>
+          <AccordionRow last>
+            <ServerTimeoutsSection value={serverTimeouts} onChange={setServerTimeouts} isDisabled={isLocked} {...sectionAccordionProps("serverTimeouts", expandedSection, setExpandedSection)} />
+          </AccordionRow>
+        </div>
 
         {confirmAction.error && (
           <Alert

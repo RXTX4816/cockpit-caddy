@@ -10,6 +10,7 @@ import {
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import { SectionActions } from "./SectionActions";
+import { SectionConfiguredDot } from "./SectionConfiguredDot";
 
 export interface ServerTimeoutValues {
   readTimeout: string;
@@ -42,12 +43,18 @@ interface Props {
   value: ServerTimeoutValues;
   onChange: (v: ServerTimeoutValues) => void;
   isDisabled?: boolean;
+  /** Controlled expand state, e.g. from a parent accordion coordinating single-open-at-a-time
+   *  across sections. Falls back to internal state when omitted. */
+  isExpanded?: boolean;
+  onToggleExpanded?: (v: boolean) => void;
 }
 
-export function ServerTimeoutsSection({ value, onChange, isDisabled }: Props) {
+export function ServerTimeoutsSection({ value, onChange, isDisabled, isExpanded: isExpandedProp, onToggleExpanded }: Props) {
   const { t } = useTranslation();
   const hasValues = !!(value.readTimeout || value.readHeaderTimeout || value.writeTimeout || value.idleTimeout || value.maxHeaderBytes || value.disableHttp3);
-  const [expanded, setExpanded] = useState(hasValues);
+  const [internalExpanded, setInternalExpanded] = useState(hasValues);
+  const expanded = isExpandedProp ?? internalExpanded;
+  const setExpanded = onToggleExpanded ?? setInternalExpanded;
 
   function set(key: keyof ServerTimeoutValues, v: string) {
     onChange({ ...value, [key]: v });
@@ -58,7 +65,7 @@ export function ServerTimeoutsSection({ value, onChange, isDisabled }: Props) {
 
   return (
     <ExpandableSection
-      toggleText={t("server_timeouts.section_title")}
+      toggleContent={<>{t("server_timeouts.section_title")}{hasValues && <SectionConfiguredDot />}</>}
       isIndented
       isExpanded={expanded}
       onToggle={(_e, v) => setExpanded(v)}

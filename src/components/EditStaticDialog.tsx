@@ -29,6 +29,8 @@ import { ServerTimeoutsSection, type ServerTimeoutValues } from "./ServerTimeout
 import { RequestBodyLimitField } from "./RequestBodyLimitField";
 import { ErrorHandlersSection } from "./ErrorHandlersSection";
 import { TlsSection, type TlsValues, tlsValuesToAdvanced, tlsValuesToMtls, tlsConfigToValues } from "./TlsSection";
+import { sectionAccordionProps } from "./sectionAccordion";
+import { AccordionRow } from "./AccordionRow";
 
 interface Props {
   proxy: ProxyEntry;
@@ -69,6 +71,7 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
   const [handlePath, setHandlePath] = useState(proxy.handlePath ?? false);
   const [portErr, setPortErr] = useState<string | null>(null);
   const [rootErr, setRootErr] = useState<string | null>(null);
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
   function validate(): boolean {
     let ok = true;
@@ -180,27 +183,56 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
               isDisabled={isLocked}
             />
           </FormGroup>
+          <RequestBodyLimitField value={requestBodyMaxSize} onChange={setRequestBodyMaxSize} isDisabled={isLocked} idPrefix="edit-static" />
         </Form>
 
-        {!proxy.namedServerKey && (
-          <TlsSection value={tlsValues} onChange={setTlsValues} isDisabled={isLocked} />
-        )}
-        <AccessLogSection value={accessLog} onChange={setAccessLog} isDisabled={isLocked} />
-        <ErrorHandlersSection value={errorHandlers} onChange={setErrorHandlers} isDisabled={isLocked} />
-        <ServerTimeoutsSection value={serverTimeouts} onChange={setServerTimeouts} isDisabled={isLocked} />
-        <RequestBodyLimitField value={requestBodyMaxSize} onChange={setRequestBodyMaxSize} isDisabled={isLocked} idPrefix="edit-static" />
-        <BasicAuthSection
-          value={basicAuth}
-          onChange={setBasicAuth}
-          isDisabled={isLocked}
-        />
-        <RequestHeadersSection value={requestHeaders} onChange={setRequestHeaders} isDisabled={isLocked} />
-        <ResponseHeadersSection
-          value={responseHeaders}
-          onChange={v => setResponseHeaders(v ?? [])}
-          isDisabled={isLocked}
-        />
-        <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!v?.path?.length) setHandlePath(false); }} isDisabled={isLocked} />
+        <div
+          style={{
+            border: "1px solid var(--pf-t--global--border--color--default)",
+            borderRadius: "var(--pf-t--global--border--radius--small)",
+            padding: "0 0.75rem",
+            marginTop: "var(--pf-v6-global--spacer--md)",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          {!proxy.namedServerKey && (
+            <AccordionRow>
+              <TlsSection value={tlsValues} onChange={setTlsValues} isDisabled={isLocked} {...sectionAccordionProps("tls", expandedSection, setExpandedSection)} />
+            </AccordionRow>
+          )}
+          <AccordionRow>
+            <AccessLogSection value={accessLog} onChange={setAccessLog} isDisabled={isLocked} {...sectionAccordionProps("accessLog", expandedSection, setExpandedSection)} />
+          </AccordionRow>
+          <AccordionRow>
+            <ErrorHandlersSection value={errorHandlers} onChange={setErrorHandlers} isDisabled={isLocked} {...sectionAccordionProps("errorHandlers", expandedSection, setExpandedSection)} />
+          </AccordionRow>
+          <AccordionRow>
+            <ServerTimeoutsSection value={serverTimeouts} onChange={setServerTimeouts} isDisabled={isLocked} {...sectionAccordionProps("serverTimeouts", expandedSection, setExpandedSection)} />
+          </AccordionRow>
+          <AccordionRow>
+            <BasicAuthSection
+              value={basicAuth}
+              onChange={setBasicAuth}
+              isDisabled={isLocked}
+              {...sectionAccordionProps("basicAuth", expandedSection, setExpandedSection)}
+            />
+          </AccordionRow>
+          <AccordionRow>
+            <RequestHeadersSection value={requestHeaders} onChange={setRequestHeaders} isDisabled={isLocked} {...sectionAccordionProps("requestHeaders", expandedSection, setExpandedSection)} />
+          </AccordionRow>
+          <AccordionRow>
+            <ResponseHeadersSection
+              value={responseHeaders}
+              onChange={v => setResponseHeaders(v ?? [])}
+              isDisabled={isLocked}
+              {...sectionAccordionProps("responseHeaders", expandedSection, setExpandedSection)}
+            />
+          </AccordionRow>
+          <AccordionRow last>
+            <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!v?.path?.length) setHandlePath(false); }} isDisabled={isLocked} {...sectionAccordionProps("routeMatchers", expandedSection, setExpandedSection)} />
+          </AccordionRow>
+        </div>
         {matchers?.path?.length && !matchers.host?.length && !matchers.method?.length && !matchers.header && !matchers.query && !matchers.remote_ip && (
           <Checkbox
             id="edit-static-handle-path"

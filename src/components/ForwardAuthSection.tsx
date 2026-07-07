@@ -18,6 +18,10 @@ interface Props {
   isDisabled?: boolean;
   uriError?: string;
   urlError?: string;
+  /** Controlled expand state, e.g. from a parent accordion coordinating single-open-at-a-time
+   *  across sections. Falls back to internal state when omitted. */
+  isExpanded?: boolean;
+  onToggleExpanded?: (v: boolean) => void;
 }
 
 function empty(): ForwardAuthConfig {
@@ -38,9 +42,11 @@ export function validateForwardAuth(fa: ForwardAuthConfig | undefined): string |
   return null;
 }
 
-export function ForwardAuthSection({ value, onChange, isDisabled, uriError, urlError }: Props) {
+export function ForwardAuthSection({ value, onChange, isDisabled, uriError, urlError, isExpanded: isExpandedProp, onToggleExpanded }: Props) {
   const { t } = useTranslation();
-  const [expanded, setExpanded] = useState(!!value);
+  const [internalExpanded, setInternalExpanded] = useState(!!value);
+  const expanded = isExpandedProp ?? internalExpanded;
+  const setExpanded = onToggleExpanded ?? setInternalExpanded;
   const [headersInput, setHeadersInput] = useState(() => headersToString(value?.copyHeaders ?? []));
 
   const enabled = !!value;

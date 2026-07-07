@@ -11,6 +11,7 @@ import {
 import { useTranslation } from "react-i18next";
 import type { LbPolicy } from "../api";
 import { SectionActions } from "./SectionActions";
+import { SectionConfiguredDot } from "./SectionConfiguredDot";
 
 export interface ExtraUpstream {
   host: string;
@@ -22,6 +23,10 @@ interface Props {
   lbPolicy: LbPolicy | "";
   onChange: (upstreams: ExtraUpstream[], policy: LbPolicy | "") => void;
   isDisabled?: boolean;
+  /** Controlled expand state, e.g. from a parent accordion coordinating single-open-at-a-time
+   *  across sections. Falls back to internal state when omitted. */
+  isExpanded?: boolean;
+  onToggleExpanded?: (v: boolean) => void;
 }
 
 const LB_POLICIES: Array<{ value: LbPolicy; labelKey: string }> = [
@@ -31,9 +36,11 @@ const LB_POLICIES: Array<{ value: LbPolicy; labelKey: string }> = [
   { value: "first",       labelKey: "upstreams.policy_first" },
 ];
 
-export function UpstreamsSection({ value, lbPolicy, onChange, isDisabled }: Props) {
+export function UpstreamsSection({ value, lbPolicy, onChange, isDisabled, isExpanded: isExpandedProp, onToggleExpanded }: Props) {
   const { t } = useTranslation();
-  const [expanded, setExpanded] = useState(value.length > 0);
+  const [internalExpanded, setInternalExpanded] = useState(value.length > 0);
+  const expanded = isExpandedProp ?? internalExpanded;
+  const setExpanded = onToggleExpanded ?? setInternalExpanded;
 
   function updateUpstream(idx: number, patch: Partial<ExtraUpstream>) {
     const next = value.map((u, i) => i === idx ? { ...u, ...patch } : u);
@@ -52,7 +59,7 @@ export function UpstreamsSection({ value, lbPolicy, onChange, isDisabled }: Prop
 
   return (
     <ExpandableSection
-      toggleText={expanded ? t("upstreams.section_hide") : t("upstreams.section_title")}
+      toggleContent={<>{expanded ? t("upstreams.section_hide") : t("upstreams.section_title")}{value.length > 0 && <SectionConfiguredDot />}</>}
       onToggle={(_e, v) => setExpanded(v)}
       isExpanded={expanded}
       style={{ marginTop: "var(--pf-v6-global--spacer--md)" }}

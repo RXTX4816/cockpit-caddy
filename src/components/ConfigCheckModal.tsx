@@ -100,12 +100,6 @@ export function ConfigCheckModal({ onClose }: Props) {
       <ModalBody>
         <Alert variant="info" isInline title={t("config_check.intro")} style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }} />
 
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "var(--pf-v6-global--spacer--md)" }}>
-          <Button variant="secondary" size="sm" isLoading={reloading} isDisabled={reloading} onClick={() => void handleReload()}>
-            {t("service.reload")}
-          </Button>
-          <span style={{ color: "var(--pf-t--global--text--color--subtle)", fontSize: "0.85em" }}>{t("config_check.reload_hint")}</span>
-        </div>
         {reloadOk && (
           <Alert variant="success" isInline title={t("caddyfile.reloaded")} style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }} />
         )}
