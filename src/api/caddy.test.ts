@@ -2145,6 +2145,69 @@ describe("parseProxies — phpFastcgi round-trip, host-matched subroute-wrapped 
   });
 });
 
+describe("request body size limit (#154)", () => {
+  it("proxyToBlock emits a request_body block before the reverse_proxy handler", () => {
+    const result = proxyToBlock(proxy({ requestBodyMaxSize: 10485760 }));
+    const lines = result.split("\n").map(l => l.trim());
+    const requestBodyIdx = lines.indexOf("request_body {");
+    const reverseProxyIdx = lines.findIndex(l => l.startsWith("reverse_proxy"));
+    expect(requestBodyIdx).toBeGreaterThanOrEqual(0);
+    expect(result).toContain("max_size 10485760");
+    expect(requestBodyIdx).toBeLessThan(reverseProxyIdx);
+  });
+
+  it("proxyToBlock omits request_body entirely when unset", () => {
+    const result = proxyToBlock(proxy({}));
+    expect(result).not.toContain("request_body");
+  });
+
+  it("proxyToBlock skips request_body for redirect/staticResponse routes, which never read the body", () => {
+    const redirectResult = proxyToBlock(proxy({ requestBodyMaxSize: 1000, redirect: { to: "https://example.com", code: 301 } }));
+    expect(redirectResult).not.toContain("request_body");
+    const respondResult = proxyToBlock(proxy({ requestBodyMaxSize: 1000, staticResponse: { statusCode: 200 } }));
+    expect(respondResult).not.toContain("request_body");
+  });
+
+  it("proxyToBlock emits request_body for fileServer and phpFastcgi routes too", () => {
+    const fsResult = proxyToBlock(proxy({ requestBodyMaxSize: 5000, fileServer: { root: "/srv" } }));
+    expect(fsResult).toContain("max_size 5000");
+    const phpResult = proxyToBlock(proxy({ requestBodyMaxSize: 5000, phpFastcgi: { upstream: "unix//run/php-fpm.sock", root: "/var/www" } }));
+    expect(phpResult).toContain("max_size 5000");
+  });
+
+  it("buildServerEntry places request_body first in the handler chain", () => {
+    const server = buildServerEntry({ externalPort: 7700, externalScheme: undefined, externalHost: undefined, targetHost: "localhost", targetPort: 7701, targetScheme: "http", tls: false, tlsSkipVerify: false, requestBodyMaxSize: 2000000 });
+    const handle = server.routes[0].handle as Record<string, unknown>[];
+    expect(handle[0]).toEqual({ handler: "request_body", max_size: 2000000 });
+    expect(handle[handle.length - 1]["handler"]).toBe("reverse_proxy");
+  });
+
+  it("parseProxies round-trips requestBodyMaxSize for a reverse_proxy route", () => {
+    const config = makeConfig([
+      { handler: "request_body", max_size: 3145728 },
+      { handler: "reverse_proxy", upstreams: [{ dial: "localhost:7701" }] },
+    ]);
+    const [p] = parseProxies(config);
+    expect(p.requestBodyMaxSize).toBe(3145728);
+  });
+
+  it("parseProxies round-trips requestBodyMaxSize for a file_server route", () => {
+    const config = makeConfig([
+      { handler: "request_body", max_size: 3145728 },
+      { handler: "file_server", root: "/var/www/html" },
+    ]);
+    const [p] = parseProxies(config);
+    expect(p.requestBodyMaxSize).toBe(3145728);
+    expect(p.fileServer?.root).toBe("/var/www/html");
+  });
+
+  it("leaves requestBodyMaxSize undefined when no request_body handler is present", () => {
+    const config = makeConfig([{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:7701" }] }]);
+    const [p] = parseProxies(config);
+    expect(p.requestBodyMaxSize).toBeUndefined();
+  });
+});
+
 describe("proxyToBlock — multiple upstreams", () => {
   it("emits all upstreams on the reverse_proxy line", () => {
     const result = proxyToBlock(proxy({

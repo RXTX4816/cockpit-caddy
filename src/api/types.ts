@@ -291,6 +291,11 @@ export interface ProxyEntry {
   /** When true, explicitly restricts this server to HTTP/1.1 and HTTP/2 (writes
    *  `protocols h1 h2`), opting out of Caddy's default HTTP/3 (QUIC) support (#51). */
   disableHttp3?: boolean;
+  /** Maximum allowed request body size for this route in bytes (#154) — same
+   *  bytes-not-human-string convention as maxHeaderBytes. Requests over this size are
+   *  rejected before reaching the upstream/handler. Not applicable to redirect/
+   *  staticResponse routes, which never read the request body. */
+  requestBodyMaxSize?: number;
   /** Per-server access log configuration */
   accessLog?: AccessLogConfig;
   /** Per-server error handlers (server.errors.routes) */

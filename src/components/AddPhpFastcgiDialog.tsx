@@ -26,6 +26,7 @@ import { ResponseHeadersSection } from "./ResponseHeadersSection";
 import { RequestHeadersSection } from "./RequestHeadersSection";
 import { AccessLogSection, type AccessLogValues, accessLogConfigToValues, accessLogValuesToConfig } from "./AccessLogSection";
 import { ServerTimeoutsSection, type ServerTimeoutValues } from "./ServerTimeoutsSection";
+import { RequestBodyLimitField } from "./RequestBodyLimitField";
 import { ErrorHandlersSection } from "./ErrorHandlersSection";
 import { TlsSection, type TlsValues, tlsValuesToAdvanced, tlsValuesToMtls, tlsConfigToValues } from "./TlsSection";
 import { PhpFastcgiEnvSection, envEntriesToRecord, type EnvEntry } from "./PhpFastcgiEnvSection";
@@ -41,13 +42,14 @@ interface Props {
   initialRequestHeaders?: HeaderOperation[];
   initialAccessLog?: AccessLogValues;
   initialServerTimeouts?: ServerTimeoutValues;
+  initialRequestBodyMaxSize?: string;
   initialErrorHandlers?: ErrorHandlerConfig[];
   initialTlsValues?: TlsValues;
   initialMatchers?: RouteMatch;
   initialHandlePath?: boolean;
 }
 
-export function AddPhpFastcgiDialog({ existingPorts, onAdd, onClose, initialValues, initialEnv, initialBasicAuth, initialResponseHeaders, initialRequestHeaders, initialAccessLog, initialServerTimeouts, initialErrorHandlers, initialTlsValues, initialMatchers, initialHandlePath }: Props) {
+export function AddPhpFastcgiDialog({ existingPorts, onAdd, onClose, initialValues, initialEnv, initialBasicAuth, initialResponseHeaders, initialRequestHeaders, initialAccessLog, initialServerTimeouts, initialRequestBodyMaxSize, initialErrorHandlers, initialTlsValues, initialMatchers, initialHandlePath }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
   const confirmAction = useConfirmAction();
@@ -66,6 +68,7 @@ export function AddPhpFastcgiDialog({ existingPorts, onAdd, onClose, initialValu
   const [requestHeaders, setRequestHeaders] = useState<HeaderOperation[] | undefined>(initialRequestHeaders);
   const [accessLog, setAccessLog] = useState<AccessLogValues>(initialAccessLog ?? accessLogConfigToValues(undefined));
   const [serverTimeouts, setServerTimeouts] = useState<ServerTimeoutValues>(initialServerTimeouts ?? { readTimeout: "", readHeaderTimeout: "", writeTimeout: "", idleTimeout: "", maxHeaderBytes: "", disableHttp3: false });
+  const [requestBodyMaxSize, setRequestBodyMaxSize] = useState(initialRequestBodyMaxSize ?? "");
   const [errorHandlers, setErrorHandlers] = useState<ErrorHandlerConfig[]>(initialErrorHandlers ?? []);
   const [tlsValues, setTlsValues] = useState<TlsValues>(initialTlsValues ?? tlsConfigToValues(undefined, undefined));
   const [matchers, setMatchers] = useState<RouteMatch | undefined>(initialMatchers);
@@ -225,6 +228,7 @@ export function AddPhpFastcgiDialog({ existingPorts, onAdd, onClose, initialValu
         <AccessLogSection value={accessLog} onChange={setAccessLog} isDisabled={isLocked} />
         <ErrorHandlersSection value={errorHandlers} onChange={setErrorHandlers} isDisabled={isLocked} />
         <ServerTimeoutsSection value={serverTimeouts} onChange={setServerTimeouts} isDisabled={isLocked} />
+        <RequestBodyLimitField value={requestBodyMaxSize} onChange={setRequestBodyMaxSize} isDisabled={isLocked} idPrefix="add-php" />
         <PhpFastcgiEnvSection value={env} onChange={setEnv} isDisabled={isLocked} />
         <BasicAuthSection
           value={basicAuth}
@@ -292,6 +296,7 @@ export function AddPhpFastcgiDialog({ existingPorts, onAdd, onClose, initialValu
                     serverIdleTimeout: serverTimeouts.idleTimeout.trim() || undefined,
                     maxHeaderBytes: serverTimeouts.maxHeaderBytes.trim() ? parseInt(serverTimeouts.maxHeaderBytes, 10) : undefined,
                     disableHttp3: serverTimeouts.disableHttp3 || undefined,
+                    requestBodyMaxSize: requestBodyMaxSize.trim() ? parseInt(requestBodyMaxSize, 10) : undefined,
                     tlsAdvanced: tlsValuesToAdvanced(tlsValues),
                     mtls: tlsValuesToMtls(tlsValues),
                     matchers: matchers ?? undefined,

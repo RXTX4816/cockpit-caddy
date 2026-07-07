@@ -745,6 +745,12 @@ function buildEncodeHandler(): CaddyHandler {
   return { handler: "encode", encodings: { gzip: {}, zstd: {} } };
 }
 
+/** Caps the request body size (#154). Must be the first handle in a route so it runs
+ *  before whatever actually reads the body (reverse_proxy, file_server upload, etc). */
+function buildRequestBodyHandler(maxSize: number): CaddyHandler {
+  return { handler: "request_body", max_size: maxSize };
+}
+
 function buildBasicAuthCaddyLines(accounts: { username: string; passwordHash: string }[]): string[] {
   return ["\tbasic_auth {", ...accounts.map(a => `\t\t${a.username} ${a.passwordHash}`), "\t}"];
 }
@@ -1072,6 +1078,11 @@ function buildTlsCaddyLines(p: Pick<ProxyEntry, "tls" | "tlsAdvanced" | "mtls">,
 /** Builds handler lines for a route, at the given indent level (default single-tab). */
 function buildRouteHandlerLines(p: ProxyEntry, indent: string): string[] {
   const lines: string[] = [];
+  // request_body must run before the handler that actually consumes the body (#154) —
+  // static_response/redir never read the body at all, so the limit is skipped there.
+  if (p.requestBodyMaxSize && !p.staticResponse && !p.redirect) {
+    lines.push(`${indent}request_body {`, `${indent}\tmax_size ${p.requestBodyMaxSize}`, `${indent}}`);
+  }
   if (p.staticResponse) {
     const { statusCode, body, close } = p.staticResponse;
     if (body && close) {
@@ -1597,6 +1608,12 @@ function detectPhpFastcgiFromRoutes(
   };
 }
 
+/** Reads back the request_body handler's max_size, if present (#154). */
+function parseRequestBodyMaxSize(handles: AnyHandler[]): number | undefined {
+  const h = handles.find(h => h.handler === "request_body") as { max_size?: number } | undefined;
+  return typeof h?.max_size === "number" ? h.max_size : undefined;
+}
+
 function findReverseProxy(handles: AnyHandler[]): CaddyReverseProxyHandler | undefined {
   for (const h of handles) {
     if (h.handler === "reverse_proxy") {
@@ -1683,6 +1700,7 @@ function parseRouteToEntry(
       serverKey: key,
       namedServerKey,
       phpFastcgi,
+      requestBodyMaxSize: parseRequestBodyMaxSize(effectiveHandles),
       matchers,
       serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, accessLog,
       errorHandlers: parseErrorHandlers(server),
@@ -1762,6 +1780,7 @@ function parseRouteToEntry(
       serverKey: key,
       namedServerKey,
       fileServer: { root: fsHandle.root ?? "/", browse: fsHandle.browse !== undefined },
+      requestBodyMaxSize: parseRequestBodyMaxSize(effectiveHandles),
       compress: fsCompress || undefined,
       basicAuth: fsBasicAuth?.length ? fsBasicAuth : undefined,
       responseHeaders: fsResponseHeaders.length ? fsResponseHeaders : undefined,
@@ -1852,6 +1871,7 @@ function parseRouteToEntry(
     serverKey: key,
     namedServerKey,
     compress: compress || undefined,
+    requestBodyMaxSize: parseRequestBodyMaxSize(effectiveHandles),
     basicAuth: basicAuth?.length ? basicAuth : undefined,
     dialTimeout: dialTimeout || undefined,
     responseHeaderTimeout: responseHeaderTimeout || undefined,
@@ -1954,6 +1974,7 @@ export function parseProxies(config: CaddyConfig, serverDefs?: import("./types")
         tlsSkipVerify: false,
         serverKey: key,
         phpFastcgi: phpFastcgiGroup,
+        requestBodyMaxSize: parseRequestBodyMaxSize(contentRoutes.flatMap(r => (r.handle ?? []) as AnyHandler[])),
         serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
         disableHttp3: phpDisableHttp3, accessLog,
         errorHandlers: parseErrorHandlers(server),
@@ -2651,6 +2672,7 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
   }
   if (proxy.fileServer) {
     const fsHandles: CaddyHandler[] = [];
+    if (proxy.requestBodyMaxSize) fsHandles.push(buildRequestBodyHandler(proxy.requestBodyMaxSize));
     if (proxy.compress) fsHandles.push(buildEncodeHandler());
     if (proxy.basicAuth?.length) fsHandles.push(buildBasicAuthHandler(proxy.basicAuth));
     if (proxy.responseHeaders?.length) fsHandles.push(buildResponseHeadersHandler(proxy.responseHeaders));
@@ -2666,6 +2688,7 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
     return applyServerTimeouts(server, proxy);
   }
   const handles: CaddyHandler[] = [];
+  if (proxy.requestBodyMaxSize) handles.push(buildRequestBodyHandler(proxy.requestBodyMaxSize));
   const handlePathRwSingle = proxy.handlePath ? buildHandlePathRewriteJson(proxy.matchers) : undefined;
   if (handlePathRwSingle) handles.push(handlePathRwSingle);
   if (proxy.compress) handles.push(buildEncodeHandler());
@@ -2690,6 +2713,7 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
 function patchHandles(handles: CaddyHandler[], proxy: ProxyEntry): CaddyHandler[] {
   if (proxy.fileServer) {
     const fsHandles: CaddyHandler[] = [];
+    if (proxy.requestBodyMaxSize) fsHandles.push(buildRequestBodyHandler(proxy.requestBodyMaxSize));
     if (proxy.compress) fsHandles.push(buildEncodeHandler());
     if (proxy.basicAuth?.length) fsHandles.push(buildBasicAuthHandler(proxy.basicAuth));
     if (proxy.responseHeaders?.length) fsHandles.push(buildResponseHeadersHandler(proxy.responseHeaders));
@@ -2699,9 +2723,10 @@ function patchHandles(handles: CaddyHandler[], proxy: ProxyEntry): CaddyHandler[
     return fsHandles;
   }
   let found = false;
-  // Strip any existing encode/authentication/rewrite/headers/file_server/forward_auth handlers; we'll re-add the correct ones below
+  // Strip any existing encode/authentication/rewrite/headers/file_server/forward_auth/
+  // request_body handlers; we'll re-add the correct ones below
   const withoutRewrite = handles.filter(h => {
-    if (h.handler === "rewrite" || h.handler === "headers" || h.handler === "encode" || h.handler === "authentication" || h.handler === "file_server") return false;
+    if (h.handler === "rewrite" || h.handler === "headers" || h.handler === "encode" || h.handler === "authentication" || h.handler === "file_server" || h.handler === "request_body") return false;
     if (h.handler === "subroute") {
       const isAuthSubroute = (h.routes as Array<{ handle?: AnyHandler[] }> | undefined)?.some(r =>
         (r.handle ?? []).some(sh => sh.handler === "reverse_proxy" && isForwardAuthProxy(sh as CaddyReverseProxyHandler)),
@@ -2731,8 +2756,10 @@ function patchHandles(handles: CaddyHandler[], proxy: ProxyEntry): CaddyHandler[
   if (!found) {
     patched.push(buildReverseProxyHandler(proxy, proxy.errorHandlers));
   }
-  // Prepend encode/auth/response-headers/rewrite/forward_auth handlers if configured
+  // Prepend request_body/encode/auth/response-headers/rewrite/forward_auth handlers if
+  // configured — request_body must run first, before anything that reads the body.
   const prefix: CaddyHandler[] = [];
+  if (proxy.requestBodyMaxSize) prefix.push(buildRequestBodyHandler(proxy.requestBodyMaxSize));
   if (proxy.compress) prefix.push(buildEncodeHandler());
   if (proxy.basicAuth?.length) prefix.push(buildBasicAuthHandler(proxy.basicAuth));
   if (proxy.responseHeaders?.length) prefix.push(buildResponseHeadersHandler(proxy.responseHeaders));

@@ -240,6 +240,11 @@
     "http3_help": "Caddy enables HTTP/1.1, HTTP/2, and HTTP/3 by default whenever TLS is configured. HTTP/3 runs over UDP on the same port as HTTPS — if UDP is blocked by your firewall, disabling it here falls back to HTTP/1.1 and HTTP/2 only.",
     "indicator": "Limits"
   },
+  "request_body": {
+    "field_label": "Max request body size (bytes, optional)",
+    "field_placeholder": "10485760",
+    "field_help": "Rejects requests with a larger body before it reaches the backend. Leave blank for no limit (Caddy's own default). E.g. 1048576 = 1 MB, 10485760 = 10 MB."
+  },
   "rewrite": {
     "section_title": "URI Rewrite (optional)",
     "type_none": "None",
