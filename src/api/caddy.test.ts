@@ -3654,6 +3654,32 @@ describe("scanConfigIssues — missing http:// scheme on TLS-disabled sites", ()
     const { proxyConf: fixed } = applyConfigFindings(findings, new Set([finding!.id]), "", proxyConf);
     expect(fixed).toContain("http://:7878 {");
   });
+
+  // Regression test (#161): the dedicated metrics site block is intentionally a bare
+  // `:PORT { }` address with no TLS directive — the same shape this check flags for real
+  // proxies — but it isn't a proxy this app tracks/toggles TLS for, so it must never
+  // produce a finding (whose "fix" would rewrite it to an address parseMetricsSiteBlock
+  // then can't read back as a valid metricsListenAddress in the Settings tab).
+  it("does not flag the dedicated metrics site block", () => {
+    const metricsBlock = buildMetricsSiteBlock({ metricsEnabled: true, metricsListenAddress: ":8888" });
+    const proxyConf = [
+      "# Managed by cockpit-caddy",
+      "",
+      "# cockpit-caddy:metrics:begin",
+      metricsBlock,
+      "# cockpit-caddy:metrics:end",
+      "",
+      ":4343 {",
+      "\treverse_proxy http://localhost:3000",
+      "}",
+      "",
+    ].join("\n");
+    const findings = scanConfigIssues("", proxyConf);
+    expect(findings.find(f => f.id.includes("8888"))).toBeUndefined();
+    // The real proxy on :4343 is still flagged — the metrics block is excluded, not
+    // scanning as a whole.
+    expect(findings.find(f => f.id === "missing-http-scheme::4343")).toBeDefined();
+  });
 });
 
 describe("scanConfigIssues — hostless lifetime drift", () => {
