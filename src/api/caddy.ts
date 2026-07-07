@@ -2508,14 +2508,22 @@ function subjectsInclude(subjects: string[] | undefined, host: string): boolean 
  * policy from Caddy's Caddyfile adapter; each host is simply listed as a `subjects`
  * entry in a shared `apps.tls.automation.policies` policy instead. Fall back to
  * that so shared-listener routes aren't misdetected as plain HTTP.
+ *
+ * A third case (#171): a site with a public-looking hostname and no explicit `tls`
+ * config at all is still served over HTTPS — Caddy's automatic HTTPS turns it on by
+ * default, the same "Caddy-default ACME" case classifyAcmeHosts (#141) already
+ * detects. Only a host Caddy's adapter put in `automatic_https.skip` (an explicit
+ * `http://` scheme) or a non-public host (localhost/IP) is genuinely plain HTTP.
  */
 function serverHasTls(
-  server: { tls_connection_policies?: CaddyTLSConnectionPolicy[] },
+  server: { tls_connection_policies?: CaddyTLSConnectionPolicy[]; automatic_https?: { skip?: string[] } },
   automationPolicies: import("./types").CaddyAutomationPolicy[] | undefined,
   externalHost: string | undefined,
 ): boolean {
   if (Array.isArray(server.tls_connection_policies) && server.tls_connection_policies.length > 0) return true;
-  return !!externalHost && !!automationPolicies?.some(p => subjectsInclude(p.subjects, externalHost));
+  if (externalHost && automationPolicies?.some(p => subjectsInclude(p.subjects, externalHost))) return true;
+  const host = tlsSubjectHost(externalHost);
+  return !!host && !server.automatic_https?.skip?.includes(host);
 }
 
 /** Extracts a usable subject hostname from a named server's first listen address, if any (e.g. "example.com:443"). */

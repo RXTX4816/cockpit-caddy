@@ -1110,6 +1110,71 @@ describe("parseProxies — bare-hostname sites sharing an implicit-port server (
   });
 });
 
+describe("parseProxies — Caddy-default automatic HTTPS detection (#171)", () => {
+  it("treats a bare public host with no explicit tls config as TLS-enabled", () => {
+    const config: CaddyConfig = {
+      apps: {
+        http: {
+          servers: {
+            srv0: {
+              listen: [":443"],
+              routes: [{
+                match: [{ host: ["bare.example.com"] }],
+                handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:4732" }] }] as import("./types").CaddyHandler[],
+                terminal: true,
+              }],
+            },
+          },
+        },
+      },
+    };
+    const [p] = parseProxies(config);
+    expect(p.tls).toBe(true);
+  });
+
+  it("treats a host in automatic_https.skip as plain HTTP", () => {
+    const config: CaddyConfig = {
+      apps: {
+        http: {
+          servers: {
+            srv0: {
+              listen: [":80"],
+              automatic_https: { skip: ["plain.example.com"] },
+              routes: [{
+                match: [{ host: ["plain.example.com"] }],
+                handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:4732" }] }] as import("./types").CaddyHandler[],
+                terminal: true,
+              }],
+            },
+          },
+        },
+      },
+    };
+    const [p] = parseProxies(config);
+    expect(p.tls).toBe(false);
+  });
+
+  it("does not treat a hostless/internal-looking route as TLS-enabled by default", () => {
+    const config: CaddyConfig = {
+      apps: {
+        http: {
+          servers: {
+            srv0: {
+              listen: [":8080"],
+              routes: [{
+                handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:4732" }] }] as import("./types").CaddyHandler[],
+                terminal: true,
+              }],
+            },
+          },
+        },
+      },
+    };
+    const [p] = parseProxies(config);
+    expect(p.tls).toBe(false);
+  });
+});
+
 describe("mergeProxy — internal TLS automation policies", () => {
   // A hostless proxy has no hostname to scope its own automation policy by, and Caddy
   // allows only one policy without subjects — so a hostless proxy's certLifetime always
