@@ -4535,6 +4535,21 @@ const METRICS_SITE_BEGIN = "# cockpit-caddy:metrics:begin";
 const METRICS_SITE_END = "# cockpit-caddy:metrics:end";
 
 /**
+ * Strips the dedicated metrics site block (see buildMetricsSiteBlock) out of conf.d content.
+ * That block is intentionally a bare `:PORT { }` address with no TLS directive — the same
+ * shape scanConfigIssues' "missing http:// scheme" check exists to flag for actual proxies
+ * — but it isn't a proxy this app tracks/toggles TLS for at all, so scanning it produces a
+ * bogus finding whose "fix" rewrites the block header to `http://:PORT`, which
+ * parseMetricsSiteBlock then reads back as an invalid metricsListenAddress (bug #161).
+ */
+function stripMetricsSiteBlock(content: string): string {
+  const bi = content.indexOf(METRICS_SITE_BEGIN);
+  const ei = content.indexOf(METRICS_SITE_END);
+  if (bi === -1 || ei === -1) return content;
+  return content.slice(0, bi) + content.slice(ei + METRICS_SITE_END.length);
+}
+
+/**
  * Builds the dedicated site block that exposes the Prometheus metrics endpoint (#43).
  * A bare `metrics` directive with no path matcher matches *every* path on that listener
  * (verified against a live instance — it's the sole unmatched route on the block), so the
@@ -4772,7 +4787,7 @@ export function scanConfigIssues(mainContent: string, proxyConfContent: string):
     }
   }
 
-  for (const block of extractRawBlocksFromCaddyfile(proxyConfContent)) {
+  for (const block of extractRawBlocksFromCaddyfile(stripMetricsSiteBlock(proxyConfContent))) {
     const serverKey = block.port !== undefined ? serverKeyByPort.get(String(block.port)) : undefined;
     if (serverKey) {
       const def = defByKey.get(serverKey);
