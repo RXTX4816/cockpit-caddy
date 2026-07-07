@@ -23,6 +23,7 @@ import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { readGlobalOptions, syncGlobalOptions, reloadService, fetchStorageInfo, checkStoragePathWritable } from "../api";
 import type { GlobalOptions, StorageInfo } from "../api";
 import { CertLifetimeSelect } from "./CertLifetimeSelect";
+import { AccessLogSection, type AccessLogValues, accessLogConfigToValues, accessLogValuesToConfig } from "./AccessLogSection";
 
 function isDuration(v: string): boolean {
   return !v || /^\d+(\.\d+)?(ns|us|ms|s|m|h)$/.test(v.trim());
@@ -88,6 +89,7 @@ export function GlobalOptionsTab() {
   const [metricsListenAddress, setMetricsListenAddress] = useState("");
   const [metricsPath, setMetricsPath] = useState("");
   const [metricsPlainFormat, setMetricsPlainFormat] = useState(false);
+  const [runtimeLog, setRuntimeLog] = useState<AccessLogValues>(accessLogConfigToValues(undefined));
 
   const loadStorageInfo = useCallback((configuredPath: string | undefined) => {
     setStorageInfo(null);
@@ -125,6 +127,7 @@ export function GlobalOptionsTab() {
         setMetricsListenAddress(opts.metricsListenAddress ?? "");
         setMetricsPath(opts.metricsPath ?? "");
         setMetricsPlainFormat(opts.metricsPlainFormat ?? false);
+        setRuntimeLog(accessLogConfigToValues(opts.runtimeLog));
       })
       .catch(e => setLoadError(e instanceof Error ? e.message : String(e)))
       .finally(() => setLoading(false));
@@ -654,6 +657,23 @@ export function GlobalOptionsTab() {
           </>
         )}
 
+        <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
+
+        <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+          {t("global_opts.runtime_log_title")}
+        </Title>
+        <Alert variant="info" isInline title={t("global_opts.runtime_log_note")} style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }} />
+
+        <AccessLogSection
+          idPrefix="rl"
+          title={t("global_opts.runtime_log_section_title")}
+          titleOn={t("global_opts.runtime_log_section_title_on")}
+          enableLabel={t("global_opts.runtime_log_enable")}
+          value={runtimeLog}
+          onChange={setRuntimeLog}
+          isDisabled={isConfirming}
+        />
+
         {confirm.error != null && (
           <Alert variant="danger" isInline title={t("global_opts.save_error")}>
             {confirm.error || t("global_opts.save_error_unknown")}
@@ -693,6 +713,7 @@ export function GlobalOptionsTab() {
                     metricsListenAddress: metricsEnabled ? (metricsListenAddress.trim() || undefined) : undefined,
                     metricsPath: metricsEnabled ? (metricsPath.trim() || undefined) : undefined,
                     metricsPlainFormat: metricsEnabled ? (metricsPlainFormat || undefined) : undefined,
+                    runtimeLog: accessLogValuesToConfig(runtimeLog),
                   };
                   // An unwritable storage path isn't caught by Caddy's own config
                   // validation (it only checks config shape, not whether the process can

@@ -30,6 +30,14 @@ interface Props {
   value: AccessLogValues;
   onChange: (v: AccessLogValues) => void;
   isDisabled?: boolean;
+  /** Distinguishes element ids when this section appears more than once on the same page
+   *  (e.g. a per-site access log alongside the global runtime logger, #158). */
+  idPrefix?: string;
+  /** Overrides the toggle/enable copy — used to relabel this identically-shaped section
+   *  for Caddy's global runtime/error logger (#158) instead of a per-site access log. */
+  title?: string;
+  titleOn?: string;
+  enableLabel?: string;
 }
 
 const OUTPUTS: AccessLogOutput[] = ["stderr", "stdout", "file", "discard"];
@@ -39,7 +47,7 @@ const LEVELS: Array<AccessLogLevel | ""> = ["", "DEBUG", "INFO", "WARN", "ERROR"
 const ACCESS_LOG_DEFAULTS: AccessLogValues = { enabled: true, output: "stderr", filePath: "", format: "", level: "", rollSizeMb: "", rollKeepCount: "", rollKeepDays: "", rollCompress: true };
 const ACCESS_LOG_EMPTY: AccessLogValues = { enabled: false, output: "stderr", filePath: "", format: "", level: "", rollSizeMb: "", rollKeepCount: "", rollKeepDays: "", rollCompress: true };
 
-export function AccessLogSection({ value, onChange, isDisabled }: Props) {
+export function AccessLogSection({ value, onChange, isDisabled, idPrefix = "al", title, titleOn, enableLabel }: Props) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(value.enabled);
 
@@ -51,9 +59,11 @@ export function AccessLogSection({ value, onChange, isDisabled }: Props) {
     ? t("access_log.file_path_required")
     : null;
 
+  const id = (suffix: string) => `${idPrefix}-${suffix}`;
+
   return (
     <ExpandableSection
-      toggleText={value.enabled ? t("access_log.section_title_on") : t("access_log.section_title")}
+      toggleText={value.enabled ? (titleOn ?? t("access_log.section_title_on")) : (title ?? t("access_log.section_title"))}
       isIndented
       isExpanded={expanded}
       onToggle={(_e, v) => setExpanded(v)}
@@ -63,10 +73,10 @@ export function AccessLogSection({ value, onChange, isDisabled }: Props) {
         onDefaults={() => { onChange(ACCESS_LOG_DEFAULTS); setExpanded(true); }}
         isDisabled={isDisabled}
       />
-      <FormGroup fieldId="al-enabled" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+      <FormGroup fieldId={id("enabled")} style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
         <Checkbox
-          id="al-enabled"
-          label={t("access_log.enable")}
+          id={id("enabled")}
+          label={enableLabel ?? t("access_log.enable")}
           isChecked={value.enabled}
           onChange={(_e, v) => set({ enabled: v })}
           isDisabled={isDisabled}
@@ -75,13 +85,13 @@ export function AccessLogSection({ value, onChange, isDisabled }: Props) {
 
       {value.enabled && (
         <>
-          <FormGroup label={t("access_log.output")} fieldId="al-output" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+          <FormGroup label={t("access_log.output")} fieldId={id("output")} style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
             <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
               {OUTPUTS.map(o => (
                 <Radio
                   key={o}
-                  id={`al-output-${o}`}
-                  name="al-output"
+                  id={id(`output-${o}`)}
+                  name={id("output")}
                   label={t(`access_log.output_${o}`)}
                   value={o}
                   isChecked={value.output === o}
@@ -93,9 +103,9 @@ export function AccessLogSection({ value, onChange, isDisabled }: Props) {
           </FormGroup>
 
           {value.output === "file" && (
-            <FormGroup label={t("access_log.file_path")} fieldId="al-file-path" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+            <FormGroup label={t("access_log.file_path")} fieldId={id("file-path")} style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
               <TextInput
-                id="al-file-path"
+                id={id("file-path")}
                 value={value.filePath}
                 onChange={(_e, v) => set({ filePath: v })}
                 placeholder="/var/log/caddy/access.log"
@@ -115,11 +125,11 @@ export function AccessLogSection({ value, onChange, isDisabled }: Props) {
           )}
 
           {value.output === "file" && (
-            <FormGroup label={t("access_log.roll_title")} fieldId="al-roll" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+            <FormGroup label={t("access_log.roll_title")} fieldId={id("roll")} style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
-                <FormGroup label={t("access_log.roll_size_mb")} fieldId="al-roll-size" style={{ flex: "1 1 8rem" }}>
+                <FormGroup label={t("access_log.roll_size_mb")} fieldId={id("roll-size")} style={{ flex: "1 1 8rem" }}>
                   <TextInput
-                    id="al-roll-size"
+                    id={id("roll-size")}
                     type="number"
                     value={value.rollSizeMb}
                     onChange={(_e, v) => set({ rollSizeMb: v })}
@@ -127,9 +137,9 @@ export function AccessLogSection({ value, onChange, isDisabled }: Props) {
                     isDisabled={isDisabled}
                   />
                 </FormGroup>
-                <FormGroup label={t("access_log.roll_keep_count")} fieldId="al-roll-keep" style={{ flex: "1 1 8rem" }}>
+                <FormGroup label={t("access_log.roll_keep_count")} fieldId={id("roll-keep")} style={{ flex: "1 1 8rem" }}>
                   <TextInput
-                    id="al-roll-keep"
+                    id={id("roll-keep")}
                     type="number"
                     value={value.rollKeepCount}
                     onChange={(_e, v) => set({ rollKeepCount: v })}
@@ -137,9 +147,9 @@ export function AccessLogSection({ value, onChange, isDisabled }: Props) {
                     isDisabled={isDisabled}
                   />
                 </FormGroup>
-                <FormGroup label={t("access_log.roll_keep_days")} fieldId="al-roll-keep-days" style={{ flex: "1 1 8rem" }}>
+                <FormGroup label={t("access_log.roll_keep_days")} fieldId={id("roll-keep-days")} style={{ flex: "1 1 8rem" }}>
                   <TextInput
-                    id="al-roll-keep-days"
+                    id={id("roll-keep-days")}
                     type="number"
                     value={value.rollKeepDays}
                     onChange={(_e, v) => set({ rollKeepDays: v })}
@@ -152,7 +162,7 @@ export function AccessLogSection({ value, onChange, isDisabled }: Props) {
                 <HelperText><HelperTextItem>{t("access_log.roll_help")}</HelperTextItem></HelperText>
               </FormHelperText>
               <Checkbox
-                id="al-roll-compress"
+                id={id("roll-compress")}
                 label={t("access_log.roll_compress")}
                 isChecked={value.rollCompress}
                 onChange={(_e, v) => set({ rollCompress: v })}
@@ -162,13 +172,13 @@ export function AccessLogSection({ value, onChange, isDisabled }: Props) {
             </FormGroup>
           )}
 
-          <FormGroup label={t("access_log.format")} fieldId="al-format" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+          <FormGroup label={t("access_log.format")} fieldId={id("format")} style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
             <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
               {FORMATS.map(f => (
                 <Radio
                   key={f || "default"}
-                  id={`al-format-${f || "default"}`}
-                  name="al-format"
+                  id={id(`format-${f || "default"}`)}
+                  name={id("format")}
                   label={t(`access_log.format_${f || "default"}`)}
                   value={f}
                   isChecked={value.format === f}
@@ -179,13 +189,13 @@ export function AccessLogSection({ value, onChange, isDisabled }: Props) {
             </div>
           </FormGroup>
 
-          <FormGroup label={t("access_log.level")} fieldId="al-level">
+          <FormGroup label={t("access_log.level")} fieldId={id("level")}>
             <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
               {LEVELS.map(l => (
                 <Radio
                   key={l || "default"}
-                  id={`al-level-${l || "default"}`}
-                  name="al-level"
+                  id={id(`level-${l || "default"}`)}
+                  name={id("level")}
                   label={t(`access_log.level_${l || "default"}`)}
                   value={l}
                   isChecked={value.level === l}

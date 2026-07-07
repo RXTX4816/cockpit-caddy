@@ -543,7 +543,12 @@
     "metrics_path_invalid": "Path must start with /",
     "metrics_plain_format": "Use plain Prometheus format instead of OpenMetrics",
     "metrics_plain_format_help": "Maps to Caddy's disable_openmetrics option. Slightly less verbose output — doesn't remove any metrics.",
-    "metrics_link": "Open metrics endpoint"
+    "metrics_link": "Open metrics endpoint",
+    "runtime_log_title": "Runtime / error log",
+    "runtime_log_note": "This is Caddy's own startup/reload/error log — separate from per-site access logs configured on each proxy. Caddy's default (nothing set below) sends it to stderr, which systemd captures in the journal.",
+    "runtime_log_section_title": "Runtime log (using Caddy's default)",
+    "runtime_log_section_title_on": "Runtime log (enabled)",
+    "runtime_log_enable": "Override Caddy's default runtime log destination"
   },
   "ca": {
     "title": "Internal Certificate Authority",
