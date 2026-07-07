@@ -94,6 +94,9 @@ export function GlobalOptionsTab() {
   const [trustedProxiesRanges, setTrustedProxiesRanges] = useState("");
   const [trustedProxiesStrict, setTrustedProxiesStrict] = useState(false);
   const [trustedProxiesHeaders, setTrustedProxiesHeaders] = useState("");
+  const [proxyProtocolEnabled, setProxyProtocolEnabled] = useState(false);
+  const [proxyProtocolTimeout, setProxyProtocolTimeout] = useState("");
+  const [proxyProtocolAllow, setProxyProtocolAllow] = useState("");
 
   const loadStorageInfo = useCallback((configuredPath: string | undefined) => {
     setStorageInfo(null);
@@ -136,6 +139,9 @@ export function GlobalOptionsTab() {
         setTrustedProxiesRanges(opts.trustedProxies?.ranges.join(" ") ?? "");
         setTrustedProxiesStrict(opts.trustedProxies?.strict ?? false);
         setTrustedProxiesHeaders(opts.trustedProxies?.headers?.join(" ") ?? "");
+        setProxyProtocolEnabled(!!opts.proxyProtocol);
+        setProxyProtocolTimeout(opts.proxyProtocol?.timeout ?? "");
+        setProxyProtocolAllow(opts.proxyProtocol?.allow?.join(" ") ?? "");
       })
       .catch(e => setLoadError(e instanceof Error ? e.message : String(e)))
       .finally(() => setLoading(false));
@@ -164,10 +170,11 @@ export function GlobalOptionsTab() {
     : !isListenAddress(metricsListenAddress) ? t("global_opts.metrics_listen_address_invalid") : null;
   const metricsPathErr = metricsPath.trim() && !metricsPath.trim().startsWith("/") ? t("global_opts.metrics_path_invalid") : null;
   const trustedProxiesRangesErr = trustedProxiesEnabled && !trustedProxiesRanges.trim();
+  const proxyProtocolTimeoutErr = proxyProtocolEnabled && !isDuration(proxyProtocolTimeout) ? t("global_opts.validation_duration") : null;
   const hasErrors = !!(
     httpPortErr || httpsPortErr || gracePeriodErr || shutdownDelayErr || onDemandBurstErr || onDemandIntervalErr
     || internalCertLifetimeErr || renewalWindowRatioErr || metricsListenAddressErr || metricsPathErr
-    || trustedProxiesRangesErr
+    || trustedProxiesRangesErr || proxyProtocolTimeoutErr
   );
 
   const isConfirming = confirm.step !== "idle";
@@ -759,6 +766,58 @@ export function GlobalOptionsTab() {
           </>
         )}
 
+        <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
+
+        <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+          {t("global_opts.proxy_protocol_title")}
+        </Title>
+        <Alert variant="info" isInline title={t("global_opts.proxy_protocol_note")} style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }} />
+
+        <FormGroup fieldId="go-proxy-protocol-enabled">
+          <Checkbox
+            id="go-proxy-protocol-enabled"
+            label={t("global_opts.proxy_protocol_enable")}
+            isChecked={proxyProtocolEnabled}
+            onChange={(_e, v) => setProxyProtocolEnabled(v)}
+            isDisabled={isConfirming}
+          />
+        </FormGroup>
+
+        {proxyProtocolEnabled && (
+          <>
+            <FormGroup label={t("global_opts.proxy_protocol_allow")} fieldId="go-proxy-protocol-allow">
+              <TextInput
+                id="go-proxy-protocol-allow"
+                value={proxyProtocolAllow}
+                onChange={(_e, v) => setProxyProtocolAllow(v)}
+                placeholder="10.0.0.0/8 192.168.1.1/32"
+                isDisabled={isConfirming}
+              />
+              <FormHelperText>
+                <HelperText><HelperTextItem>{t("global_opts.proxy_protocol_allow_help")}</HelperTextItem></HelperText>
+              </FormHelperText>
+            </FormGroup>
+
+            <FormGroup label={t("global_opts.proxy_protocol_timeout")} fieldId="go-proxy-protocol-timeout">
+              <TextInput
+                id="go-proxy-protocol-timeout"
+                value={proxyProtocolTimeout}
+                onChange={(_e, v) => setProxyProtocolTimeout(v)}
+                placeholder="2s"
+                validated={proxyProtocolTimeoutErr ? "error" : "default"}
+                isDisabled={isConfirming}
+              />
+              <FormHelperText>
+                <HelperText>
+                  <HelperTextItem variant={proxyProtocolTimeoutErr ? "error" : "default"}>
+                    {proxyProtocolTimeoutErr ?? t("global_opts.proxy_protocol_timeout_help")}
+                  </HelperTextItem>
+                </HelperText>
+              </FormHelperText>
+            </FormGroup>
+          </>
+        )}
+
         {confirm.error != null && (
           <Alert variant="danger" isInline title={t("global_opts.save_error")}>
             {confirm.error || t("global_opts.save_error_unknown")}
@@ -803,6 +862,10 @@ export function GlobalOptionsTab() {
                       ranges: trustedProxiesRanges.trim().split(/\s+/),
                       strict: trustedProxiesStrict || undefined,
                       headers: trustedProxiesHeaders.trim() ? trustedProxiesHeaders.trim().split(/\s+/) : undefined,
+                    } : undefined,
+                    proxyProtocol: proxyProtocolEnabled ? {
+                      timeout: proxyProtocolTimeout.trim() || undefined,
+                      allow: proxyProtocolAllow.trim() ? proxyProtocolAllow.trim().split(/\s+/) : undefined,
                     } : undefined,
                   };
                   // An unwritable storage path isn't caught by Caddy's own config

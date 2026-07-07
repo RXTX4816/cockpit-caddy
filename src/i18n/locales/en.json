@@ -570,7 +570,14 @@
     "trusted_proxies_headers": "Client IP header (optional)",
     "trusted_proxies_headers_help": "Space-separated header names to check, in order. Leave blank for Caddy's own default (X-Forwarded-For only).",
     "trusted_proxies_strict": "Strict mode (parse right-to-left)",
-    "trusted_proxies_strict_help": "Use when the header might contain untrusted, attacker-supplied entries before the trusted ones — reads from the right instead of the left."
+    "trusted_proxies_strict_help": "Use when the header might contain untrusted, attacker-supplied entries before the trusted ones — reads from the right instead of the left.",
+    "proxy_protocol_title": "PROXY protocol",
+    "proxy_protocol_note": "For a TCP-level load balancer that doesn't terminate TLS or add HTTP headers (e.g. AWS NLB, HAProxy in TCP mode) — this replaces the need for Trusted proxies above, which relies on an HTTP header a TCP-level LB can't add. Applies to every server; a port with its own HTTP/3 or timeout override still gets this setting merged in separately.",
+    "proxy_protocol_enable": "Accept PROXY protocol on incoming connections",
+    "proxy_protocol_allow": "Allowed source IPs (optional)",
+    "proxy_protocol_allow_help": "Space-separated CIDR ranges allowed to send PROXY protocol headers — restrict to your load balancer's own IPs to prevent client IP spoofing. Leave blank to accept from any source.",
+    "proxy_protocol_timeout": "Header read timeout (optional)",
+    "proxy_protocol_timeout_help": "Max time to wait for the PROXY protocol header before giving up (Go duration, e.g. 2s). Leave blank for Caddy's own default."
   },
   "ca": {
     "title": "Internal Certificate Authority",

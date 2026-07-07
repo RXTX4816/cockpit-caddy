@@ -3111,6 +3111,97 @@ describe("trusted proxies global option (#153)", () => {
   });
 });
 
+describe("PROXY protocol global option (#157)", () => {
+  it("parses a bare proxy_protocol with no sub-block", () => {
+    const body = ["\tservers {", "\t\tlistener_wrappers {", "\t\t\tproxy_protocol", "\t\t}", "\t}"].join("\n");
+    const opts = parseGlobalOptions(makeOpts(body));
+    expect(opts.proxyProtocol).toEqual({});
+  });
+
+  it("parses timeout and allow from the proxy_protocol sub-block", () => {
+    const body = [
+      "\tservers {",
+      "\t\tlistener_wrappers {",
+      "\t\t\tproxy_protocol {",
+      "\t\t\t\ttimeout 2s",
+      "\t\t\t\tallow 10.0.0.0/8 192.168.1.1/32",
+      "\t\t\t}",
+      "\t\t}",
+      "\t}",
+    ].join("\n");
+    const opts = parseGlobalOptions(makeOpts(body));
+    expect(opts.proxyProtocol).toEqual({ timeout: "2s", allow: ["10.0.0.0/8", "192.168.1.1/32"] });
+  });
+
+  it("parses proxy_protocol alongside trusted_proxies in the same servers block", () => {
+    const body = [
+      "\tservers {",
+      "\t\tlistener_wrappers {",
+      "\t\t\tproxy_protocol {",
+      "\t\t\t\ttimeout 2s",
+      "\t\t\t}",
+      "\t\t}",
+      "\t\ttrusted_proxies static 10.0.0.0/8",
+      "\t}",
+    ].join("\n");
+    const opts = parseGlobalOptions(makeOpts(body));
+    expect(opts.proxyProtocol).toEqual({ timeout: "2s" });
+    expect(opts.trustedProxies).toEqual({ ranges: ["10.0.0.0/8"] });
+  });
+
+  it("does not misparse a per-port servers :PORT block as the global proxy_protocol block", () => {
+    const body = ["\tservers :8443 {", "\t\tprotocols h1 h2", "\t}"].join("\n");
+    const opts = parseGlobalOptions(makeOpts(body));
+    expect(opts.proxyProtocol).toBeUndefined();
+  });
+
+  it("leaves proxyProtocol undefined when no servers block is present", () => {
+    const opts = parseGlobalOptions(makeOpts("\temail admin@example.com"));
+    expect(opts.proxyProtocol).toBeUndefined();
+  });
+
+  it("buildGlobalOptionsPatch emits listener_wrappers with timeout and allow", () => {
+    const patched = buildGlobalOptionsPatch("", {
+      proxyProtocol: { timeout: "2s", allow: ["10.0.0.0/8"] },
+    });
+    expect(patched).toContain("servers {");
+    expect(patched).toContain("listener_wrappers {");
+    expect(patched).toContain("proxy_protocol {");
+    expect(patched).toContain("timeout 2s");
+    expect(patched).toContain("allow 10.0.0.0/8");
+  });
+
+  it("emits a bare proxy_protocol line when neither timeout nor allow is set", () => {
+    const patched = buildGlobalOptionsPatch("", { proxyProtocol: {} });
+    expect(patched).toContain("\t\t\tproxy_protocol\n");
+    expect(patched).not.toContain("proxy_protocol {");
+  });
+
+  it("combines proxy_protocol and trusted_proxies in one servers block", () => {
+    const patched = buildGlobalOptionsPatch("", {
+      proxyProtocol: { timeout: "2s" },
+      trustedProxies: { ranges: ["10.0.0.0/8"] },
+    });
+    const serversBlocks = patched.match(/\tservers \{/g) ?? [];
+    expect(serversBlocks).toHaveLength(1);
+    expect(patched).toContain("proxy_protocol {");
+    expect(patched).toContain("trusted_proxies static 10.0.0.0/8");
+  });
+
+  it("round-trips through parseGlobalOptions", () => {
+    const patched = buildGlobalOptionsPatch("", {
+      proxyProtocol: { timeout: "5s", allow: ["203.0.113.0/24"] },
+    });
+    const opts = parseGlobalOptions(patched);
+    expect(opts.proxyProtocol).toEqual({ timeout: "5s", allow: ["203.0.113.0/24"] });
+  });
+
+  it("omits the servers block entirely when proxyProtocol and trustedProxies are both unset", () => {
+    const patched = buildGlobalOptionsPatch("", { email: "admin@example.com" });
+    expect(patched).not.toContain("servers {");
+  });
+});
+
 describe("parseGlobalOptions — #96 unmanaged directives fallback", () => {
   it("reads email/acme_ca from a hand-written global block with no managed markers", () => {
     const content = "{\n\temail admin@example.com\n\tacme_ca https://acme-staging-v02.api.letsencrypt.org/directory\n}\n";
