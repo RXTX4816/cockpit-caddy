@@ -19,6 +19,11 @@ export interface AccessLogValues {
   filePath: string;
   format: AccessLogFormat | "";
   level: AccessLogLevel | "";
+  /** Log rotation (#155) — only applicable when output === "file". */
+  rollSizeMb: string;
+  rollKeepCount: string;
+  rollKeepDays: string;
+  rollCompress: boolean;
 }
 
 interface Props {
@@ -31,8 +36,8 @@ const OUTPUTS: AccessLogOutput[] = ["stderr", "stdout", "file", "discard"];
 const FORMATS: Array<AccessLogFormat | ""> = ["", "json", "console"];
 const LEVELS: Array<AccessLogLevel | ""> = ["", "DEBUG", "INFO", "WARN", "ERROR"];
 
-const ACCESS_LOG_DEFAULTS: AccessLogValues = { enabled: true, output: "stderr", filePath: "", format: "", level: "" };
-const ACCESS_LOG_EMPTY: AccessLogValues = { enabled: false, output: "stderr", filePath: "", format: "", level: "" };
+const ACCESS_LOG_DEFAULTS: AccessLogValues = { enabled: true, output: "stderr", filePath: "", format: "", level: "", rollSizeMb: "", rollKeepCount: "", rollKeepDays: "", rollCompress: true };
+const ACCESS_LOG_EMPTY: AccessLogValues = { enabled: false, output: "stderr", filePath: "", format: "", level: "", rollSizeMb: "", rollKeepCount: "", rollKeepDays: "", rollCompress: true };
 
 export function AccessLogSection({ value, onChange, isDisabled }: Props) {
   const { t } = useTranslation();
@@ -97,11 +102,63 @@ export function AccessLogSection({ value, onChange, isDisabled }: Props) {
                 validated={filePathErr ? "error" : "default"}
                 isDisabled={isDisabled}
               />
-              {filePathErr && (
+              {filePathErr ? (
                 <FormHelperText>
                   <HelperText><HelperTextItem variant="error">{filePathErr}</HelperTextItem></HelperText>
                 </FormHelperText>
+              ) : (
+                <FormHelperText>
+                  <HelperText><HelperTextItem>{t("access_log.file_path_help")}</HelperTextItem></HelperText>
+                </FormHelperText>
               )}
+            </FormGroup>
+          )}
+
+          {value.output === "file" && (
+            <FormGroup label={t("access_log.roll_title")} fieldId="al-roll" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
+                <FormGroup label={t("access_log.roll_size_mb")} fieldId="al-roll-size" style={{ flex: "1 1 8rem" }}>
+                  <TextInput
+                    id="al-roll-size"
+                    type="number"
+                    value={value.rollSizeMb}
+                    onChange={(_e, v) => set({ rollSizeMb: v })}
+                    placeholder="100"
+                    isDisabled={isDisabled}
+                  />
+                </FormGroup>
+                <FormGroup label={t("access_log.roll_keep_count")} fieldId="al-roll-keep" style={{ flex: "1 1 8rem" }}>
+                  <TextInput
+                    id="al-roll-keep"
+                    type="number"
+                    value={value.rollKeepCount}
+                    onChange={(_e, v) => set({ rollKeepCount: v })}
+                    placeholder="10"
+                    isDisabled={isDisabled}
+                  />
+                </FormGroup>
+                <FormGroup label={t("access_log.roll_keep_days")} fieldId="al-roll-keep-days" style={{ flex: "1 1 8rem" }}>
+                  <TextInput
+                    id="al-roll-keep-days"
+                    type="number"
+                    value={value.rollKeepDays}
+                    onChange={(_e, v) => set({ rollKeepDays: v })}
+                    placeholder="30"
+                    isDisabled={isDisabled}
+                  />
+                </FormGroup>
+              </div>
+              <FormHelperText>
+                <HelperText><HelperTextItem>{t("access_log.roll_help")}</HelperTextItem></HelperText>
+              </FormHelperText>
+              <Checkbox
+                id="al-roll-compress"
+                label={t("access_log.roll_compress")}
+                isChecked={value.rollCompress}
+                onChange={(_e, v) => set({ rollCompress: v })}
+                isDisabled={isDisabled}
+                style={{ marginTop: "0.4rem" }}
+              />
             </FormGroup>
           )}
 
@@ -146,11 +203,16 @@ export function AccessLogSection({ value, onChange, isDisabled }: Props) {
 
 export function accessLogValuesToConfig(v: AccessLogValues): AccessLogConfig | undefined {
   if (!v.enabled) return undefined;
+  const isFile = v.output === "file";
   return {
     output: v.output,
-    filePath: v.output === "file" ? v.filePath.trim() : undefined,
+    filePath: isFile ? v.filePath.trim() : undefined,
     format: v.format || undefined,
     level: v.level || undefined,
+    rollSizeMb: isFile && v.rollSizeMb.trim() ? parseInt(v.rollSizeMb, 10) : undefined,
+    rollKeepCount: isFile && v.rollKeepCount.trim() ? parseInt(v.rollKeepCount, 10) : undefined,
+    rollKeepDays: isFile && v.rollKeepDays.trim() ? parseInt(v.rollKeepDays, 10) : undefined,
+    rollCompress: isFile && !v.rollCompress ? false : undefined,
   };
 }
 
@@ -161,5 +223,9 @@ export function accessLogConfigToValues(cfg: AccessLogConfig | undefined): Acces
     filePath: cfg?.filePath ?? "",
     format: cfg?.format ?? "",
     level: cfg?.level ?? "",
+    rollSizeMb: cfg?.rollSizeMb != null ? String(cfg.rollSizeMb) : "",
+    rollKeepCount: cfg?.rollKeepCount != null ? String(cfg.rollKeepCount) : "",
+    rollKeepDays: cfg?.rollKeepDays != null ? String(cfg.rollKeepDays) : "",
+    rollCompress: cfg?.rollCompress !== false,
   };
 }

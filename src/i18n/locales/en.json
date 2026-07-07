@@ -435,6 +435,7 @@
     "output_discard": "Discard",
     "file_path": "Log file path",
     "file_path_required": "File path is required when output is File",
+    "file_path_help": "Must be writable by the caddy service. This plugin automatically fixes file ownership after each save, so a brand-new path should just work — but if Caddy still can't write here after saving, check that the parent directory itself is writable by the caddy user.",
     "format": "Format",
     "format_default": "Default",
     "format_json": "JSON",
@@ -445,7 +446,13 @@
     "level_INFO": "INFO",
     "level_WARN": "WARN",
     "level_ERROR": "ERROR",
-    "indicator": "Logging"
+    "indicator": "Logging",
+    "roll_title": "Log rotation (optional)",
+    "roll_size_mb": "Max size before rotating (MB)",
+    "roll_keep_count": "Rolled files to keep",
+    "roll_keep_days": "Max age of rolled files (days)",
+    "roll_compress": "Compress rolled files (gzip)",
+    "roll_help": "Prevents the log file from growing unbounded. Leave blank for Caddy's own default (no rotation — the file grows forever)."
   },
   "config_check": {
     "button": "Check Config",
