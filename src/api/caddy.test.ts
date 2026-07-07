@@ -4,6 +4,7 @@ import {
   parseLegacyLabelsFromCaddyfile,
   parseConfTlsMap,
   parseConfExternalAddresses,
+  parseConfCustomTlsCaMap,
   extractRawBlocksFromCaddyfile,
   buildMigratedConfContent,
   mergeMigratedConfContent,
@@ -165,6 +166,23 @@ describe("parseConfTlsMap", () => {
       "https://jellyfin.speedport.ip:7700": true, "7700": true,
       ":8096": false, "8096": false,
     });
+  });
+});
+
+describe("parseConfCustomTlsCaMap (#152)", () => {
+  it("extracts the CA bundle path from a tls_ca_bundle comment", () => {
+    const conf = `:7700 {\n\ttls /c.pem /k.pem\n\t# tls_ca_bundle: /intermediate.pem\n\treverse_proxy localhost:8998\n}\n`;
+    expect(parseConfCustomTlsCaMap(conf)).toEqual({ ":7700": "/intermediate.pem", "7700": "/intermediate.pem" });
+  });
+
+  it("returns an empty object when no comment is present", () => {
+    const conf = `:7700 {\n\ttls /c.pem /k.pem\n\treverse_proxy localhost:8998\n}\n`;
+    expect(parseConfCustomTlsCaMap(conf)).toEqual({});
+  });
+
+  it("ignores unrelated comments", () => {
+    const conf = `# label: test\n:7700 {\n\treverse_proxy localhost:8998\n}\n`;
+    expect(parseConfCustomTlsCaMap(conf)).toEqual({});
   });
 });
 
@@ -541,6 +559,69 @@ describe("proxyToBlock", () => {
   it("still scopes a genuine public-looking hostname independently", () => {
     const result = proxyToBlock(proxy({ tls: true, externalHost: "sub.example.com", tlsAdvanced: { certLifetime: "90d" } }));
     expect(result).toContain("lifetime 90d");
+  });
+});
+
+describe("proxyToBlock — custom TLS certificate (#152)", () => {
+  it("writes a bare tls cert key line when no advanced settings", () => {
+    const result = proxyToBlock(proxy({
+      tls: true,
+      customTls: { certFile: "/etc/caddy/certs/example.com.pem", keyFile: "/etc/caddy/certs/example.com.key" },
+    }));
+    expect(result).toContain("\ttls /etc/caddy/certs/example.com.pem /etc/caddy/certs/example.com.key");
+    expect(result).not.toContain("tls internal");
+    expect(result).not.toContain("issuer internal");
+  });
+
+  it("combines protocols/ciphers/curves/client_auth in a block form", () => {
+    const result = proxyToBlock(proxy({
+      tls: true,
+      customTls: { certFile: "/c.pem", keyFile: "/k.pem" },
+      tlsAdvanced: { protocolMin: "tls1.2", protocolMax: "tls1.3", cipherSuites: ["TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"], curves: ["x25519"] },
+      mtls: { mode: "require", trustedCaFile: "/ca.pem" },
+    }));
+    expect(result).toContain("\ttls /c.pem /k.pem {");
+    expect(result).toContain("protocols tls1.2 tls1.3");
+    expect(result).toContain("ciphers TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256");
+    expect(result).toContain("curves x25519");
+    expect(result).toContain("client_auth {");
+    expect(result).toContain("mode require");
+  });
+
+  it("never emits issuer/lifetime/renewal_window_ratio even when tlsAdvanced has them set", () => {
+    const result = proxyToBlock(proxy({
+      tls: true,
+      externalHost: "sub.example.com",
+      customTls: { certFile: "/c.pem", keyFile: "/k.pem" },
+      tlsAdvanced: { certLifetime: "90d", renewalWindowRatio: 0.5 },
+    }));
+    expect(result).not.toContain("issuer");
+    expect(result).not.toContain("lifetime");
+    expect(result).not.toContain("renewal_window_ratio");
+  });
+
+  it("emits a tls_ca_bundle comment when caFile is set", () => {
+    const result = proxyToBlock(proxy({
+      tls: true,
+      customTls: { certFile: "/c.pem", keyFile: "/k.pem", caFile: "/intermediate.pem" },
+    }));
+    expect(result).toContain("# tls_ca_bundle: /intermediate.pem");
+  });
+
+  it("omits the comment when caFile is unset", () => {
+    const result = proxyToBlock(proxy({
+      tls: true,
+      customTls: { certFile: "/c.pem", keyFile: "/k.pem" },
+    }));
+    expect(result).not.toContain("tls_ca_bundle");
+  });
+
+  it("falls back to tls internal when customTls is only partially filled", () => {
+    const result = proxyToBlock(proxy({
+      tls: true,
+      customTls: { certFile: "/c.pem", keyFile: "" },
+    }));
+    expect(result).toContain("tls internal");
   });
 });
 
@@ -2561,6 +2642,127 @@ describe("parseProxies — lb retry/failover tuning round-trip (#156)", () => {
     const config: CaddyConfig = { apps: { http: { servers: { srv0: server } } } };
     const [p] = parseProxies(config);
     expect(p.lbRetry).toEqual(lbRetry);
+  });
+});
+
+describe("buildServerEntry — custom TLS certificate (#152)", () => {
+  it("sets certificate_selection.any_tag on the connection policy when tls+customTls set", () => {
+    const server = buildServerEntry({
+      externalPort: 7700, externalScheme: undefined, externalHost: "sub.example.com",
+      targetHost: "localhost", targetPort: 8080, targetScheme: "http",
+      tls: true, tlsSkipVerify: false,
+      customTls: { certFile: "/c.pem", keyFile: "/k.pem" },
+    });
+    const policy = server.tls_connection_policies?.[0];
+    expect(policy?.certificate_selection?.any_tag).toEqual(["custom:host:sub.example.com"]);
+  });
+
+  it("does not set certificate_selection when tls is false, even with customTls set", () => {
+    const server = buildServerEntry({
+      externalPort: 7700, externalScheme: undefined, externalHost: undefined,
+      targetHost: "localhost", targetPort: 8080, targetScheme: "http",
+      tls: false, tlsSkipVerify: false,
+      customTls: { certFile: "/c.pem", keyFile: "/k.pem" },
+    });
+    expect(server.tls_connection_policies).toBeUndefined();
+  });
+
+  it("uses a port-based tag for a hostless proxy", () => {
+    const server = buildServerEntry({
+      externalPort: 7700, externalScheme: undefined, externalHost: undefined,
+      targetHost: "localhost", targetPort: 8080, targetScheme: "http",
+      tls: true, tlsSkipVerify: false,
+      customTls: { certFile: "/c.pem", keyFile: "/k.pem" },
+    });
+    expect(server.tls_connection_policies?.[0]?.certificate_selection?.any_tag).toEqual(["custom:7700"]);
+  });
+});
+
+describe("parseProxies — custom TLS certificate round-trip (#152)", () => {
+  function configWithCustomCert(): CaddyConfig {
+    return {
+      apps: {
+        http: {
+          servers: {
+            srv0: {
+              listen: [":7700"],
+              tls_connection_policies: [{ certificate_selection: { any_tag: ["custom:7700"] } }],
+              routes: [{
+                handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:8080" }] }] as import("./types").CaddyHandler[],
+                terminal: true,
+              }],
+            },
+          },
+        },
+        tls: {
+          certificates: {
+            load_files: [{ certificate: "/c.pem", key: "/k.pem", tags: ["custom:7700"] }],
+          },
+        },
+      },
+    };
+  }
+
+  it("resolves customTls.certFile/keyFile from the tagged load_files entry", () => {
+    const [p] = parseProxies(configWithCustomCert());
+    expect(p.customTls).toEqual({ certFile: "/c.pem", keyFile: "/k.pem" });
+  });
+
+  it("leaves customTls undefined when the policy has no certificate_selection", () => {
+    const config = makeConfig([{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:8080" }] }]);
+    const [p] = parseProxies(config);
+    expect(p.customTls).toBeUndefined();
+  });
+
+  it("leaves customTls undefined when the tag doesn't match any load_files entry", () => {
+    const config: CaddyConfig = configWithCustomCert();
+    config.apps!.tls!.certificates!.load_files = [];
+    const [p] = parseProxies(config);
+    expect(p.customTls).toBeUndefined();
+  });
+});
+
+describe("mergeProxy — custom TLS certificate load_files management (#152)", () => {
+  const basePayload = {
+    id: "7700", externalPort: 7700, externalHost: undefined, targetHost: "localhost", targetPort: 8080,
+    targetScheme: "http" as const, tls: true, tlsSkipVerify: false, serverKey: "srv7700",
+  };
+
+  it("adds a load_files entry when a proxy with customTls is merged in", () => {
+    const config = mergeProxy({}, { ...basePayload, customTls: { certFile: "/c.pem", keyFile: "/k.pem" } });
+    expect(config.apps?.tls?.certificates?.load_files).toEqual([
+      { certificate: "/c.pem", key: "/k.pem", tags: ["custom:7700"] },
+    ]);
+  });
+
+  it("replaces the entry in place when the cert path changes on the same proxy", () => {
+    let config = mergeProxy({}, { ...basePayload, customTls: { certFile: "/c.pem", keyFile: "/k.pem" } });
+    config = mergeProxy(config, { ...basePayload, customTls: { certFile: "/c2.pem", keyFile: "/k2.pem" } });
+    expect(config.apps?.tls?.certificates?.load_files).toEqual([
+      { certificate: "/c2.pem", key: "/k2.pem", tags: ["custom:7700"] },
+    ]);
+  });
+
+  it("removes the entry when customTls is cleared but tls stays on", () => {
+    let config = mergeProxy({}, { ...basePayload, customTls: { certFile: "/c.pem", keyFile: "/k.pem" } });
+    config = mergeProxy(config, { ...basePayload, customTls: undefined });
+    expect(config.apps?.tls?.certificates?.load_files ?? []).toEqual([]);
+  });
+
+  it("removes the entry when tls is disabled", () => {
+    let config = mergeProxy({}, { ...basePayload, customTls: { certFile: "/c.pem", keyFile: "/k.pem" } });
+    config = mergeProxy(config, { ...basePayload, tls: false, customTls: { certFile: "/c.pem", keyFile: "/k.pem" } });
+    expect(config.apps?.tls?.certificates?.load_files ?? []).toEqual([]);
+  });
+
+  it("keeps other proxies' load_files entries untouched", () => {
+    let config = mergeProxy({}, { ...basePayload, customTls: { certFile: "/c.pem", keyFile: "/k.pem" } });
+    config = mergeProxy(config, {
+      ...basePayload, id: "7701", externalPort: 7701, serverKey: "srv7701",
+      customTls: { certFile: "/other.pem", keyFile: "/other.key" },
+    });
+    const tags = (config.apps?.tls?.certificates?.load_files ?? []).map(f => f.tags?.[0]).sort();
+    expect(tags).toEqual(["custom:7700", "custom:7701"]);
   });
 });
 

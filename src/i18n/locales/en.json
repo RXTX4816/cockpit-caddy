@@ -681,7 +681,17 @@
     "lifetime_preset_1y": "1 year",
     "lifetime_preset_custom": "Custom",
     "indicator_mtls": "mTLS",
-    "indicator_advanced": "TLS policy"
+    "indicator_advanced": "TLS policy",
+    "custom_cert_file": "Custom certificate file",
+    "custom_cert_help": "Path to a PEM file with your own certificate (full chain — leaf plus any intermediates). Leave both this and the key file blank to use Caddy's automatic ACME/internal-CA issuance instead.",
+    "custom_key_file": "Custom private key file",
+    "custom_ca_file": "CA bundle / intermediate chain file (optional)",
+    "custom_ca_help": "For your own reference only — Caddy has no separate slot for this on a manually-loaded certificate, so any intermediates must already be included in the certificate file above.",
+    "custom_file_checking": "Checking file…",
+    "custom_file_unreadable": "File not found or not readable by Caddy's user",
+    "custom_file_readable": "File is readable",
+    "custom_file_valid_expiry": "Valid — expires {{date}}",
+    "custom_cert_lifetime_note": "A custom certificate is loaded above — certificate lifetime and renewal window don't apply, since Caddy isn't issuing anything itself."
   },
   "error_handler": {
     "section_title": "Custom error handlers (optional)",
