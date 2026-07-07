@@ -2651,6 +2651,74 @@ describe("Prometheus metrics endpoint (#43)", () => {
   });
 });
 
+describe("runtime / error log global option (#158)", () => {
+  it("parses a bare global log block (defaults to stderr)", () => {
+    const body = ["\tlog {", "\t\toutput stderr", "\t}"].join("\n");
+    const opts = parseGlobalOptions(makeOpts(body));
+    expect(opts.runtimeLog).toEqual({ output: "stderr" });
+  });
+
+  it("parses level and file output with rotation", () => {
+    const body = [
+      "\tlog {",
+      "\t\tlevel DEBUG",
+      "\t\toutput file /var/log/caddy/caddy.log {",
+      "\t\t\troll_size 50MiB",
+      "\t\t\troll_keep 5",
+      "\t\t\troll_keep_for 240h",
+      "\t\t\troll_uncompressed",
+      "\t\t}",
+      "\t}",
+    ].join("\n");
+    const opts = parseGlobalOptions(makeOpts(body));
+    expect(opts.runtimeLog).toEqual({
+      output: "file",
+      filePath: "/var/log/caddy/caddy.log",
+      level: "DEBUG",
+      rollSizeMb: 50,
+      rollKeepCount: 5,
+      rollKeepDays: 10,
+      rollCompress: false,
+    });
+  });
+
+  it("leaves runtimeLog undefined when no log block is present", () => {
+    const opts = parseGlobalOptions(makeOpts("\temail admin@example.com"));
+    expect(opts.runtimeLog).toBeUndefined();
+  });
+
+  it("buildGlobalOptionsPatch emits a log block reusing buildLogCaddyLines' shape", () => {
+    const patched = buildGlobalOptionsPatch("", {
+      runtimeLog: { output: "file", filePath: "/var/log/caddy/caddy.log", level: "WARN", rollSizeMb: 20 },
+    });
+    expect(patched).toContain("log {");
+    expect(patched).toContain("level WARN");
+    expect(patched).toContain("output file /var/log/caddy/caddy.log {");
+    expect(patched).toContain("roll_size 20MiB");
+  });
+
+  it("round-trips through parseGlobalOptions", () => {
+    const patched = buildGlobalOptionsPatch("", {
+      runtimeLog: { output: "file", filePath: "/var/log/caddy/caddy.log", level: "ERROR", rollSizeMb: 10, rollKeepCount: 3, rollKeepDays: 7, rollCompress: false },
+    });
+    const opts = parseGlobalOptions(patched);
+    expect(opts.runtimeLog).toEqual({
+      output: "file",
+      filePath: "/var/log/caddy/caddy.log",
+      level: "ERROR",
+      rollSizeMb: 10,
+      rollKeepCount: 3,
+      rollKeepDays: 7,
+      rollCompress: false,
+    });
+  });
+
+  it("omits the log directive entirely when runtimeLog is unset (Caddy's own stderr default applies)", () => {
+    const patched = buildGlobalOptionsPatch("", { email: "admin@example.com" });
+    expect(patched).not.toContain("\tlog {");
+  });
+});
+
 describe("parseGlobalOptions — #96 unmanaged directives fallback", () => {
   it("reads email/acme_ca from a hand-written global block with no managed markers", () => {
     const content = "{\n\temail admin@example.com\n\tacme_ca https://acme-staging-v02.api.letsencrypt.org/directory\n}\n";

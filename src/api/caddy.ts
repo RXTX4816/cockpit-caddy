@@ -3959,6 +3959,13 @@ export interface GlobalOptions {
    * those), just a slightly less verbose wire format.
    */
   metricsPlainFormat?: boolean;
+  /**
+   * Caddy's own runtime/error log (#158) — startup messages, reload results, TLS/ACME
+   * errors, config errors — as opposed to per-site access logs (AccessLogConfig on each
+   * ProxyEntry/ServerDef). Written to the reserved `logging.logs.default` entry. Reuses
+   * AccessLogConfig's shape since the JSON writer/level/rotation fields are identical.
+   */
+  runtimeLog?: import("./types").AccessLogConfig;
 }
 
 /**
@@ -3969,7 +3976,7 @@ export interface GlobalOptions {
 const KNOWN_GLOBAL_OPTION_KEYS = new Set([
   "http_port", "https_port", "debug", "grace_period", "shutdown_delay",
   "email", "acme_ca", "acme_ca_root", "acme_eab", "on_demand_tls",
-  "renewal_window_ratio", "storage", "metrics",
+  "renewal_window_ratio", "storage", "metrics", "log",
 ]);
 
 /**
@@ -4050,6 +4057,45 @@ function parseOptionLines(lines: string[]): GlobalOptions {
         i++;
         while (i < lines.length && lines[i].trim() !== "}") i++;
       }
+    } else if (key === "log" && line.endsWith("{")) {
+      // #158 — Caddy's own runtime/error logger (the *unnamed* `log` global option),
+      // distinct from a per-site access log. Same writer/level/rotation shape.
+      const runtimeLog: import("./types").AccessLogConfig = { output: "stderr" };
+      i++;
+      let depth = 1;
+      while (i < lines.length) {
+        const inner = lines[i].trim();
+        depth += (inner.match(/\{/g) ?? []).length - (inner.match(/\}/g) ?? []).length;
+        if (depth <= 0) break;
+        if (inner === "}") { i++; continue; }
+        if (inner === "roll_uncompressed") { runtimeLog.rollCompress = false; i++; continue; }
+        const im = inner.match(/^(\S+)(?:\s+(.*))?$/);
+        if (im) {
+          const [, ik, iv] = im;
+          if (ik === "output") {
+            if (iv?.startsWith("file ")) {
+              runtimeLog.output = "file";
+              runtimeLog.filePath = iv.slice(5).replace(/\s*\{$/, "").trim();
+            } else if (iv) {
+              runtimeLog.output = iv.trim() as import("./types").AccessLogOutput;
+            }
+          } else if (ik === "level" && iv) {
+            runtimeLog.level = iv.trim() as import("./types").AccessLogLevel;
+          } else if (ik === "format" && iv) {
+            runtimeLog.format = iv.trim() as import("./types").AccessLogFormat;
+          } else if (ik === "roll_size" && iv) {
+            const mb = iv.trim().match(/^(\d+(?:\.\d+)?)MiB$/i);
+            if (mb) runtimeLog.rollSizeMb = Math.round(parseFloat(mb[1]));
+          } else if (ik === "roll_keep" && iv) {
+            runtimeLog.rollKeepCount = parseInt(iv.trim(), 10);
+          } else if (ik === "roll_keep_for" && iv) {
+            const hrs = iv.trim().match(/^(\d+(?:\.\d+)?)h$/);
+            if (hrs) runtimeLog.rollKeepDays = Math.round(parseFloat(hrs[1]) / 24);
+          }
+        }
+        i++;
+      }
+      opts.runtimeLog = runtimeLog;
     }
     i++;
   }
@@ -4146,6 +4192,9 @@ function buildGlobalOptionsLines(opts: GlobalOptions): string {
   // conf.d (see buildMetricsSiteBlock), since a bare global option can't also declare
   // a listener. per_host/observe_catchall_hosts/otlp sub-options aren't exposed here.
   if (opts.metricsEnabled) lines.push("\tmetrics");
+  // #158 — Caddy's own runtime/error logger. buildLogCaddyLines already emits exactly the
+  // one-tab-indented `log { ... }` shape this global-options block needs.
+  if (opts.runtimeLog) lines.push(buildLogCaddyLines(opts.runtimeLog).join("\n"));
   return lines.join("\n");
 }
 
@@ -4286,11 +4335,16 @@ export async function syncGlobalOptions(opts: GlobalOptions): Promise<void> {
 
   if (patched === diskContent && proxyConfPatched === proxyConfDisk) return;
 
-  if (proxyConfPatched !== proxyConfDisk) {
-    for (const logPath of new Set(extractLogFilePaths(proxyConfPatched))) {
-      const err = await checkLogFileWritable(logPath);
-      if (err) throw new CaddyfileError(`Log file "${logPath}" isn't writable by Caddy: ${err}`);
-    }
+  // #158's runtime logger lives in the main Caddyfile's global options, not conf.d — check
+  // both files for log paths that would otherwise get poisoned by validate (see
+  // checkLogFileWritable).
+  const logPaths = new Set([
+    ...(patched !== diskContent ? extractLogFilePaths(patched) : []),
+    ...(proxyConfPatched !== proxyConfDisk ? extractLogFilePaths(proxyConfPatched) : []),
+  ]);
+  for (const logPath of logPaths) {
+    const err = await checkLogFileWritable(logPath);
+    if (err) throw new CaddyfileError(`Log file "${logPath}" isn't writable by Caddy: ${err}`);
   }
   await fsWriteFile(MAIN_CADDYFILE, patched, "try");
   if (proxyConfPatched !== proxyConfDisk) await fsWriteFile(PROXY_CONF_PATH, proxyConfPatched, "try");
@@ -4301,7 +4355,8 @@ export async function syncGlobalOptions(opts: GlobalOptions): Promise<void> {
     if (proxyConfPatched !== proxyConfDisk) await fsWriteFile(PROXY_CONF_PATH, proxyConfDisk, "try");
     throw e;
   }
-  await fixAccessLogFileOwnership(proxyConfPatched);
+  await fixAccessLogFileOwnership(patched);
+  if (proxyConfPatched !== proxyConfDisk) await fixAccessLogFileOwnership(proxyConfPatched);
 }
 
 /** Read current global options from the main Caddyfile, merged with the metrics site
@@ -4476,11 +4531,13 @@ export async function runConfigFixes(selectedIds: Set<string>): Promise<ConfigFi
 
   if (main === mainDisk && proxyConf === proxyConfDisk) return findings;
 
-  if (proxyConf !== proxyConfDisk) {
-    for (const logPath of new Set(extractLogFilePaths(proxyConf))) {
-      const err = await checkLogFileWritable(logPath);
-      if (err) throw new CaddyfileError(`Log file "${logPath}" isn't writable by Caddy: ${err}`);
-    }
+  const logPaths = new Set([
+    ...(main !== mainDisk ? extractLogFilePaths(main) : []),
+    ...(proxyConf !== proxyConfDisk ? extractLogFilePaths(proxyConf) : []),
+  ]);
+  for (const logPath of logPaths) {
+    const err = await checkLogFileWritable(logPath);
+    if (err) throw new CaddyfileError(`Log file "${logPath}" isn't writable by Caddy: ${err}`);
   }
   await fsWriteFile(MAIN_CADDYFILE, main, "try");
   await fsWriteFile(PROXY_CONF_PATH, proxyConf, "try");
@@ -4491,6 +4548,7 @@ export async function runConfigFixes(selectedIds: Set<string>): Promise<ConfigFi
     await fsWriteFile(PROXY_CONF_PATH, proxyConfDisk, "try");
     throw e;
   }
+  await fixAccessLogFileOwnership(main);
   await fixAccessLogFileOwnership(proxyConf);
   return findings;
 }
