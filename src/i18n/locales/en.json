@@ -548,7 +548,18 @@
     "runtime_log_note": "This is Caddy's own startup/reload/error log — separate from per-site access logs configured on each proxy. Caddy's default (nothing set below) sends it to stderr, which systemd captures in the journal.",
     "runtime_log_section_title": "Runtime log (using Caddy's default)",
     "runtime_log_section_title_on": "Runtime log (enabled)",
-    "runtime_log_enable": "Override Caddy's default runtime log destination"
+    "runtime_log_enable": "Override Caddy's default runtime log destination",
+    "trusted_proxies_title": "Trusted proxies",
+    "trusted_proxies_note": "If Caddy sits behind another reverse proxy, load balancer, or CDN, it otherwise sees that intermediary's IP as the client IP — this affects access logs and the remote_ip route matcher. Applies to every server; a port with its own HTTP/3 or timeout override still gets this setting merged in separately.",
+    "trusted_proxies_enable": "Trust upstream proxy headers for the real client IP",
+    "trusted_proxies_ranges": "Trusted CIDR ranges",
+    "trusted_proxies_ranges_help": "Space-separated CIDR ranges, or the private_ranges keyword (all private IPv4/IPv6 ranges) — e.g. from your CDN's published IP list.",
+    "trusted_proxies_ranges_required": "At least one range (or private_ranges) is required",
+    "trusted_proxies_private_ranges_button": "Add private_ranges",
+    "trusted_proxies_headers": "Client IP header (optional)",
+    "trusted_proxies_headers_help": "Space-separated header names to check, in order. Leave blank for Caddy's own default (X-Forwarded-For only).",
+    "trusted_proxies_strict": "Strict mode (parse right-to-left)",
+    "trusted_proxies_strict_help": "Use when the header might contain untrusted, attacker-supplied entries before the trusted ones — reads from the right instead of the left."
   },
   "ca": {
     "title": "Internal Certificate Authority",

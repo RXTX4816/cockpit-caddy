@@ -193,6 +193,23 @@ export interface AccessLogConfig {
   rollCompress?: boolean;
 }
 
+/** Trusted proxy CIDR ranges + client-IP header config (#153) — global (applies to every
+ *  server), since Caddy's per-port `servers :PORT { }` block fully replaces (doesn't merge
+ *  with) the global `servers { }` block's settings for that port, verified against a live
+ *  instance. Written into every per-port managed servers block too, not just the global
+ *  one, so a port with its own HTTP/3/timeout override doesn't silently lose this. */
+export interface TrustedProxiesConfig {
+  /** CIDR ranges, or the "private_ranges" keyword Caddy expands to all private IPv4/IPv6
+   *  ranges. Space-separated tokens, written as-is into the Caddyfile. */
+  ranges: string[];
+  /** Parses IP headers right-to-left instead of the default left-to-right — needed when
+   *  the header may contain untrusted, attacker-supplied entries before the trusted ones. */
+  strict?: boolean;
+  /** Which header(s) to read the client IP from, checked in order. Caddy's own default is
+   *  just X-Forwarded-For when this is unset. */
+  headers?: string[];
+}
+
 export interface HeaderOperation {
   op: "set" | "add" | "delete";
   name: string;
