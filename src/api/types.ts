@@ -253,6 +253,22 @@ export interface StaticResponseConfig {
 
 export type LbPolicy = "round_robin" | "random" | "least_conn" | "first";
 
+/** reverse_proxy retry/failover tuning (#156) — how many times, for how long, and how
+ *  often to retry a different upstream after a failed request, and which response status
+ *  codes should count as a failure worth retrying. Applies even with a single upstream
+ *  (retries just re-dial the same one) — not gated on multiple upstreams like lb_policy. */
+export interface LbRetryConfig {
+  /** Max number of retries across all upstreams. */
+  retries?: number;
+  /** Total time budget across all retries (Go duration, e.g. "5s"). */
+  tryDuration?: string;
+  /** Wait time between retry attempts (Go duration, e.g. "250ms"). */
+  tryInterval?: string;
+  /** Upstream response status codes that should be treated as a failure and trigger
+   *  retrying a different upstream, in addition to Caddy's own connection-error defaults. */
+  unhealthyStatus?: number[];
+}
+
 export type ErrorMatchType = "specific" | "4xx" | "5xx" | "all";
 export type ErrorHandlerType = "respond" | "redirect" | "static";
 
@@ -314,6 +330,8 @@ export interface ProxyEntry {
   extraUpstreams?: Array<{ host: string; port: number }>;
   /** Load-balancing policy when multiple upstreams are configured */
   lbPolicy?: LbPolicy;
+  /** Retry/failover tuning (#156) — applies even with a single upstream. */
+  lbRetry?: LbRetryConfig;
   /** Incoming connection timeouts (Go duration strings e.g. "30s", "5m") */
   serverReadTimeout?: string;
   serverReadHeaderTimeout?: string;

@@ -37,6 +37,7 @@ import { BasicAuthSection, resolveBasicAuth, type AuthEntry } from "./BasicAuthS
 import { ErrorHandlersSection } from "./ErrorHandlersSection";
 import { ForwardAuthSection, validateForwardAuth } from "./ForwardAuthSection";
 import { UpstreamsSection, validateUpstreams, type ExtraUpstream } from "./UpstreamsSection";
+import { LbRetrySection, validateLbRetry, lbRetryValuesToConfig, lbRetryConfigToValues, type LbRetryValues } from "./LbRetrySection";
 import { TlsSection, type TlsValues, tlsValuesToAdvanced, tlsValuesToMtls, tlsConfigToValues, tlsValuesHaveErrors } from "./TlsSection";
 import type { ErrorHandlerConfig, ForwardAuthConfig, LbPolicy } from "../api";
 import { SectionActions } from "./SectionActions";
@@ -81,6 +82,7 @@ interface Props {
   initialBasicAuth?: AuthEntry[];
   initialExtraUpstreams?: ExtraUpstream[];
   initialLbPolicy?: LbPolicy;
+  initialLbRetry?: LbRetryValues;
   initialServerTimeouts?: ServerTimeoutValues;
   initialRequestBodyMaxSize?: string;
   initialAccessLog?: AccessLogValues;
@@ -95,7 +97,7 @@ interface Props {
   initialServerKey?: string;
 }
 
-export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, initialValues, initialRewrite, initialRequestHeaders, initialResponseHeaders, initialTransport, initialBasicAuth, initialExtraUpstreams, initialLbPolicy, initialServerTimeouts, initialRequestBodyMaxSize, initialAccessLog, initialErrorHandlers, initialForwardAuth, initialTlsValues, initialMatchers, initialHandlePath, initialIsNamedRoute, initialNamedRouteName, servers, initialServerKey }: Props) {
+export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, initialValues, initialRewrite, initialRequestHeaders, initialResponseHeaders, initialTransport, initialBasicAuth, initialExtraUpstreams, initialLbPolicy, initialLbRetry, initialServerTimeouts, initialRequestBodyMaxSize, initialAccessLog, initialErrorHandlers, initialForwardAuth, initialTlsValues, initialMatchers, initialHandlePath, initialIsNamedRoute, initialNamedRouteName, servers, initialServerKey }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
   const confirmAction = useConfirmAction();
@@ -125,6 +127,7 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
   const [basicAuth, setBasicAuth] = useState<AuthEntry[]>(initialBasicAuth ?? []);
   const [extraUpstreams, setExtraUpstreams] = useState<ExtraUpstream[]>(initialExtraUpstreams ?? []);
   const [lbPolicy, setLbPolicy] = useState<LbPolicy | "">(initialLbPolicy ?? "");
+  const [lbRetry, setLbRetry] = useState<LbRetryValues>(initialLbRetry ?? lbRetryConfigToValues(undefined));
   const [tlsValues, setTlsValues] = useState<TlsValues>(initialTlsValues ?? tlsConfigToValues(undefined, undefined));
   const [matchers, setMatchers] = useState<RouteMatch | undefined>(initialMatchers);
   const [handlePath, setHandlePath] = useState(initialHandlePath ?? false);
@@ -195,7 +198,8 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
   function handleAddClick() {
     const errs = validate();
     const upstreamErr = validateUpstreams(extraUpstreams);
-    if (Object.keys(errs).length > 0 || upstreamErr || forwardAuthErr) { setErrors(errs); return; }
+    const lbRetryErr = validateLbRetry(lbRetry);
+    if (Object.keys(errs).length > 0 || upstreamErr || lbRetryErr || forwardAuthErr) { setErrors(errs); return; }
     confirmAction.confirm();
   }
 
@@ -426,6 +430,7 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
           onChange={(u, p) => { setExtraUpstreams(u); setLbPolicy(p); }}
           isDisabled={isLocked}
         />
+        <LbRetrySection value={lbRetry} onChange={setLbRetry} isDisabled={isLocked} />
         <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!v?.path?.length) setHandlePath(false); }} isDisabled={isLocked} />
         {matchers?.path?.length && !matchers.host?.length && !matchers.method?.length && !matchers.header && !matchers.query && !matchers.remote_ip && (
           <Checkbox
@@ -490,6 +495,7 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
                       ? extraUpstreams.map(u => ({ host: u.host.trim(), port: parseInt(u.port, 10) }))
                       : undefined,
                     lbPolicy: (lbPolicy || undefined) as LbPolicy | undefined,
+                    lbRetry: lbRetryValuesToConfig(lbRetry),
                     accessLog: accessLogValuesToConfig(accessLog),
                     errorHandlers: errorHandlers.length ? errorHandlers : undefined,
                     forwardAuth: forwardAuth ?? undefined,
