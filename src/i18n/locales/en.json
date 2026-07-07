@@ -286,6 +286,17 @@
     "validation_host": "Host is required",
     "validation_port": "Port must be 1–65535"
   },
+  "lb_retry": {
+    "section_title": "Retry & Failover Tuning (optional)",
+    "retries": "Max retries",
+    "try_duration": "Retry duration budget",
+    "try_interval": "Retry interval",
+    "unhealthy_status": "Unhealthy status codes",
+    "unhealthy_status_help": "Space-separated response codes that should count as a failed attempt and trigger retrying a different upstream, e.g. 500 502 503.",
+    "validation_retries": "Retries must be 0 or greater",
+    "validation_duration": "Must be a Go duration (e.g. 5s, 250ms)",
+    "validation_status": "Must be space-separated 3-digit status codes"
+  },
   "response_headers": {
     "section_title": "Response Headers (optional)",
     "op_set": "Set",

@@ -37,6 +37,7 @@ import { BasicAuthSection, resolveBasicAuth, type AuthEntry } from "./BasicAuthS
 import { ErrorHandlersSection } from "./ErrorHandlersSection";
 import { ForwardAuthSection, validateForwardAuth } from "./ForwardAuthSection";
 import { UpstreamsSection, validateUpstreams, type ExtraUpstream } from "./UpstreamsSection";
+import { LbRetrySection, validateLbRetry, lbRetryValuesToConfig, lbRetryConfigToValues, type LbRetryValues } from "./LbRetrySection";
 import type { ErrorHandlerConfig, ForwardAuthConfig, LbPolicy } from "../api";
 import { SectionActions } from "./SectionActions";
 
@@ -89,6 +90,7 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
     (proxy.extraUpstreams ?? []).map(u => ({ host: u.host, port: String(u.port) }))
   );
   const [lbPolicy, setLbPolicy] = useState<LbPolicy | "">(proxy.lbPolicy ?? "");
+  const [lbRetry, setLbRetry] = useState<LbRetryValues>(lbRetryConfigToValues(proxy.lbRetry));
   const [errorHandlers, setErrorHandlers] = useState<ErrorHandlerConfig[]>(proxy.errorHandlers ?? []);
   const [forwardAuth, setForwardAuth] = useState<ForwardAuthConfig | undefined>(proxy.forwardAuth);
   const [tlsValues, setTlsValues] = useState<TlsValues>(tlsConfigToValues(proxy.tlsAdvanced, proxy.mtls));
@@ -142,6 +144,7 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
       return;
     }
     if (validateUpstreams(extraUpstreams)) return;
+    if (validateLbRetry(lbRetry)) return;
     if (forwardAuthErr) return;
     setExtHostErr(null);
     saveConfirm.confirm();
@@ -343,6 +346,7 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
           onChange={(u, p) => { setExtraUpstreams(u); setLbPolicy(p); }}
           isDisabled={isConfirming}
         />
+        <LbRetrySection value={lbRetry} onChange={setLbRetry} isDisabled={isConfirming} />
         <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!v?.path?.length) setHandlePath(false); }} isDisabled={isConfirming} />
         {matchers?.path?.length && !matchers.host?.length && !matchers.method?.length && !matchers.header && !matchers.query && !matchers.remote_ip && (
           <Checkbox
@@ -413,6 +417,7 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
                     ? extraUpstreams.map(u => ({ host: u.host.trim(), port: parseInt(u.port, 10) }))
                     : undefined,
                   lbPolicy: (lbPolicy || undefined) as LbPolicy | undefined,
+                  lbRetry: lbRetryValuesToConfig(lbRetry),
                   accessLog: accessLogValuesToConfig(accessLog),
                   errorHandlers: errorHandlers.length ? errorHandlers : undefined,
                   forwardAuth: forwardAuth ?? undefined,

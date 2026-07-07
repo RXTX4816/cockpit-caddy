@@ -2377,6 +2377,38 @@ describe("proxyToBlock — multiple upstreams", () => {
   });
 });
 
+describe("proxyToBlock — lb retry/failover tuning (#156)", () => {
+  it("emits lb_retries, lb_try_duration, lb_try_interval, unhealthy_status", () => {
+    const result = proxyToBlock(proxy({
+      lbRetry: { retries: 3, tryDuration: "5s", tryInterval: "250ms", unhealthyStatus: [500, 502, 503] },
+    }));
+    expect(result).toContain("lb_retries 3");
+    expect(result).toContain("lb_try_duration 5s");
+    expect(result).toContain("lb_try_interval 250ms");
+    expect(result).toContain("unhealthy_status 500 502 503");
+  });
+
+  it("applies even with a single upstream (not gated on multiple upstreams like lb_policy)", () => {
+    const result = proxyToBlock(proxy({ lbRetry: { retries: 2 } }));
+    expect(result).toContain("lb_retries 2");
+  });
+
+  it("omits lb retry lines when unset", () => {
+    const result = proxyToBlock(proxy({}));
+    expect(result).not.toContain("lb_retries");
+    expect(result).not.toContain("lb_try_duration");
+    expect(result).not.toContain("lb_try_interval");
+    expect(result).not.toContain("unhealthy_status");
+  });
+
+  it("emits only the fields that are set", () => {
+    const result = proxyToBlock(proxy({ lbRetry: { tryDuration: "10s" } }));
+    expect(result).toContain("lb_try_duration 10s");
+    expect(result).not.toContain("lb_retries");
+    expect(result).not.toContain("unhealthy_status");
+  });
+});
+
 describe("buildServerEntry — multiple upstreams", () => {
   it("includes all upstreams in reverse_proxy handler", () => {
     const server = buildServerEntry({
@@ -2433,6 +2465,102 @@ describe("parseProxies — multiple upstreams round-trip", () => {
     const config = makeConfig([{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:8080" }] }]);
     const [p] = parseProxies(config);
     expect(p.extraUpstreams).toBeUndefined();
+  });
+});
+
+describe("buildServerEntry — lb retry/failover tuning (#156)", () => {
+  it("includes load_balancing.retries/try_duration/try_interval and health_checks.passive.unhealthy_status", () => {
+    const server = buildServerEntry({
+      externalPort: 7700, externalScheme: undefined, externalHost: undefined,
+      targetHost: "localhost", targetPort: 8080, targetScheme: "http",
+      tls: false, tlsSkipVerify: false,
+      lbRetry: { retries: 3, tryDuration: "5s", tryInterval: "250ms", unhealthyStatus: [500, 502, 503] },
+    });
+    const rp = server.routes[0].handle.find(h => h.handler === "reverse_proxy") as Record<string, unknown> | undefined;
+    const lb = rp!.load_balancing as Record<string, unknown> | undefined;
+    expect(lb).toMatchObject({ retries: 3, try_duration: "5s", try_interval: "250ms" });
+    const hc = rp!.health_checks as Record<string, unknown> | undefined;
+    expect((hc?.passive as Record<string, unknown> | undefined)?.unhealthy_status).toEqual([500, 502, 503]);
+  });
+
+  it("applies lb_retries even without lbPolicy or multiple upstreams", () => {
+    const server = buildServerEntry({
+      externalPort: 7700, externalScheme: undefined, externalHost: undefined,
+      targetHost: "localhost", targetPort: 8080, targetScheme: "http",
+      tls: false, tlsSkipVerify: false,
+      lbRetry: { retries: 2 },
+    });
+    const rp = server.routes[0].handle.find(h => h.handler === "reverse_proxy") as Record<string, unknown> | undefined;
+    expect((rp!.load_balancing as Record<string, unknown>).retries).toBe(2);
+  });
+
+  it("merges retry fields with an existing lbPolicy selection_policy", () => {
+    const server = buildServerEntry({
+      externalPort: 7700, externalScheme: undefined, externalHost: undefined,
+      targetHost: "localhost", targetPort: 8080, targetScheme: "http",
+      tls: false, tlsSkipVerify: false,
+      extraUpstreams: [{ host: "backend2", port: 8081 }],
+      lbPolicy: "round_robin",
+      lbRetry: { retries: 3 },
+    });
+    const rp = server.routes[0].handle.find(h => h.handler === "reverse_proxy") as Record<string, unknown> | undefined;
+    const lb = rp!.load_balancing as Record<string, unknown>;
+    expect(lb.selection_policy).toMatchObject({ policy: "round_robin" });
+    expect(lb.retries).toBe(3);
+  });
+
+  it("omits load_balancing and health_checks entirely when lbRetry unset", () => {
+    const server = buildServerEntry({
+      externalPort: 7700, externalScheme: undefined, externalHost: undefined,
+      targetHost: "localhost", targetPort: 8080, targetScheme: "http",
+      tls: false, tlsSkipVerify: false,
+    });
+    const rp = server.routes[0].handle.find(h => h.handler === "reverse_proxy") as Record<string, unknown> | undefined;
+    expect(rp!.load_balancing).toBeUndefined();
+    expect(rp!.health_checks).toBeUndefined();
+  });
+});
+
+describe("parseProxies — lb retry/failover tuning round-trip (#156)", () => {
+  it("parses retries/try_duration/try_interval and unhealthy_status", () => {
+    const config = makeConfig([{
+      handler: "reverse_proxy",
+      upstreams: [{ dial: "localhost:8080" }],
+      load_balancing: { retries: 3, try_duration: "5s", try_interval: "250ms" },
+      health_checks: { passive: { unhealthy_status: [500, 502, 503] } },
+    }]);
+    const [p] = parseProxies(config);
+    expect(p.lbRetry).toEqual({ retries: 3, tryDuration: "5s", tryInterval: "250ms", unhealthyStatus: [500, 502, 503] });
+  });
+
+  it("parses nanosecond-number durations back to Go duration strings", () => {
+    const config = makeConfig([{
+      handler: "reverse_proxy",
+      upstreams: [{ dial: "localhost:8080" }],
+      load_balancing: { try_duration: 5_000_000_000, try_interval: 250_000_000 },
+    }]);
+    const [p] = parseProxies(config);
+    expect(p.lbRetry?.tryDuration).toBe("5s");
+    expect(p.lbRetry?.tryInterval).toBe("0.25s");
+  });
+
+  it("leaves lbRetry undefined when none of the fields are present", () => {
+    const config = makeConfig([{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:8080" }] }]);
+    const [p] = parseProxies(config);
+    expect(p.lbRetry).toBeUndefined();
+  });
+
+  it("round-trips through buildServerEntry + parseProxies", () => {
+    const lbRetry = { retries: 4, tryDuration: "10s", tryInterval: "1s", unhealthyStatus: [500, 503] };
+    const server = buildServerEntry({
+      externalPort: 7700, externalScheme: undefined, externalHost: undefined,
+      targetHost: "localhost", targetPort: 8080, targetScheme: "http",
+      tls: false, tlsSkipVerify: false,
+      lbRetry,
+    });
+    const config: CaddyConfig = { apps: { http: { servers: { srv0: server } } } };
+    const [p] = parseProxies(config);
+    expect(p.lbRetry).toEqual(lbRetry);
   });
 });
 

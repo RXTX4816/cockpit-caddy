@@ -39,6 +39,7 @@ import {
 } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { useLayout, useLocalStorage } from "@rxtx4816/cockpit-plugin-base-react";
 import { AddProxyDialog } from "./AddProxyDialog";
+import { lbRetryConfigToValues } from "./LbRetrySection";
 import { AddRedirectDialog } from "./AddRedirectDialog";
 import { AddStaticDialog } from "./AddStaticDialog";
 import { AddRespondDialog } from "./AddRespondDialog";
@@ -923,6 +924,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
           initialBasicAuth={(duplicating.basicAuth ?? []).map(a => ({ username: a.username, password: "", existingHash: a.passwordHash }))}
           initialExtraUpstreams={(duplicating.extraUpstreams ?? []).map(u => ({ host: u.host, port: String(u.port) }))}
           initialLbPolicy={duplicating.lbPolicy}
+          initialLbRetry={lbRetryConfigToValues(duplicating.lbRetry)}
           initialServerTimeouts={{
             readTimeout: duplicating.serverReadTimeout ?? "",
             readHeaderTimeout: duplicating.serverReadHeaderTimeout ?? "",
