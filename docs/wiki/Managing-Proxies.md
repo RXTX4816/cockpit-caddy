@@ -89,21 +89,25 @@ Click **Add Proxy** in the toolbar.
 
 ### Optional sections
 
-Each proxy dialog has expandable sections for advanced configuration. Every section has a **Clear** button (with confirm) that resets it, and sections with known defaults also have a **Defaults** button.
+Each proxy dialog groups its advanced configuration into a single box of expandable sections — only one is open at a time. Every section has a **Clear** button (with confirm) that resets it, and sections with known defaults also have a **Defaults** button. A section's title gets a small dot indicator once it holds a non-default value, so the group can be scanned at a glance without opening every row.
+
+The **Max request body size** field sits in the main form (not inside the expandable group) since it's a single value, not a sub-form.
 
 | Section | What it configures |
 |---|---|
-| **Route Matchers** | Path, host, method, header, query, and remote IP matchers |
-| **Transport** | Dial timeout, response header timeout |
-| **Access Log** | Per-server access logging (output, format, level) |
+| **TLS Policy** | Protocol versions, cipher suites, curves, mTLS, internal-issuer certificate lifetime — or a custom/bring-your-own certificate (point at existing cert + key PEM files instead of Caddy issuing one) |
+| **Access Log** | Per-server access logging (output, format, level, rotation) |
 | **Error Handlers** | Custom responses for 4xx/5xx errors |
 | **Forward Auth** | Delegate authentication to an external service |
-| **Server Timeouts** | Read, write, idle timeouts and max header size |
+| **Transport** | Dial timeout, response header timeout |
+| **Server Timeouts** | Read, write, idle timeouts, max header size, and HTTP/3 opt-out |
 | **Basic Auth** | Username/password protection |
 | **Rewrite** | Strip prefix, add prefix, or regex path rewrite |
 | **Request Headers** | Add, set, or delete upstream request headers |
 | **Response Headers** | Add, set, or delete downstream response headers |
-| **Extra Upstreams** | Additional upstream targets with load-balancing policy |
+| **Extra Upstreams** | Additional upstream targets with a load-balancing policy |
+| **Retry & Failover Tuning** | Max retries, retry duration/interval, and which upstream response codes count as a failure worth retrying — applies even with a single upstream |
+| **Route Matchers** | Path, host, method, header, query, and remote IP matchers |
 
 ---
 
@@ -129,7 +133,7 @@ Click **Add Static** in the toolbar.
 
 ### Optional sections
 
-Same expandable sections as the proxy dialog except Transport, Rewrite, Forward Auth, and Extra Upstreams (which don't apply to a file server): Route Matchers, Access Log, Error Handlers, Server Timeouts, Basic Auth, Request Headers, and Response Headers.
+Same as the proxy dialog except Transport, Rewrite, Forward Auth, Extra Upstreams, and Retry & Failover Tuning (which don't apply to a file server, since there's no upstream to dial): TLS Policy (including custom certificates), Access Log, Error Handlers, Server Timeouts, Basic Auth, Request Headers, Response Headers, and Route Matchers. The Max request body size field is also available in the main form.
 
 ---
 

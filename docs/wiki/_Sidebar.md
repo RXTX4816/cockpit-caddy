@@ -6,6 +6,7 @@
 
 - [Proxy Dashboard](Proxy-Dashboard)
 - [Managing Entries](Managing-Proxies)
+- [Global Options](Global-Options)
 - [Service Control](Service-Control)
 
 **Help**
