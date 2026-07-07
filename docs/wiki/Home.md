@@ -11,9 +11,11 @@ Cockpit Caddy is a web-based UI for managing [Caddy](https://caddyserver.com/), 
 - Search and filter entries by port, target, or label
 - Add, edit, duplicate, and delete rules from the web UI
 - Start, stop, restart, and reload the Caddy service
-- TLS certificates handled automatically via Caddy's internal CA — no DNS or Let's Encrypt required
-- Per-server access logging, server timeouts, and transport tuning
-- Global Caddy options, Caddyfile editor, log viewer, and internal CA viewer
+- TLS certificates handled automatically via Caddy's internal CA — no DNS or Let's Encrypt required — or bring your own certificate, or let Caddy issue via ACME/Let's Encrypt
+- Per-server access logging (with rotation), request body size limits, server timeouts, and transport tuning
+- Load-balancer retry/failover tuning and extra upstreams for a single route
+- Trusted proxies and PROXY protocol support for running behind another load balancer or CDN
+- Global Caddy options, Caddyfile editor, log viewer, config health check, and internal CA / ACME status viewers
 
 ## Pages
 
@@ -21,6 +23,7 @@ Cockpit Caddy is a web-based UI for managing [Caddy](https://caddyserver.com/), 
 |---|---|
 | [Proxy Dashboard](Proxy-Dashboard) | The main screen — entry list, status, search, and actions |
 | [Managing Proxies](Managing-Proxies) | Add, edit, and delete rules |
+| [Global Options](Global-Options) | Ports, ACME, on-demand TLS, storage, metrics, trusted proxies, PROXY protocol |
 | [Service Control](Service-Control) | Start, stop, restart, and reload the Caddy service |
 | [Troubleshooting](Troubleshooting) | Fixes for common installation and runtime problems |
 | [Development](Development) | Dev setup, build commands, plugin-base, and VM testing |

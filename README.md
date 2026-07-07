@@ -28,20 +28,22 @@ Caddy handles TLS automatically via its internal CA (`tls internal`). No DNS, no
 
 ## Features
 
-- Reverse proxy rules — add / edit / delete with optional load balancing, forward auth, rewrites, request/response headers, and custom error handlers
+- Reverse proxy rules — add / edit / delete with optional load balancing (with retry/failover tuning), forward auth, rewrites, request/response headers, and custom error handlers
 - **Named virtual servers** — group multiple routes under one port with per-route matchers (path, host, method, header, query, remote IP)
 - **Route matchers** — restrict which requests a route handles; catch-all routes handle the rest
 - **Strip path prefix** (`handle_path`) — remove the matched path prefix before forwarding to the upstream
 - Static file servers — serve directories with optional browse, basic auth, and access logs
 - Redirects and static HTTP responses
 - Start, stop, restart, and reload the Caddy service
-- TLS self-signed certificates via Caddy's internal CA (enabled by default)
-- Per-server access logging, server timeouts, and transport tuning
+- TLS via Caddy's internal CA (self-signed, enabled by default), ACME/Let's Encrypt, or your own certificate — with per-route protocol/cipher/mTLS policy
+- Per-server access logging with rotation, request body size limits, server timeouts, and transport tuning
+- **Trusted proxies** and **PROXY protocol** support for the real client IP when running behind another load balancer or CDN
 - Search and filter entries by port, target, or label
 - Caddyfile editor with syntax highlighting
 - Log viewer with per-service filtering
-- Global Caddy options (ports, debug mode, shutdown delays)
-- Internal CA viewer with PEM export
+- Global Caddy options (ports, ACME, on-demand TLS, storage, Prometheus metrics, runtime log)
+- Config health check that finds and fixes known-stale configuration shapes
+- Internal CA and ACME status viewers with PEM export
 - 24 language support (UI follows Cockpit's language setting)
 
 ## Requirements
