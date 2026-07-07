@@ -26,6 +26,7 @@ import { ResponseHeadersSection } from "./ResponseHeadersSection";
 import { RequestHeadersSection } from "./RequestHeadersSection";
 import { AccessLogSection, type AccessLogValues, accessLogConfigToValues, accessLogValuesToConfig } from "./AccessLogSection";
 import { ServerTimeoutsSection, type ServerTimeoutValues } from "./ServerTimeoutsSection";
+import { RequestBodyLimitField } from "./RequestBodyLimitField";
 import { ErrorHandlersSection } from "./ErrorHandlersSection";
 import { TlsSection, type TlsValues, tlsValuesToAdvanced, tlsValuesToMtls, tlsConfigToValues } from "./TlsSection";
 
@@ -61,6 +62,7 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
     maxHeaderBytes: proxy.maxHeaderBytes != null ? String(proxy.maxHeaderBytes) : "",
     disableHttp3: proxy.disableHttp3 ?? false,
   });
+  const [requestBodyMaxSize, setRequestBodyMaxSize] = useState(proxy.requestBodyMaxSize != null ? String(proxy.requestBodyMaxSize) : "");
   const [errorHandlers, setErrorHandlers] = useState<ErrorHandlerConfig[]>(proxy.errorHandlers ?? []);
   const [tlsValues, setTlsValues] = useState<TlsValues>(tlsConfigToValues(proxy.tlsAdvanced, proxy.mtls));
   const [matchers, setMatchers] = useState<RouteMatch | undefined>(proxy.matchers);
@@ -186,6 +188,7 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
         <AccessLogSection value={accessLog} onChange={setAccessLog} isDisabled={isLocked} />
         <ErrorHandlersSection value={errorHandlers} onChange={setErrorHandlers} isDisabled={isLocked} />
         <ServerTimeoutsSection value={serverTimeouts} onChange={setServerTimeouts} isDisabled={isLocked} />
+        <RequestBodyLimitField value={requestBodyMaxSize} onChange={setRequestBodyMaxSize} isDisabled={isLocked} idPrefix="edit-static" />
         <BasicAuthSection
           value={basicAuth}
           onChange={setBasicAuth}
@@ -241,6 +244,7 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
                     serverIdleTimeout: serverTimeouts.idleTimeout.trim() || undefined,
                     maxHeaderBytes: serverTimeouts.maxHeaderBytes.trim() ? parseInt(serverTimeouts.maxHeaderBytes, 10) : undefined,
                     disableHttp3: serverTimeouts.disableHttp3 || undefined,
+                    requestBodyMaxSize: requestBodyMaxSize.trim() ? parseInt(requestBodyMaxSize, 10) : undefined,
                     tlsAdvanced: tlsValuesToAdvanced(tlsValues),
                     mtls: tlsValuesToMtls(tlsValues),
                     matchers: matchers ?? undefined,

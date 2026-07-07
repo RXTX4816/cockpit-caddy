@@ -31,6 +31,7 @@ import { ResponseHeadersSection } from "./ResponseHeadersSection";
 import { TransportSection, type TransportValues } from "./TransportSection";
 import { TlsSection, type TlsValues, tlsValuesToAdvanced, tlsValuesToMtls, tlsConfigToValues, tlsValuesHaveErrors } from "./TlsSection";
 import { ServerTimeoutsSection, type ServerTimeoutValues } from "./ServerTimeoutsSection";
+import { RequestBodyLimitField } from "./RequestBodyLimitField";
 import { AccessLogSection, type AccessLogValues, accessLogValuesToConfig, accessLogConfigToValues } from "./AccessLogSection";
 import { BasicAuthSection, resolveBasicAuth, type AuthEntry } from "./BasicAuthSection";
 import { ErrorHandlersSection } from "./ErrorHandlersSection";
@@ -80,6 +81,7 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
     maxHeaderBytes: proxy.maxHeaderBytes != null ? String(proxy.maxHeaderBytes) : "",
     disableHttp3: proxy.disableHttp3 ?? false,
   });
+  const [requestBodyMaxSize, setRequestBodyMaxSize] = useState(proxy.requestBodyMaxSize != null ? String(proxy.requestBodyMaxSize) : "");
   const [basicAuth, setBasicAuth] = useState<AuthEntry[]>(
     (proxy.basicAuth ?? []).map(a => ({ username: a.username, password: "", existingHash: a.passwordHash }))
   );
@@ -330,6 +332,7 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
           uriError={forwardAuthErr ?? undefined}
         />
         <ServerTimeoutsSection value={serverTimeouts} onChange={setServerTimeouts} isDisabled={isConfirming} />
+        <RequestBodyLimitField value={requestBodyMaxSize} onChange={setRequestBodyMaxSize} isDisabled={isConfirming} idPrefix="edit-proxy" />
         <BasicAuthSection value={basicAuth} onChange={setBasicAuth} isDisabled={isConfirming} />
         <RewriteSection value={rewrite} onChange={setRewrite} isDisabled={isConfirming} />
         <RequestHeadersSection value={requestHeaders} onChange={setRequestHeaders} isDisabled={isConfirming} />
@@ -419,6 +422,7 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
                   serverIdleTimeout: serverTimeouts.idleTimeout.trim() || undefined,
                   maxHeaderBytes: serverTimeouts.maxHeaderBytes.trim() ? parseInt(serverTimeouts.maxHeaderBytes, 10) : undefined,
                   disableHttp3: serverTimeouts.disableHttp3 || undefined,
+                  requestBodyMaxSize: requestBodyMaxSize.trim() ? parseInt(requestBodyMaxSize, 10) : undefined,
                   tlsAdvanced: tlsValuesToAdvanced(tlsValues),
                   mtls: tlsValuesToMtls(tlsValues),
                   matchers: matchers ?? undefined,

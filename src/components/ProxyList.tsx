@@ -101,7 +101,7 @@ function FlagChips({ proxy, t }: { proxy: ProxyEntry; t: (k: string) => string }
   if (proxy.basicAuth?.length) chips.push({ label: t("proxies.indicator_auth"), color: "red" });
   if (proxy.dialTimeout ?? proxy.responseHeaderTimeout) chips.push({ label: t("proxies.indicator_timeouts"), color: "grey" });
   if (proxy.accessLog) chips.push({ label: t("access_log.indicator"), color: "teal" });
-  if (proxy.serverReadTimeout ?? proxy.serverReadHeaderTimeout ?? proxy.serverWriteTimeout ?? proxy.serverIdleTimeout ?? proxy.maxHeaderBytes) chips.push({ label: t("proxies.indicator_limits"), color: "grey" });
+  if (proxy.serverReadTimeout ?? proxy.serverReadHeaderTimeout ?? proxy.serverWriteTimeout ?? proxy.serverIdleTimeout ?? proxy.maxHeaderBytes ?? proxy.requestBodyMaxSize) chips.push({ label: t("proxies.indicator_limits"), color: "grey" });
   if (proxy.extraUpstreams?.length) chips.push({ label: t("proxies.indicator_lb"), color: "blue" });
   if (proxy.forwardAuth) chips.push({ label: t("forward_auth.indicator"), color: "purple" });
   if (proxy.mtls) chips.push({ label: t("tls_policy.indicator_mtls"), color: "orange" });
@@ -853,6 +853,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
             maxHeaderBytes: duplicating.maxHeaderBytes != null ? String(duplicating.maxHeaderBytes) : "",
             disableHttp3: duplicating.disableHttp3 ?? false,
           }}
+          initialRequestBodyMaxSize={duplicating.requestBodyMaxSize != null ? String(duplicating.requestBodyMaxSize) : ""}
           initialErrorHandlers={duplicating.errorHandlers}
           initialTlsValues={tlsConfigToValues(duplicating.tlsAdvanced, duplicating.mtls)}
           initialMatchers={duplicating.matchers}
@@ -886,6 +887,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
             maxHeaderBytes: duplicating.maxHeaderBytes != null ? String(duplicating.maxHeaderBytes) : "",
             disableHttp3: duplicating.disableHttp3 ?? false,
           }}
+          initialRequestBodyMaxSize={duplicating.requestBodyMaxSize != null ? String(duplicating.requestBodyMaxSize) : ""}
           initialErrorHandlers={duplicating.errorHandlers}
           initialTlsValues={tlsConfigToValues(duplicating.tlsAdvanced, duplicating.mtls)}
           initialMatchers={duplicating.matchers}
@@ -929,6 +931,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
             maxHeaderBytes: duplicating.maxHeaderBytes != null ? String(duplicating.maxHeaderBytes) : "",
             disableHttp3: duplicating.disableHttp3 ?? false,
           }}
+          initialRequestBodyMaxSize={duplicating.requestBodyMaxSize != null ? String(duplicating.requestBodyMaxSize) : ""}
           initialAccessLog={duplicating.accessLog ? accessLogConfigToValues(duplicating.accessLog) : undefined}
           initialErrorHandlers={duplicating.errorHandlers}
           initialForwardAuth={duplicating.forwardAuth}
