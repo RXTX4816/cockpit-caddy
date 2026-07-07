@@ -239,6 +239,18 @@ export interface TrustedProxiesConfig {
   headers?: string[];
 }
 
+/** Accept the PROXY protocol on incoming connections (#157) — global, like
+ *  TrustedProxiesConfig, for the same per-port-block-replaces-global-block reason. Written
+ *  as a `listener_wrappers { proxy_protocol { ... } }` entry in the `servers { }` block. */
+export interface ProxyProtocolConfig {
+  /** Max time to wait for the PROXY protocol header before giving up (Go duration, e.g. "2s"). */
+  timeout?: string;
+  /** CIDR ranges allowed to send PROXY protocol headers — restrict to trusted upstream
+   *  load balancers only, to prevent client IP spoofing. Unset means any source is trusted,
+   *  matching Caddy's own default. */
+  allow?: string[];
+}
+
 export interface HeaderOperation {
   op: "set" | "add" | "delete";
   name: string;

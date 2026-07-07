@@ -1108,6 +1108,25 @@ function buildTrustedProxiesLines(tp: import("./types").TrustedProxiesConfig, in
   return lines;
 }
 
+/**
+ * PROXY protocol config lines for a `servers { }` block (#157) — same global/per-port-block
+ * duplication requirement as buildTrustedProxiesLines, for the identical reason (a per-port
+ * `servers :PORT { }` block fully replaces the global block's settings for that port).
+ */
+function buildProxyProtocolLines(pp: import("./types").ProxyProtocolConfig, indent: string): string[] {
+  const inner: string[] = [];
+  if (pp.timeout) inner.push(`${indent}\t\ttimeout ${pp.timeout}`);
+  if (pp.allow?.length) inner.push(`${indent}\t\tallow ${pp.allow.join(" ")}`);
+  const lines = [`${indent}listener_wrappers {`];
+  if (inner.length) {
+    lines.push(`${indent}\tproxy_protocol {`, ...inner, `${indent}\t}`);
+  } else {
+    lines.push(`${indent}\tproxy_protocol`);
+  }
+  lines.push(`${indent}}`);
+  return lines;
+}
+
 function buildLogCaddyLines(log: import("./types").AccessLogConfig): string[] {
   const lines = ["\tlog {"];
   const rollLines = log.output === "file" ? buildLogRollLines(log, "\t\t\t") : [];
@@ -3688,7 +3707,11 @@ export function findGlobalBlock(content: string): { open: number; close: number 
  * disables HTTP/3 for the whole port if *any* proxy on it asked to — an explicit opt-out
  * from one host is honored for the shared listener rather than silently dropped.
  */
-function buildManagedServersBlocks(proxies: ProxyEntry[], trustedProxies?: import("./types").TrustedProxiesConfig): string {
+function buildManagedServersBlocks(
+  proxies: ProxyEntry[],
+  trustedProxies?: import("./types").TrustedProxiesConfig,
+  proxyProtocol?: import("./types").ProxyProtocolConfig,
+): string {
   const relevant = proxies.filter(p => !p.namedServerKey &&
     (p.serverReadTimeout || p.serverReadHeaderTimeout || p.serverWriteTimeout || p.serverIdleTimeout || p.maxHeaderBytes || p.disableHttp3));
 
@@ -3726,6 +3749,9 @@ function buildManagedServersBlocks(proxies: ProxyEntry[], trustedProxies?: impor
       // completely ignored for it (verified against a live instance — no merging happens),
       // so trusted_proxies must be repeated here too.
       if (trustedProxies?.ranges.length) lines.push(...buildTrustedProxiesLines(trustedProxies, "\t\t"));
+      // #157 — same reasoning as trusted_proxies above: a per-port block silently drops the
+      // global listener_wrappers/proxy_protocol config too, so it must be repeated here.
+      if (proxyProtocol) lines.push(...buildProxyProtocolLines(proxyProtocol, "\t\t"));
       lines.push("\t}");
       return lines.join("\n");
     })
@@ -3790,8 +3816,8 @@ export async function syncGlobalTimeouts(proxies: ProxyEntry[]): Promise<void> {
   // drop it for any port that also has its own timeout/protocol override (see
   // buildManagedServersBlocks). Read fresh from disk rather than threading it through every
   // caller — trusted_proxies itself is saved via the separate syncGlobalOptions path.
-  const trustedProxies = parseGlobalOptions(original).trustedProxies;
-  const blocks = buildManagedServersBlocks(proxies, trustedProxies);
+  const globalOpts = parseGlobalOptions(original);
+  const blocks = buildManagedServersBlocks(proxies, globalOpts.trustedProxies, globalOpts.proxyProtocol);
   const patched = patchMainCaddyfile(original, blocks);
   if (patched === original) return;
 
@@ -4145,6 +4171,8 @@ export interface GlobalOptions {
   runtimeLog?: import("./types").AccessLogConfig;
   /** Trusted proxy ranges / client IP header config (#153) — see TrustedProxiesConfig. */
   trustedProxies?: import("./types").TrustedProxiesConfig;
+  /** Accept the PROXY protocol on incoming connections (#157) — see ProxyProtocolConfig. */
+  proxyProtocol?: import("./types").ProxyProtocolConfig;
 }
 
 /**
@@ -4276,18 +4304,44 @@ function parseOptionLines(lines: string[]): GlobalOptions {
       }
       opts.runtimeLog = runtimeLog;
     } else if (line === "servers {") {
-      // #153 — the bare (portless) global `servers { trusted_proxies ... }` block. Matched
-      // on the exact trimmed line (not just `key === "servers"`) so a per-port
-      // `servers :PORT { ... }` block (a *different* feature — #51's timeouts/protocols,
-      // its own separate managed section) is left alone here, not misparsed as this one.
+      // #153/#157 — the bare (portless) global `servers { trusted_proxies ...
+      // listener_wrappers { proxy_protocol { ... } } }` block. Matched on the exact trimmed
+      // line (not just `key === "servers"`) so a per-port `servers :PORT { ... }` block (a
+      // *different* feature — #51's timeouts/protocols, its own separate managed section)
+      // is left alone here, not misparsed as this one.
       const tp: import("./types").TrustedProxiesConfig = { ranges: [] };
+      let pp: import("./types").ProxyProtocolConfig | undefined;
       i++;
       let depth = 1;
+      let inListenerWrappers = false;
+      let inProxyProtocol = false;
       while (i < lines.length) {
         const inner = lines[i].trim();
         depth += (inner.match(/\{/g) ?? []).length - (inner.match(/\}/g) ?? []).length;
         if (depth <= 0) break;
+
+        if (inProxyProtocol) {
+          if (inner === "}") { inProxyProtocol = false; i++; continue; }
+          const pm = inner.match(/^(\S+)(?:\s+(.*))?$/);
+          if (pm) {
+            const [, pk, pv] = pm;
+            if (pk === "timeout" && pv) pp!.timeout = pv.trim();
+            else if (pk === "allow" && pv) pp!.allow = pv.trim().split(/\s+/);
+          }
+          i++;
+          continue;
+        }
+        if (inListenerWrappers) {
+          if (inner === "}") { inListenerWrappers = false; i++; continue; }
+          if (inner === "proxy_protocol" || inner === "proxy_protocol {") {
+            pp = pp ?? {};
+            if (inner === "proxy_protocol {") inProxyProtocol = true;
+          }
+          i++;
+          continue;
+        }
         if (inner === "}") { i++; continue; }
+        if (inner === "listener_wrappers {") { inListenerWrappers = true; i++; continue; }
         if (inner === "trusted_proxies_strict") { tp.strict = true; i++; continue; }
         const im = inner.match(/^(\S+)(?:\s+(.*))?$/);
         if (im) {
@@ -4301,6 +4355,7 @@ function parseOptionLines(lines: string[]): GlobalOptions {
         i++;
       }
       if (tp.ranges.length) opts.trustedProxies = tp;
+      if (pp) opts.proxyProtocol = pp;
     }
     i++;
   }
@@ -4400,11 +4455,15 @@ function buildGlobalOptionsLines(opts: GlobalOptions): string {
   // #158 — Caddy's own runtime/error logger. buildLogCaddyLines already emits exactly the
   // one-tab-indented `log { ... }` shape this global-options block needs.
   if (opts.runtimeLog) lines.push(buildLogCaddyLines(opts.runtimeLog).join("\n"));
-  // #153 — global (portless) `servers { trusted_proxies ... }`. Also merged into every
-  // per-port managed servers block by buildManagedServersBlocks, since a port with its own
-  // HTTP/3/timeout override would otherwise silently lose this (see buildTrustedProxiesLines).
-  if (opts.trustedProxies?.ranges.length) {
-    lines.push(["\tservers {", ...buildTrustedProxiesLines(opts.trustedProxies, "\t\t"), "\t}"].join("\n"));
+  // #153/#157 — global (portless) `servers { }` block: trusted_proxies and/or
+  // listener_wrappers/proxy_protocol. Also merged into every per-port managed servers block
+  // by buildManagedServersBlocks, since a port with its own HTTP/3/timeout override would
+  // otherwise silently lose these (see buildTrustedProxiesLines/buildProxyProtocolLines).
+  const serversLines: string[] = [];
+  if (opts.proxyProtocol) serversLines.push(...buildProxyProtocolLines(opts.proxyProtocol, "\t\t"));
+  if (opts.trustedProxies?.ranges.length) serversLines.push(...buildTrustedProxiesLines(opts.trustedProxies, "\t\t"));
+  if (serversLines.length) {
+    lines.push(["\tservers {", ...serversLines, "\t}"].join("\n"));
   }
   return lines.join("\n");
 }
@@ -4548,7 +4607,7 @@ export async function syncGlobalOptions(opts: GlobalOptions): Promise<void> {
     const config = await fetchCaddyConfig();
     const serverDefs = parseServerDefsFromConf((await fsReadFile(PROXY_CONF_PATH, "try")) ?? "");
     const proxies = parseProxies(config, serverDefs);
-    patched = patchMainCaddyfile(patched, buildManagedServersBlocks(proxies, opts.trustedProxies));
+    patched = patchMainCaddyfile(patched, buildManagedServersBlocks(proxies, opts.trustedProxies, opts.proxyProtocol));
   } catch {
     // Admin API unreachable — existing per-port blocks (if any) keep whatever
     // trusted_proxies they last had; they'll refresh next time a proxy is added/edited.
