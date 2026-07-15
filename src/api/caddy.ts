@@ -951,19 +951,28 @@ function buildReverseProxyLines(
   const lbRetryLines = buildLbRetryLines(p.lbRetry);
 
   // When error handlers are configured, intercept upstream HTTP error responses and
-  // re-raise them as Caddy errors so that handle_errors blocks fire.
+  // re-raise them as Caddy errors so that handle_errors blocks fire. The Caddyfile
+  // `error` directive parses its status argument at config-compile time, not runtime —
+  // a placeholder like `{rp.status_code}` doesn't parse as an integer, so Caddy silently
+  // treats it as an error *message* instead and the status falls back to 500 (verified
+  // against a live reload; see e2e/error-handlers-workflows.spec.ts). Emit one matcher +
+  // handle_response per code instead, each hardcoding a literal status. Exact codes
+  // (matchType "specific") stay perfectly precise; wildcard categories ("4xx"/"5xx") raise
+  // a representative code (400/500) since Caddyfile can't forward the exact runtime value —
+  // handle_errors still matches by category regardless, so routing is unaffected either way.
   const errorPassthroughLines: string[] = [];
   if (errorHandlers?.length) {
     const codes = errorHandlerResponseCodes(errorHandlers);
-    if (codes.length) {
-      const statusTokens = codes.map(c => (c < 10 ? `${c}xx` : String(c))).join(" ");
+    codes.forEach((c, i) => {
+      const statusToken = c < 10 ? `${c}xx` : String(c);
+      const literalStatus = c < 10 ? c * 100 : c;
       errorPassthroughLines.push(
-        `\t\t@upstream_error status ${statusTokens}`,
-        `\t\thandle_response @upstream_error {`,
-        `\t\t\terror {rp.status_code}`,
+        `\t\t@upstream_error${i} status ${statusToken}`,
+        `\t\thandle_response @upstream_error${i} {`,
+        `\t\t\terror ${literalStatus}`,
         `\t\t}`,
       );
-    }
+    });
   }
 
   const needsBlock = transportLines.length > 0 || headerLines.length > 0 || lbLines.length > 0 || lbRetryLines.length > 0 || errorPassthroughLines.length > 0;
@@ -2268,7 +2277,14 @@ function buildResponseHeadersHandler(ops: import("./types").HeaderOperation[]): 
     if (h.op === "add") add[h.name] = val;
     else set[h.name] = val;
   }
-  const resp: Record<string, unknown> = {};
+  // "deferred" makes response header rewriting apply just before the response is
+  // actually written, after reverse_proxy has copied the upstream's headers in —
+  // without it these ops run too early to affect a proxied response at all. The
+  // Caddyfile `header` directive's own adapter sets this automatically (confirmed via
+  // `caddy adapt`); this hand-rolled JSON path needs to set it explicitly too (verified
+  // against a live reload — omitting it silently no-ops the whole handler for proxied
+  // routes; see e2e/response-headers-workflows.spec.ts).
+  const resp: Record<string, unknown> = { deferred: true };
   if (Object.keys(set).length) resp["set"] = set;
   if (Object.keys(add).length) resp["add"] = add;
   if (del.length) resp["delete"] = del;
@@ -2321,10 +2337,17 @@ function buildReverseProxyHandler(
   if (errorHandlers?.length) {
     const codes = errorHandlerResponseCodes(errorHandlers);
     if (codes.length) {
-      rp.handle_response = [{
-        match: { status_code: codes },
-        routes: [{ handle: [{ handler: "error", status_code: "{rp.status_code}" }] }],
-      }];
+      // Mirrors the Caddyfile-generation fix in buildReverseProxyLines: the "error"
+      // handler module's status_code field does not runtime-resolve the {rp.status_code}
+      // placeholder (verified against a live reload — it silently 500s), so emit one
+      // handle_response per code with a literal status_code instead. Exact codes
+      // (matchType "specific") stay precise; wildcard categories ("4xx"/"5xx") raise a
+      // representative code (400/500) since there's no way to forward the exact runtime
+      // value — handle_errors still matches by category regardless.
+      rp.handle_response = codes.map(c => ({
+        match: { status_code: [c] },
+        routes: [{ handle: [{ handler: "error", status_code: c < 10 ? c * 100 : c }] }],
+      }));
     }
   }
   return rp;

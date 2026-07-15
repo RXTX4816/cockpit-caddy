@@ -112,7 +112,7 @@ Check which VMs are currently running before selecting projects:
 npm run vm status
 ```
 
-Tests live in `e2e/` and cover login, tab navigation, service control, proxy management, Caddyfile editor, and logs viewer.
+Tests live in `e2e/` and cover login, tab navigation, service control, proxy management, Caddyfile editor, and logs viewer. See [E2E Test Coverage](E2E-Test-Coverage) for the full catalog of what's implemented.
 
 ## Reprovisioning
 

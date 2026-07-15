@@ -16,3 +16,5 @@
 **Development**
 
 - [Development](Development)
+- [VM Testing](VM-Testing)
+- [E2E Test Coverage](E2E-Test-Coverage)
