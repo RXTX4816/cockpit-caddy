@@ -5,21 +5,11 @@
  * changes on its own polling cadence, without requiring a page reload.
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { addProxy, spawnCmd } from './helpers';
+import { addProxy, startHttpBackend } from './helpers';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
   await dismissAdminBanner(page);
   await page.getByRole('button', { name: /add proxy/i }).first().waitFor({ state: 'visible', timeout: 15000 });
-}
-
-async function startListener(page: import('@playwright/test').Page, port: number): Promise<void> {
-  // Kill any stray listener left behind by a previous failed run before binding.
-  await spawnCmd(page, ['bash', '-c', `fuser -k ${port}/tcp 2>&1; true`]);
-  await spawnCmd(page, ['bash', '-c', `nohup python3 -m http.server ${port} >/tmp/hc-e2e-${port}.log 2>&1 & disown`]);
-}
-
-async function stopListener(page: import('@playwright/test').Page, port: number): Promise<void> {
-  await spawnCmd(page, ['bash', '-c', `fuser -k ${port}/tcp 2>&1; true`]);
 }
 
 /** Finds the DataList row for a given port (scopes by the anchor element id). */
@@ -32,7 +22,7 @@ test('health monitor status dot updates live without page reload', async ({ plug
 
   const port = 19210;
   const targetPort = 19211;
-  await startListener(page, targetPort);
+  const backend = await startHttpBackend(page, targetPort);
 
   try {
     await addProxy(page, { port, target: `localhost:${targetPort}` });
@@ -49,10 +39,10 @@ test('health monitor status dot updates live without page reload', async ({ plug
 
     // Kill the upstream without touching the page — the dot must update on its own
     // (previously required a full reload; interval was 30s, now 5s).
-    await stopListener(page, targetPort);
+    await backend.stop();
 
     await expect(dot).toHaveAttribute('style', /var\(--pf-t--global--color--status--danger--default\)/, { timeout: 15000 });
   } finally {
-    await stopListener(page, targetPort);
+    await backend.stop();
   }
 });

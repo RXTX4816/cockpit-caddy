@@ -59,7 +59,7 @@ npm run build
 npm run vm init   # download base images and start VMs
 ```
 
-See the [cockpit-plugin-base-react](https://github.com/RXTX4816/cockpit-plugin-base-react) repo for the full VM command reference.
+See the [cockpit-plugin-base-react](https://github.com/RXTX4816/cockpit-plugin-base-react) repo for the full VM command reference, and [E2E Test Coverage](E2E-Test-Coverage) for what the Playwright suite already tests.
 
 ## Project structure
 

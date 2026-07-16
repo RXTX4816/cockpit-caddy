@@ -6,26 +6,17 @@
  * the Caddyfile contains a request_body block.
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { spawnCmd } from './helpers';
+import { spawnCmd, startHttpBackend } from './helpers';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
   await dismissAdminBanner(page);
   await page.getByRole('button', { name: /add proxy/i }).first().waitFor({ state: 'visible', timeout: 15000 });
 }
 
-async function startListener(page: import('@playwright/test').Page, port: number): Promise<void> {
-  await spawnCmd(page, ['bash', '-c', `fuser -k ${port}/tcp 2>&1; true`]);
-  await spawnCmd(page, ['bash', '-c', `nohup python3 -m http.server ${port} >/tmp/rbl-e2e-${port}.log 2>&1 & disown`]);
-}
-
-async function stopListener(page: import('@playwright/test').Page, port: number): Promise<void> {
-  await spawnCmd(page, ['bash', '-c', `fuser -k ${port}/tcp 2>&1; true`]);
-}
-
 test('rejects a request body over the configured limit and allows one under it', async ({ pluginPage: page }) => {
   const port = 19330;
   const targetPort = 19331;
-  await startListener(page, targetPort);
+  const backend = await startHttpBackend(page, targetPort);
 
   try {
     await waitForToolbar(page);
@@ -67,6 +58,6 @@ test('rejects a request body over the configured limit and allows one under it',
     // should never see it.
     expect(await curlStatus('x'.repeat(5000))).toBe('413');
   } finally {
-    await stopListener(page, targetPort);
+    await backend.stop();
   }
 });

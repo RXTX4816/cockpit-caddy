@@ -16,20 +16,11 @@
  * button (unlike the toolbar's copy of the same label) has no confirmation dialog.
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { spawnCmd, readFile, CADDYFILE_PATH } from './helpers';
+import { spawnCmd, readFile, CADDYFILE_PATH, startHttpBackend } from './helpers';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
   await dismissAdminBanner(page);
   await page.getByRole('button', { name: /add proxy/i }).first().waitFor({ state: 'visible', timeout: 15000 });
-}
-
-async function startListener(page: import('@playwright/test').Page, port: number): Promise<void> {
-  await spawnCmd(page, ['bash', '-c', `fuser -k ${port}/tcp 2>&1; true`]);
-  await spawnCmd(page, ['bash', '-c', `nohup python3 -m http.server ${port} >/tmp/tp-e2e-${port}.log 2>&1 & disown`]);
-}
-
-async function stopListener(page: import('@playwright/test').Page, port: number): Promise<void> {
-  await spawnCmd(page, ['bash', '-c', `fuser -k ${port}/tcp 2>&1; true`]);
 }
 
 /** Saves the trusted-proxies Settings fields. Does not reload — callers that need the
@@ -71,7 +62,7 @@ async function liveConfig(page: import('@playwright/test').Page): Promise<any> {
 test('trusted_proxies reaches the live server only after an explicit reload', async ({ pluginPage: page }) => {
   const port = 19340;
   const targetPort = 19341;
-  await startListener(page, targetPort);
+  const backend = await startHttpBackend(page, targetPort);
 
   try {
     await waitForToolbar(page);
@@ -101,7 +92,7 @@ test('trusted_proxies reaches the live server only after an explicit reload', as
     await expect.poll(async () => serverFor(await liveConfig(page))?.trusted_proxies?.ranges, { timeout: 10000 })
       .toEqual(['192.168.0.0/16', '172.16.0.0/12', '10.0.0.0/8', '127.0.0.1/8', 'fd00::/8', '::1']);
   } finally {
-    await stopListener(page, targetPort);
+    await backend.stop();
     await saveTrustedProxies(page, null);
     await reloadConfig(page).catch(() => {});
   }
@@ -110,7 +101,7 @@ test('trusted_proxies reaches the live server only after an explicit reload', as
 test('trusted_proxies survives a per-port servers block also carrying an HTTP/3 override', async ({ pluginPage: page }) => {
   const port = 19342;
   const targetPort = 19343;
-  await startListener(page, targetPort);
+  const backend = await startHttpBackend(page, targetPort);
 
   try {
     await waitForToolbar(page);
@@ -142,7 +133,7 @@ test('trusted_proxies survives a per-port servers block also carrying an HTTP/3 
     expect(blockMatch![0]).toContain('protocols h1 h2');
     expect(blockMatch![0]).toContain('trusted_proxies static private_ranges');
   } finally {
-    await stopListener(page, targetPort);
+    await backend.stop();
     await saveTrustedProxies(page, null);
   }
 });
