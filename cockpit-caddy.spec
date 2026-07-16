@@ -25,6 +25,7 @@ install -m 0644 main.js       %{buildroot}%{_datadir}/cockpit/cockpit-caddy/
 install -m 0644 main.css      %{buildroot}%{_datadir}/cockpit/cockpit-caddy/
 install -m 0644 manifest.json %{buildroot}%{_datadir}/cockpit/cockpit-caddy/
 install -m 0644 index.html    %{buildroot}%{_datadir}/cockpit/cockpit-caddy/
+cp -r assets %{buildroot}%{_datadir}/cockpit/cockpit-caddy/
 
 %files
 %doc README.md
