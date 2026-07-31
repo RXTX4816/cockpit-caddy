@@ -1,5 +1,7 @@
 import type { CaddyConfig, CaddyHandler, CaddyReverseProxyHandler, CaddyRoute, CaddyServer, CaddyTLSClientAuthentication, CaddyTLSConnectionPolicy, ProxyEntry } from "./types";
 import { readFile as fsReadFile, writeFile as fsWriteFile } from "@rxtx4816/cockpit-plugin-base-react/lib/cockpit-fs";
+import { reloadService as reloadSystemdService } from "@rxtx4816/cockpit-plugin-base-react/systemd";
+import { listConfDFiles } from "./systemd";
 
 /**
  * Thrown when a proxy config was written to disk successfully but the Caddy
@@ -75,6 +77,20 @@ export function setAdminAddress(tcp: string, socket: string): void {
 
 let transport: Transport | null = null;
 
+// Whether Caddy is installed as a local systemd service. Kept current by
+// useCaddyStatus's poll — false means Caddy is only reachable via the Admin API
+// (e.g. running in a container), so local `caddy`/`systemctl` calls are skipped
+// in favor of Admin-API equivalents.
+let caddyManaged = true;
+
+export function setCaddyManaged(managed: boolean): void {
+  caddyManaged = managed;
+}
+
+export function isCaddyManaged(): boolean {
+  return caddyManaged;
+}
+
 async function tcpGet(path: string): Promise<string> {
   return cockpit.spawn(
     ["curl", "-sf", "--connect-timeout", "2", `${tcpBase}${path}`],
@@ -91,9 +107,14 @@ async function unixGet(path: string): Promise<string> {
 
 // POST helpers avoid curl -f so the response body is captured on HTTP errors.
 // We append -w "\n%{http_code}" and split on the last newline to get status + body.
-async function curlPost(curlArgs: string[], body: string, opts: object = {}): Promise<void> {
+async function curlPost(
+  curlArgs: string[],
+  body: string,
+  opts: object = {},
+  contentType = "application/json",
+): Promise<void> {
   const out = await cockpit.spawn(
-    [...curlArgs, "-s", "-X", "POST", "-H", "Content-Type: application/json",
+    [...curlArgs, "-s", "-X", "POST", "-H", `Content-Type: ${contentType}`,
      "-d", body, "-w", "\n%{http_code}"],
     opts,
   );
@@ -107,15 +128,16 @@ async function curlPost(curlArgs: string[], body: string, opts: object = {}): Pr
   }
 }
 
-async function tcpPost(path: string, body: string): Promise<void> {
-  await curlPost(["curl", `${tcpBase}${path}`], body);
+async function tcpPost(path: string, body: string, contentType?: string): Promise<void> {
+  await curlPost(["curl", `${tcpBase}${path}`], body, {}, contentType);
 }
 
-async function unixPost(path: string, body: string): Promise<void> {
+async function unixPost(path: string, body: string, contentType?: string): Promise<void> {
   await curlPost(
     ["curl", "--unix-socket", unixSocket, `http://localhost${path}`],
     body,
     { superuser: "try" },
+    contentType,
   );
 }
 
@@ -177,6 +199,51 @@ export async function fetchCaddyConfig(): Promise<CaddyConfig> {
 export async function pushCaddyConfig(config: CaddyConfig): Promise<void> {
   const body = JSON.stringify(config);
   await (transport === "unix" ? unixPost("/config/", body) : tcpPost("/config/", body));
+}
+
+/**
+ * Loads a raw Caddyfile via Caddy's own `/load` endpoint (distinct from the
+ * `/config/` JSON endpoint `pushCaddyConfig` uses), using `Content-Type:
+ * text/caddyfile` so Caddy's own Caddyfile adapter validates and atomically
+ * swaps in the config server-side — rejecting (with the old config left
+ * running) if invalid. This is how validate+apply work when there's no local
+ * `caddy` binary/systemd unit to shell out to (see `caddyManaged`).
+ */
+export async function applyCaddyfileViaApi(content: string): Promise<void> {
+  try {
+    await (transport === "unix"
+      ? unixPost("/load", content, "text/caddyfile")
+      : tcpPost("/load", content, "text/caddyfile"));
+  } catch (e) {
+    throw new CaddyfileError(e instanceof Error ? e.message : String(e));
+  }
+}
+
+// Must match useProxies.ts's CONF_D_GLOB — the exact line ensureConfDImported
+// writes into the main Caddyfile to pull in conf.d.
+const CONF_D_IMPORT_LINE = "import /etc/caddy/conf.d/*.conf";
+
+/**
+ * Caddy's `/load` endpoint disallows the `import` directive when adapting
+ * content submitted directly over HTTP (it has no on-disk origin) — a
+ * deliberate anti-SSRF safeguard, since otherwise anyone with Admin API
+ * access could use `import` to read arbitrary files off the server.
+ * Confirmed directly: posting the main Caddyfile as-is returns 200 but
+ * `GET /config/apps` comes back null — the import silently loads nothing.
+ * So conf.d files must be read and inlined here ourselves before posting.
+ */
+async function buildFlattenedMainCaddyfile(): Promise<string> {
+  const main = (await fsReadFile(MAIN_CADDYFILE, "try")) ?? "";
+  if (!main.includes(CONF_D_IMPORT_LINE)) return main;
+  const confPaths = (await listConfDFiles()).filter(p => p.endsWith(".conf"));
+  const confContents = await Promise.all(confPaths.map(p => fsReadFile(p, "try")));
+  const inlined = confContents.filter((c): c is string => !!c).join("\n\n");
+  return main.replace(CONF_D_IMPORT_LINE, inlined);
+}
+
+/** Applies the current on-disk Caddyfile (main + conf.d, inlined) via the Admin API. */
+export async function applyCurrentCaddyfileViaApi(): Promise<void> {
+  await applyCaddyfileViaApi(await buildFlattenedMainCaddyfile());
 }
 
 const PROXY_CONF_PATH = "/etc/caddy/conf.d/cockpit-caddy.conf";
@@ -3683,8 +3750,17 @@ const GLOBAL_OPTS_END = "# cockpit-caddy:opts:end";
  * Runs `caddy validate` on MAIN_CADDYFILE. Streams output so the error message
  * is available even if cockpit.spawn rejects with an empty message object.
  * Throws CaddyfileError with the relevant error line on failure.
+ *
+ * When Caddy isn't installed as a local systemd service (running in a
+ * container, say), there's no local `caddy` binary to shell out to — instead,
+ * push MAIN_CADDYFILE straight to the running instance via the Admin API,
+ * which validates and applies atomically (see applyCaddyfileViaApi).
  */
 async function runCaddyValidate(): Promise<void> {
+  if (!caddyManaged) {
+    await applyCurrentCaddyfileViaApi();
+    return;
+  }
   let output = "";
   const proc = cockpit.spawn(
     ["caddy", "validate", "--config", MAIN_CADDYFILE, "--adapter", "caddyfile"],
@@ -3697,6 +3773,20 @@ async function runCaddyValidate(): Promise<void> {
     const errorLine = output.split("\n").find(l => /^Error:/i.test(l.trim())) ?? output.trim();
     throw new CaddyfileError(errorLine.replace(/^Error:\s*/i, "").trim());
   }
+}
+
+/**
+ * Reloads Caddy: `systemctl reload caddy` when it's a locally managed
+ * service, or an Admin-API config push (applyCaddyfileViaApi) when it isn't
+ * (see caddyManaged) — e.g. Caddy running in a container with no local unit
+ * to reload.
+ */
+export async function reloadCaddy(): Promise<void> {
+  if (!caddyManaged) {
+    await applyCurrentCaddyfileViaApi();
+    return;
+  }
+  await reloadSystemdService("caddy");
 }
 
 /**

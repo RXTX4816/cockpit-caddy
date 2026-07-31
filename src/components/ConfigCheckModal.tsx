@@ -15,7 +15,7 @@ import {
   Title,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
-import { readCaddyfile, readProxyConf, scanConfigIssues, runConfigFixes, reloadService, CaddyfileError } from "../api";
+import { readCaddyfile, readProxyConf, scanConfigIssues, runConfigFixes, reloadCaddy, CaddyfileError } from "../api";
 import type { ConfigFinding } from "../api";
 
 interface Props {
@@ -84,7 +84,7 @@ export function ConfigCheckModal({ onClose }: Props) {
     setReloading(true);
     setReloadError(null);
     try {
-      await reloadService("caddy");
+      await reloadCaddy();
       setReloadOk(true);
       setTimeout(() => setReloadOk(false), 4000);
     } catch (e) {

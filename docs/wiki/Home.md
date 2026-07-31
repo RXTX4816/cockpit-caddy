@@ -11,6 +11,7 @@ Cockpit Caddy is a web-based UI for managing [Caddy](https://caddyserver.com/), 
 - Search and filter entries by port, target, or label
 - Add, edit, duplicate, and delete rules from the web UI
 - Start, stop, restart, and reload the Caddy service
+- Works with Caddy running externally (e.g. Docker) — see [Service Control: External mode](Service-Control#external-mode)
 - TLS certificates handled automatically via Caddy's internal CA — no DNS or Let's Encrypt required — or bring your own certificate, or let Caddy issue via ACME/Let's Encrypt
 - Per-server access logging (with rotation), request body size limits, server timeouts, and transport tuning
 - Load-balancer retry/failover tuning and extra upstreams for a single route

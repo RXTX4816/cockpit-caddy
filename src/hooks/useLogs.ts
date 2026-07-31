@@ -1,8 +1,12 @@
 import { useState, useRef, useCallback } from "react";
 import { useAutoRefresh } from "@rxtx4816/cockpit-plugin-base-react";
-import { fetchServiceLogs } from "../api";
+import { fetchServiceLogs, fetchContainerLogs, isCaddyManaged } from "../api";
+import { loadLogContainer } from "./useLogContainer";
 
 const POLL_INTERVAL = 5000;
+
+/** Sentinel error value LogsViewer translates into a user-facing message. */
+export const CONTAINER_NOT_CONFIGURED = "container-not-configured";
 
 export function useLogs() {
   const [liveLogs, setLiveLogs] = useState("");
@@ -16,6 +20,21 @@ export function useLogs() {
 
   const fetchLogs = useCallback(async () => {
     try {
+      if (!isCaddyManaged()) {
+        const container = loadLogContainer();
+        if (!container) {
+          setError(CONTAINER_NOT_CONFIGURED);
+          setLiveLogs("");
+          liveRef.current = "";
+          return;
+        }
+        const output = await fetchContainerLogs(container);
+        const text = output ?? "";
+        liveRef.current = text;
+        setLiveLogs(text);
+        setError(null);
+        return;
+      }
       const output = await fetchServiceLogs();
       const text = output ?? "";
       liveRef.current = text;

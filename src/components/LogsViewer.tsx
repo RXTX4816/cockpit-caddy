@@ -7,7 +7,7 @@ import {
 } from "@patternfly/react-core";
 import { LogViewer } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { useTranslation } from "react-i18next";
-import { useLogs } from "../hooks/useLogs";
+import { useLogs, CONTAINER_NOT_CONFIGURED } from "../hooks/useLogs";
 
 interface Props {
   filterValue?: string;
@@ -66,6 +66,7 @@ function parseCaddyField(line: string, field: string): string | undefined {
 export function LogsViewer({ filterValue, onFilterChange }: Props) {
   const { t } = useTranslation();
   const { logs, loading, error, refresh, paused, pause, resume } = useLogs();
+  const displayError = error === CONTAINER_NOT_CONFIGURED ? t("logs.container_not_configured") : error;
 
   const [levelFilter, setLevelFilter] = useState<LevelFilter>("all");
   const [activeLogger, setActiveLogger] = useState<string>("all");
@@ -147,7 +148,7 @@ export function LogsViewer({ filterValue, onFilterChange }: Props) {
       <LogViewer
         lines={filteredLines}
         loading={loading}
-        error={error}
+        error={displayError}
         onRefresh={refresh}
         paused={paused}
         onPause={pause}

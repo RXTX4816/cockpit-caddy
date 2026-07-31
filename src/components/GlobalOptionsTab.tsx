@@ -20,7 +20,7 @@ import {
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
-import { readGlobalOptions, syncGlobalOptions, reloadService, fetchStorageInfo, checkStoragePathWritable } from "../api";
+import { readGlobalOptions, syncGlobalOptions, reloadCaddy, fetchStorageInfo, checkStoragePathWritable } from "../api";
 import type { GlobalOptions, StorageInfo } from "../api";
 import { CertLifetimeSelect } from "./CertLifetimeSelect";
 import { AccessLogSection, type AccessLogValues, accessLogConfigToValues, accessLogValuesToConfig } from "./AccessLogSection";
@@ -184,7 +184,7 @@ export function GlobalOptionsTab() {
     setReloading(true);
     setReloadError(null);
     try {
-      await reloadService("caddy");
+      await reloadCaddy();
       setNeedsReload(false);
       setReloadOk(true);
       setTimeout(() => setReloadOk(false), 4000);

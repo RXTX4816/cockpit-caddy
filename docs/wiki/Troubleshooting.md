@@ -26,6 +26,46 @@ Common problems and how to fix them.
 
 ---
 
+## Managing a containerized Caddy
+
+Cockpit Caddy doesn't require Caddy to be installed as a local systemd service — if the Admin API is reachable (TCP and/or a Unix socket), the plugin works against it directly. This covers running Caddy in Docker, or any setup where the process managing Caddy isn't `caddy.service`. See [External mode](Service-Control#external-mode) for what changes in the UI.
+
+**Requirements for this to work well:**
+
+- The container needs its Admin API reachable from the host — either publish the TCP port, or bind-mount a Unix socket directory (e.g. `/run/caddy`) between host and container. Configure the address(es) to try via the gear icon (Admin API Address dialog).
+- For proxy management, the Caddyfile editor, and backup/restore to reflect the *real* running config, the container must bind-mount the same `/etc/caddy` directory the plugin edits on the host. If the container has its own separate, non-shared config, those features will show/edit files the container never actually reads.
+- `network_mode: host` is the simplest way to satisfy both of the above if your Caddyfile binds the Admin API to `localhost` (a loopback bind is only reachable from the host if the container shares the host's network namespace).
+
+Example `docker-compose.yml`:
+
+```yaml
+services:
+  caddy:
+    image: caddy:2.11.4
+    network_mode: host
+    volumes:
+      - /etc/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - /run/caddy:/run/caddy
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:
+```
+
+**Running a native `caddy.service` at the same time:** don't. If both a local systemd-managed Caddy and a container are configured to use the same Admin API port/socket, whichever one loses the race crashes (`bind: address already in use`), and — because systemd's `RuntimeDirectory=` recreates `/run/caddy` fresh on every restart attempt — a crash-looping local service can keep invalidating the container's bind-mounted socket directory out from under it, breaking the container's config reloads too. If you only installed the native package to test something, stop and disable it:
+
+```bash
+sudo systemctl stop caddy
+sudo systemctl disable caddy
+```
+
+then restart the container so it re-creates its listeners cleanly.
+
+---
+
 ## Caddy Admin API not reachable
 
 **Symptom:** The dashboard loads but shows an error connecting to Caddy, or the entry list is empty with no add buttons.

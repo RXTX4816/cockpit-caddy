@@ -16,8 +16,9 @@ import {
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import { useAdminAddress } from "../hooks/useAdminAddress";
+import { useLogContainer } from "../hooks/useLogContainer";
 import { ADMIN_TCP_DEFAULT, ADMIN_SOCKET_DEFAULT } from "../api/caddy";
-import { testTcpConnection, testUnixSocket } from "../api";
+import { testTcpConnection, testUnixSocket, testDockerContainer } from "../api";
 
 interface Props {
   onClose: () => void;
@@ -28,12 +29,16 @@ type TestResult = "ok" | "fail" | null;
 export function AdminAddressDialog({ onClose }: Props) {
   const { t } = useTranslation();
   const { tcp, socket, save } = useAdminAddress();
+  const { container, save: saveContainer } = useLogContainer();
   const [tcpValue, setTcpValue] = useState(tcp);
   const [socketValue, setSocketValue] = useState(socket);
+  const [containerValue, setContainerValue] = useState(container);
   const [testingTcp, setTestingTcp] = useState(false);
   const [testingSocket, setTestingSocket] = useState(false);
+  const [testingContainer, setTestingContainer] = useState(false);
   const [tcpResult, setTcpResult] = useState<TestResult>(null);
   const [socketResult, setSocketResult] = useState<TestResult>(null);
+  const [containerResult, setContainerResult] = useState<TestResult>(null);
 
   const canSave = tcpResult === "ok" || socketResult === "ok";
 
@@ -53,16 +58,27 @@ export function AdminAddressDialog({ onClose }: Props) {
     setTestingSocket(false);
   }
 
+  async function handleTestContainer() {
+    setTestingContainer(true);
+    setContainerResult(null);
+    const ok = await testDockerContainer(containerValue);
+    setContainerResult(ok ? "ok" : "fail");
+    setTestingContainer(false);
+  }
+
   function handleSave() {
     save(tcpValue, socketValue);
+    saveContainer(containerValue);
     onClose();
   }
 
   function handleReset() {
     setTcpValue(ADMIN_TCP_DEFAULT);
     setSocketValue(ADMIN_SOCKET_DEFAULT);
+    setContainerValue("");
     setTcpResult(null);
     setSocketResult(null);
+    setContainerResult(null);
   }
 
   function handleFieldChange(setter: (v: string) => void, clearResult: () => void) {
@@ -138,6 +154,37 @@ export function AdminAddressDialog({ onClose }: Props) {
             )}
             {socketResult === "fail" && (
               <Alert variant="danger" isInline title={t("admin_address.test_socket_fail")} style={{ marginTop: "0.5rem" }} />
+            )}
+          </FormGroup>
+          <FormGroup label={t("admin_address.container_label")} fieldId="aa-container">
+            <TextInput
+              id="aa-container"
+              value={containerValue}
+              onChange={handleFieldChange(setContainerValue, () => setContainerResult(null))}
+              placeholder="caddy"
+            />
+            <FormHelperText>
+              <HelperText>
+                <HelperTextItem>{t("admin_address.container_help")}</HelperTextItem>
+              </HelperText>
+            </FormHelperText>
+          </FormGroup>
+          <FormGroup label="" fieldId="aa-container-test">
+            <Button
+              id="aa-container-test"
+              variant="secondary"
+              size="sm"
+              onClick={() => void handleTestContainer()}
+              isLoading={testingContainer}
+              isDisabled={testingContainer || !containerValue}
+            >
+              {t("admin_address.test_container_button")}
+            </Button>
+            {containerResult === "ok" && (
+              <Alert variant="success" isInline title={t("admin_address.test_ok")} style={{ marginTop: "0.5rem" }} />
+            )}
+            {containerResult === "fail" && (
+              <Alert variant="danger" isInline title={t("admin_address.test_container_fail")} style={{ marginTop: "0.5rem" }} />
             )}
           </FormGroup>
         </Form>

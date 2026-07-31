@@ -42,6 +42,52 @@ export async function validateCaddyfile(content: string): Promise<void> {
 
 export const fetchServiceLogs = () => baseFetchServiceLogs(SERVICE, 1000);
 
+/**
+ * Fetches `systemctl status` for the given unit (recent log lines included),
+ * for surfacing *why* a start/restart failed — `systemctl start` can return
+ * success at the job-queuing level even when the process then immediately
+ * exits (e.g. a port already bound by something else), so the generic
+ * "unreachable" messaging alone isn't actionable. `systemctl status` exits
+ * non-zero for a failed unit, so output is streamed to capture it even
+ * though the process itself rejects.
+ */
+export async function fetchServiceFailureReason(unit: string): Promise<string> {
+  let output = "";
+  const proc = cockpit.spawn(["systemctl", "status", unit, "--no-pager", "-l"], { err: "out" });
+  proc.stream(chunk => { output += chunk; });
+  try {
+    await proc;
+  } catch { /* non-zero exit for a failed/inactive unit is expected */ }
+  return output.trim();
+}
+
+/**
+ * Fetches recent log output from a Docker container running Caddy, for use
+ * when Caddy has no local systemd unit (`journalctl -u caddy` finds nothing
+ * for a containerized process). No `--timestamps` flag — Caddy's own JSON/
+ * console log lines already carry a timestamp field, and the log-line parser
+ * in LogsViewer already handles both formats without a journalctl-style prefix.
+ */
+export async function fetchContainerLogs(container: string, lines = 300): Promise<string> {
+  return cockpit.spawn(
+    ["docker", "logs", "--tail", String(lines), container],
+    { superuser: "try", err: "out" },
+  );
+}
+
+/** Checks that `container` exists and is running, for the log-source "Test" button. */
+export async function testDockerContainer(container: string): Promise<boolean> {
+  try {
+    const out = await cockpit.spawn(
+      ["docker", "inspect", "--format", "{{.State.Running}}", container],
+      { superuser: "try", err: "ignore" },
+    );
+    return out.trim() === "true";
+  } catch {
+    return false;
+  }
+}
+
 export async function listConfDFiles(): Promise<string[]> {
   try {
     const out = await cockpit.spawn(
