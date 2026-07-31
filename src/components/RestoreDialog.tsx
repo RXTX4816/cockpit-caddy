@@ -14,7 +14,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { ConfirmDialog } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { listTarArchives, extractTarArchive } from "@rxtx4816/cockpit-plugin-base-react/lib/tar";
-import { reloadService } from "../api";
+import { reloadCaddy } from "../api";
 
 interface Props {
   onClose: () => void;
@@ -91,7 +91,7 @@ export function RestoreDialog({ onClose }: Props) {
     setReloading(true);
     setReloadError(null);
     try {
-      await reloadService("caddy");
+      await reloadCaddy();
       setReloadOk(true);
       setTimeout(() => setReloadOk(false), 4000);
     } catch (e) {

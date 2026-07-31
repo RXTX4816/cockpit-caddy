@@ -6,6 +6,7 @@ import {
   Content,
   EmptyState,
   EmptyStateBody,
+  ExpandableSection,
   Label,
   PageSection,
   Spinner,
@@ -39,7 +40,7 @@ import { useCaddyVersion } from "../hooks/useCaddyVersion";
 
 function AppInner() {
   const { t } = useTranslation();
-  const { status, adminApiOk, loading, refresh } = useCaddyStatus();
+  const { status, adminApiOk, loading, failureDetail, refresh } = useCaddyStatus();
   const adminAllowed = useAdminMode();
   const caddyVersion = useCaddyVersion();
   type AppModals = { backup: undefined; restore: undefined; adminAddress: undefined; ca: undefined; acme: undefined; configCheck: undefined };
@@ -51,8 +52,23 @@ function AppInner() {
 
   useEffect(() => { applyStoredAdminAddress(); }, []);
 
-  const apiUnreachable = status === "inactive" || status === "failed" ||
-    (status === "active" && !adminApiOk);
+  // True whenever the Admin API is reachable but systemd doesn't confirm the
+  // *local* service is the thing serving it — not just "not-installed"
+  // (a container), but also "inactive"/"failed"/"unknown" with a reachable
+  // API, which means some other process (e.g. a leftover manual `caddy run`,
+  // or a container also bound to the same port) is actually answering
+  // requests. Start/Stop/Restart would be misleading or actively harmful
+  // here (starting the local service can crash-loop fighting over the same
+  // port — see the "failed" alert below), so treat all of these the same way.
+  const unmanaged = adminApiOk && status !== "active";
+
+  const apiUnreachable = !adminApiOk && (status === "inactive" || status === "active" || status === "unknown");
+
+  // Only alarm about the local systemd unit failing when nothing else is
+  // serving the Admin API either — if adminApiOk is true, some other process
+  // (e.g. a container) is working fine, and the calmer "unmanaged" info alert
+  // above already covers "the local service isn't what's running this".
+  const showUnitFailedAlert = !loading && !adminApiOk && (status === "failed" || status === "unknown");
 
   const showAdminWarning = adminAllowed === false && !adminBypass;
 
@@ -84,6 +100,7 @@ function AppInner() {
                 status={status}
                 loading={loading}
                 onRefresh={refresh}
+                unmanaged={unmanaged}
                 extraActions={
                   <div style={{ display: "flex", gap: "0.5rem" }}>
                     <Button variant="secondary" size="sm" icon={<WrenchIcon />} onClick={() => modals.open("configCheck")}>{t("config_check.button")}</Button>
@@ -116,10 +133,33 @@ function AppInner() {
           </StackItem>
         )}
 
-        {status === "not-installed" && (
+        {status === "not-installed" && !adminApiOk && (
           <StackItem>
             <Alert variant="warning" title={t("service.not_installed")}>
               <Content component="p">{t("service.not_installed_body")}</Content>
+            </Alert>
+          </StackItem>
+        )}
+
+        {unmanaged && (
+          <StackItem>
+            <Alert variant="info" title={t("service.unmanaged")}>
+              <Content component="p">{t("service.unmanaged_body")}</Content>
+            </Alert>
+          </StackItem>
+        )}
+
+        {showUnitFailedAlert && (
+          <StackItem>
+            <Alert variant="danger" isInline title={t("service.unit_failed")}>
+              <Content component="p">{t("service.unit_failed_body")}</Content>
+              {failureDetail && (
+                <ExpandableSection toggleText={t("service.unit_failed_details_toggle")} isIndented style={{ marginTop: "0.5rem" }}>
+                  <Content component="pre" style={{ whiteSpace: "pre-wrap", fontSize: "0.8rem" }}>
+                    {failureDetail}
+                  </Content>
+                </ExpandableSection>
+              )}
             </Alert>
           </StackItem>
         )}
@@ -159,7 +199,7 @@ function AppInner() {
               </Tab>
               <Tab eventKey={1} title={<TabTitleText>{t("tabs.caddyfile")}</TabTitleText>}>
                 <PageSection hasBodyWrapper={false}>
-                  <CaddyfileEditor />
+                  <CaddyfileEditor unmanaged={unmanaged} />
                 </PageSection>
               </Tab>
               <Tab eventKey={2} title={<TabTitleText>{t("tabs.logs")}</TabTitleText>}>

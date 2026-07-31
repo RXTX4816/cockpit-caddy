@@ -35,6 +35,7 @@ Caddy handles TLS automatically via its internal CA (`tls internal`). No DNS, no
 - Static file servers — serve directories with optional browse, basic auth, and access logs
 - Redirects and static HTTP responses
 - Start, stop, restart, and reload the Caddy service
+- **Works with Caddy running externally** (Docker container, or any process not managed by `caddy.service`) — proxy management, the Caddyfile editor, and reload all work through the Admin API alone, with log viewing via a configured container name
 - TLS via Caddy's internal CA (self-signed, enabled by default), ACME/Let's Encrypt, or your own certificate — with per-route protocol/cipher/mTLS policy
 - Per-server access logging with rotation, request body size limits, server timeouts, and transport tuning
 - **Trusted proxies** and **PROXY protocol** support for the real client IP when running behind another load balancer or CDN
@@ -49,7 +50,7 @@ Caddy handles TLS automatically via its internal CA (`tls internal`). No DNS, no
 ## Requirements
 
 - Cockpit 300+
-- Caddy (any recent version with Admin API support)
+- Caddy (any recent version with Admin API support) — installed natively as `caddy.service`, or running externally (e.g. in a Docker container)
 - Caddy Admin API enabled (default: `localhost:2019`)
 
 ## Installation

@@ -14,7 +14,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { CodeEditor } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { useCaddyfile } from "../hooks/useCaddyfile";
-import { listConfDFiles, validateCaddyfile, reloadService } from "../api";
+import { listConfDFiles, validateCaddyfile, reloadCaddy, applyCurrentCaddyfileViaApi, isCaddyManaged } from "../api";
 
 const MAIN_PATH = "/etc/caddy/Caddyfile";
 
@@ -23,7 +23,12 @@ interface FileEntry {
   label: string;
 }
 
-export function CaddyfileEditor() {
+interface Props {
+  /** True when Caddy is only reachable via the Admin API (no local systemd unit) — e.g. running in a container. */
+  unmanaged?: boolean;
+}
+
+export function CaddyfileEditor({ unmanaged = false }: Props) {
   const { t } = useTranslation();
 
   const [files, setFiles] = useState<FileEntry[]>([{ path: MAIN_PATH, label: "Caddyfile" }]);
@@ -98,7 +103,8 @@ export function CaddyfileEditor() {
 
   async function handleSave() {
     setSaveErr(null);
-    if (selectedPath === MAIN_PATH) {
+    const managed = isCaddyManaged();
+    if (selectedPath === MAIN_PATH && managed) {
       setValidating(true);
       try {
         await validateCaddyfile(draft);
@@ -113,7 +119,20 @@ export function CaddyfileEditor() {
       await save(draft);
       setBaselineContent(draft);
       setEditMode(false);
-      setNeedsReload(true);
+      if (selectedPath === MAIN_PATH && !managed) {
+        // No local caddy binary/systemd unit to validate/reload with — the Admin
+        // API's /load endpoint validates and applies atomically in one step.
+        // Rebuilds from disk (main + conf.d inlined) rather than posting `draft`
+        // directly, since conf.d must be inlined — see applyCurrentCaddyfileViaApi.
+        try {
+          await applyCurrentCaddyfileViaApi();
+        } catch (e) {
+          setSaveErr(e instanceof Error ? e.message : String(e));
+          setNeedsReload(true); // let the user retry via the Reload button
+        }
+      } else {
+        setNeedsReload(true);
+      }
     } catch (e) {
       setSaveErr(e instanceof Error ? e.message : String(e));
     }
@@ -123,7 +142,7 @@ export function CaddyfileEditor() {
     setReloading(true);
     setReloadError(null);
     try {
-      await reloadService("caddy");
+      await reloadCaddy();
       setNeedsReload(false);
       setReloadOk(true);
       setTimeout(() => setReloadOk(false), 4000);
@@ -179,6 +198,11 @@ export function CaddyfileEditor() {
       {isManagedByPlugin && (
         <StackItem>
           <Alert variant="info" isInline title={t("caddyfile.managed_file")} />
+        </StackItem>
+      )}
+      {unmanaged && (
+        <StackItem>
+          <Alert variant="info" isInline title={t("caddyfile.unmanaged_note")} />
         </StackItem>
       )}
 

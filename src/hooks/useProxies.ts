@@ -7,7 +7,7 @@ import {
   surgicallyWriteProxy, surgicallyRemoveBlock,
   extractRawBlocksFromCaddyfile, mergeMigratedConfContent, writeRawProxyConf, writeRawProxyConfValidated,
   CaddyfileError,
-  writeFile, reloadService, syncGlobalTimeouts,
+  writeFile, reloadCaddy, syncGlobalTimeouts,
   readServerDefs, writeServerDefs, parseServerDefsFromConf,
   surgicallyWriteServerBlock, surgicallyRemoveServerBlock,
   mergeNamedServer, removeNamedServer,
@@ -300,7 +300,7 @@ export function useProxies() {
       // reverse_proxy) with no single-handler equivalent — mergeProxy can't construct
       // that either, so it always needs the same reload-from-Caddyfile path.
       if (sharesPortWithOtherHost(afterProxies, newProxy) || newProxy.phpFastcgi) {
-        await reloadService("caddy");
+        await reloadCaddy();
         await refresh();
         return;
       }
@@ -407,7 +407,7 @@ export function useProxies() {
       // shared by multiple hosts (#139), nor a php_fastcgi route's four-route Caddyfile
       // macro expansion (#35) — reload instead so Caddy's own Caddyfile adapter builds it.
       if (sharesPortWithOtherHost(afterProxies, entry) || entry.phpFastcgi) {
-        await reloadService("caddy");
+        await reloadCaddy();
         await refresh();
         return;
       }
@@ -472,7 +472,7 @@ export function useProxies() {
       // removing it by serverKey would delete a still-live sibling too. Reload instead so
       // Caddy's own Caddyfile adapter rebuilds the listener from the (now-correct) text.
       if (sharesPortWithOtherHost(proxies, proxy)) {
-        await reloadService("caddy");
+        await reloadCaddy();
         await refresh();
         return;
       }
@@ -550,7 +550,7 @@ export function useProxies() {
     await cockpit.spawn(["mkdir", "-p", "/etc/caddy/conf.d"], { superuser: "try" });
     await writeRawProxyConf(content);
     await writeCaddyfile(newCaddyfile);
-    await reloadService("caddy");
+    await reloadCaddy();
 
     await delay(500);
 
