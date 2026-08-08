@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert,
   Button,
@@ -65,6 +65,14 @@ export function AdminAddressDialog({ onClose }: Props) {
     setContainerResult(ok ? "ok" : "fail");
     setTestingContainer(false);
   }
+
+  useEffect(() => {
+    // Auto-test the stored values once on dialog open so the user isn't
+    // left guessing why Save is disabled.
+    void handleTestTcp();
+    void handleTestSocket();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function handleSave() {
     save(tcpValue, socketValue);

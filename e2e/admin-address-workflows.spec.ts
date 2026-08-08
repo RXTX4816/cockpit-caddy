@@ -36,11 +36,21 @@ test('test-connection button reports failure against an unreachable address', as
   await expect(modal.getByText(/tcp connection failed/i)).toBeVisible({ timeout: 10000 });
 });
 
-test('save is disabled until a connection test succeeds, then persists the value', async ({ pluginPage: page }) => {
+test('dialog auto-tests the stored address on open and enables save once it succeeds', async ({ pluginPage: page }) => {
   await waitForToolbar(page);
   const modal = await openAdminAddressDialog(page);
 
-  await expect(modal.getByRole('button', { name: /^save$/i })).toBeDisabled();
+  // The default socket is reachable in the test VM, so the auto-run test on
+  // open should succeed without the user clicking anything.
+  await expect(modal.getByText(/connection successful/i)).toBeVisible({ timeout: 10000 });
+  await expect(modal.getByRole('button', { name: /^save$/i })).toBeEnabled();
+});
+
+test('editing a field after auto-test clears its result and re-disables save until re-tested', async ({ pluginPage: page }) => {
+  await waitForToolbar(page);
+  const modal = await openAdminAddressDialog(page);
+
+  await expect(modal.getByRole('button', { name: /^save$/i })).toBeEnabled({ timeout: 10000 });
 
   // A redundant double-slash still resolves to the same real socket (the OS collapses
   // repeated slashes transparently), but is NOT a byte-identical match to the app's own
@@ -48,6 +58,8 @@ test('save is disabled until a connection test succeeds, then persists the value
   // the default, nothing to store".
   const customSocket = '/run/caddy//admin.socket';
   await modal.locator('#aa-socket').fill(customSocket);
+  await expect(modal.getByRole('button', { name: /^save$/i })).toBeDisabled();
+
   await modal.locator('#aa-socket-test').click();
   await expect(modal.getByText(/connection successful/i)).toBeVisible({ timeout: 10000 });
   await expect(modal.getByRole('button', { name: /^save$/i })).toBeEnabled();
