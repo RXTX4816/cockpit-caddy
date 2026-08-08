@@ -47,7 +47,7 @@ npm run test:e2e                          # All running VMs
 npm run test:e2e -- --project=arch        # Target a specific VM
 npm run test:e2e -- --project=arch --project=debian
 npm run test:e2e:ui                       # Visual runner (step-by-step debugging)
-BASE_URL=https://localhost:9093 npm run test:e2e:codegen  # Record a new test
+BASE_URL=https://localhost:9190 npm run test:e2e:codegen  # Record a new test
 ```
 
 Start and wait for a VM before running:

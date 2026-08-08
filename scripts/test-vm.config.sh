@@ -9,7 +9,7 @@ INSTALL_PATH="/usr/share/cockpit/cockpit-caddy"
 # Simple distro VMs — no runtime variants needed for Caddy
 ALL_VMS=(arch debian fedora)
 SSH_BASE=2230       # offset from compose's 2220 so both can run simultaneously
-COCKPIT_BASE=9093
+COCKPIT_BASE=9190  # offset from compose's 9090-9100 range so both can run simultaneously
 
 extra_packages() {
   local distro="$1"
