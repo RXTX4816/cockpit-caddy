@@ -48,9 +48,9 @@ npm run vm wait arch
 
 | VM | Cockpit | SSH |
 |---|---|---|
-| arch | https://localhost:9093 | `ssh -p 2230 test@localhost` |
-| debian | https://localhost:9094 | `ssh -p 2231 test@localhost` |
-| fedora | https://localhost:9095 | `ssh -p 2232 test@localhost` |
+| arch | https://localhost:9190 | `ssh -p 2230 test@localhost` |
+| debian | https://localhost:9191 | `ssh -p 2231 test@localhost` |
+| fedora | https://localhost:9192 | `ssh -p 2232 test@localhost` |
 
 **Login:** `test` / `test` (your `~/.ssh/id_*.pub` is also injected automatically if found)
 
@@ -103,7 +103,7 @@ npm run test:e2e
 npm run test:e2e:ui
 
 # Record a new test interactively
-BASE_URL=https://localhost:9093 npm run test:e2e:codegen
+BASE_URL=https://localhost:9190 npm run test:e2e:codegen
 ```
 
 Check which VMs are currently running before selecting projects:
@@ -176,6 +176,6 @@ sudo usermod -aG kvm $USER   # then log out and back in
 **Port already in use**
 Change the port constants in `scripts/test-vm.config.sh`:
 ```bash
-COCKPIT_BASE=9093   # arch=9093, debian=9094, fedora=9095
+COCKPIT_BASE=9190   # arch=9190, debian=9191, fedora=9192
 SSH_BASE=2230       # arch=2230, debian=2231, fedora=2232
 ```
