@@ -421,7 +421,8 @@
   "footer": {
     "caddy_version": "Caddy {{version}}",
     "help": "Help & Wiki",
-    "feedback": "Report an issue"
+    "feedback": "Report an issue",
+    "source": "Source code"
   },
   "error_boundary": {
     "load_error": "Error loading Caddy plugin"

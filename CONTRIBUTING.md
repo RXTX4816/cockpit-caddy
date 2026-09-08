@@ -104,4 +104,13 @@ chore: update PatternFly to 6.5.0
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the MIT License.
+By contributing, you agree that your contributions are licensed under the
+project's license, **AGPL-3.0-only** (inbound = outbound). Contributions made
+before the relicense were under the MIT License — see [LICENSE-HISTORY.md](LICENSE-HISTORY.md).
+
+Sign off every commit to certify you have the right to submit it under that
+license, per the [Developer Certificate of Origin](https://developercertificate.org/):
+
+```
+git commit -s
+```

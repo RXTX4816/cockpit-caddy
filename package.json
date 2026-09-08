@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "description": "Caddy reverse proxy management plugin for Cockpit",
   "author": "RXTX4816",
-  "license": "MIT",
+  "license": "AGPL-3.0-only",
   "homepage": "https://github.com/RXTX4816/cockpit-caddy",
   "repository": {
     "type": "git",
@@ -30,7 +30,7 @@
     "@codemirror/merge": "^6.12.2",
     "@patternfly/react-core": "^6.6.1",
     "@playwright/test": "^1.62.1",
-    "@rxtx4816/cockpit-plugin-base-react": "1.1.2",
+    "@rxtx4816/cockpit-plugin-base-react": "^2.0.0",
     "@testing-library/jest-dom": "^7.0.0",
     "@testing-library/react": "^16.3.2",
     "@types/react": "^19.2.17",
