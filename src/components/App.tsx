@@ -81,6 +81,7 @@ function AppInner() {
           links={[
             { label: t("footer.help"), href: (pkg.homepage as string) + "/wiki" },
             { label: t("footer.feedback"), href: (pkg.homepage as string) + "/issues/new/choose" },
+            { label: t("footer.source"), href: pkg.homepage as string },
           ]}
         >
           {caddyVersion && (
