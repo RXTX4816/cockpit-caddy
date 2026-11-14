@@ -362,7 +362,7 @@ export function buildMigratedConfContent(blocks: RawBlock[]): string {
  *
  * Appends only the new blocks' body (no extra header line) since the existing
  * content already carries one — otherwise repeated migrations pile up a fresh
- * "# Managed by cockpit-caddy" comment every time.
+ * CONF_HEADER comment every time.
  */
 export function mergeMigratedConfContent(existingConfD: string, newBlocks: RawBlock[]): string {
   const trimmedExisting = existingConfD.trim();
@@ -373,23 +373,28 @@ export function mergeMigratedConfContent(existingConfD: string, newBlocks: RawBl
 }
 
 /**
- * Collapses repeated "# Managed by cockpit-caddy" header comments left behind
- * by migrations that ran before mergeMigratedConfContent stopped appending a
- * fresh one each time. Keeps only the first occurrence.
+ * Leaves exactly one current CONF_HEADER at the place of the first header line:
+ * old LEGACY_CONF_HEADER lines are replaced, and repeated headers (left by
+ * migrations that used to append a fresh one each time) are dropped together
+ * with the blank line after them. A file without any header is left alone.
  */
-export function deduplicateManagedHeader(content: string): { content: string; changed: boolean } {
+export function normalizeManagedHeader(content: string): { content: string; changed: boolean } {
   const lines = content.split("\n");
   let seenHeader = false;
   let changed = false;
   const result: string[] = [];
   for (let i = 0; i < lines.length; i++) {
-    if (lines[i].trim() === CONF_HEADER) {
+    const line = lines[i].trim();
+    if (line === CONF_HEADER || line === LEGACY_CONF_HEADER) {
       if (seenHeader) {
         changed = true;
         if (lines[i + 1]?.trim() === "") i++; // also drop the blank line that follows it
         continue;
       }
       seenHeader = true;
+      if (lines[i] !== CONF_HEADER) changed = true;
+      result.push(CONF_HEADER);
+      continue;
     }
     result.push(lines[i]);
   }
@@ -641,7 +646,14 @@ export async function readProxyConf(): Promise<string> {
   }
 }
 
-const CONF_HEADER = "# Managed by cockpit-caddy - edits to this file may be overwritten by user plugin actions";
+/**
+ * First line of cockpit-caddy.conf. Plain information for anyone opening the file:
+ * nothing parses it, apart from normalizeManagedHeader keeping a single copy.
+ */
+export const CONF_HEADER = "# Written by the Cockpit Caddy plugin. Hand edits are fine; saving a proxy in Cockpit rewrites only the block that holds it.";
+
+/** Header written before #237. It read as if the plugin kept the real config elsewhere. */
+export const LEGACY_CONF_HEADER = "# Managed by cockpit-caddy - edits to this file may be overwritten by user plugin actions";
 
 /** Converts Caddyfile short placeholders to JSON API long form. */
 function caddyPlaceholderToJson(s: string): string {
@@ -3285,28 +3297,17 @@ export function removeProxy(config: CaddyConfig, serverKey: string): CaddyConfig
 // Named Server storage & generation — #49
 // ---------------------------------------------------------------------------
 
-const SERVERS_CONF_PATH = "/etc/caddy/conf.d/cockpit-caddy-servers.json";
-
-export async function readServerDefs(): Promise<import("./types").ServerDef[]> {
-  try {
-    const raw = await fsReadFile(SERVERS_CONF_PATH, "try");
-    if (!raw) return [];
-    return JSON.parse(raw) as import("./types").ServerDef[];
-  } catch {
-    return [];
-  }
-}
-
-export async function writeServerDefs(defs: import("./types").ServerDef[]): Promise<void> {
-  await cockpit.spawn(["mkdir", "-p", "/etc/caddy/conf.d"], { superuser: "try" });
-  await fsWriteFile(SERVERS_CONF_PATH, JSON.stringify(defs, null, 2), "try");
-}
-
 /**
- * Parses ServerDef objects from conf.d content by reading embedded `# serverdef: {...}` comments.
- * Falls back to a minimal def (key + listen addresses only) for legacy blocks that predate the
- * embedded-comment format. This is the primary source of server defs — no separate file needed.
+ * Named-server definitions used to be mirrored into this JSON file. They live only
+ * in the `# serverdef:` comments in cockpit-caddy.conf now; the leftover file is
+ * deleted on first load (see removeLegacyServerDefsFile).
  */
+const LEGACY_SERVERS_JSON_PATH = "/etc/caddy/conf.d/cockpit-caddy-servers.json";
+
+export async function removeLegacyServerDefsFile(): Promise<void> {
+  await cockpit.spawn(["rm", "-f", LEGACY_SERVERS_JSON_PATH], { superuser: "try" }).catch(() => {});
+}
+
 export function parseServerDefsFromConf(content: string): import("./types").ServerDef[] {
   const defs: import("./types").ServerDef[] = [];
   const lines = content.split("\n");

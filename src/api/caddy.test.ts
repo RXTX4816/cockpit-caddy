@@ -8,7 +8,9 @@ import {
   extractRawBlocksFromCaddyfile,
   buildMigratedConfContent,
   mergeMigratedConfContent,
-  deduplicateManagedHeader,
+  normalizeManagedHeader,
+  CONF_HEADER,
+  LEGACY_CONF_HEADER,
   proxyToBlock,
   buildServerEntry,
   parseProxies,
@@ -338,7 +340,7 @@ describe("mergeMigratedConfContent — preserves existing conf.d annotations", (
   it("falls back to the fresh-migration header when conf.d was empty", () => {
     const newBlocks = extractRawBlocksFromCaddyfile("git.example.com {\n\treverse_proxy localhost:4732\n}\n");
     const result = mergeMigratedConfContent("", newBlocks);
-    expect(result).toContain("# Managed by cockpit-caddy");
+    expect(result.startsWith(CONF_HEADER)).toBe(true);
     expect(result).toContain("git.example.com {");
   });
 
@@ -346,50 +348,50 @@ describe("mergeMigratedConfContent — preserves existing conf.d annotations", (
     let content = mergeMigratedConfContent("", extractRawBlocksFromCaddyfile(":3333 {\n\treverse_proxy localhost:3000\n}\n"));
     content = mergeMigratedConfContent(content, extractRawBlocksFromCaddyfile(":3334 {\n\treverse_proxy localhost:3000\n}\n"));
     content = mergeMigratedConfContent(content, extractRawBlocksFromCaddyfile(":3335 {\n\treverse_proxy localhost:3000\n}\n"));
-    expect(content.match(/# Managed by cockpit-caddy/g)).toHaveLength(1);
+    expect(content.split(CONF_HEADER)).toHaveLength(2);
     expect(content).toContain(":3333 {");
     expect(content).toContain(":3334 {");
     expect(content).toContain(":3335 {");
   });
 });
 
-describe("deduplicateManagedHeader", () => {
-  it("collapses repeated header comments left by older migrations, keeping the first", () => {
-    const content = [
-      "# Managed by cockpit-caddy - edits to this file may be overwritten by user plugin actions",
-      "",
-      "# label: test",
-      ":3333 {",
-      "\treverse_proxy localhost:3000",
-      "}",
-      "",
-      "# Managed by cockpit-caddy - edits to this file may be overwritten by user plugin actions",
-      "",
-      ":3334 {",
-      "\treverse_proxy localhost:3000",
-      "}",
-      "",
-      "# Managed by cockpit-caddy - edits to this file may be overwritten by user plugin actions",
-      "",
-      ":3335 {",
-      "\treverse_proxy localhost:3000",
-      "}",
-    ].join("\n") + "\n";
+describe("normalizeManagedHeader", () => {
+  const block = (port: number) => `:${port} {\n\treverse_proxy localhost:3000\n}`;
 
-    const { content: result, changed } = deduplicateManagedHeader(content);
+  it("replaces the old 'may be overwritten' header with the current one", () => {
+    const content = `${LEGACY_CONF_HEADER}\n\n${block(3333)}\n`;
+    const { content: result, changed } = normalizeManagedHeader(content);
     expect(changed).toBe(true);
-    expect(result.match(/# Managed by cockpit-caddy/g)).toHaveLength(1);
-    expect(result).toContain("# label: test");
-    expect(result).toContain(":3333 {");
-    expect(result).toContain(":3334 {");
-    expect(result).toContain(":3335 {");
+    expect(result).toBe(`${CONF_HEADER}\n\n${block(3333)}\n`);
+    expect(result).not.toContain("may be overwritten");
   });
 
-  it("reports no change when there is only one header", () => {
-    const content = "# Managed by cockpit-caddy - edits to this file may be overwritten by user plugin actions\n\n:3333 {\n\treverse_proxy localhost:3000\n}\n";
-    const { content: result, changed } = deduplicateManagedHeader(content);
+  it("collapses repeated old and current headers into one current header at the top", () => {
+    const content = [
+      LEGACY_CONF_HEADER, "", "# label: test", block(3333), "",
+      LEGACY_CONF_HEADER, "", block(3334), "",
+      CONF_HEADER, "", block(3335),
+    ].join("\n") + "\n";
+
+    const { content: result, changed } = normalizeManagedHeader(content);
+    expect(changed).toBe(true);
+    expect(result.split(CONF_HEADER)).toHaveLength(2);
+    expect(result).not.toContain(LEGACY_CONF_HEADER);
+    expect(result.startsWith(CONF_HEADER)).toBe(true);
+    expect(result).toContain("# label: test");
+    for (const port of [3333, 3334, 3335]) expect(result).toContain(block(port));
+  });
+
+  it("reports no change when the file already has exactly one current header", () => {
+    const content = `${CONF_HEADER}\n\n${block(3333)}\n`;
+    const { content: result, changed } = normalizeManagedHeader(content);
     expect(changed).toBe(false);
     expect(result).toBe(content);
+  });
+
+  it("leaves a file without any header alone", () => {
+    const content = `# label: hand-written\n${block(3333)}\n`;
+    expect(normalizeManagedHeader(content)).toEqual({ content, changed: false });
   });
 });
 
