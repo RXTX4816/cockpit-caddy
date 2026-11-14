@@ -9,6 +9,8 @@ import {
   buildMigratedConfContent,
   mergeMigratedConfContent,
   normalizeManagedHeader,
+  withConfDImport,
+  inlineConfDImport,
   CONF_HEADER,
   LEGACY_CONF_HEADER,
   proxyToBlock,
@@ -3860,5 +3862,53 @@ describe("applyConfigFindings", () => {
     const { proxyConf: fixed } = applyConfigFindings(findings, new Set([onlyOne.id]), main, proxyConf);
     expect(fixed).toContain("http://:4343 {");
     expect(fixed).toContain("lifetime 90d"); // the other finding was not selected, so left as-is
+  });
+});
+
+describe("withConfDImport (#237: leave the user's own conf.d import alone)", () => {
+  const PLUGIN_LINE = "import /etc/caddy/conf.d/*.conf";
+
+  it.each([
+    "import /etc/caddy/conf.d/*",
+    "import /etc/caddy/conf.d/*.conf",
+    "import conf.d/*",
+    "\timport conf.d/*.conf",
+    "import /etc/caddy/conf.d/cockpit-caddy.conf",
+  ])("keeps the Caddyfile byte-for-byte when it already has `%s`", line => {
+    const caddyfile = `{\n\tadmin localhost:2019\n}\n\n${line}\n`;
+    expect(withConfDImport(caddyfile)).toBe(caddyfile);
+  });
+
+  it("appends the plugin's import when there is no conf.d import at all", () => {
+    expect(withConfDImport(":80 {\n\trespond ok\n}\n")).toBe(`:80 {\n\trespond ok\n}\n${PLUGIN_LINE}\n`);
+  });
+
+  it("doesn't count a comment mentioning conf.d as an import", () => {
+    expect(withConfDImport("# see conf.d\n")).toBe(`# see conf.d\n${PLUGIN_LINE}\n`);
+  });
+});
+
+describe("inlineConfDImport", () => {
+  const files = [
+    { path: "/etc/caddy/conf.d/b.conf", content: ":2 {\n}" },
+    { path: "/etc/caddy/conf.d/a.conf", content: ":1 {\n}" },
+    { path: "/etc/caddy/conf.d/notes.txt", content: ":3 {\n}" },
+  ];
+
+  it("inlines only .conf files, in name order, for conf.d/*.conf", () => {
+    expect(inlineConfDImport("{\n}\nimport /etc/caddy/conf.d/*.conf\n", files)).toBe("{\n}\n:1 {\n}\n\n:2 {\n}\n");
+  });
+
+  it("inlines every file for a bare conf.d/* import, as Caddy would load them", () => {
+    expect(inlineConfDImport("import /etc/caddy/conf.d/*\n", files)).toBe(":1 {\n}\n\n:2 {\n}\n\n:3 {\n}\n");
+  });
+
+  it("handles the relative form", () => {
+    expect(inlineConfDImport("import conf.d/*.conf\n", files)).toBe(":1 {\n}\n\n:2 {\n}\n");
+  });
+
+  it("returns the Caddyfile unchanged without a conf.d glob import", () => {
+    const main = ":80 {\n}\n";
+    expect(inlineConfDImport(main, files)).toBe(main);
   });
 });

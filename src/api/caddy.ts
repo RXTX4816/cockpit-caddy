@@ -219,9 +219,41 @@ export async function applyCaddyfileViaApi(content: string): Promise<void> {
   }
 }
 
-// Must match useProxies.ts's CONF_D_GLOB — the exact line ensureConfDImported
-// writes into the main Caddyfile to pull in conf.d.
-const CONF_D_IMPORT_LINE = "import /etc/caddy/conf.d/*.conf";
+/** The import line the plugin adds when the main Caddyfile doesn't import conf.d at all. */
+export const CONF_D_IMPORT_LINE = "import /etc/caddy/conf.d/*.conf";
+
+/** Any `import` line that pulls in something from conf.d, in whatever form the user wrote it. */
+const ANY_CONF_D_IMPORT = /^[ \t]*import[ \t]+\S*conf\.d\//m;
+
+/** `import [/etc/caddy/]conf.d/*` or `…/*.conf`, the globs whose files can be inlined. */
+const CONF_D_GLOB_IMPORT = /^[ \t]*import[ \t]+(?:\/etc\/caddy\/)?conf\.d\/\*(\.conf)?[ \t]*$/m;
+
+/**
+ * Returns the main Caddyfile with the plugin's conf.d import added, but only when
+ * there is no conf.d import yet. An import the user wrote (a bare `conf.d/*`, a
+ * relative path, a single file) is left exactly as it is.
+ */
+export function withConfDImport(caddyfile: string): string {
+  if (ANY_CONF_D_IMPORT.test(caddyfile)) return caddyfile;
+  return caddyfile.trimEnd() + "\n" + CONF_D_IMPORT_LINE + "\n";
+}
+
+/**
+ * Replaces a conf.d glob import with the contents of the files it matches, in name
+ * order: `*.conf` takes only .conf files, a bare `*` takes all of them, as Caddy
+ * would. Without such an import the Caddyfile comes back unchanged.
+ */
+export function inlineConfDImport(main: string, files: { path: string; content: string }[]): string {
+  const m = CONF_D_GLOB_IMPORT.exec(main);
+  if (!m) return main;
+  const onlyConf = m[1] !== undefined;
+  const inlined = files
+    .filter(f => !onlyConf || f.path.endsWith(".conf"))
+    .sort((a, b) => a.path.localeCompare(b.path))
+    .map(f => f.content)
+    .join("\n\n");
+  return main.slice(0, m.index) + inlined + main.slice(m.index + m[0].length);
+}
 
 /**
  * Caddy's `/load` endpoint disallows the `import` directive when adapting
@@ -234,14 +266,13 @@ const CONF_D_IMPORT_LINE = "import /etc/caddy/conf.d/*.conf";
  */
 async function buildFlattenedMainCaddyfile(): Promise<string> {
   const main = (await fsReadFile(MAIN_CADDYFILE, "try")) ?? "";
-  if (!main.includes(CONF_D_IMPORT_LINE)) return main;
-  const confPaths = (await listConfDFiles()).filter(p => p.endsWith(".conf"));
-  const confContents = await Promise.all(confPaths.map(p => fsReadFile(p, "try")));
-  const inlined = confContents.filter((c): c is string => !!c).join("\n\n");
-  return main.replace(CONF_D_IMPORT_LINE, inlined);
+  if (!CONF_D_GLOB_IMPORT.test(main)) return main;
+  const paths = await listConfDFiles();
+  const contents = await Promise.all(paths.map(p => fsReadFile(p, "try")));
+  const files = paths.flatMap((path, i) => (contents[i] ? [{ path, content: contents[i] }] : []));
+  return inlineConfDImport(main, files);
 }
 
-/** Applies the current on-disk Caddyfile (main + conf.d, inlined) via the Admin API. */
 export async function applyCurrentCaddyfileViaApi(): Promise<void> {
   await applyCaddyfileViaApi(await buildFlattenedMainCaddyfile());
 }

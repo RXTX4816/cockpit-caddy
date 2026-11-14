@@ -12,6 +12,7 @@ import {
   surgicallyWriteServerBlock, surgicallyRemoveServerBlock,
   mergeNamedServer, removeNamedServer,
   deduplicateServerBlocks, normalizeManagedHeader, proxyAddressKeys, findGlobalBlock,
+  withConfDImport, CONF_D_IMPORT_LINE,
   resolveInternalIssuerSettings, readGlobalOptions,
   applyGlobalInternalLifetimeToProxy, applyGlobalInternalLifetimeToServer,
   routeHosts, hostsConflict, standaloneProxyId,
@@ -19,19 +20,16 @@ import {
 import type { ProxyEntry, ServerDef } from "../api";
 import { useCaddyConfig } from "./useCaddyConfig";
 
-const CONF_D_GLOB = "import /etc/caddy/conf.d/*.conf";
 const CADDYFILE_BAK = "/etc/caddy/Caddyfile.bak";
 
+/**
+ * Makes sure Caddy loads conf.d. Adds the plugin's import line only when the main
+ * Caddyfile has no conf.d import at all; an import the user wrote stays untouched.
+ */
 async function ensureConfDImported(): Promise<void> {
-  let content = await readCaddyfile();
-  if (content.includes("import /etc/caddy/conf.d/*") && !content.includes("import /etc/caddy/conf.d/*.conf")) {
-    // Migrate bare wildcard to *.conf so the JSON metadata file is not imported by Caddy
-    content = content.replace(/import \/etc\/caddy\/conf\.d\/\*/g, "import /etc/caddy/conf.d/*.conf");
-    await writeCaddyfile(content);
-    await removeLegacyServerDefsFile();
-  } else if (!content.includes("conf.d")) {
-    await writeCaddyfile(content.trimEnd() + "\n" + CONF_D_GLOB + "\n");
-  }
+  const content = await readCaddyfile();
+  const next = withConfDImport(content);
+  if (next !== content) await writeCaddyfile(next);
 }
 
 function delay(ms: number): Promise<void> {
@@ -540,7 +538,7 @@ export function useProxies() {
     // migration should only move site blocks to conf.d, not discard global settings.
     const gb = findGlobalBlock(caddyfileContent);
     const globalBlock = gb ? caddyfileContent.slice(gb.open, gb.close + 1) : null;
-    const newCaddyfile = globalBlock ? `${globalBlock}\n\n${CONF_D_GLOB}\n` : `${CONF_D_GLOB}\n`;
+    const newCaddyfile = globalBlock ? `${globalBlock}\n\n${CONF_D_IMPORT_LINE}\n` : `${CONF_D_IMPORT_LINE}\n`;
 
     await writeFile(CADDYFILE_BAK, caddyfileContent);
     await cockpit.spawn(["mkdir", "-p", "/etc/caddy/conf.d"], { superuser: "try" });
