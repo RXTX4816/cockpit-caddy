@@ -21,9 +21,9 @@
 import type { Page } from '@playwright/test';
 
 export const PROXY_CONF_PATH = '/etc/caddy/conf.d/cockpit-caddy.conf';
-export const SERVERS_CONF_PATH = '/etc/caddy/conf.d/cockpit-caddy-servers.json';
 export const CADDYFILE_PATH = '/etc/caddy/Caddyfile';
-const CONF_HEADER = '# Managed by cockpit-caddy - edits to this file may be overwritten by user plugin actions';
+/** Same text as CONF_HEADER in src/api/caddy.ts, so the plugin's first-load repair has nothing to rewrite. */
+export const CONF_HEADER = '# Written by the Cockpit Caddy plugin. Hand edits are fine; saving a proxy in Cockpit rewrites only the block that holds it.';
 
 // ---------------------------------------------------------------------------
 // Low-level cockpit helpers (run inside the plugin page's browser context)
@@ -60,12 +60,6 @@ export async function readConf(page: Page): Promise<string> {
   return (await readFile(page, PROXY_CONF_PATH)) ?? '';
 }
 
-/** Returns the parsed cockpit-caddy-servers.json array. */
-export async function readServersJson(page: Page): Promise<object[]> {
-  const raw = await readFile(page, SERVERS_CONF_PATH);
-  return raw ? JSON.parse(raw) : [];
-}
-
 export function spawnCmd(page: Page, args: string[]): Promise<string> {
   return page.evaluate(
     ([cmd]) =>
@@ -93,7 +87,6 @@ async function reloadCaddy(page: Page): Promise<void> {
  */
 export async function resetConfig(page: Page): Promise<void> {
   await writeFile(page, PROXY_CONF_PATH, `${CONF_HEADER}\n`);
-  await writeFile(page, SERVERS_CONF_PATH, '[]');
   // Standalone proxies' server-level timeouts/header limits/HTTP-3 opt-out (#51) live in
   // a managed section of the *main* Caddyfile (`# cockpit-caddy:begin`/`:end`), not
   // conf.d — strip any leftover section from a previous test so it doesn't leak into
@@ -227,26 +220,21 @@ export interface ServerOpts {
 }
 
 /**
- * Add a named server definition (ServerDef) to the servers JSON file and
- * a matching Caddyfile block to the managed conf.d file, then reload Caddy.
+ * Add a named server with no routes yet, written the way the UI's "Add server"
+ * writes it: a `# server:` / `# serverdef:` comment pair over an empty block in
+ * the managed conf.d file.
  */
 export async function addServer(page: Page, opts: ServerOpts): Promise<void> {
-  // Write the server def to the JSON file so syncConf (via readServerDefs fallback)
-  // picks it up and shows the server tab. We deliberately do NOT write a Caddyfile
-  // block here: an empty block (:PORT {}) would cause Caddy to register a server on
-  // that port, and addProxy would then fail with a port conflict when pushing the
-  // JSON config via mergeNamedServer. The first route added via the UI triggers
-  // surgicallyWriteServerBlock which writes the proper block.
-  const raw = await readFile(page, SERVERS_CONF_PATH);
-  const defs: object[] = raw ? JSON.parse(raw) : [];
-  defs.push({
-    key: opts.key,
-    name: opts.name,
-    listenAddresses: opts.ports,
-    tls: opts.tls ?? false,
-  });
-  await writeFile(page, SERVERS_CONF_PATH, JSON.stringify(defs, null, 2));
-  // No reloadCaddy — conf.d unchanged. Let the 3s auto-refresh pick up the new server def.
+  const tls = opts.tls ?? false;
+  // Same address rule as serverDefToBlock: TLS off forces http:// on every address.
+  const addr = (tls ? opts.ports : opts.ports.map(p => `http://${p}`)).join(' ');
+  const def = JSON.stringify({ name: opts.name, ...(tls ? { tls: true } : {}) });
+  const block = [`# server: ${opts.key}`, `# serverdef: ${def}`, `${addr} {`, `}`].join('\n');
+
+  const current = (await readFile(page, PROXY_CONF_PATH)) ?? `${CONF_HEADER}\n`;
+  await writeFile(page, PROXY_CONF_PATH, `${current.trimEnd()}\n\n${block}\n`);
+  // No reloadCaddy, as with the UI: Caddy only learns about the server once its first
+  // route is added (mergeNamedServer). Let the 3s auto-refresh pick up the new server def.
 }
 
 // ---------------------------------------------------------------------------

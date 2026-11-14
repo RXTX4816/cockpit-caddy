@@ -19,7 +19,7 @@ If Caddy's Admin API is reachable but there's no *local, actively-running* `cadd
 In this mode:
 
 - **Start / Stop / Restart are disabled.** There's no local systemd unit to safely control, and starting one anyway can actively conflict with whatever is really serving requests (e.g. two Caddy processes fighting over the same port).
-- **Reload still works**, via the Admin API instead of `systemctl reload` — it pushes the current on-disk Caddyfile (with `conf.d/*.conf` files inlined) straight to the running instance.
+- **Reload still works**, via the Admin API instead of `systemctl reload` — it pushes the current on-disk Caddyfile (with the `conf.d` files it imports inlined) straight to the running instance.
 - Proxy management, the Caddyfile editor, and the config health check all work normally, since they only need the Admin API to be reachable.
 - The **Logs** tab needs a bit of extra setup — see [below](#viewing-logs-in-external-mode).
 

@@ -8,10 +8,11 @@ import {
   extractRawBlocksFromCaddyfile, mergeMigratedConfContent, writeRawProxyConf, writeRawProxyConfValidated,
   CaddyfileError,
   writeFile, reloadCaddy, syncGlobalTimeouts,
-  readServerDefs, writeServerDefs, parseServerDefsFromConf,
+  removeLegacyServerDefsFile, parseServerDefsFromConf,
   surgicallyWriteServerBlock, surgicallyRemoveServerBlock,
   mergeNamedServer, removeNamedServer,
-  deduplicateServerBlocks, deduplicateManagedHeader, proxyAddressKeys, findGlobalBlock,
+  deduplicateServerBlocks, normalizeManagedHeader, proxyAddressKeys, findGlobalBlock,
+  withConfDImport, CONF_D_IMPORT_LINE,
   resolveInternalIssuerSettings, readGlobalOptions,
   applyGlobalInternalLifetimeToProxy, applyGlobalInternalLifetimeToServer,
   routeHosts, hostsConflict, standaloneProxyId,
@@ -19,20 +20,16 @@ import {
 import type { ProxyEntry, ServerDef } from "../api";
 import { useCaddyConfig } from "./useCaddyConfig";
 
-const CONF_D_GLOB = "import /etc/caddy/conf.d/*.conf";
 const CADDYFILE_BAK = "/etc/caddy/Caddyfile.bak";
 
+/**
+ * Makes sure Caddy loads conf.d. Adds the plugin's import line only when the main
+ * Caddyfile has no conf.d import at all; an import the user wrote stays untouched.
+ */
 async function ensureConfDImported(): Promise<void> {
-  let content = await readCaddyfile();
-  if (content.includes("import /etc/caddy/conf.d/*") && !content.includes("import /etc/caddy/conf.d/*.conf")) {
-    // Migrate bare wildcard to *.conf so the JSON metadata file is not imported by Caddy
-    content = content.replace(/import \/etc\/caddy\/conf\.d\/\*/g, "import /etc/caddy/conf.d/*.conf");
-    await writeCaddyfile(content);
-    // Delete the old server defs JSON file — defs are now embedded in conf.d blocks
-    await cockpit.spawn(["rm", "-f", "/etc/caddy/conf.d/cockpit-caddy-servers.json"], { superuser: "try" }).catch(() => {});
-  } else if (!content.includes("conf.d")) {
-    await writeCaddyfile(content.trimEnd() + "\n" + CONF_D_GLOB + "\n");
-  }
+  const content = await readCaddyfile();
+  const next = withConfDImport(content);
+  if (next !== content) await writeCaddyfile(next);
 }
 
 function delay(ms: number): Promise<void> {
@@ -108,12 +105,14 @@ export function useProxies() {
   const syncConf = useCallback(() => {
     const syncStart = Date.now();
     void readProxyConf().then(async c => {
-      // One-time repair: remove duplicate server blocks and header comments
-      // left by older append/migration bugs.
+      // One-time repair: remove duplicate server blocks left by older append/migration
+      // bugs, bring the header comment up to date, and delete the server-defs JSON file
+      // older versions mirrored the `# serverdef:` comments into.
       if (!confdRepairedRef.current) {
         confdRepairedRef.current = true;
+        await removeLegacyServerDefsFile();
         const { content: dedupedServers, changed: serversChanged } = deduplicateServerBlocks(c);
-        const { content: repaired, changed: headerChanged } = deduplicateManagedHeader(dedupedServers);
+        const { content: repaired, changed: headerChanged } = normalizeManagedHeader(dedupedServers);
         if (serversChanged || headerChanged) {
           await writeRawProxyConf(repaired);
           return; // let next auto-refresh cycle pick up the repaired state
@@ -126,10 +125,7 @@ export function useProxies() {
       setConfAccessLog(parseConfAccessLogMap(c));
       setConfForwardAuth(parseConfForwardAuthMap(c));
       setConfCustomTlsCa(parseConfCustomTlsCaMap(c));
-      // Primary: parse server defs from embedded # serverdef: comments in conf.d.
-      // Fallback: read old JSON file for blocks that predate the embedded-comment format.
-      let defs = parseServerDefsFromConf(c);
-      if (defs.length === 0) defs = await readServerDefs();
+      const defs = parseServerDefsFromConf(c);
       setServersLoaded(true);
       // Only update servers if no mutation happened after this sync started
       if (lastServersMutationAt.current <= syncStart) {
@@ -226,7 +222,7 @@ export function useProxies() {
         if (newProxy.label) {
           updatedDef = { ...def, routeLabels: { ...def.routeLabels, [newProxy.id]: newProxy.label } };
           // Set servers early so the label is in state before the config update triggers re-render.
-          // No separate writeServerDefs — the def is embedded in the conf.d block.
+          // The def is embedded in the conf.d block, written below.
           const newDefs = servers.map(s => s.key === def.key ? updatedDef : s);
           lastServersMutationAt.current = Date.now();
           setServers(newDefs);
@@ -449,9 +445,8 @@ export function useProxies() {
           lastServersMutationAt.current = Date.now();
           setServers(newDefs);
         } else {
-          // Last route removed: remove from conf.d, servers.json (fallback), and state
+          // Last route removed: remove from conf.d and state
           await writeRawProxyConf(surgicallyRemoveServerBlock(current, proxy.namedServerKey));
-          await writeServerDefs(servers.filter(s => s.key !== proxy.namedServerKey));
           await update(removeNamedServer(config, proxy.namedServerKey));
           lastServersMutationAt.current = Date.now();
           setServers(servers.filter(s => s.key !== proxy.namedServerKey));
@@ -523,7 +518,6 @@ export function useProxies() {
     async (key: string) => {
       const current = await readProxyConf();
       await writeRawProxyConf(surgicallyRemoveServerBlock(current, key));
-      await writeServerDefs(servers.filter(s => s.key !== key));
       await update(removeNamedServer(config, key));
       lastServersMutationAt.current = Date.now();
       setServers(servers.filter(s => s.key !== key));
@@ -544,7 +538,7 @@ export function useProxies() {
     // migration should only move site blocks to conf.d, not discard global settings.
     const gb = findGlobalBlock(caddyfileContent);
     const globalBlock = gb ? caddyfileContent.slice(gb.open, gb.close + 1) : null;
-    const newCaddyfile = globalBlock ? `${globalBlock}\n\n${CONF_D_GLOB}\n` : `${CONF_D_GLOB}\n`;
+    const newCaddyfile = globalBlock ? `${globalBlock}\n\n${CONF_D_IMPORT_LINE}\n` : `${CONF_D_IMPORT_LINE}\n`;
 
     await writeFile(CADDYFILE_BAK, caddyfileContent);
     await cockpit.spawn(["mkdir", "-p", "/etc/caddy/conf.d"], { superuser: "try" });

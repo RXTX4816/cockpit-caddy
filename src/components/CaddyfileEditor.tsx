@@ -6,6 +6,8 @@ import {
   Spinner,
   Stack,
   StackItem,
+  ToggleGroup,
+  ToggleGroupItem,
   Toolbar,
   ToolbarContent,
   ToolbarGroup,
@@ -156,7 +158,7 @@ export function CaddyfileEditor({ unmanaged = false }: Props) {
   const diskChangedWhileEditing =
     editMode && diskContent !== null && diskContent !== baselineContent;
   const isBusy = saving || validating || reloading;
-  const isManagedByPlugin = selectedPath.includes("cockpit-caddy");
+  const isManagedByPlugin = selectedPath.endsWith("/cockpit-caddy.conf");
 
   if (loading) return <Spinner />;
 
@@ -209,19 +211,18 @@ export function CaddyfileEditor({ unmanaged = false }: Props) {
       <StackItem>
         <Toolbar>
           <ToolbarContent>
-            <ToolbarGroup variant="filter-group">
-              {files.map(f => (
-                <ToolbarItem key={f.path}>
-                  <Button
-                    variant={f.path === selectedPath ? "secondary" : "plain"}
-                    size="sm"
-                    onClick={() => switchFile(f)}
-                  >
-                    <code style={{ fontSize: "0.8rem" }}>{f.label}</code>
-                  </Button>
-                </ToolbarItem>
-              ))}
-            </ToolbarGroup>
+            <ToolbarItem>
+              <ToggleGroup isCompact aria-label={t("caddyfile.file_switcher")}>
+                {files.map(f => (
+                  <ToggleGroupItem
+                    key={f.path}
+                    text={<code style={{ fontSize: "0.8rem" }}>{f.label}</code>}
+                    isSelected={f.path === selectedPath}
+                    onChange={() => switchFile(f)}
+                  />
+                ))}
+              </ToggleGroup>
+            </ToolbarItem>
 
             <ToolbarGroup align={{ default: "alignEnd" }}>
               {diskChangedWhileEditing && (

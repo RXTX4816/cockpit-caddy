@@ -219,9 +219,41 @@ export async function applyCaddyfileViaApi(content: string): Promise<void> {
   }
 }
 
-// Must match useProxies.ts's CONF_D_GLOB — the exact line ensureConfDImported
-// writes into the main Caddyfile to pull in conf.d.
-const CONF_D_IMPORT_LINE = "import /etc/caddy/conf.d/*.conf";
+/** The import line the plugin adds when the main Caddyfile doesn't import conf.d at all. */
+export const CONF_D_IMPORT_LINE = "import /etc/caddy/conf.d/*.conf";
+
+/** Any `import` line that pulls in something from conf.d, in whatever form the user wrote it. */
+const ANY_CONF_D_IMPORT = /^[ \t]*import[ \t]+\S*conf\.d\//m;
+
+/** `import [/etc/caddy/]conf.d/*` or `…/*.conf`, the globs whose files can be inlined. */
+const CONF_D_GLOB_IMPORT = /^[ \t]*import[ \t]+(?:\/etc\/caddy\/)?conf\.d\/\*(\.conf)?[ \t]*$/m;
+
+/**
+ * Returns the main Caddyfile with the plugin's conf.d import added, but only when
+ * there is no conf.d import yet. An import the user wrote (a bare `conf.d/*`, a
+ * relative path, a single file) is left exactly as it is.
+ */
+export function withConfDImport(caddyfile: string): string {
+  if (ANY_CONF_D_IMPORT.test(caddyfile)) return caddyfile;
+  return caddyfile.trimEnd() + "\n" + CONF_D_IMPORT_LINE + "\n";
+}
+
+/**
+ * Replaces a conf.d glob import with the contents of the files it matches, in name
+ * order: `*.conf` takes only .conf files, a bare `*` takes all of them, as Caddy
+ * would. Without such an import the Caddyfile comes back unchanged.
+ */
+export function inlineConfDImport(main: string, files: { path: string; content: string }[]): string {
+  const m = CONF_D_GLOB_IMPORT.exec(main);
+  if (!m) return main;
+  const onlyConf = m[1] !== undefined;
+  const inlined = files
+    .filter(f => !onlyConf || f.path.endsWith(".conf"))
+    .sort((a, b) => a.path.localeCompare(b.path))
+    .map(f => f.content)
+    .join("\n\n");
+  return main.slice(0, m.index) + inlined + main.slice(m.index + m[0].length);
+}
 
 /**
  * Caddy's `/load` endpoint disallows the `import` directive when adapting
@@ -234,14 +266,13 @@ const CONF_D_IMPORT_LINE = "import /etc/caddy/conf.d/*.conf";
  */
 async function buildFlattenedMainCaddyfile(): Promise<string> {
   const main = (await fsReadFile(MAIN_CADDYFILE, "try")) ?? "";
-  if (!main.includes(CONF_D_IMPORT_LINE)) return main;
-  const confPaths = (await listConfDFiles()).filter(p => p.endsWith(".conf"));
-  const confContents = await Promise.all(confPaths.map(p => fsReadFile(p, "try")));
-  const inlined = confContents.filter((c): c is string => !!c).join("\n\n");
-  return main.replace(CONF_D_IMPORT_LINE, inlined);
+  if (!CONF_D_GLOB_IMPORT.test(main)) return main;
+  const paths = await listConfDFiles();
+  const contents = await Promise.all(paths.map(p => fsReadFile(p, "try")));
+  const files = paths.flatMap((path, i) => (contents[i] ? [{ path, content: contents[i] }] : []));
+  return inlineConfDImport(main, files);
 }
 
-/** Applies the current on-disk Caddyfile (main + conf.d, inlined) via the Admin API. */
 export async function applyCurrentCaddyfileViaApi(): Promise<void> {
   await applyCaddyfileViaApi(await buildFlattenedMainCaddyfile());
 }
@@ -362,7 +393,7 @@ export function buildMigratedConfContent(blocks: RawBlock[]): string {
  *
  * Appends only the new blocks' body (no extra header line) since the existing
  * content already carries one — otherwise repeated migrations pile up a fresh
- * "# Managed by cockpit-caddy" comment every time.
+ * CONF_HEADER comment every time.
  */
 export function mergeMigratedConfContent(existingConfD: string, newBlocks: RawBlock[]): string {
   const trimmedExisting = existingConfD.trim();
@@ -373,23 +404,28 @@ export function mergeMigratedConfContent(existingConfD: string, newBlocks: RawBl
 }
 
 /**
- * Collapses repeated "# Managed by cockpit-caddy" header comments left behind
- * by migrations that ran before mergeMigratedConfContent stopped appending a
- * fresh one each time. Keeps only the first occurrence.
+ * Leaves exactly one current CONF_HEADER at the place of the first header line:
+ * old LEGACY_CONF_HEADER lines are replaced, and repeated headers (left by
+ * migrations that used to append a fresh one each time) are dropped together
+ * with the blank line after them. A file without any header is left alone.
  */
-export function deduplicateManagedHeader(content: string): { content: string; changed: boolean } {
+export function normalizeManagedHeader(content: string): { content: string; changed: boolean } {
   const lines = content.split("\n");
   let seenHeader = false;
   let changed = false;
   const result: string[] = [];
   for (let i = 0; i < lines.length; i++) {
-    if (lines[i].trim() === CONF_HEADER) {
+    const line = lines[i].trim();
+    if (line === CONF_HEADER || line === LEGACY_CONF_HEADER) {
       if (seenHeader) {
         changed = true;
         if (lines[i + 1]?.trim() === "") i++; // also drop the blank line that follows it
         continue;
       }
       seenHeader = true;
+      if (lines[i] !== CONF_HEADER) changed = true;
+      result.push(CONF_HEADER);
+      continue;
     }
     result.push(lines[i]);
   }
@@ -641,7 +677,14 @@ export async function readProxyConf(): Promise<string> {
   }
 }
 
-const CONF_HEADER = "# Managed by cockpit-caddy - edits to this file may be overwritten by user plugin actions";
+/**
+ * First line of cockpit-caddy.conf. Plain information for anyone opening the file:
+ * nothing parses it, apart from normalizeManagedHeader keeping a single copy.
+ */
+export const CONF_HEADER = "# Written by the Cockpit Caddy plugin. Hand edits are fine; saving a proxy in Cockpit rewrites only the block that holds it.";
+
+/** Header written before #237. It read as if the plugin kept the real config elsewhere. */
+export const LEGACY_CONF_HEADER = "# Managed by cockpit-caddy - edits to this file may be overwritten by user plugin actions";
 
 /** Converts Caddyfile short placeholders to JSON API long form. */
 function caddyPlaceholderToJson(s: string): string {
@@ -3285,28 +3328,17 @@ export function removeProxy(config: CaddyConfig, serverKey: string): CaddyConfig
 // Named Server storage & generation — #49
 // ---------------------------------------------------------------------------
 
-const SERVERS_CONF_PATH = "/etc/caddy/conf.d/cockpit-caddy-servers.json";
-
-export async function readServerDefs(): Promise<import("./types").ServerDef[]> {
-  try {
-    const raw = await fsReadFile(SERVERS_CONF_PATH, "try");
-    if (!raw) return [];
-    return JSON.parse(raw) as import("./types").ServerDef[];
-  } catch {
-    return [];
-  }
-}
-
-export async function writeServerDefs(defs: import("./types").ServerDef[]): Promise<void> {
-  await cockpit.spawn(["mkdir", "-p", "/etc/caddy/conf.d"], { superuser: "try" });
-  await fsWriteFile(SERVERS_CONF_PATH, JSON.stringify(defs, null, 2), "try");
-}
-
 /**
- * Parses ServerDef objects from conf.d content by reading embedded `# serverdef: {...}` comments.
- * Falls back to a minimal def (key + listen addresses only) for legacy blocks that predate the
- * embedded-comment format. This is the primary source of server defs — no separate file needed.
+ * Named-server definitions used to be mirrored into this JSON file. They live only
+ * in the `# serverdef:` comments in cockpit-caddy.conf now; the leftover file is
+ * deleted on first load (see removeLegacyServerDefsFile).
  */
+const LEGACY_SERVERS_JSON_PATH = "/etc/caddy/conf.d/cockpit-caddy-servers.json";
+
+export async function removeLegacyServerDefsFile(): Promise<void> {
+  await cockpit.spawn(["rm", "-f", LEGACY_SERVERS_JSON_PATH], { superuser: "try" }).catch(() => {});
+}
+
 export function parseServerDefsFromConf(content: string): import("./types").ServerDef[] {
   const defs: import("./types").ServerDef[] = [];
   const lines = content.split("\n");

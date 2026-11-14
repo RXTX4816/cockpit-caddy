@@ -9,6 +9,7 @@
  * internet-reachable domain, no port 80/443 exposure for an HTTP-01 challenge).
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
+import { CONF_HEADER } from './helpers';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
   await dismissAdminBanner(page);
@@ -30,7 +31,7 @@ async function writeConf(page: import('@playwright/test').Page, conf: string) {
 
 test('classifies a bare public hostname as using Caddy default automatic HTTPS', async ({ pluginPage: page }) => {
   await writeConf(page, [
-    '# Managed by cockpit-caddy - edits to this file may be overwritten by user plugin actions',
+    CONF_HEADER,
     '',
     'default-acme.example.test:19500 {',
     '\treverse_proxy http://localhost:3000',
@@ -47,7 +48,7 @@ test('classifies a bare public hostname as using Caddy default automatic HTTPS',
 
 test('classifies an internal-CA (self-signed) hostname distinctly', async ({ pluginPage: page }) => {
   await writeConf(page, [
-    '# Managed by cockpit-caddy - edits to this file may be overwritten by user plugin actions',
+    CONF_HEADER,
     '',
     'selfsigned.example.test:19501 {',
     '\ttls internal',
@@ -65,7 +66,7 @@ test('classifies an internal-CA (self-signed) hostname distinctly', async ({ plu
 
 test('classifies an explicit http:// hostname as no TLS', async ({ pluginPage: page }) => {
   await writeConf(page, [
-    '# Managed by cockpit-caddy - edits to this file may be overwritten by user plugin actions',
+    CONF_HEADER,
     '',
     'http://plain.example.test:19502 {',
     '\treverse_proxy http://localhost:3002',
@@ -93,7 +94,7 @@ test('shows the empty state when no public hostnames are configured', async ({ p
 // ACME, not get miscounted as an "explicit policy" the way it did before this fix.
 test('a default-ACME host stays classified as Caddy default even alongside an internal-CA host', async ({ pluginPage: page }) => {
   await writeConf(page, [
-    '# Managed by cockpit-caddy - edits to this file may be overwritten by user plugin actions',
+    CONF_HEADER,
     '',
     'default-acme.example.test:19503 {',
     '\treverse_proxy http://localhost:3003',
@@ -118,7 +119,7 @@ test('a default-ACME host stays classified as Caddy default even alongside an in
 
 test('Edit Proxy shows a note when the host is already ACME-managed', async ({ pluginPage: page }) => {
   await writeConf(page, [
-    '# Managed by cockpit-caddy - edits to this file may be overwritten by user plugin actions',
+    CONF_HEADER,
     '',
     'default-acme.example.test:19505 {',
     '\treverse_proxy http://localhost:3005',

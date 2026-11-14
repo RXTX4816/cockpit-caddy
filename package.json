@@ -30,7 +30,7 @@
     "@codemirror/merge": "^6.12.3",
     "@patternfly/react-core": "^6.7.0",
     "@playwright/test": "^1.65.0",
-    "@rxtx4816/cockpit-plugin-base-react": "^2.3.0",
+    "@rxtx4816/cockpit-plugin-base-react": "^2.3.1",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
     "@types/react": "^19.3.0",

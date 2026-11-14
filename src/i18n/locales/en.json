@@ -354,7 +354,8 @@
     "reloaded": "Caddy config reloaded successfully",
     "changed_on_disk": "Changed on disk",
     "empty": "File is empty",
-    "managed_file": "This file is managed by cockpit-caddy. Manual edits may be overwritten by proxy changes.",
+    "managed_file": "The Proxy List tab reads and writes this file directly. Saving a proxy there rewrites the block that holds it (for a route on a named server, that server's whole block), so hand edits inside that block can be replaced. Other blocks are left as they are.",
+    "file_switcher": "Caddyfile to view",
     "unmanaged_note": "This is the Caddyfile on the host filesystem. Whether it's the file the running container actually reads depends on how that container is configured (shared bind mount vs. its own separate config) — edits here may have no effect on the live instance unless the container shares this path."
   },
   "logs": {

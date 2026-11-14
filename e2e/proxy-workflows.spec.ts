@@ -6,7 +6,7 @@
  * the proxy list state and the raw cockpit-caddy.conf content.
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { readConf } from './helpers';
+import { readConf, CONF_HEADER } from './helpers';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
   await dismissAdminBanner(page);
@@ -196,7 +196,7 @@ test('two proxies with explicit https:// scheme sharing a port keep distinct lab
   await waitForToolbar(page);
 
   const conf = [
-    '# Managed by cockpit-caddy - edits to this file may be overwritten by user plugin actions',
+    CONF_HEADER,
     '',
     '# label: 139test1',
     'https://test.speedport.ip:19300 {',
