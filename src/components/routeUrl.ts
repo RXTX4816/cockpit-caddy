@@ -1,16 +1,18 @@
 import { buildUrl } from "@rxtx4816/cockpit-plugin-base-react/lib/uri";
 import type { ProxyEntry } from "../api";
+import { externalHostList } from "../api/externalHosts";
 
 /**
  * Resolves the public hostname a route actually answers on: its Host matcher
  * (the most authoritative "this is the public subdomain") takes priority over
  * externalHost (the bind address, set whenever a subdomain is typed into
- * Add/Edit Proxy), falling back to the browser's own hostname — e.g. when
+ * Add/Edit Proxy; its first name when it lists several, #208), falling back to
+ * the browser's own hostname — e.g. when
  * Cockpit is viewed over an SSH port-forward, `window.location.hostname` is
  * `localhost` and would otherwise silently override a configured subdomain.
  */
 export function resolveRouteHost(proxy: Pick<ProxyEntry, "externalHost" | "matchers">): string {
-  return proxy.matchers?.host?.[0] || proxy.externalHost || window.location.hostname;
+  return proxy.matchers?.host?.[0] || externalHostList(proxy.externalHost)[0] || window.location.hostname;
 }
 
 /**

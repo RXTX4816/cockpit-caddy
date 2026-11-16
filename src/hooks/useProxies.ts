@@ -4,7 +4,7 @@ import {
   parseProxies, mergeProxy, removeProxy,
   readCaddyfile, writeCaddyfile, readProxyConf,
   parseLabelsFromCaddyfile, parseConfTlsMap, parseConfExternalAddresses, parseConfAccessLogMap, parseConfForwardAuthMap, parseConfCustomTlsCaMap,
-  surgicallyWriteProxy, surgicallyRemoveBlock,
+  surgicallyWriteProxy, surgicallyEditProxy, surgicallyRemoveBlock,
   extractRawBlocksFromCaddyfile, mergeMigratedConfContent, writeRawProxyConf, writeRawProxyConfValidated,
   CaddyfileError,
   writeFile, reloadCaddy, syncGlobalTimeouts,
@@ -346,8 +346,6 @@ export function useProxies() {
       // based lookup ambiguous (serverKey isn't unique per route once Caddy assigns its own
       // shared JSON server key across those routes on reload).
       const originalProxy = proxies.find(p => p.id === entry.id);
-      const originalPort = originalProxy?.externalPort ?? entry.externalPort;
-      const originalHost = originalProxy ? routeHosts(originalProxy)?.[0] : undefined;
 
       // Recompute id for the post-edit host/port now that the original has been located
       // above. serverKey is deliberately left untouched (still the original proxy's key,
@@ -372,13 +370,7 @@ export function useProxies() {
         readProxyConf(),
       ]);
 
-      let updated = current;
-      const newHost = routeHosts(entry)?.[0];
-      if (originalPort !== entry.externalPort || originalHost !== newHost) {
-        updated = surgicallyRemoveBlock(updated, originalPort, originalHost);
-      }
-      updated = surgicallyWriteProxy(updated, entry);
-      await writeRawProxyConfValidated(updated);
+      await writeRawProxyConfValidated(surgicallyEditProxy(current, originalProxy, entry));
 
       setLabels(prev => {
         const n = { ...prev };
@@ -458,7 +450,7 @@ export function useProxies() {
       const remainingProxies = proxies.filter(p => p.id !== proxy.id);
       await syncGlobalTimeouts(remainingProxies);
       const current = await readProxyConf();
-      await writeRawProxyConf(surgicallyRemoveBlock(current, proxy.externalPort, routeHosts(proxy)?.[0]));
+      await writeRawProxyConf(surgicallyRemoveBlock(current, proxy.externalPort, routeHosts(proxy)?.join(", ")));
       const proxyKey = proxyAddressKeys(proxy)[0];
       setLabels(prev => { const n = { ...prev }; delete n[proxyKey]; return n; });
       setConfTls(prev => { const n = { ...prev }; delete n[proxyKey]; return n; });

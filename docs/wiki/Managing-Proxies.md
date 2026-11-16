@@ -74,7 +74,7 @@ Click **Add Proxy** in the toolbar.
 
 | Field | Description |
 |---|---|
-| External Address | Port (and optionally scheme + hostname) Caddy listens on — omitted when adding to a named server |
+| External Address | Port (and optionally scheme + hostname) Caddy listens on — omitted when adding to a named server. Several hostnames can share one proxy: separate them with commas (`example.com, www.example.com`) and they are written as one site block with every name |
 | Target Host | Upstream host to forward traffic to (default `localhost`) |
 | Target Port | Upstream port |
 
