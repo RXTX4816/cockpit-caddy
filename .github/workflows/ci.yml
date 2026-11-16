@@ -15,3 +15,32 @@ jobs:
     with:
       plugin-name: cockpit-caddy
     secrets: inherit
+
+  # Generated Caddyfiles must load in a real Caddy, not just look right in a string
+  # compare. The shared Test job has no caddy binary, so it skips these.
+  caddy-adapt:
+    name: Caddy adapt
+    runs-on: ubuntu-latest
+    env:
+      CADDY_VERSION: "2.11.7"
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - run: npm ci
+
+      - name: Install Caddy
+        run: |
+          curl -fsSL "https://github.com/caddyserver/caddy/releases/download/v${CADDY_VERSION}/caddy_${CADDY_VERSION}_linux_amd64.tar.gz" \
+            | tar -xz -C "$RUNNER_TEMP" caddy
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+
+      - run: caddy version
+
+      - name: caddy adapt on generated configs
+        run: npx vitest run src/api/caddyAdapt.test.ts
+        env:
+          CADDY_ADAPT_REQUIRED: "1"

@@ -20,11 +20,12 @@ import {
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast, ExternalAddressInput } from "@rxtx4816/cockpit-plugin-base-react/components";
-import { readProxyConf, parseConfExternalAddresses, CaddyApiError, CaddyfileError, routeHosts, hostsConflict, fetchCaddyConfig, classifyAcmeHosts } from "../api";
+import { readProxyConf, parseConfExternalAddresses, CaddyApiError, CaddyfileError, routeHosts, hostsConflict, fetchCaddyConfig, classifyAcmeHosts, externalHostList, normalizeExternalHost, formatExternalAddressPreview } from "../api";
 import type { ProxyEntry, RewriteConfig, HeaderOperation, RouteMatch, ServerDef, AcmeHostStatus } from "../api";
 import { RouteMatchersSection } from "./RouteMatchersSection";
 import { parseListenPort } from "./AddServerDialog";
 import { EXTERNAL_ADDRESS_BUILTIN_SCHEMES } from "./externalAddressSchemes";
+import { externalHostFieldError } from "./externalHostField";
 import { isValidPort } from "@rxtx4816/cockpit-plugin-base-react/lib/uri";
 import { RewriteSection } from "./RewriteSection";
 import { RequestHeadersSection } from "./RequestHeadersSection";
@@ -161,7 +162,7 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
     void fetchCaddyConfig().then(config => setAcmeHosts(classifyAcmeHosts(config))).catch(() => {});
   }, []);
 
-  const acmeStatus = acmeHosts.find(h => h.host === form.externalHost.trim());
+  const acmeStatus = acmeHosts.find(h => externalHostList(form.externalHost).includes(h.host));
 
   function validate(): FormErrors {
     const errs: FormErrors = {};
@@ -172,10 +173,12 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
       else if (!isValidPort(port)) errs.externalPort = t("add_proxy.validation_port_range");
       else if (existingRoutes.some(r =>
         r.externalPort === port &&
-        hostsConflict(routeHosts(r), routeHosts({ externalHost: form.externalHost.trim() || undefined, matchers }))
+        hostsConflict(routeHosts(r), routeHosts({ externalHost: normalizeExternalHost(form.externalHost), matchers }))
       )) errs.externalPort = t("add_proxy.validation_port_duplicate", { port });
+      const hostErr = externalHostFieldError(form.externalHost, t);
+      if (hostErr) errs.externalHost = hostErr;
     }
-    if (form.externalScheme && !form.externalHost.trim()) {
+    if (!errs.externalHost && form.externalScheme && !form.externalHost.trim()) {
       errs.externalHost = t("add_proxy.validation_ext_host_required_with_scheme");
     }
     // "https://" in the address triggers Caddy's automatic HTTPS on its own, regardless
@@ -209,13 +212,7 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
   const isLocked = confirmAction.step !== "idle";
   const isSaving = confirmAction.step === "submitting";
 
-  const extHeader = form.externalScheme && form.externalHost
-    ? `${form.externalScheme}://${form.externalHost}:${form.externalPort || "…"}`
-    : form.externalHost
-      ? `${form.externalHost}:${form.externalPort || "…"}`
-      : form.externalPort
-        ? `:${form.externalPort}`
-        : null;
+  const extHeader = formatExternalAddressPreview(form.externalScheme, form.externalHost, form.externalPort);
   const targetUrl = `${form.targetScheme}://${form.targetHost || "…"}:${form.targetPort || "…"}`;
 
   return (
@@ -518,7 +515,7 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
                 try {
                   await onAdd({
                     externalScheme: serverCtx ? undefined : (form.externalScheme || undefined),
-                    externalHost: serverCtx ? undefined : (form.externalHost.trim() || undefined),
+                    externalHost: serverCtx ? undefined : normalizeExternalHost(form.externalHost),
                     externalPort: serverCtx ? serverCtx.port : parseInt(form.externalPort, 10),
                     targetHost: form.targetHost.trim(),
                     targetPort: parseInt(form.targetPort, 10),
