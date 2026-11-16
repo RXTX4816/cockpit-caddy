@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { useAutoRefresh } from "@rxtx4816/cockpit-plugin-base-react";
 import { fetchServiceLogs, fetchContainerLogs, isCaddyManaged } from "../api";
-import { loadLogContainer } from "./useLogContainer";
+import { loadLogContainer, loadLogDockerHost } from "./useLogContainer";
 
 const POLL_INTERVAL = 5000;
 
@@ -28,7 +28,7 @@ export function useLogs() {
           liveRef.current = "";
           return;
         }
-        const output = await fetchContainerLogs(container);
+        const output = await fetchContainerLogs(container, loadLogDockerHost());
         const text = output ?? "";
         liveRef.current = text;
         setLiveLogs(text);

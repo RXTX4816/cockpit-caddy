@@ -649,6 +649,10 @@
     "container_help": "Name or ID of the Docker container running Caddy, used to show logs when Caddy has no local systemd service (optional)",
     "test_container_button": "Test container",
     "test_container_fail": "Container not found or not running",
+    "docker_host_label": "Docker socket (optional)",
+    "docker_host_help": "Socket of the Docker daemon running the container, e.g. unix:///run/user/1000/docker.sock for rootless Docker. Leave empty for the default daemon",
+    "test_docker_socket_missing": "Docker socket not found — check the path and that the Docker daemon is running",
+    "test_docker_socket_unreadable": "Docker socket can't be read — check its owner and permissions",
     "reset_button": "Reset to defaults",
     "save_tooltip": "Test a successful connection first"
   },
