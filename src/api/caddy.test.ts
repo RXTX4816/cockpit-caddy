@@ -4132,7 +4132,7 @@ describe("multiple hostnames — parse, edit, write round trips (#208)", () => {
     const p = proxy({ id: "host:example.com", externalPort: 443, tls: true, externalHost: "example.com, www.example.com", targetPort: 8001 });
     const out = surgicallyWriteProxy(conf, p);
     expect(count(out, "example.com, www.example.com {")).toBe(1);
-    expect(out).not.toMatch(/^example\.com:443/m);
+    expect(out.split("\n").some(l => l.startsWith("example.com:443"))).toBe(false);
     expect(out).toContain("reverse_proxy http://localhost:8001");
     expect(out).not.toContain("localhost:8000");
     expect(out).toContain(other.trim());

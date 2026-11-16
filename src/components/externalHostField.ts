@@ -1,9 +1,10 @@
+import type { TFunction } from "i18next";
 import { validateExternalHost } from "../api";
 
 /** The host-field error the proxy dialogs show for a typed host list (#208), if any. */
 export function externalHostFieldError(
   value: string,
-  t: (key: string, opts?: Record<string, unknown>) => string,
+  t: TFunction,
 ): string | undefined {
   const err = validateExternalHost(value);
   if (!err) return undefined;
