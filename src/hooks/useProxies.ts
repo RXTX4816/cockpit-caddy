@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useAutoRefresh } from "@rxtx4816/cockpit-plugin-base-react";
+import { i18n } from "@rxtx4816/cockpit-plugin-base-react/i18n";
 import {
   parseProxies, mergeProxy, removeProxy,
   readCaddyfile, writeCaddyfile, readProxyConf,
@@ -49,16 +50,14 @@ function checkServerPortConflicts(
     const port = parseInt(m[1], 10);
     // Conflict with a standalone proxy
     if (proxies.some(p => p.externalPort === port && !p.namedServerKey)) {
-      throw new CaddyfileError(
-        `Port ${port} is already used by a standalone proxy. Remove it first or use a different port.`
-      );
+      throw new CaddyfileError(i18n.t("errors.port_used_by_standalone", { port }));
     }
     // Conflict with a different named server
     const otherServer = proxies.find(p =>
       p.externalPort === port && p.namedServerKey && p.namedServerKey !== ownKey
     );
     if (otherServer) {
-      throw new CaddyfileError(`Port ${port} is already used by server "${otherServer.namedServerKey}".`);
+      throw new CaddyfileError(i18n.t("errors.port_used_by_server", { port, server: otherServer.namedServerKey }));
     }
   }
 }
@@ -258,7 +257,7 @@ export function useProxies() {
       );
       if (serverConflict) {
         throw new CaddyfileError(
-          `Port ${newProxy.externalPort} is already used by server "${serverConflict.name}". Add routes to that server tab instead.`
+          i18n.t("errors.port_used_by_server_add", { port: newProxy.externalPort, server: serverConflict.name }),
         );
       }
       // Only drop existing proxies that genuinely conflict with the new one (#139) — a

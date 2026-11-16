@@ -1,6 +1,7 @@
 import type { CaddyConfig, CaddyHandler, CaddyReverseProxyHandler, CaddyRoute, CaddyServer, CaddyTLSClientAuthentication, CaddyTLSConnectionPolicy, ProxyEntry } from "./types";
 import { readFile as fsReadFile, writeFile as fsWriteFile } from "@rxtx4816/cockpit-plugin-base-react/lib/cockpit-fs";
 import { reloadService as reloadSystemdService } from "@rxtx4816/cockpit-plugin-base-react/systemd";
+import { i18n } from "@rxtx4816/cockpit-plugin-base-react/i18n";
 import { listConfDFiles } from "./systemd";
 
 /**
@@ -448,7 +449,7 @@ export async function writeRawProxyConfValidated(content: string): Promise<void>
   // checkLogFileWritable for why `caddy validate` succeeding isn't enough on its own.
   for (const logPath of new Set(extractLogFilePaths(content))) {
     const err = await checkLogFileWritable(logPath);
-    if (err) throw new CaddyfileError(`Log file "${logPath}" isn't writable by Caddy: ${err}`);
+    if (err) throw new CaddyfileError(i18n.t("errors.log_file_not_writable", { path: logPath, error: err }));
   }
   await fsWriteFile(PROXY_CONF_PATH, content, "try");
   try {
@@ -4171,10 +4172,7 @@ async function getCaddyServiceUser(): Promise<{ user: string; group: string } | 
 export async function checkStoragePathWritable(path: string): Promise<string | null> {
   const readWritePaths = await getCaddyReadWritePaths();
   if (readWritePaths && readWritePaths.length > 0 && !readWritePaths.some(p => isPathWithin(path, p))) {
-    return `The caddy service is sandboxed (systemd ReadWritePaths=) to only: ${readWritePaths.join(", ")}. ` +
-      `"${path}" falls outside all of them, so Caddy would never be able to write there regardless of ` +
-      `file permissions — choose a path under one of the allowed directories, or add this path to the ` +
-      `unit's ReadWritePaths= via "systemctl edit caddy".`;
+    return i18n.t("errors.path_outside_sandbox", { allowed: readWritePaths.join(", "), path });
   }
   try {
     await cockpit.spawn(["mkdir", "-p", path], { superuser: "try", err: "message" });
@@ -4219,10 +4217,7 @@ export async function checkLogFileWritable(filePath: string): Promise<string | n
 
   const readWritePaths = await getCaddyReadWritePaths();
   if (readWritePaths && readWritePaths.length > 0 && !readWritePaths.some(p => isPathWithin(filePath, p))) {
-    return `The caddy service is sandboxed (systemd ReadWritePaths=) to only: ${readWritePaths.join(", ")}. ` +
-      `"${filePath}" falls outside all of them, so Caddy would never be able to write there regardless of ` +
-      `file permissions — choose a path under one of the allowed directories, or add this path to the ` +
-      `unit's ReadWritePaths= via "systemctl edit caddy".`;
+    return i18n.t("errors.path_outside_sandbox", { allowed: readWritePaths.join(", "), path: filePath });
   }
   try {
     await cockpit.spawn(["mkdir", "-p", dir], { superuser: "try", err: "message" });
@@ -4796,7 +4791,7 @@ export async function syncGlobalOptions(opts: GlobalOptions): Promise<void> {
   ]);
   for (const logPath of logPaths) {
     const err = await checkLogFileWritable(logPath);
-    if (err) throw new CaddyfileError(`Log file "${logPath}" isn't writable by Caddy: ${err}`);
+    if (err) throw new CaddyfileError(i18n.t("errors.log_file_not_writable", { path: logPath, error: err }));
   }
   await fsWriteFile(MAIN_CADDYFILE, patched, "try");
   if (proxyConfPatched !== proxyConfDisk) await fsWriteFile(PROXY_CONF_PATH, proxyConfPatched, "try");
@@ -4865,8 +4860,8 @@ export function scanConfigIssues(mainContent: string, proxyConfContent: string):
     effectiveLifetime = lifetime;
     findings.push({
       id: "stale-cert-issuer-directive",
-      title: "Replace the old global certificate-lifetime directive",
-      explanation: `An older version of this plugin wrote the shared internal-issuer lifetime as a real Caddy directive (\`cert_issuer\`). Caddy rejects that as soon as any proxy without a hostname also sets its own certificate lifetime — it sees two different definitions of the same default certificate policy and refuses to reload ("automation policy from site block is also default/catch-all policy ... in conflict"). The value (${lifetime}) is kept, just stored safely as a comment instead, which Caddy ignores.`,
+      title: i18n.t("config_check.cert_issuer_title"),
+      explanation: i18n.t("config_check.cert_issuer_explanation", { lifetime }),
       before: certIssuerMatch[0].trim(),
       after: `${INTERNAL_LIFETIME_MARKER} ${lifetime}`,
       fix: (main, proxyConf) => {
@@ -4908,8 +4903,8 @@ export function scanConfigIssues(mainContent: string, proxyConfContent: string):
       const newHeaderLine = `http://${stripScheme(block.address)} {`;
       findings.push({
         id: `missing-http-scheme:${idSuffix}`,
-        title: `Mark ${label} as explicitly plain HTTP`,
-        explanation: "Caddy only excludes a site from its automatic-HTTPS bookkeeping when the address explicitly says \"http://\" — a bare address is still eligible even with TLS off in this app, and can silently claim the shared internal-issuer policy with no certificate settings at all, which then conflicts with any other hostless proxy that has an explicit lifetime.",
+        title: i18n.t("config_check.http_scheme_title", { target: label }),
+        explanation: i18n.t("config_check.http_scheme_explanation"),
         before: `${block.address} {`,
         after: newHeaderLine,
         fix: (main, proxyConf) => ({
@@ -4930,10 +4925,13 @@ export function scanConfigIssues(mainContent: string, proxyConfContent: string):
           : block.raw.replace(/issuer internal \{\s*\n[ \t]*lifetime\s+\S+\s*\n[ \t]*\}/, "issuer internal");
         findings.push({
           id: `lifetime-drift:${idSuffix}`,
-          title: `Sync ${label} to the shared certificate lifetime`,
-          explanation: `This has no hostname, so it must use the exact same internal-issuer lifetime as every other hostless proxy/server — Caddy allows only one shared policy for all of them. It currently has ${current ? `"${current}"` : "no explicit lifetime (Caddy's 12h default)"}, but the shared value is ${effectiveLifetime ? `"${effectiveLifetime}"` : "unset (Caddy's 12h default)"}.`,
-          before: current ? `lifetime ${current}` : "(no explicit lifetime)",
-          after: effectiveLifetime ? `lifetime ${effectiveLifetime}` : "(no explicit lifetime)",
+          title: i18n.t("config_check.lifetime_drift_title", { target: label }),
+          explanation: i18n.t("config_check.lifetime_drift_explanation", {
+            current: current ? `"${current}"` : i18n.t("config_check.lifetime_drift_current_none"),
+            shared: effectiveLifetime ? `"${effectiveLifetime}"` : i18n.t("config_check.lifetime_drift_shared_none"),
+          }),
+          before: current ? `lifetime ${current}` : i18n.t("config_check.no_explicit_lifetime"),
+          after: effectiveLifetime ? `lifetime ${effectiveLifetime}` : i18n.t("config_check.no_explicit_lifetime"),
           fix: (main, proxyConf) => ({ main, proxyConf: proxyConf.replace(block.raw, fixedRaw) }),
         });
       }
@@ -4944,7 +4942,7 @@ export function scanConfigIssues(mainContent: string, proxyConfContent: string):
     const serverKey = block.port !== undefined ? serverKeyByPort.get(String(block.port)) : undefined;
     if (serverKey) {
       const def = defByKey.get(serverKey);
-      if (def) checkBlock(block, def.tls, namedServerIsHostless(def.listenAddresses), `server "${def.name}"`, `server:${def.key}`);
+      if (def) checkBlock(block, def.tls, namedServerIsHostless(def.listenAddresses), i18n.t("config_check.target_server", { name: def.name }), `server:${def.key}`);
       continue;
     }
     const tlsEnabled = hasExplicitTlsDirective(block.raw);
@@ -4989,7 +4987,7 @@ export async function runConfigFixes(selectedIds: Set<string>): Promise<ConfigFi
   ]);
   for (const logPath of logPaths) {
     const err = await checkLogFileWritable(logPath);
-    if (err) throw new CaddyfileError(`Log file "${logPath}" isn't writable by Caddy: ${err}`);
+    if (err) throw new CaddyfileError(i18n.t("errors.log_file_not_writable", { path: logPath, error: err }));
   }
   await fsWriteFile(MAIN_CADDYFILE, main, "try");
   await fsWriteFile(PROXY_CONF_PATH, proxyConf, "try");

@@ -142,7 +142,7 @@ export function EditServerDialog({ def, onSave, onClose }: Props) {
                       isDanger
                       onClick={() => removeAddress(i)}
                       isDisabled={isLocked}
-                      aria-label={`Remove ${addr}`}
+                      aria-label={t("servers.remove_address", { address: addr })}
                     >×</Button>
                   </div>
                 ))}

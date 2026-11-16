@@ -58,8 +58,8 @@ function MatcherCell({ matchers }: { matchers?: RouteMatch }) {
   matchers.method?.forEach((m, i) => chips.push(
     <Label key={`m${i}`} isCompact color="orange" variant="outline">{m}</Label>
   ));
-  if (matchers.header) chips.push(<Label key="hdr" isCompact color="teal" variant="outline">header</Label>);
-  if (matchers.query) chips.push(<Label key="qry" isCompact color="teal" variant="outline">query</Label>);
+  if (matchers.header) chips.push(<Label key="hdr" isCompact color="teal" variant="outline">{t("matchers.type_header")}</Label>);
+  if (matchers.query) chips.push(<Label key="qry" isCompact color="teal" variant="outline">{t("matchers.type_query")}</Label>);
   if (matchers.remote_ip) chips.push(<Label key="ip" isCompact color="grey" variant="outline">IP</Label>);
   return (
     <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap", alignItems: "center" }}>
@@ -81,14 +81,14 @@ function FlagChips({ proxy, t }: { proxy: ProxyEntry; t: (k: string) => string }
   if (proxy.redirect) chips.push({ label: String(proxy.redirect.code), color: "purple" });
   if (proxy.staticResponse?.close) chips.push({ label: t("proxies.indicator_close"), color: "grey" });
   if (proxy.rewrite) chips.push({ label: t(`rewrite.type_${proxy.rewrite.type}`), color: "teal" });
-  if (proxy.fileServer?.browse) chips.push({ label: "browse", color: "teal" });
+  if (proxy.fileServer?.browse) chips.push({ label: t("proxies.indicator_browse"), color: "teal" });
   if (proxy.compress) chips.push({ label: t("proxies.indicator_compress"), color: "teal" });
   if (proxy.basicAuth?.length) chips.push({ label: t("proxies.indicator_auth"), color: "red" });
   if (proxy.dialTimeout ?? proxy.responseHeaderTimeout) chips.push({ label: t("proxies.indicator_timeouts"), color: "grey" });
   if (proxy.accessLog) chips.push({ label: t("access_log.indicator"), color: "teal" });
   if (proxy.forwardAuth) chips.push({ label: t("forward_auth.indicator"), color: "purple" });
   if (proxy.mtls) chips.push({ label: t("tls_policy.indicator_mtls"), color: "orange" });
-  if (proxy.handlePath) chips.push({ label: "strip prefix", color: "teal" });
+  if (proxy.handlePath) chips.push({ label: t("proxies.indicator_strip_prefix"), color: "teal" });
   if (chips.length === 0) return null;
   return (
     <div style={{ display: "flex", gap: "0.2rem", flexWrap: "wrap", marginTop: "0.25rem" }}>
