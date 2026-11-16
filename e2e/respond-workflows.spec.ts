@@ -95,5 +95,5 @@ test('respond route on a port already used by a redirect is rejected', async ({ 
   await modal.locator('#respond-port').fill('19185');
   await modal.locator('#respond-status').fill('200');
   await modal.getByRole('button', { name: /^add response$/i }).click();
-  await expect(modal.getByText(/port.*already/i)).toBeVisible({ timeout: 5000 });
+  await expect(modal.getByText(/port \d+ is already in use/i)).toBeVisible({ timeout: 5000 });
 });

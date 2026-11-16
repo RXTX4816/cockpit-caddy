@@ -2040,6 +2040,15 @@ describe("buildServerEntry — fileServer", () => {
 });
 
 describe("parseProxies — fileServer round-trip", () => {
+  it("reads the root from the vars handler the Caddyfile adapter emits (#245)", () => {
+    const config = makeConfig([
+      { handler: "vars", root: "/srv/www" } as import("./types").CaddyHandler,
+      { handler: "file_server", hide: ["/etc/caddy/Caddyfile"] } as import("./types").CaddyHandler,
+    ]);
+    const [p] = parseProxies(config);
+    expect(p.fileServer?.root).toBe("/srv/www");
+  });
+
   it("parses file_server handler", () => {
     const config = makeConfig([{ handler: "file_server", root: "/var/www/html" }]);
     const [p] = parseProxies(config);

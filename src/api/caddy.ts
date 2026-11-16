@@ -2171,7 +2171,15 @@ function parseRouteToEntry(
       tlsSkipVerify: false,
       serverKey: key,
       namedServerKey,
-      fileServer: { root: fsHandle.root ?? "/", browse: fsHandle.browse !== undefined },
+      // The Caddyfile adapter turns `root * <dir>` into a separate `vars` handler and
+      // leaves file_server without a root (#245). Never fall back to "/": saving that
+      // back would serve the whole filesystem; an empty root fails the required field instead.
+      fileServer: {
+        root: fsHandle.root
+          ?? (effectiveHandles.find(h => h.handler === "vars" && typeof (h as { root?: unknown }).root === "string") as { root?: string } | undefined)?.root
+          ?? "",
+        browse: fsHandle.browse !== undefined,
+      },
       requestBodyMaxSize: parseRequestBodyMaxSize(effectiveHandles),
       compress: fsCompress || undefined,
       basicAuth: fsBasicAuth?.length ? fsBasicAuth : undefined,

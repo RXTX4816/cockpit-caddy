@@ -103,5 +103,5 @@ test('redirect on a port already used by a proxy is rejected', async ({ pluginPa
   await modal.locator('#redirect-port').fill('19145');
   await modal.locator('#redirect-to').fill('https://example.test/');
   await modal.getByRole('button', { name: /^add redirect$/i }).click();
-  await expect(modal.getByText(/port.*already/i)).toBeVisible({ timeout: 5000 });
+  await expect(modal.getByText(/port \d+ is already in use/i)).toBeVisible({ timeout: 5000 });
 });
