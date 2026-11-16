@@ -117,5 +117,5 @@ test('static site on a port already used by a redirect is rejected', async ({ pl
   await modal.locator('#static-port').fill('19166');
   await modal.locator('#static-root').fill('/var/www/e2e-19166');
   await modal.getByRole('button', { name: /^add static server$/i }).click();
-  await expect(modal.getByText(/port.*already/i)).toBeVisible({ timeout: 5000 });
+  await expect(modal.getByText(/port \d+ is already in use/i)).toBeVisible({ timeout: 5000 });
 });

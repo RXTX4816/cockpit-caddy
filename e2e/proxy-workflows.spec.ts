@@ -164,7 +164,7 @@ test('two standalone proxies can share a port via distinct subdomains', async ({
   await modal.locator('#target-port').fill('3011');
   await modal.getByRole('button', { name: /add proxy/i }).click();
   // No "port already in use" validation error should block confirmation.
-  await expect(modal.getByText(/port.*already/i)).not.toBeVisible();
+  await expect(modal.getByText(/port \d+ is already in use/i)).not.toBeVisible();
   await modal.getByRole('button', { name: /^confirm$/i }).click();
   await expect(modal).not.toBeVisible({ timeout: 15000 });
 
@@ -238,5 +238,5 @@ test('two hostless proxies on the same port still conflict', async ({ pluginPage
   await modal.getByLabel(/target host/i).fill('localhost');
   await modal.locator('#target-port').fill('3013');
   await modal.getByRole('button', { name: /add proxy/i }).click();
-  await expect(modal.getByText(/port.*already/i)).toBeVisible({ timeout: 5000 });
+  await expect(modal.getByText(/port \d+ is already in use/i)).toBeVisible({ timeout: 5000 });
 });
