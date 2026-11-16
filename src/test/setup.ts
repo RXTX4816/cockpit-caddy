@@ -7,6 +7,7 @@ await import("../i18n");
 
 const mockSpawn = vi.fn();
 const mockHttp = vi.fn();
-vi.stubGlobal("cockpit", { spawn: mockSpawn, http: mockHttp });
+const mockUser = vi.fn();
+vi.stubGlobal("cockpit", { spawn: mockSpawn, http: mockHttp, user: mockUser });
 
-export { mockSpawn, mockHttp };
+export { mockSpawn, mockHttp, mockUser };

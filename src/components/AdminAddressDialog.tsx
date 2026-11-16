@@ -19,6 +19,7 @@ import { useAdminAddress } from "../hooks/useAdminAddress";
 import { useLogContainer } from "../hooks/useLogContainer";
 import { ADMIN_TCP_DEFAULT, ADMIN_SOCKET_DEFAULT } from "../api/caddy";
 import { testTcpConnection, testUnixSocket, testDockerContainer } from "../api";
+import type { DockerTestResult } from "../api";
 
 interface Props {
   onClose: () => void;
@@ -29,16 +30,17 @@ type TestResult = "ok" | "fail" | null;
 export function AdminAddressDialog({ onClose }: Props) {
   const { t } = useTranslation();
   const { tcp, socket, save } = useAdminAddress();
-  const { container, save: saveContainer } = useLogContainer();
+  const { container, dockerHost, save: saveContainer } = useLogContainer();
   const [tcpValue, setTcpValue] = useState(tcp);
   const [socketValue, setSocketValue] = useState(socket);
   const [containerValue, setContainerValue] = useState(container);
+  const [dockerHostValue, setDockerHostValue] = useState(dockerHost);
   const [testingTcp, setTestingTcp] = useState(false);
   const [testingSocket, setTestingSocket] = useState(false);
   const [testingContainer, setTestingContainer] = useState(false);
   const [tcpResult, setTcpResult] = useState<TestResult>(null);
   const [socketResult, setSocketResult] = useState<TestResult>(null);
-  const [containerResult, setContainerResult] = useState<TestResult>(null);
+  const [containerResult, setContainerResult] = useState<DockerTestResult | null>(null);
 
   const canSave = tcpResult === "ok" || socketResult === "ok";
 
@@ -61,8 +63,7 @@ export function AdminAddressDialog({ onClose }: Props) {
   async function handleTestContainer() {
     setTestingContainer(true);
     setContainerResult(null);
-    const ok = await testDockerContainer(containerValue);
-    setContainerResult(ok ? "ok" : "fail");
+    setContainerResult(await testDockerContainer(containerValue, dockerHostValue.trim()));
     setTestingContainer(false);
   }
 
@@ -76,7 +77,7 @@ export function AdminAddressDialog({ onClose }: Props) {
 
   function handleSave() {
     save(tcpValue, socketValue);
-    saveContainer(containerValue);
+    saveContainer(containerValue, dockerHostValue.trim());
     onClose();
   }
 
@@ -84,6 +85,7 @@ export function AdminAddressDialog({ onClose }: Props) {
     setTcpValue(ADMIN_TCP_DEFAULT);
     setSocketValue(ADMIN_SOCKET_DEFAULT);
     setContainerValue("");
+    setDockerHostValue("");
     setTcpResult(null);
     setSocketResult(null);
     setContainerResult(null);
@@ -177,6 +179,19 @@ export function AdminAddressDialog({ onClose }: Props) {
               </HelperText>
             </FormHelperText>
           </FormGroup>
+          <FormGroup label={t("admin_address.docker_host_label")} fieldId="aa-docker-host">
+            <TextInput
+              id="aa-docker-host"
+              value={dockerHostValue}
+              onChange={handleFieldChange(setDockerHostValue, () => setContainerResult(null))}
+              placeholder="unix:///run/user/1000/docker.sock"
+            />
+            <FormHelperText>
+              <HelperText>
+                <HelperTextItem>{t("admin_address.docker_host_help")}</HelperTextItem>
+              </HelperText>
+            </FormHelperText>
+          </FormGroup>
           <FormGroup label="" fieldId="aa-container-test">
             <Button
               id="aa-container-test"
@@ -191,8 +206,14 @@ export function AdminAddressDialog({ onClose }: Props) {
             {containerResult === "ok" && (
               <Alert variant="success" isInline title={t("admin_address.test_ok")} style={{ marginTop: "0.5rem" }} />
             )}
-            {containerResult === "fail" && (
+            {containerResult === "not-running" && (
               <Alert variant="danger" isInline title={t("admin_address.test_container_fail")} style={{ marginTop: "0.5rem" }} />
+            )}
+            {containerResult === "socket-missing" && (
+              <Alert variant="danger" isInline title={t("admin_address.test_docker_socket_missing")} style={{ marginTop: "0.5rem" }} />
+            )}
+            {containerResult === "socket-unreadable" && (
+              <Alert variant="danger" isInline title={t("admin_address.test_docker_socket_unreadable")} style={{ marginTop: "0.5rem" }} />
             )}
           </FormGroup>
         </Form>
