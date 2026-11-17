@@ -743,6 +743,39 @@ function regexReplaceToCaddy(replace: string): string {
 }
 
 // ---------------------------------------------------------------------------
+// Caddyfile quoting — #251
+// ---------------------------------------------------------------------------
+
+/**
+ * Turns a user-entered value into exactly one Caddyfile token that Caddy reads back verbatim.
+ * Plain values stay as they are (unless `always`); otherwise double quotes with `\"` escapes.
+ * Caddy's lexer has no escape for a backslash, so a value with `\` right before a quote or at
+ * the end uses backticks (no escapes at all), and a value with newlines, or one that fits
+ * neither form, uses a heredoc whose marker occurs nowhere in the value. The body and marker sit at column 0, so Caddy strips
+ * no indentation from it.
+ */
+export function caddyQuote(value: string, opts: { always?: boolean } = {}): string {
+  const needsQuotes = opts.always || value === "" || /[\s"`\\]/.test(value) || value.startsWith("#") || value === "{" || value === "}";
+  if (!value.includes("\n") && !value.includes("\r")) {
+    if (!needsQuotes) return value;
+    if (!/\\("|$)/.test(value)) return `"${value.replace(/"/g, '\\"')}"`;
+    if (!value.includes("`")) return `\`${value}\``;
+  }
+  // Caddy's lexer ends a heredoc as soon as the text read so far ends with the marker, even
+  // mid-line, so the marker must not occur anywhere in the value.
+  let marker = "END";
+  for (let i = 1; value.includes(marker); i++) marker = `END${i}`;
+  return `<<${marker}\n${value}\n${marker}`;
+}
+
+/** One `header` / `header_up` line for a header operation, values quoted for Caddy (#251). */
+function headerOpLine(prefix: string, h: import("./types").HeaderOperation, opts: { quoteSet?: boolean } = {}): string {
+  if (h.op === "delete") return `${prefix} -${h.name}`;
+  if (h.op === "add") return `${prefix} +${h.name} ${caddyQuote(h.value ?? "")}`;
+  return `${prefix} ${h.name} ${caddyQuote(h.value ?? "", { always: opts.quoteSet })}`;
+}
+
+// ---------------------------------------------------------------------------
 // Route Matcher helpers — #48
 // ---------------------------------------------------------------------------
 
@@ -771,11 +804,11 @@ function buildMatcherCaddyLines(m: import("./types").RouteMatch, name: string, i
   // the "*" value, and query takes `param=value` pairs.
   if (m.header) {
     for (const [hdr, vals] of Object.entries(m.header)) {
-      lines.push(`${indent}\theader ${hdr} ${presenceValues(vals).join(" ")}`);
+      lines.push(`${indent}\theader ${hdr} ${presenceValues(vals).map(v => caddyQuote(v)).join(" ")}`);
     }
   }
   if (m.query) {
-    const pairs = Object.entries(m.query).flatMap(([param, vals]) => presenceValues(vals).map(v => `${param}=${v}`));
+    const pairs = Object.entries(m.query).flatMap(([param, vals]) => presenceValues(vals).map(v => caddyQuote(`${param}=${v}`)));
     if (pairs.length) lines.push(`${indent}\tquery ${pairs.join(" ")}`);
   }
   if (m.remote_ip?.ranges.length) {
@@ -1131,9 +1164,7 @@ function buildReverseProxyLines(
   const upstreams = buildUpstreamList(p);
 
   const headerLines = (p.requestHeaders ?? []).map(h => {
-    if (h.op === "delete") return `\t\theader_up -${h.name}`;
-    if (h.op === "add") return `\t\theader_up +${h.name} ${h.value ?? ""}`;
-    return `\t\theader_up ${h.name} ${h.value ?? ""}`;
+    return headerOpLine("\t\theader_up", h);
   });
 
   const transportLines = buildTransportLines(p);
@@ -1270,12 +1301,12 @@ function buildErrorHandlerCaddyLines(handlers: import("./types").ErrorHandlerCon
     } else if (h.type === "static") {
       lines.push(`\t\trewrite * /{http.error.status_code}.html`);
       lines.push(`\t\tfile_server {`);
-      lines.push(`\t\t\troot ${h.filePath ?? "/var/www/errors"}`);
+      lines.push(`\t\t\troot ${caddyQuote(h.filePath ?? "/var/www/errors")}`);
       lines.push(`\t\t}`);
     } else {
       const body = h.body ?? "{http.error.status_code} {http.error.status_text}";
       const sc = h.statusCode ? ` ${h.statusCode}` : "";
-      lines.push(`\t\trespond "${body}"${sc}`);
+      lines.push(`\t\trespond ${caddyQuote(body, { always: true })}${sc}`);
     }
     lines.push("\t}");
   }
@@ -1458,11 +1489,11 @@ function buildRouteHandlerLines(p: ProxyEntry, indent: string): string[] {
   if (p.staticResponse) {
     const { statusCode, body, close } = p.staticResponse;
     if (body && close) {
-      lines.push(`${indent}respond "${body}" ${statusCode} {`);
+      lines.push(`${indent}respond ${caddyQuote(body, { always: true })} ${statusCode} {`);
       lines.push(`${indent}\tclose`);
       lines.push(`${indent}}`);
     } else if (body) {
-      lines.push(`${indent}respond "${body}" ${statusCode}`);
+      lines.push(`${indent}respond ${caddyQuote(body, { always: true })} ${statusCode}`);
     } else if (close) {
       lines.push(`${indent}respond ${statusCode} {`);
       lines.push(`${indent}\tclose`);
@@ -1480,11 +1511,9 @@ function buildRouteHandlerLines(p: ProxyEntry, indent: string): string[] {
       lines.push(`${indent}}`);
     }
     for (const h of p.responseHeaders ?? []) {
-      if (h.op === "delete") lines.push(`${indent}header -${h.name}`);
-      else if (h.op === "add") lines.push(`${indent}header +${h.name} ${h.value ?? ""}`);
-      else lines.push(`${indent}header ${h.name} "${h.value ?? ""}"`);
+      lines.push(headerOpLine(`${indent}header`, h, { quoteSet: true }));
     }
-    lines.push(`${indent}root * ${p.fileServer.root}`);
+    lines.push(`${indent}root * ${caddyQuote(p.fileServer.root)}`);
     lines.push(p.fileServer.browse ? `${indent}file_server browse` : `${indent}file_server`);
   } else if (p.phpFastcgi) {
     if (p.compress) lines.push(`${indent}encode gzip zstd`);
@@ -1494,9 +1523,7 @@ function buildRouteHandlerLines(p: ProxyEntry, indent: string): string[] {
       lines.push(`${indent}}`);
     }
     for (const h of p.responseHeaders ?? []) {
-      if (h.op === "delete") lines.push(`${indent}header -${h.name}`);
-      else if (h.op === "add") lines.push(`${indent}header +${h.name} ${h.value ?? ""}`);
-      else lines.push(`${indent}header ${h.name} "${h.value ?? ""}"`);
+      lines.push(headerOpLine(`${indent}header`, h, { quoteSet: true }));
     }
     lines.push(`${indent}root * ${p.phpFastcgi.root}`);
     const { upstream, index, splitPath, env } = p.phpFastcgi;
@@ -1505,7 +1532,7 @@ function buildRouteHandlerLines(p: ProxyEntry, indent: string): string[] {
       lines.push(`${indent}php_fastcgi ${upstream} {`);
       if (index) lines.push(`${indent}\tindex ${index}`);
       if (splitPath?.length) lines.push(`${indent}\tsplit ${splitPath.join(" ")}`);
-      for (const [k, v] of envEntries) lines.push(`${indent}\tenv ${k} ${v}`);
+      for (const [k, v] of envEntries) lines.push(`${indent}\tenv ${k} ${caddyQuote(v)}`);
       lines.push(`${indent}}`);
     } else {
       lines.push(`${indent}php_fastcgi ${upstream}`);
@@ -1518,9 +1545,7 @@ function buildRouteHandlerLines(p: ProxyEntry, indent: string): string[] {
       lines.push(`${indent}}`);
     }
     for (const h of p.responseHeaders ?? []) {
-      if (h.op === "delete") lines.push(`${indent}header -${h.name}`);
-      else if (h.op === "add") lines.push(`${indent}header +${h.name} ${h.value ?? ""}`);
-      else lines.push(`${indent}header ${h.name} "${h.value ?? ""}"`);
+      lines.push(headerOpLine(`${indent}header`, h, { quoteSet: true }));
     }
     if (p.rewrite) lines.push(...buildRewriteCaddyLines(p.rewrite, p.externalPort, indent));
     if (p.forwardAuth) {
@@ -1715,11 +1740,9 @@ function patchRawBlock(raw: string, proxy: ProxyEntry): string {
     if (proxy.compress) kept.push("\tencode gzip zstd");
     if (proxy.basicAuth?.length) kept.push(...buildBasicAuthCaddyLines(proxy.basicAuth));
     for (const h of proxy.responseHeaders ?? []) {
-      if (h.op === "delete") kept.push(`\theader -${h.name}`);
-      else if (h.op === "add") kept.push(`\theader +${h.name} ${h.value ?? ""}`);
-      else kept.push(`\theader ${h.name} "${h.value ?? ""}"`);
+      kept.push(headerOpLine(`\theader`, h, { quoteSet: true }));
     }
-    kept.push(`\troot * ${proxy.fileServer.root}`);
+    kept.push(`\troot * ${caddyQuote(proxy.fileServer.root)}`);
     kept.push(proxy.fileServer.browse ? "\tfile_server browse" : "\tfile_server");
   } else {
     if (proxy.compress) kept.push("\tencode gzip zstd");
@@ -2206,8 +2229,8 @@ function parseRouteToEntry(
     const fsCompress = effectiveHandles.some(h => h.handler === "encode");
     const fsAuthHandle = effectiveHandles.find(h => h.handler === "authentication");
     const fsBasicAuth = fsAuthHandle ? parseBasicAuthJson(fsAuthHandle) : undefined;
-    const fsHeadersHandle = effectiveHandles.find(h => h.handler === "headers");
-    const fsResponseHeaders = fsHeadersHandle ? parseResponseHeadersJson(fsHeadersHandle) : [];
+    // The Caddyfile adapter emits one headers handler per `header` line, so read them all.
+    const fsResponseHeaders = effectiveHandles.flatMap(parseResponseHeadersJson);
     const fsTls = serverHasTls(server, automationPolicies, externalHost);
     const fsTlsPolicy = Array.isArray(server.tls_connection_policies) ? server.tls_connection_policies[0] : undefined;
     return {
@@ -2296,8 +2319,7 @@ function parseRouteToEntry(
   const basicAuth = authHandle ? parseBasicAuthJson(authHandle) : undefined;
   const rewriteHandle = effectiveHandles.find(h => h.handler === "rewrite");
   const rewrite = rewriteHandle ? parseRewriteFromHandle(rewriteHandle) : undefined;
-  const headersHandle = effectiveHandles.find(h => h.handler === "headers");
-  const responseHeadersParsed = headersHandle ? parseResponseHeadersJson(headersHandle) : [];
+  const responseHeadersParsed = effectiveHandles.flatMap(parseResponseHeadersJson);
   const requestHeaders = parseRequestHeadersJson(rp.headers as Record<string, unknown> | undefined);
 
   // Detect handle_path pattern: a strip_prefix rewrite whose value matches the path matcher prefix

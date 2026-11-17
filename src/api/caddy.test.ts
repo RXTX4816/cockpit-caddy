@@ -14,6 +14,7 @@ import {
   CONF_HEADER,
   LEGACY_CONF_HEADER,
   proxyToBlock,
+  caddyQuote,
   buildServerEntry,
   parseProxies,
   surgicallyReplaceBlock,
@@ -4210,5 +4211,29 @@ describe("multiple hostnames — parse, edit, write round trips (#208)", () => {
     expect(out).toContain("a.example.com:443 {");
     expect(surgicallyRemoveBlock(`example.com, www.example.com {\n\treverse_proxy localhost:8000\n}\n`, 443, "example.com, www.example.com"))
       .not.toContain("example.com");
+  });
+});
+
+describe("caddyQuote (#251)", () => {
+  it("leaves plain values and placeholders alone", () => {
+    expect(caddyQuote("plain")).toBe("plain");
+    expect(caddyQuote("{host}")).toBe("{host}");
+  });
+  it("double-quotes spaces, quotes, empty values and comment-like values", () => {
+    expect(caddyQuote("two words")).toBe('"two words"');
+    expect(caddyQuote('say "hi"')).toBe('"say \\"hi\\""');
+    expect(caddyQuote("")).toBe('""');
+    expect(caddyQuote("#x")).toBe('"#x"');
+  });
+  it("quotes plain values when asked to", () => {
+    expect(caddyQuote("OK", { always: true })).toBe('"OK"');
+  });
+  it("uses backticks when a backslash would escape the closing quote", () => {
+    expect(caddyQuote("C:\\dir\\")).toBe("`C:\\dir\\`");
+  });
+  it("uses a heredoc for newlines, with a marker that occurs nowhere in the value", () => {
+    expect(caddyQuote("a\nb")).toBe("<<END\na\nb\nEND");
+    expect(caddyQuote("END\nx")).toBe("<<END1\nEND\nx\nEND1");
+    expect(caddyQuote("the BACKEND\nx")).toBe("<<END1\nthe BACKEND\nx\nEND1");
   });
 });
