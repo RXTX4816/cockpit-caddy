@@ -241,3 +241,49 @@ describe.runIf(available || required)("user values are quoted so Caddy reads the
     expect(again.find(x => x.externalPort === 8082)?.staticResponse).toEqual({ statusCode: 201, body });
   });
 });
+
+describe.runIf(available || required)("PHP sites serve static files too (#247)", () => {
+  const php = { upstream: "localhost:9000", root: "/srv/php" };
+
+  function handlers(conf: string): string[] {
+    const out: string[] = [];
+    JSON.stringify(adapt(conf), (k, v) => {
+      if (k === "handler") out.push(v as string);
+      return v;
+    });
+    return out;
+  }
+
+  it.each([
+    ["hostless", {}],
+    ["with a hostname", { externalHost: "php.example.com", tls: true, externalPort: 443 }],
+  ])("a new PHP site (%s) gets file_server and still reads back as PHP", (_n, extra) => {
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, phpFastcgi: php, ...extra })]);
+    expect(conf).toMatch(/php_fastcgi localhost:9000\n\tfile_server\n/);
+    expect(handlers(conf)).toContain("file_server");
+    const [p] = readBack(conf);
+    expect(p.phpFastcgi).toEqual(php);
+    expect(p.fileServer).toBeUndefined();
+  });
+
+  it("a PHP root with a space reads back verbatim", () => {
+    const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, phpFastcgi: { ...php, root: "/srv/my app" } })]));
+    expect(p.phpFastcgi?.root).toBe("/srv/my app");
+  });
+
+  it.each([
+    ["without file_server", ""],
+    ["with file_server", "\tfile_server\n"],
+  ])("editing a hand-written PHP site %s keeps it a PHP site with one file_server", (_n, fs) => {
+    const conf = `${CONF_HEADER}\n\nphp.example.com {\n\troot * /srv/php\n\tphp_fastcgi localhost:9000\n${fs}}\n\nother.example.com {\n\treverse_proxy localhost:9000\n}\n`;
+    const p = readBack(conf).find(x => x.phpFastcgi)!;
+    expect(p.phpFastcgi).toEqual(php);
+    const edited = surgicallyWriteProxy(conf, { ...p, phpFastcgi: { ...php, index: "app.php" } });
+    const block = edited.slice(edited.indexOf("php.example.com {"), edited.indexOf("other.example.com"));
+    expect(block).not.toContain("reverse_proxy");
+    expect(block.match(/file_server/g)).toHaveLength(1);
+    const again = readBack(edited);
+    expect(again.find(x => x.externalHost === "php.example.com")?.phpFastcgi).toEqual({ ...php, index: "app.php" });
+    expect(again.find(x => x.externalHost === "other.example.com")?.targetPort).toBe(9000);
+  });
+});

@@ -1478,6 +1478,28 @@ function buildTlsPolicyBlockLines(
   return lines;
 }
 
+/**
+ * `root` + `php_fastcgi` + `file_server` for a PHP site. php_fastcgi only proxies `*.php` and
+ * rewrites other existing files to themselves, so without file_server nothing serves CSS, JS or
+ * images (#247). Caddy's docs say it "should almost always be paired with" both.
+ */
+function buildPhpFastcgiLines(php: import("./types").PhpFastcgiConfig, indent: string): string[] {
+  const lines = [`${indent}root * ${caddyQuote(php.root)}`];
+  const { upstream, index, splitPath, env } = php;
+  const envEntries = env ? Object.entries(env) : [];
+  if (index || splitPath?.length || envEntries.length) {
+    lines.push(`${indent}php_fastcgi ${upstream} {`);
+    if (index) lines.push(`${indent}\tindex ${index}`);
+    if (splitPath?.length) lines.push(`${indent}\tsplit ${splitPath.join(" ")}`);
+    for (const [k, v] of envEntries) lines.push(`${indent}\tenv ${k} ${caddyQuote(v)}`);
+    lines.push(`${indent}}`);
+  } else {
+    lines.push(`${indent}php_fastcgi ${upstream}`);
+  }
+  lines.push(`${indent}file_server`);
+  return lines;
+}
+
 /** Builds handler lines for a route, at the given indent level (default single-tab). */
 function buildRouteHandlerLines(p: ProxyEntry, indent: string): string[] {
   const lines: string[] = [];
@@ -1525,18 +1547,7 @@ function buildRouteHandlerLines(p: ProxyEntry, indent: string): string[] {
     for (const h of p.responseHeaders ?? []) {
       lines.push(headerOpLine(`${indent}header`, h, { quoteSet: true }));
     }
-    lines.push(`${indent}root * ${p.phpFastcgi.root}`);
-    const { upstream, index, splitPath, env } = p.phpFastcgi;
-    const envEntries = env ? Object.entries(env) : [];
-    if (index || splitPath?.length || envEntries.length) {
-      lines.push(`${indent}php_fastcgi ${upstream} {`);
-      if (index) lines.push(`${indent}\tindex ${index}`);
-      if (splitPath?.length) lines.push(`${indent}\tsplit ${splitPath.join(" ")}`);
-      for (const [k, v] of envEntries) lines.push(`${indent}\tenv ${k} ${caddyQuote(v)}`);
-      lines.push(`${indent}}`);
-    } else {
-      lines.push(`${indent}php_fastcgi ${upstream}`);
-    }
+    lines.push(...buildPhpFastcgiLines(p.phpFastcgi, indent));
   } else {
     if (p.compress) lines.push(`${indent}encode gzip zstd`);
     if (p.basicAuth?.length) {
@@ -1716,8 +1727,9 @@ function patchRawBlock(raw: string, proxy: ProxyEntry): string {
         continue;
       }
 
-      // Skip top-level `reverse_proxy` directive, including any nested { } block
-      if (trimmed.startsWith("reverse_proxy") && (trimmed.length === 13 || trimmed[13] === " ")) {
+      // Skip top-level `reverse_proxy` / `php_fastcgi` directives, including any nested { } block
+      if ((trimmed.startsWith("reverse_proxy") && (trimmed.length === 13 || trimmed[13] === " "))
+        || (trimmed.startsWith("php_fastcgi") && (trimmed.length === 11 || trimmed[11] === " "))) {
         nestDepth += opens - closes;
         i++;
         while (i < closingIdx && nestDepth > 0) {
@@ -1744,6 +1756,12 @@ function patchRawBlock(raw: string, proxy: ProxyEntry): string {
     }
     kept.push(`\troot * ${caddyQuote(proxy.fileServer.root)}`);
     kept.push(proxy.fileServer.browse ? "\tfile_server browse" : "\tfile_server");
+  } else if (proxy.phpFastcgi) {
+    // A hand-written PHP site (#247): its root/php_fastcgi/file_server were skipped above.
+    if (proxy.compress) kept.push("\tencode gzip zstd");
+    if (proxy.basicAuth?.length) kept.push(...buildBasicAuthCaddyLines(proxy.basicAuth));
+    for (const h of proxy.responseHeaders ?? []) kept.push(headerOpLine("\theader", h, { quoteSet: true }));
+    kept.push(...buildPhpFastcgiLines(proxy.phpFastcgi, "\t"));
   } else {
     if (proxy.compress) kept.push("\tencode gzip zstd");
     if (proxy.basicAuth?.length) kept.push(...buildBasicAuthCaddyLines(proxy.basicAuth));

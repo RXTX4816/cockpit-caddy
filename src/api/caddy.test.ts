@@ -2147,7 +2147,8 @@ describe("proxyToBlock — phpFastcgi (#35)", () => {
     expect(result).toContain("php_fastcgi unix//run/php-fpm.sock");
     expect(result).not.toContain("php_fastcgi unix//run/php-fpm.sock {");
     expect(result).not.toContain("reverse_proxy");
-    expect(result).not.toContain("file_server");
+    // php_fastcgi alone serves no CSS/JS/images (#247)
+    expect(result).toContain("php_fastcgi unix//run/php-fpm.sock\n\tfile_server");
   });
 
   it("emits index/split/env inside a block when any option is set", () => {
