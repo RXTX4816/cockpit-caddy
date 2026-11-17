@@ -58,8 +58,42 @@ test('proxy with regex rewrite writes matcher and rewrite directive', async ({ p
   await expect(modal).not.toBeVisible({ timeout: 15000 });
 
   const conf = await readConf(page);
-  expect(conf).toContain('path_regexp rw ^/old/(.*)$');
-  expect(conf).toContain('/new/{re.rw.1}');
+  expect(conf).toContain('uri path_regexp ^/old/(.*)$ /new/$1');
+});
+
+// #254: after a reload Caddy runs the saved Caddyfile, which must replace only the matched
+// part of the path, as the instant-apply JSON does (not the whole URI).
+test('regex rewrite replaces only the matched part of the path after a reload', async ({ pluginPage: page }) => {
+  const targetPort = 19226;
+  await spawnCmd(page, ['bash', '-c', `fuser -k ${targetPort}/tcp 2>&1; true`]);
+  await spawnCmd(page, ['bash', '-c',
+    `nohup python3 -m http.server ${targetPort} >/tmp/e2e-backend-${targetPort}.log 2>&1 & disown`]);
+
+  try {
+    await waitForToolbar(page);
+    await page.getByRole('button', { name: /add proxy/i }).first().click();
+    const modal = page.getByRole('dialog');
+    await modal.getByLabel('External port').fill('19225');
+    await modal.getByLabel(/target host/i).fill('localhost');
+    await modal.locator('#target-port').fill(String(targetPort));
+    await modal.locator('#tls').uncheck();
+    await modal.getByRole('button', { name: /uri rewrite/i }).click();
+    await modal.locator('#rw-type-regex').click();
+    await modal.locator('#rw-find').fill('old');
+    await modal.locator('#rw-replace').fill('new');
+    await modal.getByRole('button', { name: /^add proxy$/i }).click();
+    await modal.getByRole('button', { name: /^confirm$/i }).click();
+    await expect(modal).not.toBeVisible({ timeout: 15000 });
+
+    await spawnCmd(page, ['caddy', 'reload', '--config', '/etc/caddy/Caddyfile']);
+    await waitForListener(page, 'http://localhost:19225/x/old/y');
+    await spawnCmd(page, ['bash', '-c', `curl -s -o /dev/null 'http://localhost:19225/x/old/y'; true`]);
+
+    const log = await spawnCmd(page, ['bash', '-c', `cat /tmp/e2e-backend-${targetPort}.log`]);
+    expect(log).toContain('"GET /x/new/y HTTP/1.1"');
+  } finally {
+    await spawnCmd(page, ['bash', '-c', `fuser -k ${targetPort}/tcp 2>&1; true`]);
+  }
 });
 
 test('URI rewrite changes the path the backend actually receives', async ({ pluginPage: page }) => {

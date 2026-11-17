@@ -6,7 +6,7 @@
  * the proxy list state and the raw cockpit-caddy.conf content.
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { readConf, CONF_HEADER } from './helpers';
+import { readConf, spawnCmd, CONF_HEADER } from './helpers';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
   await dismissAdminBanner(page);
@@ -239,4 +239,25 @@ test('two hostless proxies on the same port still conflict', async ({ pluginPage
   await modal.locator('#target-port').fill('3013');
   await modal.getByRole('button', { name: /add proxy/i }).click();
   await expect(modal.getByText(/port \d+ is already in use/i)).toBeVisible({ timeout: 5000 });
+});
+
+// #254: an IP in the host field binds that IP. The instant-apply JSON always did; the saved
+// Caddyfile needs `bind`, or the port opens on every interface after the next reload.
+test('an IP host keeps binding only that IP after a reload', async ({ pluginPage: page }) => {
+  await waitForToolbar(page);
+  await page.getByRole('button', { name: /add proxy/i }).first().click();
+  const modal = page.getByRole('dialog');
+  await modal.getByLabel('External port').fill('19254');
+  await modal.getByLabel(/external host/i).fill('127.0.0.1');
+  await modal.getByLabel(/target host/i).fill('localhost');
+  await modal.locator('#target-port').fill('3000');
+  await modal.locator('#tls').uncheck();
+  await modal.getByRole('button', { name: /^add proxy$/i }).click();
+  await modal.getByRole('button', { name: /^confirm$/i }).click();
+  await expect(modal).not.toBeVisible({ timeout: 15000 });
+
+  expect(await readConf(page)).toContain('\tbind 127.0.0.1');
+  await spawnCmd(page, ['caddy', 'reload', '--config', '/etc/caddy/Caddyfile']);
+  await expect.poll(async () => (await spawnCmd(page, ['bash', '-c', "ss -Hltn 'sport = :19254' | awk '{print $4}'"])).trim(), { timeout: 10000 })
+    .toBe('127.0.0.1:19254');
 });

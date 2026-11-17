@@ -1027,10 +1027,10 @@ describe("proxyToBlock — rewrite", () => {
     expect(rwIdx).toBeLessThan(rpIdx);
   });
 
-  it("emits path_regexp matcher + rewrite for regex mode", () => {
+  it("emits uri path_regexp for regex mode, replacing only the match like the JSON (#254)", () => {
     const result = proxyToBlock(proxy({ rewrite: { type: "regex", find: "^/old/(.*)", replace: "/new/$1" } }));
-    expect(result).toContain("path_regexp rw ^/old/(.*)");
-    expect(result).toContain("{re.rw.1}");
+    expect(result).toContain("uri path_regexp ^/old/(.*) /new/$1");
+    expect(result).not.toContain("@rw");
     expect(result).toContain("reverse_proxy");
   });
 
