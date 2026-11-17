@@ -370,6 +370,10 @@ export interface ProxyEntry {
    *  Caddy's automatic HTTPS (Let's Encrypt/ZeroSSL, no `tls` line, needs a public name),
    *  "internal" is Caddy's local CA (`tls internal`). Undefined means "internal". */
   tlsIssuer?: "acme" | "internal";
+  /** On-demand TLS for this site (#253): get the certificate at the first TLS handshake
+   *  (`tls { on_demand }`). The global `on_demand_tls` option only configures the ask
+   *  endpoint; it doesn't turn this on. */
+  tlsOnDemand?: boolean;
   /** Skip TLS verification when connecting to an https upstream */
   tlsSkipVerify: boolean;
   label?: string;

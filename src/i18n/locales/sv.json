@@ -543,14 +543,13 @@
     "acme_eab_placeholder": "Lämna tomt om det inte krävs",
     "acme_eab_help": "Uppgifter för External Account Binding som vissa leverantörer kräver (t.ex. ZeroSSL). Båda fälten måste anges tillsammans.",
     "on_demand_title": "TLS på begäran",
-    "on_demand_enabled": "Aktivera TLS på begäran",
-    "on_demand_enabled_help": "Caddy hämtar certifikat vid anslutningen för värdnamn som inte är kända vid start. Kräver en publikt nåbar server.",
+    "on_demand_enabled": "Konfigurera on demand-TLS",
+    "on_demand_enabled_help": "Anger slutpunkten Caddy frågar innan det hämtar ett certifikat on demand. Det slår inte på on demand-TLS: det är ett val per webbplats i dess HTTPS-inställningar.",
     "on_demand_no_ask_warning": "Ingen ask-URL angiven — Caddy utfärdar certifikat för vilken domän som helst utan auktorisering. Ange en ask-URL för att förhindra missbruk.",
     "on_demand_ask": "Ask-URL",
     "on_demand_ask_help": "Caddy frågar den här slutpunkten innan ett certifikat utfärdas. Den måste returnera HTTP 2xx för att tillåta utfärdandet.",
     "on_demand_interval": "Intervall för hastighetsbegränsning",
     "on_demand_burst": "Burst för hastighetsbegränsning",
-    "on_demand_burst_help": "Max antal utfärdade certifikat per intervall. Lämna båda tomma för ingen begränsning (rekommenderas inte).",
     "validation_burst": "Måste vara ett positivt heltal",
     "internal_tls_title": "Intern TLS (proxies utan värdnamn)",
     "internal_tls_note": "Caddy kan bara avgränsa en certifikatpolicy per värdnamn. Proxies/servrar utan värdnamn delar alla på den här enda inställningen — det går inte att ge två proxies utan värdnamn olika livslängd. Proxies med ett riktigt värdnamn kan fortfarande ange sin egen i avsnittet TLS-policy i redigeringsdialogen.",
@@ -605,7 +604,8 @@
     "proxy_protocol_allow": "Tillåtna käll-IP:n (valfritt)",
     "proxy_protocol_allow_help": "CIDR-intervall separerade med blanksteg som får skicka PROXY-protokollhuvuden — begränsa till lastbalanserarens egna IP:n för att förhindra förfalskade klient-IP:n. Lämna tomt för att acceptera alla källor.",
     "proxy_protocol_timeout": "Tidsgräns för läsning av huvudet (valfritt)",
-    "proxy_protocol_timeout_help": "Längsta väntetid på PROXY-protokollhuvudet innan Caddy ger upp (Go-varaktighet, t.ex. 2s). Lämna tomt för Caddys standard."
+    "proxy_protocol_timeout_help": "Längsta väntetid på PROXY-protokollhuvudet innan Caddy ger upp (Go-varaktighet, t.ex. 2s). Lämna tomt för Caddys standard.",
+    "on_demand_rate_deprecated": "Caddy rekommenderar inte längre interval och burst. Töm båda och lita på ask-slutpunkten i stället."
   },
   "ca": {
     "title": "Intern certifikatutfärdare",
@@ -855,6 +855,8 @@
     "acme_help": "Caddy hämtar och förnyar ett publikt certifikat. Namnet måste peka på den här servern och portarna 80 och 443 måste nås från internet.",
     "internal_help": "Signerat av Caddys egen CA: webbläsare litar bara på det där CA:ns rotcertifikat är installerat. Bra för interna namn.",
     "acme_needs_name": "Signerat av Caddys egen CA. Automatiska certifikat kräver ett publikt värdnamn i värdfältet.",
-    "off_help": "Webbplatsen serveras över vanlig HTTP."
+    "off_help": "Webbplatsen serveras över vanlig HTTP.",
+    "on_demand": "On demand: hämta certifikatet vid första TLS-handskakningen",
+    "on_demand_help": "För namn som inte är kända i förväg. Ange en ask-slutpunkt under Inställningar → On demand-TLS, annars kan vem som helst som pekar ett namn mot servern få Caddy att begära ett certifikat för det."
   }
 }

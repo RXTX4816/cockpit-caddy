@@ -543,14 +543,13 @@
     "acme_eab_placeholder": "Kosongkan jika tidak diperlukan",
     "acme_eab_help": "Kredensial External Account Binding yang diminta beberapa penyedia (mis. ZeroSSL). Kedua kolom harus diisi bersamaan.",
     "on_demand_title": "TLS sesuai permintaan",
-    "on_demand_enabled": "Aktifkan TLS sesuai permintaan",
-    "on_demand_enabled_help": "Caddy akan memperoleh sertifikat saat koneksi untuk nama host yang tidak diketahui saat mulai. Memerlukan server yang dapat dijangkau publik.",
+    "on_demand_enabled": "Atur TLS sesuai permintaan",
+    "on_demand_enabled_help": "Mengatur endpoint yang ditanya Caddy sebelum mengambil sertifikat sesuai permintaan. Ini tidak menyalakan TLS sesuai permintaan: itu opsi per situs di pengaturan HTTPS situs tersebut.",
     "on_demand_no_ask_warning": "URL ask belum diatur — Caddy akan menerbitkan sertifikat untuk domain apa pun tanpa otorisasi. Atur URL ask untuk mencegah penyalahgunaan.",
     "on_demand_ask": "URL ask",
     "on_demand_ask_help": "Caddy menanyakan endpoint ini sebelum menerbitkan sertifikat. Endpoint harus mengembalikan HTTP 2xx untuk mengizinkan penerbitan.",
     "on_demand_interval": "Interval batas laju",
     "on_demand_burst": "Lonjakan batas laju",
-    "on_demand_burst_help": "Jumlah maksimum sertifikat yang diterbitkan per interval. Kosongkan keduanya untuk tanpa batas laju (tidak disarankan).",
     "validation_burst": "Harus berupa bilangan bulat positif",
     "internal_tls_title": "TLS internal (proxy tanpa nama host)",
     "internal_tls_note": "Caddy hanya bisa membatasi kebijakan sertifikat berdasarkan nama host. Semua proxy/server tanpa nama host berbagi satu pengaturan ini — tidak ada cara memberi masa berlaku berbeda untuk dua proxy tanpa nama host. Proxy dengan nama host sungguhan tetap bisa mengatur miliknya sendiri di bagian Kebijakan TLS pada dialog edit.",
@@ -605,7 +604,8 @@
     "proxy_protocol_allow": "IP sumber yang diizinkan (opsional)",
     "proxy_protocol_allow_help": "Rentang CIDR yang dipisahkan spasi yang boleh mengirim header protokol PROXY — batasi ke IP penyeimbang beban Anda sendiri untuk mencegah pemalsuan IP klien. Kosongkan untuk menerima dari sumber mana pun.",
     "proxy_protocol_timeout": "Batas waktu baca header (opsional)",
-    "proxy_protocol_timeout_help": "Waktu tunggu maksimum untuk header protokol PROXY sebelum menyerah (durasi Go, mis. 2s). Kosongkan untuk bawaan Caddy."
+    "proxy_protocol_timeout_help": "Waktu tunggu maksimum untuk header protokol PROXY sebelum menyerah (durasi Go, mis. 2s). Kosongkan untuk bawaan Caddy.",
+    "on_demand_rate_deprecated": "Caddy tidak lagi menyarankan interval dan burst. Kosongkan keduanya dan andalkan endpoint ask."
   },
   "ca": {
     "title": "Otoritas sertifikat internal",
@@ -855,6 +855,8 @@
     "acme_help": "Caddy mengambil dan memperbarui sertifikat publik. Nama harus mengarah ke server ini, dan port 80 serta 443 harus bisa dijangkau dari internet.",
     "internal_help": "Ditandatangani CA milik Caddy: browser hanya memercayainya di tempat sertifikat root CA itu terpasang. Cocok untuk nama internal.",
     "acme_needs_name": "Ditandatangani CA milik Caddy. Sertifikat otomatis memerlukan nama host publik di kolom host.",
-    "off_help": "Situs disajikan lewat HTTP biasa."
+    "off_help": "Situs disajikan lewat HTTP biasa.",
+    "on_demand": "Sesuai permintaan: ambil sertifikat saat handshake TLS pertama",
+    "on_demand_help": "Untuk nama yang tidak diketahui sebelumnya. Atur endpoint ask di Pengaturan → TLS sesuai permintaan; jika tidak, siapa pun yang mengarahkan nama ke server ini bisa membuat Caddy meminta sertifikat untuknya."
   }
 }

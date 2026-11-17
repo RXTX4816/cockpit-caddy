@@ -45,3 +45,14 @@ describe("TLS mode (#246)", () => {
     expect(onChange).toHaveBeenCalledWith("acme");
   });
 });
+
+describe("on-demand TLS per site (#253)", () => {
+  it("shows the on-demand checkbox while TLS is on and reports changes", () => {
+    const onOnDemandChange = vi.fn();
+    const { rerender } = render(<TlsModeField id="m" value="acme" onChange={() => {}} publicName onDemand={false} onOnDemandChange={onOnDemandChange} />);
+    fireEvent.click(screen.getByLabelText("On-demand: get the certificate at the first TLS handshake"));
+    expect(onOnDemandChange).toHaveBeenCalledWith(true);
+    rerender(<TlsModeField id="m" value="off" onChange={() => {}} publicName onDemand={false} onOnDemandChange={onOnDemandChange} />);
+    expect(screen.queryByLabelText("On-demand: get the certificate at the first TLS handshake")).toBeNull();
+  });
+});

@@ -543,14 +543,13 @@
     "acme_eab_placeholder": "如不需要請留空",
     "acme_eab_help": "部分供應商（例如 ZeroSSL）要求的 External Account Binding 憑證資料。兩個欄位必須一起設定。",
     "on_demand_title": "隨選 TLS",
-    "on_demand_enabled": "啟用隨選 TLS",
-    "on_demand_enabled_help": "對於啟動時未知的主機名稱，Caddy 會在連線時取得憑證。需要可公開連線的伺服器。",
+    "on_demand_enabled": "設定按需 TLS",
+    "on_demand_enabled_help": "設定 Caddy 按需取得憑證前要詢問的端點。它不會開啟按需 TLS：開啟是每個網站 HTTPS 設定中的選項。",
     "on_demand_no_ask_warning": "未設定 ask URL——Caddy 會在未經授權的情況下為任何網域簽發憑證。請設定 ask URL 以防濫用。",
     "on_demand_ask": "ask URL",
     "on_demand_ask_help": "Caddy 在簽發憑證前會查詢此端點。它必須回傳 HTTP 2xx 才允許簽發。",
     "on_demand_interval": "速率限制間隔",
     "on_demand_burst": "速率限制突發量",
-    "on_demand_burst_help": "每個間隔內最多簽發的憑證數。兩項都留空表示不限速（不建議）。",
     "validation_burst": "必須是正整數",
     "internal_tls_title": "內部 TLS（無主機名稱的代理）",
     "internal_tls_note": "Caddy 只能依主機名稱限定憑證原則的範圍。所有無主機名稱的代理/伺服器共用這一個設定——無法為兩個無主機名稱的代理設定不同的有效期限。有真實主機名稱的代理仍可在其編輯對話框的「TLS 原則」區段中個別設定。",
@@ -605,7 +604,8 @@
     "proxy_protocol_allow": "允許的來源 IP（選填）",
     "proxy_protocol_allow_help": "以空格分隔、允許傳送 PROXY 通訊協定標頭的 CIDR 範圍——請限制為負載平衡器本身的 IP，以防用戶端 IP 遭偽造。留空則接受任何來源。",
     "proxy_protocol_timeout": "標頭讀取逾時（選填）",
-    "proxy_protocol_timeout_help": "放棄前等待 PROXY 通訊協定標頭的最長時間（Go 時間長度，例如 2s）。留空則使用 Caddy 預設。"
+    "proxy_protocol_timeout_help": "放棄前等待 PROXY 通訊協定標頭的最長時間（Go 時間長度，例如 2s）。留空則使用 Caddy 預設。",
+    "on_demand_rate_deprecated": "Caddy 已不再建議 interval 與 burst。請清空兩者，改用 ask 端點。"
   },
   "ca": {
     "title": "內部憑證授權單位",
@@ -855,6 +855,8 @@
     "acme_help": "Caddy 會取得並更新公開憑證。該名稱必須指向本伺服器，且 80 與 443 連接埠需能從網際網路存取。",
     "internal_help": "由 Caddy 自己的 CA 簽發：只有安裝了該 CA 根憑證的地方瀏覽器才會信任。適合內部名稱。",
     "acme_needs_name": "由 Caddy 自己的 CA 簽發。自動憑證需要在主機欄位填寫公開主機名稱。",
-    "off_help": "網站透過純 HTTP 提供服務。"
+    "off_help": "網站透過純 HTTP 提供服務。",
+    "on_demand": "按需：在首次 TLS 交握時取得憑證",
+    "on_demand_help": "適用於事先不知道的名稱。請在 設定 → 按需 TLS 中設定 ask 端點，否則任何把名稱指向本伺服器的人都能讓 Caddy 為其申請憑證。"
   }
 }

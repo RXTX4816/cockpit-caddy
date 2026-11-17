@@ -119,6 +119,7 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
 
   const publicName = hasPublicName(externalHost);
   const tlsMode: TlsMode = tlsModeChoice === "acme" && !publicName ? "internal" : tlsModeChoice;
+  const [tlsOnDemand, setTlsOnDemand] = useState(!!proxy.tlsOnDemand);
   const tls = tlsMode !== "off";
 
   function portError(): string | null {
@@ -294,7 +295,7 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
 
           {!proxy.namedServerKey && (
             <div>
-              <TlsModeField id="edit-tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isConfirming} />
+              <TlsModeField id="edit-tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isConfirming} onDemand={tlsOnDemand} onOnDemandChange={setTlsOnDemand} />
               <SectionActions onDefaults={() => setTlsModeChoice(defaultTlsMode(externalHost))} isDisabled={isConfirming} />
             </div>
           )}
@@ -430,6 +431,7 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
                   targetHost: targetHost.trim(),
                   targetPort: parseInt(targetPort, 10),
                   ...(proxy.namedServerKey ? { tls } : tlsModeToEntry(tlsMode, externalHost)),
+                  tlsOnDemand: tlsMode !== "off" && tlsOnDemand ? true : undefined,
                   tlsSkipVerify: targetScheme === "https" ? tlsSkipVerify : false,
                   compress: compress || undefined,
                   label: label.trim() || undefined,

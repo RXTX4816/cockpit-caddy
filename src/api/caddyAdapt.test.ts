@@ -10,7 +10,7 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync, writeFileSync, rmSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { CONF_HEADER, buildServerEntry, proxiesToCaddyfile, parseProxies, parseConfExternalAddresses, proxyAddressKeys, resolveInternalIssuerSettings, surgicallyWriteProxy, buildMigratedConfContent, migrateCaddyfile, parseConfTlsIssuerMap } from "./caddy";
+import { CONF_HEADER, buildServerEntry, proxiesToCaddyfile, parseProxies, parseConfExternalAddresses, proxyAddressKeys, resolveInternalIssuerSettings, surgicallyWriteProxy, buildMigratedConfContent, migrateCaddyfile, parseConfTlsIssuerMap, parseConfTlsOnDemandMap, parseConfTlsMap } from "./caddy";
 import type { CaddyConfig, CaddyServer, ProxyEntry } from "./types";
 
 function hasCaddy(): boolean {
@@ -44,11 +44,17 @@ function adapt(caddyfile: string): CaddyConfig {
 function readBack(conf: string): ProxyEntry[] {
   const ext = parseConfExternalAddresses(conf);
   const issuers = parseConfTlsIssuerMap(conf);
+  const onDemands = parseConfTlsOnDemandMap(conf);
+  const confTls = parseConfTlsMap(conf);
   return parseProxies(adapt(conf)).map(p => {
     const found = proxyAddressKeys(p).map(k => ext[k]).find(Boolean);
-    const withHost = { ...p, externalHost: p.externalHost ?? found?.host, externalScheme: p.externalScheme ?? found?.scheme };
+    const keys = proxyAddressKeys({ ...p, externalHost: p.externalHost ?? found?.host, externalScheme: p.externalScheme ?? found?.scheme });
+    const tls = p.tls || keys.some(k => confTls[k]);
+    const withHost = { ...p, tls, externalHost: p.externalHost ?? found?.host, externalScheme: p.externalScheme ?? found?.scheme };
     const issuer = proxyAddressKeys(withHost).map(k => issuers[k]).find(Boolean);
-    return issuer && withHost.tls && !withHost.customTls ? { ...withHost, tlsIssuer: issuer } : withHost;
+    const onDemand = proxyAddressKeys(withHost).some(k => onDemands[k]);
+    const withIssuer = issuer && withHost.tls && !withHost.customTls ? { ...withHost, tlsIssuer: issuer } : withHost;
+    return onDemand && withIssuer.tls ? { ...withIssuer, tlsOnDemand: true } : withIssuer;
   });
 }
 
@@ -470,5 +476,41 @@ describe.runIf(available || required)("TLS issuer: automatic ACME or the interna
   it("a hand-written tls internal on a public name reads back as internal", () => {
     const conf = `${CONF_HEADER}\n\napp.example.com {\n\ttls internal\n\treverse_proxy localhost:8000\n}\n`;
     expect(readBack(conf)[0]).toMatchObject({ tlsIssuer: "internal" });
+  });
+});
+
+describe.runIf(available || required)("per-site on-demand TLS (#253)", () => {
+  const onDemandPolicy = (conf: string) => (adapt(conf).apps?.tls?.automation?.policies ?? []).find(p => (p as { on_demand?: boolean }).on_demand);
+
+  it("an ACME site with on-demand writes tls { on_demand } and reads it back", () => {
+    const conf = proxiesToCaddyfile([entry({ externalHost: "app.example.com", tlsIssuer: "acme", tlsOnDemand: true })]);
+    expect(conf).toContain("\ttls {\n\t\ton_demand\n\t}");
+    expect(onDemandPolicy(conf)?.subjects).toEqual(["app.example.com"]);
+    expect(readBack(conf)[0]).toMatchObject({ tlsIssuer: "acme", tlsOnDemand: true });
+  });
+
+  it("an internal-CA site with on-demand keeps the internal issuer", () => {
+    const conf = proxiesToCaddyfile([entry({ externalHost: "app.example.com", tlsIssuer: "internal", tlsOnDemand: true })]);
+    expect(conf).toContain("\ttls {\n\t\tissuer internal\n\t\ton_demand\n\t}");
+    expect(onDemandPolicy(conf)?.issuers?.[0]?.module).toBe("internal");
+    expect(readBack(conf)[0]).toMatchObject({ tlsIssuer: "internal", tlsOnDemand: true });
+  });
+
+  it("a hostless internal-CA site can use on-demand too", () => {
+    const conf = proxiesToCaddyfile([entry({ tlsOnDemand: true })]);
+    expect(onDemandPolicy(conf)).toBeDefined();
+    expect(readBack(conf)[0]).toMatchObject({ tls: true, tlsOnDemand: true });
+  });
+
+  it("on-demand is dropped with TLS off", () => {
+    expect(proxiesToCaddyfile([entry({ tls: false, tlsOnDemand: true })])).not.toContain("on_demand");
+  });
+
+  it("editing a hand-written on-demand site keeps on_demand", () => {
+    const conf = `${CONF_HEADER}\n\napp.example.com {\n\ttls {\n\t\ton_demand\n\t}\n\treverse_proxy localhost:8000\n}\n`;
+    const p = readBack(conf)[0];
+    expect(p).toMatchObject({ tlsIssuer: "acme", tlsOnDemand: true });
+    const edited = surgicallyWriteProxy(conf, { ...p, targetPort: 8001 });
+    expect(readBack(edited)[0]).toMatchObject({ tlsIssuer: "acme", tlsOnDemand: true, targetPort: 8001 });
   });
 });

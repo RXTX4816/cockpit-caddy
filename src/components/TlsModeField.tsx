@@ -1,4 +1,4 @@
-import { FormGroup, FormHelperText, FormSelect, FormSelectOption, HelperText, HelperTextItem } from "@patternfly/react-core";
+import { Checkbox, FormGroup, FormHelperText, FormSelect, FormSelectOption, HelperText, HelperTextItem } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import { externalHostList, tlsSubjectHost } from "../api";
 import type { ProxyEntry } from "../api";
@@ -36,9 +36,12 @@ interface Props {
   /** Whether the site's host field has a public name; ACME is unavailable without one. */
   publicName: boolean;
   isDisabled?: boolean;
+  /** Per-site on-demand TLS (#253); the checkbox shows while TLS is on, when a handler is given. */
+  onDemand?: boolean;
+  onOnDemandChange?: (v: boolean) => void;
 }
 
-export function TlsModeField({ id, value, onChange, publicName, isDisabled }: Props) {
+export function TlsModeField({ id, value, onChange, publicName, isDisabled, onDemand, onOnDemandChange }: Props) {
   const { t } = useTranslation();
   const help = value === "acme" ? t("tls_mode.acme_help")
     : value === "internal" ? (publicName ? t("tls_mode.internal_help") : t("tls_mode.acme_needs_name"))
@@ -55,6 +58,17 @@ export function TlsModeField({ id, value, onChange, publicName, isDisabled }: Pr
           <HelperTextItem>{help}</HelperTextItem>
         </HelperText>
       </FormHelperText>
+      {value !== "off" && onOnDemandChange && (
+        <Checkbox
+          id={`${id}-on-demand`}
+          label={t("tls_mode.on_demand")}
+          description={t("tls_mode.on_demand_help")}
+          isChecked={!!onDemand}
+          onChange={(_e, v) => onOnDemandChange(v)}
+          isDisabled={isDisabled}
+          style={{ marginTop: "0.4rem" }}
+        />
+      )}
     </FormGroup>
   );
 }

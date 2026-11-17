@@ -543,14 +543,13 @@
     "acme_eab_placeholder": "Gerekli değilse boş bırakın",
     "acme_eab_help": "Bazı sağlayıcıların (ör. ZeroSSL) istediği External Account Binding kimlik bilgileri. İki alan birlikte doldurulmalıdır.",
     "on_demand_title": "İsteğe bağlı TLS",
-    "on_demand_enabled": "İsteğe bağlı TLS'yi etkinleştir",
-    "on_demand_enabled_help": "Caddy, başlangıçta bilinmeyen ana bilgisayar adları için sertifikaları bağlantı anında alır. Herkese açık erişilebilir bir sunucu gerekir.",
+    "on_demand_enabled": "İsteğe bağlı TLS'yi yapılandır",
+    "on_demand_enabled_help": "Caddy'nin isteğe bağlı sertifika almadan önce sorduğu uç noktayı belirler. İsteğe bağlı TLS'yi açmaz: bu, her sitenin HTTPS ayarlarındaki site bazlı bir seçenektir.",
     "on_demand_no_ask_warning": "Ask URL'si ayarlanmamış — Caddy herhangi bir alan adı için yetkilendirme olmadan sertifika verir. Kötüye kullanımı önlemek için bir ask URL'si ayarlayın.",
     "on_demand_ask": "Ask URL'si",
     "on_demand_ask_help": "Caddy sertifika vermeden önce bu uç noktayı sorgular. Vermeye izin vermek için HTTP 2xx döndürmelidir.",
     "on_demand_interval": "Hız sınırı aralığı",
     "on_demand_burst": "Hız sınırı patlaması",
-    "on_demand_burst_help": "Aralık başına verilen en fazla sertifika sayısı. Hız sınırı olmaması için ikisini de boş bırakın (önerilmez).",
     "validation_burst": "Pozitif bir tam sayı olmalıdır",
     "internal_tls_title": "İç TLS (ana bilgisayar adı olmayan proxy'ler)",
     "internal_tls_note": "Caddy bir sertifika ilkesini yalnızca ana bilgisayar adına göre kapsamlandırabilir. Ana bilgisayar adı olmayan proxy/sunucuların hepsi bu tek ayarı paylaşır — iki böyle proxy'ye farklı ömürler verilemez. Gerçek bir ana bilgisayar adı olan proxy'ler, düzenleme iletişim kutularındaki TLS İlkesi bölümünde yine kendi değerlerini ayarlayabilir.",
@@ -605,7 +604,8 @@
     "proxy_protocol_allow": "İzin verilen kaynak IP'ler (isteğe bağlı)",
     "proxy_protocol_allow_help": "PROXY protokolü başlıkları göndermesine izin verilen, boşlukla ayrılmış CIDR aralıkları — istemci IP sahteciliğini önlemek için bunu yük dengeleyicinizin kendi IP'leriyle sınırlayın. Her kaynağı kabul etmek için boş bırakın.",
     "proxy_protocol_timeout": "Başlık okuma zaman aşımı (isteğe bağlı)",
-    "proxy_protocol_timeout_help": "Vazgeçmeden önce PROXY protokolü başlığı için beklenecek en uzun süre (Go süresi, ör. 2s). Caddy varsayılanı için boş bırakın."
+    "proxy_protocol_timeout_help": "Vazgeçmeden önce PROXY protokolü başlığı için beklenecek en uzun süre (Go süresi, ör. 2s). Caddy varsayılanı için boş bırakın.",
+    "on_demand_rate_deprecated": "Caddy artık interval ve burst önermiyor. İkisini de temizleyin ve ask uç noktasına güvenin."
   },
   "ca": {
     "title": "İç sertifika yetkilisi",
@@ -855,6 +855,8 @@
     "acme_help": "Caddy herkese açık bir sertifika alır ve yeniler. Ad bu sunucuyu göstermeli, 80 ve 443 numaralı portlara internetten erişilebilmelidir.",
     "internal_help": "Caddy'nin kendi CA'sı tarafından imzalanır: tarayıcılar ona yalnızca bu CA'nın kök sertifikasının kurulu olduğu yerde güvenir. Dahili adlar için uygundur.",
     "acme_needs_name": "Caddy'nin kendi CA'sı tarafından imzalanır. Otomatik sertifikalar için ana makine alanında herkese açık bir ad gerekir.",
-    "off_help": "Site düz HTTP üzerinden sunulur."
+    "off_help": "Site düz HTTP üzerinden sunulur.",
+    "on_demand": "İsteğe bağlı: sertifikayı ilk TLS el sıkışmasında al",
+    "on_demand_help": "Önceden bilinmeyen adlar için. Ayarlar → İsteğe bağlı TLS altında bir ask uç noktası belirleyin; aksi hâlde bu sunucuya ad yönlendiren herkes Caddy'ye sertifika istetebilir."
   }
 }

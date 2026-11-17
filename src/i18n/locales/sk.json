@@ -543,14 +543,13 @@
     "acme_eab_placeholder": "Ponechajte prázdne, ak sa nevyžaduje",
     "acme_eab_help": "Prihlasovacie údaje External Account Binding, ktoré vyžadujú niektorí poskytovatelia (napr. ZeroSSL). Obe polia treba vyplniť spolu.",
     "on_demand_title": "TLS na požiadanie",
-    "on_demand_enabled": "Zapnúť TLS na požiadanie",
-    "on_demand_enabled_help": "Caddy získa certifikáty pri nadväzovaní spojenia pre názvy hostiteľov, ktoré nie sú známe pri štarte. Vyžaduje verejne dostupný server.",
+    "on_demand_enabled": "Nastaviť TLS na požiadanie",
+    "on_demand_enabled_help": "Nastaví endpoint, ktorého sa Caddy pýta, kým získa certifikát na požiadanie. TLS na požiadanie tým nezapne: to je voľba každého webu v jeho nastaveniach HTTPS.",
     "on_demand_no_ask_warning": "Nie je nastavená URL ask — Caddy bude vydávať certifikáty pre akúkoľvek doménu bez autorizácie. Nastavte URL ask, aby ste zabránili zneužitiu.",
     "on_demand_ask": "URL ask",
     "on_demand_ask_help": "Caddy sa pred vydaním certifikátu opýta tohto endpointu. Ten musí vrátiť HTTP 2xx, aby vydanie povolil.",
     "on_demand_interval": "Interval obmedzenia rýchlosti",
     "on_demand_burst": "Dávka obmedzenia rýchlosti",
-    "on_demand_burst_help": "Maximálny počet vydaných certifikátov za interval. Ponechajte obe polia prázdne pre žiadne obmedzenie (neodporúča sa).",
     "validation_burst": "Musí ísť o kladné celé číslo",
     "internal_tls_title": "Interné TLS (proxy bez názvu hostiteľa)",
     "internal_tls_note": "Caddy dokáže obmedziť politiku certifikátov len podľa názvu hostiteľa. Proxy/servery bez názvu hostiteľa zdieľajú toto jediné nastavenie — dvom takým proxy nemožno nastaviť rôznu platnosť. Proxy so skutočným názvom hostiteľa si môžu nastaviť vlastnú v sekcii Politika TLS v dialógu úprav.",
@@ -605,7 +604,8 @@
     "proxy_protocol_allow": "Povolené zdrojové IP (voliteľné)",
     "proxy_protocol_allow_help": "Rozsahy CIDR oddelené medzerami, ktoré smú posielať hlavičky protokolu PROXY — obmedzte ich na IP adresy vášho vyvažovača, aby ste zabránili podvrhnutiu IP klienta. Ponechajte prázdne na prijatie z ľubovoľného zdroja.",
     "proxy_protocol_timeout": "Časový limit čítania hlavičky (voliteľné)",
-    "proxy_protocol_timeout_help": "Maximálny čas čakania na hlavičku protokolu PROXY, kým to vzdá (čas vo formáte Go, napr. 2s). Ponechajte prázdne pre predvolenú hodnotu Caddy."
+    "proxy_protocol_timeout_help": "Maximálny čas čakania na hlavičku protokolu PROXY, kým to vzdá (čas vo formáte Go, napr. 2s). Ponechajte prázdne pre predvolenú hodnotu Caddy.",
+    "on_demand_rate_deprecated": "Caddy už neodporúča interval a burst. Vymažte obe polia a spoľahnite sa na endpoint ask."
   },
   "ca": {
     "title": "Interná certifikačná autorita",
@@ -855,6 +855,8 @@
     "acme_help": "Caddy získa a obnovuje verejný certifikát. Názov musí smerovať na tento server a porty 80 a 443 musia byť dostupné z internetu.",
     "internal_help": "Podpísané vlastnou CA Caddy: prehliadače mu dôverujú len tam, kde je nainštalovaný koreňový certifikát tejto CA. Vhodné pre interné názvy.",
     "acme_needs_name": "Podpísané vlastnou CA Caddy. Automatické certifikáty potrebujú verejný názov hostiteľa v poli hostiteľa.",
-    "off_help": "Web sa poskytuje cez čisté HTTP."
+    "off_help": "Web sa poskytuje cez čisté HTTP.",
+    "on_demand": "Na požiadanie: získať certifikát pri prvom TLS handshaku",
+    "on_demand_help": "Pre názvy, ktoré vopred nepoznáte. Nastavte endpoint ask v Nastavenia → TLS na požiadanie, inak ktokoľvek, kto nasmeruje názov na tento server, prinúti Caddy vyžiadať preň certifikát."
   }
 }

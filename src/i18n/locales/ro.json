@@ -543,14 +543,13 @@
     "acme_eab_placeholder": "Lasă gol dacă nu este necesar",
     "acme_eab_help": "Date External Account Binding cerute de unii furnizori (de ex. ZeroSSL). Ambele câmpuri trebuie completate împreună.",
     "on_demand_title": "TLS la cerere",
-    "on_demand_enabled": "Activează TLS la cerere",
-    "on_demand_enabled_help": "Caddy va obține certificate în momentul conexiunii pentru nume de gazdă necunoscute la pornire. Necesită un server accesibil public.",
+    "on_demand_enabled": "Configurează TLS la cerere",
+    "on_demand_enabled_help": "Setează endpoint-ul pe care Caddy îl întreabă înainte de a obține un certificat la cerere. Nu pornește TLS la cerere: aceasta este o opțiune a fiecărui site, în setările lui HTTPS.",
     "on_demand_no_ask_warning": "Nu este setat un URL ask — Caddy va emite certificate pentru orice domeniu fără autorizare. Setează un URL ask pentru a preveni abuzurile.",
     "on_demand_ask": "URL ask",
     "on_demand_ask_help": "Caddy interoghează acest endpoint înainte de a emite un certificat. Trebuie să returneze HTTP 2xx pentru a permite emiterea.",
     "on_demand_interval": "Intervalul limitării de rată",
     "on_demand_burst": "Rafala limitării de rată",
-    "on_demand_burst_help": "Numărul maxim de certificate emise pe interval. Lasă ambele goale pentru fără limită (nerecomandat).",
     "validation_burst": "Trebuie să fie un număr întreg pozitiv",
     "internal_tls_title": "TLS intern (proxy-uri fără nume de gazdă)",
     "internal_tls_note": "Caddy poate delimita o politică de certificate doar după numele de gazdă. Proxy-urile/serverele fără nume de gazdă partajează toate această singură setare — nu se pot da durate diferite la două proxy-uri fără nume de gazdă. Proxy-urile cu un nume de gazdă real își pot seta în continuare propria valoare în secțiunea Politică TLS din dialogul de editare.",
@@ -605,7 +604,8 @@
     "proxy_protocol_allow": "IP-uri sursă permise (opțional)",
     "proxy_protocol_allow_help": "Intervale CIDR separate prin spații care au voie să trimită antete ale protocolului PROXY — limitează-le la IP-urile echilibratorului tău pentru a preveni falsificarea IP-ului clientului. Lasă gol pentru a accepta orice sursă.",
     "proxy_protocol_timeout": "Timeout pentru citirea antetului (opțional)",
-    "proxy_protocol_timeout_help": "Timpul maxim de așteptare a antetului protocolului PROXY înainte de renunțare (durată Go, de ex. 2s). Lasă gol pentru valoarea implicită Caddy."
+    "proxy_protocol_timeout_help": "Timpul maxim de așteptare a antetului protocolului PROXY înainte de renunțare (durată Go, de ex. 2s). Lasă gol pentru valoarea implicită Caddy.",
+    "on_demand_rate_deprecated": "Caddy nu mai recomandă interval și burst. Goliți ambele și bazați-vă pe endpoint-ul ask."
   },
   "ca": {
     "title": "Autoritate de certificare internă",
@@ -855,6 +855,8 @@
     "acme_help": "Caddy obține și reînnoiește un certificat public. Numele trebuie să indice acest server, iar porturile 80 și 443 trebuie să fie accesibile din internet.",
     "internal_help": "Semnat de CA-ul propriu al Caddy: browserele au încredere în el doar unde este instalat certificatul rădăcină al acestui CA. Potrivit pentru nume interne.",
     "acme_needs_name": "Semnat de CA-ul propriu al Caddy. Certificatele automate au nevoie de un nume de gazdă public în câmpul gazdă.",
-    "off_help": "Site-ul este servit prin HTTP simplu."
+    "off_help": "Site-ul este servit prin HTTP simplu.",
+    "on_demand": "La cerere: obține certificatul la primul handshake TLS",
+    "on_demand_help": "Pentru nume necunoscute dinainte. Setați un endpoint ask în Setări → TLS la cerere, altfel oricine îndreaptă un nume spre acest server poate face Caddy să ceară un certificat pentru el."
   }
 }

@@ -543,14 +543,13 @@
     "acme_eab_placeholder": "Jätä tyhjäksi, jos ei tarvita",
     "acme_eab_help": "Joidenkin palveluntarjoajien (esim. ZeroSSL) vaatimat External Account Binding -tunnukset. Molemmat kentät on täytettävä yhdessä.",
     "on_demand_title": "TLS tarvittaessa",
-    "on_demand_enabled": "Ota tarvittaessa haettava TLS käyttöön",
-    "on_demand_enabled_help": "Caddy hankkii varmenteet yhteyden muodostuessa isäntänimille, joita ei tiedetä käynnistyksessä. Edellyttää julkisesti tavoitettavaa palvelinta.",
+    "on_demand_enabled": "Määritä tarvittaessa haettava TLS",
+    "on_demand_enabled_help": "Asettaa päätepisteen, jolta Caddy kysyy ennen kuin hakee varmenteen tarvittaessa. Tämä ei ota toimintoa käyttöön: se on sivustokohtainen valinta sivuston HTTPS-asetuksissa.",
     "on_demand_no_ask_warning": "Ask-URL:ää ei ole asetettu — Caddy myöntää varmenteita mille tahansa verkkotunnukselle ilman valtuutusta. Aseta ask-URL väärinkäytön estämiseksi.",
     "on_demand_ask": "Ask-URL",
     "on_demand_ask_help": "Caddy kysyy tältä päätepisteeltä ennen varmenteen myöntämistä. Sen on palautettava HTTP 2xx, jotta myöntäminen sallitaan.",
     "on_demand_interval": "Nopeusrajoituksen aikaväli",
     "on_demand_burst": "Nopeusrajoituksen purske",
-    "on_demand_burst_help": "Aikavälin aikana myönnettävien varmenteiden enimmäismäärä. Jätä molemmat tyhjiksi, jos rajoitusta ei tarvita (ei suositella).",
     "validation_burst": "Täytyy olla positiivinen kokonaisluku",
     "internal_tls_title": "Sisäinen TLS (isäntänimettömät proxyt)",
     "internal_tls_note": "Caddy voi rajata varmennekäytännön vain isäntänimen mukaan. Isäntänimettömät proxyt/palvelimet jakavat kaikki tämän yhden asetuksen — kahdelle isäntänimettömälle proxylle ei voi antaa eri voimassaoloaikoja. Proxyt, joilla on oikea isäntänimi, voivat yhä asettaa omansa muokkausikkunan TLS-käytäntö-osiossa.",
@@ -605,7 +604,8 @@
     "proxy_protocol_allow": "Sallitut lähde-IP:t (valinnainen)",
     "proxy_protocol_allow_help": "Välilyönneillä erotetut CIDR-alueet, jotka saavat lähettää PROXY-protokollan otsakkeita — rajaa kuormantasaajasi omiin IP-osoitteisiin estääksesi asiakas-IP:n väärentämisen. Jätä tyhjäksi hyväksyäksesi kaikki lähteet.",
     "proxy_protocol_timeout": "Otsakkeen lukemisen aikakatkaisu (valinnainen)",
-    "proxy_protocol_timeout_help": "Enimmäisaika, jonka PROXY-protokollan otsaketta odotetaan ennen luovuttamista (Go-kesto, esim. 2s). Jätä tyhjäksi käyttääksesi Caddyn oletusta."
+    "proxy_protocol_timeout_help": "Enimmäisaika, jonka PROXY-protokollan otsaketta odotetaan ennen luovuttamista (Go-kesto, esim. 2s). Jätä tyhjäksi käyttääksesi Caddyn oletusta.",
+    "on_demand_rate_deprecated": "Caddy ei enää suosittele intervalia ja burstia. Tyhjennä molemmat ja luota ask-päätepisteeseen."
   },
   "ca": {
     "title": "Sisäinen varmentaja",
@@ -855,6 +855,8 @@
     "acme_help": "Caddy hakee ja uusii julkisen varmenteen. Nimen on osoitettava tähän palvelimeen, ja porttien 80 ja 443 on oltava tavoitettavissa internetistä.",
     "internal_help": "Caddyn oman CA:n allekirjoittama: selaimet luottavat siihen vain, jos CA:n juurivarmenne on asennettu. Sopii sisäisille nimille.",
     "acme_needs_name": "Caddyn oman CA:n allekirjoittama. Automaattiset varmenteet vaativat julkisen isäntänimen isäntäkenttään.",
-    "off_help": "Sivusto tarjoillaan pelkällä HTTP:llä."
+    "off_help": "Sivusto tarjoillaan pelkällä HTTP:llä.",
+    "on_demand": "Tarvittaessa: hae varmenne ensimmäisessä TLS-kättelyssä",
+    "on_demand_help": "Nimille, joita ei tiedetä etukäteen. Aseta ask-päätepiste kohdassa Asetukset → Tarvittaessa haettava TLS, muuten kuka tahansa tähän palvelimeen nimen osoittava voi saada Caddyn pyytämään sille varmenteen."
   }
 }

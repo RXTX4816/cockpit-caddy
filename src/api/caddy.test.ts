@@ -4314,3 +4314,36 @@ describe("parseConfTlsIssuerMap (#246)", () => {
     expect(map(":8443 {\n\treverse_proxy x:1\n}")).toEqual({});
   });
 });
+
+describe("editing a hand-written multi-line tls block (#253)", () => {
+  it("replaces the whole tls { } block instead of leaving its body behind", () => {
+    const conf = `${CONF_HEADER}\n\napp.example.com {\n\ttls {\n\t\tprotocols tls1.3\n\t\ton_demand\n\t}\n\treverse_proxy localhost:8000\n}\n`;
+    const out = surgicallyWriteProxy(conf, proxy({ externalHost: "app.example.com", externalPort: 443, tls: true, tlsIssuer: "acme", tlsOnDemand: true, targetPort: 8001 }));
+    expect(out).toContain("app.example.com {\n\ttls {\n\t\ton_demand\n\t}\n\treverse_proxy http://localhost:8001\n}");
+    expect(out.match(/protocols/g)).toBeNull();
+  });
+});
+
+describe("JSON push keeps the rest of apps.tls (#253)", () => {
+  it("mergeProxy keeps the on-demand ask permission and other automation settings", () => {
+    const permission = { module: "http", endpoint: "http://localhost:9123/ok" };
+    const config: CaddyConfig = {
+      apps: {
+        http: { servers: {} },
+        tls: { automation: { policies: [{ subjects: ["od.example.com"], on_demand: true }], on_demand: { permission } } },
+      } as unknown as CaddyConfig["apps"],
+    };
+    const out = mergeProxy(config, proxy({ externalPort: 7700, tls: true }));
+    const tls = out.apps?.tls as { automation?: { on_demand?: unknown; policies?: Array<{ subjects?: string[]; on_demand?: boolean }> } };
+    expect(tls.automation?.on_demand).toEqual({ permission });
+    expect(tls.automation?.policies?.some(p => p.subjects?.some(s => s === "od.example.com") && p.on_demand)).toBe(true);
+  });
+});
+
+describe("editing hand-written multi-line directive blocks (#253)", () => {
+  it("replaces a whole header { } block instead of leaving its body behind", () => {
+    const conf = `${CONF_HEADER}\n\napp.example.com {\n\theader {\n\t\tX-A 1\n\t}\n\tencode {\n\t\tgzip\n\t}\n\treverse_proxy localhost:8000\n}\n`;
+    const out = surgicallyWriteProxy(conf, proxy({ externalHost: "app.example.com", externalPort: 443, tls: true, tlsIssuer: "acme", targetPort: 8001, compress: true }));
+    expect(out).toContain("app.example.com {\n\tencode gzip zstd\n\treverse_proxy http://localhost:8001\n}");
+  });
+});

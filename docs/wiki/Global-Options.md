@@ -22,7 +22,9 @@ ACME only applies to routes with a real public hostname — a bare `:443` with t
 
 ## On-demand TLS
 
-Lets Caddy provision certificates the first time a hostname is seen, rather than up front. Requires a publicly reachable server and (strongly recommended) an `ask` endpoint that validates the hostname before Caddy requests a certificate for it.
+On-demand TLS gets a site's certificate at the first TLS handshake instead of up front, for names that aren't known in advance. It is turned on **per site**: the site's HTTPS settings have an "On-demand" checkbox, written as `tls { on_demand }`.
+
+This global section only configures it: the `ask` endpoint Caddy queries before it gets a certificate (it must answer 2xx to allow the name). Set one, or anyone who points a name at the server can make Caddy request certificates for it. The old `interval`/`burst` rate limits are no longer accepted by Caddy; the form only shows them while an existing config still has them, so they can be cleared.
 
 ## Internal TLS (hostless proxies)
 
