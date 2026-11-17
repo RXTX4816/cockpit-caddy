@@ -109,7 +109,7 @@ export function RequestHeadersSection({ value, onChange, isDisabled, isExpanded:
                   isDanger
                   onClick={() => remove(i)}
                   isDisabled={isDisabled}
-                  aria-label="remove"
+                  aria-label={t("common.remove_aria")}
                 >
                   ×
                 </Button>
@@ -138,7 +138,7 @@ export function RequestHeadersSection({ value, onChange, isDisabled, isExpanded:
 
         {/* Add row */}
         <div style={{ display: "flex", gap: "0.4rem", alignItems: "flex-end", flexWrap: "wrap" }}>
-          <ToggleGroup aria-label="header op" isCompact>
+          <ToggleGroup aria-label={t("common.header_op_aria")} isCompact>
             {(["set", "add", "delete"] as HeaderOperation["op"][]).map(o => (
               <ToggleGroupItem
                 key={o}

@@ -1,10 +1,13 @@
+import { useTranslation } from "react-i18next";
+
 /** Small indicator shown next to a collapsed accordion section's title when it holds a
  *  non-default value (#146) — lets the user scan the group without expanding every row. */
 export function SectionConfiguredDot() {
+  const { t } = useTranslation();
   return (
     <span
-      aria-label="configured"
-      title="Configured"
+      aria-label={t("common.configured")}
+      title={t("common.configured")}
       style={{
         display: "inline-block",
         width: "0.5rem",

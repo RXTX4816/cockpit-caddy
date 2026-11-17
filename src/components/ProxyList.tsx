@@ -64,9 +64,10 @@ import { accessLogConfigToValues } from "./AccessLogSection";
 import { tlsConfigToValues } from "./TlsSection";
 
 type ProxyLayout = "list" | "card";
+/** `label` holds the i18n key; it's translated where the selector is rendered. */
 const PROXY_LAYOUTS: LayoutOption<ProxyLayout>[] = [
-  { key: "list", icon: <ListAltIcon />, label: "List" },
-  { key: "card", icon: <ThIcon />,      label: "Cards" },
+  { key: "list", icon: <ListAltIcon />, label: "proxies.layout_list" },
+  { key: "card", icon: <ThIcon />,      label: "proxies.layout_cards" },
 ];
 
 interface ApiError { message: string; search: string; action: "add" | "edit" }
@@ -98,7 +99,7 @@ function FlagChips({ proxy, t }: { proxy: ProxyEntry; t: (k: string) => string }
     chips.push({ label: t("proxies.indicator_close"), color: "grey" });
   }
   if (proxy.rewrite) chips.push({ label: t(`rewrite.type_${proxy.rewrite.type}`), color: "teal" });
-  if (proxy.fileServer?.browse) chips.push({ label: "browse", color: "teal" });
+  if (proxy.fileServer?.browse) chips.push({ label: t("proxies.indicator_browse"), color: "teal" });
   if (proxy.compress) chips.push({ label: t("proxies.indicator_compress"), color: "teal" });
   if (proxy.basicAuth?.length) chips.push({ label: t("proxies.indicator_auth"), color: "red" });
   if (proxy.dialTimeout ?? proxy.responseHeaderTimeout) chips.push({ label: t("proxies.indicator_timeouts"), color: "grey" });
@@ -108,7 +109,7 @@ function FlagChips({ proxy, t }: { proxy: ProxyEntry; t: (k: string) => string }
   if (proxy.forwardAuth) chips.push({ label: t("forward_auth.indicator"), color: "purple" });
   if (proxy.mtls) chips.push({ label: t("tls_policy.indicator_mtls"), color: "orange" });
   if (proxy.tlsAdvanced) chips.push({ label: t("tls_policy.indicator_advanced"), color: "grey" });
-  if (proxy.matchers) chips.push({ label: "matcher", color: "teal" });
+  if (proxy.matchers) chips.push({ label: t("proxies.indicator_matcher"), color: "teal" });
   if (chips.length === 0) return <span style={{ color: "var(--pf-v6-global--Color--200)" }}>—</span>;
   return (
     <div style={{ display: "flex", gap: "0.2rem", flexWrap: "wrap" }}>
@@ -604,7 +605,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
                   <LayoutSelector
                     layout={layout}
                     onLayoutChange={setLayout}
-                    layouts={PROXY_LAYOUTS}
+                    layouts={PROXY_LAYOUTS.map(l => ({ ...l, label: t(l.label) }))}
                   />
                   <Button
                     variant="plain"
@@ -622,7 +623,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
             <Tabs
               activeKey={activeTab}
               onSelect={(_e, key) => setActiveTab(String(key))}
-              aria-label="Server tabs"
+              aria-label={t("servers.tabs_aria")}
             >
               <Tab eventKey="all" title={<TabTitleText>{t("servers.tab_all")}</TabTitleText>} />
               {ungroupedCount > 0 || activeTab === "ungrouped" ? (
@@ -806,7 +807,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
             port: duplicating.namedServerKey ? "" : String(duplicating.externalPort),
             to: duplicating.redirect.to,
             code: duplicating.redirect.code,
-            label: duplicating.label ? `${duplicating.label} (copy)` : "",
+            label: duplicating.label ? t("proxies.copy_label", { label: duplicating.label }) : "",
           }}
           initialMatchers={duplicating.matchers}
           initialHandlePath={duplicating.handlePath}
@@ -823,7 +824,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
             statusCode: String(duplicating.staticResponse.statusCode),
             body: duplicating.staticResponse.body ?? "",
             close: duplicating.staticResponse.close ?? false,
-            label: duplicating.label ? `${duplicating.label} (copy)` : "",
+            label: duplicating.label ? t("proxies.copy_label", { label: duplicating.label }) : "",
           }}
           initialMatchers={duplicating.matchers}
           initialHandlePath={duplicating.handlePath}
@@ -841,7 +842,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
             browse: duplicating.fileServer.browse,
             tls: duplicating.tls,
             compress: duplicating.compress ?? false,
-            label: duplicating.label ? `${duplicating.label} (copy)` : "",
+            label: duplicating.label ? t("proxies.copy_label", { label: duplicating.label }) : "",
           }}
           initialBasicAuth={(duplicating.basicAuth ?? []).map(a => ({ username: a.username, password: "", existingHash: a.passwordHash }))}
           initialResponseHeaders={duplicating.responseHeaders}
@@ -874,7 +875,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
             splitPath: duplicating.phpFastcgi.splitPath?.join(" ") ?? "",
             tls: duplicating.tls,
             compress: duplicating.compress ?? false,
-            label: duplicating.label ? `${duplicating.label} (copy)` : "",
+            label: duplicating.label ? t("proxies.copy_label", { label: duplicating.label }) : "",
           }}
           initialEnv={envRecordToEntries(duplicating.phpFastcgi.env)}
           initialBasicAuth={(duplicating.basicAuth ?? []).map(a => ({ username: a.username, password: "", existingHash: a.passwordHash }))}
@@ -913,7 +914,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
             tls: duplicating.tls,
             tlsSkipVerify: duplicating.tlsSkipVerify,
             compress: duplicating.compress ?? false,
-            label: duplicating.label ? `${duplicating.label} (copy)` : "",
+            label: duplicating.label ? t("proxies.copy_label", { label: duplicating.label }) : "",
           }}
           initialRewrite={duplicating.rewrite}
           initialRequestHeaders={duplicating.requestHeaders}

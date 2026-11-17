@@ -74,7 +74,7 @@ export function InternalCaModal({ onClose }: Props) {
       try {
         const handle = await (window as Window & { showSaveFilePicker: ShowSaveFilePicker }).showSaveFilePicker({
           suggestedName: filename,
-          types: [{ description: "PEM certificate", accept: { "application/x-pem-file": [".pem"] } }],
+          types: [{ description: t("ca.pem_file_type"), accept: { "application/x-pem-file": [".pem"] } }],
         });
         const writable = await handle.createWritable();
         await writable.write(pem);
@@ -98,7 +98,7 @@ export function InternalCaModal({ onClose }: Props) {
     } catch (err) {
       setDownloadError((err as { message?: string })?.message ?? String(err));
     }
-  }, []);
+  }, [t]);
 
   const downloadPem = useCallback(() => downloadCert(ca?.rootPem ?? "", "caddy-root-ca.pem"), [ca, downloadCert]);
   const downloadIntermediatePem = useCallback(
@@ -234,7 +234,7 @@ export function InternalCaModal({ onClose }: Props) {
 
             <ExpandableSection toggleText={t("ca.install_instructions_title")} isIndented>
               <Content>
-                <Content component="h4">Linux (system trust store)</Content>
+                <Content component="h4">{t("ca.install_linux")}</Content>
                 <ClipboardCopy isReadOnly isCode>
                   {"sudo cp caddy-root-ca.pem /usr/local/share/ca-certificates/caddy-root-ca.crt && sudo update-ca-certificates"}
                 </ClipboardCopy>
@@ -242,7 +242,7 @@ export function InternalCaModal({ onClose }: Props) {
                 <ClipboardCopy isReadOnly isCode>
                   {"sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain caddy-root-ca.pem"}
                 </ClipboardCopy>
-                <Content component="h4">Windows (PowerShell, admin)</Content>
+                <Content component="h4">{t("ca.install_windows")}</Content>
                 <ClipboardCopy isReadOnly isCode>
                   {"Import-Certificate -FilePath caddy-root-ca.pem -CertStoreLocation Cert:\\LocalMachine\\Root"}
                 </ClipboardCopy>

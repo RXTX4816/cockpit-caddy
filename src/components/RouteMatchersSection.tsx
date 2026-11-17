@@ -177,7 +177,7 @@ export function RouteMatchersSection({ value, onChange, isDisabled, isExpanded: 
               {paths.map((p, i) => (
                 <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
                   <code style={{ fontSize: "0.85rem" }}>{p}</code>
-                  <Button variant="plain" size="sm" isDanger onClick={() => removePath(i)} isDisabled={isDisabled} aria-label="remove path">×</Button>
+                  <Button variant="plain" size="sm" isDanger onClick={() => removePath(i)} isDisabled={isDisabled} aria-label={t("matchers.remove_path")}>×</Button>
                 </span>
               ))}
             </div>
@@ -206,7 +206,7 @@ export function RouteMatchersSection({ value, onChange, isDisabled, isExpanded: 
               {hosts.map((h, i) => (
                 <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
                   <code style={{ fontSize: "0.85rem" }}>{h}</code>
-                  <Button variant="plain" size="sm" isDanger onClick={() => removeHost(i)} isDisabled={isDisabled} aria-label="remove host">×</Button>
+                  <Button variant="plain" size="sm" isDanger onClick={() => removeHost(i)} isDisabled={isDisabled} aria-label={t("matchers.remove_host")}>×</Button>
                 </span>
               ))}
             </div>
@@ -255,9 +255,9 @@ export function RouteMatchersSection({ value, onChange, isDisabled, isExpanded: 
                   <Label isCompact color="blue">{name}</Label>
                   {vals.length > 0
                     ? <code style={{ fontSize: "0.85rem" }}>{vals.join(", ")}</code>
-                    : <span style={{ color: "var(--pf-t--global--text--color--subtle)", fontSize: "0.8rem" }}>(present)</span>
+                    : <span style={{ color: "var(--pf-t--global--text--color--subtle)", fontSize: "0.8rem" }}>{t("matchers.header_present")}</span>
                   }
-                  <Button variant="plain" size="sm" isDanger onClick={() => removeHeader(name)} isDisabled={isDisabled} aria-label="remove header">×</Button>
+                  <Button variant="plain" size="sm" isDanger onClick={() => removeHeader(name)} isDisabled={isDisabled} aria-label={t("matchers.remove_header")}>×</Button>
                 </div>
               ))}
             </div>
@@ -299,7 +299,7 @@ export function RouteMatchersSection({ value, onChange, isDisabled, isExpanded: 
                 <div key={name} style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem" }}>
                   <Label isCompact color="teal">{name}</Label>
                   {vals.length > 0 && <code style={{ fontSize: "0.85rem" }}>{vals.join(", ")}</code>}
-                  <Button variant="plain" size="sm" isDanger onClick={() => removeQuery(name)} isDisabled={isDisabled} aria-label="remove query param">×</Button>
+                  <Button variant="plain" size="sm" isDanger onClick={() => removeQuery(name)} isDisabled={isDisabled} aria-label={t("matchers.remove_query")}>×</Button>
                 </div>
               ))}
             </div>
@@ -335,7 +335,7 @@ export function RouteMatchersSection({ value, onChange, isDisabled, isExpanded: 
               {cidrs.map((c, i) => (
                 <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
                   <code style={{ fontSize: "0.85rem" }}>{c}</code>
-                  <Button variant="plain" size="sm" isDanger onClick={() => removeCidr(i)} isDisabled={isDisabled} aria-label="remove cidr">×</Button>
+                  <Button variant="plain" size="sm" isDanger onClick={() => removeCidr(i)} isDisabled={isDisabled} aria-label={t("matchers.remove_cidr")}>×</Button>
                 </span>
               ))}
             </div>

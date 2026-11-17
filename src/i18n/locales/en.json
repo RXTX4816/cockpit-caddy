@@ -9,14 +9,14 @@
     "duplicate": "Duplicate",
     "retry": "Retry",
     "refresh": "Refresh",
-    "copy": "Copy",
-    "copied": "Copied!",
-    "unknown": "unknown",
     "clear": "Clear",
     "defaults": "Defaults",
     "confirm_clear": "Clear all values in this section?",
     "confirm_defaults": "Reset this section to default values?",
-    "confirm_apply": "Apply"
+    "confirm_apply": "Apply",
+    "configured": "Configured",
+    "remove_aria": "remove",
+    "header_op_aria": "Header operation"
   },
   "app": {
     "title": "Caddy",
@@ -50,9 +50,6 @@
     "confirm_reload_title": "Reload Caddy config?",
     "confirm_reload_body": "Caddy will reload its configuration without interrupting existing connections.",
     "confirm_action": "Confirm",
-    "start_failed": "Failed to start Caddy",
-    "stop_failed": "Failed to stop Caddy",
-    "restart_failed": "Failed to restart Caddy",
     "reload_failed": "Failed to reload Caddy config"
   },
   "proxies": {
@@ -86,23 +83,25 @@
     "indicator_lb": "LB",
     "indicator_close": "Close conn",
     "indicator_limits": "Limits",
-    "copy_url": "Copy URL",
     "load_failed": "Failed to load proxies",
     "service_not_running": "Start the Caddy service to view and manage proxies.",
     "delete_confirm_title": "Delete proxy :{{port}}?",
     "delete_confirm_body": "This will remove the reverse proxy for port {{port}} → {{target}}.",
     "delete_confirm_button": "Delete",
-    "logs_button": "Logs",
     "api_error_add_title": "Proxy created on disk — Caddy rejected the live push",
     "api_error_edit_title": "Label saved — Caddy rejected the config update (other changes not applied)",
     "caddyfile_error_title": "Caddyfile validation failed — changes not saved",
-    "view_logs": "View Logs"
+    "view_logs": "View Logs",
+    "indicator_browse": "browse",
+    "indicator_matcher": "matcher",
+    "indicator_strip_prefix": "strip prefix",
+    "layout_list": "List",
+    "layout_cards": "Cards",
+    "copy_label": "{{label}} (copy)"
   },
   "add_proxy": {
     "title": "Add Reverse Proxy",
     "aria_label": "Add reverse proxy dialog",
-    "field_external_port": "External Port",
-    "field_external_port_help": "HTTPS port to expose on this machine (1024–65535)",
     "field_external_address": "External Address",
     "field_external_address_help": "Protocol and hostname are optional. Port is required. Separate several hostnames with commas.",
     "ext_scheme_none": "(none)",
@@ -116,8 +115,6 @@
     "validation_https_requires_tls": "The \"https\" protocol requires TLS to be enabled below — Caddy would otherwise manage HTTPS on its own, ungoverned by this app's settings. Enable TLS or choose a different protocol.",
     "field_target_host": "Target Host",
     "field_target_host_placeholder": "localhost",
-    "field_target_port": "Target Port",
-    "field_target_scheme": "Backend Scheme",
     "field_tls_skip_verify": "Skip TLS verification on backend (for self-signed backend certs)",
     "field_tls": "Enable TLS (self-signed via Caddy internal CA)",
     "field_tls_short": "Enable TLS (self-signed)",
@@ -135,7 +132,6 @@
     "validation_target_port_required": "Target port is required",
     "validation_target_port_range": "Target port must be between 1 and 65535",
     "validation_target_host_required": "Target host is required",
-    "error_save_failed": "Failed to save proxy",
     "confirm_body": "This will create a reverse proxy :{{port}} → {{target}} and reload Caddy's configuration."
   },
   "add_static": {
@@ -247,8 +243,7 @@
     "max_header_bytes_help": "Maximum request header size in bytes (default: 1 MB = 1048576)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "Disable HTTP/3",
-    "http3_help": "Caddy enables HTTP/1.1, HTTP/2, and HTTP/3 by default whenever TLS is configured. HTTP/3 runs over UDP on the same port as HTTPS — if UDP is blocked by your firewall, disabling it here falls back to HTTP/1.1 and HTTP/2 only.",
-    "indicator": "Limits"
+    "http3_help": "Caddy enables HTTP/1.1, HTTP/2, and HTTP/3 by default whenever TLS is configured. HTTP/3 runs over UDP on the same port as HTTPS — if UDP is blocked by your firewall, disabling it here falls back to HTTP/1.1 and HTTP/2 only."
   },
   "request_body": {
     "field_label": "Max request body size (bytes, optional)",
@@ -268,7 +263,8 @@
     "field_prefix_placeholder_add": "/api",
     "field_find_placeholder": "^/api/(.*)",
     "field_replace_placeholder": "/$1",
-    "field_replace_help": "Use $1, $2 for capture groups"
+    "field_replace_help": "Use $1, $2 for capture groups",
+    "type_aria": "Rewrite type"
   },
   "probe": {
     "status_pending": "Checking…",
@@ -330,10 +326,7 @@
     "field_name": "Header name",
     "field_value": "Value",
     "add_button": "Add",
-    "presets_label": "Presets",
-    "preset_real_ip": "X-Real-IP",
-    "preset_forwarded_for": "X-Forwarded-For",
-    "preset_forwarded_proto": "X-Forwarded-Proto"
+    "presets_label": "Presets"
   },
   "edit_redirect": {
     "title": "Edit Redirect — :{{port}}",
@@ -345,15 +338,11 @@
     "title": "Edit Proxy — :{{port}}",
     "aria_label": "Edit reverse proxy dialog",
     "save_button": "Save Changes",
-    "confirm_save_body": "This will update the proxy on :{{port}} and reload Caddy's configuration.",
-    "confirm_delete_body": "This will permanently remove the reverse proxy on :{{port}} → {{target}}."
+    "confirm_save_body": "This will update the proxy on :{{port}} and reload Caddy's configuration."
   },
   "caddyfile": {
-    "title": "Caddyfile",
-    "save_button": "Save",
     "load_failed": "Failed to load file",
     "save_failed": "Save failed",
-    "saved": "File saved",
     "saved_needs_reload": "File saved — reload Caddy to apply changes",
     "reloaded": "Caddy config reloaded successfully",
     "changed_on_disk": "Changed on disk",
@@ -363,7 +352,6 @@
     "unmanaged_note": "This is the Caddyfile on the host filesystem. Whether it's the file the running container actually reads depends on how that container is configured (shared bind mount vs. its own separate config) — edits here may have no effect on the live instance unless the container shares this path."
   },
   "logs": {
-    "title": "Logs",
     "empty": "No log entries yet.",
     "no_matches": "No log lines match your search.",
     "load_failed": "Failed to load logs",
@@ -489,7 +477,17 @@
     "after": "After",
     "apply_button": "Apply {{count}} selected",
     "apply_error": "Failed to apply — changes not saved",
-    "apply_ok": "Fixes applied. Reload Caddy for them to take effect."
+    "apply_ok": "Fixes applied. Reload Caddy for them to take effect.",
+    "target_server": "server \"{{name}}\"",
+    "cert_issuer_title": "Replace the old global certificate-lifetime directive",
+    "cert_issuer_explanation": "An older version of this plugin wrote the shared internal-issuer lifetime as a real Caddy directive (`cert_issuer`). Caddy rejects that as soon as any proxy without a hostname also sets its own certificate lifetime — it sees two different definitions of the same default certificate policy and refuses to reload (\"automation policy from site block is also default/catch-all policy ... in conflict\"). The value ({{lifetime}}) is kept, just stored safely as a comment instead, which Caddy ignores.",
+    "http_scheme_title": "Mark {{target}} as explicitly plain HTTP",
+    "http_scheme_explanation": "Caddy only excludes a site from its automatic-HTTPS bookkeeping when the address explicitly says \"http://\" — a bare address is still eligible even with TLS off in this app, and can silently claim the shared internal-issuer policy with no certificate settings at all, which then conflicts with any other hostless proxy that has an explicit lifetime.",
+    "lifetime_drift_title": "Sync {{target}} to the shared certificate lifetime",
+    "lifetime_drift_explanation": "This has no hostname, so it must use the exact same internal-issuer lifetime as every other hostless proxy/server — Caddy allows only one shared policy for all of them. It currently has {{current}}, but the shared value is {{shared}}.",
+    "lifetime_drift_current_none": "no explicit lifetime (Caddy's 12h default)",
+    "lifetime_drift_shared_none": "unset (Caddy's 12h default)",
+    "no_explicit_lifetime": "(no explicit lifetime)"
   },
   "global_opts": {
     "title": "Global Caddy options",
@@ -612,7 +610,10 @@
     "download_overwritten": "Overwrote existing file at {{path}}",
     "download_error": "Download failed",
     "install_instructions_title": "How to install in browsers / OS",
-    "firefox_instructions": "Open Firefox → Settings → Privacy & Security → Certificates → View Certificates → Authorities → Import. Select the downloaded .pem file and check \"Trust this CA to identify websites\"."
+    "firefox_instructions": "Open Firefox → Settings → Privacy & Security → Certificates → View Certificates → Authorities → Import. Select the downloaded .pem file and check \"Trust this CA to identify websites\".",
+    "install_linux": "Linux (system trust store)",
+    "install_windows": "Windows (PowerShell, admin)",
+    "pem_file_type": "PEM certificate"
   },
   "acme": {
     "title": "ACME / Let's Encrypt",
@@ -763,11 +764,15 @@
     "field_header_value_help": "Leave value blank to match any request that includes the header.",
     "field_query_name": "Param",
     "field_query_value": "Value",
-    "help_text": "Unmatched requests will not be handled by this route."
+    "header_present": "(present)",
+    "remove_path": "Remove path",
+    "remove_host": "Remove host",
+    "remove_header": "Remove header",
+    "remove_query": "Remove query parameter",
+    "remove_cidr": "Remove CIDR range"
   },
   "handle_path": {
-    "label": "Strip matched path prefix (handle_path)",
-    "help": "Removes the matched path prefix before forwarding to the upstream."
+    "label": "Strip matched path prefix (handle_path)"
   },
   "named_route": {
     "toggle_label": "Register as named route (invoke)",
@@ -797,8 +802,6 @@
     "validation_addr_required": "At least one listen address is required",
     "confirm_add": "This will create a new named server block in /etc/caddy/conf.d/. Caddy will need a reload to pick up the new configuration.",
     "confirm_edit": "This will update the server block in /etc/caddy/conf.d/ and the Caddy JSON configuration.",
-    "adding_to": "Adding route to server: {{name}}",
-    "route_of": "Route in: {{name}}",
     "selector_label": "Server",
     "selector_none": "None – standalone port",
     "routes_section": "Routes",
@@ -815,6 +818,16 @@
     "field_timeouts": "Timeouts",
     "field_max_header": "Max header size",
     "field_access_log": "Access log",
-    "field_error_handlers": "Error handlers"
+    "field_error_handlers": "Error handlers",
+    "tabs_aria": "Server tabs",
+    "remove_address": "Remove {{address}}"
+  },
+  "errors": {
+    "port_used_by_standalone": "Port {{port}} is already used by a standalone proxy. Remove it first or use a different port.",
+    "port_used_by_server": "Port {{port}} is already used by server \"{{server}}\".",
+    "port_used_by_server_add": "Port {{port}} is already used by server \"{{server}}\". Add routes to that server tab instead.",
+    "log_file_not_writable": "Log file \"{{path}}\" isn't writable by Caddy: {{error}}",
+    "path_outside_sandbox": "The caddy service is sandboxed (systemd ReadWritePaths=) to only: {{allowed}}. \"{{path}}\" falls outside all of them, so Caddy would never be able to write there regardless of file permissions — choose a path under one of the allowed directories, or add this path to the unit's ReadWritePaths= via \"systemctl edit caddy\".",
+    "invalid_caddyfile": "Invalid Caddyfile"
   }
 }

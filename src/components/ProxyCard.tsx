@@ -77,7 +77,7 @@ export function ProxyCard({ proxy, onEdit, onDelete, onDuplicate, probeStatuses 
                 {proxy.tls
                   ? <Label isCompact color="blue" variant="outline">{t("proxies.tls_self_signed")}</Label>
                   : <Label isCompact color="grey" variant="outline">{t("proxies.tls_none")}</Label>}
-                {proxy.fileServer.browse && <Label isCompact color="teal" variant="outline">browse</Label>}
+                {proxy.fileServer.browse && <Label isCompact color="teal" variant="outline">{t("proxies.indicator_browse")}</Label>}
                 {proxy.compress && <Label isCompact color="teal" variant="outline">{t("proxies.indicator_compress")}</Label>}
                 {proxy.basicAuth?.length ? <Label isCompact color="red" variant="outline">{t("proxies.indicator_auth")}</Label> : null}
               </div>

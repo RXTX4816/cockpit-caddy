@@ -10,6 +10,7 @@ export {
 
 import { fetchServiceLogs as baseFetchServiceLogs } from "@rxtx4816/cockpit-plugin-base-react/systemd";
 import { readFile as fsReadFile, writeFile as fsWriteFile } from "@rxtx4816/cockpit-plugin-base-react/lib/cockpit-fs";
+import { i18n } from "@rxtx4816/cockpit-plugin-base-react/i18n";
 
 const SERVICE = "caddy";
 const CADDYFILE_PATH = "/etc/caddy/Caddyfile";
@@ -34,7 +35,7 @@ export async function validateCaddyfile(content: string): Promise<void> {
     proc.stream(chunk => { output += chunk; });
     await proc;
   } catch {
-    throw new Error(output.trim() || "Invalid Caddyfile");
+    throw new Error(output.trim() || i18n.t("errors.invalid_caddyfile"));
   } finally {
     await cockpit.spawn(["rm", "-f", tmp], { superuser: "try" }).catch(() => { /* ignore */ });
   }

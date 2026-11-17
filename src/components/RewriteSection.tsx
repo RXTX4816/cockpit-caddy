@@ -69,7 +69,7 @@ export function RewriteSection({ value, onChange, isDisabled, isExpanded: isExpa
         isDisabled={isDisabled}
       />
       <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-        <ToggleGroup aria-label="rewrite type" isCompact>
+        <ToggleGroup aria-label={t("rewrite.type_aria")} isCompact>
           {(["none", "strip_prefix", "add_prefix", "regex"] as RewriteType[]).map(opt => (
             <ToggleGroupItem
               key={opt}
