@@ -251,7 +251,7 @@ test('an IP host keeps binding only that IP after a reload', async ({ pluginPage
   await modal.getByLabel(/external host/i).fill('127.0.0.1');
   await modal.getByLabel(/target host/i).fill('localhost');
   await modal.locator('#target-port').fill('3000');
-  await modal.locator('#tls').uncheck();
+  await modal.locator('#tls').selectOption('off');
   await modal.getByRole('button', { name: /^add proxy$/i }).click();
   await modal.getByRole('button', { name: /^confirm$/i }).click();
   await expect(modal).not.toBeVisible({ timeout: 15000 });
@@ -260,4 +260,35 @@ test('an IP host keeps binding only that IP after a reload', async ({ pluginPage
   await spawnCmd(page, ['caddy', 'reload', '--config', '/etc/caddy/Caddyfile']);
   await expect.poll(async () => (await spawnCmd(page, ['bash', '-c', "ss -Hltn 'sport = :19254' | awk '{print $4}'"])).trim(), { timeout: 10000 })
     .toBe('127.0.0.1:19254');
+});
+
+// #246: a public hostname defaults to automatic HTTPS; the internal CA is a deliberate choice.
+test('a public hostname defaults to automatic HTTPS, the internal CA writes tls internal', async ({ pluginPage: page }) => {
+  await waitForToolbar(page);
+  await page.getByRole('button', { name: /add proxy/i }).first().click();
+  let modal = page.getByRole('dialog');
+  await modal.getByLabel('External port').fill('19246');
+  await expect(modal.locator('#tls')).toHaveValue('internal');
+  await modal.getByLabel(/external host/i).fill('acme.example.test');
+  await expect(modal.locator('#tls')).toHaveValue('acme');
+  await modal.getByLabel(/target host/i).fill('localhost');
+  await modal.locator('#target-port').fill('3000');
+  await modal.getByRole('button', { name: /^add proxy$/i }).click();
+  await modal.getByRole('button', { name: /^confirm$/i }).click();
+  await expect(modal).not.toBeVisible({ timeout: 15000 });
+
+  let conf = await readConf(page);
+  expect(conf).toContain('acme.example.test:19246 {');
+  expect(conf).not.toMatch(/\btls\b/);
+
+  await page.locator('li').filter({ hasText: 'acme.example.test' }).getByRole('button', { name: /^edit$/i }).click();
+  modal = page.getByRole('dialog');
+  await expect(modal.locator('#edit-tls')).toHaveValue('acme', { timeout: 10000 });
+  await modal.locator('#edit-tls').selectOption('internal');
+  await modal.getByRole('button', { name: /save changes/i }).click();
+  await modal.getByRole('button', { name: /^confirm$/i }).click();
+  await expect(modal).not.toBeVisible({ timeout: 15000 });
+
+  conf = await readConf(page);
+  expect(conf).toContain('\ttls internal');
 });

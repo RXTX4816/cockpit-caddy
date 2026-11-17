@@ -46,6 +46,7 @@ import {
   extractLogFilePaths,
   migrateCaddyfile,
   CONF_D_IMPORT_LINE,
+  parseConfTlsIssuerMap,
 } from "./caddy";
 import type { CaddyConfig, CaddyServer, ProxyEntry, RouteMatch, ServerDef } from "./types";
 
@@ -4293,5 +4294,23 @@ describe("migrateCaddyfile keeps everything that isn't a site block (#267)", () 
 
   it("a Caddyfile with only snippets and imports needs no migration", () => {
     expect(migrateCaddyfile("(snip) {\n\theader X 1\n}\nimport /etc/caddy/conf.d/*\n").blocks).toEqual([]);
+  });
+});
+
+describe("parseConfTlsIssuerMap (#246)", () => {
+  const map = (block: string) => parseConfTlsIssuerMap(`${CONF_HEADER}\n\n${block}\n`);
+  it("a public name with no tls line, or only an ACME email, is ACME", () => {
+    expect(map("app.example.com {\n\treverse_proxy x:1\n}")["app.example.com"]).toBe("acme");
+    expect(map("app.example.com {\n\ttls me@example.com\n}")["app.example.com"]).toBe("acme");
+    expect(map("app.example.com {\n\ttls me@example.com {\n\t\tprotocols tls1.3\n\t}\n}")["app.example.com"]).toBe("acme");
+  });
+  it("tls internal or an internal issuer is internal", () => {
+    expect(map("app.example.com {\n\ttls internal\n}")["app.example.com"]).toBe("internal");
+    expect(map("app.example.com:443 {\n\ttls {\n\t\tissuer internal {\n\t\t\tlifetime 30d\n\t\t}\n\t}\n}")["app.example.com:443"]).toBe("internal");
+  });
+  it("certificate files, plain HTTP and hostless sites have no issuer entry", () => {
+    expect(map("app.example.com {\n\ttls /c.pem /k.pem\n}")).toEqual({});
+    expect(map("http://app.example.com {\n\treverse_proxy x:1\n}")).toEqual({});
+    expect(map(":8443 {\n\treverse_proxy x:1\n}")).toEqual({});
   });
 });

@@ -134,7 +134,7 @@ test('PHP site serves static files next to the PHP ones', async ({ pluginPage: p
   await modal.getByLabel(/listen port/i).fill('19303');
   await modal.getByLabel(/fastcgi upstream/i).fill('127.0.0.1:9000');
   await modal.getByLabel(/root directory/i).fill('/etc/caddy/e2e-php-19303');
-  await modal.locator('#php-tls').uncheck();
+  await modal.locator('#php-tls').selectOption('off');
   await modal.getByRole('button', { name: /add php site/i }).click();
   await modal.getByRole('button', { name: /^confirm$/i }).click();
   await expect(modal).not.toBeVisible({ timeout: 15000 });

@@ -23,7 +23,7 @@ test('custom upstream dial/response timeouts are written to the transport block'
   await modal.getByLabel('External port').fill('19410');
   await modal.getByLabel(/target host/i).fill('localhost');
   await modal.locator('#target-port').fill('3000');
-  await modal.locator('#tls').uncheck();
+  await modal.locator('#tls').selectOption('off');
 
   await modal.getByRole('button', { name: /upstream timeouts/i }).click();
   await modal.locator('#transport-dial').fill('3s');
@@ -46,7 +46,7 @@ test('server-level timeouts round-trip through edit and persist in the Caddyfile
   await modal1.getByLabel('External port').fill('19411');
   await modal1.getByLabel(/target host/i).fill('localhost');
   await modal1.locator('#target-port').fill('3000');
-  await modal1.locator('#tls').uncheck();
+  await modal1.locator('#tls').selectOption('off');
 
   await modal1.getByRole('button', { name: /server timeouts/i }).click();
   await modal1.locator('#st-read').fill('5s');

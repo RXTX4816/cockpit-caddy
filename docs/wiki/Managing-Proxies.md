@@ -83,7 +83,7 @@ Click **Add Proxy** in the toolbar.
 | Field | Description |
 |---|---|
 | Label | Human-readable name (e.g. `Nextcloud`) |
-| TLS | Enable self-signed TLS via Caddy's internal CA (on by default) — server-level when inside a named server |
+| HTTPS certificate | **Automatic (Let's Encrypt / ACME)** — the default for a public hostname: Caddy gets and renews a public certificate, no `tls` line is written. **Caddy's internal CA** — the default for a bare port, an IP or a local name (`tls internal`); browsers trust it only where the CA's root is installed. **Off** — plain HTTP. A certificate file under TLS settings overrides the issuer. Inside a named server, TLS is set on the server. |
 | Compression | Enable gzip/zstd response compression |
 | Skip TLS verify | Skip verification of the upstream's TLS certificate (for self-signed backends) |
 
@@ -128,7 +128,7 @@ Click **Add Static** in the toolbar.
 |---|---|
 | Label | Human-readable name |
 | Browse | Enable directory listing |
-| TLS | Self-signed TLS via Caddy's internal CA (on by default) |
+| HTTPS certificate | Caddy's internal CA (default) or Off; a site with a public hostname can also use Automatic (Let's Encrypt / ACME) |
 | Compression | Enable gzip/zstd compression |
 
 ### Optional sections
@@ -147,7 +147,7 @@ Click **Add Redirect** in the toolbar.
 | Redirect To | Target URL (e.g. `https://example.com`) |
 | Status Code | HTTP redirect code (301, 302, 307, 308) |
 | Label | Optional name |
-| TLS | Self-signed TLS (on by default) |
+| TLS | Caddy's internal CA (on by default) |
 
 Route Matchers are also available for redirects inside a named server.
 
@@ -164,7 +164,7 @@ Click **Add Respond** in the toolbar. Returns a fixed HTTP response — useful f
 | Response Body | Optional plain-text or HTML body |
 | Close Connection | Close the connection after the response |
 | Label | Optional name |
-| TLS | Self-signed TLS (on by default) |
+| TLS | Caddy's internal CA (on by default) |
 
 Route Matchers are also available for respond entries inside a named server.
 

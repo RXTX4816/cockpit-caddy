@@ -44,7 +44,7 @@ test('add response header (set) is visible in curl -I output', async ({ pluginPa
     await modal.getByLabel('External port').fill('19260');
     await modal.getByLabel(/target host/i).fill('localhost');
     await modal.locator('#target-port').fill(String(targetPort));
-    await modal.locator('#tls').uncheck();
+    await modal.locator('#tls').selectOption('off');
 
     await modal.getByRole('button', { name: /response headers/i }).click();
     await responseHeadersSection(modal).getByLabel('Header name').fill('X-E2E-Response');
@@ -78,7 +78,7 @@ test('delete response header removes it from curl -I output', async ({ pluginPag
     await modal1.getByLabel('External port').fill('19262');
     await modal1.getByLabel(/target host/i).fill('localhost');
     await modal1.locator('#target-port').fill(String(targetPort));
-    await modal1.locator('#tls').uncheck();
+    await modal1.locator('#tls').selectOption('off');
     await modal1.getByRole('button', { name: /response headers/i }).click();
     await modal1.locator('#resp-hdr-op-delete').click();
     await responseHeadersSection(modal1).getByLabel('Header name').fill('Server');
@@ -121,7 +121,7 @@ test('response headers persist across edit dialog reopen', async ({ pluginPage: 
   await modal1.getByLabel('External port').fill('19264');
   await modal1.getByLabel(/target host/i).fill('localhost');
   await modal1.locator('#target-port').fill('3000');
-  await modal1.locator('#tls').uncheck();
+  await modal1.locator('#tls').selectOption('off');
   await modal1.getByRole('button', { name: /response headers/i }).click();
   await modal1.getByRole('button', { name: 'X-Content-Type-Options' }).click();
   await modal1.getByRole('button', { name: /^add proxy$/i }).click();

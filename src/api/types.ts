@@ -364,8 +364,12 @@ export interface ProxyEntry {
   targetPort: number;
   /** Scheme used when connecting to the upstream */
   targetScheme: "http" | "https";
-  /** Enable TLS (internal CA) on the incoming listener */
+  /** Enable TLS on the incoming listener; tlsIssuer says where the certificate comes from */
   tls: boolean;
+  /** Who issues the certificate when tls is on and no customTls is set (#246): "acme" is
+   *  Caddy's automatic HTTPS (Let's Encrypt/ZeroSSL, no `tls` line, needs a public name),
+   *  "internal" is Caddy's local CA (`tls internal`). Undefined means "internal". */
+  tlsIssuer?: "acme" | "internal";
   /** Skip TLS verification when connecting to an https upstream */
   tlsSkipVerify: boolean;
   label?: string;

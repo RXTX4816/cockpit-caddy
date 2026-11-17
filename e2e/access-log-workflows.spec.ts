@@ -22,7 +22,7 @@ test('enabling per-route access log writes the correct log directive', async ({ 
   await modal.getByLabel('External port').fill('19450');
   await modal.getByLabel(/target host/i).fill('localhost');
   await modal.locator('#target-port').fill('3000');
-  await modal.locator('#tls').uncheck();
+  await modal.locator('#tls').selectOption('off');
 
   await modal.getByRole('button', { name: /access logging/i }).click();
   await modal.locator('#al-enabled').check();
@@ -56,7 +56,7 @@ test('a real request produces a log entry in the configured access log file', as
     await modal.getByLabel('External port').fill('19452');
     await modal.getByLabel(/target host/i).fill('localhost');
     await modal.locator('#target-port').fill('19453');
-    await modal.locator('#tls').uncheck();
+    await modal.locator('#tls').selectOption('off');
 
     await modal.getByRole('button', { name: /access logging/i }).click();
     await modal.locator('#al-enabled').check();

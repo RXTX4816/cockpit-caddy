@@ -35,7 +35,7 @@ test('add request header preset writes correct Caddyfile directive', async ({ pl
   await modal.getByLabel('External port').fill('19240');
   await modal.getByLabel(/target host/i).fill('localhost');
   await modal.locator('#target-port').fill('3000');
-  await modal.locator('#tls').uncheck();
+  await modal.locator('#tls').selectOption('off');
 
   await modal.getByRole('button', { name: /request headers/i }).click();
   await modal.getByRole('button', { name: 'X-Forwarded-Proto' }).click();
@@ -55,7 +55,7 @@ test('custom set/add/delete header operations write correct Caddyfile directives
   await modal.getByLabel('External port').fill('19241');
   await modal.getByLabel(/target host/i).fill('localhost');
   await modal.locator('#target-port').fill('3000');
-  await modal.locator('#tls').uncheck();
+  await modal.locator('#tls').selectOption('off');
 
   await modal.getByRole('button', { name: /request headers/i }).click();
 
@@ -120,7 +120,7 @@ test('request headers actually reach the backend', async ({ pluginPage: page }) 
     await modal.getByLabel('External port').fill('19242');
     await modal.getByLabel(/target host/i).fill('localhost');
     await modal.locator('#target-port').fill(String(targetPort));
-    await modal.locator('#tls').uncheck();
+    await modal.locator('#tls').selectOption('off');
 
     await modal.getByRole('button', { name: /request headers/i }).click();
     await requestHeadersSection(modal).getByLabel('Header name').fill('X-E2E-Marker');
@@ -159,7 +159,7 @@ test('remove header operation updates the Caddyfile', async ({ pluginPage: page 
   await modal1.getByLabel('External port').fill('19244');
   await modal1.getByLabel(/target host/i).fill('localhost');
   await modal1.locator('#target-port').fill('3000');
-  await modal1.locator('#tls').uncheck();
+  await modal1.locator('#tls').selectOption('off');
   await modal1.getByRole('button', { name: /request headers/i }).click();
   await requestHeadersSection(modal1).getByLabel('Header name').fill('X-To-Remove');
   await requestHeadersSection(modal1).getByLabel('Value').fill('temp');

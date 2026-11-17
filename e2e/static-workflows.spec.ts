@@ -27,7 +27,7 @@ async function addStaticViaUI(
   const modal = page.getByRole('dialog');
   await modal.locator('#static-port').fill(String(port));
   await modal.locator('#static-root').fill(root);
-  await modal.locator('#static-tls').uncheck();
+  await modal.locator('#static-tls').selectOption('off');
   await modal.getByRole('button', { name: /^add static server$/i }).click();
   await modal.getByRole('button', { name: /^confirm$/i }).click();
   await expect(modal).not.toBeVisible({ timeout: 15000 });

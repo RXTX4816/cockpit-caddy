@@ -38,6 +38,8 @@ import {
   type LayoutOption,
 } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { useLayout, useLocalStorage } from "@rxtx4816/cockpit-plugin-base-react";
+import { TlsBadge } from "./TlsBadge";
+import { tlsModeOf } from "./TlsModeField";
 import { AddProxyDialog } from "./AddProxyDialog";
 import { lbRetryConfigToValues } from "./LbRetrySection";
 import { AddRedirectDialog } from "./AddRedirectDialog";
@@ -234,9 +236,7 @@ function ProxyRow({ proxy, onEdit, onDelete, onDuplicate, probeStatuses, servers
                 <span style={{ color: "var(--pf-v6-global--Color--200)" }}>—</span>
               ) : (
                 <div style={{ display: "flex", gap: "0.2rem", flexWrap: "wrap" }}>
-                  {proxy.tls
-                    ? <Label color="blue" isCompact variant="outline">{t("proxies.tls_self_signed")}</Label>
-                    : <Label color="grey" isCompact variant="outline">{t("proxies.tls_none")}</Label>}
+                  <TlsBadge proxy={proxy} />
                   {!proxy.fileServer && proxy.tlsSkipVerify && (
                     <Label color="orange" isCompact variant="outline">{t("proxies.tls_skip_verify")}</Label>
                   )}
@@ -903,6 +903,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
           onClose={() => setDuplicating(null)}
           onApiError={msg => setApiError({ message: msg, search: extractLogsSearch(msg), action: "add" })}
           servers={servers}
+          initialTlsMode={tlsModeOf(duplicating)}
           initialServerKey={duplicating.namedServerKey}
           initialValues={{
             externalScheme: duplicating.namedServerKey ? "" : (duplicating.externalScheme ?? ""),

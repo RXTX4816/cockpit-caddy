@@ -10,7 +10,7 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync, writeFileSync, rmSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { CONF_HEADER, buildServerEntry, proxiesToCaddyfile, parseProxies, parseConfExternalAddresses, proxyAddressKeys, resolveInternalIssuerSettings, surgicallyWriteProxy, buildMigratedConfContent, migrateCaddyfile } from "./caddy";
+import { CONF_HEADER, buildServerEntry, proxiesToCaddyfile, parseProxies, parseConfExternalAddresses, proxyAddressKeys, resolveInternalIssuerSettings, surgicallyWriteProxy, buildMigratedConfContent, migrateCaddyfile, parseConfTlsIssuerMap } from "./caddy";
 import type { CaddyConfig, CaddyServer, ProxyEntry } from "./types";
 
 function hasCaddy(): boolean {
@@ -40,12 +40,15 @@ function adapt(caddyfile: string): CaddyConfig {
   }
 }
 
-/** parseProxies plus the conf.d host/scheme fallback useProxies layers on top. */
+/** parseProxies plus the conf.d host/scheme/issuer fallback useProxies layers on top. */
 function readBack(conf: string): ProxyEntry[] {
   const ext = parseConfExternalAddresses(conf);
+  const issuers = parseConfTlsIssuerMap(conf);
   return parseProxies(adapt(conf)).map(p => {
     const found = proxyAddressKeys(p).map(k => ext[k]).find(Boolean);
-    return { ...p, externalHost: p.externalHost ?? found?.host, externalScheme: p.externalScheme ?? found?.scheme };
+    const withHost = { ...p, externalHost: p.externalHost ?? found?.host, externalScheme: p.externalScheme ?? found?.scheme };
+    const issuer = proxyAddressKeys(withHost).map(k => issuers[k]).find(Boolean);
+    return issuer && withHost.tls && !withHost.customTls ? { ...withHost, tlsIssuer: issuer } : withHost;
   });
 }
 
@@ -414,5 +417,58 @@ describe.runIf(available || required)("migration output loads in Caddy (#267)", 
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
+  });
+});
+
+describe.runIf(available || required)("TLS issuer: automatic ACME or the internal CA (#246)", () => {
+  const site = (o: Partial<ProxyEntry>) => entry({ externalHost: "app.example.com", ...o });
+  const internalPolicyFor = (conf: string, host: string) =>
+    (adapt(conf).apps?.tls?.automation?.policies ?? []).some(p => p.subjects?.includes(host) && p.issuers?.some(i => i.module === "internal"));
+
+  it("ACME writes no tls line and reads back as ACME", () => {
+    const conf = proxiesToCaddyfile([site({ tlsIssuer: "acme" })]);
+    expect(conf).not.toMatch(/\btls\b/);
+    expect(internalPolicyFor(conf, "app.example.com")).toBe(false);
+    expect(readBack(conf)[0]).toMatchObject({ tls: true, tlsIssuer: "acme" });
+  });
+
+  it("the internal CA writes tls internal and reads back as internal", () => {
+    const conf = proxiesToCaddyfile([site({ tlsIssuer: "internal" })]);
+    expect(conf).toContain("tls internal");
+    expect(internalPolicyFor(conf, "app.example.com")).toBe(true);
+    expect(readBack(conf)[0]).toMatchObject({ tls: true, tlsIssuer: "internal" });
+  });
+
+  it("no issuer given stays the internal CA, as before", () => {
+    expect(proxiesToCaddyfile([site({})])).toContain("tls internal");
+  });
+
+  it("ACME with protocol settings writes a tls block without an issuer", () => {
+    const conf = proxiesToCaddyfile([site({ tlsIssuer: "acme", tlsAdvanced: { protocolMin: "tls1.3" } })]);
+    expect(conf).toContain("\ttls {\n\t\tprotocols tls1.3\n\t}");
+    expect(conf).not.toContain("issuer");
+    expect(readBack(conf)[0]).toMatchObject({ tlsIssuer: "acme" });
+  });
+
+  it("a hostless site can't use ACME and falls back to the internal CA", () => {
+    expect(proxiesToCaddyfile([entry({ tlsIssuer: "acme" })])).toContain("tls internal");
+  });
+
+  it.each([
+    ["a hand-written bare hostname", "app.example.com {\n\treverse_proxy localhost:8000\n}"],
+    ["a plugin-format host:443 header", "app.example.com:443 {\n\treverse_proxy localhost:8000\n}"],
+  ])("editing %s that relies on automatic HTTPS keeps it ACME", (_n, block) => {
+    const conf = `${CONF_HEADER}\n\n${block}\n`;
+    const p = readBack(conf)[0];
+    expect(p).toMatchObject({ tls: true, tlsIssuer: "acme" });
+    const edited = surgicallyWriteProxy(conf, { ...p, targetPort: 8001 });
+    expect(edited).not.toMatch(/\btls\b/);
+    expect(internalPolicyFor(edited, "app.example.com")).toBe(false);
+    expect(readBack(edited)[0]).toMatchObject({ tlsIssuer: "acme", targetPort: 8001 });
+  });
+
+  it("a hand-written tls internal on a public name reads back as internal", () => {
+    const conf = `${CONF_HEADER}\n\napp.example.com {\n\ttls internal\n\treverse_proxy localhost:8000\n}\n`;
+    expect(readBack(conf)[0]).toMatchObject({ tlsIssuer: "internal" });
   });
 });

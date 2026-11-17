@@ -31,7 +31,7 @@ test('custom error handler for 404 writes correct handle_errors block', async ({
   await modal.getByLabel('External port').fill('19390');
   await modal.getByLabel(/target host/i).fill('localhost');
   await modal.locator('#target-port').fill('19391');
-  await modal.locator('#tls').uncheck();
+  await modal.locator('#tls').selectOption('off');
 
   await modal.getByRole('button', { name: /custom error handlers/i }).click();
   await modal.getByRole('button', { name: /add error handler/i }).click();
@@ -61,7 +61,7 @@ test('custom error handler actually renders for a real 404 response', async ({ p
     await modal.getByLabel('External port').fill('19392');
     await modal.getByLabel(/target host/i).fill('localhost');
     await modal.locator('#target-port').fill(String(targetPort));
-    await modal.locator('#tls').uncheck();
+    await modal.locator('#tls').selectOption('off');
 
     await modal.getByRole('button', { name: /custom error handlers/i }).click();
     await modal.getByRole('button', { name: /add error handler/i }).click();
@@ -91,7 +91,7 @@ test('removing the error handler reverts to the default Caddy error page', async
   await modal1.getByLabel('External port').fill('19394');
   await modal1.getByLabel(/target host/i).fill('localhost');
   await modal1.locator('#target-port').fill('19395');
-  await modal1.locator('#tls').uncheck();
+  await modal1.locator('#tls').selectOption('off');
   await modal1.getByRole('button', { name: /custom error handlers/i }).click();
   await modal1.getByRole('button', { name: /add error handler/i }).click();
   await modal1.locator('#eh-codes-0').fill('404');

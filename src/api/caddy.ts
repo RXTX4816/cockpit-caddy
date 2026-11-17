@@ -611,6 +611,29 @@ export function parseConfTlsMap(content: string): Record<string, boolean> {
 }
 
 /**
+ * Returns address → certificate issuer (#246) for conf.d site blocks that serve TLS without a
+ * certificate file of their own: "internal" when the block says `tls internal` or names the
+ * internal issuer, "acme" when a public name relies on Caddy's automatic HTTPS (no issuer
+ * named, or an ACME one). Blocks with plain HTTP, a cert file, or no public name are left out.
+ */
+export function parseConfTlsIssuerMap(content: string): Record<string, "acme" | "internal"> {
+  const result: Record<string, "acme" | "internal"> = {};
+  for (const block of extractRawBlocksFromCaddyfile(content)) {
+    const addresses = parseSiteAddresses(block.address);
+    if (!addresses?.length || addresses.some(a => a.scheme === "http")) continue;
+    const body = block.raw.split("\n").slice(1).map(l => l.trim());
+    if (body.some(t => t === "tls off")) continue;
+    // `tls <cert> <key>` loads a certificate file: no issuer at all.
+    if (body.some(t => /^tls\s+(?!internal\b)\S+\s+[^\s{]/.test(t))) continue;
+    const internal = body.some(t => /^tls\s+internal\b/.test(t) || /^issuer\s+internal\b/.test(t));
+    const publicName = addresses.some(a => !!a.host && !isCaddyInternalSubject(a.host));
+    if (internal) setBlockResult(result, block, "internal");
+    else if (publicName) setBlockResult(result, block, "acme");
+  }
+  return result;
+}
+
+/**
  * Returns address → CA bundle path by reading `# tls_ca_bundle: <path>` comments (#152)
  * from conf.d site blocks. Caddy has no field for this on a manually-loaded certificate —
  * it's stored as a comment purely so the UI can show it back to the user, the same way
@@ -1423,7 +1446,7 @@ function buildLogCaddyLines(log: import("./types").AccessLogConfig): string[] {
  * that silent, order-dependent overwrite — hostless renewal window only comes from
  * the real global `renewal_window_ratio` Caddyfile option instead.
  */
-function buildTlsCaddyLines(p: Pick<ProxyEntry, "tls" | "tlsAdvanced" | "mtls" | "customTls">, hostless: boolean): string[] {
+function buildTlsCaddyLines(p: Pick<ProxyEntry, "tls" | "tlsIssuer" | "tlsAdvanced" | "mtls" | "customTls">, hostless: boolean): string[] {
   if (!p.tls) return [];
   const adv = p.tlsAdvanced;
   const mtls = p.mtls;
@@ -1453,6 +1476,14 @@ function buildTlsCaddyLines(p: Pick<ProxyEntry, "tls" | "tlsAdvanced" | "mtls" |
     lines.push("\t}");
     lines.push(...caComment);
     return lines;
+  }
+
+  // Automatic HTTPS (#246): Caddy's default issuers (ACME) apply when the block names no
+  // issuer at all. It needs a public name, so a hostless site keeps the internal CA. The
+  // internal-issuer settings (lifetime, renewal ratio) don't apply here.
+  if (p.tlsIssuer === "acme" && !hostless) {
+    const policy = buildTlsPolicyBlockLines(adv, mtls);
+    return policy.length ? ["\ttls {", ...policy, "\t}"] : [];
   }
 
   if (!hasAdvanced && !hasMtls) return ["\ttls internal"];
