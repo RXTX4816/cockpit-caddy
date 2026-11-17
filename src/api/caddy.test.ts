@@ -19,6 +19,7 @@ import {
   surgicallyReplaceBlock,
   surgicallyRemoveBlock,
   surgicallyWriteProxy,
+  surgicallyEditProxy,
   parseGlobalOptions,
   buildGlobalOptionsPatch,
   serverDefToBlock,
@@ -2039,6 +2040,15 @@ describe("buildServerEntry — fileServer", () => {
 });
 
 describe("parseProxies — fileServer round-trip", () => {
+  it("reads the root from the vars handler the Caddyfile adapter emits (#245)", () => {
+    const config = makeConfig([
+      { handler: "vars", root: "/srv/www" } as import("./types").CaddyHandler,
+      { handler: "file_server", hide: ["/etc/caddy/Caddyfile"] } as import("./types").CaddyHandler,
+    ]);
+    const [p] = parseProxies(config);
+    expect(p.fileServer?.root).toBe("/srv/www");
+  });
+
   it("parses file_server handler", () => {
     const config = makeConfig([{ handler: "file_server", root: "/var/www/html" }]);
     const [p] = parseProxies(config);
@@ -3702,6 +3712,20 @@ describe("scanConfigIssues — missing http:// scheme on TLS-disabled sites", ()
     expect(fixed).not.toContain("https://");
   });
 
+  it("puts http:// on every address of a multi-host block (#208)", () => {
+    const proxyConf = "# Managed by cockpit-caddy\n\na.example.com:8080, https://b.example.com:8080 {\n\treverse_proxy http://localhost:3000\n}\n";
+    const findings = scanConfigIssues("", proxyConf);
+    const finding = findings.find(f => f.id.startsWith("missing-http-scheme"));
+    expect(finding?.after).toBe("http://a.example.com:8080, http://b.example.com:8080 {");
+    const { proxyConf: fixed } = applyConfigFindings(findings, new Set([finding!.id]), "", proxyConf);
+    expect(fixed).toContain("http://a.example.com:8080, http://b.example.com:8080 {");
+  });
+
+  it("does not flag a multi-host block whose every address is http:// (#208)", () => {
+    const proxyConf = "# Managed by cockpit-caddy\n\nhttp://a.example.com:8080, http://b.example.com:8080 {\n\treverse_proxy http://localhost:3000\n}\n";
+    expect(scanConfigIssues("", proxyConf).find(f => f.id.startsWith("missing-http-scheme"))).toBeUndefined();
+  });
+
   it("does not flag a block that already has an explicit http:// scheme", () => {
     const proxyConf = "# Managed by cockpit-caddy\n\nhttp://:4343 {\n\treverse_proxy http://localhost:3000\n}\n";
     const findings = scanConfigIssues("", proxyConf);
@@ -3910,5 +3934,281 @@ describe("inlineConfDImport", () => {
   it("returns the Caddyfile unchanged without a conf.d glob import", () => {
     const main = ":80 {\n}\n";
     expect(inlineConfDImport(main, files)).toBe(main);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Several hostnames for one proxy (#208)
+// ---------------------------------------------------------------------------
+
+describe("multiple hostnames — writing (#208)", () => {
+  const multi = (overrides: Partial<ProxyEntry> = {}) => proxy({
+    id: "host:example.com", externalPort: 443, tls: true,
+    externalHost: "example.com, www.example.com", ...overrides,
+  });
+
+  it("writes every name into one site address, each with the port", () => {
+    expect(proxyToBlock(multi()).split("\n")[0]).toBe("example.com:443, www.example.com:443 {");
+  });
+
+  it("repeats the scheme on every name", () => {
+    expect(proxyToBlock(multi({ externalScheme: "https" })).split("\n")[0])
+      .toBe("https://example.com:443, https://www.example.com:443 {");
+  });
+
+  it("forces http:// on every name when TLS is off", () => {
+    expect(proxyToBlock(multi({ tls: false, externalPort: 8080 })).split("\n")[0])
+      .toBe("http://example.com:8080, http://www.example.com:8080 {");
+  });
+
+  it("writes a single hostname exactly as before", () => {
+    expect(proxyToBlock(proxy({ tls: true, externalPort: 443, externalHost: "example.com" })).split("\n")[0])
+      .toBe("example.com:443 {");
+  });
+
+  it("treats a proxy with public names as host-scoped, not hostless, for TLS", () => {
+    const block = proxyToBlock(multi({ tlsAdvanced: { certLifetime: "30d", renewalWindowRatio: 0.5 } }));
+    expect(block).toContain("renewal_window_ratio 0.5");
+    expect(applyGlobalInternalLifetimeToProxy(multi({ tlsAdvanced: { certLifetime: "30d" } }), "90d"))
+      .toEqual({ certLifetime: "30d" });
+  });
+
+  it("adds a host matcher with every name to the JSON route, and none for a single host", () => {
+    const server = buildServerEntry(multi());
+    expect(server.routes?.[0].match).toEqual([{ host: ["example.com", "www.example.com"] }]);
+    expect(buildServerEntry(proxy({ externalPort: 443, externalHost: "example.com" })).routes?.[0].match).toBeUndefined();
+  });
+
+  it("scopes a custom internal-issuer policy to every name (#139 grouping)", () => {
+    const config: CaddyConfig = {
+      apps: {
+        http: { servers: {} },
+        tls: {
+          automation: {
+            policies: [
+              { issuers: [{ module: "internal" }] },
+              { subjects: ["www.example.com"], issuers: [{ module: "internal", lifetime: "10d" }] },
+              { subjects: ["other.example.com"], issuers: [{ module: "internal", lifetime: "20d" }] },
+            ],
+          },
+        },
+      },
+    };
+    const result = mergeProxy(config, multi({ serverKey: "srv443", tlsAdvanced: { certLifetime: "30d" } }));
+    const policies = result.apps?.tls?.automation?.policies ?? [];
+    expect(policies).toContainEqual({ subjects: ["example.com", "www.example.com"], issuers: [{ module: "internal", lifetime: "30d" }] });
+    expect(policies.filter(p => p.subjects?.some(s => s === "www.example.com"))).toHaveLength(1);
+    expect(policies.find(p => p.subjects?.some(s => s === "other.example.com"))?.issuers?.[0]?.lifetime).toBe("20d");
+  });
+
+  it("mergeProxy keeps the JSON host matcher in step with the name list on a patched server", () => {
+    const config: CaddyConfig = {
+      apps: {
+        http: {
+          servers: {
+            srv443: {
+              listen: [":443"],
+              routes: [{ handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:7701" }] }] as import("./types").CaddyHandler[], terminal: true }],
+            },
+          },
+        },
+      },
+    };
+    const grown = mergeProxy(config, multi({ serverKey: "srv443" }));
+    expect(grown.apps?.http?.servers?.srv443.routes?.[0].match).toEqual([{ host: ["example.com", "www.example.com"] }]);
+    const shrunk = mergeProxy(grown, multi({ serverKey: "srv443", externalHost: "example.com" }));
+    expect(shrunk.apps?.http?.servers?.srv443.routes?.[0].match).toBeUndefined();
+  });
+
+  it("routeHosts and standaloneProxyId see every name, the id keyed by the first", () => {
+    expect(routeHosts({ externalHost: "example.com, www.example.com" })).toEqual(["example.com", "www.example.com"]);
+    expect(standaloneProxyId({ externalPort: 443, externalHost: "example.com, www.example.com" })).toBe("host:example.com");
+    expect(hostsConflict(routeHosts({ externalHost: "a.example.com, b.example.com" }), ["b.example.com"])).toBe(true);
+  });
+
+  it("proxyAddressKeys includes the written address and the bare list", () => {
+    const keys = proxyAddressKeys(multi());
+    expect(keys[0]).toBe("example.com:443, www.example.com:443");
+    expect(keys).toContain("example.com, www.example.com");
+    expect(keys).toContain("https://example.com:443, https://www.example.com:443");
+  });
+});
+
+describe("multiple hostnames — reading (#208)", () => {
+  it("parseConfExternalAddresses keeps every name of a host:port list", () => {
+    const conf = `example.com:443, www.example.com:443 {\n\treverse_proxy localhost:8000\n}\n`;
+    expect(parseConfExternalAddresses(conf)["example.com:443, www.example.com:443"])
+      .toEqual({ host: "example.com, www.example.com" });
+  });
+
+  it("parseConfExternalAddresses keeps every name and the scheme of a scheme://host:port list", () => {
+    const conf = `https://a.example.com:8443, https://b.example.com:8443 {\n\treverse_proxy localhost:8000\n}\n`;
+    expect(parseConfExternalAddresses(conf)["https://a.example.com:8443, https://b.example.com:8443"])
+      .toEqual({ scheme: "https", host: "a.example.com, b.example.com" });
+  });
+
+  it("parseConfExternalAddresses keeps every name of a bare list, comma or space separated", () => {
+    const conf = `a.example.com,b.example.com {\n\treverse_proxy localhost:8000\n}\n\nc.example.com d.example.com {\n\treverse_proxy localhost:8001\n}\n`;
+    const map = parseConfExternalAddresses(conf);
+    expect(map["a.example.com,b.example.com"]).toEqual({ host: "a.example.com, b.example.com" });
+    // also findable under the canonical spelling proxyAddressKeys produces
+    expect(map["a.example.com, b.example.com"]).toEqual({ host: "a.example.com, b.example.com" });
+    expect(map["c.example.com d.example.com"]).toEqual({ host: "c.example.com, d.example.com" });
+  });
+
+  it("parseProxies turns a multi-host route into one proxy with every name as externalHost", () => {
+    const config: CaddyConfig = {
+      apps: {
+        http: {
+          servers: {
+            srv0: {
+              listen: [":443"],
+              routes: [
+                {
+                  match: [{ host: ["example.com", "www.example.com"] }],
+                  handle: [{ handler: "subroute", routes: [{ handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:8000" }] }] }] }] as import("./types").CaddyHandler[],
+                  terminal: true,
+                },
+                {
+                  match: [{ host: ["other.example.com"] }],
+                  handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:9000" }] }] as import("./types").CaddyHandler[],
+                  terminal: true,
+                },
+              ],
+            },
+          },
+        },
+        tls: { automation: { policies: [{ subjects: ["example.com", "www.example.com"], issuers: [{ module: "internal", lifetime: "30d" }] }] } },
+      },
+    };
+    const proxies = parseProxies(config);
+    expect(proxies).toHaveLength(2);
+    const p = proxies.find(x => x.targetPort === 8000)!;
+    expect(p.externalHost).toBe("example.com, www.example.com");
+    expect(p.matchers).toBeUndefined();
+    expect(p.id).toBe("host:example.com");
+    expect(p.tls).toBe(true);
+    expect(resolveInternalIssuerSettings(config, p.externalHost).certLifetime).toBe("30d");
+  });
+});
+
+describe("multiple hostnames — parse, edit, write round trips (#208)", () => {
+  const other = `# label: other\nother.example.com:443 {\n\treverse_proxy http://localhost:9000\n}\n`;
+  const count = (s: string, sub: string) => s.split(sub).length - 1;
+
+  /** Reads conf.d the way useProxies does: host and scheme from the block header. */
+  function readBack(conf: string, port: number, host: string) {
+    const ext = parseConfExternalAddresses(conf);
+    const keys = proxyAddressKeys({ externalPort: port, externalHost: host, tls: true });
+    return keys.map(k => ext[k]).find(Boolean);
+  }
+
+  it("single host: an edit rewrites the block in place, byte-for-byte header", () => {
+    const conf = `${CONF_HEADER}\n\nexample.com:443 {\n\ttls internal\n\treverse_proxy http://localhost:8000\n}\n\n${other}`;
+    const p = proxy({ id: "host:example.com", externalPort: 443, tls: true, externalHost: "example.com", targetPort: 8001 });
+    const out = surgicallyWriteProxy(conf, p);
+    expect(out).toBe(conf.replace("localhost:8000", "localhost:8001"));
+  });
+
+  it("several hosts with port: edit in place, other blocks untouched", () => {
+    const conf = `${CONF_HEADER}\n\nexample.com:443, www.example.com:443 {\n\ttls internal\n\treverse_proxy http://localhost:8000\n}\n\n${other}`;
+    expect(readBack(conf, 443, "example.com, www.example.com")).toEqual({ host: "example.com, www.example.com" });
+    const p = proxy({ id: "host:example.com", externalPort: 443, tls: true, externalHost: "example.com, www.example.com", targetPort: 8001 });
+    const out = surgicallyWriteProxy(conf, p);
+    expect(out).toBe(conf.replace("localhost:8000", "localhost:8001"));
+  });
+
+  it("several hosts with scheme and port: edit in place", () => {
+    const conf = `https://a.example.com:8443, https://b.example.com:8443 {\n\ttls internal\n\treverse_proxy http://localhost:8000\n}\n\n${other}`;
+    const back = readBack(conf, 8443, "a.example.com, b.example.com")!;
+    const p = proxy({ externalPort: 8443, tls: true, externalScheme: back.scheme, externalHost: back.host, targetPort: 8001 });
+    const out = surgicallyWriteProxy(conf, p);
+    expect(out).toBe(conf.replace("localhost:8000", "localhost:8001"));
+  });
+
+  it("several hosts without port (hand-written): edit patches the block, header kept", () => {
+    const conf = `example.com, www.example.com {\n\treverse_proxy localhost:8000\n}\n\n${other}`;
+    expect(readBack(conf, 443, "example.com, www.example.com")).toEqual({ host: "example.com, www.example.com" });
+    const p = proxy({ id: "host:example.com", externalPort: 443, tls: true, externalHost: "example.com, www.example.com", targetPort: 8001 });
+    const out = surgicallyWriteProxy(conf, p);
+    expect(count(out, "example.com, www.example.com {")).toBe(1);
+    expect(out.split("\n").some(l => l.startsWith("example.com:443"))).toBe(false);
+    expect(out).toContain("reverse_proxy http://localhost:8001");
+    expect(out).not.toContain("localhost:8000");
+    expect(out).toContain(other.trim());
+  });
+
+  it("single host without port (hand-written): edit patches the block instead of adding a second one", () => {
+    const conf = `git.example.com {\n\treverse_proxy localhost:4732\n}\n`;
+    const p = proxy({ id: "host:git.example.com", externalPort: 443, tls: true, externalHost: "git.example.com", targetPort: 4733 });
+    const out = surgicallyWriteProxy(conf, p);
+    expect(count(out, "git.example.com")).toBe(1);
+    expect(out).toContain("reverse_proxy http://localhost:4733");
+  });
+
+  it("adding a name rewrites the header of the same block", () => {
+    const conf = `${CONF_HEADER}\n\nexample.com:443 {\n\ttls internal\n\treverse_proxy http://localhost:8000\n}\n\n${other}`;
+    const p = proxy({ id: "host:example.com", externalPort: 443, tls: true, externalHost: "example.com, www.example.com", targetPort: 8000 });
+    const out = surgicallyWriteProxy(conf, p);
+    expect(out).toBe(conf.replace("example.com:443 {", "example.com:443, www.example.com:443 {"));
+  });
+
+  it("removing a name rewrites the header of the same block", () => {
+    const conf = `example.com:443, www.example.com:443 {\n\ttls internal\n\treverse_proxy http://localhost:8000\n}\n\n${other}`;
+    const p = proxy({ id: "host:example.com", externalPort: 443, tls: true, externalHost: "example.com", targetPort: 8000 });
+    const out = surgicallyWriteProxy(conf, p);
+    expect(out).toBe(conf.replace("example.com:443, www.example.com:443 {", "example.com:443 {"));
+  });
+
+  it("adding a name to a hand-written portless block replaces only its header", () => {
+    const conf = `example.com {\n\treverse_proxy localhost:8000\n\t# keep me\n}\n\n${other}`;
+    const p = proxy({ id: "host:example.com", externalPort: 443, tls: true, externalHost: "example.com, www.example.com", targetPort: 8000 });
+    const out = surgicallyWriteProxy(conf, p);
+    expect(out.split("\n")[0]).toBe("example.com:443, www.example.com:443 {");
+    expect(out).toContain("# keep me");
+    expect(out.split("\n").filter(l => l.endsWith("{")).map(l => l.trim())).toEqual(["example.com:443, www.example.com:443 {", "other.example.com:443 {"]);
+    expect(out).toContain(other.trim());
+  });
+
+  it("only the matching block is written when another site shares the port", () => {
+    const conf = `a.example.com:443 {\n\treverse_proxy localhost:8001\n}\n\nc.example.com:443, d.example.com:443 {\n\treverse_proxy localhost:8002\n}\n`;
+    const p = proxy({ id: "host:c.example.com", externalPort: 443, tls: true, externalHost: "c.example.com, d.example.com", targetPort: 9999 });
+    const out = surgicallyWriteProxy(conf, p);
+    expect(out).toContain("reverse_proxy localhost:8001");
+    expect(out).toContain("reverse_proxy http://localhost:9999");
+    expect(out).not.toContain("localhost:8002");
+    expect(count(out, "c.example.com")).toBe(1);
+  });
+
+  it("adding a name to one of several sites sharing the port grows that site's block in place", () => {
+    const conf = `a.example.com:443 {\n\treverse_proxy localhost:8001\n}\n\nc.example.com:443 {\n\treverse_proxy localhost:8002\n}\n`;
+    const p = proxy({ id: "host:c.example.com", externalPort: 443, tls: true, externalHost: "c.example.com, d.example.com", targetPort: 8002 });
+    const out = surgicallyWriteProxy(conf, p);
+    expect(out.split("\n").filter(l => l.endsWith("{"))).toEqual(["a.example.com:443 {", "c.example.com:443, d.example.com:443 {"]);
+  });
+
+  it("surgicallyEditProxy grows a site's name list in place, ahead of a sibling on the port", () => {
+    const conf = `example.com:443 {\n\treverse_proxy http://localhost:8000\n}\n\n${other}`;
+    const original = proxy({ id: "host:example.com", externalPort: 443, tls: true, externalHost: "example.com", targetPort: 8000 });
+    const out = surgicallyEditProxy(conf, original, { ...original, externalHost: "example.com, www.example.com" });
+    expect(out.split("\n").filter(l => l.endsWith("{"))).toEqual(["example.com:443, www.example.com:443 {", "other.example.com:443 {"]);
+    const back = surgicallyEditProxy(out, { ...original, externalHost: "example.com, www.example.com" }, { ...original, externalHost: "www.example.com" });
+    expect(back.split("\n").filter(l => l.endsWith("{"))).toEqual(["www.example.com:443 {", "other.example.com:443 {"]);
+  });
+
+  it("surgicallyEditProxy still moves a site renamed to an unrelated name", () => {
+    const conf = `example.com:443 {\n\treverse_proxy http://localhost:8000\n}\n\n${other}`;
+    const original = proxy({ id: "host:example.com", externalPort: 443, tls: true, externalHost: "example.com", targetPort: 8000 });
+    const out = surgicallyEditProxy(conf, original, { ...original, externalHost: "new.example.com, www.new.example.com" });
+    expect(out.split("\n").filter(l => l.endsWith("{"))).toEqual(["other.example.com:443 {", "new.example.com:443, www.new.example.com:443 {"]);
+  });
+
+  it("surgicallyRemoveBlock removes a multi-host block by its full host list, leaving a sibling", () => {
+    const conf = `a.example.com:443 {\n\treverse_proxy localhost:8001\n}\n\nc.example.com:443, d.example.com:443 {\n\treverse_proxy localhost:8002\n}\n`;
+    const out = surgicallyRemoveBlock(conf, 443, "c.example.com, d.example.com");
+    expect(out).not.toContain("c.example.com");
+    expect(out).toContain("a.example.com:443 {");
+    expect(surgicallyRemoveBlock(`example.com, www.example.com {\n\treverse_proxy localhost:8000\n}\n`, 443, "example.com, www.example.com"))
+      .not.toContain("example.com");
   });
 });

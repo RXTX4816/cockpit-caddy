@@ -36,6 +36,12 @@ describe("resolveRouteHost / buildRouteUrl (#140)", () => {
     expect(buildRouteUrl("https", 8443, proxy)).toBe("https://app.example.com:8443/");
   });
 
+  it("links to the first name of a multi-host externalHost (#208)", () => {
+    const proxy = makeProxy({ externalHost: "app.example.com, www.app.example.com" });
+    expect(resolveRouteHost(proxy)).toBe("app.example.com");
+    expect(buildRouteUrl("https", 8443, proxy)).toBe("https://app.example.com:8443/");
+  });
+
   it("prefers the Host matcher over externalHost when both are set", () => {
     const proxy = makeProxy({
       externalHost: "app.example.com",

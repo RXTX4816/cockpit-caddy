@@ -9,6 +9,7 @@ import {
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import type { ProxyEntry } from "../api";
+import { formatExternalHostPort } from "../api";
 import type { ProbeStatus } from "../api/probe";
 import { UpstreamStatusDot } from "./UpstreamStatusDot";
 import { buildRouteUrl } from "./routeUrl";
@@ -30,7 +31,7 @@ export function ProxyCard({ proxy, onEdit, onDelete, onDuplicate, probeStatuses 
 
   const portLink = (
     <a href={url} target="_blank" rel="noopener noreferrer" style={{ fontFamily: "monospace", fontWeight: "bold" }}>
-      {proxy.externalHost ? `${proxy.externalHost}:${proxy.externalPort}` : `:${proxy.externalPort}`}
+      {formatExternalHostPort(proxy)}
       {proxy.matchers?.path?.[0] ? proxy.matchers.path[0].replace(/\*$/, "…") : ""}
     </a>
   );

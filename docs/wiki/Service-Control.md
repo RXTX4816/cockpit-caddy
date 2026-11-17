@@ -29,6 +29,8 @@ See [Managing a containerized Caddy](Troubleshooting#managing-a-containerized-ca
 
 `journalctl -u caddy` has nothing to show for a process with no local systemd unit, so the Logs tab instead reads `docker logs <container>` for a container name you configure. Open the Admin API Address dialog (gear icon next to Service Control) and fill in **Container name (for logs)** with the name or ID of the container running Caddy, then use **Test container** to confirm it's reachable. Until a container name is set, the Logs tab shows a prompt instead of silently staying empty.
 
+If the container runs on a **rootless** Docker daemon, also fill in **Docker socket (optional)**, e.g. `unix:///run/user/1000/docker.sock` (a bare path works too). The plugin then runs `docker --host <socket> ...` as the user that owns the socket instead of as root, since the default (rootful) daemon doesn't know the container. **Test container** says whether the socket is missing or can't be read. Leave the field empty to use the default daemon.
+
 ### "Caddy service failed" alert
 
 If the local `caddy.service` unit is genuinely `failed` (not just inactive) **and** the Admin API isn't reachable through any other means either, the plugin shows a red alert with the actual `systemctl status caddy` output (in a collapsible details section) so you can see why it crashed — e.g. a port conflict — without leaving the browser. This alert stays quiet whenever the Admin API is reachable through something else, since in that case Caddy is working fine regardless of the local unit's state.

@@ -59,6 +59,7 @@ import { useUpstreamProbe } from "../hooks/useUpstreamProbe";
 import { UpstreamStatusDot } from "./UpstreamStatusDot";
 import { buildRouteUrl } from "./routeUrl";
 import type { ProxyEntry, ServerDef } from "../api";
+import { formatExternalHostPort } from "../api";
 import { accessLogConfigToValues } from "./AccessLogSection";
 import { tlsConfigToValues } from "./TlsSection";
 
@@ -176,7 +177,7 @@ function ProxyRow({ proxy, onEdit, onDelete, onDuplicate, probeStatuses, servers
                 id={`proxy-${proxy.id}`}
                 style={{ fontFamily: "monospace", fontWeight: "bold" }}
               >
-                {proxy.externalHost ? `${proxy.externalHost}:${proxy.externalPort}` : `:${proxy.externalPort}`}
+                {formatExternalHostPort(proxy)}
                 {proxy.matchers?.path?.[0] ? proxy.matchers.path[0].replace(/\*$/, "…") : ""}
               </a>
               {serverName && (

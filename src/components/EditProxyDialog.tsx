@@ -20,8 +20,9 @@ import {
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast, ExternalAddressInput } from "@rxtx4816/cockpit-plugin-base-react/components";
-import { readProxyConf, parseConfExternalAddresses, CaddyApiError, CaddyfileError, routeHosts, hostsConflict, fetchCaddyConfig, classifyAcmeHosts } from "../api";
+import { readProxyConf, parseConfExternalAddresses, CaddyApiError, CaddyfileError, routeHosts, hostsConflict, fetchCaddyConfig, classifyAcmeHosts, externalHostList, normalizeExternalHost, formatExternalAddressPreview } from "../api";
 import { EXTERNAL_ADDRESS_BUILTIN_SCHEMES } from "./externalAddressSchemes";
+import { externalHostFieldError } from "./externalHostField";
 import { isValidPort } from "@rxtx4816/cockpit-plugin-base-react/lib/uri";
 import type { ProxyEntry, RewriteConfig, HeaderOperation, RouteMatch, ServerDef, AcmeHostStatus } from "../api";
 import { RouteMatchersSection } from "./RouteMatchersSection";
@@ -119,7 +120,7 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
     void fetchCaddyConfig().then(config => setAcmeHosts(classifyAcmeHosts(config))).catch(() => {});
   }, []);
 
-  const acmeStatus = acmeHosts.find(h => h.host === externalHost.trim());
+  const acmeStatus = acmeHosts.find(h => externalHostList(externalHost).includes(h.host));
 
   function portError(): string | null {
     const n = parseInt(externalPort, 10);
@@ -127,7 +128,7 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
     if (!isValidPort(n)) return t("add_proxy.validation_port_range");
     if (existingRoutes.some(r =>
       r.externalPort === n &&
-      hostsConflict(routeHosts(r), routeHosts({ externalHost: externalHost.trim() || undefined, matchers }))
+      hostsConflict(routeHosts(r), routeHosts({ externalHost: normalizeExternalHost(externalHost), matchers }))
     )) return t("add_proxy.validation_port_duplicate", { port: n });
     return null;
   }
@@ -135,6 +136,11 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
   const forwardAuthErr = validateForwardAuth(forwardAuth);
 
   function validateAndConfirm() {
+    const hostErr = externalHostFieldError(externalHost, t);
+    if (hostErr) {
+      setExtHostErr(hostErr);
+      return;
+    }
     if (externalScheme && !externalHost.trim()) {
       setExtHostErr(t("add_proxy.validation_ext_host_required_with_scheme"));
       return;
@@ -162,11 +168,7 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
     if (isConfirming) warningRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [isConfirming]);
 
-  const extHeader = externalScheme && externalHost
-    ? `${externalScheme}://${externalHost}:${externalPort || "…"}`
-    : externalHost
-      ? `${externalHost}:${externalPort || "…"}`
-      : `:${externalPort || "…"}`;
+  const extHeader = formatExternalAddressPreview(externalScheme, externalHost, externalPort) ?? ":…";
   const targetUrl = `${targetScheme}://${targetHost || "…"}:${targetPort || "…"}`;
 
   return (
@@ -437,7 +439,7 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
                 const entry: ProxyEntry = {
                   ...proxy,
                   externalScheme: externalScheme || undefined,
-                  externalHost: externalHost.trim() || undefined,
+                  externalHost: normalizeExternalHost(externalHost),
                   externalPort: port,
                   // id is intentionally left as proxy.id (via the ...proxy spread) — it still
                   // identifies *which* existing proxy this is even if the host/port changed as

@@ -344,7 +344,9 @@ export interface ProxyEntry {
   externalPort: number;
   /** Optional protocol for the external listener (e.g. "http", "https", "h2c") */
   externalScheme?: string;
-  /** Optional hostname/IP for the external listener; omit to bind all interfaces */
+  /** Optional hostname/IP for the external listener; omit to bind all interfaces.
+   *  Several names (#208) are joined by ", " (e.g. "example.com, www.example.com"),
+   *  written as one site block with every name; see externalHosts.ts. */
   externalHost?: string;
   targetHost: string;
   targetPort: number;
