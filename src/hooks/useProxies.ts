@@ -6,14 +6,14 @@ import {
   readCaddyfile, writeCaddyfile, readProxyConf,
   parseLabelsFromCaddyfile, parseConfTlsMap, parseConfExternalAddresses, parseConfAccessLogMap, parseConfForwardAuthMap, parseConfCustomTlsCaMap,
   surgicallyWriteProxy, surgicallyEditProxy, surgicallyRemoveBlock,
-  extractRawBlocksFromCaddyfile, mergeMigratedConfContent, writeRawProxyConf, writeRawProxyConfValidated,
+  migrateCaddyfile, mergeMigratedConfContent, writeRawProxyConf, writeRawProxyConfValidated,
   CaddyfileError,
   writeFile, reloadCaddy, syncGlobalTimeouts,
   removeLegacyServerDefsFile, parseServerDefsFromConf,
   surgicallyWriteServerBlock, surgicallyRemoveServerBlock,
   mergeNamedServer, removeNamedServer,
-  deduplicateServerBlocks, normalizeManagedHeader, proxyAddressKeys, findGlobalBlock,
-  withConfDImport, CONF_D_IMPORT_LINE,
+  deduplicateServerBlocks, normalizeManagedHeader, proxyAddressKeys,
+  withConfDImport,
   resolveInternalIssuerSettings, readGlobalOptions,
   applyGlobalInternalLifetimeToProxy, applyGlobalInternalLifetimeToServer,
   routeHosts, hostsConflict, standaloneProxyId,
@@ -150,7 +150,7 @@ export function useProxies() {
   // whether it's a legacy file with no conf.d import at all, or one that already
   // imports conf.d but also has extra hand-added blocks sitting alongside it.
   const needsMigration = useMemo(
-    () => extractRawBlocksFromCaddyfile(caddyfileContent).length > 0,
+    () => migrateCaddyfile(caddyfileContent).blocks.length > 0,
     [caddyfileContent],
   );
 
@@ -521,15 +521,11 @@ export function useProxies() {
     // not destructive, when the user already has proxies set up there. The
     // existing conf.d content is kept verbatim (see mergeMigratedConfContent)
     // so its `# label:`/`# server:`/`# serverdef:` comments survive.
-    const newBlocks = extractRawBlocksFromCaddyfile(caddyfileContent);
+    // Only site blocks move (#267): the global options, snippets, other imports and an
+    // existing conf.d import stay in the main Caddyfile as the user wrote them.
+    const { blocks: newBlocks, caddyfile: newCaddyfile } = migrateCaddyfile(caddyfileContent);
     const existingConfD = await readProxyConf();
     const content = mergeMigratedConfContent(existingConfD, newBlocks);
-
-    // Preserve the original global options block (admin, email, acme_ca, etc.) —
-    // migration should only move site blocks to conf.d, not discard global settings.
-    const gb = findGlobalBlock(caddyfileContent);
-    const globalBlock = gb ? caddyfileContent.slice(gb.open, gb.close + 1) : null;
-    const newCaddyfile = globalBlock ? `${globalBlock}\n\n${CONF_D_IMPORT_LINE}\n` : `${CONF_D_IMPORT_LINE}\n`;
 
     await writeFile(CADDYFILE_BAK, caddyfileContent);
     await cockpit.spawn(["mkdir", "-p", "/etc/caddy/conf.d"], { superuser: "try" });

@@ -412,6 +412,24 @@ export function extractRawBlocksFromCaddyfile(content: string): RawBlock[] {
   return blocks;
 }
 
+/**
+ * Migration (#267): the site blocks to move to conf.d, and the main Caddyfile without them.
+ * Only real site blocks move. Snippets `(name) { }`, named routes, other imports and comments
+ * stay where they were, so sites that `import` a snippet still find it. A conf.d import the
+ * user already has (e.g. the distro's `import /etc/caddy/conf.d/*`) is kept as written; the
+ * plugin's own import is added only when there is none.
+ */
+export function migrateCaddyfile(content: string): { blocks: RawBlock[]; caddyfile: string } {
+  const blocks = extractRawBlocksFromCaddyfile(content).filter(b => parseSiteAddresses(b.address) !== undefined);
+  let rest = content;
+  for (const b of blocks) {
+    const at = rest.indexOf(b.raw);
+    if (at !== -1) rest = rest.slice(0, at) + rest.slice(at + b.raw.length);
+  }
+  rest = rest.replace(/\n{3,}/g, "\n\n").replace(/^\n+/, "");
+  return { blocks, caddyfile: withConfDImport(rest.trimEnd() + "\n") };
+}
+
 /** Builds the conf.d file content from raw blocks, preserving all original syntax. */
 export function buildMigratedConfContent(blocks: RawBlock[]): string {
   const header = CONF_HEADER + "\n";

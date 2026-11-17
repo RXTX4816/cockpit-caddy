@@ -7,7 +7,7 @@
  * proxy list showed no entry for it afterward.
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { addProxy, spawnCmd, writeFile, readConf } from './helpers';
+import { addProxy, spawnCmd, writeFile, readConf, PROXY_CONF_PATH, CONF_HEADER } from './helpers';
 
 const CADDYFILE_PATH = '/etc/caddy/Caddyfile';
 
@@ -99,4 +99,43 @@ test('detects a hand-added block alongside an existing conf.d import, and migrat
   expect(conf).toContain('localhost:19513');
   await expect(page.getByRole('link', { name: ':19510' })).toBeVisible({ timeout: 10000 });
   await expect(page.getByRole('link', { name: ':19512' })).toBeVisible({ timeout: 10000 });
+});
+
+// #267: migration rebuilt the main Caddyfile from only the global block plus its own
+// `conf.d/*.conf` import, dropping snippets and narrowing the distro's `conf.d/*` import.
+test('migration keeps snippets and the existing conf.d import as written', async ({ pluginPage: page }) => {
+  await dismissAdminBanner(page);
+  const baseline = '{\n\tadmin "unix//run/caddy/admin.socket"\n}\n\nimport /etc/caddy/conf.d/*\n';
+  try {
+    await writeFile(
+      page,
+      CADDYFILE_PATH,
+      '{\n\tadmin "unix//run/caddy/admin.socket"\n}\n\n(common) {\n\theader X-Common yes\n}\n\n:19514 {\n\timport common\n\trespond "migrated"\n}\n\n# Import additional caddy config files in /etc/caddy/conf.d/\nimport /etc/caddy/conf.d/*\n',
+    );
+    await reloadCaddy(page);
+    await page.reload({ waitUntil: 'networkidle' });
+    await dismissAdminBanner(page);
+
+    await page.getByRole('button', { name: /^migrate…$/i }).click({ timeout: 15000 });
+    const modal = page.getByRole('dialog', { name: /migrate caddyfile\?/i });
+    await modal.getByRole('button', { name: /^migrate$/i }).click();
+    await expect(modal).not.toBeVisible({ timeout: 15000 });
+
+    const main = await spawnCmd(page, ['cat', CADDYFILE_PATH]);
+    expect(main).toContain('(common) {\n\theader X-Common yes\n}');
+    expect(main).toContain('import /etc/caddy/conf.d/*\n');
+    expect(main).not.toContain('conf.d/*.conf');
+    expect(main).not.toContain(':19514');
+    expect(await readConf(page)).toContain(':19514 {');
+
+    // The migrated site still gets the snippet's header, so the reload found it.
+    const headers = await spawnCmd(page, ['bash', '-c', "curl -s -D - -o /dev/null 'http://localhost:19514/'; true"]);
+    expect(headers.toLowerCase()).toContain('x-common: yes');
+    await expect(page.getByRole('button', { name: /^migrate…$/i })).not.toBeVisible();
+  } finally {
+    // conf.d now holds a site that imports the snippet, so reset both files before reloading.
+    await writeFile(page, PROXY_CONF_PATH, `${CONF_HEADER}\n`);
+    await writeFile(page, CADDYFILE_PATH, baseline);
+    await reloadCaddy(page);
+  }
 });
