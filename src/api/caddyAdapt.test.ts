@@ -10,8 +10,8 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { CONF_HEADER, proxiesToCaddyfile, parseProxies, parseConfExternalAddresses, proxyAddressKeys, resolveInternalIssuerSettings, surgicallyWriteProxy } from "./caddy";
-import type { CaddyConfig, ProxyEntry } from "./types";
+import { CONF_HEADER, buildServerEntry, proxiesToCaddyfile, parseProxies, parseConfExternalAddresses, proxyAddressKeys, resolveInternalIssuerSettings, surgicallyWriteProxy } from "./caddy";
+import type { CaddyConfig, CaddyServer, ProxyEntry } from "./types";
 
 function hasCaddy(): boolean {
   try {
@@ -112,5 +112,42 @@ describe.runIf(available || required)("caddy adapt accepts generated multi-host 
     ]);
     const grown = surgicallyWriteProxy(edited, { ...p, externalHost: "example.com, www.example.com, api.example.com" });
     expect(readBack(grown).map(x => x.externalHost).sort()).toEqual(["example.com, www.example.com, api.example.com", "other.example.com"]);
+  });
+});
+
+/** The reverse_proxy handlers of a server's first route, wherever subroutes nest them. */
+function reverseProxies(server: CaddyServer | undefined): Record<string, unknown>[] {
+  const out: Record<string, unknown>[] = [];
+  const walk = (handles: Array<Record<string, unknown>>) => {
+    for (const h of handles) {
+      if (h.handler === "reverse_proxy") out.push(h);
+      for (const r of (h.routes as Array<{ handle?: Array<Record<string, unknown>> }> | undefined) ?? []) walk(r.handle ?? []);
+    }
+  };
+  for (const r of server?.routes ?? []) walk((r.handle ?? []) as Array<Record<string, unknown>>);
+  return out;
+}
+
+describe.runIf(available || required)("forward_auth instant-apply JSON matches the Caddyfile adapter (#248)", () => {
+  const cases: Array<[string, import("./types").ForwardAuthConfig]> = [
+    ["https upstream with copy_headers", { upstreamUrl: "https://auth.example.com:9091", uri: "/api/verify?rd=x", copyHeaders: ["Remote-User", "Remote-Groups"] }],
+    ["https upstream without a port", { upstreamUrl: "https://auth.example.com", uri: "/", copyHeaders: ["Remote-User"] }],
+    ["http upstream without copy_headers or port", { upstreamUrl: "http://auth.local", uri: "/verify", copyHeaders: [] }],
+  ];
+
+  it.each(cases)("%s", (_name, forwardAuth) => {
+    const p = entry({ tls: false, externalPort: 8080, forwardAuth });
+    const adapted = adapt(proxiesToCaddyfile([p]));
+    const fromCaddy = reverseProxies(Object.values(adapted.apps?.http?.servers ?? {})[0])[0];
+    const pushed = reverseProxies(buildServerEntry(p))[0];
+    expect(pushed).toEqual(fromCaddy);
+  });
+
+  it("reads forward_auth back from adapted JSON and keeps the real upstream as the target", () => {
+    const forwardAuth = { upstreamUrl: "https://auth.example.com:9091", uri: "/api/verify", copyHeaders: ["Remote-Groups", "Remote-User"] };
+    const [p] = parseProxies(adapt(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, targetPort: 8000, forwardAuth })])));
+    expect(p.targetHost).toBe("localhost");
+    expect(p.targetPort).toBe(8000);
+    expect(p.forwardAuth).toEqual(forwardAuth);
   });
 });

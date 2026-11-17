@@ -847,12 +847,37 @@ function buildForwardAuthCaddyLines(fa: import("./types").ForwardAuthConfig): st
   return lines;
 }
 
+/** Splits a forward_auth URL into Caddy's dial address (default port filled in) and TLS flag. */
+function forwardAuthDial(url: string): { dial: string; tls: boolean } {
+  const tls = /^https:\/\//i.test(url.trim());
+  const hostPort = url.trim().replace(/^https?:\/\//i, "").replace(/\/.*$/, "");
+  const hasPort = /:\d+$/.test(hostPort) && !/^\[[^\]]*\]$/.test(hostPort);
+  return { dial: hasPort ? hostPort : `${hostPort}:${tls ? 443 : 80}`, tls };
+}
+
+const RP_HEADER_PLACEHOLDER = /^\{http\.reverse_proxy\.header\.(.+)\}$/;
+
+/**
+ * Builds the same JSON as Caddy's own forward_auth Caddyfile adapter (#248): on a 2xx from
+ * the auth service, each copied header is first deleted from the client's request and then
+ * set from the auth response, so the backend sees who logged in and a client can't forge
+ * `Remote-User`. An `https://` auth URL gets a TLS transport.
+ */
 function buildForwardAuthHandler(fa: import("./types").ForwardAuthConfig): CaddyHandler | null {
   if (!fa.upstreamUrl.trim()) return null;
-  const dial = fa.upstreamUrl.replace(/^https?:\/\//, "");
+  const { dial, tls } = forwardAuthDial(fa.upstreamUrl);
+  const responseRoutes: Array<Record<string, unknown>> = [{ handle: [{ handler: "vars" }] }];
+  for (const name of [...fa.copyHeaders].sort()) {
+    const placeholder = `{http.reverse_proxy.header.${name}}`;
+    responseRoutes.push({ handle: [{ handler: "headers", request: { delete: [name] } }] });
+    responseRoutes.push({
+      handle: [{ handler: "headers", request: { set: { [name]: [placeholder] } } }],
+      match: [{ not: [{ vars: { [placeholder]: [""] } }] }],
+    });
+  }
   const rp: Record<string, unknown> = {
+    handle_response: [{ match: { status_code: [2] }, routes: responseRoutes }],
     handler: "reverse_proxy",
-    upstreams: [{ dial }],
     headers: {
       request: {
         set: {
@@ -861,41 +886,51 @@ function buildForwardAuthHandler(fa: import("./types").ForwardAuthConfig): Caddy
         },
       },
     },
-    handle_response: [{
-      match: { status_code: [2] },
-      routes: [{
-        handle: [{
-          handler: "copy_response_headers",
-          ...(fa.copyHeaders.length ? { include: fa.copyHeaders } : {}),
-        }],
-      }],
-    }],
+    rewrite: { method: "GET", uri: fa.uri || "/" },
+    ...(tls ? { transport: { protocol: "http", tls: {} } } : {}),
+    upstreams: [{ dial }],
   };
-  if (fa.uri) rp.rewrite = { method: "GET", uri: fa.uri };
   return { handler: "subroute", routes: [{ handle: [rp as CaddyHandler] }] } as CaddyHandler;
 }
 
-function isForwardAuthProxy(rp: CaddyReverseProxyHandler): boolean {
+type ResponseRoute = { handle?: Array<Record<string, unknown>>; match?: unknown };
+
+function forwardAuthResponseRoutes(rp: CaddyReverseProxyHandler): ResponseRoute[] | undefined {
   const resp = (rp.handle_response as Array<Record<string, unknown>> | undefined)?.[0];
-  if (!resp) return false;
-  const match = resp.match as Record<string, unknown> | undefined;
-  if ((match?.status_code as number[] | undefined)?.[0] !== 2) return false;
-  const routes = (resp.routes as Array<{ handle?: unknown[] }> | undefined) ?? [];
+  const match = resp?.match as Record<string, unknown> | undefined;
+  if ((match?.status_code as number[] | undefined)?.[0] !== 2) return undefined;
+  return (resp?.routes as ResponseRoute[] | undefined) ?? [];
+}
+
+/**
+ * A forward_auth guard: a reverse_proxy whose 2xx handle_response either copies headers into
+ * the request (Caddy's adapter shape, a leading `vars` handler) or, in configs pushed by older
+ * plugin versions, uses `copy_response_headers`.
+ */
+function isForwardAuthProxy(rp: CaddyReverseProxyHandler): boolean {
+  const routes = forwardAuthResponseRoutes(rp);
+  if (!routes) return false;
   return routes.some(r =>
-    (r.handle ?? []).some(h => (h as { handler?: string })?.handler === "copy_response_headers"),
+    (r.handle ?? []).some(h => h.handler === "copy_response_headers" || h.handler === "vars"),
   );
 }
 
 function extractForwardAuthFromProxy(rp: CaddyReverseProxyHandler): import("./types").ForwardAuthConfig {
+  const raw = rp as Record<string, unknown>;
   const dial = rp.upstreams?.[0]?.dial ?? "";
-  const upstreamUrl = /^https?:\/\//.test(dial) ? dial : `http://${dial}`;
-  const uri = (rp as Record<string, unknown>).rewrite as { uri?: string } | undefined;
-  const resp = (rp.handle_response as Array<Record<string, unknown>> | undefined)?.[0];
-  const routes = (resp?.routes as Array<{ handle?: unknown[] }> | undefined) ?? [];
-  const copyHandle = routes.flatMap(r => r.handle ?? [])
-    .find(h => (h as { handler?: string })?.handler === "copy_response_headers") as
-    { handler: string; include?: string[] } | undefined;
-  return { upstreamUrl, uri: uri?.uri, copyHeaders: copyHandle?.include ?? [] };
+  const tls = !!(raw.transport as { tls?: unknown } | undefined)?.tls;
+  const scheme = tls ? "https" : "http";
+  const defaultPort = tls ? ":443" : ":80";
+  const hostPort = /^https?:\/\//.test(dial) ? dial.replace(/^https?:\/\//, "") : dial;
+  const upstreamUrl = `${scheme}://${hostPort.endsWith(defaultPort) ? hostPort.slice(0, -defaultPort.length) : hostPort}`;
+  const uri = raw.rewrite as { uri?: string } | undefined;
+  const handles = (forwardAuthResponseRoutes(rp) ?? []).flatMap(r => r.handle ?? []);
+  const copyHandle = handles.find(h => h.handler === "copy_response_headers") as { include?: string[] } | undefined;
+  const fromSets = handles.flatMap(h => {
+    const set = (h.request as { set?: Record<string, string[]> } | undefined)?.set ?? {};
+    return Object.entries(set).filter(([, v]) => RP_HEADER_PLACEHOLDER.test(v?.[0] ?? "")).map(([k]) => k);
+  });
+  return { upstreamUrl, uri: uri?.uri, copyHeaders: copyHandle?.include ?? fromSets };
 }
 
 function detectForwardAuth(handles: AnyHandler[]): import("./types").ForwardAuthConfig | undefined {
