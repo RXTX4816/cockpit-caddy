@@ -1153,7 +1153,19 @@ function buildLbRetryLines(lbRetry: import("./types").LbRetryConfig | undefined)
   if (lbRetry.retries != null) lines.push(`\t\tlb_retries ${lbRetry.retries}`);
   if (lbRetry.tryDuration) lines.push(`\t\tlb_try_duration ${lbRetry.tryDuration}`);
   if (lbRetry.tryInterval) lines.push(`\t\tlb_try_interval ${lbRetry.tryInterval}`);
-  if (lbRetry.unhealthyStatus?.length) lines.push(`\t\tunhealthy_status ${lbRetry.unhealthyStatus.join(" ")}`);
+  // Passive checks are off in Caddy without fail_duration (#252), so the options that only
+  // feed them are written only alongside it.
+  if (lbRetry.failDuration) {
+    lines.push(`\t\tfail_duration ${lbRetry.failDuration}`);
+    if (lbRetry.maxFails != null) lines.push(`\t\tmax_fails ${lbRetry.maxFails}`);
+    if (lbRetry.unhealthyStatus?.length) lines.push(`\t\tunhealthy_status ${lbRetry.unhealthyStatus.join(" ")}`);
+  }
+  if (lbRetry.healthUri) {
+    lines.push(`\t\thealth_uri ${lbRetry.healthUri}`);
+    if (lbRetry.healthInterval) lines.push(`\t\thealth_interval ${lbRetry.healthInterval}`);
+    if (lbRetry.healthTimeout) lines.push(`\t\thealth_timeout ${lbRetry.healthTimeout}`);
+    if (lbRetry.healthStatus) lines.push(`\t\thealth_status ${lbRetry.healthStatus}`);
+  }
   return lines;
 }
 
@@ -2081,18 +2093,51 @@ function parseRequestBodyMaxSize(handles: AnyHandler[]): number | undefined {
   return typeof h?.max_size === "number" ? h.max_size : undefined;
 }
 
+/** Mirrors buildLbRetryLines' health-check part as Caddy JSON (#252). */
+function buildHealthChecksJson(lbRetry: import("./types").LbRetryConfig | undefined): Record<string, unknown> | undefined {
+  if (!lbRetry) return undefined;
+  const out: Record<string, unknown> = {};
+  if (lbRetry.failDuration) {
+    out.passive = {
+      fail_duration: lbRetry.failDuration,
+      ...(lbRetry.maxFails != null ? { max_fails: lbRetry.maxFails } : {}),
+      ...(lbRetry.unhealthyStatus?.length ? { unhealthy_status: lbRetry.unhealthyStatus } : {}),
+    };
+  }
+  if (lbRetry.healthUri) {
+    const cls = lbRetry.healthStatus?.match(/^([1-5])xx$/i);
+    out.active = {
+      uri: lbRetry.healthUri,
+      ...(lbRetry.healthInterval ? { interval: lbRetry.healthInterval } : {}),
+      ...(lbRetry.healthTimeout ? { timeout: lbRetry.healthTimeout } : {}),
+      ...(lbRetry.healthStatus ? { expect_status: cls ? parseInt(cls[1], 10) : parseInt(lbRetry.healthStatus, 10) } : {}),
+    };
+  }
+  return Object.keys(out).length ? out : undefined;
+}
+
 function parseLbRetry(rp: CaddyReverseProxyHandler): import("./types").LbRetryConfig | undefined {
   const lb = rp.load_balancing as { retries?: number; try_duration?: number | string; try_interval?: number | string } | undefined;
-  const unhealthyStatus = (rp.health_checks as { passive?: { unhealthy_status?: number[] } } | undefined)?.passive?.unhealthy_status;
-  const tryDuration = parseDuration(lb?.try_duration);
-  const tryInterval = parseDuration(lb?.try_interval);
+  type Passive = { fail_duration?: number | string; max_fails?: number; unhealthy_status?: number[] };
+  type Active = { uri?: string; interval?: number | string; timeout?: number | string; expect_status?: number };
+  const hc = rp.health_checks as { passive?: Passive; active?: Active } | undefined;
+  const unhealthyStatus = hc?.passive?.unhealthy_status;
+  const expect = hc?.active?.expect_status;
   const cfg: import("./types").LbRetryConfig = {
     retries: lb?.retries,
-    tryDuration: tryDuration || undefined,
-    tryInterval: tryInterval || undefined,
+    tryDuration: parseDuration(lb?.try_duration) || undefined,
+    tryInterval: parseDuration(lb?.try_interval) || undefined,
+    failDuration: parseDuration(hc?.passive?.fail_duration) || undefined,
+    maxFails: hc?.passive?.max_fails,
     unhealthyStatus: unhealthyStatus?.length ? unhealthyStatus : undefined,
+    healthUri: hc?.active?.uri || undefined,
+    healthInterval: parseDuration(hc?.active?.interval) || undefined,
+    healthTimeout: parseDuration(hc?.active?.timeout) || undefined,
+    // Caddy stores a status class ("2xx") as its first digit.
+    healthStatus: expect == null ? undefined : expect < 10 ? `${expect}xx` : String(expect),
   };
-  return (cfg.retries != null || cfg.tryDuration || cfg.tryInterval || cfg.unhealthyStatus) ? cfg : undefined;
+  for (const k of Object.keys(cfg) as Array<keyof typeof cfg>) if (cfg[k] == null) delete cfg[k];
+  return Object.keys(cfg).length ? cfg : undefined;
 }
 
 function findReverseProxy(handles: AnyHandler[]): CaddyReverseProxyHandler | undefined {
@@ -2628,9 +2673,9 @@ function buildReverseProxyHandler(
       ...(lbRetry.tryInterval ? { try_interval: lbRetry.tryInterval } : {}),
     };
   }
-  if (lbRetry?.unhealthyStatus?.length) {
-    rp.health_checks = { passive: { unhealthy_status: lbRetry.unhealthyStatus } };
-  }
+  const healthChecks = buildHealthChecksJson(lbRetry);
+  if (healthChecks) rp.health_checks = healthChecks;
+
   if (errorHandlers?.length) {
     const codes = errorHandlerResponseCodes(errorHandlers);
     if (codes.length) {
