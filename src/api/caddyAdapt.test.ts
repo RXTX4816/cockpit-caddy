@@ -287,3 +287,47 @@ describe.runIf(available || required)("PHP sites serve static files too (#247)",
     expect(again.find(x => x.externalHost === "other.example.com")?.targetPort).toBe(9000);
   });
 });
+
+describe.runIf(available || required)("passive and active health checks (#252)", () => {
+  const twoUpstreams = { extraUpstreams: [{ host: "localhost", port: 8001 }] };
+  const lbRetry = {
+    retries: 2, failDuration: "30s", maxFails: 3, unhealthyStatus: [500, 503],
+    healthUri: "/healthz", healthInterval: "10s", healthTimeout: "2s", healthStatus: "2xx",
+  };
+
+  function adaptedRp(conf: string): Record<string, unknown> {
+    let rp: Record<string, unknown> | undefined;
+    JSON.stringify(adapt(conf), (k, v) => {
+      if (v && typeof v === "object" && (v as { handler?: string }).handler === "reverse_proxy") rp = v;
+      return v;
+    });
+    return rp!;
+  }
+
+  it("reads every health-check field back after a reload", () => {
+    const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, ...twoUpstreams, lbRetry })]));
+    expect(p.lbRetry).toEqual(lbRetry);
+  });
+
+  it("an exact expected status reads back as written", () => {
+    const cfg = { healthUri: "/h", healthStatus: "204" };
+    const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, lbRetry: cfg })]));
+    expect(p.lbRetry).toEqual(cfg);
+  });
+
+  it("the instant-apply JSON health_checks equal the adapted ones (durations aside)", () => {
+    const p = entry({ tls: false, externalPort: 8080, ...twoUpstreams, lbRetry });
+    const fromCaddy = adaptedRp(proxiesToCaddyfile([p])).health_checks as Record<string, Record<string, unknown>>;
+    const pushed = (buildServerEntry(p).routes?.[0]?.handle?.find(h => h.handler === "reverse_proxy") as Record<string, unknown>)
+      .health_checks as Record<string, Record<string, unknown>>;
+    const ns = (d: unknown) => (typeof d === "string" ? parseInt(d, 10) * 1e9 : d);
+    expect({ ...pushed.passive, fail_duration: ns(pushed.passive.fail_duration) }).toEqual(fromCaddy.passive);
+    expect({ ...pushed.active, interval: ns(pushed.active.interval), timeout: ns(pushed.active.timeout) }).toEqual(fromCaddy.active);
+  });
+
+  it("unhealthy_status is not written without fail_duration, where Caddy would ignore it", () => {
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, lbRetry: { unhealthyStatus: [500] } })]);
+    expect(conf).not.toContain("unhealthy_status");
+    expect(adaptedRp(conf).health_checks).toBeUndefined();
+  });
+});

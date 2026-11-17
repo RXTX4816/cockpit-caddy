@@ -39,7 +39,7 @@ test('proxy with path matcher generates named @m block and handle wrapper', asyn
   await waitForToolbar(page);
   const modal = await openAddProxyWithMatchers(page, 19200, { host: 'localhost', port: 3000 });
 
-  await modal.getByLabel('Path').fill('/api/*');
+  await modal.getByLabel('Path', { exact: true }).fill('/api/*');
   await modal.getByRole('button', { name: /add path/i }).click();
   await submitAndConfirm(modal);
 
@@ -55,7 +55,7 @@ test('proxy with path matcher + handlePath generates handle_path block', async (
   await waitForToolbar(page);
   const modal = await openAddProxyWithMatchers(page, 19201, { host: 'localhost', port: 3000 });
 
-  await modal.getByLabel('Path').fill('/api/*');
+  await modal.getByLabel('Path', { exact: true }).fill('/api/*');
   await modal.getByRole('button', { name: /add path/i }).click();
   // handlePath checkbox only appears after a path-only matcher is added
   await modal.getByLabel(/strip matched path prefix/i).check();
@@ -72,7 +72,7 @@ test('handlePath checkbox hidden when non-path matchers are also present', async
   const modal = await openAddProxyWithMatchers(page, 19202, { host: 'localhost', port: 3000 });
 
   // Add a path matcher first
-  await modal.getByLabel('Path').fill('/api/*');
+  await modal.getByLabel('Path', { exact: true }).fill('/api/*');
   await modal.getByRole('button', { name: /add path/i }).click();
   // handlePath checkbox should be visible now (path-only)
   await expect(modal.getByLabel(/strip matched path prefix/i)).toBeVisible();
@@ -139,7 +139,7 @@ test('path + host matchers both appear in a single @m block (AND logic)', async 
   await waitForToolbar(page);
   const modal = await openAddProxyWithMatchers(page, 19206, { host: 'localhost', port: 3000 });
 
-  await modal.getByLabel('Path').fill('/api/*');
+  await modal.getByLabel('Path', { exact: true }).fill('/api/*');
   await modal.getByRole('button', { name: /add path/i }).click();
   await modal.getByLabel('Host', { exact: true }).fill('api.example.com');
   await modal.getByRole('button', { name: /add host/i }).click();
@@ -174,7 +174,7 @@ test('edit proxy: add path matcher to existing plain proxy regenerates block wit
   await page.locator('li').filter({ has: page.locator('#proxy-19207') }).getByRole('button', { name: /^edit$/i }).click();
   modal = page.getByRole('dialog');
   await modal.getByText(/route matchers/i).click();
-  await modal.getByLabel('Path').fill('/api/*');
+  await modal.getByLabel('Path', { exact: true }).fill('/api/*');
   await modal.getByRole('button', { name: /add path/i }).click();
   await modal.getByRole('button', { name: /save changes/i }).click();
   await modal.getByRole('button', { name: /^confirm$/i }).click();
@@ -191,7 +191,7 @@ test('edit proxy: remove all matchers reverts to plain block without @m', async 
 
   // Create proxy with a path matcher
   const modal0 = await openAddProxyWithMatchers(page, 19208, { host: 'localhost', port: 3000 });
-  await modal0.getByLabel('Path').fill('/api/*');
+  await modal0.getByLabel('Path', { exact: true }).fill('/api/*');
   await modal0.getByRole('button', { name: /add path/i }).click();
   await submitAndConfirm(modal0);
 

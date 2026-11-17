@@ -2542,11 +2542,12 @@ describe("proxyToBlock — multiple upstreams", () => {
 describe("proxyToBlock — lb retry/failover tuning (#156)", () => {
   it("emits lb_retries, lb_try_duration, lb_try_interval, unhealthy_status", () => {
     const result = proxyToBlock(proxy({
-      lbRetry: { retries: 3, tryDuration: "5s", tryInterval: "250ms", unhealthyStatus: [500, 502, 503] },
+      lbRetry: { retries: 3, tryDuration: "5s", tryInterval: "250ms", failDuration: "30s", unhealthyStatus: [500, 502, 503] },
     }));
     expect(result).toContain("lb_retries 3");
     expect(result).toContain("lb_try_duration 5s");
     expect(result).toContain("lb_try_interval 250ms");
+    expect(result).toContain("fail_duration 30s");
     expect(result).toContain("unhealthy_status 500 502 503");
   });
 
@@ -2636,13 +2637,13 @@ describe("buildServerEntry — lb retry/failover tuning (#156)", () => {
       externalPort: 7700, externalScheme: undefined, externalHost: undefined,
       targetHost: "localhost", targetPort: 8080, targetScheme: "http",
       tls: false, tlsSkipVerify: false,
-      lbRetry: { retries: 3, tryDuration: "5s", tryInterval: "250ms", unhealthyStatus: [500, 502, 503] },
+      lbRetry: { retries: 3, tryDuration: "5s", tryInterval: "250ms", failDuration: "30s", unhealthyStatus: [500, 502, 503] },
     });
     const rp = server.routes[0].handle.find(h => h.handler === "reverse_proxy") as Record<string, unknown> | undefined;
     const lb = rp!.load_balancing as Record<string, unknown> | undefined;
     expect(lb).toMatchObject({ retries: 3, try_duration: "5s", try_interval: "250ms" });
     const hc = rp!.health_checks as Record<string, unknown> | undefined;
-    expect((hc?.passive as Record<string, unknown> | undefined)?.unhealthy_status).toEqual([500, 502, 503]);
+    expect(hc?.passive).toEqual({ fail_duration: "30s", unhealthy_status: [500, 502, 503] });
   });
 
   it("applies lb_retries even without lbPolicy or multiple upstreams", () => {
@@ -2713,7 +2714,7 @@ describe("parseProxies — lb retry/failover tuning round-trip (#156)", () => {
   });
 
   it("round-trips through buildServerEntry + parseProxies", () => {
-    const lbRetry = { retries: 4, tryDuration: "10s", tryInterval: "1s", unhealthyStatus: [500, 503] };
+    const lbRetry = { retries: 4, tryDuration: "10s", tryInterval: "1s", failDuration: "30s", unhealthyStatus: [500, 503] };
     const server = buildServerEntry({
       externalPort: 7700, externalScheme: undefined, externalHost: undefined,
       targetHost: "localhost", targetPort: 8080, targetScheme: "http",

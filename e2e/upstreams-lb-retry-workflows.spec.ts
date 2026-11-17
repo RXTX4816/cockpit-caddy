@@ -200,3 +200,60 @@ test('lb retry count and interval settings are written to the Caddyfile', async 
   expect(conf).toContain('lb_try_duration 10s');
   expect(conf).toContain('lb_try_interval 500ms');
 });
+
+// #252: active health checks take a dead upstream out of rotation, with no retries
+// configured at all — every request goes to the live backend once a check has failed.
+test('active health checks take a dead upstream out of rotation', async ({ pluginPage: page }) => {
+  const portA = 19371;
+  const portB = 19372;
+  await startTaggedBackend(page, portA);
+  await startTaggedBackend(page, portB);
+
+  try {
+    await waitForToolbar(page);
+    await page.getByRole('button', { name: /add proxy/i }).first().click();
+    const modal = page.getByRole('dialog');
+    await modal.getByLabel('External port').fill('19370');
+    await modal.getByLabel(/target host/i).fill('localhost');
+    await modal.locator('#target-port').fill(String(portA));
+    await modal.locator('#tls').uncheck();
+
+    await modal.getByRole('button', { name: /additional upstreams/i }).click();
+    await modal.getByRole('button', { name: /add upstream/i }).click();
+    await modal.locator('#upstream-host-0').fill('localhost');
+    await modal.locator('#upstream-port-0').fill(String(portB));
+    await modal.getByRole('button', { name: /^round robin$/i }).click();
+
+    await modal.getByRole('button', { name: /retry & failover tuning/i }).click();
+    await modal.locator('#lbr-fail-duration').fill('30s');
+    await modal.locator('#lbr-unhealthy-status').fill('500 503');
+    await modal.locator('#lbr-health-uri').fill('/');
+    await modal.locator('#lbr-health-interval').fill('1s');
+    await modal.locator('#lbr-health-timeout').fill('1s');
+    await modal.locator('#lbr-health-status').fill('2xx');
+
+    await modal.getByRole('button', { name: /^add proxy$/i }).click();
+    await modal.getByRole('button', { name: /^confirm$/i }).click();
+    await expect(modal).not.toBeVisible({ timeout: 15000 });
+
+    const conf = await readConf(page);
+    expect(conf).toContain('fail_duration 30s');
+    expect(conf).toContain('unhealthy_status 500 503');
+    expect(conf).toContain('health_uri /');
+    expect(conf).toContain('health_interval 1s');
+    expect(conf).toContain('health_status 2xx');
+
+    await waitForListener(page, 'http://localhost:19370/');
+    await stopBackend(page, portA);
+
+    const curl = () => spawnCmd(page, ['bash', '-c', `curl -s 'http://localhost:19370/'; true`]).then(b => b.trim());
+    // Once a check has failed (interval 1s), round robin skips the dead backend.
+    await expect.poll(async () => {
+      const bodies = [await curl(), await curl(), await curl(), await curl()];
+      return bodies.every(b => b === String(portB));
+    }, { timeout: 15000, intervals: [1000] }).toBe(true);
+  } finally {
+    await stopBackend(page, portA);
+    await stopBackend(page, portB);
+  }
+});

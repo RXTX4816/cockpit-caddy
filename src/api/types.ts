@@ -295,9 +295,9 @@ export interface StaticResponseConfig {
 export type LbPolicy = "round_robin" | "random" | "least_conn" | "first";
 
 /** reverse_proxy retry/failover tuning (#156) — how many times, for how long, and how
- *  often to retry a different upstream after a failed request, and which response status
- *  codes should count as a failure worth retrying. Applies even with a single upstream
- *  (retries just re-dial the same one) — not gated on multiple upstreams like lb_policy. */
+ *  often to retry a different upstream after a failed connection, plus passive and active
+ *  health checks (#252) that take failing upstreams out of rotation. Retries apply even with
+ *  a single upstream (they just re-dial it) — not gated on multiple upstreams like lb_policy. */
 export interface LbRetryConfig {
   /** Max number of retries across all upstreams. */
   retries?: number;
@@ -305,9 +305,21 @@ export interface LbRetryConfig {
   tryDuration?: string;
   /** Wait time between retry attempts (Go duration, e.g. "250ms"). */
   tryInterval?: string;
-  /** Upstream response status codes that should be treated as a failure and trigger
-   *  retrying a different upstream, in addition to Caddy's own connection-error defaults. */
+  /** Passive health checks (#252): how long a failed request counts against an upstream.
+   *  Caddy keeps passive checks off without it, so unhealthyStatus/maxFails need it. */
+  failDuration?: string;
+  /** Passive: failures within failDuration after which an upstream is marked down (Caddy: 1). */
+  maxFails?: number;
+  /** Passive: upstream response codes that count as a failure (only with failDuration). */
   unhealthyStatus?: number[];
+  /** Active health checks (#252): path Caddy requests on each upstream; empty = off. */
+  healthUri?: string;
+  /** Active: time between checks (Caddy: 30s). */
+  healthInterval?: string;
+  /** Active: how long to wait for a check's reply (Caddy: 5s). */
+  healthTimeout?: string;
+  /** Active: expected status, an exact code ("204") or a class ("2xx"). Caddy: any 2xx. */
+  healthStatus?: string;
 }
 
 export type ErrorMatchType = "specific" | "4xx" | "5xx" | "all";
