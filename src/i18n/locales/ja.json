@@ -786,7 +786,14 @@
     "remove_host": "ホストを削除",
     "remove_header": "ヘッダーを削除",
     "remove_query": "クエリパラメーターを削除",
-    "remove_cidr": "CIDR 範囲を削除"
+    "remove_cidr": "CIDR 範囲を削除",
+    "exclude_title": "一致するリクエストを除外",
+    "exclude_help": "これらすべてに一致するリクエストは、上の条件に一致していても除外されます。ここだけを設定すると「これ以外すべて」になります。",
+    "exclude_prefix": "除外:",
+    "expression_label": "式 (CEL)",
+    "expression_help": "あわせて真である必要がある条件です。{path} や {method} などのプレースホルダーを使えます。保存時に Caddy が検証します。",
+    "expression_docs": "expression マッチャーのドキュメント",
+    "chip_not": "除外"
   },
   "handle_path": {
     "label": "一致したパスのプレフィックスを除去（handle_path）"

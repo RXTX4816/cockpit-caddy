@@ -786,7 +786,14 @@
     "remove_host": "移除主機",
     "remove_header": "移除標頭",
     "remove_query": "移除查詢參數",
-    "remove_cidr": "移除 CIDR 範圍"
+    "remove_cidr": "移除 CIDR 範圍",
+    "exclude_title": "排除符合的請求",
+    "exclude_help": "同時符合下列所有欄位的請求會被略過，即使它符合上方的欄位。只填寫這裡則表示符合除此之外的所有請求。",
+    "exclude_prefix": "排除：",
+    "expression_label": "運算式 (CEL)",
+    "expression_help": "也必須為真的條件，可使用 {path} 或 {method} 等預留位置。儲存時由 Caddy 檢查。",
+    "expression_docs": "expression 比對器文件",
+    "chip_not": "排除"
   },
   "handle_path": {
     "label": "移除符合的路徑前綴（handle_path）"

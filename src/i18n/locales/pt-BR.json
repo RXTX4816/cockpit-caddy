@@ -786,7 +786,14 @@
     "remove_host": "Remover host",
     "remove_header": "Remover cabeçalho",
     "remove_query": "Remover parâmetro de consulta",
-    "remove_cidr": "Remover faixa CIDR"
+    "remove_cidr": "Remover faixa CIDR",
+    "exclude_title": "Excluir as requisições correspondentes",
+    "exclude_help": "Uma requisição que corresponde a todos estes campos é ignorada, mesmo que corresponda aos campos acima. Preencha só estes para abranger tudo exceto eles.",
+    "exclude_prefix": "Excluir:",
+    "expression_label": "Expressão (CEL)",
+    "expression_help": "Uma condição que também precisa ser verdadeira, com marcadores como {path} ou {method}. O Caddy a verifica ao salvar.",
+    "expression_docs": "Documentação do matcher expression",
+    "chip_not": "exceto"
   },
   "handle_path": {
     "label": "Remover o prefixo de caminho correspondente (handle_path)"

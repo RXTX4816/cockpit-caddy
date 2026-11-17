@@ -17,7 +17,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
-import { CaddyApiError } from "../api";
+import { CaddyApiError, isPathOnlyMatcher } from "../api";
 import { TlsModeField, defaultTlsMode, hasPublicName, tlsModeToEntry, type TlsMode, tlsModeOf } from "./TlsModeField";
 import { SectionActions } from "./SectionActions";
 import type { ProxyEntry, ErrorHandlerConfig, RouteMatch } from "../api";
@@ -229,10 +229,10 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
             />
           </AccordionRow>
           <AccordionRow last>
-            <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!v?.path?.length) setHandlePath(false); }} isDisabled={isLocked} {...sectionAccordionProps("routeMatchers", expandedSection, setExpandedSection)} />
+            <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!isPathOnlyMatcher(v)) setHandlePath(false); }} isDisabled={isLocked} {...sectionAccordionProps("routeMatchers", expandedSection, setExpandedSection)} />
           </AccordionRow>
         </div>
-        {matchers?.path?.length && !matchers.host?.length && !matchers.method?.length && !matchers.header && !matchers.query && !matchers.remote_ip && (
+        {isPathOnlyMatcher(matchers) && (
           <Checkbox
             id="edit-static-handle-path"
             label={t("handle_path.label")}

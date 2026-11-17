@@ -10,7 +10,7 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync, writeFileSync, rmSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { CONF_HEADER, buildServerEntry, proxiesToCaddyfile, parseProxies, parseConfExternalAddresses, proxyAddressKeys, resolveInternalIssuerSettings, surgicallyWriteProxy, buildMigratedConfContent, migrateCaddyfile, parseConfTlsIssuerMap, parseConfTlsOnDemandMap, parseConfTlsMap } from "./caddy";
+import { CONF_HEADER, buildServerEntry, proxiesToCaddyfile, parseProxies, parseConfExternalAddresses, proxyAddressKeys, resolveInternalIssuerSettings, surgicallyWriteProxy, buildMigratedConfContent, migrateCaddyfile, parseConfTlsIssuerMap, parseConfTlsOnDemandMap, parseConfTlsMap, expandPlaceholderShorthands } from "./caddy";
 import type { CaddyConfig, CaddyServer, ProxyEntry } from "./types";
 
 function hasCaddy(): boolean {
@@ -183,6 +183,61 @@ describe.runIf(available || required)("route matchers write a Caddyfile Caddy ac
     const pushedMatch = buildServerEntry(p).routes?.[0]?.match?.[0] as Record<string, unknown>;
     expect(found).toHaveLength(1);
     expect({ header: pushedMatch.header, query: pushedMatch.query }).toEqual({ header: found[0].header, query: found[0].query });
+  });
+});
+
+describe.runIf(available || required)("route matchers with not and expression adapt and read back (#287)", () => {
+  const routeMatch = (conf: string) => {
+    const found: Array<Record<string, unknown>> = [];
+    JSON.stringify(adapt(conf), (k, v) => {
+      if (k === "match" && Array.isArray(v)) found.push(...v);
+      return v;
+    });
+    return found.filter(m => !("host" in m && Object.keys(m).length === 1));
+  };
+
+  it("exclude only", () => {
+    const matchers = { not: { path: ["/api/*"] } };
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, matchers })]);
+    expect(routeMatch(conf)).toEqual([{ not: [{ path: ["/api/*"] }] }]);
+    expect(readBack(conf)[0].matchers).toEqual(matchers);
+  });
+
+  it("include and exclude", () => {
+    const matchers = { path: ["/app/*"], not: { path: ["/app/admin/*"], remote_ip: { ranges: ["10.0.0.0/8"] }, header: { "X-Bot": [] as string[] } } };
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, matchers })]);
+    expect(routeMatch(conf)).toEqual([{ path: ["/app/*"], not: [{ path: ["/app/admin/*"], remote_ip: { ranges: ["10.0.0.0/8"] }, header: { "X-Bot": ["*"] } }] }]);
+    expect(readBack(conf)[0].matchers).toEqual(matchers);
+  });
+
+  it.each([
+    '{method} == "GET" && {path}.startsWith("/api")',
+    "{header.X-Forwarded-Proto} == 'https'",
+    'path("/a/*") || {query.debug} == "1"',
+    "remote_ip('10.0.0.0/8') && !({uri}.endsWith(`.php`))",
+  ])("expression %s", expression => {
+    const matchers = { path: ["/api/*"], not: { path: ["/api/v1/*"] }, expression };
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, matchers })]);
+    const [adapted] = routeMatch(conf);
+    expect(adapted.not).toEqual([{ path: ["/api/v1/*"] }]);
+    expect(adapted.expression).toMatchObject({ expr: expandPlaceholderShorthands(expression) });
+    expect(readBack(conf)[0].matchers).toEqual(matchers);
+  });
+
+  it("the instant-apply JSON matcher equals the adapted one (apart from the matcher name)", () => {
+    const p = entry({ tls: false, externalPort: 8080, matchers: { not: { method: ["POST"] }, expression: '{path}.startsWith("/x")' } });
+    const [adapted] = routeMatch(proxiesToCaddyfile([p]));
+    const pushed = buildServerEntry(p).routes?.[0]?.match?.[0] as Record<string, unknown>;
+    expect(pushed).toEqual({ ...adapted, expression: { expr: (adapted.expression as { expr: string }).expr } });
+  });
+
+  it("a path-only include with an exclude stays a handle, not handle_path", () => {
+    const matchers = { path: ["/api/*"], not: { path: ["/api/private/*"] } };
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, matchers, handlePath: true })]);
+    expect(conf).not.toContain("handle_path");
+    const [p] = readBack(conf);
+    expect(p.matchers).toEqual(matchers);
+    expect(p.handlePath).toBeUndefined();
   });
 });
 

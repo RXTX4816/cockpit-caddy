@@ -40,7 +40,7 @@ test('proxy with path matcher generates named @m block and handle wrapper', asyn
   const modal = await openAddProxyWithMatchers(page, 19200, { host: 'localhost', port: 3000 });
 
   await modal.getByLabel('Path', { exact: true }).fill('/api/*');
-  await modal.getByRole('button', { name: /add path/i }).click();
+  await modal.getByRole('button', { name: /^add path$/i }).click();
   await submitAndConfirm(modal);
 
   const conf = await readConf(page);
@@ -56,7 +56,7 @@ test('proxy with path matcher + handlePath generates handle_path block', async (
   const modal = await openAddProxyWithMatchers(page, 19201, { host: 'localhost', port: 3000 });
 
   await modal.getByLabel('Path', { exact: true }).fill('/api/*');
-  await modal.getByRole('button', { name: /add path/i }).click();
+  await modal.getByRole('button', { name: /^add path$/i }).click();
   // handlePath checkbox only appears after a path-only matcher is added
   await modal.getByLabel(/strip matched path prefix/i).check();
   await submitAndConfirm(modal);
@@ -73,13 +73,13 @@ test('handlePath checkbox hidden when non-path matchers are also present', async
 
   // Add a path matcher first
   await modal.getByLabel('Path', { exact: true }).fill('/api/*');
-  await modal.getByRole('button', { name: /add path/i }).click();
+  await modal.getByRole('button', { name: /^add path$/i }).click();
   // handlePath checkbox should be visible now (path-only)
   await expect(modal.getByLabel(/strip matched path prefix/i)).toBeVisible();
 
   // Now also add a host matcher — handlePath becomes ineligible
   await modal.getByLabel('Host', { exact: true }).fill('example.com');
-  await modal.getByRole('button', { name: /add host/i }).click();
+  await modal.getByRole('button', { name: /^add host$/i }).click();
   // handlePath checkbox must disappear or be hidden
   await expect(modal.getByLabel(/strip matched path prefix/i)).not.toBeVisible();
 
@@ -91,7 +91,7 @@ test('proxy with host matcher writes host line in @m block', async ({ pluginPage
   const modal = await openAddProxyWithMatchers(page, 19203, { host: 'localhost', port: 3000 });
 
   await modal.getByLabel('Host', { exact: true }).fill('example.com');
-  await modal.getByRole('button', { name: /add host/i }).click();
+  await modal.getByRole('button', { name: /^add host$/i }).click();
   await submitAndConfirm(modal);
 
   const conf = await readConf(page);
@@ -105,8 +105,8 @@ test('proxy with method matcher writes method line in @m block', async ({ plugin
   const modal = await openAddProxyWithMatchers(page, 19204, { host: 'localhost', port: 3000 });
 
   // Method toggles are checkboxes/toggle buttons within the Method section
-  await modal.getByRole('button', { name: 'GET' }).click();
-  await modal.getByRole('button', { name: 'POST' }).click();
+  await modal.getByRole('button', { name: 'GET', exact: true }).first().click();
+  await modal.getByRole('button', { name: 'POST', exact: true }).first().click();
   await submitAndConfirm(modal);
 
   const conf = await readConf(page);
@@ -123,8 +123,8 @@ test('proxy with header matcher writes header line in @m block', async ({ plugin
   // Request Headers / Response Headers sections that share the same aria-labels.
   // PF6 ExpandableSection content renders with role="region" + aria-labelledby → toggle text.
   const matchersContent = modal.getByRole('region', { name: /route matchers/i });
-  await matchersContent.getByLabel('Header name').fill('X-API-Key');
-  await matchersContent.getByLabel(/value.*blank.*present/i).fill('secret');
+  await matchersContent.getByLabel('Header name', { exact: true }).fill('X-API-Key');
+  await matchersContent.getByLabel(/^value.*blank.*present/i).fill('secret');
   // Two "Add" buttons exist in the region (header + query); click the enabled one
   await matchersContent.getByRole('button', { name: /^add$/i }).first().click();
   await submitAndConfirm(modal);
@@ -140,9 +140,9 @@ test('path + host matchers both appear in a single @m block (AND logic)', async 
   const modal = await openAddProxyWithMatchers(page, 19206, { host: 'localhost', port: 3000 });
 
   await modal.getByLabel('Path', { exact: true }).fill('/api/*');
-  await modal.getByRole('button', { name: /add path/i }).click();
+  await modal.getByRole('button', { name: /^add path$/i }).click();
   await modal.getByLabel('Host', { exact: true }).fill('api.example.com');
-  await modal.getByRole('button', { name: /add host/i }).click();
+  await modal.getByRole('button', { name: /^add host$/i }).click();
   await submitAndConfirm(modal);
 
   const conf = await readConf(page);
@@ -175,7 +175,7 @@ test('edit proxy: add path matcher to existing plain proxy regenerates block wit
   modal = page.getByRole('dialog');
   await modal.getByText(/route matchers/i).click();
   await modal.getByLabel('Path', { exact: true }).fill('/api/*');
-  await modal.getByRole('button', { name: /add path/i }).click();
+  await modal.getByRole('button', { name: /^add path$/i }).click();
   await modal.getByRole('button', { name: /save changes/i }).click();
   await modal.getByRole('button', { name: /^confirm$/i }).click();
   await expect(modal).not.toBeVisible({ timeout: 15000 });
@@ -192,7 +192,7 @@ test('edit proxy: remove all matchers reverts to plain block without @m', async 
   // Create proxy with a path matcher
   const modal0 = await openAddProxyWithMatchers(page, 19208, { host: 'localhost', port: 3000 });
   await modal0.getByLabel('Path', { exact: true }).fill('/api/*');
-  await modal0.getByRole('button', { name: /add path/i }).click();
+  await modal0.getByRole('button', { name: /^add path$/i }).click();
   await submitAndConfirm(modal0);
 
   let conf = await readConf(page);
@@ -202,7 +202,7 @@ test('edit proxy: remove all matchers reverts to plain block without @m', async 
   await page.locator('li').filter({ has: page.locator('#proxy-19208') }).getByRole('button', { name: /^edit$/i }).click();
   const editModal = page.getByRole('dialog');
   // Matchers section auto-expands when proxy has matchers — only click to expand if the button isn't visible yet
-  const removeBtn = editModal.getByRole('button', { name: /remove path/i });
+  const removeBtn = editModal.getByRole('button', { name: /^remove path$/i });
   const isVisible = await removeBtn.isVisible();
   if (!isVisible) {
     await editModal.getByText(/route matchers/i).click();
@@ -226,7 +226,7 @@ test('header-presence and query matchers write a Caddyfile that caddy adapt acce
   const modal = await openAddProxyWithMatchers(page, 19209, { host: 'localhost', port: 3000 });
 
   const matchersContent = modal.getByRole('region', { name: /route matchers/i });
-  await matchersContent.getByLabel('Header name').fill('X-Present');
+  await matchersContent.getByLabel('Header name', { exact: true }).fill('X-Present');
   await matchersContent.getByRole('button', { name: /^add$/i }).first().click();
   await matchersContent.getByLabel('Param', { exact: true }).fill('debug');
   await matchersContent.getByLabel('Value', { exact: true }).fill('true');
@@ -238,4 +238,32 @@ test('header-presence and query matchers write a Caddyfile that caddy adapt acce
   expect(conf).toContain('query debug=true');
   // adapt, not validate: validate as root provisions the app and can leave root-owned log files.
   await spawnCmd(page, ['caddy', 'adapt', '--config', '/etc/caddy/Caddyfile', '--adapter', 'caddyfile']);
+});
+
+// #287: an Exclude group becomes `not { ... }` inside the named matcher, and the CEL expression
+// is written quoted; both survive a reload and reopening the dialog.
+test('exclude path and expression are written, adapt, and read back in the edit dialog', async ({ pluginPage: page }) => {
+  await waitForToolbar(page);
+  const modal = await openAddProxyWithMatchers(page, 19210, { host: 'localhost', port: 3000 });
+
+  const exclude = modal.getByRole('group', { name: /exclude requests that match/i });
+  await exclude.getByLabel('Exclude: Path', { exact: true }).fill('/api/*');
+  await exclude.getByRole('button', { name: 'Exclude: Add path' }).click();
+  const expression = '{method} == "GET"';
+  await modal.getByLabel('Expression (CEL)').fill(expression);
+  await submitAndConfirm(modal);
+
+  const conf = await readConf(page);
+  expect(conf).toContain('@m19210 {');
+  expect(conf).toMatch(/not \{\s+path \/api\/\*\s+\}/);
+  expect(conf).toContain('expression "{method} == \\"GET\\""');
+  expect(conf).not.toContain('handle_path');
+  await spawnCmd(page, ['caddy', 'adapt', '--config', '/etc/caddy/Caddyfile', '--adapter', 'caddyfile']);
+
+  await page.locator('li').filter({ has: page.locator('#proxy-19210') }).getByRole('button', { name: /^edit$/i }).click();
+  const editModal = page.getByRole('dialog');
+  const excludeGroup = editModal.getByRole('group', { name: /exclude requests that match/i });
+  if (!(await excludeGroup.isVisible())) await editModal.getByText(/route matchers/i).click();
+  await expect(excludeGroup.getByText('/api/*', { exact: true })).toBeVisible();
+  await expect(editModal.getByLabel('Expression (CEL)')).toHaveValue(expression);
 });

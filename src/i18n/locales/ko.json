@@ -786,7 +786,14 @@
     "remove_host": "호스트 제거",
     "remove_header": "헤더 제거",
     "remove_query": "쿼리 매개변수 제거",
-    "remove_cidr": "CIDR 범위 제거"
+    "remove_cidr": "CIDR 범위 제거",
+    "exclude_title": "일치하는 요청 제외",
+    "exclude_help": "이 필드 모두와 일치하는 요청은 위 필드와 일치하더라도 건너뜁니다. 이것만 설정하면 이를 제외한 모든 요청과 일치합니다.",
+    "exclude_prefix": "제외:",
+    "expression_label": "표현식 (CEL)",
+    "expression_help": "함께 참이어야 하는 조건입니다. {path}, {method} 같은 플레이스홀더를 쓸 수 있습니다. 저장할 때 Caddy가 검사합니다.",
+    "expression_docs": "expression 매처 문서",
+    "chip_not": "제외"
   },
   "handle_path": {
     "label": "일치한 경로 접두사 제거(handle_path)"

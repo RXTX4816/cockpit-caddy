@@ -786,7 +786,14 @@
     "remove_host": "Ana bilgisayarı kaldır",
     "remove_header": "Başlığı kaldır",
     "remove_query": "Sorgu parametresini kaldır",
-    "remove_cidr": "CIDR aralığını kaldır"
+    "remove_cidr": "CIDR aralığını kaldır",
+    "exclude_title": "Eşleşen istekleri hariç tut",
+    "exclude_help": "Bu alanların hepsiyle eşleşen bir istek, yukarıdaki alanlarla eşleşse bile atlanır. Yalnızca bunları doldurursanız bunlar dışındaki her şey eşleşir.",
+    "exclude_prefix": "Hariç:",
+    "expression_label": "İfade (CEL)",
+    "expression_help": "Ayrıca doğru olması gereken bir koşul; {path} veya {method} gibi yer tutucular kullanılabilir. Caddy kaydederken denetler.",
+    "expression_docs": "expression eşleştirici belgeleri",
+    "chip_not": "hariç"
   },
   "handle_path": {
     "label": "Eşleşen yol önekini kaldır (handle_path)"

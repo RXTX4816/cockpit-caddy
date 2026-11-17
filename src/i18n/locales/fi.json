@@ -786,7 +786,14 @@
     "remove_host": "Poista isäntä",
     "remove_header": "Poista otsake",
     "remove_query": "Poista kyselyparametri",
-    "remove_cidr": "Poista CIDR-alue"
+    "remove_cidr": "Poista CIDR-alue",
+    "exclude_title": "Sulje pois vastaavat pyynnöt",
+    "exclude_help": "Pyyntö, joka vastaa kaikkia näitä kenttiä, ohitetaan, vaikka se vastaisi yllä olevia kenttiä. Täytä vain nämä, niin sääntö koskee kaikkea muuta.",
+    "exclude_prefix": "Pois:",
+    "expression_label": "Lauseke (CEL)",
+    "expression_help": "Ehto, jonka täytyy myös täyttyä, paikkamerkein kuten {path} tai {method}. Caddy tarkistaa sen tallennettaessa.",
+    "expression_docs": "Expression-matcherin ohjeet",
+    "chip_not": "paitsi"
   },
   "handle_path": {
     "label": "Poista täsmännyt polun etuliite (handle_path)"

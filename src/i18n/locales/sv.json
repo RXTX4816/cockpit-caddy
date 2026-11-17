@@ -786,7 +786,14 @@
     "remove_host": "Ta bort värd",
     "remove_header": "Ta bort huvud",
     "remove_query": "Ta bort frågeparameter",
-    "remove_cidr": "Ta bort CIDR-intervall"
+    "remove_cidr": "Ta bort CIDR-intervall",
+    "exclude_title": "Undanta matchande förfrågningar",
+    "exclude_help": "En förfrågan som matchar alla dessa fält hoppas över, även om den matchar fälten ovan. Fyll bara i dessa för att matcha allt utom dem.",
+    "exclude_prefix": "Undanta:",
+    "expression_label": "Uttryck (CEL)",
+    "expression_help": "Ett villkor som också måste vara sant, med platshållare som {path} eller {method}. Caddy kontrollerar det när du sparar.",
+    "expression_docs": "Dokumentation för expression-matcharen",
+    "chip_not": "utom"
   },
   "handle_path": {
     "label": "Ta bort det matchade sökvägsprefixet (handle_path)"

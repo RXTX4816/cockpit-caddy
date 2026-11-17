@@ -20,7 +20,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast, ExternalAddressInput } from "@rxtx4816/cockpit-plugin-base-react/components";
-import { readProxyConf, parseConfExternalAddresses, CaddyApiError, CaddyfileError, routeHosts, hostsConflict, normalizeExternalHost, formatExternalAddressPreview } from "../api";
+import { readProxyConf, parseConfExternalAddresses, CaddyApiError, CaddyfileError, routeHosts, hostsConflict, normalizeExternalHost, formatExternalAddressPreview, isPathOnlyMatcher } from "../api";
 import { TlsModeField, defaultTlsMode, hasPublicName, tlsModeOf, tlsModeToEntry, type TlsMode } from "./TlsModeField";
 import { EXTERNAL_ADDRESS_BUILTIN_SCHEMES } from "./externalAddressSchemes";
 import { externalHostFieldError } from "./externalHostField";
@@ -372,10 +372,10 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
             <LbRetrySection value={lbRetry} onChange={setLbRetry} isDisabled={isConfirming} {...sectionAccordionProps("lbRetry", expandedSection, setExpandedSection)} />
           </AccordionRow>
           <AccordionRow last>
-            <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!v?.path?.length) setHandlePath(false); }} isDisabled={isConfirming} {...sectionAccordionProps("routeMatchers", expandedSection, setExpandedSection)} />
+            <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!isPathOnlyMatcher(v)) setHandlePath(false); }} isDisabled={isConfirming} {...sectionAccordionProps("routeMatchers", expandedSection, setExpandedSection)} />
           </AccordionRow>
         </div>
-        {matchers?.path?.length && !matchers.host?.length && !matchers.method?.length && !matchers.header && !matchers.query && !matchers.remote_ip && (
+        {isPathOnlyMatcher(matchers) && (
           <Checkbox
             id="edit-proxy-handle-path"
             label={t("handle_path.label")}

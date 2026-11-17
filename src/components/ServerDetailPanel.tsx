@@ -21,6 +21,7 @@ import {
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import type { ProxyEntry, RouteMatch, ServerDef } from "../api";
+import { hasAnyMatcher } from "../api";
 import { UpstreamStatusDot } from "./UpstreamStatusDot";
 import { parseListenPort } from "./AddServerDialog";
 import { buildRouteUrl, resolveRouteHost } from "./routeUrl";
@@ -41,11 +42,7 @@ function formatBytes(n: number): string {
 
 function MatcherCell({ matchers }: { matchers?: RouteMatch }) {
   const { t } = useTranslation();
-  if (!matchers || (
-    !matchers.path?.length && !matchers.host?.length &&
-    !matchers.method?.length && !matchers.header &&
-    !matchers.query && !matchers.remote_ip
-  )) {
+  if (!hasAnyMatcher(matchers)) {
     return <span style={{ color: "var(--pf-v6-global--Color--200)", fontStyle: "italic" }}>{t("servers.col_catch_all")}</span>;
   }
   const chips: React.ReactNode[] = [];
@@ -61,6 +58,8 @@ function MatcherCell({ matchers }: { matchers?: RouteMatch }) {
   if (matchers.header) chips.push(<Label key="hdr" isCompact color="teal" variant="outline">{t("matchers.type_header")}</Label>);
   if (matchers.query) chips.push(<Label key="qry" isCompact color="teal" variant="outline">{t("matchers.type_query")}</Label>);
   if (matchers.remote_ip) chips.push(<Label key="ip" isCompact color="grey" variant="outline">IP</Label>);
+  if (matchers.not) chips.push(<Label key="not" isCompact color="red" variant="outline">{t("matchers.chip_not")}</Label>);
+  if (matchers.expression) chips.push(<Label key="expr" isCompact color="grey" variant="outline" title={matchers.expression}>CEL</Label>);
   return (
     <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap", alignItems: "center" }}>
       {chips}

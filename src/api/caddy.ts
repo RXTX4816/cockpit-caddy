@@ -836,35 +836,44 @@ function fromPresenceValues(fields: Record<string, string[] | null>): Record<str
   return out;
 }
 
+/** The matcher-field lines (path, host, ...) shared by a named matcher and its `not` block. */
+function matcherFieldLines(m: import("./types").RouteMatchFields, indent: string): string[] {
+  const lines: string[] = [];
+  if (m.path?.length) lines.push(`${indent}path ${m.path.join(" ")}`);
+  if (m.host?.length) lines.push(`${indent}host ${m.host.join(" ")}`);
+  if (m.method?.length) lines.push(`${indent}method ${m.method.join(" ")}`);
+  // Caddy's Caddyfile syntax has no bare "present" form for either matcher (#250): presence is
+  // the "*" value, and query takes `param=value` pairs.
+  if (m.header) {
+    for (const [hdr, vals] of Object.entries(m.header)) {
+      lines.push(`${indent}header ${hdr} ${presenceValues(vals).map(v => caddyQuote(v)).join(" ")}`);
+    }
+  }
+  if (m.query) {
+    const pairs = Object.entries(m.query).flatMap(([param, vals]) => presenceValues(vals).map(v => caddyQuote(`${param}=${v}`)));
+    if (pairs.length) lines.push(`${indent}query ${pairs.join(" ")}`);
+  }
+  if (m.remote_ip?.ranges.length) {
+    lines.push(`${indent}remote_ip ${m.remote_ip.ranges.join(" ")}`);
+  }
+  return lines;
+}
+
 /**
  * Generates named-matcher lines for a Caddyfile block.
  * Uses block form `@name { ... }` always (more stable for round-trips than inline form).
  */
 function buildMatcherCaddyLines(m: import("./types").RouteMatch, name: string, indent: string): string[] {
-  const lines: string[] = [`${indent}@${name} {`];
-  if (m.path?.length) lines.push(`${indent}\tpath ${m.path.join(" ")}`);
-  if (m.host?.length) lines.push(`${indent}\thost ${m.host.join(" ")}`);
-  if (m.method?.length) lines.push(`${indent}\tmethod ${m.method.join(" ")}`);
-  // Caddy's Caddyfile syntax has no bare "present" form for either matcher (#250): presence is
-  // the "*" value, and query takes `param=value` pairs.
-  if (m.header) {
-    for (const [hdr, vals] of Object.entries(m.header)) {
-      lines.push(`${indent}\theader ${hdr} ${presenceValues(vals).map(v => caddyQuote(v)).join(" ")}`);
-    }
-  }
-  if (m.query) {
-    const pairs = Object.entries(m.query).flatMap(([param, vals]) => presenceValues(vals).map(v => caddyQuote(`${param}=${v}`)));
-    if (pairs.length) lines.push(`${indent}\tquery ${pairs.join(" ")}`);
-  }
-  if (m.remote_ip?.ranges.length) {
-    lines.push(`${indent}\tremote_ip ${m.remote_ip.ranges.join(" ")}`);
-  }
+  const lines: string[] = [`${indent}@${name} {`, ...matcherFieldLines(m, `${indent}\t`)];
+  const notLines = m.not ? matcherFieldLines(m.not, `${indent}\t\t`) : [];
+  if (notLines.length) lines.push(`${indent}\tnot {`, ...notLines, `${indent}\t}`);
+  if (m.expression?.trim()) lines.push(`${indent}\texpression ${caddyQuote(m.expression.trim(), { always: true })}`);
   lines.push(`${indent}}`);
   return lines;
 }
 
-/** Converts RouteMatch to Caddy JSON match object. */
-function buildMatcherJson(m: import("./types").RouteMatch): Record<string, unknown> {
+/** Caddy JSON for the plain matcher fields. */
+function matcherFieldsJson(m: import("./types").RouteMatchFields): Record<string, unknown> {
   const obj: Record<string, unknown> = {};
   if (m.path?.length) obj.path = m.path;
   if (m.host?.length) obj.host = m.host;
@@ -884,10 +893,19 @@ function buildMatcherJson(m: import("./types").RouteMatch): Record<string, unkno
   return obj;
 }
 
-/** Parses a Caddy JSON match object back to RouteMatch. Returns undefined if empty/missing. */
-function parseMatcherJson(match: Record<string, unknown> | undefined): import("./types").RouteMatch | undefined {
-  if (!match || !Object.keys(match).length) return undefined;
-  const m: import("./types").RouteMatch = {};
+/** Converts RouteMatch to Caddy JSON match object. */
+function buildMatcherJson(m: import("./types").RouteMatch): Record<string, unknown> {
+  const obj = matcherFieldsJson(m);
+  const not = m.not ? matcherFieldsJson(m.not) : {};
+  if (Object.keys(not).length) obj.not = [not];
+  // The Caddyfile adapter expands placeholder shorthands; JSON pushed directly must do the same.
+  if (m.expression?.trim()) obj.expression = { expr: expandPlaceholderShorthands(m.expression.trim()) };
+  return obj;
+}
+
+/** Parses the plain matcher fields of a Caddy JSON match object. */
+function parseMatcherFieldsJson(match: Record<string, unknown>): import("./types").RouteMatchFields {
+  const m: import("./types").RouteMatchFields = {};
   if (Array.isArray(match.path) && match.path.length) m.path = match.path as string[];
   if (Array.isArray(match.host) && match.host.length) m.host = match.host as string[];
   if (Array.isArray(match.method) && match.method.length) m.method = match.method as string[];
@@ -903,12 +921,115 @@ function parseMatcherJson(match: Record<string, unknown> | undefined): import(".
     const ri = (match.remote_ip as { ranges?: string[] }).ranges;
     if (ri?.length) m.remote_ip = { ranges: ri };
   }
+  return m;
+}
+
+/** Parses a Caddy JSON match object back to RouteMatch. Returns undefined if empty/missing. */
+function parseMatcherJson(match: Record<string, unknown> | undefined): import("./types").RouteMatch | undefined {
+  if (!match || !Object.keys(match).length) return undefined;
+  const m: import("./types").RouteMatch = parseMatcherFieldsJson(match);
+  // Only one exclude group is supported (#287); Caddy's `not` is a list of matcher sets.
+  if (Array.isArray(match.not) && match.not[0] && typeof match.not[0] === "object") {
+    const not = parseMatcherFieldsJson(match.not[0] as Record<string, unknown>);
+    if (Object.keys(not).length) m.not = not;
+  }
+  // Caddy accepts the expression as a string or as {expr, name}; the adapter writes the object.
+  const rawExpr = typeof match.expression === "string" ? match.expression
+    : (match.expression as { expr?: unknown } | undefined)?.expr;
+  if (typeof rawExpr === "string" && rawExpr.trim()) m.expression = collapsePlaceholderShorthands(rawExpr);
   return Object.keys(m).length ? m : undefined;
 }
 
+/** True when any matcher (include, exclude or expression) is set. */
+export function hasAnyMatcher(m: import("./types").RouteMatch | undefined): m is import("./types").RouteMatch {
+  return !!m && Object.keys(buildMatcherJson(m)).length > 0;
+}
+
 /** Returns true when only path matchers are set (needed for handle_path eligibility). */
-function isPathOnlyMatcher(m: import("./types").RouteMatch): boolean {
-  return !!(m.path?.length) && !m.host && !m.method && !m.header && !m.query && !m.remote_ip;
+export function isPathOnlyMatcher(m: import("./types").RouteMatch | undefined): boolean {
+  return !!m && !!(m.path?.length) && !m.host?.length && !m.method?.length && !m.header && !m.query && !m.remote_ip
+    && !(m.not && Object.keys(matcherFieldsJson(m.not)).length) && !m.expression?.trim();
+}
+
+/** True when the matcher is a host list and nothing else (a hostname-only site block). */
+function isHostOnlyMatcher(m: import("./types").RouteMatch | undefined): m is import("./types").RouteMatch & { host: string[] } {
+  return !!m?.host?.length && !m.path && !m.method && !m.header && !m.query && !m.remote_ip && !m.not && !m.expression;
+}
+
+// Caddyfile placeholder shorthands (#287), as Caddy 2.11's adapter expands them. Exact ones first,
+// then prefixes; collapsing tries the longest long form first so `{http.request.uri.path.dir}`
+// becomes `{dir}`, not `{path.dir}`.
+const PLACEHOLDER_SHORTHANDS: Array<[string, string]> = [
+  ["host", "http.request.host"],
+  ["hostport", "http.request.hostport"],
+  ["port", "http.request.port"],
+  ["orig_method", "http.request.orig_method"],
+  ["orig_uri", "http.request.orig_uri"],
+  ["orig_path", "http.request.orig_uri.path"],
+  ["orig_dir", "http.request.orig_uri.path.dir"],
+  ["orig_file", "http.request.orig_uri.path.file"],
+  ["orig_query", "http.request.orig_uri.query"],
+  ["method", "http.request.method"],
+  ["uri", "http.request.uri"],
+  ["path", "http.request.uri.path"],
+  ["dir", "http.request.uri.path.dir"],
+  ["file", "http.request.uri.path.file"],
+  ["query", "http.request.uri.query"],
+  ["remote", "http.request.remote"],
+  ["remote_host", "http.request.remote.host"],
+  ["remote_port", "http.request.remote.port"],
+  ["scheme", "http.request.scheme"],
+  ["uuid", "http.request.uuid"],
+  ["tls_cipher", "http.request.tls.cipher_suite"],
+  ["tls_version", "http.request.tls.version"],
+  ["tls_client_fingerprint", "http.request.tls.client.fingerprint"],
+  ["tls_client_issuer", "http.request.tls.client.issuer"],
+  ["tls_client_serial", "http.request.tls.client.serial"],
+  ["tls_client_subject", "http.request.tls.client.subject"],
+  ["tls_client_certificate_pem", "http.request.tls.client.certificate_pem"],
+  ["tls_client_certificate_der_base64", "http.request.tls.client.certificate_der_base64"],
+  ["upstream_hostport", "http.reverse_proxy.upstream.hostport"],
+  ["client_ip", "http.vars.client_ip"],
+];
+const PLACEHOLDER_PREFIXES: Array<[string, string]> = [
+  ["header.", "http.request.header."],
+  ["cookie.", "http.request.cookie."],
+  ["labels.", "http.request.host.labels."],
+  ["path.", "http.request.uri.path."],
+  ["file.", "http.request.uri.path.file."],
+  ["query.", "http.request.uri.query."],
+  ["re.", "http.regexp."],
+  ["vars.", "http.vars."],
+  ["rp.", "http.reverse_proxy."],
+  ["resp.", "http.intercept."],
+  ["err.", "http.error."],
+  ["file_match.", "http.matchers.file."],
+];
+
+function mapPlaceholders(text: string, fn: (name: string) => string): string {
+  return text.replace(/\{([^{}\s]+)\}/g, (_, name: string) => `{${fn(name)}}`);
+}
+
+/** `{path}` → `{http.request.uri.path}`, the way Caddy's Caddyfile adapter expands shorthands. */
+export function expandPlaceholderShorthands(text: string): string {
+  return mapPlaceholders(text, name => {
+    const exact = PLACEHOLDER_SHORTHANDS.find(([s]) => s === name);
+    if (exact) return exact[1];
+    const prefix = PLACEHOLDER_PREFIXES.find(([s]) => name.startsWith(s));
+    return prefix ? prefix[1] + name.slice(prefix[0].length) : name;
+  });
+}
+
+/** Reverse of expandPlaceholderShorthands, so an expression reads back as it was written. */
+export function collapsePlaceholderShorthands(text: string): string {
+  return mapPlaceholders(text, name => {
+    const exact = PLACEHOLDER_SHORTHANDS.find(([, l]) => l === name);
+    if (exact) return exact[0];
+    const prefix = PLACEHOLDER_PREFIXES
+      .filter(([, l]) => name.startsWith(l))
+      .sort((a, b) => b[1].length - a[1].length)[0];
+    return prefix ? prefix[0] + name.slice(prefix[1].length) : name;
+  });
 }
 
 /** Derives the strip-prefix value from the first path pattern, e.g. "/api/*" → "/api". */
@@ -1650,7 +1771,7 @@ export function proxyToBlock(p: ProxyEntry): string {
   const lines = p.label ? [`# label: ${p.label}`, `${header} {`] : [`${header} {`];
   lines.push(...buildBindLines(p));
 
-  if (p.matchers && Object.keys(buildMatcherJson(p.matchers)).length > 0) {
+  if (hasAnyMatcher(p.matchers)) {
     const matcherName = `m${p.externalPort}`;
     const useHandlePath = p.handlePath && isPathOnlyMatcher(p.matchers) && !!(p.matchers.path?.length);
 
@@ -2210,8 +2331,7 @@ function parseRouteToEntry(
   // :443/:80 server with other sites. Promote it to externalHost so the UI shows
   // the real address instead of a blank host with an opaque matcher chip. A site
   // block with several names (`a.com, b.com {`, #208) lists all of them here.
-  if (!externalHost && matchers?.host?.length
-    && !matchers.path && !matchers.method && !matchers.header && !matchers.query && !matchers.remote_ip) {
+  if (!externalHost && isHostOnlyMatcher(matchers)) {
     externalHost = matchers.host.join(", ");
     matchers = undefined;
   }
@@ -3787,8 +3907,8 @@ export function serverDefToBlock(def: import("./types").ServerDef, routes: Proxy
   if (def.accessLog) lines.push(...buildLogCaddyLines(def.accessLog));
 
   // Routes: matcher routes first, catch-all last
-  const matcherRoutes = normalRoutes.filter(r => r.matchers && Object.keys(buildMatcherJson(r.matchers)).length > 0);
-  const catchAllRoutes = normalRoutes.filter(r => !r.matchers || !Object.keys(buildMatcherJson(r.matchers)).length);
+  const matcherRoutes = normalRoutes.filter(r => hasAnyMatcher(r.matchers));
+  const catchAllRoutes = normalRoutes.filter(r => !hasAnyMatcher(r.matchers));
 
   for (let i = 0; i < matcherRoutes.length; i++) {
     const route = matcherRoutes[i];
@@ -3815,7 +3935,7 @@ export function serverDefToBlock(def: import("./types").ServerDef, routes: Proxy
 
   // Named-route invoke directives
   for (const nr of namedRoutes) {
-    if (nr.matchers && Object.keys(buildMatcherJson(nr.matchers)).length > 0) {
+    if (hasAnyMatcher(nr.matchers)) {
       const matcherName = `nr_${nr.namedRouteName!}`;
       lines.push(...buildMatcherCaddyLines(nr.matchers, matcherName, "\t"));
       lines.push(`\thandle @${matcherName} {`);
@@ -3932,8 +4052,8 @@ export function mergeNamedServer(
   }
 
   // Sort normal routes: matcher routes first, catch-all last
-  const matcherRoutes = normalRoutes.filter(r => r.matchers && Object.keys(buildMatcherJson(r.matchers)).length > 0);
-  const catchAllRoutes = normalRoutes.filter(r => !r.matchers || !Object.keys(buildMatcherJson(r.matchers)).length);
+  const matcherRoutes = normalRoutes.filter(r => hasAnyMatcher(r.matchers));
+  const catchAllRoutes = normalRoutes.filter(r => !hasAnyMatcher(r.matchers));
 
   for (const route of [...matcherRoutes, ...catchAllRoutes]) {
     const handles = buildRouteHandlesForEntry(route);

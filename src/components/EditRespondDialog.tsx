@@ -18,7 +18,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
-import { CaddyApiError } from "../api";
+import { CaddyApiError, isPathOnlyMatcher } from "../api";
 import type { ProxyEntry, RouteMatch } from "../api";
 import { RouteMatchersSection } from "./RouteMatchersSection";
 
@@ -128,8 +128,8 @@ export function EditRespondDialog({ proxy, existingPorts: _existingPorts, onSave
             />
           </FormGroup>
         </Form>
-        <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!v?.path?.length) setHandlePath(false); }} isDisabled={isLocked} />
-        {matchers?.path?.length && !matchers.host?.length && !matchers.method?.length && !matchers.header && !matchers.query && !matchers.remote_ip && (
+        <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!isPathOnlyMatcher(v)) setHandlePath(false); }} isDisabled={isLocked} />
+        {isPathOnlyMatcher(matchers) && (
           <Checkbox
             id="edit-respond-handle-path"
             label={t("handle_path.label")}

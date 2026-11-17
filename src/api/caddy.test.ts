@@ -38,6 +38,9 @@ import {
   applyConfigFindings,
   routeHosts,
   hostsConflict,
+  isPathOnlyMatcher,
+  expandPlaceholderShorthands,
+  collapsePlaceholderShorthands,
   standaloneProxyId,
   classifyAcmeHosts,
   buildMetricsSiteBlock,
@@ -3483,6 +3486,125 @@ describe("parseProxies — matchers round-trip", () => {
     const proxies = parseProxies(config);
     expect(proxies[0].matchers?.method).toEqual(["GET"]);
     expect(proxies[0].matchers?.path).toEqual(["/api/*"]);
+  });
+});
+
+describe("route matchers — not and expression (#287)", () => {
+  it("emits an exclude-only matcher as a not block", () => {
+    const result = proxyToBlock(proxy({ matchers: { not: { path: ["/api/*"] } } }));
+    expect(result).toContain("@m7700 {\n\t\tnot {\n\t\t\tpath /api/*\n\t\t}\n\t}");
+  });
+
+  it("emits include and exclude fields in the same named matcher", () => {
+    const result = proxyToBlock(proxy({ matchers: { path: ["/app/*"], not: { remote_ip: { ranges: ["10.0.0.0/8"] }, method: ["POST"] } } }));
+    expect(result).toContain("\t\tpath /app/*\n\t\tnot {\n\t\t\tmethod POST\n\t\t\tremote_ip 10.0.0.0/8\n\t\t}");
+  });
+
+  it("emits an expression as one quoted token", () => {
+    const result = proxyToBlock(proxy({ matchers: { expression: '{method} == "GET" && {path}.startsWith("/api")' } }));
+    expect(result).toContain('\t\texpression "{method} == \\"GET\\" && {path}.startsWith(\\"/api\\")"');
+  });
+
+  it("does not use handle_path when an exclude or an expression is set", () => {
+    const withNot = proxyToBlock(proxy({ matchers: { path: ["/api/*"], not: { path: ["/api/admin/*"] } }, handlePath: true }));
+    expect(withNot).not.toContain("handle_path");
+    expect(withNot).toContain("handle @m7700 {");
+    const withExpr = proxyToBlock(proxy({ matchers: { path: ["/api/*"], expression: "true" }, handlePath: true }));
+    expect(withExpr).not.toContain("handle_path");
+  });
+
+  it("isPathOnlyMatcher is false with an exclude or an expression", () => {
+    expect(isPathOnlyMatcher({ path: ["/a/*"] })).toBe(true);
+    expect(isPathOnlyMatcher({ path: ["/a/*"], not: { path: ["/b"] } })).toBe(false);
+    expect(isPathOnlyMatcher({ path: ["/a/*"], expression: "true" })).toBe(false);
+    expect(isPathOnlyMatcher({ not: { path: ["/b"] } })).toBe(false);
+  });
+
+  it("builds the instant-apply JSON with not and the expanded expression", () => {
+    const entry = buildServerEntry(proxy({ matchers: { path: ["/x/*"], not: { path: ["/api/*"] }, expression: "{method} == \"GET\" && {header.X-A} != \"\"" } }));
+    expect(entry.routes[0].match?.[0]).toEqual({
+      path: ["/x/*"],
+      not: [{ path: ["/api/*"] }],
+      expression: { expr: "{http.request.method} == \"GET\" && {http.request.header.X-A} != \"\"" },
+    });
+  });
+
+  it("parses not and an adapted expression back into RouteMatch with Caddyfile shorthands", () => {
+    const config: CaddyConfig = {
+      apps: { http: { servers: {
+        srv7700: {
+          listen: [":7700"],
+          routes: [{
+            match: [{
+              not: [{ path: ["/api/*"], remote_ip: { ranges: ["10.0.0.0/8"] } }],
+              expression: { expr: "{http.request.method} == \"GET\" && {http.request.uri.path}.startsWith(\"/api\")", name: "m7700" },
+            }],
+            handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:7701" }] }],
+          }],
+        },
+      } } },
+    };
+    expect(parseProxies(config)[0].matchers).toEqual({
+      not: { path: ["/api/*"], remote_ip: { ranges: ["10.0.0.0/8"] } },
+      expression: '{method} == "GET" && {path}.startsWith("/api")',
+    });
+  });
+
+  it("accepts a plain-string expression in JSON", () => {
+    const config: CaddyConfig = {
+      apps: { http: { servers: {
+        srv7700: {
+          listen: [":7700"],
+          routes: [{
+            match: [{ expression: "{http.request.host.labels.1} == \"example\"" }],
+            handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:7701" }] }],
+          }],
+        },
+      } } },
+    };
+    expect(parseProxies(config)[0].matchers).toEqual({ expression: '{labels.1} == "example"' });
+  });
+
+  it("a host include with an exclude is not promoted to the site address", () => {
+    const config: CaddyConfig = {
+      apps: { http: { servers: {
+        srv0: {
+          listen: [":443"],
+          routes: [{
+            match: [{ host: ["a.example.com"], not: [{ path: ["/admin/*"] }] }],
+            handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:7701" }] }],
+          }],
+        },
+      } } },
+    };
+    const [p] = parseProxies(config);
+    expect(p.matchers).toEqual({ host: ["a.example.com"], not: { path: ["/admin/*"] } });
+  });
+});
+
+describe("Caddyfile placeholder shorthands (#287)", () => {
+  it.each([
+    ["{method}", "{http.request.method}"],
+    ["{path}", "{http.request.uri.path}"],
+    ["{dir}", "{http.request.uri.path.dir}"],
+    ["{file.ext}", "{http.request.uri.path.file.ext}"],
+    ["{path.0}", "{http.request.uri.path.0}"],
+    ["{header.X-A}", "{http.request.header.X-A}"],
+    ["{remote_host}", "{http.request.remote.host}"],
+    ["{tls_client_subject}", "{http.request.tls.client.subject}"],
+    ["{client_ip}", "{http.vars.client_ip}"],
+    ["{orig_dir}", "{http.request.orig_uri.path.dir}"],
+    ["{labels.1}", "{http.request.host.labels.1}"],
+    ["{re.n.1}", "{http.regexp.n.1}"],
+    ["{err.status_code}", "{http.error.status_code}"],
+    ["{unknown}", "{unknown}"],
+  ])("%s ↔ %s", (short, long) => {
+    expect(expandPlaceholderShorthands(short)).toBe(long);
+    expect(collapsePlaceholderShorthands(long)).toBe(short);
+  });
+
+  it("leaves text outside placeholders alone", () => {
+    expect(expandPlaceholderShorthands('{path}.startsWith("/{x") && "{method}"')).toBe('{http.request.uri.path}.startsWith("/{x") && "{http.request.method}"');
   });
 });
 

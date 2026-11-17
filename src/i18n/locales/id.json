@@ -786,7 +786,14 @@
     "remove_host": "Hapus host",
     "remove_header": "Hapus header",
     "remove_query": "Hapus parameter kueri",
-    "remove_cidr": "Hapus rentang CIDR"
+    "remove_cidr": "Hapus rentang CIDR",
+    "exclude_title": "Kecualikan permintaan yang cocok",
+    "exclude_help": "Permintaan yang cocok dengan semua kolom ini dilewati, meskipun cocok dengan kolom di atas. Isi hanya kolom ini untuk mencocokkan semuanya kecuali itu.",
+    "exclude_prefix": "Kecualikan:",
+    "expression_label": "Ekspresi (CEL)",
+    "expression_help": "Kondisi yang juga harus benar, dengan placeholder seperti {path} atau {method}. Caddy memeriksanya saat menyimpan.",
+    "expression_docs": "Dokumentasi matcher expression",
+    "chip_not": "kecuali"
   },
   "handle_path": {
     "label": "Hapus prefiks jalur yang cocok (handle_path)"
