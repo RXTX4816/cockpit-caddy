@@ -176,3 +176,68 @@ describe.runIf(available || required)("route matchers write a Caddyfile Caddy ac
     expect({ header: pushedMatch.header, query: pushedMatch.query }).toEqual({ header: found[0].header, query: found[0].query });
   });
 });
+
+describe.runIf(available || required)("user values are quoted so Caddy reads them back verbatim (#251)", () => {
+  // Header values can't contain newlines; everything else must survive the Caddyfile lexer.
+  const headerValues = ["plain", "two words", 'say "hi"', "{http.vars.who} extra", "C:\\dir\\", "back\\\"slash quote", "a`b c", "#notacomment"];
+  // Caddy ends a heredoc wherever the marker appears, even mid-line ("BACKEND", "APPEND").
+  const bodies = [...headerValues, "line1\nline2 \"quoted\"\n\tindented", "END\nEND", "the BACKEND is down\nAPPEND END1 here"];
+
+  it.each(headerValues)("request and response header value %j", value => {
+    const headers = [{ op: "set" as const, name: "X-Set", value }, { op: "add" as const, name: "X-Add", value }];
+    const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, requestHeaders: headers, responseHeaders: headers })]));
+    expect(p.requestHeaders).toEqual(expect.arrayContaining(headers));
+    expect(p.responseHeaders).toEqual(expect.arrayContaining(headers));
+  });
+
+  it.each(bodies)("respond body %j", body => {
+    const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, staticResponse: { statusCode: 200, body } })]));
+    expect(p.staticResponse?.body).toBe(body);
+    expect(p.staticResponse?.statusCode).toBe(200);
+  });
+
+  it.each(bodies)("respond body %j with close", body => {
+    const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, staticResponse: { statusCode: 403, body, close: true } })]));
+    expect(p.staticResponse).toEqual({ statusCode: 403, body, close: true });
+  });
+
+  it.each(bodies)("error handler respond body %j", body => {
+    const errorHandlers = [{ matchType: "all" as const, type: "respond" as const, body, statusCode: 500 }];
+    const adapted = JSON.stringify(adapt(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, errorHandlers })])));
+    expect(adapted).toContain(JSON.stringify(body));
+  });
+
+  it.each(headerValues)("php_fastcgi env value %j", value => {
+    const phpFastcgi = { upstream: "localhost:9000", root: "/srv/php", env: { APP_NAME: value } };
+    const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, phpFastcgi })]));
+    expect(p.phpFastcgi?.env).toEqual({ APP_NAME: value });
+  });
+
+  it("a static site root with a space", () => {
+    const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, fileServer: { root: "/srv/my site" } })]));
+    expect(p.fileServer?.root).toBe("/srv/my site");
+  });
+
+  it("route matcher header value with a space", () => {
+    const matchers = { header: { "X-Agent": ["Some Bot"] } };
+    const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, matchers })]));
+    expect(p.matchers).toEqual(matchers);
+  });
+
+  it("quoted values survive parse → edit → write next to another site", () => {
+    const headers = [{ op: "set" as const, name: "X-Set", value: 'say "hi" {http.vars.who}' }];
+    const body = "a\n{b}\nc";
+    const conf = proxiesToCaddyfile([
+      entry({ tls: false, externalPort: 8080, responseHeaders: headers }),
+      entry({ tls: false, externalPort: 8081, targetPort: 9000 }),
+      entry({ tls: false, externalPort: 8082, staticResponse: { statusCode: 200, body } }),
+    ]);
+    const first = readBack(conf);
+    let edited = surgicallyWriteProxy(conf, { ...first.find(x => x.externalPort === 8080)!, targetPort: 8001 });
+    edited = surgicallyWriteProxy(edited, { ...first.find(x => x.externalPort === 8082)!, staticResponse: { statusCode: 201, body } });
+    const again = readBack(edited);
+    expect(again.find(x => x.externalPort === 8080)).toMatchObject({ targetPort: 8001, responseHeaders: headers });
+    expect(again.find(x => x.externalPort === 8081)?.targetPort).toBe(9000);
+    expect(again.find(x => x.externalPort === 8082)?.staticResponse).toEqual({ statusCode: 201, body });
+  });
+});
