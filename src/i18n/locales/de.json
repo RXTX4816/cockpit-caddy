@@ -231,16 +231,19 @@
   "transport": {
     "section_title": "Upstream-Timeouts (optional)",
     "dial_timeout": "Verbindungs-Timeout",
-    "response_header_timeout": "Timeout für Antwort-Header"
+    "response_header_timeout": "Timeout für Antwort-Header",
+    "defaults_help": "Ein leeres Feld nutzt Caddys Standardwert (grau angezeigt). Ein Timeout für die Antwort-Header bricht Long Polling und langsame Antworten ab."
   },
   "server_timeouts": {
     "section_title": "Server-Timeouts & -Limits (optional)",
+    "defaults_help": "Ein leeres Feld nutzt Caddys Standardwert (grau angezeigt). Ein Timeout für den Request-Body oder das Schreiben bricht jeden Upload oder Download ab, der länger dauert.",
+    "no_timeout": "keins",
     "read_timeout": "Timeout beim Lesen des Bodys",
     "read_header_timeout": "Timeout beim Lesen der Header",
     "write_timeout": "Schreib-Timeout",
     "idle_timeout": "Leerlauf-Timeout",
     "max_header_bytes": "Max. Header-Größe (Bytes)",
-    "max_header_bytes_help": "Maximale Größe der Request-Header in Bytes (Standard: 1 MB = 1048576)",
+    "max_header_bytes_help": "Maximale Größe der Request-Header in Bytes (Caddy-Standard: 16 KiB = 16384)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "HTTP/3 deaktivieren",
     "http3_help": "Caddy aktiviert HTTP/1.1, HTTP/2 und HTTP/3 standardmäßig, sobald TLS konfiguriert ist. HTTP/3 läuft über UDP auf demselben Port wie HTTPS – wenn Ihre Firewall UDP blockiert, fällt Caddy nach dem Deaktivieren hier auf HTTP/1.1 und HTTP/2 zurück."

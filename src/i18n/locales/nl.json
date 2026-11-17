@@ -231,16 +231,19 @@
   "transport": {
     "section_title": "Upstream-time-outs (optioneel)",
     "dial_timeout": "Verbindingstime-out",
-    "response_header_timeout": "Time-out voor antwoordheaders"
+    "response_header_timeout": "Time-out voor antwoordheaders",
+    "defaults_help": "Laat een veld leeg om de standaardwaarde van Caddy te gebruiken (grijs weergegeven). Een time-out voor response-headers breekt long polling en trage antwoorden af."
   },
   "server_timeouts": {
     "section_title": "Servertime-outs & -limieten (optioneel)",
+    "defaults_help": "Laat een veld leeg om de standaardwaarde van Caddy te gebruiken (grijs weergegeven). Een time-out voor het lezen van de body of het schrijven breekt elke upload of download af die langer duurt.",
+    "no_timeout": "geen",
     "read_timeout": "Time-out voor lezen van de body",
     "read_header_timeout": "Time-out voor lezen van headers",
     "write_timeout": "Schrijftime-out",
     "idle_timeout": "Inactiviteitstime-out",
     "max_header_bytes": "Max. headergrootte (bytes)",
-    "max_header_bytes_help": "Maximale grootte van de requestheaders in bytes (standaard: 1 MB = 1048576)",
+    "max_header_bytes_help": "Maximale grootte van de request-headers in bytes (standaard in Caddy: 16 KiB = 16384)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "HTTP/3 uitschakelen",
     "http3_help": "Caddy schakelt HTTP/1.1, HTTP/2 en HTTP/3 standaard in zodra TLS is geconfigureerd. HTTP/3 loopt over UDP op dezelfde poort als HTTPS — als je firewall UDP blokkeert, valt Caddy na uitschakelen hier terug op alleen HTTP/1.1 en HTTP/2."

@@ -2,6 +2,8 @@ import { useState } from "react";
 import {
   ExpandableSection,
   FormGroup,
+  HelperText,
+  HelperTextItem,
   TextInput,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
@@ -13,7 +15,8 @@ export interface TransportValues {
   responseHeaderTimeout: string;
 }
 
-const TRANSPORT_DEFAULTS: TransportValues = { dialTimeout: "10s", responseHeaderTimeout: "30s" };
+// Empty means Caddy's own default (#249): dial 3s, no response header timeout. "Defaults"
+// clears the fields; the placeholders show Caddy's values.
 const TRANSPORT_EMPTY: TransportValues = { dialTimeout: "", responseHeaderTimeout: "" };
 
 interface Props {
@@ -46,16 +49,19 @@ export function TransportSection({ value, onChange, isDisabled, isExpanded: isEx
     >
       <SectionActions
         onClear={() => onChange(TRANSPORT_EMPTY)}
-        onDefaults={() => onChange(TRANSPORT_DEFAULTS)}
+        onDefaults={() => onChange(TRANSPORT_EMPTY)}
         isDisabled={isDisabled}
       />
+      <HelperText style={{ marginBottom: "0.6rem" }}>
+        <HelperTextItem>{t("transport.defaults_help")}</HelperTextItem>
+      </HelperText>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
         <FormGroup label={t("transport.dial_timeout")} fieldId="transport-dial" style={{ flex: "1 1 10rem" }}>
           <TextInput
             id="transport-dial"
             value={value.dialTimeout}
             onChange={(_e, v) => set("dialTimeout", v)}
-            placeholder="10s"
+            placeholder="3s"
             isDisabled={isDisabled}
           />
         </FormGroup>
@@ -64,7 +70,7 @@ export function TransportSection({ value, onChange, isDisabled, isExpanded: isEx
             id="transport-resp"
             value={value.responseHeaderTimeout}
             onChange={(_e, v) => set("responseHeaderTimeout", v)}
-            placeholder="30s"
+            placeholder={t("server_timeouts.no_timeout")}
             isDisabled={isDisabled}
           />
         </FormGroup>

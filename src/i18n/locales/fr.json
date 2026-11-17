@@ -231,16 +231,19 @@
   "transport": {
     "section_title": "Délais upstream (facultatif)",
     "dial_timeout": "Délai de connexion",
-    "response_header_timeout": "Délai des en-têtes de réponse"
+    "response_header_timeout": "Délai des en-têtes de réponse",
+    "defaults_help": "Laissez un champ vide pour utiliser la valeur par défaut de Caddy, affichée en grisé. Un délai d'en-têtes de réponse interrompt le long polling et les réponses lentes."
   },
   "server_timeouts": {
     "section_title": "Délais et limites du serveur (facultatif)",
+    "defaults_help": "Laissez un champ vide pour utiliser la valeur par défaut de Caddy, affichée en grisé. Un délai de lecture du corps ou d'écriture interrompt tout envoi ou téléchargement plus long.",
+    "no_timeout": "aucun",
     "read_timeout": "Délai de lecture du corps",
     "read_header_timeout": "Délai de lecture des en-têtes",
     "write_timeout": "Délai d'écriture",
     "idle_timeout": "Délai d'inactivité",
     "max_header_bytes": "Taille max. des en-têtes (octets)",
-    "max_header_bytes_help": "Taille maximale des en-têtes de requête en octets (par défaut : 1 Mo = 1048576)",
+    "max_header_bytes_help": "Taille maximale des en-têtes de requête en octets (par défaut dans Caddy : 16 Kio = 16384)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "Désactiver HTTP/3",
     "http3_help": "Caddy active HTTP/1.1, HTTP/2 et HTTP/3 par défaut dès que TLS est configuré. HTTP/3 passe par UDP sur le même port que HTTPS — si votre pare-feu bloque UDP, le désactiver ici ramène à HTTP/1.1 et HTTP/2 uniquement."

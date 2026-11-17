@@ -231,16 +231,19 @@
   "transport": {
     "section_title": "Batas waktu upstream (opsional)",
     "dial_timeout": "Batas waktu koneksi",
-    "response_header_timeout": "Batas waktu header respons"
+    "response_header_timeout": "Batas waktu header respons",
+    "defaults_help": "Biarkan kolom kosong untuk memakai nilai bawaan Caddy, yang ditampilkan abu-abu. Batas waktu header respons memutus long polling dan respons yang lambat."
   },
   "server_timeouts": {
     "section_title": "Batas waktu & batasan server (opsional)",
+    "defaults_help": "Biarkan kolom kosong untuk memakai nilai bawaan Caddy, yang ditampilkan abu-abu. Batas waktu baca body atau tulis memutus setiap unggahan atau unduhan yang lebih lama.",
+    "no_timeout": "tidak ada",
     "read_timeout": "Batas waktu baca isi",
     "read_header_timeout": "Batas waktu baca header",
     "write_timeout": "Batas waktu tulis",
     "idle_timeout": "Batas waktu menganggur",
     "max_header_bytes": "Ukuran header maks. (byte)",
-    "max_header_bytes_help": "Ukuran maksimum header permintaan dalam byte (bawaan: 1 MB = 1048576)",
+    "max_header_bytes_help": "Ukuran maksimum header permintaan dalam byte (bawaan Caddy: 16 KiB = 16384)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "Nonaktifkan HTTP/3",
     "http3_help": "Caddy mengaktifkan HTTP/1.1, HTTP/2, dan HTTP/3 secara bawaan setiap kali TLS dikonfigurasi. HTTP/3 berjalan di atas UDP pada port yang sama dengan HTTPS — jika firewall memblokir UDP, menonaktifkannya di sini akan kembali ke HTTP/1.1 dan HTTP/2 saja."

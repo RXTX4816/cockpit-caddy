@@ -231,16 +231,19 @@
   "transport": {
     "section_title": "上游逾時（選填）",
     "dial_timeout": "連線逾時",
-    "response_header_timeout": "回應標頭逾時"
+    "response_header_timeout": "回應標頭逾時",
+    "defaults_help": "留空即使用 Caddy 的預設值（以灰色顯示）。回應標頭逾時會中斷長輪詢和較慢的回應。"
   },
   "server_timeouts": {
     "section_title": "伺服器逾時與限制（選填）",
+    "defaults_help": "留空即使用 Caddy 的預設值（以灰色顯示）。設定讀取請求內容或寫入逾時後，任何耗時更長的上傳或下載都會被中斷。",
+    "no_timeout": "無",
     "read_timeout": "讀取內文逾時",
     "read_header_timeout": "讀取標頭逾時",
     "write_timeout": "寫入逾時",
     "idle_timeout": "閒置逾時",
     "max_header_bytes": "標頭大小上限（位元組）",
-    "max_header_bytes_help": "請求標頭的大小上限，以位元組為單位（預設：1 MB = 1048576）",
+    "max_header_bytes_help": "請求標頭的最大大小（位元組，Caddy 預設值：16 KiB = 16384）",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "停用 HTTP/3",
     "http3_help": "只要設定了 TLS，Caddy 預設會啟用 HTTP/1.1、HTTP/2 和 HTTP/3。HTTP/3 透過 UDP 在與 HTTPS 相同的連接埠上運作——若防火牆封鎖 UDP，在此停用後只會使用 HTTP/1.1 和 HTTP/2。"

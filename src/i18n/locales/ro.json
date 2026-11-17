@@ -231,16 +231,19 @@
   "transport": {
     "section_title": "Timeout-uri upstream (opțional)",
     "dial_timeout": "Timeout de conectare",
-    "response_header_timeout": "Timeout pentru antetele răspunsului"
+    "response_header_timeout": "Timeout pentru antetele răspunsului",
+    "defaults_help": "Lăsați un câmp gol pentru a folosi valoarea implicită Caddy, afișată cu gri. O limită de timp pentru antetele răspunsului întrerupe long polling-ul și răspunsurile lente."
   },
   "server_timeouts": {
     "section_title": "Timeout-uri și limite ale serverului (opțional)",
+    "defaults_help": "Lăsați un câmp gol pentru a folosi valoarea implicită Caddy, afișată cu gri. O limită de timp pentru citirea corpului sau scriere întrerupe orice încărcare sau descărcare mai lungă.",
+    "no_timeout": "niciunul",
     "read_timeout": "Timeout pentru citirea corpului",
     "read_header_timeout": "Timeout pentru citirea antetelor",
     "write_timeout": "Timeout de scriere",
     "idle_timeout": "Timeout de inactivitate",
     "max_header_bytes": "Dimensiune max. antete (octeți)",
-    "max_header_bytes_help": "Dimensiunea maximă a antetelor cererii în octeți (implicit: 1 MB = 1048576)",
+    "max_header_bytes_help": "Dimensiunea maximă a antetelor cererii în octeți (implicit în Caddy: 16 KiB = 16384)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "Dezactivează HTTP/3",
     "http3_help": "Caddy activează implicit HTTP/1.1, HTTP/2 și HTTP/3 ori de câte ori TLS este configurat. HTTP/3 rulează peste UDP pe același port ca HTTPS — dacă firewall-ul blochează UDP, dezactivarea aici lasă doar HTTP/1.1 și HTTP/2."

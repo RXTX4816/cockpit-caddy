@@ -231,16 +231,19 @@
   "transport": {
     "section_title": "Limity czasu upstreamu (opcjonalnie)",
     "dial_timeout": "Limit czasu połączenia",
-    "response_header_timeout": "Limit czasu nagłówków odpowiedzi"
+    "response_header_timeout": "Limit czasu nagłówków odpowiedzi",
+    "defaults_help": "Zostaw pole puste, aby użyć domyślnej wartości Caddy (pokazanej na szaro). Limit czasu nagłówków odpowiedzi przerywa long polling i wolne odpowiedzi."
   },
   "server_timeouts": {
     "section_title": "Limity czasu i ograniczenia serwera (opcjonalnie)",
+    "defaults_help": "Zostaw pole puste, aby użyć domyślnej wartości Caddy (pokazanej na szaro). Limit czasu odczytu treści lub zapisu przerywa każde dłuższe wysyłanie lub pobieranie.",
+    "no_timeout": "brak",
     "read_timeout": "Limit czasu odczytu treści",
     "read_header_timeout": "Limit czasu odczytu nagłówków",
     "write_timeout": "Limit czasu zapisu",
     "idle_timeout": "Limit czasu bezczynności",
     "max_header_bytes": "Maks. rozmiar nagłówków (bajty)",
-    "max_header_bytes_help": "Maksymalny rozmiar nagłówków żądania w bajtach (domyślnie: 1 MB = 1048576)",
+    "max_header_bytes_help": "Maksymalny rozmiar nagłówków żądania w bajtach (domyślnie w Caddy: 16 KiB = 16384)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "Wyłącz HTTP/3",
     "http3_help": "Caddy domyślnie włącza HTTP/1.1, HTTP/2 i HTTP/3, gdy skonfigurowano TLS. HTTP/3 działa przez UDP na tym samym porcie co HTTPS — jeśli zapora blokuje UDP, wyłączenie go tutaj pozostawia tylko HTTP/1.1 i HTTP/2."
