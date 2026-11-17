@@ -14,7 +14,8 @@
  * socket exists.
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { readConf } from './helpers';
+import { readConf, spawnCmd } from './helpers';
+import { curlStatus } from './live';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
   await dismissAdminBanner(page);
@@ -121,4 +122,23 @@ test('deleting a PHP site removes it from the list and the Caddyfile', async ({ 
 
   // File write may complete slightly after the UI state update.
   await expect.poll(async () => readConf(page), { timeout: 8000 }).not.toContain(':19303');
+});
+
+// #247: php_fastcgi alone only proxies *.php, so without file_server a PHP app's CSS/JS
+// 404. No PHP-FPM is needed for this: the .css never reaches the FastCGI upstream.
+test('PHP site serves static files next to the PHP ones', async ({ pluginPage: page }) => {
+  await spawnCmd(page, ['bash', '-c', 'mkdir -p /etc/caddy/e2e-php-19303 && echo "body{}" > /etc/caddy/e2e-php-19303/style.css && chmod -R a+rX /etc/caddy/e2e-php-19303']);
+  await waitForToolbar(page);
+  await page.getByRole('button', { name: /add php site/i }).click();
+  const modal = page.getByRole('dialog');
+  await modal.getByLabel(/listen port/i).fill('19303');
+  await modal.getByLabel(/fastcgi upstream/i).fill('127.0.0.1:9000');
+  await modal.getByLabel(/root directory/i).fill('/etc/caddy/e2e-php-19303');
+  await modal.locator('#php-tls').uncheck();
+  await modal.getByRole('button', { name: /add php site/i }).click();
+  await modal.getByRole('button', { name: /^confirm$/i }).click();
+  await expect(modal).not.toBeVisible({ timeout: 15000 });
+
+  expect(await readConf(page)).toMatch(/php_fastcgi 127\.0\.0\.1:9000\n\tfile_server/);
+  await expect.poll(() => curlStatus(page, 'http://localhost:19303/style.css'), { timeout: 10000 }).toBe('200');
 });
