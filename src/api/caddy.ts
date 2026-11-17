@@ -633,6 +633,15 @@ export function parseConfTlsIssuerMap(content: string): Record<string, "acme" | 
   return result;
 }
 
+/** Returns address → true for conf.d site blocks whose `tls { }` block turns on `on_demand` (#253). */
+export function parseConfTlsOnDemandMap(content: string): Record<string, boolean> {
+  const result: Record<string, boolean> = {};
+  for (const block of extractRawBlocksFromCaddyfile(content)) {
+    if (block.raw.split("\n").some(l => l.trim() === "on_demand")) setBlockResult(result, block, true);
+  }
+  return result;
+}
+
 /**
  * Returns address → CA bundle path by reading `# tls_ca_bundle: <path>` comments (#152)
  * from conf.d site blocks. Caddy has no field for this on a manually-loaded certificate —
@@ -1446,7 +1455,7 @@ function buildLogCaddyLines(log: import("./types").AccessLogConfig): string[] {
  * that silent, order-dependent overwrite — hostless renewal window only comes from
  * the real global `renewal_window_ratio` Caddyfile option instead.
  */
-function buildTlsCaddyLines(p: Pick<ProxyEntry, "tls" | "tlsIssuer" | "tlsAdvanced" | "mtls" | "customTls">, hostless: boolean): string[] {
+function buildTlsCaddyLines(p: Pick<ProxyEntry, "tls" | "tlsIssuer" | "tlsOnDemand" | "tlsAdvanced" | "mtls" | "customTls">, hostless: boolean): string[] {
   if (!p.tls) return [];
   const adv = p.tlsAdvanced;
   const mtls = p.mtls;
@@ -1463,6 +1472,8 @@ function buildTlsCaddyLines(p: Pick<ProxyEntry, "tls" | "tlsIssuer" | "tlsAdvanc
     || certLifetime || renewalWindowRatio !== undefined
   );
   const hasMtls = mtls?.mode;
+  // #253: a certificate file has nothing to obtain, so on_demand only goes with an issuer.
+  const onDemandLines = p.tlsOnDemand ? ["\t\ton_demand"] : [];
 
   if (hasCustomCert) {
     const certLine = `\ttls ${custom!.certFile.trim()} ${custom!.keyFile.trim()}`;
@@ -1482,11 +1493,11 @@ function buildTlsCaddyLines(p: Pick<ProxyEntry, "tls" | "tlsIssuer" | "tlsAdvanc
   // issuer at all. It needs a public name, so a hostless site keeps the internal CA. The
   // internal-issuer settings (lifetime, renewal ratio) don't apply here.
   if (p.tlsIssuer === "acme" && !hostless) {
-    const policy = buildTlsPolicyBlockLines(adv, mtls);
+    const policy = [...buildTlsPolicyBlockLines(adv, mtls), ...onDemandLines];
     return policy.length ? ["\ttls {", ...policy, "\t}"] : [];
   }
 
-  if (!hasAdvanced && !hasMtls) return ["\ttls internal"];
+  if (!hasAdvanced && !hasMtls && !onDemandLines.length) return ["\ttls internal"];
 
   const lines: string[] = ["\ttls {"];
   if (certLifetime) {
@@ -1500,6 +1511,7 @@ function buildTlsCaddyLines(p: Pick<ProxyEntry, "tls" | "tlsIssuer" | "tlsAdvanc
     lines.push(`\t\trenewal_window_ratio ${renewalWindowRatio}`);
   }
   lines.push(...buildTlsPolicyBlockLines(adv, mtls));
+  lines.push(...onDemandLines);
   lines.push("\t}");
   return lines;
 }
@@ -1731,75 +1743,32 @@ function patchRawBlock(raw: string, proxy: ProxyEntry): string {
   const kept: string[] = [lines[0]]; // preserve header exactly as-is
   let i = 1;
   let nestDepth = 0;
+  const braces = (t: string) => (t.match(/\{/g) ?? []).length - (t.match(/\}/g) ?? []).length;
+  /** Drops the directive at line i together with its nested `{ ... }` block, if it has one. */
+  const skipDirective = () => {
+    let depth = braces(lines[i].trim());
+    i++;
+    while (i < closingIdx && depth > 0) {
+      depth += braces(lines[i].trim());
+      i++;
+    }
+  };
+  const isDirective = (trimmed: string, name: string) =>
+    trimmed === name || trimmed.startsWith(`${name} `) || trimmed.startsWith(`${name}\t`) || trimmed === `${name}{`;
+
+  // The directives the plugin writes again below are dropped here, each with its whole block.
+  const rewritten = ["tls", "encode", "root", "file_server", "header", "basic_auth", "forward_auth", "reverse_proxy", "php_fastcgi"];
 
   while (i < closingIdx) {
     const line = lines[i];
     const trimmed = line.trim();
-    const opens = (trimmed.match(/\{/g) ?? []).length;
-    const closes = (trimmed.match(/\}/g) ?? []).length;
 
-    if (nestDepth === 0) {
-      // Skip top-level `tls` directive (tls internal, tls email, etc. but not tls_)
-      if (trimmed === "tls" || (trimmed.startsWith("tls ") && !trimmed.startsWith("tls_"))) {
-        nestDepth += opens - closes;
-        i++;
-        continue;
-      }
-
-      // Skip top-level `encode` directive
-      if (trimmed === "encode" || trimmed.startsWith("encode ")) {
-        nestDepth += opens - closes;
-        i++;
-        continue;
-      }
-
-      // Skip top-level `root`, `file_server`, and `header` directives
-      if (trimmed.startsWith("root ") || trimmed === "file_server" || trimmed.startsWith("file_server ")
-        || trimmed === "header" || trimmed.startsWith("header ") || trimmed.startsWith("header\t")) {
-        nestDepth += opens - closes;
-        i++;
-        continue;
-      }
-
-      // Skip top-level `basic_auth` block
-      if (trimmed === "basic_auth" || trimmed.startsWith("basic_auth ")) {
-        nestDepth += opens - closes;
-        i++;
-        while (i < closingIdx && nestDepth > 0) {
-          const t = lines[i].trim();
-          nestDepth += (t.match(/\{/g) ?? []).length - (t.match(/\}/g) ?? []).length;
-          i++;
-        }
-        continue;
-      }
-
-      // Skip top-level `forward_auth` block
-      if (trimmed.startsWith("forward_auth ")) {
-        nestDepth += opens - closes;
-        i++;
-        while (i < closingIdx && nestDepth > 0) {
-          const t = lines[i].trim();
-          nestDepth += (t.match(/\{/g) ?? []).length - (t.match(/\}/g) ?? []).length;
-          i++;
-        }
-        continue;
-      }
-
-      // Skip top-level `reverse_proxy` / `php_fastcgi` directives, including any nested { } block
-      if ((trimmed.startsWith("reverse_proxy") && (trimmed.length === 13 || trimmed[13] === " "))
-        || (trimmed.startsWith("php_fastcgi") && (trimmed.length === 11 || trimmed[11] === " "))) {
-        nestDepth += opens - closes;
-        i++;
-        while (i < closingIdx && nestDepth > 0) {
-          const t = lines[i].trim();
-          nestDepth += (t.match(/\{/g) ?? []).length - (t.match(/\}/g) ?? []).length;
-          i++;
-        }
-        continue;
-      }
+    if (nestDepth === 0 && rewritten.some(name => isDirective(trimmed, name))) {
+      skipDirective();
+      continue;
     }
 
-    nestDepth += opens - closes;
+    nestDepth += braces(trimmed);
     kept.push(line);
     i++;
   }
@@ -3564,6 +3533,34 @@ function patchLoggingLogs(
  * cert content, so switching to a different cert file (or disabling TLS/reverting to
  * ACME/internal) cleanly replaces or drops the old load_files entry instead of leaking it.
  */
+/**
+ * The tls app after a JSON push (#253): only the automation policies and the loaded
+ * certificate files are rebuilt by the plugin. Everything else in apps.tls stays, above all
+ * automation.on_demand (the global ask permission): dropping it left on-demand sites with no
+ * permission check until the next reload.
+ */
+function mergeTlsApp(
+  prev: import("./types").CaddyTlsApp | undefined,
+  rebuilt: import("./types").CaddyTlsApp | undefined,
+  certificates?: Pick<import("./types").CaddyTlsApp, "certificates">,
+): import("./types").CaddyTlsApp | undefined {
+  const without = (obj: unknown, key: string): Record<string, unknown> =>
+    Object.fromEntries(Object.entries((obj ?? {}) as Record<string, unknown>).filter(([k]) => k !== key));
+  const { automation: prevAutomation, certificates: prevCertificates, ...rest } = (prev ?? {}) as import("./types").CaddyTlsApp & Record<string, unknown>;
+  const automationRest = without(prevAutomation, "policies");
+  const certificatesRest = without(prevCertificates, "load_files");
+  const out: Record<string, unknown> = { ...rest };
+  const policies = rebuilt?.automation?.policies;
+  if (policies?.length || Object.keys(automationRest).length) {
+    out.automation = { ...automationRest, ...(policies?.length ? { policies } : {}) };
+  }
+  const loadFiles = certificates?.certificates?.load_files;
+  if (loadFiles?.length || Object.keys(certificatesRest).length) {
+    out.certificates = { ...certificatesRest, ...(loadFiles?.length ? { load_files: loadFiles } : {}) };
+  }
+  return Object.keys(out).length ? out as import("./types").CaddyTlsApp : undefined;
+}
+
 function rebuildTlsCertificates(
   config: CaddyConfig,
   proxy: Pick<ProxyEntry, "tls" | "customTls" | "externalPort" | "externalHost" | "matchers">,
@@ -3593,7 +3590,7 @@ export function mergeProxy(config: CaddyConfig, proxy: ProxyEntry): CaddyConfig 
     apps: {
       ...config.apps,
       http: { ...config.apps?.http, servers },
-      tls: (automation || certificates) ? { ...automation, ...certificates } : undefined,
+      tls: mergeTlsApp(config.apps?.tls, automation, certificates),
     },
   };
 }
@@ -4010,7 +4007,7 @@ export function mergeNamedServer(
     apps: {
       ...config.apps,
       http: { ...config.apps?.http, servers },
-      tls: rebuildTlsAutomationPolicies(config, servers, def.key, def.tlsAdvanced, externalHostList(namedServerSubjectHost(def))),
+      tls: mergeTlsApp(config.apps?.tls, rebuildTlsAutomationPolicies(config, servers, def.key, def.tlsAdvanced, externalHostList(namedServerSubjectHost(def))), config.apps?.tls),
     },
   };
 }

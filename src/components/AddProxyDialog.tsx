@@ -81,6 +81,7 @@ interface Props {
   initialValues?: Partial<FormState>;
   /** Duplicate (#246): the source's certificate mode, instead of following the host field. */
   initialTlsMode?: TlsMode;
+  initialTlsOnDemand?: boolean;
   initialRewrite?: RewriteConfig;
   initialRequestHeaders?: HeaderOperation[];
   initialResponseHeaders?: HeaderOperation[];
@@ -103,7 +104,7 @@ interface Props {
   initialServerKey?: string;
 }
 
-export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, initialValues, initialTlsMode, initialRewrite, initialRequestHeaders, initialResponseHeaders, initialTransport, initialBasicAuth, initialExtraUpstreams, initialLbPolicy, initialLbRetry, initialServerTimeouts, initialRequestBodyMaxSize, initialAccessLog, initialErrorHandlers, initialForwardAuth, initialTlsValues, initialMatchers, initialHandlePath, initialIsNamedRoute, initialNamedRouteName, servers, initialServerKey }: Props) {
+export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, initialValues, initialTlsMode, initialTlsOnDemand, initialRewrite, initialRequestHeaders, initialResponseHeaders, initialTransport, initialBasicAuth, initialExtraUpstreams, initialLbPolicy, initialLbRetry, initialServerTimeouts, initialRequestBodyMaxSize, initialAccessLog, initialErrorHandlers, initialForwardAuth, initialTlsValues, initialMatchers, initialHandlePath, initialIsNamedRoute, initialNamedRouteName, servers, initialServerKey }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
   const confirmAction = useConfirmAction();
@@ -147,6 +148,7 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
   const publicName = hasPublicName(form.externalHost);
   const chosenMode = tlsModeChoice ?? defaultTlsMode(form.externalHost);
   const tlsMode: TlsMode = chosenMode === "acme" && !publicName ? "internal" : chosenMode;
+  const [tlsOnDemand, setTlsOnDemand] = useState(initialTlsOnDemand ?? false);
 
   const selectedServer = servers?.find(s => s.key === selectedServerKey);
   const serverCtx: ServerContext | undefined = selectedServer ? {
@@ -375,7 +377,7 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
 
           {!serverCtx && (
             <div>
-              <TlsModeField id="tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isLocked} />
+              <TlsModeField id="tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isLocked} onDemand={tlsOnDemand} onOnDemandChange={setTlsOnDemand} />
               <SectionActions onDefaults={() => setTlsModeChoice(null)} isDisabled={isLocked} />
             </div>
           )}
@@ -505,6 +507,7 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
                     targetPort: parseInt(form.targetPort, 10),
                     targetScheme: form.targetScheme,
                     ...(serverCtx ? { tls: form.tls } : tlsModeToEntry(tlsMode, form.externalHost)),
+                    tlsOnDemand: tlsMode !== "off" && tlsOnDemand ? true : undefined,
                     tlsSkipVerify: form.targetScheme === "https" ? form.tlsSkipVerify : false,
                     compress: form.compress || undefined,
                     label: form.label.trim() || undefined,

@@ -543,14 +543,13 @@
     "acme_eab_placeholder": "Leave blank if not required",
     "acme_eab_help": "External Account Binding credentials required by some providers (e.g. ZeroSSL). Both fields must be set together.",
     "on_demand_title": "On-demand TLS",
-    "on_demand_enabled": "Enable on-demand TLS",
-    "on_demand_enabled_help": "Caddy will provision certificates at connection time for hostnames not known at startup. Requires a publicly reachable server.",
+    "on_demand_enabled": "Configure on-demand TLS",
+    "on_demand_enabled_help": "Sets the endpoint Caddy asks before it gets a certificate on demand. This doesn't turn on-demand TLS on: that is a per-site option in each site's HTTPS settings.",
     "on_demand_no_ask_warning": "No ask URL set — Caddy will issue certificates for any domain without authorization. Set an ask URL to prevent abuse.",
     "on_demand_ask": "Ask URL",
     "on_demand_ask_help": "Caddy queries this endpoint before issuing a certificate. It must return HTTP 2xx to allow issuance.",
     "on_demand_interval": "Rate limit interval",
     "on_demand_burst": "Rate limit burst",
-    "on_demand_burst_help": "Maximum certificates issued per interval. Leave both blank for no rate limit (not recommended).",
     "validation_burst": "Must be a positive integer",
     "internal_tls_title": "Internal TLS (hostless proxies)",
     "internal_tls_note": "Caddy can only scope a certificate policy by hostname. Proxies/servers with no hostname all share this one setting — there's no way to give two hostless proxies different lifetimes. Proxies with a real hostname can still set their own in the TLS Policy section of their edit dialog.",
@@ -605,7 +604,8 @@
     "proxy_protocol_allow": "Allowed source IPs (optional)",
     "proxy_protocol_allow_help": "Space-separated CIDR ranges allowed to send PROXY protocol headers — restrict to your load balancer's own IPs to prevent client IP spoofing. Leave blank to accept from any source.",
     "proxy_protocol_timeout": "Header read timeout (optional)",
-    "proxy_protocol_timeout_help": "Max time to wait for the PROXY protocol header before giving up (Go duration, e.g. 2s). Leave blank for Caddy's own default."
+    "proxy_protocol_timeout_help": "Max time to wait for the PROXY protocol header before giving up (Go duration, e.g. 2s). Leave blank for Caddy's own default.",
+    "on_demand_rate_deprecated": "Caddy no longer recommends interval and burst. Clear both and rely on the ask endpoint instead."
   },
   "ca": {
     "title": "Internal Certificate Authority",
@@ -855,6 +855,8 @@
     "acme_help": "Caddy gets and renews a public certificate. The name must point to this server, and ports 80 and 443 must be reachable from the internet.",
     "internal_help": "Signed by Caddy's own CA: browsers only trust it where that CA's root certificate is installed. Good for internal names.",
     "acme_needs_name": "Signed by Caddy's own CA. Automatic certificates need a public hostname in the host field.",
-    "off_help": "The site is served over plain HTTP."
+    "off_help": "The site is served over plain HTTP.",
+    "on_demand": "On-demand: get the certificate at the first TLS handshake",
+    "on_demand_help": "For names that aren't known in advance. Set an ask endpoint under Settings → On-demand TLS, or anyone who points a name at this server can make Caddy request a certificate for it."
   }
 }

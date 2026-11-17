@@ -457,41 +457,45 @@ export function GlobalOptionsTab() {
                 <HelperText><HelperTextItem>{t("global_opts.on_demand_ask_help")}</HelperTextItem></HelperText>
               </FormHelperText>
             </FormGroup>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
-              <FormGroup label={t("global_opts.on_demand_interval")} fieldId="go-on-demand-interval" style={{ flex: "1 1 12rem" }}>
-                <TextInput
-                  id="go-on-demand-interval"
-                  value={onDemandInterval}
-                  onChange={(_e, v) => setOnDemandInterval(v)}
-                  placeholder={t("global_opts.duration_placeholder")}
-                  validated={onDemandIntervalErr ? "error" : "default"}
-                  isDisabled={isConfirming}
-                />
-                {onDemandIntervalErr && (
-                  <FormHelperText>
-                    <HelperText><HelperTextItem variant="error">{onDemandIntervalErr}</HelperTextItem></HelperText>
-                  </FormHelperText>
-                )}
-              </FormGroup>
-              <FormGroup label={t("global_opts.on_demand_burst")} fieldId="go-on-demand-burst" style={{ flex: "1 1 12rem" }}>
-                <TextInput
-                  id="go-on-demand-burst"
-                  value={onDemandBurst}
-                  onChange={(_e, v) => setOnDemandBurst(v)}
-                  placeholder="5"
-                  validated={onDemandBurstErr ? "error" : "default"}
-                  isDisabled={isConfirming}
-                />
-                {onDemandBurstErr && (
-                  <FormHelperText>
-                    <HelperText><HelperTextItem variant="error">{onDemandBurstErr}</HelperTextItem></HelperText>
-                  </FormHelperText>
-                )}
-                <FormHelperText>
-                  <HelperText><HelperTextItem>{t("global_opts.on_demand_burst_help")}</HelperTextItem></HelperText>
-                </FormHelperText>
-              </FormGroup>
-            </div>
+            {/* #253: Caddy says interval/burst are not recommended. Only show them while set, so an
+                existing config can be cleared, and never invite new ones. */}
+            {(onDemandInterval || onDemandBurst) && (
+              <>
+                <Alert variant="warning" isInline title={t("global_opts.on_demand_rate_deprecated")} style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }} />
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
+                  <FormGroup label={t("global_opts.on_demand_interval")} fieldId="go-on-demand-interval" style={{ flex: "1 1 12rem" }}>
+                    <TextInput
+                      id="go-on-demand-interval"
+                      value={onDemandInterval}
+                      onChange={(_e, v) => setOnDemandInterval(v)}
+                      placeholder={t("global_opts.duration_placeholder")}
+                      validated={onDemandIntervalErr ? "error" : "default"}
+                      isDisabled={isConfirming}
+                    />
+                    {onDemandIntervalErr && (
+                      <FormHelperText>
+                        <HelperText><HelperTextItem variant="error">{onDemandIntervalErr}</HelperTextItem></HelperText>
+                      </FormHelperText>
+                    )}
+                  </FormGroup>
+                  <FormGroup label={t("global_opts.on_demand_burst")} fieldId="go-on-demand-burst" style={{ flex: "1 1 12rem" }}>
+                    <TextInput
+                      id="go-on-demand-burst"
+                      value={onDemandBurst}
+                      onChange={(_e, v) => setOnDemandBurst(v)}
+                      placeholder="5"
+                      validated={onDemandBurstErr ? "error" : "default"}
+                      isDisabled={isConfirming}
+                    />
+                    {onDemandBurstErr && (
+                      <FormHelperText>
+                        <HelperText><HelperTextItem variant="error">{onDemandBurstErr}</HelperTextItem></HelperText>
+                      </FormHelperText>
+                    )}
+                  </FormGroup>
+                </div>
+              </>
+            )}
           </>
         )}
 

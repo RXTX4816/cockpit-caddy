@@ -543,14 +543,13 @@
     "acme_eab_placeholder": "Laat leeg als niet vereist",
     "acme_eab_help": "External Account Binding-gegevens die sommige aanbieders vereisen (bijv. ZeroSSL). Beide velden moeten samen worden ingevuld.",
     "on_demand_title": "On-demand TLS",
-    "on_demand_enabled": "On-demand TLS inschakelen",
-    "on_demand_enabled_help": "Caddy haalt bij het opzetten van de verbinding certificaten op voor hostnamen die bij het starten nog onbekend zijn. Vereist een publiek bereikbare server.",
+    "on_demand_enabled": "On-demand TLS configureren",
+    "on_demand_enabled_help": "Stelt het endpoint in dat Caddy raadpleegt voordat het on demand een certificaat haalt. Dit zet on-demand TLS niet aan: dat is een optie per site in de HTTPS-instellingen.",
     "on_demand_no_ask_warning": "Geen ask-URL ingesteld — Caddy geeft zonder autorisatie certificaten uit voor elk domein. Stel een ask-URL in om misbruik te voorkomen.",
     "on_demand_ask": "Ask-URL",
     "on_demand_ask_help": "Caddy raadpleegt dit endpoint voordat er een certificaat wordt uitgegeven. Het moet HTTP 2xx teruggeven om uitgifte toe te staan.",
     "on_demand_interval": "Interval van de snelheidslimiet",
     "on_demand_burst": "Burst van de snelheidslimiet",
-    "on_demand_burst_help": "Maximaal aantal uitgegeven certificaten per interval. Laat beide leeg voor geen limiet (niet aanbevolen).",
     "validation_burst": "Moet een positief geheel getal zijn",
     "internal_tls_title": "Interne TLS (proxies zonder hostnaam)",
     "internal_tls_note": "Caddy kan een certificaatbeleid alleen per hostnaam afbakenen. Proxies/servers zonder hostnaam delen allemaal deze ene instelling — twee proxies zonder hostnaam kunnen geen verschillende levensduur krijgen. Proxies met een echte hostnaam kunnen nog steeds hun eigen waarde instellen in de sectie TLS-beleid van hun bewerkdialoog.",
@@ -605,7 +604,8 @@
     "proxy_protocol_allow": "Toegestane bron-IP's (optioneel)",
     "proxy_protocol_allow_help": "Door spaties gescheiden CIDR-bereiken die PROXY-protocolheaders mogen sturen — beperk dit tot de IP's van je load balancer om vervalsing van client-IP's te voorkomen. Laat leeg om elke bron te accepteren.",
     "proxy_protocol_timeout": "Time-out voor lezen van de header (optioneel)",
-    "proxy_protocol_timeout_help": "Maximale wachttijd op de PROXY-protocolheader voordat wordt opgegeven (Go-duur, bijv. 2s). Laat leeg voor de standaard van Caddy."
+    "proxy_protocol_timeout_help": "Maximale wachttijd op de PROXY-protocolheader voordat wordt opgegeven (Go-duur, bijv. 2s). Laat leeg voor de standaard van Caddy.",
+    "on_demand_rate_deprecated": "Caddy raadt interval en burst niet meer aan. Maak beide leeg en vertrouw op het ask-endpoint."
   },
   "ca": {
     "title": "Interne certificeringsinstantie",
@@ -855,6 +855,8 @@
     "acme_help": "Caddy haalt en vernieuwt een publiek certificaat. De naam moet naar deze server wijzen en poort 80 en 443 moeten vanaf internet bereikbaar zijn.",
     "internal_help": "Ondertekend door Caddy's eigen CA: browsers vertrouwen het alleen waar het rootcertificaat van die CA is geïnstalleerd. Goed voor interne namen.",
     "acme_needs_name": "Ondertekend door Caddy's eigen CA. Automatische certificaten hebben een publieke hostnaam in het hostveld nodig.",
-    "off_help": "De site wordt via gewoon HTTP geserveerd."
+    "off_help": "De site wordt via gewoon HTTP geserveerd.",
+    "on_demand": "On-demand: certificaat ophalen bij de eerste TLS-handshake",
+    "on_demand_help": "Voor namen die vooraf niet bekend zijn. Stel een ask-endpoint in onder Instellingen → On-demand TLS, anders kan iedereen die een naam naar deze server laat wijzen Caddy er een certificaat voor laten aanvragen."
   }
 }

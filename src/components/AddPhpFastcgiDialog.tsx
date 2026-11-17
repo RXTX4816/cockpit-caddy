@@ -67,6 +67,7 @@ export function AddPhpFastcgiDialog({ existingPorts, onAdd, onClose, initialValu
   const [tlsModeChoice, setTlsModeChoice] = useState<TlsMode>((initialValues?.tls ?? true) ? "internal" : "off");
   const publicName = hasPublicName(undefined);
   const tlsMode: TlsMode = tlsModeChoice === "acme" && !publicName ? "internal" : tlsModeChoice;
+  const [tlsOnDemand, setTlsOnDemand] = useState(false);
   const [compress, setCompress] = useState(initialValues?.compress ?? false);
   const [label, setLabel] = useState(initialValues?.label ?? "");
   const [basicAuth, setBasicAuth] = useState<AuthEntry[]>(initialBasicAuth ?? []);
@@ -210,7 +211,7 @@ export function AddPhpFastcgiDialog({ existingPorts, onAdd, onClose, initialValu
           </FormGroup>
 
           <div>
-            <TlsModeField id="php-tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isLocked} />
+            <TlsModeField id="php-tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isLocked} onDemand={tlsOnDemand} onOnDemandChange={setTlsOnDemand} />
             <SectionActions onDefaults={() => setTlsModeChoice(defaultTlsMode(undefined))} isDisabled={isLocked} />
           </div>
 
@@ -307,6 +308,7 @@ export function AddPhpFastcgiDialog({ existingPorts, onAdd, onClose, initialValu
                     targetPort: 0,
                     targetScheme: "http",
                     ...tlsModeToEntry(tlsMode, undefined),
+                    tlsOnDemand: tlsMode !== "off" && tlsOnDemand ? true : undefined,
                     tlsSkipVerify: false,
                     compress: compress || undefined,
                     label: label.trim() || undefined,

@@ -543,14 +543,13 @@
     "acme_eab_placeholder": "Leer lassen, falls nicht erforderlich",
     "acme_eab_help": "Zugangsdaten für External Account Binding, die manche Anbieter verlangen (z. B. ZeroSSL). Beide Felder müssen zusammen gesetzt werden.",
     "on_demand_title": "On-Demand-TLS",
-    "on_demand_enabled": "On-Demand-TLS aktivieren",
-    "on_demand_enabled_help": "Caddy stellt Zertifikate beim Verbindungsaufbau für Hostnamen aus, die beim Start nicht bekannt sind. Erfordert einen öffentlich erreichbaren Server.",
+    "on_demand_enabled": "On-Demand-TLS konfigurieren",
+    "on_demand_enabled_help": "Legt den Endpunkt fest, den Caddy fragt, bevor es ein Zertifikat on demand holt. On-Demand-TLS wird dadurch nicht eingeschaltet: Das ist eine Option pro Seite in deren HTTPS-Einstellungen.",
     "on_demand_no_ask_warning": "Keine Ask-URL gesetzt – Caddy stellt ohne Autorisierung Zertifikate für jede Domain aus. Setzen Sie eine Ask-URL, um Missbrauch zu verhindern.",
     "on_demand_ask": "Ask-URL",
     "on_demand_ask_help": "Caddy fragt diesen Endpunkt ab, bevor ein Zertifikat ausgestellt wird. Er muss HTTP 2xx zurückgeben, um die Ausstellung zu erlauben.",
     "on_demand_interval": "Intervall der Ratenbegrenzung",
     "on_demand_burst": "Burst der Ratenbegrenzung",
-    "on_demand_burst_help": "Maximale Anzahl ausgestellter Zertifikate pro Intervall. Beide Felder leer lassen für keine Ratenbegrenzung (nicht empfohlen).",
     "validation_burst": "Muss eine positive ganze Zahl sein",
     "internal_tls_title": "Internes TLS (Proxies ohne Hostname)",
     "internal_tls_note": "Caddy kann eine Zertifikatsrichtlinie nur nach Hostname eingrenzen. Proxies/Server ohne Hostname teilen sich alle diese eine Einstellung – zwei Proxies ohne Hostname können keine unterschiedlichen Laufzeiten erhalten. Proxies mit echtem Hostnamen können im Abschnitt „TLS-Richtlinie“ ihres Bearbeitungsdialogs weiterhin eigene Werte setzen.",
@@ -605,7 +604,8 @@
     "proxy_protocol_allow": "Erlaubte Quell-IPs (optional)",
     "proxy_protocol_allow_help": "Durch Leerzeichen getrennte CIDR-Bereiche, die PROXY-Protokoll-Header senden dürfen – beschränken Sie dies auf die IPs Ihres Load Balancers, um gefälschte Client-IPs zu verhindern. Leer lassen, um jede Quelle zu akzeptieren.",
     "proxy_protocol_timeout": "Timeout für das Lesen des Headers (optional)",
-    "proxy_protocol_timeout_help": "Maximale Wartezeit auf den PROXY-Protokoll-Header, bevor abgebrochen wird (Go-Dauer, z. B. 2s). Leer lassen für den Caddy-Standard."
+    "proxy_protocol_timeout_help": "Maximale Wartezeit auf den PROXY-Protokoll-Header, bevor abgebrochen wird (Go-Dauer, z. B. 2s). Leer lassen für den Caddy-Standard.",
+    "on_demand_rate_deprecated": "Caddy empfiehlt Intervall und Burst nicht mehr. Leere beide Felder und verlass dich stattdessen auf den Ask-Endpunkt."
   },
   "ca": {
     "title": "Interne Zertifizierungsstelle",
@@ -855,6 +855,8 @@
     "acme_help": "Caddy holt und erneuert ein öffentliches Zertifikat. Der Name muss auf diesen Server zeigen, und die Ports 80 und 443 müssen aus dem Internet erreichbar sein.",
     "internal_help": "Von Caddys eigener CA signiert: Browser vertrauen ihm nur, wo das Root-Zertifikat dieser CA installiert ist. Gut für interne Namen.",
     "acme_needs_name": "Von Caddys eigener CA signiert. Automatische Zertifikate brauchen einen öffentlichen Hostnamen im Host-Feld.",
-    "off_help": "Die Seite wird über reines HTTP ausgeliefert."
+    "off_help": "Die Seite wird über reines HTTP ausgeliefert.",
+    "on_demand": "On-Demand: Zertifikat beim ersten TLS-Handshake holen",
+    "on_demand_help": "Für Namen, die vorher nicht bekannt sind. Lege unter Einstellungen → On-Demand-TLS einen Ask-Endpunkt fest, sonst kann jeder, der einen Namen auf diesen Server zeigen lässt, Caddy ein Zertifikat dafür anfordern lassen."
   }
 }

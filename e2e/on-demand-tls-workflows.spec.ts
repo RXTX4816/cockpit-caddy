@@ -69,3 +69,27 @@ test('disabling on-demand TLS removes the block and Caddy still reloads cleanly'
   await reloadFromSettings(page);
   await expectCaddyActive(page);
 });
+
+// #253: on-demand TLS is turned on per site (`tls { on_demand }`), not by the global option.
+test('a site turns on on-demand TLS and the Edit dialog reads it back', async ({ pluginPage: page }) => {
+  await waitForToolbar(page);
+  await page.getByRole('button', { name: /add proxy/i }).first().click();
+  let modal = page.getByRole('dialog');
+  await modal.getByLabel('External port').fill('19253');
+  await modal.getByLabel(/target host/i).fill('localhost');
+  await modal.locator('#target-port').fill('3000');
+  await expect(modal.locator('#tls')).toHaveValue('internal');
+  await modal.locator('#tls-on-demand').check();
+  await modal.getByRole('button', { name: /^add proxy$/i }).click();
+  await modal.getByRole('button', { name: /^confirm$/i }).click();
+  await expect(modal).not.toBeVisible({ timeout: 15000 });
+
+  const conf = await readFile(page, '/etc/caddy/conf.d/cockpit-caddy.conf');
+  expect(conf).toContain(':19253 {\n\ttls {\n\t\tissuer internal\n\t\ton_demand\n\t}');
+  await expectCaddyActive(page);
+
+  await page.locator('li').filter({ has: page.locator('#proxy-19253') }).getByRole('button', { name: /^edit$/i }).click();
+  modal = page.getByRole('dialog');
+  await expect(modal.locator('#edit-tls-on-demand')).toBeChecked({ timeout: 10000 });
+  await modal.getByRole('button', { name: /cancel/i }).click();
+});

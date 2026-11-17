@@ -4,7 +4,7 @@ import { i18n } from "@rxtx4816/cockpit-plugin-base-react/i18n";
 import {
   parseProxies, mergeProxy, removeProxy,
   readCaddyfile, writeCaddyfile, readProxyConf,
-  parseLabelsFromCaddyfile, parseConfTlsMap, parseConfExternalAddresses, parseConfAccessLogMap, parseConfForwardAuthMap, parseConfCustomTlsCaMap, parseConfTlsIssuerMap,
+  parseLabelsFromCaddyfile, parseConfTlsMap, parseConfExternalAddresses, parseConfAccessLogMap, parseConfForwardAuthMap, parseConfCustomTlsCaMap, parseConfTlsIssuerMap, parseConfTlsOnDemandMap,
   surgicallyWriteProxy, surgicallyEditProxy, surgicallyRemoveBlock,
   migrateCaddyfile, mergeMigratedConfContent, writeRawProxyConf, writeRawProxyConfValidated,
   CaddyfileError,
@@ -62,9 +62,10 @@ function checkServerPortConflicts(
   }
 }
 
-/** A site whose TLS automation only Caddy's Caddyfile adapter builds correctly (#246). */
+/** A site whose TLS automation only Caddy's Caddyfile adapter builds correctly: automatic
+ *  HTTPS (#246) or on-demand TLS (#253). */
 function reliesOnCaddyfileTls(p: ProxyEntry): boolean {
-  return p.tls && !p.customTls && p.tlsIssuer === "acme";
+  return p.tls && !p.customTls && (p.tlsIssuer === "acme" || !!p.tlsOnDemand);
 }
 
 /** The conf.d issuer map after writing `p` under `key` (dropping `oldKey`), before the next poll. */
@@ -78,13 +79,23 @@ function withIssuer(
   return n;
 }
 
+/** The conf.d on-demand map after writing `p` under `key` (dropping `oldKey`), before the next poll. */
+function withOnDemand(map: Record<string, boolean>, oldKey: string | undefined, key: string, p: ProxyEntry): Record<string, boolean> {
+  const n = { ...map };
+  if (oldKey) delete n[oldKey];
+  if (p.tls && !p.customTls && p.tlsOnDemand) n[key] = true;
+  else delete n[key];
+  return n;
+}
+
 /**
  * Sites whose JSON only Caddy's own Caddyfile adapter builds correctly, so they are applied
  * by reloading instead of pushing hand-built JSON: php_fastcgi (#35) expands into several
- * routes, and automatic HTTPS (#246) needs ACME automation that the JSON push doesn't build.
+ * routes, and automatic HTTPS (#246) and on-demand TLS (#253) need automation policies that
+ * the JSON push doesn't build.
  */
 function needsCaddyfileReload(p: ProxyEntry): boolean {
-  return !!p.phpFastcgi || (p.tls && p.tlsIssuer === "acme" && !p.customTls);
+  return !!p.phpFastcgi || reliesOnCaddyfileTls(p);
 }
 
 /**
@@ -116,6 +127,7 @@ export function useProxies() {
   const [confForwardAuth, setConfForwardAuth] = useState<Record<string, import("../api").ForwardAuthConfig>>({});
   const [confCustomTlsCa, setConfCustomTlsCa] = useState<Record<string, string>>({});
   const [confTlsIssuer, setConfTlsIssuer] = useState<Record<string, "acme" | "internal">>({});
+  const [confTlsOnDemand, setConfTlsOnDemand] = useState<Record<string, boolean>>({});
   const [caddyfileContent, setCaddyfileContent] = useState<string>("");
   const [servers, setServers] = useState<ServerDef[]>([]);
   // Guards proxies memo from running before the first conf.d read completes.
@@ -151,6 +163,7 @@ export function useProxies() {
       setConfForwardAuth(parseConfForwardAuthMap(c));
       setConfCustomTlsCa(parseConfCustomTlsCaMap(c));
       setConfTlsIssuer(parseConfTlsIssuerMap(c));
+      setConfTlsOnDemand(parseConfTlsOnDemandMap(c));
       const defs = parseServerDefsFromConf(c);
       setServersLoaded(true);
       // Only update servers if no mutation happened after this sync started
@@ -228,9 +241,11 @@ export function useProxies() {
         customTls: p.customTls ? { ...p.customTls, caFile: lookup(confCustomTlsCa) } : undefined,
         // Automatic HTTPS vs the internal CA (#246) is only visible in the Caddyfile text.
         tlsIssuer: tls && !p.customTls ? lookup(confTlsIssuer) : undefined,
+        // Per-site on-demand TLS (#253), likewise read from the Caddyfile.
+        tlsOnDemand: tls && !p.customTls && lookup(confTlsOnDemand) ? true : undefined,
       };
     }),
-    [config, labels, confTls, confExternal, confAccessLog, confForwardAuth, confCustomTlsCa, confTlsIssuer, servers, serversLoaded],
+    [config, labels, confTls, confExternal, confAccessLog, confForwardAuth, confCustomTlsCa, confTlsIssuer, confTlsOnDemand, servers, serversLoaded],
   );
 
   // #246: while any site relies on automatic HTTPS, Caddy's own Caddyfile adapter has to build
@@ -325,6 +340,7 @@ export function useProxies() {
       });
       setConfTls(prev => ({ ...prev, [newProxyKey]: newProxy.tls }));
       setConfTlsIssuer(prev => withIssuer(prev, undefined, newProxyKey, newProxy));
+      setConfTlsOnDemand(prev => withOnDemand(prev, undefined, newProxyKey, newProxy));
       setConfExternal(prev => ({
         ...prev,
         [newProxyKey]: { scheme: newProxy.externalScheme, host: newProxy.externalHost },
@@ -427,6 +443,7 @@ export function useProxies() {
         return n;
       });
       setConfTlsIssuer(prev => withIssuer(prev, originalKey, entryKey, entry));
+      setConfTlsOnDemand(prev => withOnDemand(prev, originalKey, entryKey, entry));
       setConfExternal(prev => {
         const n = { ...prev };
         delete n[originalKey];

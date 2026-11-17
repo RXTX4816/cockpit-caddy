@@ -543,14 +543,13 @@
     "acme_eab_placeholder": "不要なら空欄",
     "acme_eab_help": "一部のプロバイダー（例: ZeroSSL）が要求する External Account Binding の資格情報。両方のフィールドをあわせて設定してください。",
     "on_demand_title": "オンデマンド TLS",
-    "on_demand_enabled": "オンデマンド TLS を有効にする",
-    "on_demand_enabled_help": "起動時に不明なホスト名について、Caddy が接続時に証明書を取得します。公開されたサーバーが必要です。",
+    "on_demand_enabled": "オンデマンド TLS を設定",
+    "on_demand_enabled_help": "Caddy がオンデマンドで証明書を取得する前に問い合わせるエンドポイントを設定します。これでオンデマンド TLS が有効になるわけではありません。有効化は各サイトの HTTPS 設定で行います。",
     "on_demand_no_ask_warning": "ask URL が設定されていません — Caddy は認可なしに任意のドメインの証明書を発行します。悪用を防ぐため ask URL を設定してください。",
     "on_demand_ask": "ask URL",
     "on_demand_ask_help": "Caddy は証明書を発行する前にこのエンドポイントに問い合わせます。発行を許可するには HTTP 2xx を返す必要があります。",
     "on_demand_interval": "レート制限の間隔",
     "on_demand_burst": "レート制限のバースト",
-    "on_demand_burst_help": "間隔あたりに発行する証明書の最大数。レート制限しない場合は両方を空欄にします（非推奨）。",
     "validation_burst": "正の整数を指定してください",
     "internal_tls_title": "内部 TLS（ホスト名なしのプロキシ）",
     "internal_tls_note": "Caddy が証明書ポリシーの範囲を限定できるのはホスト名単位だけです。ホスト名のないプロキシ/サーバーはすべてこの 1 つの設定を共有するため、ホスト名なしのプロキシ 2 つに異なる有効期間を設定することはできません。実際のホスト名を持つプロキシは、編集ダイアログの「TLS ポリシー」セクションで個別に設定できます。",
@@ -605,7 +604,8 @@
     "proxy_protocol_allow": "許可する送信元 IP（任意）",
     "proxy_protocol_allow_help": "PROXY プロトコルのヘッダーを送信できる CIDR 範囲をスペース区切りで指定します。クライアント IP の偽装を防ぐため、ロードバランサー自身の IP に限定してください。どの送信元も受け付ける場合は空欄にします。",
     "proxy_protocol_timeout": "ヘッダー読み取りタイムアウト（任意）",
-    "proxy_protocol_timeout_help": "PROXY プロトコルのヘッダーを待つ最大時間（Go の時間形式、例: 2s）。Caddy の既定を使う場合は空欄にします。"
+    "proxy_protocol_timeout_help": "PROXY プロトコルのヘッダーを待つ最大時間（Go の時間形式、例: 2s）。Caddy の既定を使う場合は空欄にします。",
+    "on_demand_rate_deprecated": "Caddy は interval と burst を推奨しなくなりました。両方を空にして ask エンドポイントに任せてください。"
   },
   "ca": {
     "title": "内部認証局",
@@ -855,6 +855,8 @@
     "acme_help": "Caddy が公開証明書を取得して更新します。名前がこのサーバーを指し、ポート 80 と 443 にインターネットから到達できる必要があります。",
     "internal_help": "Caddy 自身の CA が署名します。ブラウザーが信頼するのは、その CA のルート証明書をインストールした環境だけです。内部向けの名前に適しています。",
     "acme_needs_name": "Caddy 自身の CA が署名します。自動証明書にはホスト欄に公開ホスト名が必要です。",
-    "off_help": "サイトは通常の HTTP で配信されます。"
+    "off_help": "サイトは通常の HTTP で配信されます。",
+    "on_demand": "オンデマンド: 最初の TLS ハンドシェイクで証明書を取得",
+    "on_demand_help": "事前に分からない名前向けです。設定 → オンデマンド TLS で ask エンドポイントを設定してください。設定しないと、このサーバーに名前を向けた人なら誰でも Caddy に証明書を要求させられます。"
   }
 }

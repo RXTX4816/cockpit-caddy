@@ -70,6 +70,7 @@ export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues, 
   const [tlsModeChoice, setTlsModeChoice] = useState<TlsMode>((initialValues?.tls ?? true) ? "internal" : "off");
   const publicName = hasPublicName(undefined);
   const tlsMode: TlsMode = tlsModeChoice === "acme" && !publicName ? "internal" : tlsModeChoice;
+  const [tlsOnDemand, setTlsOnDemand] = useState(false);
   const [compress, setCompress] = useState(initialValues?.compress ?? false);
   const [label, setLabel] = useState(initialValues?.label ?? "");
   const [basicAuth, setBasicAuth] = useState<AuthEntry[]>(initialBasicAuth ?? []);
@@ -213,7 +214,7 @@ export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues, 
 
           {!serverCtx && (
             <div>
-              <TlsModeField id="static-tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isLocked} />
+              <TlsModeField id="static-tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isLocked} onDemand={tlsOnDemand} onOnDemandChange={setTlsOnDemand} />
               <SectionActions onDefaults={() => setTlsModeChoice(defaultTlsMode(undefined))} isDisabled={isLocked} />
             </div>
           )}
@@ -310,6 +311,7 @@ export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues, 
                     targetPort: 0,
                     targetScheme: "http",
                     ...tlsModeToEntry(tlsMode, undefined),
+                    tlsOnDemand: tlsMode !== "off" && tlsOnDemand ? true : undefined,
                     tlsSkipVerify: false,
                     compress: compress || undefined,
                     label: label.trim() || undefined,

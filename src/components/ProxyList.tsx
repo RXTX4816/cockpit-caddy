@@ -904,6 +904,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
           onApiError={msg => setApiError({ message: msg, search: extractLogsSearch(msg), action: "add" })}
           servers={servers}
           initialTlsMode={tlsModeOf(duplicating)}
+          initialTlsOnDemand={duplicating.tlsOnDemand}
           initialServerKey={duplicating.namedServerKey}
           initialValues={{
             externalScheme: duplicating.namedServerKey ? "" : (duplicating.externalScheme ?? ""),

@@ -56,6 +56,7 @@ export function EditPhpFastcgiDialog({ proxy, existingPorts, onSave, onClose }: 
   const [tlsModeChoice, setTlsModeChoice] = useState<TlsMode>(tlsModeOf(proxy));
   const publicName = hasPublicName(proxy.externalHost);
   const tlsMode: TlsMode = tlsModeChoice === "acme" && !publicName ? "internal" : tlsModeChoice;
+  const [tlsOnDemand, setTlsOnDemand] = useState(!!proxy.tlsOnDemand);
   const [compress, setCompress] = useState(proxy.compress ?? false);
   const [label, setLabel] = useState(proxy.label ?? "");
   const [basicAuth, setBasicAuth] = useState<AuthEntry[]>(
@@ -207,7 +208,7 @@ export function EditPhpFastcgiDialog({ proxy, existingPorts, onSave, onClose }: 
           </FormGroup>
 
           <div>
-            <TlsModeField id="php-edit-tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isLocked} />
+            <TlsModeField id="php-edit-tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isLocked} onDemand={tlsOnDemand} onOnDemandChange={setTlsOnDemand} />
             <SectionActions onDefaults={() => setTlsModeChoice(defaultTlsMode(proxy.externalHost))} isDisabled={isLocked} />
           </div>
 
@@ -300,6 +301,7 @@ export function EditPhpFastcgiDialog({ proxy, existingPorts, onSave, onClose }: 
                     ...proxy,
                     externalPort: parseInt(port, 10),
                     ...tlsModeToEntry(tlsMode, proxy.externalHost),
+                    tlsOnDemand: tlsMode !== "off" && tlsOnDemand ? true : undefined,
                     compress: compress || undefined,
                     label: label.trim() || undefined,
                     phpFastcgi: {

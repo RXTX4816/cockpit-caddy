@@ -52,6 +52,7 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
   const [tlsModeChoice, setTlsModeChoice] = useState<TlsMode>(tlsModeOf(proxy));
   const publicName = hasPublicName(proxy.externalHost);
   const tlsMode: TlsMode = tlsModeChoice === "acme" && !publicName ? "internal" : tlsModeChoice;
+  const [tlsOnDemand, setTlsOnDemand] = useState(!!proxy.tlsOnDemand);
   const [compress, setCompress] = useState(proxy.compress ?? false);
   const [label, setLabel] = useState(proxy.label ?? "");
   const [basicAuth, setBasicAuth] = useState<AuthEntry[]>(
@@ -167,7 +168,7 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
 
           {!proxy.namedServerKey && (
             <div>
-              <TlsModeField id="static-edit-tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isLocked} />
+              <TlsModeField id="static-edit-tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isLocked} onDemand={tlsOnDemand} onOnDemandChange={setTlsOnDemand} />
               <SectionActions onDefaults={() => setTlsModeChoice(defaultTlsMode(proxy.externalHost))} isDisabled={isLocked} />
             </div>
           )}
@@ -260,6 +261,7 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
                     ...proxy,
                     externalPort: parseInt(port, 10),
                     ...tlsModeToEntry(tlsMode, proxy.externalHost),
+                    tlsOnDemand: tlsMode !== "off" && tlsOnDemand ? true : undefined,
                     compress: compress || undefined,
                     label: label.trim() || undefined,
                     fileServer: { root: root.trim(), browse: browse || undefined },

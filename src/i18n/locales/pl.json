@@ -543,14 +543,13 @@
     "acme_eab_placeholder": "Pozostaw puste, jeśli niewymagane",
     "acme_eab_help": "Dane External Account Binding wymagane przez niektórych dostawców (np. ZeroSSL). Oba pola trzeba ustawić razem.",
     "on_demand_title": "TLS na żądanie",
-    "on_demand_enabled": "Włącz TLS na żądanie",
-    "on_demand_enabled_help": "Caddy będzie uzyskiwał certyfikaty w momencie połączenia dla nazw hostów nieznanych przy starcie. Wymaga publicznie osiągalnego serwera.",
+    "on_demand_enabled": "Skonfiguruj TLS na żądanie",
+    "on_demand_enabled_help": "Ustawia endpoint, o który Caddy pyta przed pobraniem certyfikatu na żądanie. Nie włącza to TLS na żądanie: to opcja każdej strony w jej ustawieniach HTTPS.",
     "on_demand_no_ask_warning": "Nie ustawiono URL ask — Caddy będzie wystawiał certyfikaty dla dowolnej domeny bez autoryzacji. Ustaw URL ask, aby zapobiec nadużyciom.",
     "on_demand_ask": "URL ask",
     "on_demand_ask_help": "Caddy odpytuje ten endpoint przed wystawieniem certyfikatu. Musi on zwrócić HTTP 2xx, aby zezwolić na wystawienie.",
     "on_demand_interval": "Okres limitu częstotliwości",
     "on_demand_burst": "Seria limitu częstotliwości",
-    "on_demand_burst_help": "Maksymalna liczba certyfikatów wystawianych w okresie. Pozostaw oba pola puste, aby nie ograniczać (niezalecane).",
     "validation_burst": "Musi to być dodatnia liczba całkowita",
     "internal_tls_title": "Wewnętrzny TLS (proxy bez nazwy hosta)",
     "internal_tls_note": "Caddy może zawęzić politykę certyfikatów tylko według nazwy hosta. Proxy/serwery bez nazwy hosta współdzielą to jedno ustawienie — nie da się nadać dwóm takim proxy różnych czasów ważności. Proxy z prawdziwą nazwą hosta mogą nadal ustawić własny w sekcji Polityka TLS w oknie edycji.",
@@ -605,7 +604,8 @@
     "proxy_protocol_allow": "Dozwolone źródłowe IP (opcjonalnie)",
     "proxy_protocol_allow_help": "Zakresy CIDR oddzielone spacjami, które mogą wysyłać nagłówki protokołu PROXY — ogranicz je do adresów IP load balancera, aby zapobiec podszywaniu się pod IP klienta. Pozostaw puste, aby akceptować dowolne źródło.",
     "proxy_protocol_timeout": "Limit czasu odczytu nagłówka (opcjonalnie)",
-    "proxy_protocol_timeout_help": "Maksymalny czas oczekiwania na nagłówek protokołu PROXY przed rezygnacją (czas w formacie Go, np. 2s). Pozostaw puste, aby użyć domyślnego w Caddy."
+    "proxy_protocol_timeout_help": "Maksymalny czas oczekiwania na nagłówek protokołu PROXY przed rezygnacją (czas w formacie Go, np. 2s). Pozostaw puste, aby użyć domyślnego w Caddy.",
+    "on_demand_rate_deprecated": "Caddy nie zaleca już interval i burst. Wyczyść oba pola i polegaj na endpoincie ask."
   },
   "ca": {
     "title": "Wewnętrzny urząd certyfikacji",
@@ -855,6 +855,8 @@
     "acme_help": "Caddy pobiera i odnawia publiczny certyfikat. Nazwa musi wskazywać na ten serwer, a porty 80 i 443 muszą być dostępne z internetu.",
     "internal_help": "Podpisany przez własne CA Caddy: przeglądarki ufają mu tylko tam, gdzie zainstalowano certyfikat główny tego CA. Dobre dla nazw wewnętrznych.",
     "acme_needs_name": "Podpisany przez własne CA Caddy. Certyfikaty automatyczne wymagają publicznej nazwy hosta w polu hosta.",
-    "off_help": "Strona jest serwowana przez zwykły HTTP."
+    "off_help": "Strona jest serwowana przez zwykły HTTP.",
+    "on_demand": "Na żądanie: pobierz certyfikat przy pierwszym uzgadnianiu TLS",
+    "on_demand_help": "Dla nazw nieznanych z góry. Ustaw endpoint ask w Ustawienia → TLS na żądanie, inaczej każdy, kto skieruje nazwę na ten serwer, może zmusić Caddy do zamówienia dla niej certyfikatu."
   }
 }
