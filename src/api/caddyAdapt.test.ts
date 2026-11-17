@@ -7,10 +7,10 @@
 /* global process -- declared in src/test/node-shims.d.ts */
 import { describe, it, expect } from "vitest";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
+import { mkdtempSync, writeFileSync, rmSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { CONF_HEADER, buildServerEntry, proxiesToCaddyfile, parseProxies, parseConfExternalAddresses, proxyAddressKeys, resolveInternalIssuerSettings, surgicallyWriteProxy } from "./caddy";
+import { CONF_HEADER, buildServerEntry, proxiesToCaddyfile, parseProxies, parseConfExternalAddresses, proxyAddressKeys, resolveInternalIssuerSettings, surgicallyWriteProxy, buildMigratedConfContent, migrateCaddyfile } from "./caddy";
 import type { CaddyConfig, CaddyServer, ProxyEntry } from "./types";
 
 function hasCaddy(): boolean {
@@ -396,5 +396,23 @@ describe.runIf(available || required)("instant-apply JSON and the saved Caddyfil
     const pushed = findHandler(buildServerEntry(p).routes, "rewrite");
     expect(pushed).toEqual(fromCaddy);
     expect(readBack(conf)[0].rewrite).toEqual(rewrite);
+  });
+});
+
+describe.runIf(available || required)("migration output loads in Caddy (#267)", () => {
+  it("a migrated site still finds the snippet that stayed in the main Caddyfile", () => {
+    const original = "(common) {\n\theader X-Common yes\n}\n\n:8080 {\n\timport common\n\trespond \"hi\"\n}\n\nimport /etc/caddy/conf.d/*\n";
+    const { blocks, caddyfile } = migrateCaddyfile(original);
+    const dir = mkdtempSync(join(tmpdir(), "cockpit-caddy-migrate-"));
+    try {
+      mkdirSync(join(dir, "conf.d"));
+      writeFileSync(join(dir, "conf.d", "cockpit-caddy.conf"), buildMigratedConfContent(blocks));
+      writeFileSync(join(dir, "Caddyfile"), caddyfile.replace("/etc/caddy/conf.d/", `${dir}/conf.d/`));
+      const out = execFileSync("caddy", ["adapt", "--config", join(dir, "Caddyfile"), "--adapter", "caddyfile"], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+      expect(out).toContain("X-Common");
+      expect(out).toContain(":8080");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

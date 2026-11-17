@@ -44,6 +44,8 @@ import {
   parseMetricsSiteBlock,
   parseConfAccessLogMap,
   extractLogFilePaths,
+  migrateCaddyfile,
+  CONF_D_IMPORT_LINE,
 } from "./caddy";
 import type { CaddyConfig, CaddyServer, ProxyEntry, RouteMatch, ServerDef } from "./types";
 
@@ -4237,5 +4239,59 @@ describe("caddyQuote (#251)", () => {
     expect(caddyQuote("a\nb")).toBe("<<END\na\nb\nEND");
     expect(caddyQuote("END\nx")).toBe("<<END1\nEND\nx\nEND1");
     expect(caddyQuote("the BACKEND\nx")).toBe("<<END1\nthe BACKEND\nx\nEND1");
+  });
+});
+
+describe("migrateCaddyfile keeps everything that isn't a site block (#267)", () => {
+  const original = [
+    "{",
+    "\tadmin \"unix//run/caddy/admin.socket\"",
+    "}",
+    "",
+    "(common) {",
+    "\tencode gzip",
+    "}",
+    "",
+    "# my sites",
+    "app.example.com {",
+    "\timport common",
+    "\treverse_proxy localhost:8000",
+    "}",
+    "",
+    "import sites-enabled/*",
+    "",
+    ":8080 {",
+    "\trespond \"hi\"",
+    "}",
+    "",
+    "# Import additional caddy config files in /etc/caddy/conf.d/",
+    "import /etc/caddy/conf.d/*",
+    "",
+  ].join("\n");
+
+  it("moves only the site blocks", () => {
+    const { blocks } = migrateCaddyfile(original);
+    expect(blocks.map(b => b.address)).toEqual(["app.example.com", ":8080"]);
+  });
+
+  it("keeps the global block, snippet, other imports, comments and the conf.d import as written", () => {
+    const { caddyfile } = migrateCaddyfile(original);
+    expect(caddyfile).toContain("admin \"unix//run/caddy/admin.socket\"");
+    expect(caddyfile).toContain("(common) {\n\tencode gzip\n}");
+    expect(caddyfile).toContain("import sites-enabled/*");
+    expect(caddyfile).toContain("import /etc/caddy/conf.d/*\n");
+    expect(caddyfile).not.toContain("conf.d/*.conf");
+    expect(caddyfile).not.toContain("app.example.com");
+    expect(caddyfile).not.toContain(":8080");
+    expect(caddyfile).not.toMatch(/\n{3,}/);
+  });
+
+  it("adds the plugin's conf.d import only when there is none", () => {
+    const { caddyfile } = migrateCaddyfile("(snip) {\n\theader X 1\n}\n\nhttp:// {\n\tfile_server\n}\n");
+    expect(caddyfile).toBe("(snip) {\n\theader X 1\n}\n" + CONF_D_IMPORT_LINE + "\n");
+  });
+
+  it("a Caddyfile with only snippets and imports needs no migration", () => {
+    expect(migrateCaddyfile("(snip) {\n\theader X 1\n}\nimport /etc/caddy/conf.d/*\n").blocks).toEqual([]);
   });
 });
