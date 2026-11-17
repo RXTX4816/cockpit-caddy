@@ -151,3 +151,28 @@ describe.runIf(available || required)("forward_auth instant-apply JSON matches t
     expect(p.forwardAuth).toEqual(forwardAuth);
   });
 });
+
+describe.runIf(available || required)("route matchers write a Caddyfile Caddy accepts (#250)", () => {
+  const matchers = {
+    query: { debug: ["true"], flag: [] as string[], tag: ["a", "b"] },
+    header: { "X-Foo": [] as string[], "X-Bar": ["baz"] },
+  };
+
+  it("query values, query presence and header presence adapt and read back unchanged", () => {
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, matchers })]);
+    const [p] = readBack(conf);
+    expect(p.matchers).toEqual(matchers);
+  });
+
+  it("the instant-apply JSON matcher equals the adapted one", () => {
+    const p = entry({ tls: false, externalPort: 8080, matchers });
+    const found: Array<Record<string, unknown>> = [];
+    JSON.stringify(adapt(proxiesToCaddyfile([p])), (k, v) => {
+      if (v && typeof v === "object" && "query" in v && "header" in v) found.push(v);
+      return v;
+    });
+    const pushedMatch = buildServerEntry(p).routes?.[0]?.match?.[0] as Record<string, unknown>;
+    expect(found).toHaveLength(1);
+    expect({ header: pushedMatch.header, query: pushedMatch.query }).toEqual({ header: found[0].header, query: found[0].query });
+  });
+});

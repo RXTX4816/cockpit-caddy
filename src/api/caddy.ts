@@ -746,6 +746,18 @@ function regexReplaceToCaddy(replace: string): string {
 // Route Matcher helpers — #48
 // ---------------------------------------------------------------------------
 
+/** RouteMatch stores "must be present" as an empty value list; Caddy spells it "*". */
+function presenceValues(vals: string[] | null | undefined): string[] {
+  return vals?.length ? vals : ["*"];
+}
+
+/** Reverse of presenceValues: a lone "*" (or null/empty) becomes the empty "present" list. */
+function fromPresenceValues(fields: Record<string, string[] | null>): Record<string, string[]> {
+  const out: Record<string, string[]> = {};
+  for (const [k, v] of Object.entries(fields)) out[k] = !v?.length || (v.length === 1 && v[0] === "*") ? [] : v;
+  return out;
+}
+
 /**
  * Generates named-matcher lines for a Caddyfile block.
  * Uses block form `@name { ... }` always (more stable for round-trips than inline form).
@@ -755,15 +767,16 @@ function buildMatcherCaddyLines(m: import("./types").RouteMatch, name: string, i
   if (m.path?.length) lines.push(`${indent}\tpath ${m.path.join(" ")}`);
   if (m.host?.length) lines.push(`${indent}\thost ${m.host.join(" ")}`);
   if (m.method?.length) lines.push(`${indent}\tmethod ${m.method.join(" ")}`);
+  // Caddy's Caddyfile syntax has no bare "present" form for either matcher (#250): presence is
+  // the "*" value, and query takes `param=value` pairs.
   if (m.header) {
     for (const [hdr, vals] of Object.entries(m.header)) {
-      lines.push(vals.length ? `${indent}\theader ${hdr} ${vals.join(" ")}` : `${indent}\theader ${hdr}`);
+      lines.push(`${indent}\theader ${hdr} ${presenceValues(vals).join(" ")}`);
     }
   }
   if (m.query) {
-    for (const [param, vals] of Object.entries(m.query)) {
-      lines.push(vals.length ? `${indent}\tquery ${param} ${vals.join(" ")}` : `${indent}\tquery ${param}`);
-    }
+    const pairs = Object.entries(m.query).flatMap(([param, vals]) => presenceValues(vals).map(v => `${param}=${v}`));
+    if (pairs.length) lines.push(`${indent}\tquery ${pairs.join(" ")}`);
   }
   if (m.remote_ip?.ranges.length) {
     lines.push(`${indent}\tremote_ip ${m.remote_ip.ranges.join(" ")}`);
@@ -780,12 +793,13 @@ function buildMatcherJson(m: import("./types").RouteMatch): Record<string, unkno
   if (m.method?.length) obj.method = m.method;
   if (m.header && Object.keys(m.header).length) {
     const h: Record<string, string[]> = {};
-    for (const [k, v] of Object.entries(m.header)) h[k] = v;
+    for (const [k, v] of Object.entries(m.header)) h[k] = presenceValues(v);
     obj.header = h;
   }
   if (m.query && Object.keys(m.query).length) {
     const q: Record<string, string[]> = {};
-    for (const [k, v] of Object.entries(m.query)) q[k] = v;
+    // An empty list never matches in Caddy's query matcher; "*" means "present".
+    for (const [k, v] of Object.entries(m.query)) q[k] = presenceValues(v);
     obj.query = q;
   }
   if (m.remote_ip?.ranges.length) obj.remote_ip = { ranges: m.remote_ip.ranges };
@@ -801,11 +815,11 @@ function parseMatcherJson(match: Record<string, unknown> | undefined): import(".
   if (Array.isArray(match.method) && match.method.length) m.method = match.method as string[];
   if (match.header && typeof match.header === "object") {
     const h = match.header as Record<string, string[]>;
-    if (Object.keys(h).length) m.header = h;
+    if (Object.keys(h).length) m.header = fromPresenceValues(h);
   }
   if (match.query && typeof match.query === "object") {
     const q = match.query as Record<string, string[]>;
-    if (Object.keys(q).length) m.query = q;
+    if (Object.keys(q).length) m.query = fromPresenceValues(q);
   }
   if (match.remote_ip && typeof match.remote_ip === "object") {
     const ri = (match.remote_ip as { ranges?: string[] }).ranges;

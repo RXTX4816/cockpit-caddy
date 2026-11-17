@@ -8,7 +8,7 @@
  * - Edit flows: adding and removing matchers on existing proxies
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { readConf } from './helpers';
+import { readConf, spawnCmd } from './helpers';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
   await dismissAdminBanner(page);
@@ -217,4 +217,25 @@ test('edit proxy: remove all matchers reverts to plain block without @m', async 
   expect(conf).not.toContain('handle @m19208');
   // Plain block still has the reverse_proxy directive (scheme prefix always included)
   expect(conf).toContain('reverse_proxy http://localhost:3000');
+});
+
+// #250: Caddy rejects `header X-Foo` (no value) and `query debug true`; the written file must
+// use `header X-Foo *` and `query debug=true` so the next reload/validate still works.
+test('header-presence and query matchers write a Caddyfile that caddy adapt accepts', async ({ pluginPage: page }) => {
+  await waitForToolbar(page);
+  const modal = await openAddProxyWithMatchers(page, 19209, { host: 'localhost', port: 3000 });
+
+  const matchersContent = modal.getByRole('region', { name: /route matchers/i });
+  await matchersContent.getByLabel('Header name').fill('X-Present');
+  await matchersContent.getByRole('button', { name: /^add$/i }).first().click();
+  await matchersContent.getByLabel('Param', { exact: true }).fill('debug');
+  await matchersContent.getByLabel('Value', { exact: true }).fill('true');
+  await matchersContent.getByRole('button', { name: /^add$/i }).last().click();
+  await submitAndConfirm(modal);
+
+  const conf = await readConf(page);
+  expect(conf).toContain('header X-Present *');
+  expect(conf).toContain('query debug=true');
+  // adapt, not validate: validate as root provisions the app and can leave root-owned log files.
+  await spawnCmd(page, ['caddy', 'adapt', '--config', '/etc/caddy/Caddyfile', '--adapter', 'caddyfile']);
 });
