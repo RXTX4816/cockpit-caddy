@@ -4,7 +4,7 @@ import { i18n } from "@rxtx4816/cockpit-plugin-base-react/i18n";
 import {
   parseProxies, mergeProxy, removeProxy,
   readCaddyfile, writeCaddyfile, readProxyConf,
-  parseLabelsFromCaddyfile, parseConfTlsMap, parseConfExternalAddresses, parseConfAccessLogMap, parseConfForwardAuthMap, parseConfCustomTlsCaMap,
+  parseLabelsFromCaddyfile, parseConfTlsMap, parseConfExternalAddresses, parseConfAccessLogMap, parseConfForwardAuthMap, parseConfCustomTlsCaMap, parseConfTlsIssuerMap,
   surgicallyWriteProxy, surgicallyEditProxy, surgicallyRemoveBlock,
   migrateCaddyfile, mergeMigratedConfContent, writeRawProxyConf, writeRawProxyConfValidated,
   CaddyfileError,
@@ -18,7 +18,7 @@ import {
   applyGlobalInternalLifetimeToProxy, applyGlobalInternalLifetimeToServer,
   routeHosts, hostsConflict, standaloneProxyId,
 } from "../api";
-import type { ProxyEntry, ServerDef } from "../api";
+import type { CaddyConfig, ProxyEntry, ServerDef } from "../api";
 import { useCaddyConfig } from "./useCaddyConfig";
 
 const CADDYFILE_BAK = "/etc/caddy/Caddyfile.bak";
@@ -62,6 +62,31 @@ function checkServerPortConflicts(
   }
 }
 
+/** A site whose TLS automation only Caddy's Caddyfile adapter builds correctly (#246). */
+function reliesOnCaddyfileTls(p: ProxyEntry): boolean {
+  return p.tls && !p.customTls && p.tlsIssuer === "acme";
+}
+
+/** The conf.d issuer map after writing `p` under `key` (dropping `oldKey`), before the next poll. */
+function withIssuer(
+  map: Record<string, "acme" | "internal">, oldKey: string | undefined, key: string, p: ProxyEntry,
+): Record<string, "acme" | "internal"> {
+  const n = { ...map };
+  if (oldKey) delete n[oldKey];
+  if (p.tls && !p.customTls) n[key] = p.tlsIssuer ?? "internal";
+  else delete n[key];
+  return n;
+}
+
+/**
+ * Sites whose JSON only Caddy's own Caddyfile adapter builds correctly, so they are applied
+ * by reloading instead of pushing hand-built JSON: php_fastcgi (#35) expands into several
+ * routes, and automatic HTTPS (#246) needs ACME automation that the JSON push doesn't build.
+ */
+function needsCaddyfileReload(p: ProxyEntry): boolean {
+  return !!p.phpFastcgi || (p.tls && p.tlsIssuer === "acme" && !p.customTls);
+}
+
 /**
  * True when `entry`'s port is also claimed by another standalone proxy in `proxies`
  * with a distinct, non-conflicting host (#139) — i.e. two+ sites legitimately sharing
@@ -90,6 +115,7 @@ export function useProxies() {
   const [confAccessLog, setConfAccessLog] = useState<Record<string, import("../api").AccessLogConfig>>({});
   const [confForwardAuth, setConfForwardAuth] = useState<Record<string, import("../api").ForwardAuthConfig>>({});
   const [confCustomTlsCa, setConfCustomTlsCa] = useState<Record<string, string>>({});
+  const [confTlsIssuer, setConfTlsIssuer] = useState<Record<string, "acme" | "internal">>({});
   const [caddyfileContent, setCaddyfileContent] = useState<string>("");
   const [servers, setServers] = useState<ServerDef[]>([]);
   // Guards proxies memo from running before the first conf.d read completes.
@@ -124,6 +150,7 @@ export function useProxies() {
       setConfAccessLog(parseConfAccessLogMap(c));
       setConfForwardAuth(parseConfForwardAuthMap(c));
       setConfCustomTlsCa(parseConfCustomTlsCaMap(c));
+      setConfTlsIssuer(parseConfTlsIssuerMap(c));
       const defs = parseServerDefsFromConf(c);
       setServersLoaded(true);
       // Only update servers if no mutation happened after this sync started
@@ -199,10 +226,24 @@ export function useProxies() {
         // The CA bundle path (#152) isn't part of Caddy's own JSON model at all — it only
         // ever lives in the Caddyfile comment, so always layer it in from there.
         customTls: p.customTls ? { ...p.customTls, caFile: lookup(confCustomTlsCa) } : undefined,
+        // Automatic HTTPS vs the internal CA (#246) is only visible in the Caddyfile text.
+        tlsIssuer: tls && !p.customTls ? lookup(confTlsIssuer) : undefined,
       };
     }),
-    [config, labels, confTls, confExternal, confAccessLog, confForwardAuth, confCustomTlsCa, servers, serversLoaded],
+    [config, labels, confTls, confExternal, confAccessLog, confForwardAuth, confCustomTlsCa, confTlsIssuer, servers, serversLoaded],
   );
+
+  // #246: while any site relies on automatic HTTPS, Caddy's own Caddyfile adapter has to build
+  // the TLS automation. The hand-built JSON only knows the internal issuer, and its catch-all
+  // policy would take over the ACME sites' public names, so reload from the Caddyfile instead.
+  const apply = useCallback(async (next: CaddyConfig) => {
+    if (proxies.some(reliesOnCaddyfileTls)) {
+      await reloadCaddy();
+      await refresh();
+      return;
+    }
+    await update(next);
+  }, [proxies, update, refresh]);
 
   const addProxy = useCallback(
     async (entry: Omit<ProxyEntry, "id" | "serverKey">) => {
@@ -232,7 +273,7 @@ export function useProxies() {
         await cockpit.spawn(["mkdir", "-p", "/etc/caddy/conf.d"], { superuser: "try" });
         const current = await readProxyConf();
         await writeRawProxyConfValidated(surgicallyWriteServerBlock(current, updatedDef, allRoutes));
-        await update(mergeNamedServer(config, updatedDef, allRoutes));
+        await apply(mergeNamedServer(config, updatedDef, allRoutes));
         return;
       }
 
@@ -283,6 +324,7 @@ export function useProxies() {
         return n;
       });
       setConfTls(prev => ({ ...prev, [newProxyKey]: newProxy.tls }));
+      setConfTlsIssuer(prev => withIssuer(prev, undefined, newProxyKey, newProxy));
       setConfExternal(prev => ({
         ...prev,
         [newProxyKey]: { scheme: newProxy.externalScheme, host: newProxy.externalHost },
@@ -294,14 +336,14 @@ export function useProxies() {
       // macro that expands into four separate JSON routes (vars/redirect/rewrite/
       // reverse_proxy) with no single-handler equivalent — mergeProxy can't construct
       // that either, so it always needs the same reload-from-Caddyfile path.
-      if (sharesPortWithOtherHost(afterProxies, newProxy) || newProxy.phpFastcgi) {
+      if (sharesPortWithOtherHost(afterProxies, newProxy) || needsCaddyfileReload(newProxy)) {
         await reloadCaddy();
         await refresh();
         return;
       }
-      await update(mergeProxy(config, newProxy));
+      await apply(mergeProxy(config, newProxy));
     },
-    [config, proxies, servers, update, refresh],
+    [config, proxies, servers, apply, refresh],
   );
 
   const editProxy = useCallback(
@@ -324,7 +366,7 @@ export function useProxies() {
 
         const current = await readProxyConf();
         await writeRawProxyConfValidated(surgicallyWriteServerBlock(current, updatedDef, allRoutes));
-        await update(mergeNamedServer(config, updatedDef, allRoutes));
+        await apply(mergeNamedServer(config, updatedDef, allRoutes));
 
         const newDefs = servers.map(s => s.key === def.key ? updatedDef : s);
         lastServersMutationAt.current = Date.now();
@@ -384,6 +426,7 @@ export function useProxies() {
         n[entryKey] = entry.tls;
         return n;
       });
+      setConfTlsIssuer(prev => withIssuer(prev, originalKey, entryKey, entry));
       setConfExternal(prev => {
         const n = { ...prev };
         delete n[originalKey];
@@ -393,14 +436,14 @@ export function useProxies() {
       // See addProxy: a hand-built single-route JSON push can't represent a listener
       // shared by multiple hosts (#139), nor a php_fastcgi route's four-route Caddyfile
       // macro expansion (#35) — reload instead so Caddy's own Caddyfile adapter builds it.
-      if (sharesPortWithOtherHost(afterProxies, entry) || entry.phpFastcgi) {
+      if (sharesPortWithOtherHost(afterProxies, entry) || needsCaddyfileReload(entry)) {
         await reloadCaddy();
         await refresh();
         return;
       }
-      await update(mergeProxy(config, entry));
+      await apply(mergeProxy(config, entry));
     },
-    [config, proxies, servers, update, refresh],
+    [config, proxies, servers, apply, refresh],
   );
 
   const deleteProxy = useCallback(
@@ -431,14 +474,14 @@ export function useProxies() {
         const current = await readProxyConf();
         if (renumbered.length > 0) {
           await writeRawProxyConfValidated(surgicallyWriteServerBlock(current, updatedDef, renumbered));
-          await update(mergeNamedServer(config, updatedDef, renumbered));
+          await apply(mergeNamedServer(config, updatedDef, renumbered));
           const newDefs = servers.map(s => s.key === def.key ? updatedDef : s);
           lastServersMutationAt.current = Date.now();
           setServers(newDefs);
         } else {
           // Last route removed: remove from conf.d and state
           await writeRawProxyConf(surgicallyRemoveServerBlock(current, proxy.namedServerKey));
-          await update(removeNamedServer(config, proxy.namedServerKey));
+          await apply(removeNamedServer(config, proxy.namedServerKey));
           lastServersMutationAt.current = Date.now();
           setServers(servers.filter(s => s.key !== proxy.namedServerKey));
         }
@@ -462,9 +505,9 @@ export function useProxies() {
         await refresh();
         return;
       }
-      await update(removeProxy(config, proxy.serverKey));
+      await apply(removeProxy(config, proxy.serverKey));
     },
-    [config, proxies, servers, update, refresh],
+    [config, proxies, servers, apply, refresh],
   );
 
   const addServer = useCallback(
@@ -497,23 +540,23 @@ export function useProxies() {
       const current = await readProxyConf();
       await writeRawProxyConfValidated(surgicallyWriteServerBlock(current, def, routes));
       if (routes.length > 0) {
-        await update(mergeNamedServer(config, def, routes));
+        await apply(mergeNamedServer(config, def, routes));
       }
       lastServersMutationAt.current = Date.now();
       setServers(servers.map(s => s.key === def.key ? def : s));
     },
-    [config, proxies, servers, update],
+    [config, proxies, servers, apply],
   );
 
   const deleteServer = useCallback(
     async (key: string) => {
       const current = await readProxyConf();
       await writeRawProxyConf(surgicallyRemoveServerBlock(current, key));
-      await update(removeNamedServer(config, key));
+      await apply(removeNamedServer(config, key));
       lastServersMutationAt.current = Date.now();
       setServers(servers.filter(s => s.key !== key));
     },
-    [config, servers, update],
+    [config, servers, apply],
   );
 
   const migrate = useCallback(async () => {

@@ -20,8 +20,9 @@ import {
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast, ExternalAddressInput } from "@rxtx4816/cockpit-plugin-base-react/components";
-import { readProxyConf, parseConfExternalAddresses, CaddyApiError, CaddyfileError, routeHosts, hostsConflict, fetchCaddyConfig, classifyAcmeHosts, externalHostList, normalizeExternalHost, formatExternalAddressPreview } from "../api";
-import type { ProxyEntry, RewriteConfig, HeaderOperation, RouteMatch, ServerDef, AcmeHostStatus } from "../api";
+import { readProxyConf, parseConfExternalAddresses, CaddyApiError, CaddyfileError, routeHosts, hostsConflict, normalizeExternalHost, formatExternalAddressPreview } from "../api";
+import type { ProxyEntry, RewriteConfig, HeaderOperation, RouteMatch, ServerDef } from "../api";
+import { TlsModeField, defaultTlsMode, hasPublicName, tlsModeToEntry, type TlsMode } from "./TlsModeField";
 import { RouteMatchersSection } from "./RouteMatchersSection";
 import { parseListenPort } from "./AddServerDialog";
 import { EXTERNAL_ADDRESS_BUILTIN_SCHEMES } from "./externalAddressSchemes";
@@ -78,6 +79,8 @@ interface Props {
   onClose: () => void;
   onApiError?: (message: string) => void;
   initialValues?: Partial<FormState>;
+  /** Duplicate (#246): the source's certificate mode, instead of following the host field. */
+  initialTlsMode?: TlsMode;
   initialRewrite?: RewriteConfig;
   initialRequestHeaders?: HeaderOperation[];
   initialResponseHeaders?: HeaderOperation[];
@@ -100,7 +103,7 @@ interface Props {
   initialServerKey?: string;
 }
 
-export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, initialValues, initialRewrite, initialRequestHeaders, initialResponseHeaders, initialTransport, initialBasicAuth, initialExtraUpstreams, initialLbPolicy, initialLbRetry, initialServerTimeouts, initialRequestBodyMaxSize, initialAccessLog, initialErrorHandlers, initialForwardAuth, initialTlsValues, initialMatchers, initialHandlePath, initialIsNamedRoute, initialNamedRouteName, servers, initialServerKey }: Props) {
+export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, initialValues, initialTlsMode, initialRewrite, initialRequestHeaders, initialResponseHeaders, initialTransport, initialBasicAuth, initialExtraUpstreams, initialLbPolicy, initialLbRetry, initialServerTimeouts, initialRequestBodyMaxSize, initialAccessLog, initialErrorHandlers, initialForwardAuth, initialTlsValues, initialMatchers, initialHandlePath, initialIsNamedRoute, initialNamedRouteName, servers, initialServerKey }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
   const confirmAction = useConfirmAction();
@@ -139,7 +142,11 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
   const [namedRouteName, setNamedRouteName] = useState(initialNamedRouteName ?? "");
   const [selectedServerKey, setSelectedServerKey] = useState(initialServerKey ?? "");
   const [extraSchemes, setExtraSchemes] = useState<string[]>([]);
-  const [acmeHosts, setAcmeHosts] = useState<AcmeHostStatus[]>([]);
+  // #246: null follows the host field (ACME for a public name), until the user picks a mode.
+  const [tlsModeChoice, setTlsModeChoice] = useState<TlsMode | null>(initialTlsMode ?? (form.tls ? null : "off"));
+  const publicName = hasPublicName(form.externalHost);
+  const chosenMode = tlsModeChoice ?? defaultTlsMode(form.externalHost);
+  const tlsMode: TlsMode = chosenMode === "acme" && !publicName ? "internal" : chosenMode;
 
   const selectedServer = servers?.find(s => s.key === selectedServerKey);
   const serverCtx: ServerContext | undefined = selectedServer ? {
@@ -156,13 +163,7 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
         .filter((s): s is string => !!s);
       setExtraSchemes([...new Set(schemes)]);
     }).catch(() => {});
-    // #141: warn if this host is already getting a cert from ACME (explicit or Caddy's
-    // own automatic-HTTPS default) — enabling self-signed/internal TLS here wouldn't
-    // actually take effect over that.
-    void fetchCaddyConfig().then(config => setAcmeHosts(classifyAcmeHosts(config))).catch(() => {});
   }, []);
-
-  const acmeStatus = acmeHosts.find(h => externalHostList(form.externalHost).includes(h.host));
 
   function validate(): FormErrors {
     const errs: FormErrors = {};
@@ -184,7 +185,7 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
     // "https://" in the address triggers Caddy's automatic HTTPS on its own, regardless
     // of the TLS toggle below — letting this combination through would silently create
     // TLS behavior this app doesn't know about and isn't tracking.
-    if (form.externalScheme === "https" && !form.tls) {
+    if (form.externalScheme === "https" && tlsMode === "off") {
       errs.externalScheme = t("add_proxy.validation_https_requires_tls");
     }
     if (!form.targetHost.trim()) errs.targetHost = t("add_proxy.validation_target_host_required");
@@ -241,7 +242,7 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
             gap: "0.5rem",
             flexWrap: "wrap",
           }}>
-            <Label isCompact color={form.tls || form.externalScheme === "https" ? "blue" : "grey"}>{extHeader}</Label>
+            <Label isCompact color={tlsMode !== "off" || form.externalScheme === "https" ? "blue" : "grey"}>{extHeader}</Label>
             <span style={{ color: "var(--pf-t--global--text--color--subtle)" }}>→</span>
             <Label isCompact color="grey">{targetUrl}</Label>
           </div>
@@ -373,27 +374,10 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
           </FormGroup>
 
           {!serverCtx && (
-            <FormGroup label={t("add_proxy.field_tls")} fieldId="tls">
-              <Checkbox
-                id="tls"
-                label={t("add_proxy.field_tls_short")}
-                isChecked={form.tls}
-                onChange={(_e, checked) => set("tls", checked)}
-                isDisabled={isLocked}
-              />
-              <SectionActions onDefaults={() => set("tls", true)} isDisabled={isLocked} />
-              {acmeStatus?.issuer === "acme" && (
-                <Alert
-                  variant="info"
-                  isInline
-                  isPlain
-                  title={t("add_proxy.acme_note_title")}
-                  style={{ marginTop: "0.4rem" }}
-                >
-                  {t("add_proxy.acme_note_body")}
-                </Alert>
-              )}
-            </FormGroup>
+            <div>
+              <TlsModeField id="tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isLocked} />
+              <SectionActions onDefaults={() => setTlsModeChoice(null)} isDisabled={isLocked} />
+            </div>
           )}
 
           <FormGroup label={t("add_proxy.field_compress")} fieldId="compress">
@@ -520,7 +504,7 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
                     targetHost: form.targetHost.trim(),
                     targetPort: parseInt(form.targetPort, 10),
                     targetScheme: form.targetScheme,
-                    tls: form.tls,
+                    ...(serverCtx ? { tls: form.tls } : tlsModeToEntry(tlsMode, form.externalHost)),
                     tlsSkipVerify: form.targetScheme === "https" ? form.tlsSkipVerify : false,
                     compress: form.compress || undefined,
                     label: form.label.trim() || undefined,

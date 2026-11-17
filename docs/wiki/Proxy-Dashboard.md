@@ -40,7 +40,7 @@ Each named-server tab shows a **server info card** at the top (listen addresses 
 | Port | The external port Caddy listens on — click to open the URL in a new tab |
 | Type | Proxy, Static, Redirect, or Respond |
 | Target / Root | Upstream address (proxy) or root directory (static) |
-| TLS | Whether Caddy's internal CA is used |
+| TLS | Where the certificate comes from: ACME (automatic HTTPS), Internal CA, Custom cert, or none |
 | Flags | Active optional features (compress, auth, access log, handle_path, …) |
 | Actions | Edit, duplicate, and delete buttons |
 

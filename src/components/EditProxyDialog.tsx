@@ -20,11 +20,12 @@ import {
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast, ExternalAddressInput } from "@rxtx4816/cockpit-plugin-base-react/components";
-import { readProxyConf, parseConfExternalAddresses, CaddyApiError, CaddyfileError, routeHosts, hostsConflict, fetchCaddyConfig, classifyAcmeHosts, externalHostList, normalizeExternalHost, formatExternalAddressPreview } from "../api";
+import { readProxyConf, parseConfExternalAddresses, CaddyApiError, CaddyfileError, routeHosts, hostsConflict, normalizeExternalHost, formatExternalAddressPreview } from "../api";
+import { TlsModeField, defaultTlsMode, hasPublicName, tlsModeOf, tlsModeToEntry, type TlsMode } from "./TlsModeField";
 import { EXTERNAL_ADDRESS_BUILTIN_SCHEMES } from "./externalAddressSchemes";
 import { externalHostFieldError } from "./externalHostField";
 import { isValidPort } from "@rxtx4816/cockpit-plugin-base-react/lib/uri";
-import type { ProxyEntry, RewriteConfig, HeaderOperation, RouteMatch, ServerDef, AcmeHostStatus } from "../api";
+import type { ProxyEntry, RewriteConfig, HeaderOperation, RouteMatch, ServerDef } from "../api";
 import { RouteMatchersSection } from "./RouteMatchersSection";
 import { RewriteSection } from "./RewriteSection";
 import { RequestHeadersSection } from "./RequestHeadersSection";
@@ -65,7 +66,8 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
   const [targetScheme, setTargetScheme] = useState<"http" | "https">(proxy.targetScheme);
   const [targetHost, setTargetHost] = useState(proxy.targetHost);
   const [targetPort, setTargetPort] = useState(String(proxy.targetPort));
-  const [tls, setTls] = useState(proxy.tls);
+  // #246: keep the site's issuer; a hand-written ACME site must not turn into `tls internal`.
+  const [tlsModeChoice, setTlsModeChoice] = useState<TlsMode>(tlsModeOf(proxy));
   const [tlsSkipVerify, setTlsSkipVerify] = useState(proxy.tlsSkipVerify);
   const [compress, setCompress] = useState(proxy.compress ?? false);
   const [label, setLabel] = useState(proxy.label ?? "");
@@ -104,7 +106,6 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
   const [namedRouteName, setNamedRouteName] = useState(proxy.namedRouteName ?? "");
   const [extraSchemes, setExtraSchemes] = useState<string[]>([]);
   const [extHostErr, setExtHostErr] = useState<string | null>(null);
-  const [acmeHosts, setAcmeHosts] = useState<AcmeHostStatus[]>([]);
 
   useEffect(() => {
     void readProxyConf().then(content => {
@@ -114,13 +115,11 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
         .filter((s): s is string => !!s);
       setExtraSchemes([...new Set(schemes)]);
     }).catch(() => {});
-    // #141: warn if this host is already getting a cert from ACME (explicit or Caddy's
-    // own automatic-HTTPS default) — enabling self-signed/internal TLS here wouldn't
-    // actually take effect over that.
-    void fetchCaddyConfig().then(config => setAcmeHosts(classifyAcmeHosts(config))).catch(() => {});
   }, []);
 
-  const acmeStatus = acmeHosts.find(h => externalHostList(externalHost).includes(h.host));
+  const publicName = hasPublicName(externalHost);
+  const tlsMode: TlsMode = tlsModeChoice === "acme" && !publicName ? "internal" : tlsModeChoice;
+  const tls = tlsMode !== "off";
 
   function portError(): string | null {
     const n = parseInt(externalPort, 10);
@@ -294,27 +293,10 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
           </FormGroup>
 
           {!proxy.namedServerKey && (
-            <FormGroup label={t("add_proxy.field_tls")} fieldId="edit-tls">
-              <Checkbox
-                id="edit-tls"
-                label={t("add_proxy.field_tls_short")}
-                isChecked={tls}
-                onChange={(_e, checked) => setTls(checked)}
-                isDisabled={isConfirming}
-              />
-              <SectionActions onDefaults={() => setTls(true)} isDisabled={isConfirming} />
-              {acmeStatus?.issuer === "acme" && (
-                <Alert
-                  variant="info"
-                  isInline
-                  isPlain
-                  title={t("add_proxy.acme_note_title")}
-                  style={{ marginTop: "0.4rem" }}
-                >
-                  {t("add_proxy.acme_note_body")}
-                </Alert>
-              )}
-            </FormGroup>
+            <div>
+              <TlsModeField id="edit-tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isConfirming} />
+              <SectionActions onDefaults={() => setTlsModeChoice(defaultTlsMode(externalHost))} isDisabled={isConfirming} />
+            </div>
           )}
 
           <FormGroup label={t("add_proxy.field_compress")} fieldId="edit-compress">
@@ -447,7 +429,7 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
                   targetScheme,
                   targetHost: targetHost.trim(),
                   targetPort: parseInt(targetPort, 10),
-                  tls,
+                  ...(proxy.namedServerKey ? { tls } : tlsModeToEntry(tlsMode, externalHost)),
                   tlsSkipVerify: targetScheme === "https" ? tlsSkipVerify : false,
                   compress: compress || undefined,
                   label: label.trim() || undefined,

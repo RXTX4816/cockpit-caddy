@@ -27,7 +27,7 @@ test('rejects a request body over the configured limit and allows one under it',
     await modal.locator('#target-port').fill(String(targetPort));
     // Plain HTTP — this test is about the body-size gate, not TLS, so there's no reason
     // to drag the internal CA into it.
-    await modal.locator('#tls').uncheck();
+    await modal.locator('#tls').selectOption('off');
     // Request body limit now sits as a plain field in the main form (#146), not behind
     // an accordion toggle.
     await modal.locator('#add-proxy-request-body-max-size').fill('100');

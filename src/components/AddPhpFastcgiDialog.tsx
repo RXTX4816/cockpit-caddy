@@ -18,6 +18,7 @@ import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { CaddyApiError } from "../api";
+import { TlsModeField, defaultTlsMode, hasPublicName, tlsModeToEntry, type TlsMode } from "./TlsModeField";
 import { SectionActions } from "./SectionActions";
 import type { ProxyEntry, HeaderOperation, ErrorHandlerConfig, RouteMatch } from "../api";
 import { RouteMatchersSection } from "./RouteMatchersSection";
@@ -62,7 +63,10 @@ export function AddPhpFastcgiDialog({ existingPorts, onAdd, onClose, initialValu
   const [index, setIndex] = useState(initialValues?.index ?? "");
   const [splitPath, setSplitPath] = useState(initialValues?.splitPath ?? "");
   const [env, setEnv] = useState<EnvEntry[]>(initialEnv ?? []);
-  const [tls, setTls] = useState(initialValues?.tls ?? true);
+  // #246: where the certificate comes from; ACME needs a public name in the site address.
+  const [tlsModeChoice, setTlsModeChoice] = useState<TlsMode>((initialValues?.tls ?? true) ? "internal" : "off");
+  const publicName = hasPublicName(undefined);
+  const tlsMode: TlsMode = tlsModeChoice === "acme" && !publicName ? "internal" : tlsModeChoice;
   const [compress, setCompress] = useState(initialValues?.compress ?? false);
   const [label, setLabel] = useState(initialValues?.label ?? "");
   const [basicAuth, setBasicAuth] = useState<AuthEntry[]>(initialBasicAuth ?? []);
@@ -205,16 +209,10 @@ export function AddPhpFastcgiDialog({ existingPorts, onAdd, onClose, initialValu
             </FormHelperText>
           </FormGroup>
 
-          <FormGroup fieldId="php-tls">
-            <Checkbox
-              id="php-tls"
-              label={t("add_proxy.field_tls_short")}
-              isChecked={tls}
-              onChange={(_e, v) => setTls(v)}
-              isDisabled={isLocked}
-            />
-            <SectionActions onDefaults={() => setTls(true)} isDisabled={isLocked} />
-          </FormGroup>
+          <div>
+            <TlsModeField id="php-tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isLocked} />
+            <SectionActions onDefaults={() => setTlsModeChoice(defaultTlsMode(undefined))} isDisabled={isLocked} />
+          </div>
 
           <FormGroup fieldId="php-compress">
             <Checkbox
@@ -308,7 +306,7 @@ export function AddPhpFastcgiDialog({ existingPorts, onAdd, onClose, initialValu
                     targetHost: "localhost",
                     targetPort: 0,
                     targetScheme: "http",
-                    tls,
+                    ...tlsModeToEntry(tlsMode, undefined),
                     tlsSkipVerify: false,
                     compress: compress || undefined,
                     label: label.trim() || undefined,

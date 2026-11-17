@@ -51,7 +51,7 @@ test('configuring forward_auth writes the correct Caddyfile directive', async ({
   await modal.getByLabel('External port').fill('19370');
   await modal.getByLabel(/target host/i).fill('localhost');
   await modal.locator('#target-port').fill('19371');
-  await modal.locator('#tls').uncheck();
+  await modal.locator('#tls').selectOption('off');
 
   await modal.getByRole('button', { name: /forward authentication/i }).click();
   await modal.getByRole('button', { name: /enable forward authentication/i }).click();
@@ -80,7 +80,7 @@ test('request is rejected when the forward_auth backend denies it', async ({ plu
     await modal.getByLabel('External port').fill('19373');
     await modal.getByLabel(/target host/i).fill('localhost');
     await modal.locator('#target-port').fill(String(backendPort));
-    await modal.locator('#tls').uncheck();
+    await modal.locator('#tls').selectOption('off');
 
     await modal.getByRole('button', { name: /forward authentication/i }).click();
     await modal.getByRole('button', { name: /enable forward authentication/i }).click();
@@ -115,7 +115,7 @@ test('request passes through to the real backend when forward_auth approves it',
     await modal.getByLabel('External port').fill('19376');
     await modal.getByLabel(/target host/i).fill('localhost');
     await modal.locator('#target-port').fill(String(backendPort));
-    await modal.locator('#tls').uncheck();
+    await modal.locator('#tls').selectOption('off');
 
     await modal.getByRole('button', { name: /forward authentication/i }).click();
     await modal.getByRole('button', { name: /enable forward authentication/i }).click();

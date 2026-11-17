@@ -18,6 +18,7 @@ import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { CaddyApiError } from "../api";
+import { TlsModeField, defaultTlsMode, hasPublicName, tlsModeToEntry, type TlsMode, tlsModeOf } from "./TlsModeField";
 import { SectionActions } from "./SectionActions";
 import type { ProxyEntry, ErrorHandlerConfig, RouteMatch } from "../api";
 import { RouteMatchersSection } from "./RouteMatchersSection";
@@ -47,7 +48,10 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
   const [port, setPort] = useState(String(proxy.externalPort));
   const [root, setRoot] = useState(proxy.fileServer?.root ?? "");
   const [browse, setBrowse] = useState(proxy.fileServer?.browse ?? false);
-  const [tls, setTls] = useState(proxy.tls);
+  // #246: where the certificate comes from; ACME needs a public name in the site address.
+  const [tlsModeChoice, setTlsModeChoice] = useState<TlsMode>(tlsModeOf(proxy));
+  const publicName = hasPublicName(proxy.externalHost);
+  const tlsMode: TlsMode = tlsModeChoice === "acme" && !publicName ? "internal" : tlsModeChoice;
   const [compress, setCompress] = useState(proxy.compress ?? false);
   const [label, setLabel] = useState(proxy.label ?? "");
   const [basicAuth, setBasicAuth] = useState<AuthEntry[]>(
@@ -162,16 +166,10 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
           </FormGroup>
 
           {!proxy.namedServerKey && (
-            <FormGroup fieldId="static-edit-tls">
-              <Checkbox
-                id="static-edit-tls"
-                label={t("add_proxy.field_tls_short")}
-                isChecked={tls}
-                onChange={(_e, v) => setTls(v)}
-                isDisabled={isLocked}
-              />
-              <SectionActions onDefaults={() => setTls(true)} isDisabled={isLocked} />
-            </FormGroup>
+            <div>
+              <TlsModeField id="static-edit-tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isLocked} />
+              <SectionActions onDefaults={() => setTlsModeChoice(defaultTlsMode(proxy.externalHost))} isDisabled={isLocked} />
+            </div>
           )}
 
           <FormGroup fieldId="static-edit-compress">
@@ -261,7 +259,7 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
                   await onSave({
                     ...proxy,
                     externalPort: parseInt(port, 10),
-                    tls,
+                    ...tlsModeToEntry(tlsMode, proxy.externalHost),
                     compress: compress || undefined,
                     label: label.trim() || undefined,
                     fileServer: { root: root.trim(), browse: browse || undefined },

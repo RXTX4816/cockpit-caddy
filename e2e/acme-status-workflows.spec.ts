@@ -9,7 +9,7 @@
  * internet-reachable domain, no port 80/443 exposure for an HTTP-01 challenge).
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { CONF_HEADER } from './helpers';
+import { CONF_HEADER, readConf } from './helpers';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
   await dismissAdminBanner(page);
@@ -117,7 +117,9 @@ test('a default-ACME host stays classified as Caddy default even alongside an in
   await expect(internalRow).toContainText('Explicit policy');
 });
 
-test('Edit Proxy shows a note when the host is already ACME-managed', async ({ pluginPage: page }) => {
+// #246: the Edit dialog shows a site on automatic HTTPS as such, and saving it must not
+// turn it into `tls internal` (which replaced a working public certificate before).
+test('editing an ACME-managed host keeps it on automatic HTTPS', async ({ pluginPage: page }) => {
   await writeConf(page, [
     CONF_HEADER,
     '',
@@ -129,5 +131,13 @@ test('Edit Proxy shows a note when the host is already ACME-managed', async ({ p
 
   await page.locator('li').filter({ hasText: 'default-acme.example.test' }).getByRole('button', { name: /^edit$/i }).click();
   const modal = page.getByRole('dialog');
-  await expect(modal.getByText(/already getting a certificate from let.?s encrypt/i)).toBeVisible({ timeout: 10000 });
+  await expect(modal.locator('#edit-tls')).toHaveValue('acme', { timeout: 10000 });
+  await modal.locator('#edit-label').fill('kept on acme');
+  await modal.getByRole('button', { name: /save changes/i }).click();
+  await modal.getByRole('button', { name: /^confirm$/i }).click();
+  await expect(modal).not.toBeVisible({ timeout: 15000 });
+
+  const conf = await readConf(page);
+  expect(conf).toContain('default-acme.example.test:19505 {');
+  expect(conf).not.toMatch(/\btls\b/);
 });

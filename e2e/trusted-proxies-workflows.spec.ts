@@ -71,7 +71,7 @@ test('trusted_proxies reaches the live server only after an explicit reload', as
     await modal.getByLabel('External port').fill(String(port));
     await modal.getByLabel(/target host/i).fill('localhost');
     await modal.locator('#target-port').fill(String(targetPort));
-    await modal.locator('#tls').uncheck();
+    await modal.locator('#tls').selectOption('off');
     await modal.getByRole('button', { name: /^add proxy$/i }).click();
     await modal.getByRole('button', { name: /^confirm$/i }).click();
     await expect(modal).not.toBeVisible({ timeout: 15000 });
@@ -115,7 +115,7 @@ test('trusted_proxies survives a per-port servers block also carrying an HTTP/3 
     await modal.getByLabel('External port').fill(String(port));
     await modal.getByLabel(/target host/i).fill('localhost');
     await modal.locator('#target-port').fill(String(targetPort));
-    await modal.locator('#tls').uncheck();
+    await modal.locator('#tls').selectOption('off');
 
     // Forces buildManagedServersBlocks to emit a per-port `servers :PORT { }` block —
     // the exact situation that used to silently drop the global trusted_proxies setting

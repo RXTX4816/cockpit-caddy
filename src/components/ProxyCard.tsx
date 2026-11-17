@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 import type { ProxyEntry } from "../api";
 import { formatExternalHostPort } from "../api";
 import type { ProbeStatus } from "../api/probe";
+import { TlsBadge } from "./TlsBadge";
 import { UpstreamStatusDot } from "./UpstreamStatusDot";
 import { buildRouteUrl } from "./routeUrl";
 
@@ -74,9 +75,7 @@ export function ProxyCard({ proxy, onEdit, onDelete, onDuplicate, probeStatuses 
               </code>
               <div style={chipRow}>
                 <Label isCompact color="green">{t("proxies.type_static")}</Label>
-                {proxy.tls
-                  ? <Label isCompact color="blue" variant="outline">{t("proxies.tls_self_signed")}</Label>
-                  : <Label isCompact color="grey" variant="outline">{t("proxies.tls_none")}</Label>}
+                <TlsBadge proxy={proxy} />
                 {proxy.fileServer.browse && <Label isCompact color="teal" variant="outline">{t("proxies.indicator_browse")}</Label>}
                 {proxy.compress && <Label isCompact color="teal" variant="outline">{t("proxies.indicator_compress")}</Label>}
                 {proxy.basicAuth?.length ? <Label isCompact color="red" variant="outline">{t("proxies.indicator_auth")}</Label> : null}
@@ -103,9 +102,7 @@ export function ProxyCard({ proxy, onEdit, onDelete, onDuplicate, probeStatuses 
               </div>
               <div style={chipRow}>
                 <Label isCompact color="blue">{t("proxies.type_proxy")}</Label>
-                {proxy.tls
-                  ? <Label isCompact color="blue" variant="outline">{t("proxies.tls_self_signed")}</Label>
-                  : <Label isCompact color="grey" variant="outline">{t("proxies.tls_none")}</Label>}
+                <TlsBadge proxy={proxy} />
                 {proxy.tlsSkipVerify && <Label isCompact color="orange" variant="outline">{t("proxies.tls_skip_verify")}</Label>}
                 {proxy.rewrite && <Label isCompact color="teal" variant="outline">{t(`rewrite.type_${proxy.rewrite.type}`)}</Label>}
                 {proxy.compress && <Label isCompact color="teal" variant="outline">{t("proxies.indicator_compress")}</Label>}

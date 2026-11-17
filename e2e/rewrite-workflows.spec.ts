@@ -24,7 +24,7 @@ test('proxy with strip_prefix rewrite writes correct Caddyfile directive', async
   await modal.getByLabel('External port').fill('19220');
   await modal.getByLabel(/target host/i).fill('localhost');
   await modal.locator('#target-port').fill('3000');
-  await modal.locator('#tls').uncheck();
+  await modal.locator('#tls').selectOption('off');
 
   await modal.getByRole('button', { name: /uri rewrite/i }).click();
   await modal.locator('#rw-type-strip_prefix').click();
@@ -46,7 +46,7 @@ test('proxy with regex rewrite writes matcher and rewrite directive', async ({ p
   await modal.getByLabel('External port').fill('19221');
   await modal.getByLabel(/target host/i).fill('localhost');
   await modal.locator('#target-port').fill('3000');
-  await modal.locator('#tls').uncheck();
+  await modal.locator('#tls').selectOption('off');
 
   await modal.getByRole('button', { name: /uri rewrite/i }).click();
   await modal.locator('#rw-type-regex').click();
@@ -76,7 +76,7 @@ test('regex rewrite replaces only the matched part of the path after a reload', 
     await modal.getByLabel('External port').fill('19225');
     await modal.getByLabel(/target host/i).fill('localhost');
     await modal.locator('#target-port').fill(String(targetPort));
-    await modal.locator('#tls').uncheck();
+    await modal.locator('#tls').selectOption('off');
     await modal.getByRole('button', { name: /uri rewrite/i }).click();
     await modal.locator('#rw-type-regex').click();
     await modal.locator('#rw-find').fill('old');
@@ -109,7 +109,7 @@ test('URI rewrite changes the path the backend actually receives', async ({ plug
     await modal.getByLabel('External port').fill('19222');
     await modal.getByLabel(/target host/i).fill('localhost');
     await modal.locator('#target-port').fill(String(targetPort));
-    await modal.locator('#tls').uncheck();
+    await modal.locator('#tls').selectOption('off');
 
     await modal.getByRole('button', { name: /uri rewrite/i }).click();
     await modal.locator('#rw-type-strip_prefix').click();
@@ -139,7 +139,7 @@ test('clearing rewrite on edit removes the directive from the Caddyfile', async 
   await modal1.getByLabel('External port').fill('19224');
   await modal1.getByLabel(/target host/i).fill('localhost');
   await modal1.locator('#target-port').fill('3000');
-  await modal1.locator('#tls').uncheck();
+  await modal1.locator('#tls').selectOption('off');
   await modal1.getByRole('button', { name: /uri rewrite/i }).click();
   await modal1.locator('#rw-type-strip_prefix').click();
   await modal1.locator('#rw-prefix').fill('/api');

@@ -46,7 +46,7 @@ test('adding a second upstream writes both to the reverse_proxy Caddyfile line',
   await modal.getByLabel('External port').fill('19350');
   await modal.getByLabel(/target host/i).fill('localhost');
   await modal.locator('#target-port').fill('19351');
-  await modal.locator('#tls').uncheck();
+  await modal.locator('#tls').selectOption('off');
 
   await modal.getByRole('button', { name: /additional upstreams/i }).click();
   await modal.getByRole('button', { name: /add upstream/i }).click();
@@ -74,7 +74,7 @@ test('load balancing distributes requests across both live backends', async ({ p
     await modal.getByLabel('External port').fill('19355');
     await modal.getByLabel(/target host/i).fill('localhost');
     await modal.locator('#target-port').fill(String(portA));
-    await modal.locator('#tls').uncheck();
+    await modal.locator('#tls').selectOption('off');
 
     await modal.getByRole('button', { name: /additional upstreams/i }).click();
     await modal.getByRole('button', { name: /add upstream/i }).click();
@@ -128,7 +128,7 @@ test('failover: killing one backend still serves via the other', async ({ plugin
     await modal.getByLabel('External port').fill('19358');
     await modal.getByLabel(/target host/i).fill('localhost');
     await modal.locator('#target-port').fill(String(portA));
-    await modal.locator('#tls').uncheck();
+    await modal.locator('#tls').selectOption('off');
 
     await modal.getByRole('button', { name: /additional upstreams/i }).click();
     await modal.getByRole('button', { name: /add upstream/i }).click();
@@ -179,7 +179,7 @@ test('lb retry count and interval settings are written to the Caddyfile', async 
   await modal.getByLabel('External port').fill('19359');
   await modal.getByLabel(/target host/i).fill('localhost');
   await modal.locator('#target-port').fill('19360');
-  await modal.locator('#tls').uncheck();
+  await modal.locator('#tls').selectOption('off');
 
   await modal.getByRole('button', { name: /additional upstreams/i }).click();
   await modal.getByRole('button', { name: /add upstream/i }).click();
@@ -216,7 +216,7 @@ test('active health checks take a dead upstream out of rotation', async ({ plugi
     await modal.getByLabel('External port').fill('19370');
     await modal.getByLabel(/target host/i).fill('localhost');
     await modal.locator('#target-port').fill(String(portA));
-    await modal.locator('#tls').uncheck();
+    await modal.locator('#tls').selectOption('off');
 
     await modal.getByRole('button', { name: /additional upstreams/i }).click();
     await modal.getByRole('button', { name: /add upstream/i }).click();

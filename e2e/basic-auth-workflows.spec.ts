@@ -35,7 +35,7 @@ test('add basic auth user requires credentials for the route', async ({ pluginPa
     await modal.getByLabel('External port').fill('19280');
     await modal.getByLabel(/target host/i).fill('localhost');
     await modal.locator('#target-port').fill(String(targetPort));
-    await modal.locator('#tls').uncheck();
+    await modal.locator('#tls').selectOption('off');
 
     await modal.getByRole('button', { name: /http basic auth/i }).click();
     await modal.getByRole('button', { name: /add account/i }).click();
@@ -62,7 +62,7 @@ test('basic auth password is stored as a bcrypt hash, not plaintext', async ({ p
   await modal.getByLabel('External port').fill('19282');
   await modal.getByLabel(/target host/i).fill('localhost');
   await modal.locator('#target-port').fill('3000');
-  await modal.locator('#tls').uncheck();
+  await modal.locator('#tls').selectOption('off');
 
   await modal.getByRole('button', { name: /http basic auth/i }).click();
   await modal.getByRole('button', { name: /add account/i }).click();
@@ -90,7 +90,7 @@ test('remove basic auth user allows unauthenticated access again', async ({ plug
     await modal1.getByLabel('External port').fill('19283');
     await modal1.getByLabel(/target host/i).fill('localhost');
     await modal1.locator('#target-port').fill(String(targetPort));
-    await modal1.locator('#tls').uncheck();
+    await modal1.locator('#tls').selectOption('off');
     await modal1.getByRole('button', { name: /http basic auth/i }).click();
     await modal1.getByRole('button', { name: /add account/i }).click();
     await modal1.locator('#auth-user-0').fill('carol');
@@ -129,7 +129,7 @@ test('edit password re-hashes and old password stops working', async ({ pluginPa
     await modal1.getByLabel('External port').fill('19285');
     await modal1.getByLabel(/target host/i).fill('localhost');
     await modal1.locator('#target-port').fill(String(targetPort));
-    await modal1.locator('#tls').uncheck();
+    await modal1.locator('#tls').selectOption('off');
     await modal1.getByRole('button', { name: /http basic auth/i }).click();
     await modal1.getByRole('button', { name: /add account/i }).click();
     await modal1.locator('#auth-user-0').fill('dave');
