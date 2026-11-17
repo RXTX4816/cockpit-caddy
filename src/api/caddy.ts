@@ -737,11 +737,6 @@ function jsonPlaceholderToCaddy(s: string): string {
     .replace(/\{http\.request\.remote\.host\}/g, "{remote_host}");
 }
 
-/** Converts $1/$2 backreferences (JSON regex format) to Caddyfile {re.rw.N} form. */
-function regexReplaceToCaddy(replace: string): string {
-  return replace.replace(/\$(\d+)/g, "{re.rw.$1}");
-}
-
 // ---------------------------------------------------------------------------
 // Caddyfile quoting — #251
 // ---------------------------------------------------------------------------
@@ -1079,7 +1074,8 @@ function buildRewriteHandler(rewrite: import("./types").RewriteConfig): CaddyHan
   if (rewrite.type === "add_prefix") {
     return { handler: "rewrite", uri: `${rewrite.value}{http.request.uri}` };
   }
-  return { handler: "rewrite", path_regexp: [{ find: rewrite.find, replace: rewrite.replace }] };
+  // Caddy's adapter leaves an empty replacement out; match it so both apply paths agree (#254).
+  return { handler: "rewrite", path_regexp: [{ find: rewrite.find, ...(rewrite.replace ? { replace: rewrite.replace } : {}) }] };
 }
 
 function parseRewriteFromHandle(h: AnyHandler): import("./types").RewriteConfig | undefined {
@@ -1092,18 +1088,18 @@ function parseRewriteFromHandle(h: AnyHandler): import("./types").RewriteConfig 
   }
   if (rw.path_regexp?.[0]) {
     const { find, replace } = rw.path_regexp[0];
-    return { type: "regex", find, replace };
+    return { type: "regex", find, replace: replace ?? "" };
   }
   return undefined;
 }
 
-function buildRewriteCaddyLines(rewrite: import("./types").RewriteConfig, port: number, indent = "\t"): string[] {
+function buildRewriteCaddyLines(rewrite: import("./types").RewriteConfig, indent = "\t"): string[] {
   if (rewrite.type === "strip_prefix") return [`${indent}uri strip_prefix ${rewrite.value}`];
   if (rewrite.type === "add_prefix") return [`${indent}rewrite ${rewrite.value}{uri}`];
-  return [
-    `${indent}@rw${port} path_regexp rw ${rewrite.find}`,
-    `${indent}rewrite @rw${port} ${regexReplaceToCaddy(rewrite.replace)}`,
-  ];
+  // `uri path_regexp` replaces the matching part of the path, like the JSON rewrite handler's
+  // path_regexp; a `path_regexp` matcher + `rewrite` replaced the whole URI instead (#254).
+  // Both use Go's $1 backreferences.
+  return [`${indent}uri path_regexp ${caddyQuote(rewrite.find)} ${caddyQuote(rewrite.replace)}`];
 }
 
 type TransportProps = Pick<ProxyEntry, "targetScheme" | "tlsSkipVerify" | "dialTimeout" | "responseHeaderTimeout">;
@@ -1570,7 +1566,7 @@ function buildRouteHandlerLines(p: ProxyEntry, indent: string): string[] {
     for (const h of p.responseHeaders ?? []) {
       lines.push(headerOpLine(`${indent}header`, h, { quoteSet: true }));
     }
-    if (p.rewrite) lines.push(...buildRewriteCaddyLines(p.rewrite, p.externalPort, indent));
+    if (p.rewrite) lines.push(...buildRewriteCaddyLines(p.rewrite, indent));
     if (p.forwardAuth) {
       // forward_auth needs slightly adjusted indentation relative to base
       const faLines = buildForwardAuthCaddyLines(p.forwardAuth).map(l => indent + l.replace(/^\t/, ""));
@@ -1591,6 +1587,7 @@ export function proxyToBlock(p: ProxyEntry): string {
   const rawAddr = buildExternalAddress(p);
   const header = isPlainHttp ? `http://${rawAddr}` : rawAddr;
   const lines = p.label ? [`# label: ${p.label}`, `${header} {`] : [`${header} {`];
+  lines.push(...buildBindLines(p));
 
   if (p.matchers && Object.keys(buildMatcherJson(p.matchers)).length > 0) {
     const matcherName = `m${p.externalPort}`;
@@ -1758,6 +1755,13 @@ function patchRawBlock(raw: string, proxy: ProxyEntry): string {
     i++;
   }
 
+  // An IP host binds that IP (#254). A `bind` that only repeats the block's old IP header is the
+  // one the plugin wrote, so it follows the host field; any other bind is the user's and stays.
+  const oldHeader = parseSiteAddresses(lines[0].trim().replace(/\{$/, "").trim());
+  const oldIp = oldHeader?.length === 1 && oldHeader[0].host && isIpAddress(oldHeader[0].host) ? oldHeader[0].host : undefined;
+  const isOwnBind = (l: string) => !!oldIp && l.trim() === `bind ${oldIp}`;
+  for (let k = kept.length - 1; k >= 1; k--) if (isOwnBind(kept[k])) kept.splice(k, 1);
+  if (!kept.slice(1).some(l => /^\s*bind(\s|$)/.test(l))) kept.splice(1, 0, ...buildBindLines(proxy));
   // Re-add updated directives before closing brace
   kept.push(...buildTlsCaddyLines(proxy, !tlsSubjectHosts(proxy.externalHost).length));
   if (proxy.fileServer) {
@@ -2736,9 +2740,23 @@ function isMultiHostOnlyMatch(match: Array<Record<string, unknown>> | undefined)
   return keys.length === 1 && keys[0] === "host" && Array.isArray(match[0].host) && match[0].host.length > 1;
 }
 
+/** True when the host field is one IP address, which the plugin treats as the bind address. */
+function bindsToIp(proxy: { externalHost?: string }): boolean {
+  return !!proxy.externalHost && externalHostList(proxy.externalHost).length === 1 && isIpAddress(proxy.externalHost);
+}
+
+/**
+ * An IP site address only matches the Host header in a Caddyfile and still listens on every
+ * interface; `bind` is what restricts the listener, as the instant-apply JSON's `IP:port`
+ * listen address does (#254).
+ */
+function buildBindLines(proxy: { externalHost?: string }): string[] {
+  return bindsToIp(proxy) ? [`\tbind ${proxy.externalHost}`] : [];
+}
+
 function buildListenAddr(proxy: { externalHost?: string; externalPort: number }): string {
   // Several names (#208) can't share one bind address, so they listen on every interface.
-  return proxy.externalHost && externalHostList(proxy.externalHost).length === 1 && isIpAddress(proxy.externalHost)
+  return bindsToIp(proxy)
     ? `${proxy.externalHost}:${proxy.externalPort}`
     : `:${proxy.externalPort}`;
 }

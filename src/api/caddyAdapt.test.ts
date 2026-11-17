@@ -331,3 +331,70 @@ describe.runIf(available || required)("passive and active health checks (#252)",
     expect(adaptedRp(conf).health_checks).toBeUndefined();
   });
 });
+
+describe.runIf(available || required)("instant-apply JSON and the saved Caddyfile agree (#254)", () => {
+  function firstServer(conf: string) {
+    return Object.values(adapt(conf).apps?.http?.servers ?? {})[0];
+  }
+  function findHandler(handles: unknown, name: string): Record<string, unknown> | undefined {
+    let found: Record<string, unknown> | undefined;
+    JSON.stringify(handles, (k, v) => {
+      if (!found && v && typeof v === "object" && (v as { handler?: string }).handler === name) found = v;
+      return v;
+    });
+    return found;
+  }
+
+  it.each(["127.0.0.1", "[::1]"])("an IP in the host field binds that IP after a reload too (%s)", ip => {
+    const p = entry({ tls: false, externalPort: 8443, externalHost: ip });
+    const conf = proxiesToCaddyfile([p]);
+    expect(firstServer(conf)?.listen).toEqual(buildServerEntry(p).listen);
+    expect(readBack(conf)[0].externalHost).toBe(ip);
+  });
+
+  it("a hostname still listens on every interface", () => {
+    const p = entry({ tls: false, externalPort: 8443, externalHost: "app.example.com" });
+    expect(proxiesToCaddyfile([p])).not.toContain("bind");
+    expect(firstServer(proxiesToCaddyfile([p]))?.listen).toEqual([":8443"]);
+  });
+
+  it("editing a hand-written IP site adds the bind once and keeps an existing one", () => {
+    const conf = `${CONF_HEADER}\n\nhttp://127.0.0.1:8443 {\n\treverse_proxy localhost:8000\n}\n`;
+    const p = readBack(conf)[0];
+    const edited = surgicallyWriteProxy(conf, { ...p, targetPort: 8001 });
+    expect(edited.match(/\bbind\b/g)).toHaveLength(1);
+    expect(firstServer(edited)?.listen).toEqual(["127.0.0.1:8443"]);
+    const again = surgicallyWriteProxy(edited, { ...readBack(edited)[0], targetPort: 8002 });
+    expect(again.match(/\bbind\b/g)).toHaveLength(1);
+  });
+
+  it("changing an IP host to a hostname drops the bind the plugin added", () => {
+    const conf = `${CONF_HEADER}\n\n10.0.0.5 {\n\treverse_proxy localhost:8000\n}\n`;
+    const once = surgicallyWriteProxy(conf, { ...readBack(conf)[0], tls: true, targetPort: 8001 });
+    expect(once).toContain("10.0.0.5 {\n\tbind 10.0.0.5");
+    const p = readBack(once)[0];
+    const renamed = surgicallyWriteProxy(once, { ...p, tls: true, externalHost: "10.0.0.5, app.example.com" });
+    expect(renamed).not.toMatch(/\bbind\b/);
+    expect(firstServer(renamed)?.listen).toEqual([":443"]);
+  });
+
+  it("a hand-written bind on a hostname site is kept", () => {
+    const conf = `${CONF_HEADER}\n\nhttp://app.example.com:8443 {\n\tbind 10.0.0.9\n\treverse_proxy localhost:8000\n}\n`;
+    const edited = surgicallyWriteProxy(conf, { ...readBack(conf)[0], targetPort: 8001 });
+    expect(edited).toContain("\tbind 10.0.0.9");
+  });
+
+  it.each([
+    ["substring with a backreference", { type: "regex" as const, find: "^/old/(.*)$", replace: "/new/$1" }],
+    ["plain substring", { type: "regex" as const, find: "old", replace: "new" }],
+    ["empty replacement", { type: "regex" as const, find: "^/v1", replace: "" }],
+    ["spaces and quotes", { type: "regex" as const, find: "a b", replace: 'c "d"' }],
+  ])("a regex rewrite (%s) is the same handler in both", (_n, rewrite) => {
+    const p = entry({ tls: false, externalPort: 8080, rewrite });
+    const conf = proxiesToCaddyfile([p]);
+    const fromCaddy = findHandler(firstServer(conf)?.routes, "rewrite");
+    const pushed = findHandler(buildServerEntry(p).routes, "rewrite");
+    expect(pushed).toEqual(fromCaddy);
+    expect(readBack(conf)[0].rewrite).toEqual(rewrite);
+  });
+});
