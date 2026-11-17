@@ -231,16 +231,19 @@
   "transport": {
     "section_title": "Tiempos de espera del upstream (opcional)",
     "dial_timeout": "Tiempo de espera de conexión",
-    "response_header_timeout": "Tiempo de espera de cabeceras de respuesta"
+    "response_header_timeout": "Tiempo de espera de cabeceras de respuesta",
+    "defaults_help": "Deja un campo vacío para usar el valor predeterminado de Caddy, que se muestra en gris. Un tiempo límite de cabeceras de respuesta corta el long polling y las respuestas lentas."
   },
   "server_timeouts": {
     "section_title": "Tiempos de espera y límites del servidor (opcional)",
+    "defaults_help": "Deja un campo vacío para usar el valor predeterminado de Caddy, que se muestra en gris. Un tiempo límite de lectura del cuerpo o de escritura corta cualquier subida o descarga que tarde más.",
+    "no_timeout": "ninguno",
     "read_timeout": "Tiempo de lectura del cuerpo",
     "read_header_timeout": "Tiempo de lectura de cabeceras",
     "write_timeout": "Tiempo de escritura",
     "idle_timeout": "Tiempo de inactividad",
     "max_header_bytes": "Tamaño máx. de cabeceras (bytes)",
-    "max_header_bytes_help": "Tamaño máximo de las cabeceras de la petición en bytes (predeterminado: 1 MB = 1048576)",
+    "max_header_bytes_help": "Tamaño máximo de las cabeceras de la petición en bytes (predeterminado de Caddy: 16 KiB = 16384)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "Desactivar HTTP/3",
     "http3_help": "Caddy activa HTTP/1.1, HTTP/2 y HTTP/3 de forma predeterminada siempre que TLS esté configurado. HTTP/3 funciona sobre UDP en el mismo puerto que HTTPS; si su cortafuegos bloquea UDP, desactivarlo aquí deja solo HTTP/1.1 y HTTP/2."

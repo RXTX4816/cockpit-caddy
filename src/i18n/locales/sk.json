@@ -231,16 +231,19 @@
   "transport": {
     "section_title": "Časové limity upstreamu (voliteľné)",
     "dial_timeout": "Časový limit pripojenia",
-    "response_header_timeout": "Časový limit hlavičiek odpovede"
+    "response_header_timeout": "Časový limit hlavičiek odpovede",
+    "defaults_help": "Nechajte pole prázdne a použije sa predvolená hodnota Caddy (zobrazená sivo). Časový limit hlavičiek odpovede preruší long polling a pomalé odpovede."
   },
   "server_timeouts": {
     "section_title": "Časové limity a obmedzenia servera (voliteľné)",
+    "defaults_help": "Nechajte pole prázdne a použije sa predvolená hodnota Caddy (zobrazená sivo). Časový limit čítania tela alebo zápisu preruší každé dlhšie nahrávanie či sťahovanie.",
+    "no_timeout": "žiadny",
     "read_timeout": "Časový limit čítania tela",
     "read_header_timeout": "Časový limit čítania hlavičiek",
     "write_timeout": "Časový limit zápisu",
     "idle_timeout": "Časový limit nečinnosti",
     "max_header_bytes": "Max. veľkosť hlavičiek (bajty)",
-    "max_header_bytes_help": "Maximálna veľkosť hlavičiek požiadavky v bajtoch (predvolené: 1 MB = 1048576)",
+    "max_header_bytes_help": "Maximálna veľkosť hlavičiek požiadavky v bajtoch (predvolené v Caddy: 16 KiB = 16384)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "Vypnúť HTTP/3",
     "http3_help": "Caddy predvolene zapína HTTP/1.1, HTTP/2 a HTTP/3, keď je nastavené TLS. HTTP/3 beží cez UDP na rovnakom porte ako HTTPS — ak firewall blokuje UDP, jeho vypnutím tu zostane len HTTP/1.1 a HTTP/2."

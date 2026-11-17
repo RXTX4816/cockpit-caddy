@@ -231,16 +231,19 @@
   "transport": {
     "section_title": "アップストリームのタイムアウト（任意）",
     "dial_timeout": "接続タイムアウト",
-    "response_header_timeout": "レスポンスヘッダーのタイムアウト"
+    "response_header_timeout": "レスポンスヘッダーのタイムアウト",
+    "defaults_help": "空欄にすると Caddy の既定値（灰色で表示）が使われます。レスポンスヘッダーのタイムアウトは、ロングポーリングや遅い応答を切断します。"
   },
   "server_timeouts": {
     "section_title": "サーバーのタイムアウトと制限（任意）",
+    "defaults_help": "空欄にすると Caddy の既定値（灰色で表示）が使われます。ボディ読み取りや書き込みのタイムアウトを設定すると、それより長いアップロードやダウンロードはすべて切断されます。",
+    "no_timeout": "なし",
     "read_timeout": "本文読み取りタイムアウト",
     "read_header_timeout": "ヘッダー読み取りタイムアウト",
     "write_timeout": "書き込みタイムアウト",
     "idle_timeout": "アイドルタイムアウト",
     "max_header_bytes": "最大ヘッダーサイズ（バイト）",
-    "max_header_bytes_help": "リクエストヘッダーの最大サイズ（バイト単位、既定値: 1 MB = 1048576）",
+    "max_header_bytes_help": "リクエストヘッダーの最大サイズ（バイト、Caddy の既定値: 16 KiB = 16384）",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "HTTP/3 を無効にする",
     "http3_help": "Caddy は TLS が設定されていると、既定で HTTP/1.1、HTTP/2、HTTP/3 を有効にします。HTTP/3 は HTTPS と同じポートの UDP 上で動作します。ファイアウォールが UDP をブロックしている場合は、ここで無効にすると HTTP/1.1 と HTTP/2 のみになります。"

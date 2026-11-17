@@ -231,16 +231,19 @@
   "transport": {
     "section_title": "Upstream zaman aşımları (isteğe bağlı)",
     "dial_timeout": "Bağlantı zaman aşımı",
-    "response_header_timeout": "Yanıt başlığı zaman aşımı"
+    "response_header_timeout": "Yanıt başlığı zaman aşımı",
+    "defaults_help": "Caddy'nin varsayılanını kullanmak için alanı boş bırakın; varsayılan gri gösterilir. Yanıt başlığı zaman aşımı, long polling'i ve yavaş yanıtları keser."
   },
   "server_timeouts": {
     "section_title": "Sunucu zaman aşımları ve sınırları (isteğe bağlı)",
+    "defaults_help": "Caddy'nin varsayılanını kullanmak için alanı boş bırakın; varsayılan gri gösterilir. Gövde okuma veya yazma zaman aşımı, daha uzun süren her yüklemeyi ya da indirmeyi keser.",
+    "no_timeout": "yok",
     "read_timeout": "Gövde okuma zaman aşımı",
     "read_header_timeout": "Başlık okuma zaman aşımı",
     "write_timeout": "Yazma zaman aşımı",
     "idle_timeout": "Boşta kalma zaman aşımı",
     "max_header_bytes": "En büyük başlık boyutu (bayt)",
-    "max_header_bytes_help": "İstek başlıklarının bayt cinsinden en büyük boyutu (varsayılan: 1 MB = 1048576)",
+    "max_header_bytes_help": "İstek başlıklarının bayt cinsinden en büyük boyutu (Caddy varsayılanı: 16 KiB = 16384)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "HTTP/3'ü devre dışı bırak",
     "http3_help": "Caddy, TLS yapılandırıldığında varsayılan olarak HTTP/1.1, HTTP/2 ve HTTP/3'ü etkinleştirir. HTTP/3, HTTPS ile aynı bağlantı noktasında UDP üzerinden çalışır — güvenlik duvarınız UDP'yi engelliyorsa burada devre dışı bırakmak yalnızca HTTP/1.1 ve HTTP/2'ye geri döner."

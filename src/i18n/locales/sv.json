@@ -231,16 +231,19 @@
   "transport": {
     "section_title": "Tidsgränser för upstream (valfritt)",
     "dial_timeout": "Tidsgräns för anslutning",
-    "response_header_timeout": "Tidsgräns för svarshuvuden"
+    "response_header_timeout": "Tidsgräns för svarshuvuden",
+    "defaults_help": "Lämna ett fält tomt för att använda Caddys standardvärde, som visas i grått. En tidsgräns för svarets headers avbryter long polling och långsamma svar."
   },
   "server_timeouts": {
     "section_title": "Servertidsgränser och gränser (valfritt)",
+    "defaults_help": "Lämna ett fält tomt för att använda Caddys standardvärde, som visas i grått. En tidsgräns för att läsa body eller skriva avbryter varje uppladdning eller nedladdning som tar längre tid.",
+    "no_timeout": "ingen",
     "read_timeout": "Tidsgräns för läsning av innehåll",
     "read_header_timeout": "Tidsgräns för läsning av huvuden",
     "write_timeout": "Tidsgräns för skrivning",
     "idle_timeout": "Tidsgräns vid inaktivitet",
     "max_header_bytes": "Max. storlek på huvuden (byte)",
-    "max_header_bytes_help": "Maximal storlek på begärans huvuden i byte (standard: 1 MB = 1048576)",
+    "max_header_bytes_help": "Största storlek på förfrågans headers i byte (Caddys standard: 16 KiB = 16384)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "Inaktivera HTTP/3",
     "http3_help": "Caddy aktiverar HTTP/1.1, HTTP/2 och HTTP/3 som standard när TLS är konfigurerat. HTTP/3 går över UDP på samma port som HTTPS — om brandväggen blockerar UDP gör en inaktivering här att bara HTTP/1.1 och HTTP/2 används."

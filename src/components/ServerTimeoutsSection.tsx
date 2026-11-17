@@ -22,14 +22,9 @@ export interface ServerTimeoutValues {
   disableHttp3: boolean;
 }
 
-const TIMEOUTS_DEFAULTS: ServerTimeoutValues = {
-  readTimeout: "5s",
-  readHeaderTimeout: "2s",
-  writeTimeout: "10s",
-  idleTimeout: "5m",
-  maxHeaderBytes: "1048576",
-  disableHttp3: false,
-};
+// Empty means Caddy's own default (#249): no read_body or write timeout, read_header 1m,
+// idle 5m, 16 KiB of headers. "Defaults" therefore clears the fields; the placeholders show
+// what Caddy uses for each. Values like read 5s / write 10s cut off uploads and downloads.
 const TIMEOUTS_EMPTY: ServerTimeoutValues = {
   readTimeout: "",
   readHeaderTimeout: "",
@@ -72,16 +67,19 @@ export function ServerTimeoutsSection({ value, onChange, isDisabled, isExpanded:
     >
       <SectionActions
         onClear={() => onChange(TIMEOUTS_EMPTY)}
-        onDefaults={() => onChange(TIMEOUTS_DEFAULTS)}
+        onDefaults={() => onChange(TIMEOUTS_EMPTY)}
         isDisabled={isDisabled}
       />
+      <HelperText style={{ marginBottom: "0.6rem" }}>
+        <HelperTextItem>{t("server_timeouts.defaults_help")}</HelperTextItem>
+      </HelperText>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
         <FormGroup label={t("server_timeouts.read_timeout")} fieldId="st-read" style={{ flex: "1 1 10rem" }}>
           <TextInput
             id="st-read"
             value={value.readTimeout}
             onChange={(_e, v) => set("readTimeout", v)}
-            placeholder="5s"
+            placeholder={t("server_timeouts.no_timeout")}
             isDisabled={isDisabled}
           />
         </FormGroup>
@@ -90,7 +88,7 @@ export function ServerTimeoutsSection({ value, onChange, isDisabled, isExpanded:
             id="st-read-header"
             value={value.readHeaderTimeout}
             onChange={(_e, v) => set("readHeaderTimeout", v)}
-            placeholder="2s"
+            placeholder="1m"
             isDisabled={isDisabled}
           />
         </FormGroup>
@@ -99,7 +97,7 @@ export function ServerTimeoutsSection({ value, onChange, isDisabled, isExpanded:
             id="st-write"
             value={value.writeTimeout}
             onChange={(_e, v) => set("writeTimeout", v)}
-            placeholder="10s"
+            placeholder={t("server_timeouts.no_timeout")}
             isDisabled={isDisabled}
           />
         </FormGroup>
@@ -118,7 +116,7 @@ export function ServerTimeoutsSection({ value, onChange, isDisabled, isExpanded:
             type="number"
             value={value.maxHeaderBytes}
             onChange={(_e, v) => set("maxHeaderBytes", v)}
-            placeholder="1048576"
+            placeholder="16384"
             isDisabled={isDisabled}
           />
           <FormHelperText>

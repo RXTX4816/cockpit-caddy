@@ -231,16 +231,19 @@
   "transport": {
     "section_title": "Upstreamin aikakatkaisut (valinnainen)",
     "dial_timeout": "Yhteyden aikakatkaisu",
-    "response_header_timeout": "Vastausotsakkeiden aikakatkaisu"
+    "response_header_timeout": "Vastausotsakkeiden aikakatkaisu",
+    "defaults_help": "Jätä kenttä tyhjäksi käyttääksesi Caddyn oletusta, joka näkyy harmaana. Vastausotsakkeiden aikakatkaisu katkaisee long pollingin ja hitaat vastaukset."
   },
   "server_timeouts": {
     "section_title": "Palvelimen aikakatkaisut ja rajat (valinnainen)",
+    "defaults_help": "Jätä kenttä tyhjäksi käyttääksesi Caddyn oletusta, joka näkyy harmaana. Rungon lukemisen tai kirjoittamisen aikakatkaisu keskeyttää jokaisen sitä pidemmän latauksen.",
+    "no_timeout": "ei mitään",
     "read_timeout": "Rungon lukemisen aikakatkaisu",
     "read_header_timeout": "Otsakkeiden lukemisen aikakatkaisu",
     "write_timeout": "Kirjoituksen aikakatkaisu",
     "idle_timeout": "Joutoajan aikakatkaisu",
     "max_header_bytes": "Otsakkeiden enimmäiskoko (tavua)",
-    "max_header_bytes_help": "Pyynnön otsakkeiden enimmäiskoko tavuina (oletus: 1 Mt = 1048576)",
+    "max_header_bytes_help": "Pyynnön otsakkeiden enimmäiskoko tavuina (Caddyn oletus: 16 KiB = 16384)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "Poista HTTP/3 käytöstä",
     "http3_help": "Caddy ottaa HTTP/1.1:n, HTTP/2:n ja HTTP/3:n oletuksena käyttöön aina, kun TLS on määritetty. HTTP/3 kulkee UDP:n yli samassa portissa kuin HTTPS — jos palomuuri estää UDP:n, sen poistaminen käytöstä tässä jättää käyttöön vain HTTP/1.1:n ja HTTP/2:n."

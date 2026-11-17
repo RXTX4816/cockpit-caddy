@@ -231,16 +231,19 @@
   "transport": {
     "section_title": "מגבלות זמן ל-upstream (אופציונלי)",
     "dial_timeout": "מגבלת זמן להתחברות",
-    "response_header_timeout": "מגבלת זמן לכותרות התגובה"
+    "response_header_timeout": "מגבלת זמן לכותרות התגובה",
+    "defaults_help": "השאירו שדה ריק כדי להשתמש בברירת המחדל של Caddy, המוצגת באפור. מגבלת זמן לכותרות התגובה קוטעת long polling ותגובות איטיות."
   },
   "server_timeouts": {
     "section_title": "מגבלות זמן ומגבלות שרת (אופציונלי)",
+    "defaults_help": "השאירו שדה ריק כדי להשתמש בברירת המחדל של Caddy, המוצגת באפור. מגבלת זמן לקריאת גוף הבקשה או לכתיבה קוטעת כל העלאה או הורדה שנמשכת יותר.",
+    "no_timeout": "ללא",
     "read_timeout": "מגבלת זמן לקריאת הגוף",
     "read_header_timeout": "מגבלת זמן לקריאת הכותרות",
     "write_timeout": "מגבלת זמן לכתיבה",
     "idle_timeout": "מגבלת זמן לחוסר פעילות",
     "max_header_bytes": "גודל כותרות מרבי (בייטים)",
-    "max_header_bytes_help": "הגודל המרבי של כותרות הבקשה בבייטים (ברירת מחדל: ‎1 MB = 1048576)",
+    "max_header_bytes_help": "הגודל המרבי של כותרות הבקשה בבתים (ברירת המחדל של Caddy:‏ 16 KiB = 16384)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "השבתת HTTP/3",
     "http3_help": "Caddy מפעיל כברירת מחדל HTTP/1.1, ‏HTTP/2 ו-HTTP/3 כשמוגדר TLS. HTTP/3 רץ על UDP באותו פורט כמו HTTPS — אם חומת האש חוסמת UDP, השבתה כאן תשאיר רק HTTP/1.1 ו-HTTP/2."

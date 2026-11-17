@@ -231,16 +231,19 @@
   "transport": {
     "section_title": "上游超时（可选）",
     "dial_timeout": "连接超时",
-    "response_header_timeout": "响应头超时"
+    "response_header_timeout": "响应头超时",
+    "defaults_help": "留空即使用 Caddy 的默认值（以灰色显示）。响应头超时会中断长轮询和较慢的响应。"
   },
   "server_timeouts": {
     "section_title": "服务器超时与限制（可选）",
+    "defaults_help": "留空即使用 Caddy 的默认值（以灰色显示）。设置读取请求体或写入超时后，任何耗时更长的上传或下载都会被中断。",
+    "no_timeout": "无",
     "read_timeout": "读取正文超时",
     "read_header_timeout": "读取请求头超时",
     "write_timeout": "写入超时",
     "idle_timeout": "空闲超时",
     "max_header_bytes": "最大请求头大小（字节）",
-    "max_header_bytes_help": "请求头的最大大小，以字节为单位（默认：1 MB = 1048576）",
+    "max_header_bytes_help": "请求头的最大大小（字节，Caddy 默认值：16 KiB = 16384）",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "禁用 HTTP/3",
     "http3_help": "只要配置了 TLS，Caddy 默认会启用 HTTP/1.1、HTTP/2 和 HTTP/3。HTTP/3 通过 UDP 在与 HTTPS 相同的端口上运行——如果防火墙阻止了 UDP，在此禁用后将只使用 HTTP/1.1 和 HTTP/2。"

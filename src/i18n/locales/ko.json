@@ -231,16 +231,19 @@
   "transport": {
     "section_title": "업스트림 시간 제한(선택)",
     "dial_timeout": "연결 시간 제한",
-    "response_header_timeout": "응답 헤더 시간 제한"
+    "response_header_timeout": "응답 헤더 시간 제한",
+    "defaults_help": "필드를 비워 두면 회색으로 표시된 Caddy 기본값이 사용됩니다. 응답 헤더 타임아웃은 롱 폴링과 느린 응답을 끊습니다."
   },
   "server_timeouts": {
     "section_title": "서버 시간 제한 및 한도(선택)",
+    "defaults_help": "필드를 비워 두면 회색으로 표시된 Caddy 기본값이 사용됩니다. 본문 읽기 또는 쓰기 타임아웃은 그보다 오래 걸리는 모든 업로드나 다운로드를 끊습니다.",
+    "no_timeout": "없음",
     "read_timeout": "본문 읽기 시간 제한",
     "read_header_timeout": "헤더 읽기 시간 제한",
     "write_timeout": "쓰기 시간 제한",
     "idle_timeout": "유휴 시간 제한",
     "max_header_bytes": "최대 헤더 크기(바이트)",
-    "max_header_bytes_help": "요청 헤더의 최대 크기(바이트, 기본값: 1 MB = 1048576)",
+    "max_header_bytes_help": "요청 헤더의 최대 크기(바이트, Caddy 기본값: 16 KiB = 16384)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "HTTP/3 사용 안 함",
     "http3_help": "Caddy는 TLS가 설정되면 기본적으로 HTTP/1.1, HTTP/2, HTTP/3을 사용합니다. HTTP/3은 HTTPS와 같은 포트의 UDP로 동작하므로, 방화벽이 UDP를 차단한다면 여기서 끄면 HTTP/1.1과 HTTP/2만 사용합니다."
