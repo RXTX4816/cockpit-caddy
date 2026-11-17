@@ -4336,7 +4336,7 @@ describe("JSON push keeps the rest of apps.tls (#253)", () => {
     const out = mergeProxy(config, proxy({ externalPort: 7700, tls: true }));
     const tls = out.apps?.tls as { automation?: { on_demand?: unknown; policies?: Array<{ subjects?: string[]; on_demand?: boolean }> } };
     expect(tls.automation?.on_demand).toEqual({ permission });
-    expect(tls.automation?.policies?.some(p => p.subjects?.includes("od.example.com") && p.on_demand)).toBe(true);
+    expect(tls.automation?.policies?.some(p => p.subjects?.some(s => s === "od.example.com") && p.on_demand)).toBe(true);
   });
 });
 
