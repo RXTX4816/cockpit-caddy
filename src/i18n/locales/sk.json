@@ -20,7 +20,8 @@
   },
   "app": {
     "title": "Caddy",
-    "loading": "Pripája sa k Caddy…"
+    "loading": "Pripája sa k Caddy…",
+    "tools": "Nástroje"
   },
   "service": {
     "running": "Beží",
@@ -50,27 +51,23 @@
     "confirm_reload_title": "Znova načítať konfiguráciu Caddy?",
     "confirm_reload_body": "Caddy znova načíta svoju konfiguráciu bez prerušenia existujúcich spojení.",
     "confirm_action": "Potvrdiť",
-    "reload_failed": "Konfiguráciu Caddy sa nepodarilo znova načítať"
+    "reload_failed": "Konfiguráciu Caddy sa nepodarilo znova načítať",
+    "action_failed": "Akcia služby zlyhala",
+    "more_actions": "Ďalšie akcie služby"
   },
   "proxies": {
     "title": "Reverse proxy",
     "empty_title": "Nie sú nastavené žiadne reverse proxy",
     "empty_body": "Pridajte proxy a sprístupnite lokálnu službu cez HTTPS.",
     "add_proxy": "Pridať proxy",
-    "add_redirect": "Pridať presmerovanie",
-    "add_static": "Pridať statický",
-    "add_respond": "Pridať odpoveď",
-    "add_php": "Pridať web PHP",
     "type_static": "Statický",
     "type_php": "PHP",
     "search_placeholder": "Hľadať proxy…",
     "col_port": "Externý port",
     "col_type": "Typ",
     "col_target": "Cieľ",
-    "col_tls": "TLS",
     "col_label": "Označenie",
     "col_actions": "Akcie",
-    "col_flags": "Vlastnosti",
     "type_proxy": "Proxy",
     "type_redirect": "Presmerovanie",
     "type_respond": "Odpoveď",
@@ -99,7 +96,16 @@
     "indicator_strip_prefix": "odstrániť prefix",
     "layout_list": "Zoznam",
     "layout_cards": "Karty",
-    "copy_label": "{{label}} (kópia)"
+    "copy_label": "{{label}} (kópia)",
+    "add_menu": "Ďalšie typy webov",
+    "col_address": "Adresa",
+    "indicator_named_route": "pomenovaná trasa",
+    "menu_proxy": "Reverzná proxy",
+    "menu_redirect": "Presmerovanie",
+    "menu_static": "Statické súbory",
+    "menu_respond": "Pevná odpoveď",
+    "menu_php": "Web v PHP",
+    "more_actions": "Ďalšie akcie"
   },
   "add_proxy": {
     "title": "Pridať reverse proxy",

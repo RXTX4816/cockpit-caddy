@@ -20,7 +20,8 @@
   },
   "app": {
     "title": "Caddy",
-    "loading": "Подключение к Caddy…"
+    "loading": "Подключение к Caddy…",
+    "tools": "Инструменты"
   },
   "service": {
     "running": "Работает",
@@ -50,27 +51,23 @@
     "confirm_reload_title": "Перезагрузить конфигурацию Caddy?",
     "confirm_reload_body": "Caddy перезагрузит конфигурацию, не прерывая существующие соединения.",
     "confirm_action": "Подтвердить",
-    "reload_failed": "Не удалось перезагрузить конфигурацию Caddy"
+    "reload_failed": "Не удалось перезагрузить конфигурацию Caddy",
+    "action_failed": "Не удалось выполнить действие со службой",
+    "more_actions": "Другие действия со службой"
   },
   "proxies": {
     "title": "Reverse proxy",
     "empty_title": "Reverse proxy не настроены",
     "empty_body": "Добавьте прокси, чтобы открыть доступ к локальной службе по HTTPS.",
     "add_proxy": "Добавить прокси",
-    "add_redirect": "Добавить перенаправление",
-    "add_static": "Добавить статику",
-    "add_respond": "Добавить ответ",
-    "add_php": "Добавить сайт PHP",
     "type_static": "Статика",
     "type_php": "PHP",
     "search_placeholder": "Поиск прокси…",
     "col_port": "Внешний порт",
     "col_type": "Тип",
     "col_target": "Цель",
-    "col_tls": "TLS",
     "col_label": "Метка",
     "col_actions": "Действия",
-    "col_flags": "Признаки",
     "type_proxy": "Прокси",
     "type_redirect": "Перенаправление",
     "type_respond": "Ответ",
@@ -99,7 +96,16 @@
     "indicator_strip_prefix": "удаление префикса",
     "layout_list": "Список",
     "layout_cards": "Карточки",
-    "copy_label": "{{label}} (копия)"
+    "copy_label": "{{label}} (копия)",
+    "add_menu": "Другие типы сайтов",
+    "col_address": "Адрес",
+    "indicator_named_route": "именованный маршрут",
+    "menu_proxy": "Обратный прокси",
+    "menu_redirect": "Перенаправление",
+    "menu_static": "Статические файлы",
+    "menu_respond": "Фиксированный ответ",
+    "menu_php": "Сайт на PHP",
+    "more_actions": "Другие действия"
   },
   "add_proxy": {
     "title": "Добавить reverse proxy",

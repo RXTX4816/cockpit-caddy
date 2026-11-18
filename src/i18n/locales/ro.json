@@ -20,7 +20,8 @@
   },
   "app": {
     "title": "Caddy",
-    "loading": "Se conectează la Caddy…"
+    "loading": "Se conectează la Caddy…",
+    "tools": "Instrumente"
   },
   "service": {
     "running": "Rulează",
@@ -50,27 +51,23 @@
     "confirm_reload_title": "Reîncarci configurația Caddy?",
     "confirm_reload_body": "Caddy își va reîncărca configurația fără a întrerupe conexiunile existente.",
     "confirm_action": "Confirmă",
-    "reload_failed": "Reîncărcarea configurației Caddy a eșuat"
+    "reload_failed": "Reîncărcarea configurației Caddy a eșuat",
+    "action_failed": "Acțiunea serviciului a eșuat",
+    "more_actions": "Mai multe acțiuni pentru serviciu"
   },
   "proxies": {
     "title": "Reverse proxy-uri",
     "empty_title": "Niciun reverse proxy configurat",
     "empty_body": "Adaugă un proxy pentru a expune un serviciu local prin HTTPS.",
     "add_proxy": "Adaugă proxy",
-    "add_redirect": "Adaugă redirecționare",
-    "add_static": "Adaugă static",
-    "add_respond": "Adaugă răspuns",
-    "add_php": "Adaugă site PHP",
     "type_static": "Static",
     "type_php": "PHP",
     "search_placeholder": "Caută proxy-uri…",
     "col_port": "Port extern",
     "col_type": "Tip",
     "col_target": "Țintă",
-    "col_tls": "TLS",
     "col_label": "Etichetă",
     "col_actions": "Acțiuni",
-    "col_flags": "Opțiuni",
     "type_proxy": "Proxy",
     "type_redirect": "Redirecționare",
     "type_respond": "Răspuns",
@@ -99,7 +96,16 @@
     "indicator_strip_prefix": "elimină prefixul",
     "layout_list": "Listă",
     "layout_cards": "Carduri",
-    "copy_label": "{{label}} (copie)"
+    "copy_label": "{{label}} (copie)",
+    "add_menu": "Alte tipuri de site",
+    "col_address": "Adresă",
+    "indicator_named_route": "rută cu nume",
+    "menu_proxy": "Proxy invers",
+    "menu_redirect": "Redirecționare",
+    "menu_static": "Fișiere statice",
+    "menu_respond": "Răspuns fix",
+    "menu_php": "Site PHP",
+    "more_actions": "Mai multe acțiuni"
   },
   "add_proxy": {
     "title": "Adaugă reverse proxy",

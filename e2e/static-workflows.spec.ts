@@ -2,12 +2,12 @@
  * Static file-server route CRUD workflows.
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { readConf, addRedirect, addStatic, writeFile, spawnCmd } from './helpers';
+import { readConf, addRedirect, addStatic, writeFile, spawnCmd, openAddMenu, rowAction } from './helpers';
 import { curlStatus, waitForListener } from './live';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
   await dismissAdminBanner(page);
-  await page.getByRole('button', { name: /add static/i }).first().waitFor({ state: 'visible', timeout: 15000 });
+  await page.getByRole('button', { name: 'More site types' }).waitFor({ state: 'visible', timeout: 15000 });
 }
 
 /** Finds the DataList row for a given port (scopes by the anchor element id). */
@@ -23,7 +23,7 @@ async function addStaticViaUI(
   port: number,
   root: string,
 ) {
-  await page.getByRole('button', { name: /add static/i }).first().click();
+  await openAddMenu(page, 'Static files');
   const modal = page.getByRole('dialog');
   await modal.locator('#static-port').fill(String(port));
   await modal.locator('#static-root').fill(root);
@@ -90,7 +90,7 @@ test('delete static site removes it from the list and the Caddyfile', async ({ p
   await addStaticViaUI(page, 19163, '/var/www/e2e-19163');
   await expect(page.getByRole('link', { name: ':19163' })).toBeVisible();
 
-  await proxyRow(page, 19163).getByRole('button', { name: /^delete$/i }).click();
+  await rowAction(proxyRow(page, 19163), 'Delete');
   const confirmModal = page.getByRole('dialog');
   await confirmModal.getByRole('button', { name: /^delete$/i }).click();
   await expect(page.getByRole('link', { name: ':19163' })).not.toBeVisible({ timeout: 10000 });
@@ -131,7 +131,7 @@ test('static site on a port already used by a redirect is rejected', async ({ pl
   await waitForToolbar(page);
   await addRedirect(page, { port: 19166, to: 'https://example.test/' });
 
-  await page.getByRole('button', { name: /add static/i }).first().click();
+  await openAddMenu(page, 'Static files');
   const modal = page.getByRole('dialog');
   await modal.locator('#static-port').fill('19166');
   await modal.locator('#static-root').fill('/var/www/e2e-19166');

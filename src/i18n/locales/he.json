@@ -20,7 +20,8 @@
   },
   "app": {
     "title": "Caddy",
-    "loading": "מתחבר ל-Caddy…"
+    "loading": "מתחבר ל-Caddy…",
+    "tools": "כלים"
   },
   "service": {
     "running": "פועל",
@@ -50,27 +51,23 @@
     "confirm_reload_title": "לטעון מחדש את תצורת Caddy?",
     "confirm_reload_body": "Caddy יטען מחדש את התצורה שלו בלי לנתק חיבורים קיימים.",
     "confirm_action": "אישור",
-    "reload_failed": "טעינה מחדש של תצורת Caddy נכשלה"
+    "reload_failed": "טעינה מחדש של תצורת Caddy נכשלה",
+    "action_failed": "פעולת השירות נכשלה",
+    "more_actions": "פעולות שירות נוספות"
   },
   "proxies": {
     "title": "Reverse proxies",
     "empty_title": "לא הוגדרו reverse proxies",
     "empty_body": "הוספת פרוקסי חושפת שירות מקומי דרך HTTPS.",
     "add_proxy": "הוספת פרוקסי",
-    "add_redirect": "הוספת הפניה",
-    "add_static": "הוספת אתר סטטי",
-    "add_respond": "הוספת תגובה",
-    "add_php": "הוספת אתר PHP",
     "type_static": "סטטי",
     "type_php": "PHP",
     "search_placeholder": "חיפוש פרוקסי…",
     "col_port": "פורט חיצוני",
     "col_type": "סוג",
     "col_target": "יעד",
-    "col_tls": "TLS",
     "col_label": "תווית",
     "col_actions": "פעולות",
-    "col_flags": "מאפיינים",
     "type_proxy": "פרוקסי",
     "type_redirect": "הפניה",
     "type_respond": "תגובה",
@@ -99,7 +96,16 @@
     "indicator_strip_prefix": "הסרת קידומת",
     "layout_list": "רשימה",
     "layout_cards": "כרטיסים",
-    "copy_label": "{{label}} (עותק)"
+    "copy_label": "{{label}} (עותק)",
+    "add_menu": "סוגי אתרים נוספים",
+    "col_address": "כתובת",
+    "indicator_named_route": "נתיב בעל שם",
+    "menu_proxy": "פרוקסי הפוך",
+    "menu_redirect": "הפניה",
+    "menu_static": "קבצים סטטיים",
+    "menu_respond": "תגובה קבועה",
+    "menu_php": "אתר PHP",
+    "more_actions": "פעולות נוספות"
   },
   "add_proxy": {
     "title": "הוספת reverse proxy",

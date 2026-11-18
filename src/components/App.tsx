@@ -3,11 +3,15 @@ import { useTranslation } from "react-i18next";
 import {
   Alert,
   Button,
+  Dropdown,
+  DropdownItem,
+  DropdownList,
   Content,
   EmptyState,
   EmptyStateBody,
   ExpandableSection,
   Label,
+  MenuToggle,
   PageSection,
   Spinner,
   Stack,
@@ -16,6 +20,7 @@ import {
   Tabs,
   TabTitleText,
   Title,
+  Tooltip,
 } from "@patternfly/react-core";
 import CogIcon from "@patternfly/react-icons/dist/esm/icons/cog-icon";
 import WrenchIcon from "@patternfly/react-icons/dist/esm/icons/wrench-icon";
@@ -48,6 +53,7 @@ function AppInner() {
   const modals = useDialogState<AppModals>(["backup", "restore", "adminAddress", "ca", "acme", "configCheck"]);
 
   const [activeTab, setActiveTab] = useState(0);
+  const [toolsOpen, setToolsOpen] = useState(false);
   const [adminBypass, setAdminBypass] = useState(false);
   const [logsSearch, setLogsSearch] = useState("");
 
@@ -104,13 +110,29 @@ function AppInner() {
                 onRefresh={refresh}
                 unmanaged={unmanaged}
                 extraActions={
-                  <div style={{ display: "flex", gap: "0.5rem" }}>
-                    <Button variant="secondary" size="sm" icon={<WrenchIcon />} onClick={() => modals.open("configCheck")}>{t("config_check.button")}</Button>
-                    <Button variant="secondary" size="sm" onClick={() => modals.open("backup")}>{t("backup.button")}</Button>
-                    <Button variant="secondary" size="sm" onClick={() => modals.open("restore")}>{t("restore.button")}</Button>
-                    <Button variant="secondary" size="sm" onClick={() => modals.open("ca")}>{t("ca.button")}</Button>
-                    <Button variant="secondary" size="sm" onClick={() => modals.open("acme")}>{t("acme.button")}</Button>
-                    <Button variant="plain" size="sm" aria-label={t("admin_address.title")} onClick={() => modals.open("adminAddress")}><CogIcon /></Button>
+                  <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                    <Dropdown
+                      isOpen={toolsOpen}
+                      onOpenChange={setToolsOpen}
+                      onSelect={() => setToolsOpen(false)}
+                      popperProps={{ position: "right" }}
+                      toggle={ref => (
+                        <MenuToggle ref={ref} size="sm" variant="secondary" icon={<WrenchIcon />} isExpanded={toolsOpen} onClick={() => setToolsOpen(o => !o)}>
+                          {t("app.tools")}
+                        </MenuToggle>
+                      )}
+                    >
+                      <DropdownList>
+                        <DropdownItem onClick={() => modals.open("configCheck")}>{t("config_check.button")}</DropdownItem>
+                        <DropdownItem onClick={() => modals.open("backup")}>{t("backup.button")}</DropdownItem>
+                        <DropdownItem onClick={() => modals.open("restore")}>{t("restore.button")}</DropdownItem>
+                        <DropdownItem onClick={() => modals.open("ca")}>{t("ca.button")}</DropdownItem>
+                        <DropdownItem onClick={() => modals.open("acme")}>{t("acme.button")}</DropdownItem>
+                      </DropdownList>
+                    </Dropdown>
+                    <Tooltip content={t("admin_address.title")}>
+                      <Button variant="plain" size="sm" aria-label={t("admin_address.title")} icon={<CogIcon />} onClick={() => modals.open("adminAddress")} />
+                    </Tooltip>
                   </div>
                 }
               />

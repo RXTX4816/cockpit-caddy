@@ -20,7 +20,8 @@
   },
   "app": {
     "title": "Caddy",
-    "loading": "Підключення до Caddy…"
+    "loading": "Підключення до Caddy…",
+    "tools": "Інструменти"
   },
   "service": {
     "running": "Працює",
@@ -50,27 +51,23 @@
     "confirm_reload_title": "Перезавантажити конфігурацію Caddy?",
     "confirm_reload_body": "Caddy перезавантажить конфігурацію, не перериваючи наявних з'єднань.",
     "confirm_action": "Підтвердити",
-    "reload_failed": "Не вдалося перезавантажити конфігурацію Caddy"
+    "reload_failed": "Не вдалося перезавантажити конфігурацію Caddy",
+    "action_failed": "Не вдалося виконати дію зі службою",
+    "more_actions": "Інші дії зі службою"
   },
   "proxies": {
     "title": "Reverse proxy",
     "empty_title": "Reverse proxy не налаштовано",
     "empty_body": "Додайте проксі, щоб відкрити доступ до локальної служби через HTTPS.",
     "add_proxy": "Додати проксі",
-    "add_redirect": "Додати переспрямування",
-    "add_static": "Додати статику",
-    "add_respond": "Додати відповідь",
-    "add_php": "Додати сайт PHP",
     "type_static": "Статика",
     "type_php": "PHP",
     "search_placeholder": "Пошук проксі…",
     "col_port": "Зовнішній порт",
     "col_type": "Тип",
     "col_target": "Ціль",
-    "col_tls": "TLS",
     "col_label": "Мітка",
     "col_actions": "Дії",
-    "col_flags": "Ознаки",
     "type_proxy": "Проксі",
     "type_redirect": "Переспрямування",
     "type_respond": "Відповідь",
@@ -99,7 +96,16 @@
     "indicator_strip_prefix": "вилучення префікса",
     "layout_list": "Список",
     "layout_cards": "Картки",
-    "copy_label": "{{label}} (копія)"
+    "copy_label": "{{label}} (копія)",
+    "add_menu": "Інші типи сайтів",
+    "col_address": "Адреса",
+    "indicator_named_route": "іменований маршрут",
+    "menu_proxy": "Зворотний проксі",
+    "menu_redirect": "Переспрямування",
+    "menu_static": "Статичні файли",
+    "menu_respond": "Фіксована відповідь",
+    "menu_php": "Сайт на PHP",
+    "more_actions": "Інші дії"
   },
   "add_proxy": {
     "title": "Додати reverse proxy",

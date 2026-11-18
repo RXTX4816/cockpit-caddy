@@ -20,7 +20,8 @@
   },
   "app": {
     "title": "Caddy",
-    "loading": "正在连接 Caddy…"
+    "loading": "正在连接 Caddy…",
+    "tools": "工具"
   },
   "service": {
     "running": "运行中",
@@ -50,27 +51,23 @@
     "confirm_reload_title": "重新加载 Caddy 配置？",
     "confirm_reload_body": "Caddy 将重新加载配置，不会中断现有连接。",
     "confirm_action": "确认",
-    "reload_failed": "重新加载 Caddy 配置失败"
+    "reload_failed": "重新加载 Caddy 配置失败",
+    "action_failed": "服务操作失败",
+    "more_actions": "更多服务操作"
   },
   "proxies": {
     "title": "反向代理",
     "empty_title": "尚未配置反向代理",
     "empty_body": "添加代理，通过 HTTPS 公开本地服务。",
     "add_proxy": "添加代理",
-    "add_redirect": "添加重定向",
-    "add_static": "添加静态站点",
-    "add_respond": "添加响应",
-    "add_php": "添加 PHP 站点",
     "type_static": "静态",
     "type_php": "PHP",
     "search_placeholder": "搜索代理…",
     "col_port": "外部端口",
     "col_type": "类型",
     "col_target": "目标",
-    "col_tls": "TLS",
     "col_label": "标签",
     "col_actions": "操作",
-    "col_flags": "特性",
     "type_proxy": "代理",
     "type_redirect": "重定向",
     "type_respond": "响应",
@@ -99,7 +96,16 @@
     "indicator_strip_prefix": "去除前缀",
     "layout_list": "列表",
     "layout_cards": "卡片",
-    "copy_label": "{{label}}（副本）"
+    "copy_label": "{{label}}（副本）",
+    "add_menu": "更多站点类型",
+    "col_address": "地址",
+    "indicator_named_route": "命名路由",
+    "menu_proxy": "反向代理",
+    "menu_redirect": "重定向",
+    "menu_static": "静态文件",
+    "menu_respond": "固定响应",
+    "menu_php": "PHP 站点",
+    "more_actions": "更多操作"
   },
   "add_proxy": {
     "title": "添加反向代理",

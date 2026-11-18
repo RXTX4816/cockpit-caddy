@@ -22,6 +22,7 @@ import {
 import { useTranslation } from "react-i18next";
 import type { ProxyEntry, RouteMatch, ServerDef } from "../api";
 import { hasAnyMatcher } from "../api";
+import { RowActions } from "./RowActions";
 import { UpstreamStatusDot } from "./UpstreamStatusDot";
 import { parseListenPort } from "./AddServerDialog";
 import { buildRouteUrl, resolveRouteHost } from "./routeUrl";
@@ -90,11 +91,14 @@ function FlagChips({ proxy, t }: { proxy: ProxyEntry; t: (k: string) => string }
   if (proxy.handlePath) chips.push({ label: t("proxies.indicator_strip_prefix"), color: "teal" });
   if (chips.length === 0) return null;
   return (
-    <div style={{ display: "flex", gap: "0.2rem", flexWrap: "wrap", marginTop: "0.25rem" }}>
+    <span style={{ display: "inline-flex", gap: "0.2rem", flexWrap: "nowrap", marginLeft: "0.35rem", verticalAlign: "middle" }}>
       {chips.map(c => <Label key={c.label} isCompact color={c.color} variant="outline">{c.label}</Label>)}
-    </div>
+    </span>
   );
 }
+
+/** Cells stay one line high (#259); long content is cut with an ellipsis. */
+const ONE_LINE = { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } as const;
 
 // ---------------------------------------------------------------------------
 // Route row
@@ -124,7 +128,7 @@ function ServerRouteRow({ proxy, serverTls, serverPort, onEdit, onDelete, onDupl
   ) : proxy.fileServer ? (
     <code style={{ fontSize: "0.85em" }}>{proxy.fileServer.root}</code>
   ) : (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", flexWrap: "wrap" }}>
+    <span style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", flexWrap: "nowrap" }}>
       {(() => {
         const key = `${proxy.targetHost}:${proxy.targetPort}`;
         const status = probeStatuses.get(key);
@@ -154,10 +158,10 @@ function ServerRouteRow({ proxy, serverTls, serverPort, onEdit, onDelete, onDupl
     <DataListItem aria-labelledby={`srv-route-${proxy.id}`}>
       <DataListItemRow>
         <DataListItemCells dataListCells={[
-          <DataListCell key="matcher" width={2}>
+          <DataListCell key="matcher" width={2} style={ONE_LINE}>
             <MatcherCell matchers={proxy.matchers} />
           </DataListCell>,
-          <DataListCell key="label" width={2}>
+          <DataListCell key="label" width={2} style={ONE_LINE}>
             <span id={`srv-route-${proxy.id}`}>
               {proxy.label
                 ? <strong>{proxy.label}</strong>
@@ -168,10 +172,10 @@ function ServerRouteRow({ proxy, serverTls, serverPort, onEdit, onDelete, onDupl
           <DataListCell key="type" width={1}>
             <Label color={et.color} isCompact>{et.label}</Label>
           </DataListCell>,
-          <DataListCell key="target" width={3}>
+          <DataListCell key="target" width={3} style={ONE_LINE}>
             {targetCell}
           </DataListCell>,
-          <DataListCell key="port" width={1}>
+          <DataListCell key="port" width={1} style={ONE_LINE}>
             <a
               href={routeUrl}
               target="_blank"
@@ -182,12 +186,8 @@ function ServerRouteRow({ proxy, serverTls, serverPort, onEdit, onDelete, onDupl
               :{serverPort}{proxy.matchers?.path?.[0] ? proxy.matchers.path[0].replace(/\*$/, "…") : "/"}
             </a>
           </DataListCell>,
-          <DataListCell key="actions" width={1}>
-            <Button variant="plain" size="sm" onClick={() => onEdit(proxy)}>{t("common.edit")}</Button>
-            {" "}
-            <Button variant="plain" size="sm" onClick={() => onDuplicate(proxy)}>{t("common.duplicate")}</Button>
-            {" "}
-            <Button variant="plain" size="sm" isDanger onClick={() => onDelete(proxy)}>{t("common.delete")}</Button>
+          <DataListCell key="actions" width={1} style={{ textAlign: "end" }}>
+            <RowActions onEdit={() => onEdit(proxy)} onDuplicate={() => onDuplicate(proxy)} onDelete={() => onDelete(proxy)} />
           </DataListCell>,
         ]} />
       </DataListItemRow>

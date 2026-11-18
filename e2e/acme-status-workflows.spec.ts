@@ -9,7 +9,7 @@
  * internet-reachable domain, no port 80/443 exposure for an HTTP-01 challenge).
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { CONF_HEADER, readConf } from './helpers';
+import { CONF_HEADER, readConf, openTool } from './helpers';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
   await dismissAdminBanner(page);
@@ -39,7 +39,7 @@ test('classifies a bare public hostname as using Caddy default automatic HTTPS',
     '',
   ].join('\n'));
 
-  await page.getByRole('button', { name: /acme.*let.?s encrypt/i }).click();
+  await openTool(page, /acme.*let.?s encrypt/i);
   const modal = page.getByRole('dialog');
   const row = modal.locator('li').filter({ hasText: 'default-acme.example.test' });
   await expect(row).toContainText("Let's Encrypt");
@@ -57,7 +57,7 @@ test('classifies an internal-CA (self-signed) hostname distinctly', async ({ plu
     '',
   ].join('\n'));
 
-  await page.getByRole('button', { name: /acme.*let.?s encrypt/i }).click();
+  await openTool(page, /acme.*let.?s encrypt/i);
   const modal = page.getByRole('dialog');
   const row = modal.locator('li').filter({ hasText: 'selfsigned.example.test' });
   await expect(row).toContainText('Internal CA');
@@ -74,7 +74,7 @@ test('classifies an explicit http:// hostname as no TLS', async ({ pluginPage: p
     '',
   ].join('\n'));
 
-  await page.getByRole('button', { name: /acme.*let.?s encrypt/i }).click();
+  await openTool(page, /acme.*let.?s encrypt/i);
   const modal = page.getByRole('dialog');
   const row = modal.locator('li').filter({ hasText: 'plain.example.test' });
   await expect(row).toContainText('No TLS');
@@ -82,7 +82,7 @@ test('classifies an explicit http:// hostname as no TLS', async ({ pluginPage: p
 
 test('shows the empty state when no public hostnames are configured', async ({ pluginPage: page }) => {
   await waitForToolbar(page);
-  await page.getByRole('button', { name: /acme.*let.?s encrypt/i }).click();
+  await openTool(page, /acme.*let.?s encrypt/i);
   const modal = page.getByRole('dialog');
   await expect(modal.getByText(/no hostnames were found/i)).toBeVisible({ timeout: 10000 });
 });
@@ -107,7 +107,7 @@ test('a default-ACME host stays classified as Caddy default even alongside an in
     '',
   ].join('\n'));
 
-  await page.getByRole('button', { name: /acme.*let.?s encrypt/i }).click();
+  await openTool(page, /acme.*let.?s encrypt/i);
   const modal = page.getByRole('dialog');
   const acmeRow = modal.locator('li').filter({ hasText: 'default-acme.example.test' });
   await expect(acmeRow).toContainText("Let's Encrypt");

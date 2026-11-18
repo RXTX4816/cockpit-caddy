@@ -6,7 +6,7 @@
  * the proxy list state and the raw cockpit-caddy.conf content.
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { readConf, spawnCmd, CONF_HEADER } from './helpers';
+import { readConf, spawnCmd, CONF_HEADER, rowAction } from './helpers';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
   await dismissAdminBanner(page);
@@ -94,7 +94,7 @@ test('delete proxy removes it from the list and the Caddyfile', async ({ pluginP
   await expect(page.getByRole('link', { name: ':19105' })).toBeVisible();
 
   // Delete
-  await proxyRow(page, 19105).getByRole('button', { name: /^delete$/i }).click();
+  await rowAction(proxyRow(page, 19105), 'Delete');
   const confirmModal = page.getByRole('dialog');
   await confirmModal.getByRole('button', { name: /^delete$/i }).click();
   await expect(page.getByRole('link', { name: ':19105' })).not.toBeVisible({ timeout: 10000 });
@@ -108,7 +108,7 @@ test('duplicate proxy opens prefilled dialog that creates a distinct new entry',
   await addProxyViaUI(page, 19106, { host: 'localhost', port: 3006 });
 
   // Duplicate
-  await proxyRow(page, 19106).getByRole('button', { name: /^duplicate$/i }).click();
+  await rowAction(proxyRow(page, 19106), 'Duplicate');
   const modal = page.getByRole('dialog');
   // Port field starts empty for duplicates — fill a distinct port
   await modal.getByLabel('External port').fill('19107');

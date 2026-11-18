@@ -20,7 +20,8 @@
   },
   "app": {
     "title": "Caddy",
-    "loading": "Łączenie z Caddy…"
+    "loading": "Łączenie z Caddy…",
+    "tools": "Narzędzia"
   },
   "service": {
     "running": "Działa",
@@ -50,27 +51,23 @@
     "confirm_reload_title": "Przeładować konfigurację Caddy?",
     "confirm_reload_body": "Caddy przeładuje konfigurację bez przerywania istniejących połączeń.",
     "confirm_action": "Potwierdź",
-    "reload_failed": "Nie udało się przeładować konfiguracji Caddy"
+    "reload_failed": "Nie udało się przeładować konfiguracji Caddy",
+    "action_failed": "Działanie usługi nie powiodło się",
+    "more_actions": "Więcej działań usługi"
   },
   "proxies": {
     "title": "Reverse proxy",
     "empty_title": "Brak skonfigurowanych reverse proxy",
     "empty_body": "Dodaj proxy, aby udostępnić lokalną usługę przez HTTPS.",
     "add_proxy": "Dodaj proxy",
-    "add_redirect": "Dodaj przekierowanie",
-    "add_static": "Dodaj statyczny",
-    "add_respond": "Dodaj odpowiedź",
-    "add_php": "Dodaj witrynę PHP",
     "type_static": "Statyczny",
     "type_php": "PHP",
     "search_placeholder": "Szukaj proxy…",
     "col_port": "Port zewnętrzny",
     "col_type": "Typ",
     "col_target": "Cel",
-    "col_tls": "TLS",
     "col_label": "Etykieta",
     "col_actions": "Akcje",
-    "col_flags": "Cechy",
     "type_proxy": "Proxy",
     "type_redirect": "Przekierowanie",
     "type_respond": "Odpowiedź",
@@ -99,7 +96,16 @@
     "indicator_strip_prefix": "usuń prefiks",
     "layout_list": "Lista",
     "layout_cards": "Karty",
-    "copy_label": "{{label}} (kopia)"
+    "copy_label": "{{label}} (kopia)",
+    "add_menu": "Inne typy witryn",
+    "col_address": "Adres",
+    "indicator_named_route": "nazwana trasa",
+    "menu_proxy": "Odwrotne proxy",
+    "menu_redirect": "Przekierowanie",
+    "menu_static": "Pliki statyczne",
+    "menu_respond": "Stała odpowiedź",
+    "menu_php": "Witryna PHP",
+    "more_actions": "Więcej działań"
   },
   "add_proxy": {
     "title": "Dodaj reverse proxy",

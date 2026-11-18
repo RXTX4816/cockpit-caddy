@@ -20,7 +20,8 @@
   },
   "app": {
     "title": "Caddy",
-    "loading": "Připojování ke Caddy…"
+    "loading": "Připojování ke Caddy…",
+    "tools": "Nástroje"
   },
   "service": {
     "running": "Běží",
@@ -50,27 +51,23 @@
     "confirm_reload_title": "Znovu načíst konfiguraci Caddy?",
     "confirm_reload_body": "Caddy znovu načte svou konfiguraci bez přerušení existujících spojení.",
     "confirm_action": "Potvrdit",
-    "reload_failed": "Konfiguraci Caddy se nepodařilo znovu načíst"
+    "reload_failed": "Konfiguraci Caddy se nepodařilo znovu načíst",
+    "action_failed": "Akce služby selhala",
+    "more_actions": "Další akce služby"
   },
   "proxies": {
     "title": "Reverse proxy",
     "empty_title": "Nejsou nastavené žádné reverse proxy",
     "empty_body": "Přidejte proxy a zpřístupněte místní službu přes HTTPS.",
     "add_proxy": "Přidat proxy",
-    "add_redirect": "Přidat přesměrování",
-    "add_static": "Přidat statický",
-    "add_respond": "Přidat odpověď",
-    "add_php": "Přidat web PHP",
     "type_static": "Statický",
     "type_php": "PHP",
     "search_placeholder": "Hledat proxy…",
     "col_port": "Externí port",
     "col_type": "Typ",
     "col_target": "Cíl",
-    "col_tls": "TLS",
     "col_label": "Popisek",
     "col_actions": "Akce",
-    "col_flags": "Vlastnosti",
     "type_proxy": "Proxy",
     "type_redirect": "Přesměrování",
     "type_respond": "Odpověď",
@@ -99,7 +96,16 @@
     "indicator_strip_prefix": "odebrat prefix",
     "layout_list": "Seznam",
     "layout_cards": "Karty",
-    "copy_label": "{{label}} (kopie)"
+    "copy_label": "{{label}} (kopie)",
+    "add_menu": "Další typy webů",
+    "col_address": "Adresa",
+    "indicator_named_route": "pojmenovaná trasa",
+    "menu_proxy": "Reverzní proxy",
+    "menu_redirect": "Přesměrování",
+    "menu_static": "Statické soubory",
+    "menu_respond": "Pevná odpověď",
+    "menu_php": "Web v PHP",
+    "more_actions": "Další akce"
   },
   "add_proxy": {
     "title": "Přidat reverse proxy",

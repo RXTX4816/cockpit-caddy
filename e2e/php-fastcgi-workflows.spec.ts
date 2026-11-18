@@ -14,12 +14,12 @@
  * socket exists.
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { readConf, spawnCmd } from './helpers';
+import { readConf, spawnCmd, openAddMenu, rowAction } from './helpers';
 import { curlStatus } from './live';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
   await dismissAdminBanner(page);
-  await page.getByRole('button', { name: /add php site/i }).waitFor({ state: 'visible', timeout: 15000 });
+  await page.getByRole('button', { name: 'More site types' }).waitFor({ state: 'visible', timeout: 15000 });
 }
 
 function proxyRow(page: import('@playwright/test').Page, port: number) {
@@ -28,7 +28,7 @@ function proxyRow(page: import('@playwright/test').Page, port: number) {
 
 test('create PHP site writes a valid php_fastcgi Caddyfile block', async ({ pluginPage: page }) => {
   await waitForToolbar(page);
-  await page.getByRole('button', { name: /add php site/i }).click();
+  await openAddMenu(page, 'PHP site');
   const modal = page.getByRole('dialog');
   await modal.getByLabel(/listen port/i).fill('19300');
   await modal.getByLabel(/fastcgi upstream/i).fill('unix//run/php-fpm.sock');
@@ -47,7 +47,7 @@ test('create PHP site writes a valid php_fastcgi Caddyfile block', async ({ plug
 
 test('PHP site with custom index/split/env round-trips through a reload', async ({ pluginPage: page }) => {
   await waitForToolbar(page);
-  await page.getByRole('button', { name: /add php site/i }).click();
+  await openAddMenu(page, 'PHP site');
   const modal = page.getByRole('dialog');
   await modal.getByLabel(/listen port/i).fill('19301');
   await modal.getByLabel(/fastcgi upstream/i).fill('127.0.0.1:9000');
@@ -83,7 +83,7 @@ test('PHP site with custom index/split/env round-trips through a reload', async 
 
 test('editing a PHP site updates the Caddyfile block', async ({ pluginPage: page }) => {
   await waitForToolbar(page);
-  await page.getByRole('button', { name: /add php site/i }).click();
+  await openAddMenu(page, 'PHP site');
   const modal = page.getByRole('dialog');
   await modal.getByLabel(/listen port/i).fill('19302');
   await modal.getByLabel(/fastcgi upstream/i).fill('unix//run/php-fpm.sock');
@@ -106,7 +106,7 @@ test('editing a PHP site updates the Caddyfile block', async ({ pluginPage: page
 
 test('deleting a PHP site removes it from the list and the Caddyfile', async ({ pluginPage: page }) => {
   await waitForToolbar(page);
-  await page.getByRole('button', { name: /add php site/i }).click();
+  await openAddMenu(page, 'PHP site');
   const modal = page.getByRole('dialog');
   await modal.getByLabel(/listen port/i).fill('19303');
   await modal.getByLabel(/fastcgi upstream/i).fill('unix//run/php-fpm.sock');
@@ -115,7 +115,7 @@ test('deleting a PHP site removes it from the list and the Caddyfile', async ({ 
   await modal.getByRole('button', { name: /^confirm$/i }).click();
   await expect(modal).not.toBeVisible({ timeout: 15000 });
 
-  await proxyRow(page, 19303).getByRole('button', { name: /^delete$/i }).click();
+  await rowAction(proxyRow(page, 19303), 'Delete');
   const confirmModal = page.getByRole('dialog');
   await confirmModal.getByRole('button', { name: /^delete$/i }).click();
   await expect(page.getByRole('link', { name: ':19303' })).not.toBeVisible({ timeout: 10000 });
@@ -129,7 +129,7 @@ test('deleting a PHP site removes it from the list and the Caddyfile', async ({ 
 test('PHP site serves static files next to the PHP ones', async ({ pluginPage: page }) => {
   await spawnCmd(page, ['bash', '-c', 'mkdir -p /etc/caddy/e2e-php-19303 && echo "body{}" > /etc/caddy/e2e-php-19303/style.css && chmod -R a+rX /etc/caddy/e2e-php-19303']);
   await waitForToolbar(page);
-  await page.getByRole('button', { name: /add php site/i }).click();
+  await openAddMenu(page, 'PHP site');
   const modal = page.getByRole('dialog');
   await modal.getByLabel(/listen port/i).fill('19303');
   await modal.getByLabel(/fastcgi upstream/i).fill('127.0.0.1:9000');

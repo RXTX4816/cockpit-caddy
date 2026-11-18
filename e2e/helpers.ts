@@ -18,7 +18,7 @@
  *   19300–19308 named-server/php-fastcgi/migrate
  *   19330–19331 request-body-limit-workflows
  */
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 
 export const PROXY_CONF_PATH = '/etc/caddy/conf.d/cockpit-caddy.conf';
 export const CADDYFILE_PATH = '/etc/caddy/Caddyfile';
@@ -282,4 +282,26 @@ export async function baseData(
   const backend = await startHttpBackend(page, opts.backendPort);
   await addProxy(page, { port: opts.proxyPort, target: `localhost:${opts.backendPort}` });
   return backend;
+}
+
+// ---------------------------------------------------------------------------
+// Menus (#259): Add ▾, Tools ▾ and the row kebab
+// ---------------------------------------------------------------------------
+
+/** The Add split button's menu: 'Reverse proxy' | 'Redirect' | 'Static files' | 'Fixed response' | 'PHP site'. */
+export async function openAddMenu(page: Page, item: string | RegExp): Promise<void> {
+  await page.getByRole('button', { name: 'More site types' }).click();
+  await page.getByRole('menuitem', { name: item }).click();
+}
+
+/** The header's Tools menu: Check Config, Backup, Restore, Internal CA, ACME / Let's Encrypt. */
+export async function openTool(page: Page, item: string | RegExp): Promise<void> {
+  await page.getByRole('button', { name: 'Tools' }).click();
+  await page.getByRole('menuitem', { name: item }).click();
+}
+
+/** A site row's kebab: 'Duplicate' | 'Delete'. Edit stays a visible button named "Edit". */
+export async function rowAction(row: Locator, item: 'Duplicate' | 'Delete'): Promise<void> {
+  await row.getByRole('button', { name: 'More actions' }).click();
+  await row.page().getByRole('menuitem', { name: item }).click();
 }

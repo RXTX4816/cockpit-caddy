@@ -20,7 +20,8 @@
   },
   "app": {
     "title": "Caddy",
-    "loading": "Caddy-სთან დაკავშირება…"
+    "loading": "Caddy-სთან დაკავშირება…",
+    "tools": "ხელსაწყოები"
   },
   "service": {
     "running": "მუშაობს",
@@ -50,27 +51,23 @@
     "confirm_reload_title": "ხელახლა ჩაიტვირთოს Caddy-ის კონფიგურაცია?",
     "confirm_reload_body": "Caddy ხელახლა ჩატვირთავს კონფიგურაციას არსებული კავშირების გაწყვეტის გარეშე.",
     "confirm_action": "დადასტურება",
-    "reload_failed": "Caddy-ის კონფიგურაციის ხელახლა ჩატვირთვა ვერ მოხერხდა"
+    "reload_failed": "Caddy-ის კონფიგურაციის ხელახლა ჩატვირთვა ვერ მოხერხდა",
+    "action_failed": "სერვისის ქმედება ვერ შესრულდა",
+    "more_actions": "სერვისის სხვა ქმედებები"
   },
   "proxies": {
     "title": "Reverse proxy-ები",
     "empty_title": "reverse proxy-ები არ არის მორგებული",
     "empty_body": "დაამატეთ პროქსი, რომ ლოკალური სერვისი HTTPS-ით გახდეს ხელმისაწვდომი.",
     "add_proxy": "პროქსის დამატება",
-    "add_redirect": "გადამისამართების დამატება",
-    "add_static": "სტატიკურის დამატება",
-    "add_respond": "პასუხის დამატება",
-    "add_php": "PHP საიტის დამატება",
     "type_static": "სტატიკური",
     "type_php": "PHP",
     "search_placeholder": "პროქსების ძიება…",
     "col_port": "გარე პორტი",
     "col_type": "ტიპი",
     "col_target": "სამიზნე",
-    "col_tls": "TLS",
     "col_label": "იარლიყი",
     "col_actions": "მოქმედებები",
-    "col_flags": "თვისებები",
     "type_proxy": "პროქსი",
     "type_redirect": "გადამისამართება",
     "type_respond": "პასუხი",
@@ -99,7 +96,16 @@
     "indicator_strip_prefix": "პრეფიქსის მოცილება",
     "layout_list": "სია",
     "layout_cards": "ბარათები",
-    "copy_label": "{{label}} (ასლი)"
+    "copy_label": "{{label}} (ასლი)",
+    "add_menu": "საიტის სხვა ტიპები",
+    "col_address": "მისამართი",
+    "indicator_named_route": "სახელიანი მარშრუტი",
+    "menu_proxy": "უკუპროქსი",
+    "menu_redirect": "გადამისამართება",
+    "menu_static": "სტატიკური ფაილები",
+    "menu_respond": "ფიქსირებული პასუხი",
+    "menu_php": "PHP საიტი",
+    "more_actions": "სხვა ქმედებები"
   },
   "add_proxy": {
     "title": "reverse proxy-ის დამატება",

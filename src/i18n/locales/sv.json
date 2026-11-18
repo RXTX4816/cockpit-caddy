@@ -20,7 +20,8 @@
   },
   "app": {
     "title": "Caddy",
-    "loading": "Ansluter till Caddy…"
+    "loading": "Ansluter till Caddy…",
+    "tools": "Verktyg"
   },
   "service": {
     "running": "Körs",
@@ -50,27 +51,23 @@
     "confirm_reload_title": "Läsa in Caddys konfiguration igen?",
     "confirm_reload_body": "Caddy läser in sin konfiguration igen utan att avbryta befintliga anslutningar.",
     "confirm_action": "Bekräfta",
-    "reload_failed": "Det gick inte att läsa in Caddys konfiguration igen"
+    "reload_failed": "Det gick inte att läsa in Caddys konfiguration igen",
+    "action_failed": "Tjänståtgärden misslyckades",
+    "more_actions": "Fler tjänståtgärder"
   },
   "proxies": {
     "title": "Reverse proxies",
     "empty_title": "Inga reverse proxies konfigurerade",
     "empty_body": "Lägg till en proxy för att exponera en lokal tjänst via HTTPS.",
     "add_proxy": "Lägg till proxy",
-    "add_redirect": "Lägg till omdirigering",
-    "add_static": "Lägg till statisk",
-    "add_respond": "Lägg till svar",
-    "add_php": "Lägg till PHP-webbplats",
     "type_static": "Statisk",
     "type_php": "PHP",
     "search_placeholder": "Sök proxies…",
     "col_port": "Extern port",
     "col_type": "Typ",
     "col_target": "Mål",
-    "col_tls": "TLS",
     "col_label": "Etikett",
     "col_actions": "Åtgärder",
-    "col_flags": "Egenskaper",
     "type_proxy": "Proxy",
     "type_redirect": "Omdirigering",
     "type_respond": "Svar",
@@ -99,7 +96,16 @@
     "indicator_strip_prefix": "ta bort prefix",
     "layout_list": "Lista",
     "layout_cards": "Kort",
-    "copy_label": "{{label}} (kopia)"
+    "copy_label": "{{label}} (kopia)",
+    "add_menu": "Fler webbplatstyper",
+    "col_address": "Adress",
+    "indicator_named_route": "namngiven route",
+    "menu_proxy": "Omvänd proxy",
+    "menu_redirect": "Omdirigering",
+    "menu_static": "Statiska filer",
+    "menu_respond": "Fast svar",
+    "menu_php": "PHP-webbplats",
+    "more_actions": "Fler åtgärder"
   },
   "add_proxy": {
     "title": "Lägg till reverse proxy",

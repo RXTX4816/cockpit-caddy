@@ -7,7 +7,7 @@
  * and expose the intermediate certificate chain in addition to the root.
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { addProxy } from './helpers';
+import { addProxy, openTool } from './helpers';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
   await dismissAdminBanner(page);
@@ -19,7 +19,7 @@ test('CA modal warns when no proxy uses the internal CA', async ({ pluginPage: p
   await addProxy(page, { port: 19500, target: 'localhost:19501' });
   await page.waitForTimeout(3500); // let the 3s auto-refresh pick up the plain (non-TLS) proxy
 
-  await page.getByRole('button', { name: /internal ca/i }).click();
+  await openTool(page, /internal ca/i);
   const modal = page.getByRole('dialog', { name: /internal certificate authority/i });
   await expect(modal.getByText(/no proxies are using the internal ca/i)).toBeVisible({ timeout: 10000 });
 });
@@ -29,7 +29,7 @@ test('CA modal shows no warning and offers intermediate chain when a proxy uses 
   await addProxy(page, { port: 19502, target: 'localhost:19503', tls: 'internal' });
   await page.waitForTimeout(3500);
 
-  await page.getByRole('button', { name: /internal ca/i }).click();
+  await openTool(page, /internal ca/i);
   const modal = page.getByRole('dialog', { name: /internal certificate authority/i });
   await expect(modal.getByText(/no proxies are using the internal ca/i)).not.toBeVisible();
 

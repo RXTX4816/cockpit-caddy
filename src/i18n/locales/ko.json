@@ -20,7 +20,8 @@
   },
   "app": {
     "title": "Caddy",
-    "loading": "Caddy에 연결하는 중…"
+    "loading": "Caddy에 연결하는 중…",
+    "tools": "도구"
   },
   "service": {
     "running": "실행 중",
@@ -50,27 +51,23 @@
     "confirm_reload_title": "Caddy 설정을 다시 불러올까요?",
     "confirm_reload_body": "기존 연결을 끊지 않고 Caddy가 설정을 다시 불러옵니다.",
     "confirm_action": "확인",
-    "reload_failed": "Caddy 설정을 다시 불러오지 못했습니다"
+    "reload_failed": "Caddy 설정을 다시 불러오지 못했습니다",
+    "action_failed": "서비스 작업 실패",
+    "more_actions": "추가 서비스 작업"
   },
   "proxies": {
     "title": "리버스 프록시",
     "empty_title": "설정된 리버스 프록시가 없습니다",
     "empty_body": "프록시를 추가하여 로컬 서비스를 HTTPS로 공개하세요.",
     "add_proxy": "프록시 추가",
-    "add_redirect": "리디렉션 추가",
-    "add_static": "정적 사이트 추가",
-    "add_respond": "응답 추가",
-    "add_php": "PHP 사이트 추가",
     "type_static": "정적",
     "type_php": "PHP",
     "search_placeholder": "프록시 검색…",
     "col_port": "외부 포트",
     "col_type": "유형",
     "col_target": "대상",
-    "col_tls": "TLS",
     "col_label": "레이블",
     "col_actions": "작업",
-    "col_flags": "속성",
     "type_proxy": "프록시",
     "type_redirect": "리디렉션",
     "type_respond": "응답",
@@ -99,7 +96,16 @@
     "indicator_strip_prefix": "접두사 제거",
     "layout_list": "목록",
     "layout_cards": "카드",
-    "copy_label": "{{label}} (사본)"
+    "copy_label": "{{label}} (사본)",
+    "add_menu": "다른 사이트 유형",
+    "col_address": "주소",
+    "indicator_named_route": "이름 있는 경로",
+    "menu_proxy": "리버스 프록시",
+    "menu_redirect": "리디렉션",
+    "menu_static": "정적 파일",
+    "menu_respond": "고정 응답",
+    "menu_php": "PHP 사이트",
+    "more_actions": "추가 작업"
   },
   "add_proxy": {
     "title": "리버스 프록시 추가",
