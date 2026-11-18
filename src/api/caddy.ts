@@ -2,7 +2,7 @@ import type { CaddyConfig, CaddyHandler, CaddyReverseProxyHandler, CaddyRoute, C
 import { readFile as fsReadFile, writeFile as fsWriteFile } from "@rxtx4816/cockpit-plugin-base-react/lib/cockpit-fs";
 import { reloadService as reloadSystemdService } from "@rxtx4816/cockpit-plugin-base-react/systemd";
 import { i18n } from "@rxtx4816/cockpit-plugin-base-react/i18n";
-import { listConfDFiles } from "./systemd";
+import { listConfDFiles, readCaddyfile, writeCaddyfile } from "./systemd";
 import { externalHostList } from "./externalHosts";
 
 /**
@@ -241,6 +241,16 @@ export function withConfDImport(caddyfile: string): string {
 }
 
 /**
+ * Makes sure Caddy loads conf.d. Adds the plugin's import line only when the main
+ * Caddyfile has no conf.d import at all; an import the user wrote stays untouched.
+ */
+export async function ensureConfDImported(): Promise<void> {
+  const content = await readCaddyfile();
+  const next = withConfDImport(content);
+  if (next !== content) await writeCaddyfile(next);
+}
+
+/**
  * Replaces a conf.d glob import with the contents of the files it matches, in name
  * order: `*.conf` takes only .conf files, a bare `*` takes all of them, as Caddy
  * would. Without such an import the Caddyfile comes back unchanged.
@@ -280,6 +290,8 @@ export async function applyCurrentCaddyfileViaApi(): Promise<void> {
 }
 
 const PROXY_CONF_PATH = "/etc/caddy/conf.d/cockpit-caddy.conf";
+/** Kept here, not in snippets.ts, so caddy.ts doesn't import its own importer. Must sort before PROXY_CONF_PATH. */
+const SNIPPETS_CONF_PATH = "/etc/caddy/conf.d/cockpit-caddy-snippets.conf";
 
 /**
  * Extracts the trailing `:PORT` from a block address, if any. Used to add a
@@ -300,7 +312,7 @@ function addressPortKey(address: string): string | undefined {
  * `a.com b.com` is also stored under the `a.com, b.com` spelling that proxyAddressKeys
  * produces.
  */
-function setBlockResult<T>(result: Record<string, T>, block: RawBlock, value: T): void {
+export function setBlockResult<T>(result: Record<string, T>, block: RawBlock, value: T): void {
   result[block.address] = value;
   const canonical = block.address.split(/[\s,]+/).filter(Boolean).join(", ");
   if (canonical !== block.address && !(canonical in result)) result[canonical] = value;
@@ -500,21 +512,40 @@ export async function writeRawProxyConf(content: string): Promise<void> {
  * would make the Caddyfile invalid.
  */
 export async function writeRawProxyConfValidated(content: string): Promise<void> {
-  const original = await readProxyConf();
+  await writeConfDFileValidated(PROXY_CONF_PATH, content);
+}
+
+async function writeConfDFileValidated(path: string, content: string): Promise<void> {
+  const original = (await fsReadFile(path, "try").catch(() => null)) ?? "";
   // Catches an unwritable log file path *before* ever saving it — see
   // checkLogFileWritable for why `caddy validate` succeeding isn't enough on its own.
   for (const logPath of new Set(extractLogFilePaths(content))) {
     const err = await checkLogFileWritable(logPath);
     if (err) throw new CaddyfileError(i18n.t("errors.log_file_not_writable", { path: logPath, error: err }));
   }
-  await fsWriteFile(PROXY_CONF_PATH, content, "try");
+  await fsWriteFile(path, content, "try");
   try {
     await runCaddyValidate();
   } catch (e) {
-    await fsWriteFile(PROXY_CONF_PATH, original, "try");
+    await fsWriteFile(path, original, "try");
     throw e;
   }
   await fixAccessLogFileOwnership(content);
+}
+
+/** The plugin's snippets file (#288); empty when it doesn't exist yet. */
+export async function readSnippetsConf(): Promise<string> {
+  try {
+    return (await fsReadFile(SNIPPETS_CONF_PATH, "try")) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+/** Writes the snippets file, validates the whole Caddyfile, and restores the old file on an error. */
+export async function writeSnippetsConfValidated(content: string): Promise<void> {
+  await cockpit.spawn(["mkdir", "-p", "/etc/caddy/conf.d"], { superuser: "try" });
+  await writeConfDFileValidated(SNIPPETS_CONF_PATH, content);
 }
 
 /** Every `output file <path>` target referenced anywhere in Caddyfile content, covering
@@ -1690,6 +1721,16 @@ function buildPhpFastcgiLines(php: import("./types").PhpFastcgiConfig, indent: s
   return lines;
 }
 
+/** `import <snippet>` lines at the top of a site block (#288). */
+function buildImportLines(p: Pick<ProxyEntry, "imports">): string[] {
+  return (p.imports ?? []).map(name => `\timport ${name}`);
+}
+
+/** `import name` of a snippet, as opposed to `import path/or/*glob`. */
+function isSnippetImportLine(trimmed: string): boolean {
+  return /^import\s+[A-Za-z0-9][A-Za-z0-9_.-]*\s*$/.test(trimmed);
+}
+
 /** Builds handler lines for a route, at the given indent level (default single-tab). */
 function buildRouteHandlerLines(p: ProxyEntry, indent: string): string[] {
   const lines: string[] = [];
@@ -1769,6 +1810,7 @@ export function proxyToBlock(p: ProxyEntry): string {
   const rawAddr = buildExternalAddress(p);
   const header = isPlainHttp ? `http://${rawAddr}` : rawAddr;
   const lines = p.label ? [`# label: ${p.label}`, `${header} {`] : [`${header} {`];
+  lines.push(...buildImportLines(p));
   lines.push(...buildBindLines(p));
 
   if (hasAnyMatcher(p.matchers)) {
@@ -1888,6 +1930,11 @@ function patchRawBlock(raw: string, proxy: ProxyEntry): string {
       skipDirective();
       continue;
     }
+    // Snippet imports (#288) follow proxy.imports; file and glob imports are the user's and stay.
+    if (nestDepth === 0 && isSnippetImportLine(trimmed)) {
+      i++;
+      continue;
+    }
 
     nestDepth += braces(trimmed);
     kept.push(line);
@@ -1901,6 +1948,7 @@ function patchRawBlock(raw: string, proxy: ProxyEntry): string {
   const isOwnBind = (l: string) => !!oldIp && l.trim() === `bind ${oldIp}`;
   for (let k = kept.length - 1; k >= 1; k--) if (isOwnBind(kept[k])) kept.splice(k, 1);
   if (!kept.slice(1).some(l => /^\s*bind(\s|$)/.test(l))) kept.splice(1, 0, ...buildBindLines(proxy));
+  kept.splice(1, 0, ...buildImportLines(proxy));
   // Re-add updated directives before closing brace
   kept.push(...buildTlsCaddyLines(proxy, !tlsSubjectHosts(proxy.externalHost).length));
   if (proxy.fileServer) {

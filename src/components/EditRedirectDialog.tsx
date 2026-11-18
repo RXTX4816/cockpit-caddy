@@ -20,6 +20,7 @@ import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { CaddyApiError, isPathOnlyMatcher } from "../api";
 import type { ProxyEntry, RouteMatch } from "../api";
 import { RouteMatchersSection } from "./RouteMatchersSection";
+import { SnippetImportsField } from "./SnippetImportsField";
 
 const REDIRECT_CODES = [301, 302, 307, 308] as const;
 
@@ -39,6 +40,7 @@ export function EditRedirectDialog({ proxy, existingPorts, onSave, onClose }: Pr
   const [code, setCode] = useState<301 | 302 | 307 | 308>(proxy.redirect?.code ?? 308);
   const [label, setLabel] = useState(proxy.label ?? "");
   const [matchers, setMatchers] = useState<RouteMatch | undefined>(proxy.matchers);
+  const [imports, setImports] = useState<string[] | undefined>(proxy.imports);
   const [handlePath, setHandlePath] = useState(proxy.handlePath ?? false);
   const [toErr, setToErr] = useState<string | null>(null);
 
@@ -117,6 +119,7 @@ export function EditRedirectDialog({ proxy, existingPorts, onSave, onClose }: Pr
             </div>
           </FormGroup>
         </Form>
+        <SnippetImportsField value={imports} onChange={setImports} snippetSettings={proxy.snippetSettings} isDisabled={isLocked} />
         <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!isPathOnlyMatcher(v)) setHandlePath(false); }} isDisabled={isLocked} />
         {isPathOnlyMatcher(matchers) && (
           <Checkbox
@@ -146,6 +149,7 @@ export function EditRedirectDialog({ proxy, existingPorts, onSave, onClose }: Pr
                   label: label.trim() || undefined,
                   redirect: { to: to.trim(), code },
                   matchers: matchers ?? undefined,
+                  imports,
                   handlePath: handlePath || undefined,
                 };
                 try {

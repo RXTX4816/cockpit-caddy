@@ -21,6 +21,7 @@ import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { CaddyApiError, isPathOnlyMatcher } from "../api";
 import type { ProxyEntry, RouteMatch } from "../api";
 import { RouteMatchersSection } from "./RouteMatchersSection";
+import { SnippetImportsField } from "./SnippetImportsField";
 
 interface Props {
   proxy: ProxyEntry;
@@ -39,6 +40,7 @@ export function EditRespondDialog({ proxy, existingPorts: _existingPorts, onSave
   const [close, setClose] = useState(proxy.staticResponse?.close ?? false);
   const [label, setLabel] = useState(proxy.label ?? "");
   const [matchers, setMatchers] = useState<RouteMatch | undefined>(proxy.matchers);
+  const [imports, setImports] = useState<string[] | undefined>(proxy.imports);
   const [handlePath, setHandlePath] = useState(proxy.handlePath ?? false);
   const [statusErr, setStatusErr] = useState<string | null>(null);
 
@@ -128,6 +130,7 @@ export function EditRespondDialog({ proxy, existingPorts: _existingPorts, onSave
             />
           </FormGroup>
         </Form>
+        <SnippetImportsField value={imports} onChange={setImports} snippetSettings={proxy.snippetSettings} isDisabled={isLocked} />
         <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!isPathOnlyMatcher(v)) setHandlePath(false); }} isDisabled={isLocked} />
         {isPathOnlyMatcher(matchers) && (
           <Checkbox
@@ -162,6 +165,7 @@ export function EditRespondDialog({ proxy, existingPorts: _existingPorts, onSave
                       close: close || undefined,
                     },
                     matchers: matchers ?? undefined,
+                    imports,
                     handlePath: handlePath || undefined,
                   });
                 } catch (e) {

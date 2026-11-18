@@ -25,6 +25,7 @@ import { TlsModeField, defaultTlsMode, hasPublicName, tlsModeToEntry, type TlsMo
 import { SectionActions } from "./SectionActions";
 import type { ProxyEntry, HeaderOperation, ErrorHandlerConfig, RouteMatch } from "../api";
 import { RouteMatchersSection } from "./RouteMatchersSection";
+import { SnippetImportsField } from "./SnippetImportsField";
 import { BasicAuthSection, resolveBasicAuth, type AuthEntry } from "./BasicAuthSection";
 import { ResponseHeadersSection } from "./ResponseHeadersSection";
 import { RequestHeadersSection } from "./RequestHeadersSection";
@@ -53,12 +54,13 @@ interface Props {
   initialErrorHandlers?: ErrorHandlerConfig[];
   initialTlsValues?: TlsValues;
   initialMatchers?: RouteMatch;
+  initialImports?: string[];
   initialHandlePath?: boolean;
   servers?: import("../api").ServerDef[];
   initialServerKey?: string;
 }
 
-export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues, initialBasicAuth, initialResponseHeaders, initialRequestHeaders, initialAccessLog, initialServerTimeouts, initialRequestBodyMaxSize, initialErrorHandlers, initialTlsValues, initialMatchers, initialHandlePath, servers, initialServerKey }: Props) {
+export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues, initialBasicAuth, initialResponseHeaders, initialRequestHeaders, initialAccessLog, initialServerTimeouts, initialRequestBodyMaxSize, initialErrorHandlers, initialTlsValues, initialMatchers, initialImports, initialHandlePath, servers, initialServerKey }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
   const confirmAction = useConfirmAction();
@@ -82,6 +84,7 @@ export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues, 
   const [errorHandlers, setErrorHandlers] = useState<ErrorHandlerConfig[]>(initialErrorHandlers ?? []);
   const [tlsValues, setTlsValues] = useState<TlsValues>(initialTlsValues ?? tlsConfigToValues(undefined, undefined));
   const [matchers, setMatchers] = useState<RouteMatch | undefined>(initialMatchers);
+  const [imports, setImports] = useState<string[] | undefined>(initialImports);
   const [handlePath, setHandlePath] = useState(initialHandlePath ?? false);
   const [selectedServerKey, setSelectedServerKey] = useState(initialServerKey ?? "");
   const [portErr, setPortErr] = useState<string | null>(null);
@@ -275,6 +278,7 @@ export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues, 
             />
           </AccordionRow>
           <AccordionRow last>
+            <SnippetImportsField value={imports} onChange={setImports} isDisabled={isLocked} />
             <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!isPathOnlyMatcher(v)) setHandlePath(false); }} isDisabled={isLocked} {...sectionAccordionProps("routeMatchers", expandedSection, setExpandedSection)} />
           </AccordionRow>
         </div>
@@ -331,6 +335,7 @@ export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues, 
                     tlsAdvanced: tlsValuesToAdvanced(tlsValues),
                     mtls: tlsValuesToMtls(tlsValues),
                     matchers: matchers ?? undefined,
+                    imports,
                     handlePath: handlePath || undefined,
                     namedServerKey: serverCtx?.serverKey,
                   });

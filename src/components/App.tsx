@@ -34,6 +34,7 @@ import { InternalCaModal } from "./InternalCaModal";
 import { AcmeStatusModal } from "./AcmeStatusModal";
 import { ConfigCheckModal } from "./ConfigCheckModal";
 import { GlobalOptionsTab } from "./GlobalOptionsTab";
+import { SnippetsSection } from "./SnippetsSection";
 import { useCaddyStatus } from "../hooks/useCaddyStatus";
 import { applyStoredAdminAddress } from "../hooks/useAdminAddress";
 import { useCaddyVersion } from "../hooks/useCaddyVersion";
@@ -211,6 +212,7 @@ function AppInner() {
               <Tab eventKey={3} title={<TabTitleText>{t("tabs.settings")}</TabTitleText>}>
                 <PageSection hasBodyWrapper={false}>
                   <GlobalOptionsTab />
+                  <SnippetsSection />
                 </PageSection>
               </Tab>
             </Tabs>

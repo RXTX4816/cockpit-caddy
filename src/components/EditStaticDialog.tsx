@@ -22,6 +22,7 @@ import { TlsModeField, defaultTlsMode, hasPublicName, tlsModeToEntry, type TlsMo
 import { SectionActions } from "./SectionActions";
 import type { ProxyEntry, ErrorHandlerConfig, RouteMatch } from "../api";
 import { RouteMatchersSection } from "./RouteMatchersSection";
+import { SnippetImportsField } from "./SnippetImportsField";
 import { BasicAuthSection, resolveBasicAuth, type AuthEntry } from "./BasicAuthSection";
 import { ResponseHeadersSection } from "./ResponseHeadersSection";
 import { RequestHeadersSection } from "./RequestHeadersSection";
@@ -73,6 +74,7 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
   const [errorHandlers, setErrorHandlers] = useState<ErrorHandlerConfig[]>(proxy.errorHandlers ?? []);
   const [tlsValues, setTlsValues] = useState<TlsValues>(tlsConfigToValues(proxy.tlsAdvanced, proxy.mtls));
   const [matchers, setMatchers] = useState<RouteMatch | undefined>(proxy.matchers);
+  const [imports, setImports] = useState<string[] | undefined>(proxy.imports);
   const [handlePath, setHandlePath] = useState(proxy.handlePath ?? false);
   const [portErr, setPortErr] = useState<string | null>(null);
   const [rootErr, setRootErr] = useState<string | null>(null);
@@ -229,6 +231,7 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
             />
           </AccordionRow>
           <AccordionRow last>
+            <SnippetImportsField value={imports} onChange={setImports} snippetSettings={proxy.snippetSettings} isDisabled={isLocked} />
             <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!isPathOnlyMatcher(v)) setHandlePath(false); }} isDisabled={isLocked} {...sectionAccordionProps("routeMatchers", expandedSection, setExpandedSection)} />
           </AccordionRow>
         </div>
@@ -280,6 +283,7 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
                     tlsAdvanced: tlsValuesToAdvanced(tlsValues),
                     mtls: tlsValuesToMtls(tlsValues),
                     matchers: matchers ?? undefined,
+                    imports,
                     handlePath: handlePath || undefined,
                   });
                 } catch (e) {

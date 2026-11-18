@@ -23,6 +23,7 @@ import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { CaddyApiError, isPathOnlyMatcher } from "../api";
 import type { ProxyEntry, RouteMatch, ServerDef } from "../api";
 import { RouteMatchersSection } from "./RouteMatchersSection";
+import { SnippetImportsField } from "./SnippetImportsField";
 import { parseListenPort } from "./AddServerDialog";
 
 const REDIRECT_CODES = [301, 302, 307, 308] as const;
@@ -46,12 +47,13 @@ interface Props {
   onClose: () => void;
   initialValues?: InitialValues;
   initialMatchers?: RouteMatch;
+  initialImports?: string[];
   initialHandlePath?: boolean;
   servers?: ServerDef[];
   initialServerKey?: string;
 }
 
-export function AddRedirectDialog({ existingPorts, onAdd, onClose, initialValues, initialMatchers, initialHandlePath, servers, initialServerKey }: Props) {
+export function AddRedirectDialog({ existingPorts, onAdd, onClose, initialValues, initialMatchers, initialImports, initialHandlePath, servers, initialServerKey }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
   const confirmAction = useConfirmAction();
@@ -61,6 +63,7 @@ export function AddRedirectDialog({ existingPorts, onAdd, onClose, initialValues
   const [code, setCode] = useState<301 | 302 | 307 | 308>(initialValues?.code ?? 308);
   const [label, setLabel] = useState(initialValues?.label ?? "");
   const [matchers, setMatchers] = useState<RouteMatch | undefined>(initialMatchers);
+  const [imports, setImports] = useState<string[] | undefined>(initialImports);
   const [handlePath, setHandlePath] = useState(initialHandlePath ?? false);
   const [selectedServerKey, setSelectedServerKey] = useState(initialServerKey ?? "");
   const [portErr, setPortErr] = useState<string | null>(null);
@@ -214,6 +217,7 @@ export function AddRedirectDialog({ existingPorts, onAdd, onClose, initialValues
             </div>
           </FormGroup>
         </Form>
+        <SnippetImportsField value={imports} onChange={setImports} isDisabled={isLocked} />
         <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!isPathOnlyMatcher(v)) setHandlePath(false); }} isDisabled={isLocked} />
         {isPathOnlyMatcher(matchers) && (
           <Checkbox
@@ -251,6 +255,7 @@ export function AddRedirectDialog({ existingPorts, onAdd, onClose, initialValues
                     label: label.trim() || undefined,
                     redirect: { to: to.trim(), code },
                     matchers: matchers ?? undefined,
+                    imports,
                     handlePath: handlePath || undefined,
                     namedServerKey: serverCtx?.serverKey,
                   });

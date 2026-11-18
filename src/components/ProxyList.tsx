@@ -57,6 +57,7 @@ import { EditServerDialog } from "./EditServerDialog";
 import { ServerDetailPanel } from "./ServerDetailPanel";
 import { ProxyCard } from "./ProxyCard";
 import { useProxies } from "../hooks/useProxies";
+import { SnippetsContext } from "./SnippetImportsField";
 import { useUpstreamProbe } from "../hooks/useUpstreamProbe";
 import { UpstreamStatusDot } from "./UpstreamStatusDot";
 import { buildRouteUrl } from "./routeUrl";
@@ -278,7 +279,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
     proxies, servers, loading, error, refresh,
     addProxy, editProxy, deleteProxy,
     addServer, editServer, deleteServer,
-    needsMigration, migrate,
+    needsMigration, migrate, snippets,
   } = useProxies();
   const [probeEnabled, setProbeEnabled] = useLocalStorage<boolean>("cockpit-caddy:probe", false, {
     serialize: v => v ? "1" : "0",
@@ -468,7 +469,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
   const hasTabs = servers.length > 0;
 
   return (
-    <>
+    <SnippetsContext.Provider value={snippets}>
       <Stack hasGutter>
         {needsMigration && (
           <StackItem>
@@ -810,6 +811,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
             label: duplicating.label ? t("proxies.copy_label", { label: duplicating.label }) : "",
           }}
           initialMatchers={duplicating.matchers}
+          initialImports={duplicating.imports}
           initialHandlePath={duplicating.handlePath}
         />
       ) : duplicating.staticResponse ? (
@@ -827,6 +829,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
             label: duplicating.label ? t("proxies.copy_label", { label: duplicating.label }) : "",
           }}
           initialMatchers={duplicating.matchers}
+          initialImports={duplicating.imports}
           initialHandlePath={duplicating.handlePath}
         />
       ) : duplicating.fileServer ? (
@@ -860,6 +863,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
           initialErrorHandlers={duplicating.errorHandlers}
           initialTlsValues={tlsConfigToValues(duplicating.tlsAdvanced, duplicating.mtls, duplicating.customTls)}
           initialMatchers={duplicating.matchers}
+          initialImports={duplicating.imports}
           initialHandlePath={duplicating.handlePath}
         />
       ) : duplicating.phpFastcgi ? (
@@ -894,6 +898,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
           initialErrorHandlers={duplicating.errorHandlers}
           initialTlsValues={tlsConfigToValues(duplicating.tlsAdvanced, duplicating.mtls, duplicating.customTls)}
           initialMatchers={duplicating.matchers}
+          initialImports={duplicating.imports}
           initialHandlePath={duplicating.handlePath}
         />
       ) : (
@@ -943,6 +948,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
           initialForwardAuth={duplicating.forwardAuth}
           initialTlsValues={tlsConfigToValues(duplicating.tlsAdvanced, duplicating.mtls, duplicating.customTls)}
           initialMatchers={duplicating.matchers}
+          initialImports={duplicating.imports}
           initialHandlePath={duplicating.handlePath}
           initialIsNamedRoute={duplicating.isNamedRoute}
           initialNamedRouteName={duplicating.namedRouteName}
@@ -1114,6 +1120,6 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
           </Button>
         </ModalFooter>
       </Modal>
-    </>
+    </SnippetsContext.Provider>
   );
 }
