@@ -379,7 +379,19 @@
     "level_all": "Wszystkie",
     "level_error": "Błąd",
     "level_warn": "Ostrzeżenie",
-    "level_info": "Info"
+    "level_info": "Info",
+    "view_label": "Widok logu",
+    "view_table": "Tabela",
+    "view_raw": "Surowy",
+    "col_time": "Czas",
+    "col_level": "Poziom",
+    "col_logger": "Logger",
+    "col_host": "Host",
+    "col_request": "Żądanie",
+    "col_status": "Status",
+    "col_message": "Komunikat",
+    "table_label": "Wpisy logu",
+    "saved_to": "Zapisano w {{path}}"
   },
   "tabs": {
     "proxy_list": "Lista proxy",

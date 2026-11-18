@@ -379,7 +379,19 @@
     "level_all": "Toate",
     "level_error": "Eroare",
     "level_warn": "Avertisment",
-    "level_info": "Info"
+    "level_info": "Info",
+    "view_label": "Vizualizare jurnal",
+    "view_table": "Tabel",
+    "view_raw": "Brut",
+    "col_time": "Ora",
+    "col_level": "Nivel",
+    "col_logger": "Logger",
+    "col_host": "Gazdă",
+    "col_request": "Cerere",
+    "col_status": "Stare",
+    "col_message": "Mesaj",
+    "table_label": "Intrări de jurnal",
+    "saved_to": "Salvat în {{path}}"
   },
   "tabs": {
     "proxy_list": "Listă proxy",

@@ -4,8 +4,13 @@ import {
   Tab,
   Tabs,
   TabTitleText,
+  ToggleGroup,
+  ToggleGroupItem,
 } from "@patternfly/react-core";
 import { LogViewer } from "@rxtx4816/cockpit-plugin-base-react/components";
+import { useLocalStorage } from "@rxtx4816/cockpit-plugin-base-react";
+import { ACCESS_LOG_PREFIX, matchesLevel, matchesLogger, parseCaddyLogLine, type LevelFilter, type ParsedLogLine } from "./caddyLog";
+import { LogTable } from "./LogTable";
 import { useTranslation } from "react-i18next";
 import { useLogs, CONTAINER_NOT_CONFIGURED } from "../hooks/useLogs";
 
@@ -14,54 +19,14 @@ interface Props {
   onFilterChange?: (v: string) => void;
 }
 
-type LevelFilter = "all" | "error" | "warn" | "info";
+type ViewMode = "table" | "raw";
 
-const LEVEL_COLORS: Record<LevelFilter, "grey" | "red" | "orange" | "blue"> = {
+const LEVEL_CHIP_COLORS: Record<LevelFilter, "grey" | "red" | "orange" | "blue"> = {
   all: "grey",
   error: "red",
   warn: "orange",
   info: "blue",
 };
-
-/** Caddy's stable namespace for HTTP access logs. */
-const ACCESS_LOG_PREFIX = "http.log.access.";
-
-/**
- * Extract a named field from a Caddy log line. Handles two formats after
- * stripping the optional journalctl "TIMESTAMP HOST UNIT[PID]: " prefix:
- *   JSON:    {"level":"info","logger":"http","msg":"..."}
- *   Console: DATE TIME[whitespace]LEVEL[whitespace]LOGGER[whitespace]MESSAGE...
- *
- * journalctl --output=short-iso expands tabs to spaces, so we use regex
- * rather than split("\t") for the console format.
- */
-function parseCaddyField(line: string, field: string): string | undefined {
-  // Strip journalctl prefix: everything up to and including "unit[pid]: "
-  const prefixMatch = line.match(/\[\d+\]: (.*)/s);
-  const payload = prefixMatch ? prefixMatch[1] : line;
-
-  // JSON format: payload starts with {
-  if (payload.trimStart().startsWith("{")) {
-    try {
-      const obj = JSON.parse(payload.trimStart()) as Record<string, unknown>;
-      const v = obj[field];
-      return typeof v === "string" ? v : undefined;
-    } catch {
-      return undefined;
-    }
-  }
-
-  // Console format: "2006/01/02 15:04:05.000  LEVEL  logger.name  message  ..."
-  // Tabs may be space-expanded by journalctl, so match on whitespace boundaries.
-  // LEVEL is always uppercase ASCII word; logger name has no whitespace.
-  const m = payload.match(/^\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}:\d{2}\.\d{3}[ \t]+([A-Z]+)[ \t]+(\S+)/);
-  if (m) {
-    if (field === "level") return m[1].toLowerCase();
-    if (field === "logger") return m[2];
-  }
-
-  return undefined;
-}
 
 export function LogsViewer({ filterValue, onFilterChange }: Props) {
   const { t } = useTranslation();
@@ -71,16 +36,32 @@ export function LogsViewer({ filterValue, onFilterChange }: Props) {
   const [levelFilter, setLevelFilter] = useState<LevelFilter>("all");
   const [activeLogger, setActiveLogger] = useState<string>("all");
 
-  const lines = useMemo(() => logs.split("\n").filter(Boolean), [logs]);
+  const [mode, setMode] = useLocalStorage<ViewMode>("cockpit-caddy:log-view", "table");
+  const [tableSearch, setTableSearch] = useState(filterValue ?? "");
+  const [isRegex, setIsRegex] = useState(false);
+  const search = filterValue ?? tableSearch;
+  const setSearch = (v: string) => { setTableSearch(v); onFilterChange?.(v); };
+
+  // Each line is parsed once: the poll returns mostly the same lines, so keep the earlier parses
+  // and drop the ones that scrolled out of the window.
+  const [cache] = useState(() => new Map<string, ParsedLogLine>());
+  const parsed = useMemo(() => {
+    const lines = logs.split("\n").filter(Boolean);
+    const out = lines.map(line => {
+      let p = cache.get(line);
+      if (!p) cache.set(line, (p = parseCaddyLogLine(line)));
+      return p;
+    });
+    const current = new Set(lines);
+    for (const key of cache.keys()) if (!current.has(key)) cache.delete(key);
+    return out;
+  }, [logs, cache]);
 
   const loggers = useMemo(() => {
     const seen = new Set<string>();
-    for (const line of lines) {
-      const logger = parseCaddyField(line, "logger");
-      if (logger) seen.add(logger);
-    }
+    for (const l of parsed) if (l.logger) seen.add(l.logger);
     return [...seen].sort();
-  }, [lines]);
+  }, [parsed]);
 
   const caddyLoggers = useMemo(
     () => loggers.filter(l => !l.startsWith(ACCESS_LOG_PREFIX)),
@@ -92,32 +73,38 @@ export function LogsViewer({ filterValue, onFilterChange }: Props) {
     [loggers],
   );
 
-  const filteredLines = useMemo(() => {
-    return lines.filter(line => {
-      const logger = parseCaddyField(line, "logger");
-
-      if (activeLogger !== "all") {
-        if (activeLogger === "caddy") {
-          // "Caddy" tab: show caddy internal logs + lines without a logger field
-          if (logger && logger.startsWith(ACCESS_LOG_PREFIX)) return false;
-        } else {
-          // Service tab: only this specific logger
-          if (logger !== activeLogger) return false;
-        }
-      }
-
-      if (levelFilter !== "all") {
-        const level = parseCaddyField(line, "level")?.toLowerCase();
-        if (!level) return levelFilter === "info";
-        if (levelFilter === "error") return level === "error";
-        if (levelFilter === "warn") return level === "error" || level === "warn";
-      }
-
-      return true;
-    });
-  }, [lines, activeLogger, levelFilter]);
+  const filtered = useMemo(
+    () => parsed.filter(l => matchesLogger(l, activeLogger) && matchesLevel(l, levelFilter)),
+    [parsed, activeLogger, levelFilter],
+  );
+  const filteredLines = useMemo(() => filtered.map(l => l.raw), [filtered]);
 
   const showFilters = loggers.length > 0;
+
+  const toolbarExtra = (
+    <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+      {showFilters && (
+        <div style={{ display: "flex", gap: "0.3rem" }}>
+          {(["all", "error", "warn", "info"] as LevelFilter[]).map(l => (
+            <Label
+              key={l}
+              isCompact
+              color={LEVEL_CHIP_COLORS[l]}
+              variant={levelFilter === l ? "filled" : "outline"}
+              onClick={() => setLevelFilter(l)}
+              style={{ cursor: "pointer" }}
+            >
+              {t(`logs.level_${l}`)}
+            </Label>
+          ))}
+        </div>
+      )}
+      <ToggleGroup isCompact aria-label={t("logs.view_label")}>
+        <ToggleGroupItem text={t("logs.view_table")} buttonId="log-view-table" isSelected={mode === "table"} onChange={() => setMode("table")} />
+        <ToggleGroupItem text={t("logs.view_raw")} buttonId="log-view-raw" isSelected={mode === "raw"} onChange={() => setMode("raw")} />
+      </ToggleGroup>
+    </div>
+  );
 
   return (
     <>
@@ -145,6 +132,22 @@ export function LogsViewer({ filterValue, onFilterChange }: Props) {
           </Tabs>
         )}
 
+      {mode === "table" ? (
+        <LogTable
+          lines={filtered}
+          loading={loading}
+          error={displayError}
+          onRefresh={refresh}
+          paused={paused}
+          onPause={pause}
+          onResume={resume}
+          search={search}
+          onSearchChange={setSearch}
+          isRegex={isRegex}
+          onRegexChange={setIsRegex}
+          toolbarExtra={toolbarExtra}
+        />
+      ) : (
       <LogViewer
         lines={filteredLines}
         loading={loading}
@@ -161,23 +164,9 @@ export function LogsViewer({ filterValue, onFilterChange }: Props) {
         refreshAriaLabel={t("common.refresh")}
         filterValue={filterValue}
         onFilterChange={onFilterChange}
-        extraToolbarItems={showFilters ? (
-          <div style={{ display: "flex", gap: "0.3rem" }}>
-            {(["all", "error", "warn", "info"] as LevelFilter[]).map(l => (
-              <Label
-                key={l}
-                isCompact
-                color={LEVEL_COLORS[l]}
-                variant={levelFilter === l ? "filled" : "outline"}
-                onClick={() => setLevelFilter(l)}
-                style={{ cursor: "pointer" }}
-              >
-                {t(`logs.level_${l}`)}
-              </Label>
-            ))}
-          </div>
-        ) : undefined}
+        extraToolbarItems={toolbarExtra}
       />
+      )}
     </>
   );
 }

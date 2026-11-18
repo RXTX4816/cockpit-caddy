@@ -379,7 +379,19 @@
     "level_all": "全部",
     "level_error": "錯誤",
     "level_warn": "警告",
-    "level_info": "資訊"
+    "level_info": "資訊",
+    "view_label": "日誌檢視",
+    "view_table": "表格",
+    "view_raw": "原始",
+    "col_time": "時間",
+    "col_level": "層級",
+    "col_logger": "記錄器",
+    "col_host": "主機",
+    "col_request": "請求",
+    "col_status": "狀態",
+    "col_message": "訊息",
+    "table_label": "日誌項目",
+    "saved_to": "已儲存至 {{path}}"
   },
   "tabs": {
     "proxy_list": "代理清單",

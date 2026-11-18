@@ -379,7 +379,19 @@
     "level_all": "הכול",
     "level_error": "שגיאה",
     "level_warn": "אזהרה",
-    "level_info": "מידע"
+    "level_info": "מידע",
+    "view_label": "תצוגת יומן",
+    "view_table": "טבלה",
+    "view_raw": "גולמי",
+    "col_time": "זמן",
+    "col_level": "רמה",
+    "col_logger": "רושם",
+    "col_host": "מארח",
+    "col_request": "בקשה",
+    "col_status": "סטטוס",
+    "col_message": "הודעה",
+    "table_label": "רשומות יומן",
+    "saved_to": "נשמר ב-{{path}}"
   },
   "tabs": {
     "proxy_list": "רשימת פרוקסי",

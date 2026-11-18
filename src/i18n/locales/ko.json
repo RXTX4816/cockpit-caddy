@@ -379,7 +379,19 @@
     "level_all": "전체",
     "level_error": "오류",
     "level_warn": "경고",
-    "level_info": "정보"
+    "level_info": "정보",
+    "view_label": "로그 보기",
+    "view_table": "표",
+    "view_raw": "원본",
+    "col_time": "시간",
+    "col_level": "수준",
+    "col_logger": "로거",
+    "col_host": "호스트",
+    "col_request": "요청",
+    "col_status": "상태",
+    "col_message": "메시지",
+    "table_label": "로그 항목",
+    "saved_to": "{{path}}에 저장됨"
   },
   "tabs": {
     "proxy_list": "프록시 목록",

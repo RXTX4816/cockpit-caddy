@@ -379,7 +379,19 @@
     "level_all": "Tümü",
     "level_error": "Hata",
     "level_warn": "Uyarı",
-    "level_info": "Bilgi"
+    "level_info": "Bilgi",
+    "view_label": "Günlük görünümü",
+    "view_table": "Tablo",
+    "view_raw": "Ham",
+    "col_time": "Zaman",
+    "col_level": "Düzey",
+    "col_logger": "Günlükçü",
+    "col_host": "Ana makine",
+    "col_request": "İstek",
+    "col_status": "Durum",
+    "col_message": "İleti",
+    "table_label": "Günlük kayıtları",
+    "saved_to": "{{path}} konumuna kaydedildi"
   },
   "tabs": {
     "proxy_list": "Proxy listesi",

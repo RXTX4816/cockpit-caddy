@@ -379,7 +379,19 @@
     "level_all": "Semua",
     "level_error": "Galat",
     "level_warn": "Peringatan",
-    "level_info": "Info"
+    "level_info": "Info",
+    "view_label": "Tampilan log",
+    "view_table": "Tabel",
+    "view_raw": "Mentah",
+    "col_time": "Waktu",
+    "col_level": "Level",
+    "col_logger": "Logger",
+    "col_host": "Host",
+    "col_request": "Permintaan",
+    "col_status": "Status",
+    "col_message": "Pesan",
+    "table_label": "Entri log",
+    "saved_to": "Disimpan ke {{path}}"
   },
   "tabs": {
     "proxy_list": "Daftar proxy",

@@ -379,7 +379,19 @@
     "level_all": "すべて",
     "level_error": "エラー",
     "level_warn": "警告",
-    "level_info": "情報"
+    "level_info": "情報",
+    "view_label": "ログ表示",
+    "view_table": "表",
+    "view_raw": "生データ",
+    "col_time": "時刻",
+    "col_level": "レベル",
+    "col_logger": "ロガー",
+    "col_host": "ホスト",
+    "col_request": "リクエスト",
+    "col_status": "ステータス",
+    "col_message": "メッセージ",
+    "table_label": "ログエントリ",
+    "saved_to": "{{path}} に保存しました"
   },
   "tabs": {
     "proxy_list": "プロキシ一覧",

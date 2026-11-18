@@ -379,7 +379,19 @@
     "level_all": "Все",
     "level_error": "Ошибка",
     "level_warn": "Предупреждение",
-    "level_info": "Инфо"
+    "level_info": "Инфо",
+    "view_label": "Вид журнала",
+    "view_table": "Таблица",
+    "view_raw": "Как есть",
+    "col_time": "Время",
+    "col_level": "Уровень",
+    "col_logger": "Логгер",
+    "col_host": "Хост",
+    "col_request": "Запрос",
+    "col_status": "Статус",
+    "col_message": "Сообщение",
+    "table_label": "Записи журнала",
+    "saved_to": "Сохранено в {{path}}"
   },
   "tabs": {
     "proxy_list": "Список прокси",
