@@ -121,7 +121,7 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
               id="static-edit-label"
               value={label}
               onChange={(_e, v) => setLabel(v)}
-              placeholder={t("add_proxy.field_label_placeholder")}
+              placeholder={t("common.example_value", { value: t("add_proxy.field_label_placeholder") })}
               isDisabled={isLocked}
             />
           </FormGroup>
@@ -147,7 +147,7 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
               id="static-edit-root"
               value={root}
               onChange={(_e, v) => { setRoot(v); setRootErr(null); }}
-              placeholder={t("add_static.field_root_placeholder")}
+              placeholder={t("common.example_value", { value: t("add_static.field_root_placeholder") })}
               isDisabled={isLocked}
               validated={rootErr ? "error" : "default"}
             />
