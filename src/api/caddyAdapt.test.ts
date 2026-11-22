@@ -11,6 +11,7 @@ import { mkdtempSync, writeFileSync, rmSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { CONF_HEADER, buildServerEntry, proxiesToCaddyfile, parseProxies, parseConfExternalAddresses, proxyAddressKeys, resolveInternalIssuerSettings, surgicallyWriteProxy, buildMigratedConfContent, migrateCaddyfile, parseConfTlsIssuerMap, parseConfTlsOnDemandMap, parseConfTlsMap, expandPlaceholderShorthands } from "./caddy";
+import { snippetsToConf, parseSnippets, parseConfSiteImports, parseConfSiteBlocks, separateSnippetSettings } from "./snippets";
 import type { CaddyConfig, CaddyServer, ProxyEntry } from "./types";
 
 function hasCaddy(): boolean {
@@ -238,6 +239,59 @@ describe.runIf(available || required)("route matchers with not and expression ad
     const [p] = readBack(conf);
     expect(p.matchers).toEqual(matchers);
     expect(p.handlePath).toBeUndefined();
+  });
+});
+
+describe.runIf(available || required)("snippets imported into sites (#288)", () => {
+  const snippetsConf = snippetsToConf([{ name: "security-headers", body: "header {\n\tX-Frame-Options DENY\n\tReferrer-Policy no-referrer\n}" }]);
+  // conf.d/*.conf is read in name order, so the snippets file comes first.
+  const withSnippets = (conf: string) => snippetsConf + "\n" + conf;
+  const sites = [
+    entry({ tls: false, externalPort: 8080, imports: ["security-headers"] }),
+    entry({ tls: false, externalPort: 8081, targetPort: 9001, imports: ["security-headers"], responseHeaders: [{ op: "set", name: "X-Own", value: "1" }] }),
+  ];
+
+  /** readBack plus the snippet layer useProxies adds. */
+  function readBackWithSnippets(conf: string): ProxyEntry[] {
+    const imports = parseConfSiteImports(conf);
+    const blocks = parseConfSiteBlocks(conf);
+    const snippets = parseSnippets(snippetsConf, "plugin");
+    return readBack(withSnippets(conf)).map(p => {
+      const key = proxyAddressKeys(p).find(k => imports[k]);
+      const withImports = key ? { ...p, imports: imports[key] } : p;
+      return separateSnippetSettings(withImports, key ? blocks[key] : undefined, snippets);
+    });
+  }
+
+  it("defines the snippet once, imports it in both sites, and Caddy applies it", () => {
+    const conf = proxiesToCaddyfile(sites);
+    expect(conf.match(/import security-headers/g)).toHaveLength(2);
+    expect(conf).not.toContain("X-Frame-Options");
+    const json = JSON.stringify(adapt(withSnippets(conf)));
+    expect(json.match(/X-Frame-Options/g)).toHaveLength(2);
+  });
+
+  it("reopening and saving a site doesn't copy the snippet's headers into it", () => {
+    const conf = proxiesToCaddyfile(sites);
+    const read = readBackWithSnippets(conf);
+    const plain = read.find(p => p.externalPort === 8080)!;
+    const own = read.find(p => p.externalPort === 8081)!;
+    expect(plain.imports).toEqual(["security-headers"]);
+    expect(plain.responseHeaders).toBeUndefined();
+    expect(plain.snippetSettings).toEqual(["security-headers"]);
+    expect(own.responseHeaders).toEqual([{ op: "set", name: "X-Own", value: "1" }]);
+
+    const saved = surgicallyWriteProxy(surgicallyWriteProxy(conf, plain), own);
+    expect(saved).not.toContain("X-Frame-Options");
+    expect(saved.match(/import security-headers/g)).toHaveLength(2);
+    expect(readBackWithSnippets(saved).map(p => [p.externalPort, p.responseHeaders])).toEqual([
+      [8080, undefined],
+      [8081, [{ op: "set", name: "X-Own", value: "1" }]],
+    ]);
+  });
+
+  it("an import of an unknown snippet is rejected by Caddy", () => {
+    expect(() => adapt(proxiesToCaddyfile([entry({ tls: false, externalPort: 8082, imports: ["missing"] })]))).toThrow();
   });
 });
 

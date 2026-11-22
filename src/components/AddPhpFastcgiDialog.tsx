@@ -22,6 +22,7 @@ import { TlsModeField, defaultTlsMode, hasPublicName, tlsModeToEntry, type TlsMo
 import { SectionActions } from "./SectionActions";
 import type { ProxyEntry, HeaderOperation, ErrorHandlerConfig, RouteMatch } from "../api";
 import { RouteMatchersSection } from "./RouteMatchersSection";
+import { SnippetImportsField } from "./SnippetImportsField";
 import { BasicAuthSection, resolveBasicAuth, type AuthEntry } from "./BasicAuthSection";
 import { ResponseHeadersSection } from "./ResponseHeadersSection";
 import { RequestHeadersSection } from "./RequestHeadersSection";
@@ -49,10 +50,11 @@ interface Props {
   initialErrorHandlers?: ErrorHandlerConfig[];
   initialTlsValues?: TlsValues;
   initialMatchers?: RouteMatch;
+  initialImports?: string[];
   initialHandlePath?: boolean;
 }
 
-export function AddPhpFastcgiDialog({ existingPorts, onAdd, onClose, initialValues, initialEnv, initialBasicAuth, initialResponseHeaders, initialRequestHeaders, initialAccessLog, initialServerTimeouts, initialRequestBodyMaxSize, initialErrorHandlers, initialTlsValues, initialMatchers, initialHandlePath }: Props) {
+export function AddPhpFastcgiDialog({ existingPorts, onAdd, onClose, initialValues, initialEnv, initialBasicAuth, initialResponseHeaders, initialRequestHeaders, initialAccessLog, initialServerTimeouts, initialRequestBodyMaxSize, initialErrorHandlers, initialTlsValues, initialMatchers, initialImports, initialHandlePath }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
   const confirmAction = useConfirmAction();
@@ -79,6 +81,7 @@ export function AddPhpFastcgiDialog({ existingPorts, onAdd, onClose, initialValu
   const [errorHandlers, setErrorHandlers] = useState<ErrorHandlerConfig[]>(initialErrorHandlers ?? []);
   const [tlsValues, setTlsValues] = useState<TlsValues>(initialTlsValues ?? tlsConfigToValues(undefined, undefined));
   const [matchers, setMatchers] = useState<RouteMatch | undefined>(initialMatchers);
+  const [imports, setImports] = useState<string[] | undefined>(initialImports);
   const [handlePath, setHandlePath] = useState(initialHandlePath ?? false);
   const [portErr, setPortErr] = useState<string | null>(null);
   const [upstreamErr, setUpstreamErr] = useState<string | null>(null);
@@ -272,6 +275,7 @@ export function AddPhpFastcgiDialog({ existingPorts, onAdd, onClose, initialValu
             />
           </AccordionRow>
           <AccordionRow last>
+            <SnippetImportsField value={imports} onChange={setImports} isDisabled={isLocked} />
             <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!isPathOnlyMatcher(v)) setHandlePath(false); }} isDisabled={isLocked} {...sectionAccordionProps("routeMatchers", expandedSection, setExpandedSection)} />
           </AccordionRow>
         </div>
@@ -334,6 +338,7 @@ export function AddPhpFastcgiDialog({ existingPorts, onAdd, onClose, initialValu
                     tlsAdvanced: tlsValuesToAdvanced(tlsValues),
                     mtls: tlsValuesToMtls(tlsValues),
                     matchers: matchers ?? undefined,
+                    imports,
                     handlePath: handlePath || undefined,
                   });
                 } catch (e) {

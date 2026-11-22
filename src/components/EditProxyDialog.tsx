@@ -27,6 +27,7 @@ import { externalHostFieldError } from "./externalHostField";
 import { isValidPort } from "@rxtx4816/cockpit-plugin-base-react/lib/uri";
 import type { ProxyEntry, RewriteConfig, HeaderOperation, RouteMatch, ServerDef } from "../api";
 import { RouteMatchersSection } from "./RouteMatchersSection";
+import { SnippetImportsField } from "./SnippetImportsField";
 import { RewriteSection } from "./RewriteSection";
 import { RequestHeadersSection } from "./RequestHeadersSection";
 import { ResponseHeadersSection } from "./ResponseHeadersSection";
@@ -101,6 +102,7 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
   const [tlsValues, setTlsValues] = useState<TlsValues>(tlsConfigToValues(proxy.tlsAdvanced, proxy.mtls, proxy.customTls));
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [matchers, setMatchers] = useState<RouteMatch | undefined>(proxy.matchers);
+  const [imports, setImports] = useState<string[] | undefined>(proxy.imports);
   const [handlePath, setHandlePath] = useState(proxy.handlePath ?? false);
   const [isNamedRoute, setIsNamedRoute] = useState(proxy.isNamedRoute ?? false);
   const [namedRouteName, setNamedRouteName] = useState(proxy.namedRouteName ?? "");
@@ -372,6 +374,7 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
             <LbRetrySection value={lbRetry} onChange={setLbRetry} isDisabled={isConfirming} {...sectionAccordionProps("lbRetry", expandedSection, setExpandedSection)} />
           </AccordionRow>
           <AccordionRow last>
+            <SnippetImportsField value={imports} onChange={setImports} snippetSettings={proxy.snippetSettings} isDisabled={isConfirming} />
             <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!isPathOnlyMatcher(v)) setHandlePath(false); }} isDisabled={isConfirming} {...sectionAccordionProps("routeMatchers", expandedSection, setExpandedSection)} />
           </AccordionRow>
         </div>
@@ -460,6 +463,7 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
                   mtls: tlsValuesToMtls(tlsValues),
                   customTls: tlsValuesToCustomTls(tlsValues),
                   matchers: matchers ?? undefined,
+                  imports,
                   handlePath: handlePath || undefined,
                   isNamedRoute: isNamedRoute || undefined,
                   namedRouteName: (isNamedRoute && namedRouteName.trim()) ? namedRouteName.trim() : undefined,

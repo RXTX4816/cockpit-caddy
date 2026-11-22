@@ -13,25 +13,16 @@ import {
   surgicallyWriteServerBlock, surgicallyRemoveServerBlock,
   mergeNamedServer, removeNamedServer,
   deduplicateServerBlocks, normalizeManagedHeader, proxyAddressKeys,
-  withConfDImport,
+  ensureConfDImported,
   resolveInternalIssuerSettings, readGlobalOptions,
   applyGlobalInternalLifetimeToProxy, applyGlobalInternalLifetimeToServer,
   routeHosts, hostsConflict, standaloneProxyId,
+  readSnippetsConf, parseSnippets, parseConfSiteBlocks, parseConfSiteImports, separateSnippetSettings, mergeSnippetLists,
 } from "../api";
-import type { CaddyConfig, ProxyEntry, ServerDef } from "../api";
+import type { CaddyConfig, ProxyEntry, ServerDef, SnippetDef } from "../api";
 import { useCaddyConfig } from "./useCaddyConfig";
 
 const CADDYFILE_BAK = "/etc/caddy/Caddyfile.bak";
-
-/**
- * Makes sure Caddy loads conf.d. Adds the plugin's import line only when the main
- * Caddyfile has no conf.d import at all; an import the user wrote stays untouched.
- */
-async function ensureConfDImported(): Promise<void> {
-  const content = await readCaddyfile();
-  const next = withConfDImport(content);
-  if (next !== content) await writeCaddyfile(next);
-}
 
 function delay(ms: number): Promise<void> {
   return new Promise(r => setTimeout(r, ms));
@@ -91,11 +82,12 @@ function withOnDemand(map: Record<string, boolean>, oldKey: string | undefined, 
 /**
  * Sites whose JSON only Caddy's own Caddyfile adapter builds correctly, so they are applied
  * by reloading instead of pushing hand-built JSON: php_fastcgi (#35) expands into several
- * routes, and automatic HTTPS (#246) and on-demand TLS (#253) need automation policies that
- * the JSON push doesn't build.
+ * routes, automatic HTTPS (#246) and on-demand TLS (#253) need automation policies that
+ * the JSON push doesn't build, and snippet imports (#288) are only in the Caddyfile.
  */
 function needsCaddyfileReload(p: ProxyEntry): boolean {
-  return !!p.phpFastcgi || reliesOnCaddyfileTls(p);
+  // Snippet imports (#288) only exist in the Caddyfile; hand-built JSON would drop what they add.
+  return !!p.phpFastcgi || reliesOnCaddyfileTls(p) || !!p.imports?.length;
 }
 
 /**
@@ -128,6 +120,9 @@ export function useProxies() {
   const [confCustomTlsCa, setConfCustomTlsCa] = useState<Record<string, string>>({});
   const [confTlsIssuer, setConfTlsIssuer] = useState<Record<string, "acme" | "internal">>({});
   const [confTlsOnDemand, setConfTlsOnDemand] = useState<Record<string, boolean>>({});
+  const [confSiteBlocks, setConfSiteBlocks] = useState<Record<string, string>>({});
+  const [confImports, setConfImports] = useState<Record<string, string[]>>({});
+  const [pluginSnippets, setPluginSnippets] = useState<SnippetDef[]>([]);
   const [caddyfileContent, setCaddyfileContent] = useState<string>("");
   const [servers, setServers] = useState<ServerDef[]>([]);
   // Guards proxies memo from running before the first conf.d read completes.
@@ -138,6 +133,12 @@ export function useProxies() {
   // so stale syncConf promises that started before the mutation don't overwrite it.
   const lastServersMutationAt = useRef(0);
   const confdRepairedRef = useRef(false);
+
+  /** Site imports (#288) right after a write, so the list never shows a site without them. */
+  const noteConfSites = useCallback((content: string) => {
+    setConfSiteBlocks(parseConfSiteBlocks(content));
+    setConfImports(parseConfSiteImports(content));
+  }, []);
 
   const syncConf = useCallback(() => {
     const syncStart = Date.now();
@@ -164,6 +165,8 @@ export function useProxies() {
       setConfCustomTlsCa(parseConfCustomTlsCaMap(c));
       setConfTlsIssuer(parseConfTlsIssuerMap(c));
       setConfTlsOnDemand(parseConfTlsOnDemandMap(c));
+      noteConfSites(c);
+      setPluginSnippets(parseSnippets(await readSnippetsConf(), "plugin"));
       const defs = parseServerDefsFromConf(c);
       setServersLoaded(true);
       // Only update servers if no mutation happened after this sync started
@@ -171,7 +174,7 @@ export function useProxies() {
         setServers(defs);
       }
     }).catch(() => { setServersLoaded(true); });
-  }, []);
+  }, [noteConfSites]);
 
   const syncCaddyfile = useCallback(() => {
     void readCaddyfile().then(c => setCaddyfileContent(c ?? "")).catch(() => {});
@@ -192,6 +195,11 @@ export function useProxies() {
   const needsMigration = useMemo(
     () => migrateCaddyfile(caddyfileContent).blocks.length > 0,
     [caddyfileContent],
+  );
+
+  const snippets = useMemo(
+    () => mergeSnippetLists(pluginSnippets, parseSnippets(caddyfileContent, "caddyfile")),
+    [pluginSnippets, caddyfileContent],
   );
 
   const proxies = useMemo(
@@ -224,8 +232,10 @@ export function useProxies() {
             ...(resolved.renewalWindowRatio !== undefined ? { renewalWindowRatio: resolved.renewalWindowRatio } : {}),
           }
         : undefined;
-      return {
+      const imports = lookup(confImports);
+      return separateSnippetSettings({
         ...p,
+        imports,
         label: lookup(labels),
         tls,
         externalScheme: p.externalScheme ?? lookup(confExternal)?.scheme,
@@ -243,9 +253,9 @@ export function useProxies() {
         tlsIssuer: tls && !p.customTls ? lookup(confTlsIssuer) : undefined,
         // Per-site on-demand TLS (#253), likewise read from the Caddyfile.
         tlsOnDemand: tls && !p.customTls && lookup(confTlsOnDemand) ? true : undefined,
-      };
+      }, lookup(confSiteBlocks), snippets);
     }),
-    [config, labels, confTls, confExternal, confAccessLog, confForwardAuth, confCustomTlsCa, confTlsIssuer, confTlsOnDemand, servers, serversLoaded],
+    [config, labels, confTls, confExternal, confAccessLog, confForwardAuth, confCustomTlsCa, confTlsIssuer, confTlsOnDemand, confSiteBlocks, confImports, snippets, servers, serversLoaded],
   );
 
   // #246: while any site relies on automatic HTTPS, Caddy's own Caddyfile adapter has to build
@@ -330,7 +340,9 @@ export function useProxies() {
         cockpit.spawn(["mkdir", "-p", "/etc/caddy/conf.d"], { superuser: "try" }),
         readProxyConf(),
       ]);
-      await writeRawProxyConfValidated(surgicallyWriteProxy(current, newProxy));
+      const written = surgicallyWriteProxy(current, newProxy);
+      await writeRawProxyConfValidated(written);
+      noteConfSites(written);
       const newProxyKey = proxyAddressKeys(newProxy)[0];
       setLabels(prev => {
         const n = { ...prev };
@@ -359,7 +371,7 @@ export function useProxies() {
       }
       await apply(mergeProxy(config, newProxy));
     },
-    [config, proxies, servers, apply, refresh],
+    [config, proxies, servers, apply, refresh, noteConfSites],
   );
 
   const editProxy = useCallback(
@@ -427,7 +439,9 @@ export function useProxies() {
         readProxyConf(),
       ]);
 
-      await writeRawProxyConfValidated(surgicallyEditProxy(current, originalProxy, entry));
+      const written = surgicallyEditProxy(current, originalProxy, entry);
+      await writeRawProxyConfValidated(written);
+      noteConfSites(written);
 
       setLabels(prev => {
         const n = { ...prev };
@@ -460,7 +474,7 @@ export function useProxies() {
       }
       await apply(mergeProxy(config, entry));
     },
-    [config, proxies, servers, apply, refresh],
+    [config, proxies, servers, apply, refresh, noteConfSites],
   );
 
   const deleteProxy = useCallback(
@@ -509,7 +523,9 @@ export function useProxies() {
       const remainingProxies = proxies.filter(p => p.id !== proxy.id);
       await syncGlobalTimeouts(remainingProxies);
       const current = await readProxyConf();
-      await writeRawProxyConf(surgicallyRemoveBlock(current, proxy.externalPort, routeHosts(proxy)?.join(", ")));
+      const written = surgicallyRemoveBlock(current, proxy.externalPort, routeHosts(proxy)?.join(", "));
+      await writeRawProxyConf(written);
+      noteConfSites(written);
       const proxyKey = proxyAddressKeys(proxy)[0];
       setLabels(prev => { const n = { ...prev }; delete n[proxyKey]; return n; });
       setConfTls(prev => { const n = { ...prev }; delete n[proxyKey]; return n; });
@@ -524,7 +540,7 @@ export function useProxies() {
       }
       await apply(removeProxy(config, proxy.serverKey));
     },
-    [config, proxies, servers, apply, refresh],
+    [config, proxies, servers, apply, refresh, noteConfSites],
   );
 
   const addServer = useCallback(
@@ -611,6 +627,7 @@ export function useProxies() {
   }, [caddyfileContent, labels, confTls, refresh]);
 
   return {
+    snippets,
     proxies, servers, loading, error, refresh,
     addProxy, editProxy, deleteProxy,
     addServer, editServer, deleteServer,

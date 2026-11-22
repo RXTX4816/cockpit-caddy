@@ -22,6 +22,7 @@ import type { Page } from '@playwright/test';
 
 export const PROXY_CONF_PATH = '/etc/caddy/conf.d/cockpit-caddy.conf';
 export const CADDYFILE_PATH = '/etc/caddy/Caddyfile';
+export const SNIPPETS_CONF_PATH = '/etc/caddy/conf.d/cockpit-caddy-snippets.conf';
 /** Same text as CONF_HEADER in src/api/caddy.ts, so the plugin's first-load repair has nothing to rewrite. */
 export const CONF_HEADER = '# Written by the Cockpit Caddy plugin. Hand edits are fine; saving a proxy in Cockpit rewrites only the block that holds it.';
 
@@ -87,6 +88,8 @@ async function reloadCaddy(page: Page): Promise<void> {
  */
 export async function resetConfig(page: Page): Promise<void> {
   await writeFile(page, PROXY_CONF_PATH, `${CONF_HEADER}\n`);
+  // Snippets (#288) after the sites, so no site is left importing a snippet that's gone.
+  await writeFile(page, SNIPPETS_CONF_PATH, '');
   // Standalone proxies' server-level timeouts/header limits/HTTP-3 opt-out (#51) live in
   // a managed section of the *main* Caddyfile (`# cockpit-caddy:begin`/`:end`), not
   // conf.d — strip any leftover section from a previous test so it doesn't leak into

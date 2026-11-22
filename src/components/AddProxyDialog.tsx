@@ -24,6 +24,7 @@ import { readProxyConf, parseConfExternalAddresses, CaddyApiError, CaddyfileErro
 import type { ProxyEntry, RewriteConfig, HeaderOperation, RouteMatch, ServerDef } from "../api";
 import { TlsModeField, defaultTlsMode, hasPublicName, tlsModeToEntry, type TlsMode } from "./TlsModeField";
 import { RouteMatchersSection } from "./RouteMatchersSection";
+import { SnippetImportsField } from "./SnippetImportsField";
 import { parseListenPort } from "./AddServerDialog";
 import { EXTERNAL_ADDRESS_BUILTIN_SCHEMES } from "./externalAddressSchemes";
 import { externalHostFieldError } from "./externalHostField";
@@ -97,6 +98,7 @@ interface Props {
   initialForwardAuth?: ForwardAuthConfig;
   initialTlsValues?: TlsValues;
   initialMatchers?: RouteMatch;
+  initialImports?: string[];
   initialHandlePath?: boolean;
   initialIsNamedRoute?: boolean;
   initialNamedRouteName?: string;
@@ -104,7 +106,7 @@ interface Props {
   initialServerKey?: string;
 }
 
-export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, initialValues, initialTlsMode, initialTlsOnDemand, initialRewrite, initialRequestHeaders, initialResponseHeaders, initialTransport, initialBasicAuth, initialExtraUpstreams, initialLbPolicy, initialLbRetry, initialServerTimeouts, initialRequestBodyMaxSize, initialAccessLog, initialErrorHandlers, initialForwardAuth, initialTlsValues, initialMatchers, initialHandlePath, initialIsNamedRoute, initialNamedRouteName, servers, initialServerKey }: Props) {
+export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, initialValues, initialTlsMode, initialTlsOnDemand, initialRewrite, initialRequestHeaders, initialResponseHeaders, initialTransport, initialBasicAuth, initialExtraUpstreams, initialLbPolicy, initialLbRetry, initialServerTimeouts, initialRequestBodyMaxSize, initialAccessLog, initialErrorHandlers, initialForwardAuth, initialTlsValues, initialMatchers, initialImports, initialHandlePath, initialIsNamedRoute, initialNamedRouteName, servers, initialServerKey }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
   const confirmAction = useConfirmAction();
@@ -138,6 +140,7 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
   const [tlsValues, setTlsValues] = useState<TlsValues>(initialTlsValues ?? tlsConfigToValues(undefined, undefined));
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [matchers, setMatchers] = useState<RouteMatch | undefined>(initialMatchers);
+  const [imports, setImports] = useState<string[] | undefined>(initialImports);
   const [handlePath, setHandlePath] = useState(initialHandlePath ?? false);
   const [isNamedRoute, setIsNamedRoute] = useState(initialIsNamedRoute ?? false);
   const [namedRouteName, setNamedRouteName] = useState(initialNamedRouteName ?? "");
@@ -454,6 +457,7 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
             <LbRetrySection value={lbRetry} onChange={setLbRetry} isDisabled={isLocked} {...sectionAccordionProps("lbRetry", expandedSection, setExpandedSection)} />
           </AccordionRow>
           <AccordionRow last>
+            <SnippetImportsField value={imports} onChange={setImports} isDisabled={isLocked} />
             <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!isPathOnlyMatcher(v)) setHandlePath(false); }} isDisabled={isLocked} {...sectionAccordionProps("routeMatchers", expandedSection, setExpandedSection)} />
           </AccordionRow>
         </div>
@@ -536,6 +540,7 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
                     mtls: tlsValuesToMtls(tlsValues),
                     customTls: tlsValuesToCustomTls(tlsValues),
                     matchers: matchers ?? undefined,
+                    imports,
                     handlePath: handlePath || undefined,
                     isNamedRoute: isNamedRoute || undefined,
                     namedRouteName: (isNamedRoute && namedRouteName.trim()) ? namedRouteName.trim() : undefined,

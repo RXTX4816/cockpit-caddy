@@ -3582,6 +3582,28 @@ describe("route matchers — not and expression (#287)", () => {
   });
 });
 
+describe("site imports (#288)", () => {
+  it("writes import lines at the top of a generated site block", () => {
+    const block = proxyToBlock(proxy({ imports: ["security-headers", "auth"] }));
+    expect(block.split("\n").slice(0, 3)).toEqual(["http://:7700 {", "\timport security-headers", "\timport auth"]);
+  });
+
+  it("a hand-written block keeps its file imports and gets its snippet imports from the entry", () => {
+    const conf = "app.example.com {\n\timport old\n\timport /etc/caddy/extra.caddy\n\treverse_proxy localhost:1\n}\n";
+    const out = surgicallyWriteProxy(conf, proxy({ externalPort: 443, tls: true, tlsIssuer: "acme", externalHost: "app.example.com", imports: ["new"] }));
+    expect(out.split("\n").slice(0, 2)).toEqual(["app.example.com {", "\timport new"]);
+    expect(out).toContain("\timport new\n");
+    expect(out).toContain("\timport /etc/caddy/extra.caddy");
+    expect(out).not.toContain("import old");
+  });
+
+  it("removing every import drops the lines", () => {
+    const conf = "app.example.com {\n\timport old\n\treverse_proxy localhost:1\n}\n";
+    const out = surgicallyWriteProxy(conf, proxy({ externalPort: 443, tls: true, tlsIssuer: "acme", externalHost: "app.example.com", imports: undefined }));
+    expect(out).not.toContain("import");
+  });
+});
+
 describe("Caddyfile placeholder shorthands (#287)", () => {
   it.each([
     ["{method}", "{http.request.method}"],
@@ -4041,6 +4063,14 @@ describe("withConfDImport (#237: leave the user's own conf.d import alone)", () 
 });
 
 describe("inlineConfDImport", () => {
+  it("inlines the snippets file before the sites that import from it (#288)", () => {
+    const files = [
+      { path: "/etc/caddy/conf.d/cockpit-caddy.conf", content: ":1 {\n\timport s\n}" },
+      { path: "/etc/caddy/conf.d/cockpit-caddy-snippets.conf", content: "(s) {\n}" },
+    ];
+    expect(inlineConfDImport("import /etc/caddy/conf.d/*.conf", files)).toBe("(s) {\n}\n\n:1 {\n\timport s\n}");
+  });
+
   const files = [
     { path: "/etc/caddy/conf.d/b.conf", content: ":2 {\n}" },
     { path: "/etc/caddy/conf.d/a.conf", content: ":1 {\n}" },

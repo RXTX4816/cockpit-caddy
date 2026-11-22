@@ -443,6 +443,10 @@ export interface ProxyEntry {
   namedRouteName?: string;
   /** When set, this route belongs to the named ServerDef with this key (#49). */
   namedServerKey?: string;
+  /** Snippets imported at the top of the site block (#288), read from the conf.d text. */
+  imports?: string[];
+  /** Snippets that supplied settings the dialog doesn't show as the site's own (#288). Read-only. */
+  snippetSettings?: string[];
 }
 
 export type { ServiceStatus } from "@rxtx4816/cockpit-plugin-base-react/systemd";

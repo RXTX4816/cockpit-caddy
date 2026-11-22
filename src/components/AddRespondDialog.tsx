@@ -24,6 +24,7 @@ import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { CaddyApiError, isPathOnlyMatcher } from "../api";
 import type { ProxyEntry, RouteMatch, ServerDef } from "../api";
 import { RouteMatchersSection } from "./RouteMatchersSection";
+import { SnippetImportsField } from "./SnippetImportsField";
 import { parseListenPort } from "./AddServerDialog";
 import type { ServerContext } from "./AddRedirectDialog";
 
@@ -33,12 +34,13 @@ interface Props {
   onClose: () => void;
   initialValues?: { port?: string; statusCode?: string; body?: string; close?: boolean; label?: string };
   initialMatchers?: RouteMatch;
+  initialImports?: string[];
   initialHandlePath?: boolean;
   servers?: ServerDef[];
   initialServerKey?: string;
 }
 
-export function AddRespondDialog({ existingPorts, onAdd, onClose, initialValues, initialMatchers, initialHandlePath, servers, initialServerKey }: Props) {
+export function AddRespondDialog({ existingPorts, onAdd, onClose, initialValues, initialMatchers, initialImports, initialHandlePath, servers, initialServerKey }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
   const confirmAction = useConfirmAction();
@@ -49,6 +51,7 @@ export function AddRespondDialog({ existingPorts, onAdd, onClose, initialValues,
   const [close, setClose] = useState(initialValues?.close ?? false);
   const [label, setLabel] = useState(initialValues?.label ?? "");
   const [matchers, setMatchers] = useState<RouteMatch | undefined>(initialMatchers);
+  const [imports, setImports] = useState<string[] | undefined>(initialImports);
   const [handlePath, setHandlePath] = useState(initialHandlePath ?? false);
   const [selectedServerKey, setSelectedServerKey] = useState(initialServerKey ?? "");
   const [portErr, setPortErr] = useState<string | null>(null);
@@ -195,6 +198,7 @@ export function AddRespondDialog({ existingPorts, onAdd, onClose, initialValues,
             />
           </FormGroup>
         </Form>
+        <SnippetImportsField value={imports} onChange={setImports} isDisabled={isLocked} />
         <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!isPathOnlyMatcher(v)) setHandlePath(false); }} isDisabled={isLocked} />
         {isPathOnlyMatcher(matchers) && (
           <Checkbox
@@ -236,6 +240,7 @@ export function AddRespondDialog({ existingPorts, onAdd, onClose, initialValues,
                       close: close || undefined,
                     },
                     matchers: matchers ?? undefined,
+                    imports,
                     handlePath: handlePath || undefined,
                     namedServerKey: serverCtx?.serverKey,
                   });
