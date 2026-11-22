@@ -22,7 +22,9 @@ test('reload button reloads without dropping existing routes', async ({ pluginPa
   await waitForToolbar(page);
   await expect(page.getByRole('link', { name: ':19490' })).toBeVisible({ timeout: 10000 });
 
-  await page.getByRole('button', { name: /^reload config$/i }).click();
+  // Reload config sits in the service kebab next to Restart (#259).
+  await page.getByRole('button', { name: 'More service actions' }).click();
+  await page.getByRole('menuitem', { name: /^reload config$/i }).click();
   await expect(page.getByRole('dialog', { name: /reload caddy config/i })).toBeVisible({ timeout: 5000 });
   await page.getByRole('button', { name: /^confirm$/i }).click();
   await expect(page.getByText(/caddy config reloaded/i)).toBeVisible({ timeout: 10000 });

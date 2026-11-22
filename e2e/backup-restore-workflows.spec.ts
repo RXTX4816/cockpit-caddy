@@ -8,7 +8,7 @@
  * radio options rather than using a file-upload picker.
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { readConf, addProxy, spawnCmd, resetConfig } from './helpers';
+import { readConf, addProxy, spawnCmd, resetConfig, openTool } from './helpers';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
   await dismissAdminBanner(page);
@@ -23,7 +23,7 @@ test('backup produces a tar archive containing the /etc/caddy config', async ({ 
   await page.reload({ waitUntil: 'networkidle' });
   await waitForToolbar(page);
 
-  await page.getByRole('button', { name: /^backup$/i }).click();
+  await openTool(page, /^backup/i);
   const modal = page.getByRole('dialog');
   await modal.locator('#bd-dest-dir').fill(BACKUP_DIR);
   const archivePath = await modal.locator('#bd-preview').inputValue();
@@ -46,7 +46,7 @@ test('restore from a backup tar replaces current config exactly', async ({ plugi
   const stateAConf = await readConf(page);
 
   // Back up state A.
-  await page.getByRole('button', { name: /^backup$/i }).click();
+  await openTool(page, /^backup/i);
   let modal = page.getByRole('dialog');
   await modal.locator('#bd-dest-dir').fill(BACKUP_DIR);
   const archivePath = await modal.locator('#bd-preview').inputValue();
@@ -63,7 +63,7 @@ test('restore from a backup tar replaces current config exactly', async ({ plugi
   expect(stateBConf).not.toBe(stateAConf);
 
   // Restore state A from the archive.
-  await page.getByRole('button', { name: /^restore$/i }).click();
+  await openTool(page, /^restore/i);
   modal = page.getByRole('dialog');
   await modal.locator('#rd-scan-dir').fill(BACKUP_DIR);
   await modal.getByRole('button', { name: /^scan$/i }).click();
@@ -89,7 +89,7 @@ test('restore of a corrupt archive is rejected without touching existing config'
   await spawnCmd(page, ['mkdir', '-p', BACKUP_DIR]);
   await spawnCmd(page, ['bash', '-c', `echo 'not a real tar file' > '${badArchive}'`]);
 
-  await page.getByRole('button', { name: /^restore$/i }).click();
+  await openTool(page, /^restore/i);
   const modal = page.getByRole('dialog');
   await modal.locator('#rd-scan-dir').fill(BACKUP_DIR);
   await modal.getByRole('button', { name: /^scan$/i }).click();
