@@ -786,7 +786,14 @@
     "remove_host": "Quitar host",
     "remove_header": "Quitar cabecera",
     "remove_query": "Quitar parámetro de consulta",
-    "remove_cidr": "Quitar rango CIDR"
+    "remove_cidr": "Quitar rango CIDR",
+    "exclude_title": "Excluir las solicitudes que coincidan",
+    "exclude_help": "Una solicitud que coincide con todos estos campos se omite, aunque coincida con los campos de arriba. Rellena solo estos para abarcar todo excepto ellos.",
+    "exclude_prefix": "Excluir:",
+    "expression_label": "Expresión (CEL)",
+    "expression_help": "Una condición que también debe cumplirse, con marcadores como {path} o {method}. Caddy la comprueba al guardar.",
+    "expression_docs": "Documentación del matcher expression",
+    "chip_not": "excepto"
   },
   "handle_path": {
     "label": "Quitar el prefijo de ruta coincidente (handle_path)"

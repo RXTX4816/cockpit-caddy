@@ -786,7 +786,14 @@
     "remove_host": "Host entfernen",
     "remove_header": "Header entfernen",
     "remove_query": "Query-Parameter entfernen",
-    "remove_cidr": "CIDR-Bereich entfernen"
+    "remove_cidr": "CIDR-Bereich entfernen",
+    "exclude_title": "Anfragen ausschließen, die passen",
+    "exclude_help": "Eine Anfrage, die alle diese Felder erfüllt, wird übersprungen, auch wenn sie die Felder oben erfüllt. Nur diese Felder setzen bedeutet: alles außer diesen Anfragen.",
+    "exclude_prefix": "Ausschließen:",
+    "expression_label": "Ausdruck (CEL)",
+    "expression_help": "Eine Bedingung, die zusätzlich erfüllt sein muss, mit Platzhaltern wie {path} oder {method}. Caddy prüft sie beim Speichern.",
+    "expression_docs": "Doku zum Expression-Matcher",
+    "chip_not": "außer"
   },
   "handle_path": {
     "label": "Getroffenes Pfadpräfix entfernen (handle_path)"

@@ -20,7 +20,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast, ExternalAddressInput } from "@rxtx4816/cockpit-plugin-base-react/components";
-import { readProxyConf, parseConfExternalAddresses, CaddyApiError, CaddyfileError, routeHosts, hostsConflict, normalizeExternalHost, formatExternalAddressPreview } from "../api";
+import { readProxyConf, parseConfExternalAddresses, CaddyApiError, CaddyfileError, routeHosts, hostsConflict, normalizeExternalHost, formatExternalAddressPreview, isPathOnlyMatcher } from "../api";
 import type { ProxyEntry, RewriteConfig, HeaderOperation, RouteMatch, ServerDef } from "../api";
 import { TlsModeField, defaultTlsMode, hasPublicName, tlsModeToEntry, type TlsMode } from "./TlsModeField";
 import { RouteMatchersSection } from "./RouteMatchersSection";
@@ -454,10 +454,10 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
             <LbRetrySection value={lbRetry} onChange={setLbRetry} isDisabled={isLocked} {...sectionAccordionProps("lbRetry", expandedSection, setExpandedSection)} />
           </AccordionRow>
           <AccordionRow last>
-            <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!v?.path?.length) setHandlePath(false); }} isDisabled={isLocked} {...sectionAccordionProps("routeMatchers", expandedSection, setExpandedSection)} />
+            <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!isPathOnlyMatcher(v)) setHandlePath(false); }} isDisabled={isLocked} {...sectionAccordionProps("routeMatchers", expandedSection, setExpandedSection)} />
           </AccordionRow>
         </div>
-        {matchers?.path?.length && !matchers.host?.length && !matchers.method?.length && !matchers.header && !matchers.query && !matchers.remote_ip && (
+        {isPathOnlyMatcher(matchers) && (
           <Checkbox
             id="add-proxy-handle-path"
             label={t("handle_path.label")}

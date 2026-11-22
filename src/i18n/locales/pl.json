@@ -786,7 +786,14 @@
     "remove_host": "Usuń host",
     "remove_header": "Usuń nagłówek",
     "remove_query": "Usuń parametr zapytania",
-    "remove_cidr": "Usuń zakres CIDR"
+    "remove_cidr": "Usuń zakres CIDR",
+    "exclude_title": "Wyklucz pasujące żądania",
+    "exclude_help": "Żądanie pasujące do wszystkich tych pól jest pomijane, nawet jeśli pasuje do pól powyżej. Ustaw tylko te pola, aby objąć wszystko oprócz nich.",
+    "exclude_prefix": "Wyklucz:",
+    "expression_label": "Wyrażenie (CEL)",
+    "expression_help": "Warunek, który też musi być spełniony, z symbolami zastępczymi jak {path} lub {method}. Caddy sprawdza go przy zapisie.",
+    "expression_docs": "Dokumentacja matchera expression",
+    "chip_not": "oprócz"
   },
   "handle_path": {
     "label": "Usuń dopasowany prefiks ścieżki (handle_path)"

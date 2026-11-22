@@ -786,7 +786,14 @@
     "remove_host": "إزالة المضيف",
     "remove_header": "إزالة الترويسة",
     "remove_query": "إزالة معامل الاستعلام",
-    "remove_cidr": "إزالة نطاق CIDR"
+    "remove_cidr": "إزالة نطاق CIDR",
+    "exclude_title": "استبعاد الطلبات المطابقة",
+    "exclude_help": "يتم تخطي الطلب الذي يطابق كل هذه الحقول، حتى لو طابق الحقول أعلاه. اضبط هذه الحقول وحدها لمطابقة كل شيء ما عداها.",
+    "exclude_prefix": "استبعاد:",
+    "expression_label": "تعبير (CEL)",
+    "expression_help": "شرط يجب أن يتحقق أيضًا، مع عناصر نائبة مثل {path} أو {method}. يتحقق Caddy منه عند الحفظ.",
+    "expression_docs": "توثيق مطابق التعبير",
+    "chip_not": "باستثناء"
   },
   "handle_path": {
     "label": "إزالة بادئة المسار المطابقة (handle_path)"

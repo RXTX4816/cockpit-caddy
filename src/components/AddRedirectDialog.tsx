@@ -20,7 +20,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
-import { CaddyApiError } from "../api";
+import { CaddyApiError, isPathOnlyMatcher } from "../api";
 import type { ProxyEntry, RouteMatch, ServerDef } from "../api";
 import { RouteMatchersSection } from "./RouteMatchersSection";
 import { parseListenPort } from "./AddServerDialog";
@@ -214,8 +214,8 @@ export function AddRedirectDialog({ existingPorts, onAdd, onClose, initialValues
             </div>
           </FormGroup>
         </Form>
-        <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!v?.path?.length) setHandlePath(false); }} isDisabled={isLocked} />
-        {matchers?.path?.length && !matchers.host?.length && !matchers.method?.length && !matchers.header && !matchers.query && !matchers.remote_ip && (
+        <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!isPathOnlyMatcher(v)) setHandlePath(false); }} isDisabled={isLocked} />
+        {isPathOnlyMatcher(matchers) && (
           <Checkbox
             id="add-redirect-handle-path"
             label={t("handle_path.label")}

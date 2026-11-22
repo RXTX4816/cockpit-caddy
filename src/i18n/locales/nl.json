@@ -786,7 +786,14 @@
     "remove_host": "Host verwijderen",
     "remove_header": "Header verwijderen",
     "remove_query": "Queryparameter verwijderen",
-    "remove_cidr": "CIDR-bereik verwijderen"
+    "remove_cidr": "CIDR-bereik verwijderen",
+    "exclude_title": "Verzoeken uitsluiten die overeenkomen",
+    "exclude_help": "Een verzoek dat aan al deze velden voldoet, wordt overgeslagen, ook als het aan de velden hierboven voldoet. Vul alleen deze in om alles behalve dit te matchen.",
+    "exclude_prefix": "Uitsluiten:",
+    "expression_label": "Expressie (CEL)",
+    "expression_help": "Een voorwaarde die ook waar moet zijn, met placeholders zoals {path} of {method}. Caddy controleert die bij het opslaan.",
+    "expression_docs": "Documentatie van de expression-matcher",
+    "chip_not": "behalve"
   },
   "handle_path": {
     "label": "Overeenkomend padprefix verwijderen (handle_path)"

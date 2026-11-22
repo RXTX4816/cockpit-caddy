@@ -786,7 +786,14 @@
     "remove_host": "Elimină gazda",
     "remove_header": "Elimină antetul",
     "remove_query": "Elimină parametrul de interogare",
-    "remove_cidr": "Elimină intervalul CIDR"
+    "remove_cidr": "Elimină intervalul CIDR",
+    "exclude_title": "Exclude cererile care se potrivesc",
+    "exclude_help": "O cerere care se potrivește cu toate aceste câmpuri este sărită, chiar dacă se potrivește cu câmpurile de mai sus. Completează doar aceste câmpuri pentru a include tot în afară de ele.",
+    "exclude_prefix": "Exclude:",
+    "expression_label": "Expresie (CEL)",
+    "expression_help": "O condiție care trebuie să fie și ea adevărată, cu substituenți precum {path} sau {method}. Caddy o verifică la salvare.",
+    "expression_docs": "Documentația matcher-ului expression",
+    "chip_not": "except"
   },
   "handle_path": {
     "label": "Elimină prefixul de cale potrivit (handle_path)"

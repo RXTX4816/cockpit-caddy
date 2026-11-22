@@ -56,7 +56,7 @@ async function addRouteToActiveServer(
   if (pathMatcher) {
     await modal.getByText(/route matchers/i).click();
     await modal.getByLabel('Path', { exact: true }).fill(pathMatcher);
-    await modal.getByRole('button', { name: /add path/i }).click();
+    await modal.getByRole('button', { name: /^add path$/i }).click();
   }
   await modal.getByRole('button', { name: /add proxy/i }).click();
   await modal.getByRole('button', { name: /^confirm$/i }).click();

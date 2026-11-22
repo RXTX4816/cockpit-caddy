@@ -786,7 +786,14 @@
     "remove_host": "הסרת מארח",
     "remove_header": "הסרת כותרת",
     "remove_query": "הסרת פרמטר שאילתה",
-    "remove_cidr": "הסרת טווח CIDR"
+    "remove_cidr": "הסרת טווח CIDR",
+    "exclude_title": "החרגת בקשות תואמות",
+    "exclude_help": "בקשה שתואמת את כל השדות האלה מדולגת, גם אם היא תואמת את השדות שלמעלה. מלאו רק אותם כדי לתפוס הכול מלבדם.",
+    "exclude_prefix": "החרגה:",
+    "expression_label": "ביטוי (CEL)",
+    "expression_help": "תנאי שחייב להתקיים גם הוא, עם מצייני מיקום כמו {path} או {method}. Caddy בודק אותו בשמירה.",
+    "expression_docs": "תיעוד ה-matcher של expression",
+    "chip_not": "מלבד"
   },
   "handle_path": {
     "label": "הסרת קידומת הנתיב התואמת (handle_path)"

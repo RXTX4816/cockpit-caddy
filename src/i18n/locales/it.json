@@ -786,7 +786,14 @@
     "remove_host": "Rimuovi host",
     "remove_header": "Rimuovi header",
     "remove_query": "Rimuovi parametro di query",
-    "remove_cidr": "Rimuovi intervallo CIDR"
+    "remove_cidr": "Rimuovi intervallo CIDR",
+    "exclude_title": "Escludi le richieste corrispondenti",
+    "exclude_help": "Una richiesta che corrisponde a tutti questi campi viene saltata, anche se corrisponde ai campi sopra. Compila solo questi per includere tutto tranne loro.",
+    "exclude_prefix": "Escludi:",
+    "expression_label": "Espressione (CEL)",
+    "expression_help": "Una condizione che deve essere anch’essa vera, con segnaposto come {path} o {method}. Caddy la verifica al salvataggio.",
+    "expression_docs": "Documentazione del matcher expression",
+    "chip_not": "tranne"
   },
   "handle_path": {
     "label": "Rimuovi il prefisso di percorso corrispondente (handle_path)"

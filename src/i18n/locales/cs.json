@@ -786,7 +786,14 @@
     "remove_host": "Odebrat hostitele",
     "remove_header": "Odebrat hlavičku",
     "remove_query": "Odebrat parametr dotazu",
-    "remove_cidr": "Odebrat rozsah CIDR"
+    "remove_cidr": "Odebrat rozsah CIDR",
+    "exclude_title": "Vyloučit odpovídající požadavky",
+    "exclude_help": "Požadavek, který odpovídá všem těmto polím, se přeskočí, i když odpovídá polím výše. Nastavte jen tato pole, chcete-li zachytit vše kromě nich.",
+    "exclude_prefix": "Vyloučit:",
+    "expression_label": "Výraz (CEL)",
+    "expression_help": "Podmínka, která musí také platit, se zástupnými symboly jako {path} nebo {method}. Caddy ji zkontroluje při uložení.",
+    "expression_docs": "Dokumentace k matcheru expression",
+    "chip_not": "kromě"
   },
   "handle_path": {
     "label": "Odebrat odpovídající prefix cesty (handle_path)"

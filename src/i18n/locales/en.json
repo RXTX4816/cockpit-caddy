@@ -786,7 +786,14 @@
     "remove_host": "Remove host",
     "remove_header": "Remove header",
     "remove_query": "Remove query parameter",
-    "remove_cidr": "Remove CIDR range"
+    "remove_cidr": "Remove CIDR range",
+    "exclude_title": "Exclude requests that match",
+    "exclude_help": "A request that matches all of these fields is skipped, even when it matches the fields above. Set only these to match everything except them.",
+    "exclude_prefix": "Exclude:",
+    "expression_label": "Expression (CEL)",
+    "expression_help": "A condition that must also be true, with placeholders like {path} or {method}. Caddy checks it when you save.",
+    "expression_docs": "Expression matcher docs",
+    "chip_not": "except"
   },
   "handle_path": {
     "label": "Strip matched path prefix (handle_path)"

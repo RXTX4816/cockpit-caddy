@@ -86,7 +86,7 @@ describe("t() usage", () => {
 /** JSX attributes whose string value is shown to the user or read out by a screen reader. */
 const TEXT_ATTRIBUTES = new Set(["aria-label", "title", "label", "content", "alt", "titleText", "bodyText", "helperText", "description"]);
 /** Literal text that is the same in every language: protocol and product names, symbols. */
-const LITERAL_OK = new Set(["http", "https", "HTTP", "TLS", "IP", "macOS", "Firefox", "×", "—", "+", "→"]);
+const LITERAL_OK = new Set(["http", "https", "HTTP", "TLS", "IP", "CEL", "macOS", "Firefox", "×", "—", "+", "→"]);
 
 function hardCodedText(file: string, src: string): string[] {
   const sf = ts.createSourceFile(file, src, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);

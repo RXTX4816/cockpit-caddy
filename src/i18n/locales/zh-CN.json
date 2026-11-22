@@ -786,7 +786,14 @@
     "remove_host": "移除主机",
     "remove_header": "移除标头",
     "remove_query": "移除查询参数",
-    "remove_cidr": "移除 CIDR 范围"
+    "remove_cidr": "移除 CIDR 范围",
+    "exclude_title": "排除匹配的请求",
+    "exclude_help": "同时匹配下列所有字段的请求会被跳过，即使它匹配上面的字段。只填写这里则表示匹配除此之外的所有请求。",
+    "exclude_prefix": "排除：",
+    "expression_label": "表达式 (CEL)",
+    "expression_help": "还必须为真的条件，可使用 {path} 或 {method} 等占位符。保存时由 Caddy 检查。",
+    "expression_docs": "expression 匹配器文档",
+    "chip_not": "排除"
   },
   "handle_path": {
     "label": "去除匹配的路径前缀（handle_path）"

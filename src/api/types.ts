@@ -63,7 +63,14 @@ export interface RouteMatch {
   /** Query param name → list of value patterns. */
   query?: Record<string, string[]>;
   remote_ip?: { ranges: string[] };
+  /** Exclude group (#287): the route matches only when these fields do NOT all match. */
+  not?: RouteMatchFields;
+  /** CEL expression (#287), as written in a Caddyfile (placeholder shorthands like `{path}`). */
+  expression?: string;
 }
+
+/** The plain matcher fields, without the `not` group and the expression. */
+export type RouteMatchFields = Omit<RouteMatch, "not" | "expression">;
 
 // ---------------------------------------------------------------------------
 // Named Server — #49
