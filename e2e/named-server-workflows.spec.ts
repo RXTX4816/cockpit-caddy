@@ -6,7 +6,7 @@
  * and server-level edit/delete.
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { addServer, addProxy, readConf } from './helpers';
+import { addServer, addProxy, readConf, rowAction } from './helpers';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
   await dismissAdminBanner(page);
@@ -130,7 +130,7 @@ test('deleting middle route renumbers remaining routes in conf (no ID gaps)', as
 
   // Delete the middle route (port 3002)
   const middleRow = page.locator('li').filter({ hasText: 'localhost:3002' });
-  await middleRow.getByRole('button', { name: /^delete$/i }).click();
+  await rowAction(middleRow, 'Delete');
   const confirmModal = page.getByRole('dialog');
   await confirmModal.getByRole('button', { name: /^delete$/i }).click();
   // Wait for the confirm dialog to close before checking route absence — both the
@@ -167,7 +167,7 @@ test('deleting last route of a named server removes the server tab', async ({ pl
   await expect(page.getByText('http://localhost:3001')).toBeVisible({ timeout: 5000 });
 
   // Delete the only route
-  await page.getByRole('button', { name: /^delete$/i }).click();
+  await rowAction(page.locator('li').filter({ hasText: 'localhost:3001' }), 'Delete');
   const confirmModal = page.getByRole('dialog');
   await confirmModal.getByRole('button', { name: /^delete$/i }).click();
   // Wait for the dialog to close (ensures deleteProxy fully completed before conf check)

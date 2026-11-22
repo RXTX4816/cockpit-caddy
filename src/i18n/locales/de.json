@@ -20,7 +20,8 @@
   },
   "app": {
     "title": "Caddy",
-    "loading": "Verbindung zu Caddy wird hergestellt…"
+    "loading": "Verbindung zu Caddy wird hergestellt…",
+    "tools": "Werkzeuge"
   },
   "service": {
     "running": "Läuft",
@@ -50,27 +51,23 @@
     "confirm_reload_title": "Caddy-Konfiguration neu laden?",
     "confirm_reload_body": "Caddy lädt seine Konfiguration neu, ohne bestehende Verbindungen zu unterbrechen.",
     "confirm_action": "Bestätigen",
-    "reload_failed": "Caddy-Konfiguration konnte nicht neu geladen werden"
+    "reload_failed": "Caddy-Konfiguration konnte nicht neu geladen werden",
+    "action_failed": "Dienstaktion fehlgeschlagen",
+    "more_actions": "Weitere Dienstaktionen"
   },
   "proxies": {
     "title": "Reverse Proxies",
     "empty_title": "Keine Reverse Proxies konfiguriert",
     "empty_body": "Fügen Sie einen Proxy hinzu, um einen lokalen Dienst über HTTPS bereitzustellen.",
     "add_proxy": "Proxy hinzufügen",
-    "add_redirect": "Weiterleitung hinzufügen",
-    "add_static": "Statisch hinzufügen",
-    "add_respond": "Antwort hinzufügen",
-    "add_php": "PHP-Site hinzufügen",
     "type_static": "Statisch",
     "type_php": "PHP",
     "search_placeholder": "Proxies durchsuchen…",
     "col_port": "Externer Port",
     "col_type": "Typ",
     "col_target": "Ziel",
-    "col_tls": "TLS",
     "col_label": "Bezeichnung",
     "col_actions": "Aktionen",
-    "col_flags": "Merkmale",
     "type_proxy": "Proxy",
     "type_redirect": "Weiterleitung",
     "type_respond": "Antwort",
@@ -99,7 +96,16 @@
     "indicator_strip_prefix": "Präfix entfernen",
     "layout_list": "Liste",
     "layout_cards": "Karten",
-    "copy_label": "{{label}} (Kopie)"
+    "copy_label": "{{label}} (Kopie)",
+    "add_menu": "Weitere Site-Typen",
+    "col_address": "Adresse",
+    "indicator_named_route": "benannte Route",
+    "menu_proxy": "Reverse Proxy",
+    "menu_redirect": "Weiterleitung",
+    "menu_static": "Statische Dateien",
+    "menu_respond": "Feste Antwort",
+    "menu_php": "PHP-Site",
+    "more_actions": "Weitere Aktionen"
   },
   "add_proxy": {
     "title": "Reverse Proxy hinzufügen",

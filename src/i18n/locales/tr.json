@@ -20,7 +20,8 @@
   },
   "app": {
     "title": "Caddy",
-    "loading": "Caddy'ye bağlanılıyor…"
+    "loading": "Caddy'ye bağlanılıyor…",
+    "tools": "Araçlar"
   },
   "service": {
     "running": "Çalışıyor",
@@ -50,27 +51,23 @@
     "confirm_reload_title": "Caddy yapılandırması yeniden yüklensin mi?",
     "confirm_reload_body": "Caddy, mevcut bağlantıları kesmeden yapılandırmasını yeniden yükleyecek.",
     "confirm_action": "Onayla",
-    "reload_failed": "Caddy yapılandırması yeniden yüklenemedi"
+    "reload_failed": "Caddy yapılandırması yeniden yüklenemedi",
+    "action_failed": "Hizmet işlemi başarısız",
+    "more_actions": "Diğer hizmet işlemleri"
   },
   "proxies": {
     "title": "Reverse proxy'ler",
     "empty_title": "Yapılandırılmış reverse proxy yok",
     "empty_body": "Yerel bir hizmeti HTTPS üzerinden sunmak için bir proxy ekleyin.",
     "add_proxy": "Proxy ekle",
-    "add_redirect": "Yönlendirme ekle",
-    "add_static": "Statik ekle",
-    "add_respond": "Yanıt ekle",
-    "add_php": "PHP sitesi ekle",
     "type_static": "Statik",
     "type_php": "PHP",
     "search_placeholder": "Proxy ara…",
     "col_port": "Harici bağlantı noktası",
     "col_type": "Tür",
     "col_target": "Hedef",
-    "col_tls": "TLS",
     "col_label": "Etiket",
     "col_actions": "Eylemler",
-    "col_flags": "Özellikler",
     "type_proxy": "Proxy",
     "type_redirect": "Yönlendirme",
     "type_respond": "Yanıt",
@@ -99,7 +96,16 @@
     "indicator_strip_prefix": "önek kaldırma",
     "layout_list": "Liste",
     "layout_cards": "Kartlar",
-    "copy_label": "{{label}} (kopya)"
+    "copy_label": "{{label}} (kopya)",
+    "add_menu": "Diğer site türleri",
+    "col_address": "Adres",
+    "indicator_named_route": "adlandırılmış rota",
+    "menu_proxy": "Ters vekil",
+    "menu_redirect": "Yönlendirme",
+    "menu_static": "Statik dosyalar",
+    "menu_respond": "Sabit yanıt",
+    "menu_php": "PHP sitesi",
+    "more_actions": "Diğer işlemler"
   },
   "add_proxy": {
     "title": "Reverse proxy ekle",

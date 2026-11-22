@@ -6,12 +6,12 @@
  * drives the "Add Redirect" toolbar button and dialog instead.
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { readConf, addProxy, spawnCmd } from './helpers';
+import { readConf, addProxy, spawnCmd, openAddMenu, rowAction } from './helpers';
 import { curlStatus, waitForListener } from './live';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
   await dismissAdminBanner(page);
-  await page.getByRole('button', { name: /add redirect/i }).first().waitFor({ state: 'visible', timeout: 15000 });
+  await page.getByRole('button', { name: 'More site types' }).waitFor({ state: 'visible', timeout: 15000 });
 }
 
 /** Finds the DataList row for a given port (scopes by the anchor element id). */
@@ -25,7 +25,7 @@ async function addRedirectViaUI(
   port: number,
   to: string,
 ) {
-  await page.getByRole('button', { name: /add redirect/i }).first().click();
+  await openAddMenu(page, 'Redirect');
   const modal = page.getByRole('dialog');
   await modal.locator('#redirect-port').fill(String(port));
   await modal.locator('#redirect-to').fill(to);
@@ -71,7 +71,7 @@ test('delete redirect removes it from the list and the Caddyfile', async ({ plug
   await addRedirectViaUI(page, 19143, 'https://example.test/');
   await expect(page.getByRole('link', { name: ':19143' })).toBeVisible();
 
-  await proxyRow(page, 19143).getByRole('button', { name: /^delete$/i }).click();
+  await rowAction(proxyRow(page, 19143), 'Delete');
   const confirmModal = page.getByRole('dialog');
   await confirmModal.getByRole('button', { name: /^delete$/i }).click();
   await expect(page.getByRole('link', { name: ':19143' })).not.toBeVisible({ timeout: 10000 });
@@ -98,7 +98,7 @@ test('redirect on a port already used by a proxy is rejected', async ({ pluginPa
   await page.reload({ waitUntil: 'networkidle' });
   await waitForToolbar(page);
 
-  await page.getByRole('button', { name: /add redirect/i }).first().click();
+  await openAddMenu(page, 'Redirect');
   const modal = page.getByRole('dialog');
   await modal.locator('#redirect-port').fill('19145');
   await modal.locator('#redirect-to').fill('https://example.test/');

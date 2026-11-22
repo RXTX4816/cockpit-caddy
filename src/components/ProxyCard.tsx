@@ -1,5 +1,4 @@
 import {
-  Button,
   Card,
   CardBody,
   CardFooter,
@@ -8,6 +7,7 @@ import {
   Label,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
+import { RowActions } from "./RowActions";
 import type { ProxyEntry } from "../api";
 import { formatExternalHostPort } from "../api";
 import type { ProbeStatus } from "../api/probe";
@@ -119,11 +119,7 @@ export function ProxyCard({ proxy, onEdit, onDelete, onDuplicate, probeStatuses 
         </div>
       </CardBody>
       <CardFooter>
-        <div style={{ display: "flex", gap: "0.25rem" }}>
-          <Button variant="plain" size="sm" onClick={() => onEdit(proxy)}>{t("common.edit")}</Button>
-          <Button variant="plain" size="sm" onClick={() => onDuplicate(proxy)}>{t("common.duplicate")}</Button>
-          <Button variant="plain" size="sm" isDanger onClick={() => onDelete(proxy)}>{t("common.delete")}</Button>
-        </div>
+        <RowActions onEdit={() => onEdit(proxy)} onDuplicate={() => onDuplicate(proxy)} onDelete={() => onDelete(proxy)} />
       </CardFooter>
     </Card>
   );

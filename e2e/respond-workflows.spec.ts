@@ -2,12 +2,12 @@
  * Static "respond" route CRUD workflows.
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { readConf, addRedirect } from './helpers';
+import { readConf, addRedirect, openAddMenu, rowAction } from './helpers';
 import { curlStatus, waitForListener } from './live';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
   await dismissAdminBanner(page);
-  await page.getByRole('button', { name: /add respond/i }).first().waitFor({ state: 'visible', timeout: 15000 });
+  await page.getByRole('button', { name: 'More site types' }).waitFor({ state: 'visible', timeout: 15000 });
 }
 
 /** Finds the DataList row for a given port (scopes by the anchor element id). */
@@ -22,7 +22,7 @@ async function addRespondViaUI(
   status: number,
   body?: string,
 ) {
-  await page.getByRole('button', { name: /add respond/i }).first().click();
+  await openAddMenu(page, 'Fixed response');
   const modal = page.getByRole('dialog');
   await modal.locator('#respond-port').fill(String(port));
   await modal.locator('#respond-status').fill(String(status));
@@ -69,7 +69,7 @@ test('delete respond route removes it from the list and the Caddyfile', async ({
   await addRespondViaUI(page, 19183, 200);
   await expect(page.getByRole('link', { name: ':19183' })).toBeVisible();
 
-  await proxyRow(page, 19183).getByRole('button', { name: /^delete$/i }).click();
+  await rowAction(proxyRow(page, 19183), 'Delete');
   const confirmModal = page.getByRole('dialog');
   await confirmModal.getByRole('button', { name: /^delete$/i }).click();
   await expect(page.getByRole('link', { name: ':19183' })).not.toBeVisible({ timeout: 10000 });
@@ -90,7 +90,7 @@ test('respond route on a port already used by a redirect is rejected', async ({ 
   await waitForToolbar(page);
   await addRedirect(page, { port: 19185, to: 'https://example.test/' });
 
-  await page.getByRole('button', { name: /add respond/i }).first().click();
+  await openAddMenu(page, 'Fixed response');
   const modal = page.getByRole('dialog');
   await modal.locator('#respond-port').fill('19185');
   await modal.locator('#respond-status').fill('200');

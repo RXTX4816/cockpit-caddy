@@ -20,7 +20,8 @@
   },
   "app": {
     "title": "Caddy",
-    "loading": "Menghubungkan ke Caddy…"
+    "loading": "Menghubungkan ke Caddy…",
+    "tools": "Alat"
   },
   "service": {
     "running": "Berjalan",
@@ -50,27 +51,23 @@
     "confirm_reload_title": "Muat ulang konfigurasi Caddy?",
     "confirm_reload_body": "Caddy akan memuat ulang konfigurasinya tanpa memutus koneksi yang ada.",
     "confirm_action": "Konfirmasi",
-    "reload_failed": "Gagal memuat ulang konfigurasi Caddy"
+    "reload_failed": "Gagal memuat ulang konfigurasi Caddy",
+    "action_failed": "Tindakan layanan gagal",
+    "more_actions": "Tindakan layanan lain"
   },
   "proxies": {
     "title": "Reverse proxy",
     "empty_title": "Belum ada reverse proxy",
     "empty_body": "Tambahkan proxy untuk mengekspos layanan lokal melalui HTTPS.",
     "add_proxy": "Tambah proxy",
-    "add_redirect": "Tambah pengalihan",
-    "add_static": "Tambah statis",
-    "add_respond": "Tambah respons",
-    "add_php": "Tambah situs PHP",
     "type_static": "Statis",
     "type_php": "PHP",
     "search_placeholder": "Cari proxy…",
     "col_port": "Port eksternal",
     "col_type": "Jenis",
     "col_target": "Tujuan",
-    "col_tls": "TLS",
     "col_label": "Label",
     "col_actions": "Tindakan",
-    "col_flags": "Fitur",
     "type_proxy": "Proxy",
     "type_redirect": "Pengalihan",
     "type_respond": "Respons",
@@ -99,7 +96,16 @@
     "indicator_strip_prefix": "hapus prefiks",
     "layout_list": "Daftar",
     "layout_cards": "Kartu",
-    "copy_label": "{{label}} (salinan)"
+    "copy_label": "{{label}} (salinan)",
+    "add_menu": "Jenis situs lain",
+    "col_address": "Alamat",
+    "indicator_named_route": "rute bernama",
+    "menu_proxy": "Reverse proxy",
+    "menu_redirect": "Pengalihan",
+    "menu_static": "Berkas statis",
+    "menu_respond": "Respons tetap",
+    "menu_php": "Situs PHP",
+    "more_actions": "Tindakan lain"
   },
   "add_proxy": {
     "title": "Tambah reverse proxy",

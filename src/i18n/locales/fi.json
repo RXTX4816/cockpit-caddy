@@ -20,7 +20,8 @@
   },
   "app": {
     "title": "Caddy",
-    "loading": "Yhdistetään Caddyyn…"
+    "loading": "Yhdistetään Caddyyn…",
+    "tools": "Työkalut"
   },
   "service": {
     "running": "Käynnissä",
@@ -50,27 +51,23 @@
     "confirm_reload_title": "Ladataanko Caddyn asetukset uudelleen?",
     "confirm_reload_body": "Caddy lataa asetuksensa uudelleen katkaisematta olemassa olevia yhteyksiä.",
     "confirm_action": "Vahvista",
-    "reload_failed": "Caddyn asetusten uudelleenlataus epäonnistui"
+    "reload_failed": "Caddyn asetusten uudelleenlataus epäonnistui",
+    "action_failed": "Palvelun toiminto epäonnistui",
+    "more_actions": "Lisää palvelun toimintoja"
   },
   "proxies": {
     "title": "Reverse proxyt",
     "empty_title": "Reverse proxyja ei ole määritetty",
     "empty_body": "Lisää proxy julkaistaksesi paikallisen palvelun HTTPS:n kautta.",
     "add_proxy": "Lisää proxy",
-    "add_redirect": "Lisää uudelleenohjaus",
-    "add_static": "Lisää staattinen",
-    "add_respond": "Lisää vastaus",
-    "add_php": "Lisää PHP-sivusto",
     "type_static": "Staattinen",
     "type_php": "PHP",
     "search_placeholder": "Hae proxyja…",
     "col_port": "Ulkoinen portti",
     "col_type": "Tyyppi",
     "col_target": "Kohde",
-    "col_tls": "TLS",
     "col_label": "Nimiö",
     "col_actions": "Toiminnot",
-    "col_flags": "Ominaisuudet",
     "type_proxy": "Proxy",
     "type_redirect": "Uudelleenohjaus",
     "type_respond": "Vastaus",
@@ -99,7 +96,16 @@
     "indicator_strip_prefix": "poista etuliite",
     "layout_list": "Luettelo",
     "layout_cards": "Kortit",
-    "copy_label": "{{label}} (kopio)"
+    "copy_label": "{{label}} (kopio)",
+    "add_menu": "Muut sivustotyypit",
+    "col_address": "Osoite",
+    "indicator_named_route": "nimetty reitti",
+    "menu_proxy": "Käänteinen välityspalvelin",
+    "menu_redirect": "Uudelleenohjaus",
+    "menu_static": "Staattiset tiedostot",
+    "menu_respond": "Kiinteä vastaus",
+    "menu_php": "PHP-sivusto",
+    "more_actions": "Lisää toimintoja"
   },
   "add_proxy": {
     "title": "Lisää reverse proxy",

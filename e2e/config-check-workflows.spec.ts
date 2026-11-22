@@ -9,7 +9,7 @@
  * syntax on disk before any reload happens.
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { readFile, writeFile, spawnCmd, CADDYFILE_PATH } from './helpers';
+import { readFile, writeFile, spawnCmd, CADDYFILE_PATH, openTool } from './helpers';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
   await dismissAdminBanner(page);
@@ -51,7 +51,7 @@ test('stale cert_issuer directive is detected by the scanner', async ({ pluginPa
   await writeFile(page, CADDYFILE_PATH, STALE_CADDYFILE);
 
   try {
-    await page.getByRole('button', { name: /check config/i }).click();
+    await openTool(page, /check config/i);
     const modal = page.getByRole('dialog');
     await expect(modal.getByText(/replace the old global certificate-lifetime directive/i)).toBeVisible({ timeout: 10000 });
     await expect(modal.locator('#finding-stale-cert-issuer-directive')).toBeChecked();
@@ -65,7 +65,7 @@ test('apply-fix flow removes the stale directive and Caddy reloads successfully'
   await writeFile(page, CADDYFILE_PATH, STALE_CADDYFILE);
 
   try {
-    await page.getByRole('button', { name: /check config/i }).click();
+    await openTool(page, /check config/i);
     const modal = page.getByRole('dialog');
     await expect(modal.getByText(/replace the old global certificate-lifetime directive/i)).toBeVisible({ timeout: 10000 });
 
@@ -94,7 +94,7 @@ test('apply-fix flow removes the stale directive and Caddy reloads successfully'
 
 test('a clean config shows no issues', async ({ pluginPage: page }) => {
   await waitForToolbar(page);
-  await page.getByRole('button', { name: /check config/i }).click();
+  await openTool(page, /check config/i);
   const modal = page.getByRole('dialog');
   await expect(modal.getByText(/no issues found/i)).toBeVisible({ timeout: 10000 });
 });

@@ -20,7 +20,8 @@
   },
   "app": {
     "title": "Caddy",
-    "loading": "Verbinden met Caddy…"
+    "loading": "Verbinden met Caddy…",
+    "tools": "Hulpmiddelen"
   },
   "service": {
     "running": "Actief",
@@ -50,27 +51,23 @@
     "confirm_reload_title": "Caddy-configuratie herladen?",
     "confirm_reload_body": "Caddy herlaadt zijn configuratie zonder bestaande verbindingen te onderbreken.",
     "confirm_action": "Bevestigen",
-    "reload_failed": "Caddy-configuratie herladen mislukt"
+    "reload_failed": "Caddy-configuratie herladen mislukt",
+    "action_failed": "Serviceactie mislukt",
+    "more_actions": "Meer serviceacties"
   },
   "proxies": {
     "title": "Reverse proxies",
     "empty_title": "Geen reverse proxies geconfigureerd",
     "empty_body": "Voeg een proxy toe om een lokale service via HTTPS beschikbaar te maken.",
     "add_proxy": "Proxy toevoegen",
-    "add_redirect": "Omleiding toevoegen",
-    "add_static": "Statisch toevoegen",
-    "add_respond": "Antwoord toevoegen",
-    "add_php": "PHP-site toevoegen",
     "type_static": "Statisch",
     "type_php": "PHP",
     "search_placeholder": "Proxies zoeken…",
     "col_port": "Externe poort",
     "col_type": "Type",
     "col_target": "Doel",
-    "col_tls": "TLS",
     "col_label": "Label",
     "col_actions": "Acties",
-    "col_flags": "Kenmerken",
     "type_proxy": "Proxy",
     "type_redirect": "Omleiding",
     "type_respond": "Antwoord",
@@ -99,7 +96,16 @@
     "indicator_strip_prefix": "prefix verwijderen",
     "layout_list": "Lijst",
     "layout_cards": "Kaarten",
-    "copy_label": "{{label}} (kopie)"
+    "copy_label": "{{label}} (kopie)",
+    "add_menu": "Meer sitetypen",
+    "col_address": "Adres",
+    "indicator_named_route": "benoemde route",
+    "menu_proxy": "Reverse proxy",
+    "menu_redirect": "Doorverwijzing",
+    "menu_static": "Statische bestanden",
+    "menu_respond": "Vast antwoord",
+    "menu_php": "PHP-site",
+    "more_actions": "Meer acties"
   },
   "add_proxy": {
     "title": "Reverse proxy toevoegen",

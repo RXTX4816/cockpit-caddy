@@ -20,7 +20,8 @@
   },
   "app": {
     "title": "Caddy",
-    "loading": "Connessione a Caddy…"
+    "loading": "Connessione a Caddy…",
+    "tools": "Strumenti"
   },
   "service": {
     "running": "In esecuzione",
@@ -50,27 +51,23 @@
     "confirm_reload_title": "Ricaricare la configurazione di Caddy?",
     "confirm_reload_body": "Caddy ricaricherà la configurazione senza interrompere le connessioni esistenti.",
     "confirm_action": "Conferma",
-    "reload_failed": "Impossibile ricaricare la configurazione di Caddy"
+    "reload_failed": "Impossibile ricaricare la configurazione di Caddy",
+    "action_failed": "Azione sul servizio non riuscita",
+    "more_actions": "Altre azioni sul servizio"
   },
   "proxies": {
     "title": "Reverse proxy",
     "empty_title": "Nessun reverse proxy configurato",
     "empty_body": "Aggiungi un proxy per esporre un servizio locale tramite HTTPS.",
     "add_proxy": "Aggiungi proxy",
-    "add_redirect": "Aggiungi reindirizzamento",
-    "add_static": "Aggiungi statico",
-    "add_respond": "Aggiungi risposta",
-    "add_php": "Aggiungi sito PHP",
     "type_static": "Statico",
     "type_php": "PHP",
     "search_placeholder": "Cerca proxy…",
     "col_port": "Porta esterna",
     "col_type": "Tipo",
     "col_target": "Destinazione",
-    "col_tls": "TLS",
     "col_label": "Etichetta",
     "col_actions": "Azioni",
-    "col_flags": "Opzioni",
     "type_proxy": "Proxy",
     "type_redirect": "Reindirizzamento",
     "type_respond": "Risposta",
@@ -99,7 +96,16 @@
     "indicator_strip_prefix": "rimuovi prefisso",
     "layout_list": "Elenco",
     "layout_cards": "Schede",
-    "copy_label": "{{label}} (copia)"
+    "copy_label": "{{label}} (copia)",
+    "add_menu": "Altri tipi di sito",
+    "col_address": "Indirizzo",
+    "indicator_named_route": "route con nome",
+    "menu_proxy": "Reverse proxy",
+    "menu_redirect": "Reindirizzamento",
+    "menu_static": "File statici",
+    "menu_respond": "Risposta fissa",
+    "menu_php": "Sito PHP",
+    "more_actions": "Altre azioni"
   },
   "add_proxy": {
     "title": "Aggiungi reverse proxy",

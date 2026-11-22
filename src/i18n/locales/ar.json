@@ -20,7 +20,8 @@
   },
   "app": {
     "title": "Caddy",
-    "loading": "جارٍ الاتصال بـ Caddy…"
+    "loading": "جارٍ الاتصال بـ Caddy…",
+    "tools": "الأدوات"
   },
   "service": {
     "running": "قيد التشغيل",
@@ -50,27 +51,23 @@
     "confirm_reload_title": "إعادة تحميل إعدادات Caddy؟",
     "confirm_reload_body": "سيعيد Caddy تحميل إعداداته دون قطع الاتصالات القائمة.",
     "confirm_action": "تأكيد",
-    "reload_failed": "تعذّرت إعادة تحميل إعدادات Caddy"
+    "reload_failed": "تعذّرت إعادة تحميل إعدادات Caddy",
+    "action_failed": "فشل إجراء الخدمة",
+    "more_actions": "إجراءات خدمة أخرى"
   },
   "proxies": {
     "title": "الوكلاء العكسيون",
     "empty_title": "لا يوجد وكلاء عكسيون مُعدّون",
     "empty_body": "أضف وكيلًا لإتاحة خدمة محلية عبر HTTPS.",
     "add_proxy": "إضافة وكيل",
-    "add_redirect": "إضافة إعادة توجيه",
-    "add_static": "إضافة موقع ثابت",
-    "add_respond": "إضافة استجابة",
-    "add_php": "إضافة موقع PHP",
     "type_static": "ثابت",
     "type_php": "PHP",
     "search_placeholder": "البحث في الوكلاء…",
     "col_port": "المنفذ الخارجي",
     "col_type": "النوع",
     "col_target": "الهدف",
-    "col_tls": "TLS",
     "col_label": "التسمية",
     "col_actions": "الإجراءات",
-    "col_flags": "الخصائص",
     "type_proxy": "وكيل",
     "type_redirect": "إعادة توجيه",
     "type_respond": "استجابة",
@@ -99,7 +96,16 @@
     "indicator_strip_prefix": "إزالة البادئة",
     "layout_list": "قائمة",
     "layout_cards": "بطاقات",
-    "copy_label": "{{label}} (نسخة)"
+    "copy_label": "{{label}} (نسخة)",
+    "add_menu": "أنواع مواقع أخرى",
+    "col_address": "العنوان",
+    "indicator_named_route": "مسار مسمّى",
+    "menu_proxy": "وكيل عكسي",
+    "menu_redirect": "إعادة توجيه",
+    "menu_static": "ملفات ثابتة",
+    "menu_respond": "استجابة ثابتة",
+    "menu_php": "موقع PHP",
+    "more_actions": "إجراءات أخرى"
   },
   "add_proxy": {
     "title": "إضافة وكيل عكسي",

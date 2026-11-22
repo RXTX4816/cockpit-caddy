@@ -9,11 +9,16 @@ import {
   DataListItem,
   DataListItemCells,
   DataListItemRow,
+  Dropdown,
+  DropdownItem,
+  DropdownList,
   EmptyState,
   EmptyStateBody,
   EmptyStateFooter,
   Gallery,
   Label,
+  MenuToggle,
+  MenuToggleAction,
   Modal,
   ModalBody,
   ModalFooter,
@@ -28,8 +33,9 @@ import {
   Toolbar,
   ToolbarContent,
   ToolbarItem,
+  Tooltip,
 } from "@patternfly/react-core";
-import { ExternalLinkAltIcon, ListAltIcon, ThIcon } from "@patternfly/react-icons";
+import { ExternalLinkAltIcon, ListAltIcon, SyncAltIcon, ThIcon } from "@patternfly/react-icons";
 import { useTranslation } from "react-i18next";
 import {
   useToast,
@@ -56,6 +62,7 @@ import { AddServerDialog } from "./AddServerDialog";
 import { EditServerDialog } from "./EditServerDialog";
 import { ServerDetailPanel } from "./ServerDetailPanel";
 import { ProxyCard } from "./ProxyCard";
+import { RowActions } from "./RowActions";
 import { useProxies } from "../hooks/useProxies";
 import { SnippetsContext } from "./SnippetImportsField";
 import { useUpstreamProbe } from "../hooks/useUpstreamProbe";
@@ -93,7 +100,12 @@ function entryType(proxy: ProxyEntry, t: (k: string) => string): EntryType {
   return { label: t("proxies.type_proxy"), color: "blue" };
 }
 
-function FlagChips({ proxy, t }: { proxy: ProxyEntry; t: (k: string) => string }) {
+/**
+ * The badges next to a site's address (#259): TLS issuer when it isn't plain HTTP, and the
+ * settings worth knowing at a glance. Nothing at all when there's nothing to say.
+ */
+export function SiteBadges({ proxy }: { proxy: ProxyEntry }) {
+  const { t } = useTranslation();
   const chips: { label: string; color: EntryTypeColor }[] = [];
   if (proxy.redirect) {
     chips.push({ label: String(proxy.redirect.code), color: "purple" });
@@ -101,27 +113,35 @@ function FlagChips({ proxy, t }: { proxy: ProxyEntry; t: (k: string) => string }
   if (proxy.staticResponse?.close) {
     chips.push({ label: t("proxies.indicator_close"), color: "grey" });
   }
+  if (!proxy.fileServer && !proxy.redirect && proxy.tlsSkipVerify) chips.push({ label: t("proxies.tls_skip_verify"), color: "orange" });
   if (proxy.rewrite) chips.push({ label: t(`rewrite.type_${proxy.rewrite.type}`), color: "teal" });
   if (proxy.fileServer?.browse) chips.push({ label: t("proxies.indicator_browse"), color: "teal" });
   if (proxy.compress) chips.push({ label: t("proxies.indicator_compress"), color: "teal" });
   if (proxy.basicAuth?.length) chips.push({ label: t("proxies.indicator_auth"), color: "red" });
+  if (proxy.forwardAuth) chips.push({ label: t("forward_auth.indicator"), color: "purple" });
   if (proxy.dialTimeout ?? proxy.responseHeaderTimeout) chips.push({ label: t("proxies.indicator_timeouts"), color: "grey" });
   if (proxy.accessLog) chips.push({ label: t("access_log.indicator"), color: "teal" });
   if (proxy.serverReadTimeout ?? proxy.serverReadHeaderTimeout ?? proxy.serverWriteTimeout ?? proxy.serverIdleTimeout ?? proxy.maxHeaderBytes ?? proxy.requestBodyMaxSize) chips.push({ label: t("proxies.indicator_limits"), color: "grey" });
   if (proxy.extraUpstreams?.length) chips.push({ label: t("proxies.indicator_lb"), color: "blue" });
-  if (proxy.forwardAuth) chips.push({ label: t("forward_auth.indicator"), color: "purple" });
   if (proxy.mtls) chips.push({ label: t("tls_policy.indicator_mtls"), color: "orange" });
   if (proxy.tlsAdvanced) chips.push({ label: t("tls_policy.indicator_advanced"), color: "grey" });
   if (proxy.matchers) chips.push({ label: t("proxies.indicator_matcher"), color: "teal" });
-  if (chips.length === 0) return <span style={{ color: "var(--pf-v6-global--Color--200)" }}>—</span>;
+  if (proxy.isNamedRoute) chips.push({ label: t("proxies.indicator_named_route"), color: "purple" });
+  for (const name of proxy.imports ?? []) chips.push({ label: name, color: "blue" });
+  const showTls = proxy.tls && !proxy.redirect;
+  if (!showTls && chips.length === 0) return null;
   return (
-    <div style={{ display: "flex", gap: "0.2rem", flexWrap: "wrap" }}>
+    <span style={{ display: "inline-flex", gap: "0.2rem", flexWrap: "nowrap", verticalAlign: "middle" }}>
+      {showTls && <TlsBadge proxy={proxy} />}
       {chips.map(c => (
         <Label key={c.label} isCompact color={c.color} variant="outline">{c.label}</Label>
       ))}
-    </div>
+    </span>
   );
 }
+
+/** Cells stay one line high (#259); long content is cut with an ellipsis. */
+const ONE_LINE = { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } as const;
 
 function HeaderRow() {
   const { t } = useTranslation();
@@ -132,11 +152,9 @@ function HeaderRow() {
           dataListCells={[
             <DataListCell key="label" width={2}><strong>{t("proxies.col_label")}</strong></DataListCell>,
             <DataListCell key="type" width={1}><strong>{t("proxies.col_type")}</strong></DataListCell>,
-            <DataListCell key="port" width={1}><strong>{t("proxies.col_port")}</strong></DataListCell>,
-            <DataListCell key="target" width={2}><strong>{t("proxies.col_target")}</strong></DataListCell>,
-            <DataListCell key="tls" width={1}><strong>{t("proxies.col_tls")}</strong></DataListCell>,
-            <DataListCell key="flags" width={1}><strong>{t("proxies.col_flags")}</strong></DataListCell>,
-            <DataListCell key="actions" width={1}><strong>{t("proxies.col_actions")}</strong></DataListCell>,
+            <DataListCell key="port" width={4}><strong>{t("proxies.col_address")}</strong></DataListCell>,
+            <DataListCell key="target" width={3}><strong>{t("proxies.col_target")}</strong></DataListCell>,
+            <DataListCell key="actions" width={1} style={{ textAlign: "end" }}><strong>{t("proxies.col_actions")}</strong></DataListCell>,
           ]}
         />
       </DataListItemRow>
@@ -164,7 +182,7 @@ function ProxyRow({ proxy, onEdit, onDelete, onDuplicate, probeStatuses, servers
       <DataListItemRow>
         <DataListItemCells
           dataListCells={[
-            <DataListCell key="label" width={2}>
+            <DataListCell key="label" width={2} style={ONE_LINE}>
               {proxy.label
                 ? <strong style={{ fontSize: "1.05em" }}>{proxy.label}</strong>
                 : <span style={{ color: "var(--pf-v6-global--Color--200)" }}>—</span>}
@@ -172,7 +190,7 @@ function ProxyRow({ proxy, onEdit, onDelete, onDuplicate, probeStatuses, servers
             <DataListCell key="type" width={1}>
               {(() => { const et = entryType(proxy, t); return <Label color={et.color} isCompact>{et.label}</Label>; })()}
             </DataListCell>,
-            <DataListCell key="port" width={1}>
+            <DataListCell key="port" width={4} style={ONE_LINE}>
               <a
                 href={url}
                 target="_blank"
@@ -193,8 +211,10 @@ function ProxyRow({ proxy, onEdit, onDelete, onDuplicate, probeStatuses, servers
                   {serverName}
                 </Label>
               )}
+              {" "}
+              <SiteBadges proxy={proxy} />
             </DataListCell>,
-            <DataListCell key="target" width={2}>
+            <DataListCell key="target" width={3} style={ONE_LINE}>
               {proxy.redirect ? (
                 <code style={{ fontSize: "0.85em" }}>{proxy.redirect.to}</code>
               ) : proxy.staticResponse ? (
@@ -204,7 +224,7 @@ function ProxyRow({ proxy, onEdit, onDelete, onDuplicate, probeStatuses, servers
               ) : proxy.phpFastcgi ? (
                 <code style={{ fontSize: "0.85em" }}>{proxy.phpFastcgi.upstream}</code>
               ) : (
-                <span style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", flexWrap: "wrap" }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", flexWrap: "nowrap" }}>
                   {(() => {
                     const primaryKey = `${proxy.targetHost}:${proxy.targetPort}`;
                     const primaryStatus = probeStatuses.get(primaryKey);
@@ -232,33 +252,8 @@ function ProxyRow({ proxy, onEdit, onDelete, onDuplicate, probeStatuses, servers
                 </span>
               )}
             </DataListCell>,
-            <DataListCell key="tls" width={1}>
-              {proxy.redirect ? (
-                <span style={{ color: "var(--pf-v6-global--Color--200)" }}>—</span>
-              ) : (
-                <div style={{ display: "flex", gap: "0.2rem", flexWrap: "wrap" }}>
-                  <TlsBadge proxy={proxy} />
-                  {!proxy.fileServer && proxy.tlsSkipVerify && (
-                    <Label color="orange" isCompact variant="outline">{t("proxies.tls_skip_verify")}</Label>
-                  )}
-                </div>
-              )}
-            </DataListCell>,
-            <DataListCell key="flags" width={1}>
-              <FlagChips proxy={proxy} t={t} />
-            </DataListCell>,
-            <DataListCell key="actions" width={1}>
-              <Button variant="plain" size="sm" onClick={() => onEdit(proxy)}>
-                {t("common.edit")}
-              </Button>
-              {" "}
-              <Button variant="plain" size="sm" onClick={() => onDuplicate(proxy)}>
-                {t("common.duplicate")}
-              </Button>
-              {" "}
-              <Button variant="plain" size="sm" isDanger onClick={() => onDelete(proxy)}>
-                {t("common.delete")}
-              </Button>
+            <DataListCell key="actions" width={1} style={{ textAlign: "end" }}>
+              <RowActions onEdit={() => onEdit(proxy)} onDuplicate={() => onDuplicate(proxy)} onDelete={() => onDelete(proxy)} />
             </DataListCell>,
           ]}
         />
@@ -304,6 +299,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useLocalStorage<string>("cockpit-caddy:server-tab", "all");
   const [showAdd, setShowAdd] = useState(false);
+  const [addMenuOpen, setAddMenuOpen] = useState(false);
   const [showAddRedirect, setShowAddRedirect] = useState(false);
   const [showAddStatic, setShowAddStatic] = useState(false);
   const [showAddRespond, setShowAddRespond] = useState(false);
@@ -551,37 +547,38 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
         <StackItem>
           <Toolbar>
             <ToolbarContent>
-              {/* Route-add buttons — context-aware: when on a server tab they add to that server */}
+              {/* Add menu (#259) — context-aware: on a server tab it adds to that server */}
               <ToolbarItem>
-                <Button variant="primary" onClick={tryAdd}>
-                  {t("proxies.add_proxy")}
-                </Button>
+                <Dropdown
+                  isOpen={addMenuOpen}
+                  onOpenChange={setAddMenuOpen}
+                  onSelect={() => setAddMenuOpen(false)}
+                  toggle={ref => (
+                    <MenuToggle
+                      ref={ref}
+                      variant="primary"
+                      isExpanded={addMenuOpen}
+                      onClick={() => setAddMenuOpen(o => !o)}
+                      aria-label={t("proxies.add_menu")}
+                      splitButtonItems={[
+                        <MenuToggleAction key="add-proxy" onClick={tryAdd}>{t("proxies.add_proxy")}</MenuToggleAction>,
+                      ]}
+                    />
+                  )}
+                >
+                  <DropdownList>
+                    <DropdownItem onClick={tryAdd}>{t("proxies.menu_proxy")}</DropdownItem>
+                    <DropdownItem onClick={() => setShowAddRedirect(true)}>{t("proxies.menu_redirect")}</DropdownItem>
+                    <DropdownItem onClick={() => setShowAddStatic(true)}>{t("proxies.menu_static")}</DropdownItem>
+                    <DropdownItem onClick={() => setShowAddRespond(true)}>{t("proxies.menu_respond")}</DropdownItem>
+                    {!initialServerKey && (
+                      <DropdownItem onClick={() => setShowAddPhp(true)}>{t("proxies.menu_php")}</DropdownItem>
+                    )}
+                  </DropdownList>
+                </Dropdown>
               </ToolbarItem>
               <ToolbarItem>
-                <Button variant="secondary" onClick={() => setShowAddRedirect(true)}>
-                  {t("proxies.add_redirect")}
-                </Button>
-              </ToolbarItem>
-              <ToolbarItem>
-                <Button variant="secondary" onClick={() => setShowAddStatic(true)}>
-                  {t("proxies.add_static")}
-                </Button>
-              </ToolbarItem>
-              <ToolbarItem>
-                <Button variant="secondary" onClick={() => setShowAddRespond(true)}>
-                  {t("proxies.add_respond")}
-                </Button>
-              </ToolbarItem>
-              {!initialServerKey && (
-                <ToolbarItem>
-                  <Button variant="secondary" onClick={() => setShowAddPhp(true)}>
-                    {t("proxies.add_php")}
-                  </Button>
-                </ToolbarItem>
-              )}
-              <ToolbarItem variant="separator" />
-              <ToolbarItem>
-                <Button variant="tertiary" onClick={() => setShowAddServer(true)}>
+                <Button variant="secondary" onClick={() => setShowAddServer(true)}>
                   {t("servers.add_server")}
                 </Button>
               </ToolbarItem>
@@ -608,11 +605,14 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
                     onLayoutChange={setLayout}
                     layouts={PROXY_LAYOUTS.map(l => ({ ...l, label: t(l.label) }))}
                   />
-                  <Button
-                    variant="plain"
-                    onClick={() => { refresh(); refreshProbe(); }}
-                    aria-label={t("common.refresh")}
-                  >↺</Button>
+                  <Tooltip content={t("common.refresh")}>
+                    <Button
+                      variant="plain"
+                      onClick={() => { refresh(); refreshProbe(); }}
+                      aria-label={t("common.refresh")}
+                      icon={<SyncAltIcon />}
+                    />
+                  </Tooltip>
                 </div>
               </ToolbarItem>
             </ToolbarContent>

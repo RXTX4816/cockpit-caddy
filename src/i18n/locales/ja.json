@@ -20,7 +20,8 @@
   },
   "app": {
     "title": "Caddy",
-    "loading": "Caddy に接続しています…"
+    "loading": "Caddy に接続しています…",
+    "tools": "ツール"
   },
   "service": {
     "running": "実行中",
@@ -50,27 +51,23 @@
     "confirm_reload_title": "Caddy の設定を再読み込みしますか？",
     "confirm_reload_body": "既存の接続を中断せずに Caddy が設定を再読み込みします。",
     "confirm_action": "確認",
-    "reload_failed": "Caddy の設定を再読み込みできませんでした"
+    "reload_failed": "Caddy の設定を再読み込みできませんでした",
+    "action_failed": "サービス操作に失敗しました",
+    "more_actions": "その他のサービス操作"
   },
   "proxies": {
     "title": "リバースプロキシ",
     "empty_title": "リバースプロキシが設定されていません",
     "empty_body": "プロキシを追加して、ローカルサービスを HTTPS で公開しましょう。",
     "add_proxy": "プロキシを追加",
-    "add_redirect": "リダイレクトを追加",
-    "add_static": "静的サイトを追加",
-    "add_respond": "レスポンスを追加",
-    "add_php": "PHP サイトを追加",
     "type_static": "静的",
     "type_php": "PHP",
     "search_placeholder": "プロキシを検索…",
     "col_port": "外部ポート",
     "col_type": "種類",
     "col_target": "転送先",
-    "col_tls": "TLS",
     "col_label": "ラベル",
     "col_actions": "操作",
-    "col_flags": "属性",
     "type_proxy": "プロキシ",
     "type_redirect": "リダイレクト",
     "type_respond": "レスポンス",
@@ -99,7 +96,16 @@
     "indicator_strip_prefix": "プレフィックス除去",
     "layout_list": "リスト",
     "layout_cards": "カード",
-    "copy_label": "{{label}}（コピー）"
+    "copy_label": "{{label}}（コピー）",
+    "add_menu": "その他のサイト種別",
+    "col_address": "アドレス",
+    "indicator_named_route": "名前付きルート",
+    "menu_proxy": "リバースプロキシ",
+    "menu_redirect": "リダイレクト",
+    "menu_static": "静的ファイル",
+    "menu_respond": "固定レスポンス",
+    "menu_php": "PHP サイト",
+    "more_actions": "その他の操作"
   },
   "add_proxy": {
     "title": "リバースプロキシを追加",

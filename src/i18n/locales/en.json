@@ -20,7 +20,8 @@
   },
   "app": {
     "title": "Caddy",
-    "loading": "Connecting to Caddy…"
+    "loading": "Connecting to Caddy…",
+    "tools": "Tools"
   },
   "service": {
     "running": "Running",
@@ -50,27 +51,23 @@
     "confirm_reload_title": "Reload Caddy config?",
     "confirm_reload_body": "Caddy will reload its configuration without interrupting existing connections.",
     "confirm_action": "Confirm",
-    "reload_failed": "Failed to reload Caddy config"
+    "reload_failed": "Failed to reload Caddy config",
+    "action_failed": "Service action failed",
+    "more_actions": "More service actions"
   },
   "proxies": {
     "title": "Reverse Proxies",
     "empty_title": "No reverse proxies configured",
     "empty_body": "Add a proxy to expose a local service over HTTPS.",
     "add_proxy": "Add Proxy",
-    "add_redirect": "Add Redirect",
-    "add_static": "Add Static",
-    "add_respond": "Add Respond",
-    "add_php": "Add PHP Site",
     "type_static": "Static",
     "type_php": "PHP",
     "search_placeholder": "Search proxies…",
     "col_port": "External Port",
     "col_type": "Type",
     "col_target": "Target",
-    "col_tls": "TLS",
     "col_label": "Label",
     "col_actions": "Actions",
-    "col_flags": "Flags",
     "type_proxy": "Proxy",
     "type_redirect": "Redirect",
     "type_respond": "Respond",
@@ -99,7 +96,16 @@
     "indicator_strip_prefix": "strip prefix",
     "layout_list": "List",
     "layout_cards": "Cards",
-    "copy_label": "{{label}} (copy)"
+    "copy_label": "{{label}} (copy)",
+    "add_menu": "More site types",
+    "col_address": "Address",
+    "indicator_named_route": "named route",
+    "menu_proxy": "Reverse proxy",
+    "menu_redirect": "Redirect",
+    "menu_static": "Static files",
+    "menu_respond": "Fixed response",
+    "menu_php": "PHP site",
+    "more_actions": "More actions"
   },
   "add_proxy": {
     "title": "Add Reverse Proxy",
