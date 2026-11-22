@@ -1,12 +1,12 @@
 import { useRef, useState, useEffect } from "react";
 import {
-  ExpandableSection,
   FormGroup,
   TextInput,
   ToggleGroup,
   ToggleGroupItem,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
+import { SectionShell } from "./sectionLayout";
 import type { RewriteConfig } from "../api";
 import { SectionActions } from "./SectionActions";
 import { SectionConfiguredDot } from "./SectionConfiguredDot";
@@ -58,7 +58,7 @@ export function RewriteSection({ value, onChange, isDisabled, isExpanded: isExpa
   }, [type]);
 
   return (
-    <ExpandableSection
+    <SectionShell
       toggleContent={<>{t("rewrite.section_title")}{type !== "none" && <SectionConfiguredDot />}</>}
       isIndented
       isExpanded={expanded}
@@ -126,6 +126,6 @@ export function RewriteSection({ value, onChange, isDisabled, isExpanded: isExpa
 
         <div ref={bottomRef} />
       </div>
-    </ExpandableSection>
+    </SectionShell>
   );
 }

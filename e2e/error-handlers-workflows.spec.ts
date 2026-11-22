@@ -6,7 +6,7 @@
  * site-level handle_errors block actually fires — see src/api/caddy.ts buildReverseProxyLines.
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { readConf, spawnCmd } from './helpers';
+import { readConf, spawnCmd, openSection } from './helpers';
 import { waitForListener } from './live';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
@@ -33,7 +33,7 @@ test('custom error handler for 404 writes correct handle_errors block', async ({
   await modal.locator('#target-port').fill('19391');
   await modal.locator('#tls').selectOption('off');
 
-  await modal.getByRole('button', { name: /custom error handlers/i }).click();
+  await openSection(modal, 'errorHandlers');
   await modal.getByRole('button', { name: /add error handler/i }).click();
   // A freshly-added handler already defaults to matchType "specific" / codes [404] /
   // type "respond" — no toggle clicks needed, just fill the codes field explicitly.
@@ -63,7 +63,7 @@ test('custom error handler actually renders for a real 404 response', async ({ p
     await modal.locator('#target-port').fill(String(targetPort));
     await modal.locator('#tls').selectOption('off');
 
-    await modal.getByRole('button', { name: /custom error handlers/i }).click();
+    await openSection(modal, 'errorHandlers');
     await modal.getByRole('button', { name: /add error handler/i }).click();
     await modal.locator('#eh-codes-0').fill('404');
     await modal.locator('#eh-body-0').fill('Custom 404 Content');
@@ -92,7 +92,7 @@ test('removing the error handler reverts to the default Caddy error page', async
   await modal1.getByLabel(/target host/i).fill('localhost');
   await modal1.locator('#target-port').fill('19395');
   await modal1.locator('#tls').selectOption('off');
-  await modal1.getByRole('button', { name: /custom error handlers/i }).click();
+  await openSection(modal1, 'errorHandlers');
   await modal1.getByRole('button', { name: /add error handler/i }).click();
   await modal1.locator('#eh-codes-0').fill('404');
   await modal1.locator('#eh-body-0').fill('Custom 404 Content');
@@ -105,7 +105,7 @@ test('removing the error handler reverts to the default Caddy error page', async
 
   await proxyRow(page, 19394).getByRole('button', { name: /^edit$/i }).click();
   const modal2 = page.getByRole('dialog');
-  await modal2.getByRole('button', { name: /custom error handlers/i }).click();
+  await openSection(modal2, 'errorHandlers');
   await modal2.getByRole('button', { name: /remove handler/i }).click();
   await modal2.getByRole('button', { name: /save changes/i }).click();
   await modal2.getByRole('button', { name: /^confirm$/i }).click();

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {
   Button,
-  ExpandableSection,
   FormGroup,
   FormHelperText,
   HelperText,
@@ -9,6 +8,7 @@ import {
   TextInput,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
+import { SectionShell } from "./sectionLayout";
 import type { ErrorHandlerConfig, ErrorMatchType, ErrorHandlerType } from "../api";
 import { SectionActions } from "./SectionActions";
 
@@ -62,7 +62,7 @@ export function ErrorHandlersSection({ value, onChange, isDisabled, isExpanded: 
     : t("error_handler.section_title");
 
   return (
-    <ExpandableSection
+    <SectionShell
       toggleText={toggleLabel}
       isIndented
       isExpanded={expanded}
@@ -115,7 +115,7 @@ export function ErrorHandlersSection({ value, onChange, isDisabled, isExpanded: 
                   id={`eh-codes-${idx}`}
                   value={codesInputValue(handler)}
                   onChange={(_e, v) => update(idx, { codes: parseCodes(v) })}
-                  placeholder="404, 502, 503"
+                  placeholder={t("common.example_value", { value: "404, 502, 503" })}
                   isDisabled={isDisabled}
                 />
                 <FormHelperText>
@@ -172,7 +172,7 @@ export function ErrorHandlersSection({ value, onChange, isDisabled, isExpanded: 
                     id={`eh-redir-${idx}`}
                     value={handler.redirectTo ?? ""}
                     onChange={(_e, v) => update(idx, { redirectTo: v })}
-                    placeholder="/error.html"
+                    placeholder={t("common.example_value", { value: "/error.html" })}
                     isDisabled={isDisabled}
                   />
                 </FormGroup>
@@ -200,7 +200,7 @@ export function ErrorHandlersSection({ value, onChange, isDisabled, isExpanded: 
                   id={`eh-root-${idx}`}
                   value={handler.filePath ?? ""}
                   onChange={(_e, v) => update(idx, { filePath: v })}
-                  placeholder="/var/www/errors"
+                  placeholder={t("common.example_value", { value: "/var/www/errors" })}
                   isDisabled={isDisabled}
                 />
                 <FormHelperText>
@@ -217,6 +217,6 @@ export function ErrorHandlersSection({ value, onChange, isDisabled, isExpanded: 
           </Button>
         </div>
       </div>
-    </ExpandableSection>
+    </SectionShell>
   );
 }

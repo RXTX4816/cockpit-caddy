@@ -16,7 +16,15 @@
     "confirm_apply": "Použiť",
     "configured": "Nastavené",
     "remove_aria": "Odstrániť",
-    "header_op_aria": "Operácia s hlavičkou"
+    "header_op_aria": "Operácia s hlavičkou",
+    "default_value": "Predvolené: {{value}}",
+    "reset_default": "Obnoviť predvolenú hodnotu Caddy",
+    "size_unit": "Jednotka",
+    "unit_b": "bajty",
+    "unit_kb": "KB",
+    "unit_mb": "MB",
+    "unit_gb": "GB",
+    "example_value": "napr. {{value}}"
   },
   "app": {
     "title": "Caddy",
@@ -122,7 +130,7 @@
     "validation_ext_host_duplicate": "„{{host}}“ je uvedený dvakrát.",
     "validation_https_requires_tls": "Protokol „https“ vyžaduje zapnuté TLS nižšie — inak by Caddy spravoval HTTPS sám, mimo nastavení tejto aplikácie. Zapnite TLS alebo zvoľte iný protokol.",
     "field_target_host": "Cieľový hostiteľ",
-    "field_target_host_placeholder": "localhost",
+    "field_target_host_placeholder": "napr. localhost",
     "field_tls_skip_verify": "Preskočiť overenie TLS backendu (pre backendy s certifikátmi podpísanými samými sebou)",
     "field_tls": "Zapnúť TLS (interná CA Caddy)",
     "field_tls_short": "Zapnúť TLS (interná CA)",
@@ -138,7 +146,16 @@
     "validation_target_port_required": "Cieľový port je povinný",
     "validation_target_port_range": "Cieľový port musí byť v rozsahu 1–65535",
     "validation_target_host_required": "Cieľový hostiteľ je povinný",
-    "confirm_body": "Vytvorí sa reverse proxy :{{port}} → {{target}} a konfigurácia Caddy sa znova načíta."
+    "confirm_body": "Vytvorí sa reverse proxy :{{port}} → {{target}} a konfigurácia Caddy sa znova načíta.",
+    "ext_host_label": "Externý hostiteľ",
+    "ext_port_label": "Externý port",
+    "ext_port_placeholder": "napr. 8443",
+    "ext_scheme_custom_input": "Vlastný protokol",
+    "ext_scheme_label": "Protokol",
+    "field_label_help": "Názov webu v zozname, napr. Grafana.",
+    "target_port_label": "Cieľový port",
+    "target_port_placeholder": "napr. 8080",
+    "target_scheme_label": "Cieľový protokol"
   },
   "add_static": {
     "title": "Pridať statický súborový server",
@@ -248,16 +265,15 @@
     "read_header_timeout": "Časový limit čítania hlavičiek",
     "write_timeout": "Časový limit zápisu",
     "idle_timeout": "Časový limit nečinnosti",
-    "max_header_bytes": "Max. veľkosť hlavičiek (bajty)",
-    "max_header_bytes_help": "Maximálna veľkosť hlavičiek požiadavky v bajtoch (predvolené v Caddy: 16 KiB = 16384)",
+    "max_header_bytes": "Max. veľkosť hlavičiek",
+    "max_header_bytes_help": "Maximálna veľkosť hlavičiek požiadavky (predvolené v Caddy: 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "Vypnúť HTTP/3",
     "http3_help": "Caddy predvolene zapína HTTP/1.1, HTTP/2 a HTTP/3, keď je nastavené TLS. HTTP/3 beží cez UDP na rovnakom porte ako HTTPS — ak firewall blokuje UDP, jeho vypnutím tu zostane len HTTP/1.1 a HTTP/2."
   },
   "request_body": {
-    "field_label": "Max. veľkosť tela požiadavky (bajty, voliteľné)",
-    "field_placeholder": "10485760",
-    "field_help": "Odmietne požiadavky s väčším telom skôr, než sa dostanú na backend. Ponechajte prázdne pre žiadny limit (predvolené správanie Caddy). Napr. 1048576 = 1 MB, 10485760 = 10 MB."
+    "field_label": "Maximálna veľkosť tela požiadavky",
+    "field_help": "Väčšie telá požiadaviek sa odmietnu skôr, než sa dostanú k backendu. Prázdne pole znamená bez limitu (predvolené v Caddy)."
   },
   "rewrite": {
     "section_title": "Prepis URI (voliteľné)",
@@ -500,7 +516,7 @@
     "roll_keep_count": "Počet ponechaných rotovaných súborov",
     "roll_keep_days": "Max. vek rotovaných súborov (dni)",
     "roll_compress": "Komprimovať rotované súbory (gzip)",
-    "roll_help": "Zabraňuje neobmedzenému rastu súboru logu. Ponechajte prázdne pre predvolené správanie Caddy (bez rotácie — súbor rastie donekonečna)."
+    "roll_help": "Caddy predvolene rotuje súbor protokolu. Nechajte pole prázdne pre predvolenú hodnotu Caddy, zobrazenú sivou."
   },
   "config_check": {
     "button": "Skontrolovať konfiguráciu",
@@ -819,7 +835,8 @@
   "named_route": {
     "toggle_label": "Zaregistrovať ako pomenovanú trasu (invoke)",
     "name_label": "Názov trasy",
-    "name_placeholder": "napr. auth-middleware"
+    "name_placeholder": "napr. auth-middleware",
+    "help": "Navyše zaregistruje trasu pod názvom, aby ju iné trasy mohli použiť cez invoke <name>."
   },
   "servers": {
     "tab_all": "Všetko",
@@ -912,5 +929,14 @@
     "title": "Snippety",
     "unused": "Neimportované",
     "used_by": "Importujú {{sites}}"
+  },
+  "proxy_tabs": {
+    "aria_label": "Nastavenia proxy",
+    "has_error": "Obsahuje chyby",
+    "general": "Všeobecné",
+    "security": "Zabezpečenie",
+    "routing": "Smerovanie",
+    "upstreams": "Upstreamy",
+    "logging": "Logy a chyby"
   }
 }

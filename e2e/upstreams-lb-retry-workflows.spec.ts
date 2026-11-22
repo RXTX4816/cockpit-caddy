@@ -6,7 +6,7 @@
  * up two live backend processes at once to prove load balancing and failover for real.
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { readConf, spawnCmd } from './helpers';
+import { readConf, spawnCmd, openSection } from './helpers';
 import { waitForListener } from './live';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
@@ -48,7 +48,7 @@ test('adding a second upstream writes both to the reverse_proxy Caddyfile line',
   await modal.locator('#target-port').fill('19351');
   await modal.locator('#tls').selectOption('off');
 
-  await modal.getByRole('button', { name: /additional upstreams/i }).click();
+  await openSection(modal, 'upstreams');
   await modal.getByRole('button', { name: /add upstream/i }).click();
   await modal.locator('#upstream-host-0').fill('localhost');
   await modal.locator('#upstream-port-0').fill('19352');
@@ -76,7 +76,7 @@ test('load balancing distributes requests across both live backends', async ({ p
     await modal.locator('#target-port').fill(String(portA));
     await modal.locator('#tls').selectOption('off');
 
-    await modal.getByRole('button', { name: /additional upstreams/i }).click();
+    await openSection(modal, 'upstreams');
     await modal.getByRole('button', { name: /add upstream/i }).click();
     await modal.locator('#upstream-host-0').fill('localhost');
     await modal.locator('#upstream-port-0').fill(String(portB));
@@ -130,7 +130,7 @@ test('failover: killing one backend still serves via the other', async ({ plugin
     await modal.locator('#target-port').fill(String(portA));
     await modal.locator('#tls').selectOption('off');
 
-    await modal.getByRole('button', { name: /additional upstreams/i }).click();
+    await openSection(modal, 'upstreams');
     await modal.getByRole('button', { name: /add upstream/i }).click();
     await modal.locator('#upstream-host-0').fill('localhost');
     await modal.locator('#upstream-port-0').fill(String(portB));
@@ -139,7 +139,7 @@ test('failover: killing one backend still serves via the other', async ({ plugin
     // Caddy does not retry a failed upstream within the same request unless
     // lb_try_duration is explicitly set (default is 0 = no retry loop) — without this,
     // a request routed to the now-dead backend would just 502 instead of failing over.
-    await modal.getByRole('button', { name: /retry & failover tuning/i }).click();
+    await openSection(modal, 'lbRetry');
     await modal.locator('#lbr-try-duration').fill('5s');
     await modal.locator('#lbr-try-interval').fill('100ms');
 
@@ -181,12 +181,12 @@ test('lb retry count and interval settings are written to the Caddyfile', async 
   await modal.locator('#target-port').fill('19360');
   await modal.locator('#tls').selectOption('off');
 
-  await modal.getByRole('button', { name: /additional upstreams/i }).click();
+  await openSection(modal, 'upstreams');
   await modal.getByRole('button', { name: /add upstream/i }).click();
   await modal.locator('#upstream-host-0').fill('localhost');
   await modal.locator('#upstream-port-0').fill('19361');
 
-  await modal.getByRole('button', { name: /retry & failover tuning/i }).click();
+  await openSection(modal, 'lbRetry');
   await modal.locator('#lbr-retries').fill('5');
   await modal.locator('#lbr-try-duration').fill('10s');
   await modal.locator('#lbr-try-interval').fill('500ms');
@@ -218,13 +218,13 @@ test('active health checks take a dead upstream out of rotation', async ({ plugi
     await modal.locator('#target-port').fill(String(portA));
     await modal.locator('#tls').selectOption('off');
 
-    await modal.getByRole('button', { name: /additional upstreams/i }).click();
+    await openSection(modal, 'upstreams');
     await modal.getByRole('button', { name: /add upstream/i }).click();
     await modal.locator('#upstream-host-0').fill('localhost');
     await modal.locator('#upstream-port-0').fill(String(portB));
     await modal.getByRole('button', { name: /^round robin$/i }).click();
 
-    await modal.getByRole('button', { name: /retry & failover tuning/i }).click();
+    await openSection(modal, 'lbRetry');
     await modal.locator('#lbr-fail-duration').fill('30s');
     await modal.locator('#lbr-unhealthy-status').fill('500 503');
     await modal.locator('#lbr-health-uri').fill('/');

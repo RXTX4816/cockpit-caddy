@@ -16,7 +16,15 @@
     "confirm_apply": "적용",
     "configured": "설정됨",
     "remove_aria": "제거",
-    "header_op_aria": "헤더 작업"
+    "header_op_aria": "헤더 작업",
+    "default_value": "기본값: {{value}}",
+    "reset_default": "Caddy 기본값으로 재설정",
+    "size_unit": "단위",
+    "unit_b": "바이트",
+    "unit_kb": "KB",
+    "unit_mb": "MB",
+    "unit_gb": "GB",
+    "example_value": "예: {{value}}"
   },
   "app": {
     "title": "Caddy",
@@ -122,7 +130,7 @@
     "validation_ext_host_duplicate": "\"{{host}}\"이(가) 두 번 입력되었습니다.",
     "validation_https_requires_tls": "\"https\" 프로토콜을 사용하려면 아래에서 TLS를 켜야 합니다. 그렇지 않으면 Caddy가 이 앱의 설정과 상관없이 HTTPS를 자체적으로 관리합니다. TLS를 켜거나 다른 프로토콜을 선택하세요.",
     "field_target_host": "대상 호스트",
-    "field_target_host_placeholder": "localhost",
+    "field_target_host_placeholder": "예: localhost",
     "field_tls_skip_verify": "백엔드 TLS 검증 건너뛰기(자체 서명 백엔드 인증서용)",
     "field_tls": "TLS 사용 (Caddy 내부 CA)",
     "field_tls_short": "TLS 사용 (내부 CA)",
@@ -138,7 +146,16 @@
     "validation_target_port_required": "대상 포트를 입력하세요",
     "validation_target_port_range": "대상 포트는 1~65535 사이여야 합니다",
     "validation_target_host_required": "대상 호스트를 입력하세요",
-    "confirm_body": "리버스 프록시 :{{port}} → {{target}}을(를) 만들고 Caddy 설정을 다시 불러옵니다."
+    "confirm_body": "리버스 프록시 :{{port}} → {{target}}을(를) 만들고 Caddy 설정을 다시 불러옵니다.",
+    "ext_host_label": "외부 호스트",
+    "ext_port_label": "외부 포트",
+    "ext_port_placeholder": "예: 8443",
+    "ext_scheme_custom_input": "사용자 지정 프로토콜",
+    "ext_scheme_label": "프로토콜",
+    "field_label_help": "목록에 표시할 사이트 이름입니다. 예: Grafana",
+    "target_port_label": "대상 포트",
+    "target_port_placeholder": "예: 8080",
+    "target_scheme_label": "대상 프로토콜"
   },
   "add_static": {
     "title": "정적 파일 서버 추가",
@@ -248,16 +265,15 @@
     "read_header_timeout": "헤더 읽기 시간 제한",
     "write_timeout": "쓰기 시간 제한",
     "idle_timeout": "유휴 시간 제한",
-    "max_header_bytes": "최대 헤더 크기(바이트)",
-    "max_header_bytes_help": "요청 헤더의 최대 크기(바이트, Caddy 기본값: 16 KiB = 16384)",
+    "max_header_bytes": "최대 헤더 크기",
+    "max_header_bytes_help": "요청 헤더의 최대 크기(Caddy 기본값: 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "HTTP/3 사용 안 함",
     "http3_help": "Caddy는 TLS가 설정되면 기본적으로 HTTP/1.1, HTTP/2, HTTP/3을 사용합니다. HTTP/3은 HTTPS와 같은 포트의 UDP로 동작하므로, 방화벽이 UDP를 차단한다면 여기서 끄면 HTTP/1.1과 HTTP/2만 사용합니다."
   },
   "request_body": {
-    "field_label": "최대 요청 본문 크기(바이트, 선택)",
-    "field_placeholder": "10485760",
-    "field_help": "본문이 이보다 큰 요청은 백엔드에 도달하기 전에 거부됩니다. 제한하지 않으려면(Caddy 기본값) 비워 두세요. 예: 1048576 = 1 MB, 10485760 = 10 MB."
+    "field_label": "요청 본문 최대 크기",
+    "field_help": "이보다 큰 요청 본문은 백엔드에 닿기 전에 거부됩니다. 비워 두면 제한이 없습니다(Caddy 기본값)."
   },
   "rewrite": {
     "section_title": "URI 재작성(선택)",
@@ -500,7 +516,7 @@
     "roll_keep_count": "보관할 순환 파일 수",
     "roll_keep_days": "순환 파일 최대 보관 기간(일)",
     "roll_compress": "순환 파일 압축(gzip)",
-    "roll_help": "로그 파일이 끝없이 커지지 않게 합니다. Caddy 기본값(순환 없음 — 파일이 계속 커짐)을 쓰려면 비워 두세요."
+    "roll_help": "Caddy는 기본적으로 로그 파일을 순환합니다. 회색으로 표시된 Caddy 기본값을 쓰려면 필드를 비워 두세요."
   },
   "config_check": {
     "button": "설정 점검",
@@ -819,7 +835,8 @@
   "named_route": {
     "toggle_label": "이름 있는 라우트로 등록(invoke)",
     "name_label": "라우트 이름",
-    "name_placeholder": "예: auth-middleware"
+    "name_placeholder": "예: auth-middleware",
+    "help": "경로를 이름으로도 등록해 다른 경로가 invoke <name>으로 재사용할 수 있게 합니다."
   },
   "servers": {
     "tab_all": "전체",
@@ -912,5 +929,14 @@
     "title": "스니펫",
     "unused": "가져오지 않음",
     "used_by": "{{sites}}에서 가져옴"
+  },
+  "proxy_tabs": {
+    "aria_label": "프록시 설정",
+    "has_error": "오류 있음",
+    "general": "일반",
+    "security": "보안",
+    "routing": "라우팅",
+    "upstreams": "업스트림",
+    "logging": "로그 및 오류"
   }
 }

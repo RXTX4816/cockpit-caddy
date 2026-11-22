@@ -1,14 +1,14 @@
 import { useState } from "react";
 import {
   Checkbox,
-  ExpandableSection,
   FormGroup,
   FormHelperText,
   HelperText,
   HelperTextItem,
-  TextInput,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
+import { ResettableTextInput, SectionShell } from "./sectionLayout";
+import { SizeField } from "./SizeField";
 import { SectionActions } from "./SectionActions";
 import { SectionConfiguredDot } from "./SectionConfiguredDot";
 
@@ -59,7 +59,7 @@ export function ServerTimeoutsSection({ value, onChange, isDisabled, isExpanded:
   }
 
   return (
-    <ExpandableSection
+    <SectionShell
       toggleContent={<>{t("server_timeouts.section_title")}{hasValues && <SectionConfiguredDot />}</>}
       isIndented
       isExpanded={expanded}
@@ -75,7 +75,7 @@ export function ServerTimeoutsSection({ value, onChange, isDisabled, isExpanded:
       </HelperText>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
         <FormGroup label={t("server_timeouts.read_timeout")} fieldId="st-read" style={{ flex: "1 1 10rem" }}>
-          <TextInput
+          <ResettableTextInput
             id="st-read"
             value={value.readTimeout}
             onChange={(_e, v) => set("readTimeout", v)}
@@ -84,16 +84,16 @@ export function ServerTimeoutsSection({ value, onChange, isDisabled, isExpanded:
           />
         </FormGroup>
         <FormGroup label={t("server_timeouts.read_header_timeout")} fieldId="st-read-header" style={{ flex: "1 1 10rem" }}>
-          <TextInput
+          <ResettableTextInput
             id="st-read-header"
             value={value.readHeaderTimeout}
             onChange={(_e, v) => set("readHeaderTimeout", v)}
-            placeholder="1m"
+            placeholder={t("common.default_value", { value: "1m" })}
             isDisabled={isDisabled}
           />
         </FormGroup>
         <FormGroup label={t("server_timeouts.write_timeout")} fieldId="st-write" style={{ flex: "1 1 10rem" }}>
-          <TextInput
+          <ResettableTextInput
             id="st-write"
             value={value.writeTimeout}
             onChange={(_e, v) => set("writeTimeout", v)}
@@ -102,21 +102,21 @@ export function ServerTimeoutsSection({ value, onChange, isDisabled, isExpanded:
           />
         </FormGroup>
         <FormGroup label={t("server_timeouts.idle_timeout")} fieldId="st-idle" style={{ flex: "1 1 10rem" }}>
-          <TextInput
+          <ResettableTextInput
             id="st-idle"
             value={value.idleTimeout}
             onChange={(_e, v) => set("idleTimeout", v)}
-            placeholder="5m"
+            placeholder={t("common.default_value", { value: "5m" })}
             isDisabled={isDisabled}
           />
         </FormGroup>
         <FormGroup label={t("server_timeouts.max_header_bytes")} fieldId="st-max-header" style={{ flex: "1 1 10rem" }}>
-          <TextInput
+          <SizeField
             id="st-max-header"
-            type="number"
             value={value.maxHeaderBytes}
-            onChange={(_e, v) => set("maxHeaderBytes", v)}
-            placeholder="16384"
+            onChange={v => set("maxHeaderBytes", v)}
+            defaultBytes={16384}
+            emptyUnit="KB"
             isDisabled={isDisabled}
           />
           <FormHelperText>
@@ -140,6 +140,6 @@ export function ServerTimeoutsSection({ value, onChange, isDisabled, isExpanded:
           </HelperText>
         </FormHelperText>
       </FormGroup>
-    </ExpandableSection>
+    </SectionShell>
   );
 }

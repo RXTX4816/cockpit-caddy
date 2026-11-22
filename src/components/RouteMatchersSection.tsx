@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {
   Button,
-  ExpandableSection,
   FormGroup,
   FormHelperText,
   HelperText,
@@ -14,6 +13,7 @@ import {
   ToggleGroupItem,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
+import { SectionShell } from "./sectionLayout";
 import type { RouteMatch, RouteMatchFields } from "../api";
 import { hasAnyMatcher } from "../api";
 import { SectionActions } from "./SectionActions";
@@ -69,7 +69,7 @@ export function RouteMatchersSection({ value, onChange, isDisabled, isExpanded: 
   const { not, expression, ...include } = value ?? {};
 
   return (
-    <ExpandableSection
+    <SectionShell
       toggleContent={<>{t("matchers.section_title")}{hasAnyMatcher(value) && <SectionConfiguredDot />}</>}
       isIndented
       isExpanded={expanded}
@@ -121,7 +121,7 @@ export function RouteMatchersSection({ value, onChange, isDisabled, isExpanded: 
           </FormHelperText>
         </FormGroup>
       </div>
-    </ExpandableSection>
+    </SectionShell>
   );
 }
 

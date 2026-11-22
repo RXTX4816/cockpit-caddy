@@ -16,7 +16,15 @@
     "confirm_apply": "Toepassen",
     "configured": "Geconfigureerd",
     "remove_aria": "Verwijderen",
-    "header_op_aria": "Header-bewerking"
+    "header_op_aria": "Header-bewerking",
+    "default_value": "Standaard: {{value}}",
+    "reset_default": "Terugzetten naar Caddy-standaard",
+    "size_unit": "Eenheid",
+    "unit_b": "bytes",
+    "unit_kb": "KB",
+    "unit_mb": "MB",
+    "unit_gb": "GB",
+    "example_value": "bijv. {{value}}"
   },
   "app": {
     "title": "Caddy",
@@ -122,7 +130,7 @@
     "validation_ext_host_duplicate": "\"{{host}}\" staat er twee keer in.",
     "validation_https_requires_tls": "Het protocol \"https\" vereist dat TLS hieronder is ingeschakeld — anders beheert Caddy HTTPS zelf, buiten de instellingen van deze app om. Schakel TLS in of kies een ander protocol.",
     "field_target_host": "Doelhost",
-    "field_target_host_placeholder": "localhost",
+    "field_target_host_placeholder": "bijv. localhost",
     "field_tls_skip_verify": "TLS-verificatie van de backend overslaan (voor zelfondertekende backend-certificaten)",
     "field_tls": "TLS inschakelen (interne CA van Caddy)",
     "field_tls_short": "TLS inschakelen (interne CA)",
@@ -138,7 +146,16 @@
     "validation_target_port_required": "Doelpoort is verplicht",
     "validation_target_port_range": "De doelpoort moet tussen 1 en 65535 liggen",
     "validation_target_host_required": "Doelhost is verplicht",
-    "confirm_body": "Er wordt een reverse proxy :{{port}} → {{target}} aangemaakt en de Caddy-configuratie wordt herladen."
+    "confirm_body": "Er wordt een reverse proxy :{{port}} → {{target}} aangemaakt en de Caddy-configuratie wordt herladen.",
+    "ext_host_label": "Externe host",
+    "ext_port_label": "Externe poort",
+    "ext_port_placeholder": "bijv. 8443",
+    "ext_scheme_custom_input": "Eigen protocol",
+    "ext_scheme_label": "Protocol",
+    "field_label_help": "Een naam voor deze site in de lijst, bijv. Grafana.",
+    "target_port_label": "Doelpoort",
+    "target_port_placeholder": "bijv. 8080",
+    "target_scheme_label": "Doelprotocol"
   },
   "add_static": {
     "title": "Statische bestandsserver toevoegen",
@@ -248,16 +265,15 @@
     "read_header_timeout": "Time-out voor lezen van headers",
     "write_timeout": "Schrijftime-out",
     "idle_timeout": "Inactiviteitstime-out",
-    "max_header_bytes": "Max. headergrootte (bytes)",
-    "max_header_bytes_help": "Maximale grootte van de request-headers in bytes (standaard in Caddy: 16 KiB = 16384)",
+    "max_header_bytes": "Max. headergrootte",
+    "max_header_bytes_help": "Maximale grootte van de request-headers (standaard in Caddy: 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "HTTP/3 uitschakelen",
     "http3_help": "Caddy schakelt HTTP/1.1, HTTP/2 en HTTP/3 standaard in zodra TLS is geconfigureerd. HTTP/3 loopt over UDP op dezelfde poort als HTTPS — als je firewall UDP blokkeert, valt Caddy na uitschakelen hier terug op alleen HTTP/1.1 en HTTP/2."
   },
   "request_body": {
-    "field_label": "Max. grootte van de request-body (bytes, optioneel)",
-    "field_placeholder": "10485760",
-    "field_help": "Weigert requests met een grotere body voordat ze de backend bereiken. Laat leeg voor geen limiet (standaard van Caddy). Bijv. 1048576 = 1 MB, 10485760 = 10 MB."
+    "field_label": "Maximale grootte van de request-body",
+    "field_help": "Grotere request-bodies worden geweigerd voordat ze de backend bereiken. Laat leeg voor geen limiet (Caddy-standaard)."
   },
   "rewrite": {
     "section_title": "URI herschrijven (optioneel)",
@@ -500,7 +516,7 @@
     "roll_keep_count": "Te bewaren geroteerde bestanden",
     "roll_keep_days": "Max. leeftijd van geroteerde bestanden (dagen)",
     "roll_compress": "Geroteerde bestanden comprimeren (gzip)",
-    "roll_help": "Voorkomt dat het logbestand onbeperkt groeit. Laat leeg voor de standaard van Caddy (geen rotatie — het bestand blijft groeien)."
+    "roll_help": "Caddy roteert het logbestand standaard. Laat een veld leeg om de standaardwaarde van Caddy te gebruiken, grijs weergegeven."
   },
   "config_check": {
     "button": "Configuratie controleren",
@@ -819,7 +835,8 @@
   "named_route": {
     "toggle_label": "Als benoemde route registreren (invoke)",
     "name_label": "Routenaam",
-    "name_placeholder": "bijv. auth-middleware"
+    "name_placeholder": "bijv. auth-middleware",
+    "help": "Registreert de route ook onder een naam, zodat andere routes hem met invoke <name> kunnen hergebruiken."
   },
   "servers": {
     "tab_all": "Alle",
@@ -912,5 +929,14 @@
     "title": "Snippets",
     "unused": "Niet geïmporteerd",
     "used_by": "Geïmporteerd door {{sites}}"
+  },
+  "proxy_tabs": {
+    "aria_label": "Proxy-instellingen",
+    "has_error": "Bevat fouten",
+    "general": "Algemeen",
+    "security": "Beveiliging",
+    "routing": "Routering",
+    "upstreams": "Upstreams",
+    "logging": "Logging & fouten"
   }
 }

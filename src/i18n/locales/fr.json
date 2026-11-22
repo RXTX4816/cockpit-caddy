@@ -16,7 +16,15 @@
     "confirm_apply": "Appliquer",
     "configured": "Configuré",
     "remove_aria": "Supprimer",
-    "header_op_aria": "Opération sur l'en-tête"
+    "header_op_aria": "Opération sur l'en-tête",
+    "default_value": "Par défaut : {{value}}",
+    "reset_default": "Revenir à la valeur par défaut de Caddy",
+    "size_unit": "Unité",
+    "unit_b": "octets",
+    "unit_kb": "Ko",
+    "unit_mb": "Mo",
+    "unit_gb": "Go",
+    "example_value": "ex. {{value}}"
   },
   "app": {
     "title": "Caddy",
@@ -122,7 +130,7 @@
     "validation_ext_host_duplicate": "« {{host}} » figure deux fois.",
     "validation_https_requires_tls": "Le protocole « https » exige que TLS soit activé ci-dessous — sinon Caddy gérerait HTTPS de son côté, hors des réglages de cette application. Activez TLS ou choisissez un autre protocole.",
     "field_target_host": "Hôte cible",
-    "field_target_host_placeholder": "localhost",
+    "field_target_host_placeholder": "p. ex. localhost",
     "field_tls_skip_verify": "Ignorer la vérification TLS du backend (pour les certificats backend auto-signés)",
     "field_tls": "Activer TLS (CA interne de Caddy)",
     "field_tls_short": "Activer TLS (CA interne)",
@@ -138,7 +146,16 @@
     "validation_target_port_required": "Le port cible est obligatoire",
     "validation_target_port_range": "Le port cible doit être compris entre 1 et 65535",
     "validation_target_host_required": "L'hôte cible est obligatoire",
-    "confirm_body": "Un reverse proxy :{{port}} → {{target}} va être créé et la configuration de Caddy rechargée."
+    "confirm_body": "Un reverse proxy :{{port}} → {{target}} va être créé et la configuration de Caddy rechargée.",
+    "ext_host_label": "Hôte externe",
+    "ext_port_label": "Port externe",
+    "ext_port_placeholder": "p. ex. 8443",
+    "ext_scheme_custom_input": "Protocole personnalisé",
+    "ext_scheme_label": "Protocole",
+    "field_label_help": "Un nom pour ce site dans la liste, p. ex. Grafana.",
+    "target_port_label": "Port cible",
+    "target_port_placeholder": "p. ex. 8080",
+    "target_scheme_label": "Protocole cible"
   },
   "add_static": {
     "title": "Ajouter un serveur de fichiers statiques",
@@ -248,16 +265,15 @@
     "read_header_timeout": "Délai de lecture des en-têtes",
     "write_timeout": "Délai d'écriture",
     "idle_timeout": "Délai d'inactivité",
-    "max_header_bytes": "Taille max. des en-têtes (octets)",
-    "max_header_bytes_help": "Taille maximale des en-têtes de requête en octets (par défaut dans Caddy : 16 Kio = 16384)",
+    "max_header_bytes": "Taille max. des en-têtes",
+    "max_header_bytes_help": "Taille maximale des en-têtes de requête (par défaut dans Caddy : 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "Désactiver HTTP/3",
     "http3_help": "Caddy active HTTP/1.1, HTTP/2 et HTTP/3 par défaut dès que TLS est configuré. HTTP/3 passe par UDP sur le même port que HTTPS — si votre pare-feu bloque UDP, le désactiver ici ramène à HTTP/1.1 et HTTP/2 uniquement."
   },
   "request_body": {
-    "field_label": "Taille max. du corps de requête (octets, facultatif)",
-    "field_placeholder": "10485760",
-    "field_help": "Rejette les requêtes dont le corps est plus grand avant qu'elles n'atteignent le backend. Laisser vide pour aucune limite (valeur par défaut de Caddy). Par ex. 1048576 = 1 Mo, 10485760 = 10 Mo."
+    "field_label": "Taille maximale du corps de requête",
+    "field_help": "Les corps plus volumineux sont refusés avant d’atteindre le backend. Laissez vide pour aucune limite (valeur par défaut de Caddy)."
   },
   "rewrite": {
     "section_title": "Réécriture d'URI (facultatif)",
@@ -500,7 +516,7 @@
     "roll_keep_count": "Fichiers archivés à conserver",
     "roll_keep_days": "Âge max. des fichiers archivés (jours)",
     "roll_compress": "Compresser les fichiers archivés (gzip)",
-    "roll_help": "Empêche le fichier journal de grossir indéfiniment. Laisser vide pour la valeur par défaut de Caddy (pas de rotation — le fichier grossit sans fin)."
+    "roll_help": "Caddy fait tourner le fichier journal par défaut. Laissez un champ vide pour utiliser la valeur par défaut de Caddy, affichée en grisé."
   },
   "config_check": {
     "button": "Vérifier la configuration",
@@ -819,7 +835,8 @@
   "named_route": {
     "toggle_label": "Enregistrer comme route nommée (invoke)",
     "name_label": "Nom de la route",
-    "name_placeholder": "par ex. auth-middleware"
+    "name_placeholder": "par ex. auth-middleware",
+    "help": "Enregistre aussi la route sous un nom, pour que d’autres routes la réutilisent avec invoke <name>."
   },
   "servers": {
     "tab_all": "Tous",
@@ -912,5 +929,14 @@
     "title": "Snippets",
     "unused": "Non importé",
     "used_by": "Importé par {{sites}}"
+  },
+  "proxy_tabs": {
+    "aria_label": "Réglages du proxy",
+    "has_error": "Contient des erreurs",
+    "general": "Général",
+    "security": "Sécurité",
+    "routing": "Routage",
+    "upstreams": "Upstreams",
+    "logging": "Journaux et erreurs"
   }
 }

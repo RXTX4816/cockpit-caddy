@@ -8,8 +8,6 @@ import {
   FormHelperText,
   HelperText,
   HelperTextItem,
-  InputGroup,
-  InputGroupText,
   Label,
   Modal,
   ModalBody,
@@ -19,7 +17,7 @@ import {
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
-import { useToast, ExternalAddressInput } from "@rxtx4816/cockpit-plugin-base-react/components";
+import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { readProxyConf, parseConfExternalAddresses, CaddyApiError, CaddyfileError, routeHosts, hostsConflict, normalizeExternalHost, formatExternalAddressPreview, isPathOnlyMatcher } from "../api";
 import type { ProxyEntry, RewriteConfig, HeaderOperation, RouteMatch, ServerDef } from "../api";
 import { TlsModeField, defaultTlsMode, hasPublicName, tlsModeToEntry, type TlsMode } from "./TlsModeField";
@@ -39,13 +37,12 @@ import { AccessLogSection, type AccessLogValues, accessLogValuesToConfig, access
 import { BasicAuthSection, resolveBasicAuth, type AuthEntry } from "./BasicAuthSection";
 import { ErrorHandlersSection } from "./ErrorHandlersSection";
 import { ForwardAuthSection, validateForwardAuth } from "./ForwardAuthSection";
-import { UpstreamsSection, validateUpstreams, type ExtraUpstream } from "./UpstreamsSection";
-import { LbRetrySection, validateLbRetry, lbRetryValuesToConfig, lbRetryConfigToValues, type LbRetryValues } from "./LbRetrySection";
-import { TlsSection, type TlsValues, tlsValuesToAdvanced, tlsValuesToMtls, tlsValuesToCustomTls, tlsConfigToValues, tlsValuesHaveErrors } from "./TlsSection";
+import { UpstreamsSection, type ExtraUpstream } from "./UpstreamsSection";
+import { LbRetrySection, lbRetryValuesToConfig, lbRetryConfigToValues, type LbRetryValues } from "./LbRetrySection";
+import { TlsSection, type TlsValues, tlsValuesToAdvanced, tlsValuesToMtls, tlsValuesToCustomTls, tlsConfigToValues } from "./TlsSection";
 import type { ErrorHandlerConfig, ForwardAuthConfig, LbPolicy } from "../api";
-import { SectionActions } from "./SectionActions";
-import { sectionAccordionProps } from "./sectionAccordion";
-import { AccordionRow } from "./AccordionRow";
+import { ProxyDialogTabs, InlineAddressField, TargetField, NamedRouteField, firstTabWithError, type ProxyTabKey } from "./proxyDialogParts";
+import { proxyTabFlags, type ProxyTabValues } from "./proxyTabFlags";
 import type { ServerContext } from "./AddRedirectDialog";
 import {
   FormSelect,
@@ -106,6 +103,8 @@ interface Props {
   initialServerKey?: string;
 }
 
+const noop = () => {};
+
 export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, initialValues, initialTlsMode, initialTlsOnDemand, initialRewrite, initialRequestHeaders, initialResponseHeaders, initialTransport, initialBasicAuth, initialExtraUpstreams, initialLbPolicy, initialLbRetry, initialServerTimeouts, initialRequestBodyMaxSize, initialAccessLog, initialErrorHandlers, initialForwardAuth, initialTlsValues, initialMatchers, initialImports, initialHandlePath, initialIsNamedRoute, initialNamedRouteName, servers, initialServerKey }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
@@ -138,7 +137,7 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
   const [lbPolicy, setLbPolicy] = useState<LbPolicy | "">(initialLbPolicy ?? "");
   const [lbRetry, setLbRetry] = useState<LbRetryValues>(initialLbRetry ?? lbRetryConfigToValues(undefined));
   const [tlsValues, setTlsValues] = useState<TlsValues>(initialTlsValues ?? tlsConfigToValues(undefined, undefined));
-  const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<ProxyTabKey>("general");
   const [matchers, setMatchers] = useState<RouteMatch | undefined>(initialMatchers);
   const [imports, setImports] = useState<string[] | undefined>(initialImports);
   const [handlePath, setHandlePath] = useState(initialHandlePath ?? false);
@@ -207,11 +206,21 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
 
   const forwardAuthErr = validateForwardAuth(forwardAuth);
 
+  const tabValues: ProxyTabValues = {
+    basicAuth, forwardAuth, forwardAuthError: forwardAuthErr, tlsValues, matchers, rewrite, requestHeaders, responseHeaders,
+    isNamedRoute, extraUpstreams, lbPolicy, lbRetry, transport, accessLog, errorHandlers, serverTimeouts, requestBodyMaxSize,
+  };
+  const flags = proxyTabFlags(tabValues, Object.values(errors).some(Boolean));
+
   function handleAddClick() {
     const errs = validate();
-    const upstreamErr = validateUpstreams(extraUpstreams);
-    const lbRetryErr = validateLbRetry(lbRetry);
-    if (Object.keys(errs).length > 0 || upstreamErr || lbRetryErr || forwardAuthErr) { setErrors(errs); return; }
+    const after = proxyTabFlags(tabValues, Object.keys(errs).length > 0);
+    const errorTab = firstTabWithError(after.hasError);
+    if (errorTab) {
+      setErrors(errs);
+      setActiveTab(errorTab);
+      return;
+    }
     confirmAction.confirm();
   }
 
@@ -253,244 +262,171 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
           </div>
         )}
 
-        <Form isHorizontal>
-          <FormGroup label={t("add_proxy.field_label")} fieldId="label">
-            <TextInput
-              id="label"
-              value={form.label}
-              onChange={(_e, v) => set("label", v)}
-              placeholder={t("add_proxy.field_label_placeholder")}
-              isDisabled={isLocked}
-            />
-          </FormGroup>
+        <ProxyDialogTabs
+          active={activeTab}
+          onSelect={setActiveTab}
+          tabs={[
+            {
+              key: "general",
+              hasError: flags.hasError.general,
+              content: (
+                <Form isHorizontal>
+                  <FormGroup label={t("add_proxy.field_label")} fieldId="label">
+                    <TextInput id="label" value={form.label} onChange={(_e, v) => set("label", v)} isDisabled={isLocked} />
+                    <FormHelperText><HelperText><HelperTextItem>{t("add_proxy.field_label_help")}</HelperTextItem></HelperText></FormHelperText>
+                  </FormGroup>
 
-          {servers && servers.length > 0 && (
-            <FormGroup label={t("servers.selector_label")} fieldId="proxy-server">
-              <FormSelect
-                id="proxy-server"
-                value={selectedServerKey}
-                onChange={(_e, v) => { setSelectedServerKey(v); setErrors(prev => ({ ...prev, externalPort: undefined })); }}
-                isDisabled={isLocked}
-              >
-                <FormSelectOption value="" label={t("servers.selector_none")} />
-                {servers.map(s => (
-                  <FormSelectOption key={s.key} value={s.key} label={`${s.name} (${s.listenAddresses[0] ?? ""})`} />
-                ))}
-              </FormSelect>
-            </FormGroup>
-          )}
+                  {servers && servers.length > 0 && (
+                    <FormGroup label={t("servers.selector_label")} fieldId="proxy-server">
+                      <FormSelect
+                        id="proxy-server"
+                        value={selectedServerKey}
+                        onChange={(_e, v) => { setSelectedServerKey(v); setErrors(prev => ({ ...prev, externalPort: undefined })); }}
+                        isDisabled={isLocked}
+                      >
+                        <FormSelectOption value="" label={t("servers.selector_none")} />
+                        {servers.map(s => (
+                          <FormSelectOption key={s.key} value={s.key} label={`${s.name} (${s.listenAddresses[0] ?? ""})`} />
+                        ))}
+                      </FormSelect>
+                    </FormGroup>
+                  )}
 
-          {serverCtx ? (
-            <FormGroup label={t("add_proxy.field_external_address")} fieldId="external-port">
-              <Label isCompact color="blue">{serverCtx.serverName} (:{serverCtx.port})</Label>
-            </FormGroup>
-          ) : (
-            <FormGroup label={t("add_proxy.field_external_address")} fieldId="external-port" isRequired>
-              <ExternalAddressInput
-                scheme={form.externalScheme}
-                onSchemeChange={v => set("externalScheme", v)}
-                host={form.externalHost}
-                onHostChange={v => set("externalHost", v)}
-                port={form.externalPort}
-                onPortChange={v => set("externalPort", v)}
-                builtinSchemes={EXTERNAL_ADDRESS_BUILTIN_SCHEMES}
-                suggestedSchemes={extraSchemes}
-                isDisabled={isLocked}
-                hostValidated={errors.externalHost ? "error" : "default"}
-                portValidated={errors.externalPort ? "error" : "default"}
-                portPlaceholder="8443"
-                hostPlaceholder={t("add_proxy.ext_host_placeholder")}
-                schemeNoneLabel={t("add_proxy.ext_scheme_none")}
-                schemeCustomLabel={t("add_proxy.ext_scheme_custom")}
-              />
-              {(errors.externalPort || errors.externalHost || errors.externalScheme) && (
-                <FormHelperText>
-                  <HelperText>
-                    <HelperTextItem variant="error">{errors.externalHost ?? errors.externalScheme ?? errors.externalPort}</HelperTextItem>
-                  </HelperText>
-                </FormHelperText>
-              )}
-              {!errors.externalPort && !errors.externalHost && !errors.externalScheme && (
-                <FormHelperText>
-                  <HelperText>
-                    <HelperTextItem>{t("add_proxy.field_external_address_help")}</HelperTextItem>
-                  </HelperText>
-                </FormHelperText>
-              )}
-            </FormGroup>
-          )}
+                  {serverCtx ? (
+                    <FormGroup label={t("add_proxy.field_external_address")} fieldId="external-port">
+                      <Label isCompact color="blue">{serverCtx.serverName} (:{serverCtx.port})</Label>
+                    </FormGroup>
+                  ) : (
+                    <FormGroup label={t("add_proxy.field_external_address")} fieldId="external-port" isRequired>
+                      <InlineAddressField
+                        scheme={form.externalScheme}
+                        onSchemeChange={v => set("externalScheme", v)}
+                        host={form.externalHost}
+                        onHostChange={v => set("externalHost", v)}
+                        port={form.externalPort}
+                        onPortChange={v => set("externalPort", v)}
+                        builtinSchemes={EXTERNAL_ADDRESS_BUILTIN_SCHEMES}
+                        suggestedSchemes={extraSchemes}
+                        isDisabled={isLocked}
+                        hostError={!!(errors.externalHost || errors.externalScheme)}
+                        portError={!!errors.externalPort}
+                      />
+                      <FormHelperText>
+                        <HelperText>
+                          {errors.externalHost || errors.externalScheme || errors.externalPort ? (
+                            <>
+                              {(errors.externalHost ?? errors.externalScheme) && <HelperTextItem variant="error">{errors.externalHost ?? errors.externalScheme}</HelperTextItem>}
+                              {errors.externalPort && <HelperTextItem variant="error">{errors.externalPort}</HelperTextItem>}
+                            </>
+                          ) : (
+                            <HelperTextItem>{t("add_proxy.field_external_address_help")}</HelperTextItem>
+                          )}
+                        </HelperText>
+                      </FormHelperText>
+                    </FormGroup>
+                  )}
 
-          <FormGroup label={t("add_proxy.field_target_host")} fieldId="target-host" isRequired>
-            <InputGroup>
-              <div style={{ display: "flex", gap: 0, width: "100%" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
-                  <Button
-                    variant={form.targetScheme === "http" ? "primary" : "plain"}
-                    size="sm"
-                    onClick={() => set("targetScheme", "http")}
+                  <TargetField
+                    idPrefix=""
+                    scheme={form.targetScheme}
+                    onSchemeChange={v => set("targetScheme", v)}
+                    host={form.targetHost}
+                    onHostChange={v => set("targetHost", v)}
+                    port={form.targetPort}
+                    onPortChange={v => set("targetPort", v)}
+                    skipVerify={form.tlsSkipVerify}
+                    onSkipVerifyChange={v => set("tlsSkipVerify", v)}
+                    hostError={errors.targetHost}
+                    portError={errors.targetPort}
                     isDisabled={isLocked}
-                  >http</Button>
-                  <Button
-                    variant={form.targetScheme === "https" ? "primary" : "plain"}
-                    size="sm"
-                    onClick={() => set("targetScheme", "https")}
+                  />
+
+                  {!serverCtx && (
+                    <TlsModeField id="tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isLocked} onDemand={tlsOnDemand} onOnDemandChange={setTlsOnDemand} />
+                  )}
+
+                  <FormGroup label={t("add_proxy.field_compress")} fieldId="compress">
+                    <Checkbox
+                      id="compress"
+                      label={t("add_proxy.field_compress_short")}
+                      isChecked={form.compress}
+                      onChange={(_e, checked) => set("compress", checked)}
+                      isDisabled={isLocked}
+                    />
+                  </FormGroup>
+                  <SnippetImportsField value={imports} onChange={setImports} isDisabled={isLocked} />
+                </Form>
+              ),
+            },
+            {
+              key: "security",
+              configured: flags.configured.security,
+              hasError: flags.hasError.security,
+              content: (
+                <>
+                  <BasicAuthSection value={basicAuth} onChange={setBasicAuth} isDisabled={isLocked} isExpanded onToggleExpanded={noop} />
+                  <ForwardAuthSection value={forwardAuth} onChange={setForwardAuth} isDisabled={isLocked} uriError={forwardAuthErr ?? undefined} isExpanded onToggleExpanded={noop} />
+                  {!serverCtx && (
+                    <TlsSection value={tlsValues} onChange={setTlsValues} isDisabled={isLocked} hostless={!form.externalHost.trim()} isExpanded onToggleExpanded={noop} />
+                  )}
+                </>
+              ),
+            },
+            {
+              key: "routing",
+              configured: flags.configured.routing,
+              content: (
+                <>
+                  <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!isPathOnlyMatcher(v)) setHandlePath(false); }} isDisabled={isLocked} isExpanded onToggleExpanded={noop} />
+                  {isPathOnlyMatcher(matchers) && (
+                    <Checkbox
+                      id="add-proxy-handle-path"
+                      label={t("handle_path.label")}
+                      isChecked={handlePath}
+                      onChange={(_e, v) => setHandlePath(v)}
+                      isDisabled={isLocked}
+                    />
+                  )}
+                  <RewriteSection value={rewrite} onChange={setRewrite} isDisabled={isLocked} isExpanded onToggleExpanded={noop} />
+                  <RequestHeadersSection value={requestHeaders} onChange={setRequestHeaders} isDisabled={isLocked} isExpanded onToggleExpanded={noop} />
+                  <ResponseHeadersSection value={responseHeaders} onChange={setResponseHeaders} isDisabled={isLocked} isExpanded onToggleExpanded={noop} />
+                  <NamedRouteField idPrefix="add-proxy-" enabled={isNamedRoute} onEnabledChange={setIsNamedRoute} name={namedRouteName} onNameChange={setNamedRouteName} isDisabled={isLocked} />
+                </>
+              ),
+            },
+            {
+              key: "upstreams",
+              configured: flags.configured.upstreams,
+              hasError: flags.hasError.upstreams,
+              content: (
+                <>
+                  <UpstreamsSection
+                    value={extraUpstreams}
+                    lbPolicy={lbPolicy}
+                    onChange={(u, p) => { setExtraUpstreams(u); setLbPolicy(p); }}
                     isDisabled={isLocked}
-                  >https</Button>
-                </div>
-                <TextInput
-                  id="target-host"
-                  value={form.targetHost}
-                  onChange={(_e, v) => set("targetHost", v)}
-                  placeholder={t("add_proxy.field_target_host_placeholder")}
-                  isDisabled={isLocked}
-                  validated={errors.targetHost ? "error" : "default"}
-                  style={{ flex: 1 }}
-                />
-                <InputGroupText>:</InputGroupText>
-                <TextInput
-                  id="target-port"
-                  type="number"
-                  value={form.targetPort}
-                  onChange={(_e, v) => set("targetPort", v)}
-                  placeholder="8080"
-                  isDisabled={isLocked}
-                  validated={errors.targetPort ? "error" : "default"}
-                  style={{ width: 90 }}
-                />
-              </div>
-            </InputGroup>
-            {(errors.targetHost || errors.targetPort) && (
-              <FormHelperText>
-                <HelperText>
-                  <HelperTextItem variant="error">{errors.targetHost ?? errors.targetPort}</HelperTextItem>
-                </HelperText>
-              </FormHelperText>
-            )}
-            {form.targetScheme === "https" && (
-              <Checkbox
-                id="tls-skip-verify"
-                label={t("add_proxy.field_tls_skip_verify")}
-                isChecked={form.tlsSkipVerify}
-                onChange={(_e, checked) => set("tlsSkipVerify", checked)}
-                isDisabled={isLocked}
-                style={{ marginTop: "0.4rem" }}
-              />
-            )}
-          </FormGroup>
-
-          {!serverCtx && (
-            <div>
-              <TlsModeField id="tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isLocked} onDemand={tlsOnDemand} onOnDemandChange={setTlsOnDemand} />
-              <SectionActions onDefaults={() => setTlsModeChoice(null)} isDisabled={isLocked} />
-            </div>
-          )}
-
-          <FormGroup label={t("add_proxy.field_compress")} fieldId="compress">
-            <Checkbox
-              id="compress"
-              label={t("add_proxy.field_compress_short")}
-              isChecked={form.compress}
-              onChange={(_e, checked) => set("compress", checked)}
-              isDisabled={isLocked}
-            />
-          </FormGroup>
-          <RequestBodyLimitField value={requestBodyMaxSize} onChange={setRequestBodyMaxSize} isDisabled={isLocked} idPrefix="add-proxy" />
-        </Form>
-        <div
-          style={{
-            border: "1px solid var(--pf-t--global--border--color--default)",
-            borderRadius: "var(--pf-t--global--border--radius--small)",
-            padding: "0 0.75rem",
-            marginTop: "var(--pf-v6-global--spacer--md)",
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          <AccordionRow>
-            <TransportSection value={transport} onChange={setTransport} isDisabled={isLocked} {...sectionAccordionProps("transport", expandedSection, setExpandedSection)} />
-          </AccordionRow>
-          {!serverCtx && (
-            <AccordionRow>
-              <TlsSection value={tlsValues} onChange={setTlsValues} isDisabled={isLocked} hostless={!form.externalHost.trim()} {...sectionAccordionProps("tls", expandedSection, setExpandedSection)} />
-            </AccordionRow>
-          )}
-          <AccordionRow>
-            <AccessLogSection value={accessLog} onChange={setAccessLog} isDisabled={isLocked} {...sectionAccordionProps("accessLog", expandedSection, setExpandedSection)} />
-          </AccordionRow>
-          <AccordionRow>
-            <ErrorHandlersSection value={errorHandlers} onChange={setErrorHandlers} isDisabled={isLocked} {...sectionAccordionProps("errorHandlers", expandedSection, setExpandedSection)} />
-          </AccordionRow>
-          <AccordionRow>
-            <ForwardAuthSection
-              value={forwardAuth}
-              onChange={setForwardAuth}
-              isDisabled={isLocked}
-              uriError={forwardAuthErr ?? undefined}
-              {...sectionAccordionProps("forwardAuth", expandedSection, setExpandedSection)}
-            />
-          </AccordionRow>
-          <AccordionRow>
-            <ServerTimeoutsSection value={serverTimeouts} onChange={setServerTimeouts} isDisabled={isLocked} {...sectionAccordionProps("serverTimeouts", expandedSection, setExpandedSection)} />
-          </AccordionRow>
-          <AccordionRow>
-            <BasicAuthSection value={basicAuth} onChange={setBasicAuth} isDisabled={isLocked} {...sectionAccordionProps("basicAuth", expandedSection, setExpandedSection)} />
-          </AccordionRow>
-          <AccordionRow>
-            <RewriteSection value={rewrite} onChange={setRewrite} isDisabled={isLocked} {...sectionAccordionProps("rewrite", expandedSection, setExpandedSection)} />
-          </AccordionRow>
-          <AccordionRow>
-            <RequestHeadersSection value={requestHeaders} onChange={setRequestHeaders} isDisabled={isLocked} {...sectionAccordionProps("requestHeaders", expandedSection, setExpandedSection)} />
-          </AccordionRow>
-          <AccordionRow>
-            <ResponseHeadersSection value={responseHeaders} onChange={setResponseHeaders} isDisabled={isLocked} {...sectionAccordionProps("responseHeaders", expandedSection, setExpandedSection)} />
-          </AccordionRow>
-          <AccordionRow>
-            <UpstreamsSection
-              value={extraUpstreams}
-              lbPolicy={lbPolicy}
-              onChange={(u, p) => { setExtraUpstreams(u); setLbPolicy(p); }}
-              isDisabled={isLocked}
-              {...sectionAccordionProps("upstreams", expandedSection, setExpandedSection)}
-            />
-          </AccordionRow>
-          <AccordionRow>
-            <LbRetrySection value={lbRetry} onChange={setLbRetry} isDisabled={isLocked} {...sectionAccordionProps("lbRetry", expandedSection, setExpandedSection)} />
-          </AccordionRow>
-          <AccordionRow last>
-            <SnippetImportsField value={imports} onChange={setImports} isDisabled={isLocked} />
-            <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!isPathOnlyMatcher(v)) setHandlePath(false); }} isDisabled={isLocked} {...sectionAccordionProps("routeMatchers", expandedSection, setExpandedSection)} />
-          </AccordionRow>
-        </div>
-        {isPathOnlyMatcher(matchers) && (
-          <Checkbox
-            id="add-proxy-handle-path"
-            label={t("handle_path.label")}
-            isChecked={handlePath}
-            onChange={(_e, v) => setHandlePath(v)}
-            isDisabled={isLocked}
-            style={{ marginLeft: "1rem", marginBottom: "0.5rem" }}
-          />
-        )}
-        <div style={{ marginLeft: "1rem", marginBottom: "0.5rem", display: "flex", flexDirection: "column", gap: "0.4rem" }}>
-          <Checkbox
-            id="add-proxy-named-route"
-            label={t("named_route.toggle_label")}
-            isChecked={isNamedRoute}
-            onChange={(_e, v) => { setIsNamedRoute(v); if (!v) setNamedRouteName(""); }}
-            isDisabled={isLocked}
-          />
-          {isNamedRoute && (
-            <TextInput
-              id="add-proxy-named-route-name"
-              aria-label={t("named_route.name_label")}
-              placeholder={t("named_route.name_placeholder")}
-              value={namedRouteName}
-              onChange={(_e, v) => setNamedRouteName(v)}
-              isDisabled={isLocked}
-              style={{ maxWidth: "20rem" }}
-            />
-          )}
-        </div>
+                    isExpanded
+                    onToggleExpanded={noop}
+                  />
+                  <LbRetrySection value={lbRetry} onChange={setLbRetry} isDisabled={isLocked} isExpanded onToggleExpanded={noop} />
+                  <TransportSection value={transport} onChange={setTransport} isDisabled={isLocked} isExpanded onToggleExpanded={noop} />
+                </>
+              ),
+            },
+            {
+              key: "logging",
+              configured: flags.configured.logging,
+              content: (
+                <>
+                  <AccessLogSection value={accessLog} onChange={setAccessLog} isDisabled={isLocked} isExpanded onToggleExpanded={noop} />
+                  <ErrorHandlersSection value={errorHandlers} onChange={setErrorHandlers} isDisabled={isLocked} isExpanded onToggleExpanded={noop} />
+                  <ServerTimeoutsSection value={serverTimeouts} onChange={setServerTimeouts} isDisabled={isLocked} isExpanded onToggleExpanded={noop} />
+                  <RequestBodyLimitField value={requestBodyMaxSize} onChange={setRequestBodyMaxSize} isDisabled={isLocked} idPrefix="add-proxy" />
+                </>
+              ),
+            },
+          ]}
+        />
 
         {confirmAction.error && (
           <Alert variant="danger" isInline title={confirmAction.error} style={{ marginTop: "var(--pf-v6-global--spacer--md)" }} />
@@ -568,7 +504,7 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
           </>
         ) : (
           <>
-            <Button variant="primary" onClick={handleAddClick} isDisabled={!!forwardAuthErr || tlsValuesHaveErrors(tlsValues)}>{t("add_proxy.add_button")}</Button>
+            <Button variant="primary" onClick={handleAddClick}>{t("add_proxy.add_button")}</Button>
             <Button variant="link" onClick={onClose}>{t("common.cancel")}</Button>
           </>
         )}

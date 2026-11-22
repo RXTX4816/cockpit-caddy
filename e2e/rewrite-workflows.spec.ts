@@ -5,7 +5,7 @@
  * so these drive "Add Proxy" directly rather than reusing addProxy() seeding.
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { readConf, spawnCmd } from './helpers';
+import { readConf, spawnCmd, openSection } from './helpers';
 import { waitForListener } from './live';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
@@ -26,7 +26,7 @@ test('proxy with strip_prefix rewrite writes correct Caddyfile directive', async
   await modal.locator('#target-port').fill('3000');
   await modal.locator('#tls').selectOption('off');
 
-  await modal.getByRole('button', { name: /uri rewrite/i }).click();
+  await openSection(modal, 'rewrite');
   await modal.locator('#rw-type-strip_prefix').click();
   await modal.locator('#rw-prefix').fill('/api');
 
@@ -48,7 +48,7 @@ test('proxy with regex rewrite writes matcher and rewrite directive', async ({ p
   await modal.locator('#target-port').fill('3000');
   await modal.locator('#tls').selectOption('off');
 
-  await modal.getByRole('button', { name: /uri rewrite/i }).click();
+  await openSection(modal, 'rewrite');
   await modal.locator('#rw-type-regex').click();
   await modal.locator('#rw-find').fill('^/old/(.*)$');
   await modal.locator('#rw-replace').fill('/new/$1');
@@ -77,7 +77,7 @@ test('regex rewrite replaces only the matched part of the path after a reload', 
     await modal.getByLabel(/target host/i).fill('localhost');
     await modal.locator('#target-port').fill(String(targetPort));
     await modal.locator('#tls').selectOption('off');
-    await modal.getByRole('button', { name: /uri rewrite/i }).click();
+    await openSection(modal, 'rewrite');
     await modal.locator('#rw-type-regex').click();
     await modal.locator('#rw-find').fill('old');
     await modal.locator('#rw-replace').fill('new');
@@ -111,7 +111,7 @@ test('URI rewrite changes the path the backend actually receives', async ({ plug
     await modal.locator('#target-port').fill(String(targetPort));
     await modal.locator('#tls').selectOption('off');
 
-    await modal.getByRole('button', { name: /uri rewrite/i }).click();
+    await openSection(modal, 'rewrite');
     await modal.locator('#rw-type-strip_prefix').click();
     await modal.locator('#rw-prefix').fill('/api');
 
@@ -140,7 +140,7 @@ test('clearing rewrite on edit removes the directive from the Caddyfile', async 
   await modal1.getByLabel(/target host/i).fill('localhost');
   await modal1.locator('#target-port').fill('3000');
   await modal1.locator('#tls').selectOption('off');
-  await modal1.getByRole('button', { name: /uri rewrite/i }).click();
+  await openSection(modal1, 'rewrite');
   await modal1.locator('#rw-type-strip_prefix').click();
   await modal1.locator('#rw-prefix').fill('/api');
   await modal1.getByRole('button', { name: /^add proxy$/i }).click();
@@ -152,7 +152,7 @@ test('clearing rewrite on edit removes the directive from the Caddyfile', async 
 
   await proxyRow(page, 19224).getByRole('button', { name: /^edit$/i }).click();
   const modal2 = page.getByRole('dialog');
-  await modal2.getByRole('button', { name: /uri rewrite/i }).click();
+  await openSection(modal2, 'rewrite');
   await modal2.locator('#rw-type-none').click();
   await modal2.getByRole('button', { name: /save changes/i }).click();
   await modal2.getByRole('button', { name: /^confirm$/i }).click();

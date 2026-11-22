@@ -32,6 +32,7 @@ Helper reference (`e2e/helpers.ts`, `e2e/live.ts`, `e2e/fixtures.ts`):
 | `startHttpBackend()` | Starts a real `python3 -m http.server` process on the VM to prove traffic actually reaches it |
 | `curlStatus()` / `waitForListener()` | Live HTTP checks against the real Caddy instance |
 | `expectCaddyActive()` | Cheapest "did this config change break the daemon" check |
+| `openSection(modal, section)` | Shows a settings section in a site dialog: clicks its tab in the proxy dialogs, expands the accordion in the others |
 
 ## Coverage by area
 
@@ -72,7 +73,7 @@ Helper reference (`e2e/helpers.ts`, `e2e/live.ts`, `e2e/fixtures.ts`):
 | `on-demand-tls-workflows.spec.ts` | Global on-demand TLS settings | enabling on-demand TLS writes the correct global tls block · disabling on-demand TLS removes the block and Caddy still reloads cleanly |
 | `http3-workflows.spec.ts` | HTTP/3 default-on behavior and per-port opt-out | disabling HTTP/3 writes a global servers block and Caddy accepts the reload · HTTP/3 stays enabled (no protocols restriction) by default · editing an unrelated proxy does not break when another port has HTTP/3 disabled |
 
-### Per-route traffic shaping (AddProxyDialog accordion sections)
+### Per-route traffic shaping (proxy dialog tabs)
 
 | File | What it covers | Tests |
 |---|---|---|

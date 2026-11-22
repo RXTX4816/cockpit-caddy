@@ -8,7 +8,7 @@
  * - Edit flows: adding and removing matchers on existing proxies
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { readConf, spawnCmd } from './helpers';
+import { readConf, spawnCmd, openSection } from './helpers';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
   await dismissAdminBanner(page);
@@ -23,7 +23,7 @@ async function openAddProxyWithMatchers(page: import('@playwright/test').Page, p
   await modal.getByLabel(/target host/i).fill(target.host);
   await modal.locator('#target-port').fill(String(target.port));
   // Expand the Route Matchers section
-  await modal.getByText(/route matchers/i).click();
+  await openSection(modal, 'routeMatchers');
   return modal;
 }
 
@@ -173,7 +173,7 @@ test('edit proxy: add path matcher to existing plain proxy regenerates block wit
   // Edit — add a path matcher
   await page.locator('li').filter({ has: page.locator('#proxy-19207') }).getByRole('button', { name: /^edit$/i }).click();
   modal = page.getByRole('dialog');
-  await modal.getByText(/route matchers/i).click();
+  await openSection(modal, 'routeMatchers');
   await modal.getByLabel('Path', { exact: true }).fill('/api/*');
   await modal.getByRole('button', { name: /^add path$/i }).click();
   await modal.getByRole('button', { name: /save changes/i }).click();
@@ -205,7 +205,7 @@ test('edit proxy: remove all matchers reverts to plain block without @m', async 
   const removeBtn = editModal.getByRole('button', { name: /^remove path$/i });
   const isVisible = await removeBtn.isVisible();
   if (!isVisible) {
-    await editModal.getByText(/route matchers/i).click();
+    await openSection(editModal, 'routeMatchers');
   }
   await removeBtn.click();
   await editModal.getByRole('button', { name: /save changes/i }).click();
@@ -263,7 +263,7 @@ test('exclude path and expression are written, adapt, and read back in the edit 
   await page.locator('li').filter({ has: page.locator('#proxy-19210') }).getByRole('button', { name: /^edit$/i }).click();
   const editModal = page.getByRole('dialog');
   const excludeGroup = editModal.getByRole('group', { name: /exclude requests that match/i });
-  if (!(await excludeGroup.isVisible())) await editModal.getByText(/route matchers/i).click();
+  if (!(await excludeGroup.isVisible())) await openSection(editModal, 'routeMatchers');
   await expect(excludeGroup.getByText('/api/*', { exact: true })).toBeVisible();
   await expect(editModal.getByLabel('Expression (CEL)')).toHaveValue(expression);
 });

@@ -6,7 +6,7 @@
  * internal CA), and that a bad path fails safely instead of leaving the proxy broken.
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { readConf, spawnCmd } from './helpers';
+import { readConf, spawnCmd, openSection } from './helpers';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
   await dismissAdminBanner(page);
@@ -43,7 +43,7 @@ test('custom certificate is actually served over TLS, not the internal CA', asyn
   await modal.getByLabel(/target host/i).fill('localhost');
   await modal.locator('#target-port').fill('9000');
 
-  await modal.getByRole('button', { name: /tls policy/i }).click();
+  await openSection(modal, 'tlsPolicy');
   await modal.locator('#tls-custom-cert').fill(`${dir}/cert.pem`);
   await modal.locator('#tls-custom-key').fill(`${dir}/key.pem`);
 
@@ -74,7 +74,7 @@ test('a nonexistent certificate path fails validation without breaking the runni
   await modal.getByLabel(/target host/i).fill('localhost');
   await modal.locator('#target-port').fill('9000');
 
-  await modal.getByRole('button', { name: /tls policy/i }).click();
+  await openSection(modal, 'tlsPolicy');
   await modal.locator('#tls-custom-cert').fill('/etc/caddy/e2e-custom-cert-320/does-not-exist.pem');
   await modal.locator('#tls-custom-key').fill('/etc/caddy/e2e-custom-cert-320/does-not-exist.key');
 

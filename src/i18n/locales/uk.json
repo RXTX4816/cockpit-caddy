@@ -16,7 +16,15 @@
     "confirm_apply": "Застосувати",
     "configured": "Налаштовано",
     "remove_aria": "Вилучити",
-    "header_op_aria": "Операція із заголовком"
+    "header_op_aria": "Операція із заголовком",
+    "default_value": "Типово: {{value}}",
+    "reset_default": "Скинути до типового значення Caddy",
+    "size_unit": "Одиниця",
+    "unit_b": "байти",
+    "unit_kb": "КБ",
+    "unit_mb": "МБ",
+    "unit_gb": "ГБ",
+    "example_value": "напр. {{value}}"
   },
   "app": {
     "title": "Caddy",
@@ -122,7 +130,7 @@
     "validation_ext_host_duplicate": "«{{host}}» вказано двічі.",
     "validation_https_requires_tls": "Протокол «https» потребує ввімкнути TLS нижче — інакше Caddy керуватиме HTTPS самостійно, в обхід налаштувань цього застосунку. Увімкніть TLS або виберіть інший протокол.",
     "field_target_host": "Цільовий хост",
-    "field_target_host_placeholder": "localhost",
+    "field_target_host_placeholder": "напр. localhost",
     "field_tls_skip_verify": "Не перевіряти TLS бекенду (для самопідписаних сертифікатів бекенду)",
     "field_tls": "Увімкнути TLS (внутрішній CA Caddy)",
     "field_tls_short": "Увімкнути TLS (внутрішній CA)",
@@ -138,7 +146,16 @@
     "validation_target_port_required": "Вкажіть цільовий порт",
     "validation_target_port_range": "Цільовий порт має бути в діапазоні 1–65535",
     "validation_target_host_required": "Вкажіть цільовий хост",
-    "confirm_body": "Буде створено reverse proxy :{{port}} → {{target}}, конфігурацію Caddy буде перезавантажено."
+    "confirm_body": "Буде створено reverse proxy :{{port}} → {{target}}, конфігурацію Caddy буде перезавантажено.",
+    "ext_host_label": "Зовнішній хост",
+    "ext_port_label": "Зовнішній порт",
+    "ext_port_placeholder": "напр. 8443",
+    "ext_scheme_custom_input": "Власний протокол",
+    "ext_scheme_label": "Протокол",
+    "field_label_help": "Назва сайту в списку, напр. Grafana.",
+    "target_port_label": "Цільовий порт",
+    "target_port_placeholder": "напр. 8080",
+    "target_scheme_label": "Цільовий протокол"
   },
   "add_static": {
     "title": "Додати сервер статичних файлів",
@@ -248,16 +265,15 @@
     "read_header_timeout": "Тайм-аут читання заголовків",
     "write_timeout": "Тайм-аут запису",
     "idle_timeout": "Тайм-аут простою",
-    "max_header_bytes": "Макс. розмір заголовків (байт)",
-    "max_header_bytes_help": "Максимальний розмір заголовків запиту в байтах (типово в Caddy: 16 КіБ = 16384)",
+    "max_header_bytes": "Макс. розмір заголовків",
+    "max_header_bytes_help": "Максимальний розмір заголовків запиту (типово в Caddy: 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "Вимкнути HTTP/3",
     "http3_help": "Caddy типово вмикає HTTP/1.1, HTTP/2 і HTTP/3, якщо налаштовано TLS. HTTP/3 працює поверх UDP на тому ж порту, що й HTTPS — якщо ваш брандмауер блокує UDP, після вимкнення тут залишаться лише HTTP/1.1 і HTTP/2."
   },
   "request_body": {
-    "field_label": "Макс. розмір тіла запиту (байт, необов'язково)",
-    "field_placeholder": "10485760",
-    "field_help": "Відхиляє запити з більшим тілом, перш ніж вони дійдуть до бекенду. Залиште порожнім, щоб не обмежувати (типова поведінка Caddy). Наприклад, 1048576 = 1 МБ, 10485760 = 10 МБ."
+    "field_label": "Максимальний розмір тіла запиту",
+    "field_help": "Запити з більшим тілом відхиляються, не доходячи до бекенду. Залиште порожнім для відсутності обмеження (типово в Caddy)."
   },
   "rewrite": {
     "section_title": "Перезапис URI (необов'язково)",
@@ -500,7 +516,7 @@
     "roll_keep_count": "Скільки ротованих файлів зберігати",
     "roll_keep_days": "Макс. вік ротованих файлів (днів)",
     "roll_compress": "Стискати ротовані файли (gzip)",
-    "roll_help": "Не дає файлу журналу зростати без меж. Залиште порожнім для типової поведінки Caddy (без ротації — файл зростає безкінечно)."
+    "roll_help": "Caddy типово ротує файл журналу. Залиште поле порожнім, щоб використати типове значення Caddy (показано сірим)."
   },
   "config_check": {
     "button": "Перевірити конфігурацію",
@@ -819,7 +835,8 @@
   "named_route": {
     "toggle_label": "Зареєструвати як іменований маршрут (invoke)",
     "name_label": "Назва маршруту",
-    "name_placeholder": "наприклад, auth-middleware"
+    "name_placeholder": "наприклад, auth-middleware",
+    "help": "Додатково реєструє маршрут під назвою, щоб інші маршрути могли використати його через invoke <name>."
   },
   "servers": {
     "tab_all": "Усі",
@@ -912,5 +929,14 @@
     "title": "Сніпети",
     "unused": "Не імпортовано",
     "used_by": "Імпортують: {{sites}}"
+  },
+  "proxy_tabs": {
+    "aria_label": "Налаштування проксі",
+    "has_error": "Є помилки",
+    "general": "Загальне",
+    "security": "Безпека",
+    "routing": "Маршрутизація",
+    "upstreams": "Апстріми",
+    "logging": "Журнали й помилки"
   }
 }

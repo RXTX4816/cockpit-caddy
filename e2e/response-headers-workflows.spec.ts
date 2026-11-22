@@ -7,7 +7,7 @@
  */
 import type { Locator } from '@playwright/test';
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { readConf, spawnCmd } from './helpers';
+import { readConf, spawnCmd, openSection } from './helpers';
 import { waitForListener } from './live';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
@@ -24,7 +24,7 @@ function proxyRow(page: import('@playwright/test').Page, port: number) {
  *  getByLabel('Header name') alone is ambiguous across the modal. Scope to the Response
  *  Headers region specifically. */
 function responseHeadersSection(modal: Locator) {
-  return modal.getByLabel('Response Headers (optional)');
+  return modal.getByRole('region', { name: /^response headers/i });
 }
 
 async function startBackend(page: import('@playwright/test').Page, port: number): Promise<void> {
@@ -46,7 +46,7 @@ test('add response header (set) is visible in curl -I output', async ({ pluginPa
     await modal.locator('#target-port').fill(String(targetPort));
     await modal.locator('#tls').selectOption('off');
 
-    await modal.getByRole('button', { name: /response headers/i }).click();
+    await openSection(modal, 'responseHeaders');
     await responseHeadersSection(modal).getByLabel('Header name').fill('X-E2E-Response');
     await responseHeadersSection(modal).getByLabel('Value').fill('resp-value');
     await responseHeadersSection(modal).getByRole('button', { name: /^add$/i }).last().click();
@@ -79,7 +79,7 @@ test('delete response header removes it from curl -I output', async ({ pluginPag
     await modal1.getByLabel(/target host/i).fill('localhost');
     await modal1.locator('#target-port').fill(String(targetPort));
     await modal1.locator('#tls').selectOption('off');
-    await modal1.getByRole('button', { name: /response headers/i }).click();
+    await openSection(modal1, 'responseHeaders');
     await modal1.locator('#resp-hdr-op-delete').click();
     await responseHeadersSection(modal1).getByLabel('Header name').fill('Server');
     await responseHeadersSection(modal1).getByRole('button', { name: /^add$/i }).last().click();
@@ -101,7 +101,7 @@ test('delete response header removes it from curl -I output', async ({ pluginPag
 
     await proxyRow(page, 19262).getByRole('button', { name: /^edit$/i }).click();
     const modal2 = page.getByRole('dialog');
-    await modal2.getByRole('button', { name: /response headers/i }).click();
+    await openSection(modal2, 'responseHeaders');
     await modal2.getByRole('button', { name: 'remove', exact: true }).click();
     await modal2.getByRole('button', { name: /save changes/i }).click();
     await modal2.getByRole('button', { name: /^confirm$/i }).click();
@@ -122,7 +122,7 @@ test('response headers persist across edit dialog reopen', async ({ pluginPage: 
   await modal1.getByLabel(/target host/i).fill('localhost');
   await modal1.locator('#target-port').fill('3000');
   await modal1.locator('#tls').selectOption('off');
-  await modal1.getByRole('button', { name: /response headers/i }).click();
+  await openSection(modal1, 'responseHeaders');
   await modal1.getByRole('button', { name: 'X-Content-Type-Options' }).click();
   await modal1.getByRole('button', { name: /^add proxy$/i }).click();
   await modal1.getByRole('button', { name: /^confirm$/i }).click();
@@ -130,6 +130,6 @@ test('response headers persist across edit dialog reopen', async ({ pluginPage: 
 
   await proxyRow(page, 19264).getByRole('button', { name: /^edit$/i }).click();
   const modal2 = page.getByRole('dialog');
-  await modal2.getByRole('button', { name: /response headers/i }).click();
+  await openSection(modal2, 'responseHeaders');
   await expect(modal2.getByText('X-Content-Type-Options: nosniff')).toBeVisible();
 });

@@ -305,3 +305,37 @@ export async function rowAction(row: Locator, item: 'Duplicate' | 'Delete'): Pro
   await row.getByRole('button', { name: 'More actions' }).click();
   await row.page().getByRole('menuitem', { name: item }).click();
 }
+
+// ---------------------------------------------------------------------------
+// Proxy dialog tabs (#260)
+// ---------------------------------------------------------------------------
+
+const SECTIONS = {
+  basicAuth: { tab: 'Security', toggle: /http basic auth/i },
+  forwardAuth: { tab: 'Security', toggle: /forward authentication/i },
+  tlsPolicy: { tab: 'Security', toggle: /tls policy/i },
+  routeMatchers: { tab: 'Routing', toggle: /route matchers/i },
+  rewrite: { tab: 'Routing', toggle: /uri rewrite/i },
+  requestHeaders: { tab: 'Routing', toggle: /request headers/i },
+  responseHeaders: { tab: 'Routing', toggle: /response headers/i },
+  upstreams: { tab: 'Upstreams', toggle: /additional upstreams/i },
+  lbRetry: { tab: 'Upstreams', toggle: /retry & failover tuning/i },
+  upstreamTimeouts: { tab: 'Upstreams', toggle: /upstream timeouts/i },
+  accessLog: { tab: 'Logging & errors', toggle: /access logging/i },
+  errorHandlers: { tab: 'Logging & errors', toggle: /custom error handlers/i },
+  serverTimeouts: { tab: 'Logging & errors', toggle: /server timeouts/i },
+} as const;
+export type DialogSection = keyof typeof SECTIONS;
+
+/**
+ * Show a settings section in a site dialog. The proxy dialogs put each section on a tab
+ * (General, Security, Routing, Upstreams, Logging & errors); the other dialogs keep the
+ * accordions, where this expands the section instead.
+ */
+export async function openSection(modal: Locator, section: DialogSection): Promise<void> {
+  const { tab, toggle } = SECTIONS[section];
+  await modal.waitFor();
+  const tabButton = modal.getByRole('tab', { name: new RegExp(`^${tab}`) });
+  if (await tabButton.count()) await tabButton.click();
+  else await modal.getByRole('button', { name: toggle }).click();
+}

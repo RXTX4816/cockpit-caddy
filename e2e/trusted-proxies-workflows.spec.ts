@@ -16,7 +16,7 @@
  * button (unlike the toolbar's copy of the same label) has no confirmation dialog.
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { spawnCmd, readFile, CADDYFILE_PATH, startHttpBackend } from './helpers';
+import { spawnCmd, readFile, CADDYFILE_PATH, startHttpBackend, openSection } from './helpers';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
   await dismissAdminBanner(page);
@@ -120,7 +120,7 @@ test('trusted_proxies survives a per-port servers block also carrying an HTTP/3 
     // Forces buildManagedServersBlocks to emit a per-port `servers :PORT { }` block —
     // the exact situation that used to silently drop the global trusted_proxies setting
     // for this port.
-    await modal.getByRole('button', { name: /server timeouts/i }).click();
+    await openSection(modal, 'serverTimeouts');
     await modal.locator('#st-disable-http3').check();
 
     await modal.getByRole('button', { name: /^add proxy$/i }).click();

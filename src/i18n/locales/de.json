@@ -16,7 +16,15 @@
     "confirm_apply": "Übernehmen",
     "configured": "Konfiguriert",
     "remove_aria": "Entfernen",
-    "header_op_aria": "Header-Operation"
+    "header_op_aria": "Header-Operation",
+    "default_value": "Standard: {{value}}",
+    "reset_default": "Auf Caddy-Standard zurücksetzen",
+    "size_unit": "Einheit",
+    "unit_b": "Bytes",
+    "unit_kb": "KB",
+    "unit_mb": "MB",
+    "unit_gb": "GB",
+    "example_value": "z. B. {{value}}"
   },
   "app": {
     "title": "Caddy",
@@ -122,7 +130,7 @@
     "validation_ext_host_duplicate": "„{{host}}“ ist doppelt aufgeführt.",
     "validation_https_requires_tls": "Das Protokoll „https“ erfordert, dass TLS unten aktiviert ist – sonst würde Caddy HTTPS eigenständig verwalten, unabhängig von den Einstellungen dieser App. Aktivieren Sie TLS oder wählen Sie ein anderes Protokoll.",
     "field_target_host": "Ziel-Host",
-    "field_target_host_placeholder": "localhost",
+    "field_target_host_placeholder": "z. B. localhost",
     "field_tls_skip_verify": "TLS-Prüfung beim Backend überspringen (für selbstsignierte Backend-Zertifikate)",
     "field_tls": "TLS aktivieren (interne CA von Caddy)",
     "field_tls_short": "TLS aktivieren (interne CA)",
@@ -138,7 +146,16 @@
     "validation_target_port_required": "Ziel-Port ist erforderlich",
     "validation_target_port_range": "Der Ziel-Port muss zwischen 1 und 65535 liegen",
     "validation_target_host_required": "Ziel-Host ist erforderlich",
-    "confirm_body": "Damit wird ein Reverse Proxy :{{port}} → {{target}} angelegt und die Caddy-Konfiguration neu geladen."
+    "confirm_body": "Damit wird ein Reverse Proxy :{{port}} → {{target}} angelegt und die Caddy-Konfiguration neu geladen.",
+    "ext_host_label": "Externer Host",
+    "ext_port_label": "Externer Port",
+    "ext_port_placeholder": "z. B. 8443",
+    "ext_scheme_custom_input": "Eigenes Protokoll",
+    "ext_scheme_label": "Protokoll",
+    "field_label_help": "Ein Name für diese Site in der Liste, z. B. Grafana.",
+    "target_port_label": "Ziel-Port",
+    "target_port_placeholder": "z. B. 8080",
+    "target_scheme_label": "Ziel-Protokoll"
   },
   "add_static": {
     "title": "Statischen Dateiserver hinzufügen",
@@ -248,16 +265,15 @@
     "read_header_timeout": "Timeout beim Lesen der Header",
     "write_timeout": "Schreib-Timeout",
     "idle_timeout": "Leerlauf-Timeout",
-    "max_header_bytes": "Max. Header-Größe (Bytes)",
-    "max_header_bytes_help": "Maximale Größe der Request-Header in Bytes (Caddy-Standard: 16 KiB = 16384)",
+    "max_header_bytes": "Max. Header-Größe",
+    "max_header_bytes_help": "Maximale Größe der Request-Header (Caddy-Standard: 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "HTTP/3 deaktivieren",
     "http3_help": "Caddy aktiviert HTTP/1.1, HTTP/2 und HTTP/3 standardmäßig, sobald TLS konfiguriert ist. HTTP/3 läuft über UDP auf demselben Port wie HTTPS – wenn Ihre Firewall UDP blockiert, fällt Caddy nach dem Deaktivieren hier auf HTTP/1.1 und HTTP/2 zurück."
   },
   "request_body": {
-    "field_label": "Max. Größe des Request-Bodys (Bytes, optional)",
-    "field_placeholder": "10485760",
-    "field_help": "Lehnt Anfragen mit größerem Body ab, bevor sie das Backend erreichen. Leer lassen für kein Limit (Caddy-Standard). Z. B. 1048576 = 1 MB, 10485760 = 10 MB."
+    "field_label": "Maximale Größe des Request-Bodys",
+    "field_help": "Größere Request-Bodys werden abgelehnt, bevor sie das Backend erreichen. Leer lassen für kein Limit (Caddy-Standard)."
   },
   "rewrite": {
     "section_title": "URI-Umschreibung (optional)",
@@ -500,7 +516,7 @@
     "roll_keep_count": "Aufzubewahrende rotierte Dateien",
     "roll_keep_days": "Max. Alter rotierter Dateien (Tage)",
     "roll_compress": "Rotierte Dateien komprimieren (gzip)",
-    "roll_help": "Verhindert, dass die Log-Datei unbegrenzt wächst. Leer lassen für den Caddy-Standard (keine Rotation – die Datei wächst unbegrenzt)."
+    "roll_help": "Caddy rotiert die Logdatei standardmäßig. Lass ein Feld leer, um Caddys Standardwert zu nutzen, der grau angezeigt wird."
   },
   "config_check": {
     "button": "Konfiguration prüfen",
@@ -819,7 +835,8 @@
   "named_route": {
     "toggle_label": "Als benannte Route registrieren (invoke)",
     "name_label": "Routenname",
-    "name_placeholder": "z. B. auth-middleware"
+    "name_placeholder": "z. B. auth-middleware",
+    "help": "Registriert die Route zusätzlich unter einem Namen, damit andere Routen sie mit invoke <name> nutzen können."
   },
   "servers": {
     "tab_all": "Alle",
@@ -912,5 +929,14 @@
     "title": "Snippets",
     "unused": "Nicht importiert",
     "used_by": "Importiert von {{sites}}"
+  },
+  "proxy_tabs": {
+    "aria_label": "Proxy-Einstellungen",
+    "has_error": "Enthält Fehler",
+    "general": "Allgemein",
+    "security": "Sicherheit",
+    "routing": "Routing",
+    "upstreams": "Upstreams",
+    "logging": "Logging & Fehler"
   }
 }

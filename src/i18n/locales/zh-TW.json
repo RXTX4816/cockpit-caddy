@@ -16,7 +16,15 @@
     "confirm_apply": "套用",
     "configured": "已設定",
     "remove_aria": "移除",
-    "header_op_aria": "標頭操作"
+    "header_op_aria": "標頭操作",
+    "default_value": "預設：{{value}}",
+    "reset_default": "重設為 Caddy 預設值",
+    "size_unit": "單位",
+    "unit_b": "位元組",
+    "unit_kb": "KB",
+    "unit_mb": "MB",
+    "unit_gb": "GB",
+    "example_value": "例如 {{value}}"
   },
   "app": {
     "title": "Caddy",
@@ -122,7 +130,7 @@
     "validation_ext_host_duplicate": "「{{host}}」重複出現。",
     "validation_https_requires_tls": "「https」通訊協定需要在下方啟用 TLS——否則 Caddy 會自行管理 HTTPS，不受此應用程式的設定控制。請啟用 TLS 或選擇其他通訊協定。",
     "field_target_host": "目標主機",
-    "field_target_host_placeholder": "localhost",
+    "field_target_host_placeholder": "例如 localhost",
     "field_tls_skip_verify": "略過後端 TLS 驗證（適用於自我簽署的後端憑證）",
     "field_tls": "啟用 TLS（Caddy 內部 CA）",
     "field_tls_short": "啟用 TLS（內部 CA）",
@@ -138,7 +146,16 @@
     "validation_target_port_required": "必須填寫目標連接埠",
     "validation_target_port_range": "目標連接埠必須介於 1 到 65535 之間",
     "validation_target_host_required": "必須填寫目標主機",
-    "confirm_body": "將建立反向代理 :{{port}} → {{target}}，並重新載入 Caddy 設定。"
+    "confirm_body": "將建立反向代理 :{{port}} → {{target}}，並重新載入 Caddy 設定。",
+    "ext_host_label": "外部主機",
+    "ext_port_label": "外部連接埠",
+    "ext_port_placeholder": "例如 8443",
+    "ext_scheme_custom_input": "自訂協定",
+    "ext_scheme_label": "協定",
+    "field_label_help": "此網站在清單中的名稱，例如 Grafana。",
+    "target_port_label": "目標連接埠",
+    "target_port_placeholder": "例如 8080",
+    "target_scheme_label": "目標協定"
   },
   "add_static": {
     "title": "新增靜態檔案伺服器",
@@ -248,16 +265,15 @@
     "read_header_timeout": "讀取標頭逾時",
     "write_timeout": "寫入逾時",
     "idle_timeout": "閒置逾時",
-    "max_header_bytes": "標頭大小上限（位元組）",
-    "max_header_bytes_help": "請求標頭的最大大小（位元組，Caddy 預設值：16 KiB = 16384）",
+    "max_header_bytes": "標頭大小上限",
+    "max_header_bytes_help": "請求標頭的最大大小（Caddy 預設值：16 KB）",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "停用 HTTP/3",
     "http3_help": "只要設定了 TLS，Caddy 預設會啟用 HTTP/1.1、HTTP/2 和 HTTP/3。HTTP/3 透過 UDP 在與 HTTPS 相同的連接埠上運作——若防火牆封鎖 UDP，在此停用後只會使用 HTTP/1.1 和 HTTP/2。"
   },
   "request_body": {
-    "field_label": "請求內文大小上限（位元組，選填）",
-    "field_placeholder": "10485760",
-    "field_help": "在請求抵達後端前拒絕內文較大的請求。留空表示不限制（Caddy 預設）。例如 1048576 = 1 MB，10485760 = 10 MB。"
+    "field_label": "請求本文大小上限",
+    "field_help": "較大的請求本文會在送達後端前被拒絕。留空表示不限制（Caddy 預設）。"
   },
   "rewrite": {
     "section_title": "URI 重寫（選填）",
@@ -500,7 +516,7 @@
     "roll_keep_count": "保留的輪替檔案數",
     "roll_keep_days": "輪替檔案的最長保留天數",
     "roll_compress": "壓縮輪替檔案（gzip）",
-    "roll_help": "避免記錄檔無限制成長。留空則使用 Caddy 預設（不輪替——檔案會持續成長）。"
+    "roll_help": "Caddy 預設會輪替記錄檔。留空即使用以灰色顯示的 Caddy 預設值。"
   },
   "config_check": {
     "button": "檢查設定",
@@ -819,7 +835,8 @@
   "named_route": {
     "toggle_label": "註冊為具名路由（invoke）",
     "name_label": "路由名稱",
-    "name_placeholder": "例如 auth-middleware"
+    "name_placeholder": "例如 auth-middleware",
+    "help": "同時以一個名稱註冊此路由，讓其他路由能用 invoke <name> 重複使用。"
   },
   "servers": {
     "tab_all": "全部",
@@ -912,5 +929,14 @@
     "title": "片段",
     "unused": "未匯入",
     "used_by": "由 {{sites}} 匯入"
+  },
+  "proxy_tabs": {
+    "aria_label": "代理設定",
+    "has_error": "有錯誤",
+    "general": "一般",
+    "security": "安全性",
+    "routing": "路由",
+    "upstreams": "上游",
+    "logging": "日誌與錯誤"
   }
 }

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {
   Button,
-  ExpandableSection,
   FormGroup,
   FormHelperText,
   HelperText,
@@ -9,6 +8,7 @@ import {
   TextInput,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
+import { SectionShell, useFlatSections } from "./sectionLayout";
 import type { LbPolicy } from "../api";
 import { SectionActions } from "./SectionActions";
 import { SectionConfiguredDot } from "./SectionConfiguredDot";
@@ -38,6 +38,7 @@ const LB_POLICIES: Array<{ value: LbPolicy; labelKey: string }> = [
 
 export function UpstreamsSection({ value, lbPolicy, onChange, isDisabled, isExpanded: isExpandedProp, onToggleExpanded }: Props) {
   const { t } = useTranslation();
+  const flat = useFlatSections();
   const [internalExpanded, setInternalExpanded] = useState(value.length > 0);
   const expanded = isExpandedProp ?? internalExpanded;
   const setExpanded = onToggleExpanded ?? setInternalExpanded;
@@ -58,8 +59,8 @@ export function UpstreamsSection({ value, lbPolicy, onChange, isDisabled, isExpa
   }
 
   return (
-    <ExpandableSection
-      toggleContent={<>{expanded ? t("upstreams.section_hide") : t("upstreams.section_title")}{value.length > 0 && <SectionConfiguredDot />}</>}
+    <SectionShell
+      toggleContent={<>{expanded && !flat ? t("upstreams.section_hide") : t("upstreams.section_title")}{value.length > 0 && <SectionConfiguredDot />}</>}
       onToggle={(_e, v) => setExpanded(v)}
       isExpanded={expanded}
       style={{ marginTop: "var(--pf-v6-global--spacer--md)" }}
@@ -128,7 +129,7 @@ export function UpstreamsSection({ value, lbPolicy, onChange, isDisabled, isExpa
           </FormGroup>
         )}
       </div>
-    </ExpandableSection>
+    </SectionShell>
   );
 }
 

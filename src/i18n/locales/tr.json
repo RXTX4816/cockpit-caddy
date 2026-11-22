@@ -16,7 +16,15 @@
     "confirm_apply": "Uygula",
     "configured": "Yapılandırıldı",
     "remove_aria": "Kaldır",
-    "header_op_aria": "Başlık işlemi"
+    "header_op_aria": "Başlık işlemi",
+    "default_value": "Varsayılan: {{value}}",
+    "reset_default": "Caddy varsayılanına sıfırla",
+    "size_unit": "Birim",
+    "unit_b": "bayt",
+    "unit_kb": "KB",
+    "unit_mb": "MB",
+    "unit_gb": "GB",
+    "example_value": "ör. {{value}}"
   },
   "app": {
     "title": "Caddy",
@@ -122,7 +130,7 @@
     "validation_ext_host_duplicate": "\"{{host}}\" iki kez yazılmış.",
     "validation_https_requires_tls": "\"https\" protokolü aşağıda TLS'nin etkinleştirilmesini gerektirir — aksi halde Caddy HTTPS'i bu uygulamanın ayarlarından bağımsız olarak kendisi yönetir. TLS'yi etkinleştirin ya da başka bir protokol seçin.",
     "field_target_host": "Hedef ana bilgisayar",
-    "field_target_host_placeholder": "localhost",
+    "field_target_host_placeholder": "örn. localhost",
     "field_tls_skip_verify": "Arka uçta TLS doğrulamasını atla (kendinden imzalı arka uç sertifikaları için)",
     "field_tls": "TLS'yi etkinleştir (Caddy'nin dahili CA'sı)",
     "field_tls_short": "TLS'yi etkinleştir (dahili CA)",
@@ -138,7 +146,16 @@
     "validation_target_port_required": "Hedef bağlantı noktası zorunludur",
     "validation_target_port_range": "Hedef bağlantı noktası 1 ile 65535 arasında olmalıdır",
     "validation_target_host_required": "Hedef ana bilgisayar zorunludur",
-    "confirm_body": ":{{port}} → {{target}} reverse proxy'si oluşturulacak ve Caddy yapılandırması yeniden yüklenecek."
+    "confirm_body": ":{{port}} → {{target}} reverse proxy'si oluşturulacak ve Caddy yapılandırması yeniden yüklenecek.",
+    "ext_host_label": "Dış ana makine",
+    "ext_port_label": "Dış bağlantı noktası",
+    "ext_port_placeholder": "örn. 8443",
+    "ext_scheme_custom_input": "Özel protokol",
+    "ext_scheme_label": "Protokol",
+    "field_label_help": "Listede bu site için bir ad, örn. Grafana.",
+    "target_port_label": "Hedef bağlantı noktası",
+    "target_port_placeholder": "örn. 8080",
+    "target_scheme_label": "Hedef protokol"
   },
   "add_static": {
     "title": "Statik dosya sunucusu ekle",
@@ -248,16 +265,15 @@
     "read_header_timeout": "Başlık okuma zaman aşımı",
     "write_timeout": "Yazma zaman aşımı",
     "idle_timeout": "Boşta kalma zaman aşımı",
-    "max_header_bytes": "En büyük başlık boyutu (bayt)",
-    "max_header_bytes_help": "İstek başlıklarının bayt cinsinden en büyük boyutu (Caddy varsayılanı: 16 KiB = 16384)",
+    "max_header_bytes": "En büyük başlık boyutu",
+    "max_header_bytes_help": "İstek başlıklarının en büyük boyutu (Caddy varsayılanı: 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "HTTP/3'ü devre dışı bırak",
     "http3_help": "Caddy, TLS yapılandırıldığında varsayılan olarak HTTP/1.1, HTTP/2 ve HTTP/3'ü etkinleştirir. HTTP/3, HTTPS ile aynı bağlantı noktasında UDP üzerinden çalışır — güvenlik duvarınız UDP'yi engelliyorsa burada devre dışı bırakmak yalnızca HTTP/1.1 ve HTTP/2'ye geri döner."
   },
   "request_body": {
-    "field_label": "En büyük istek gövdesi boyutu (bayt, isteğe bağlı)",
-    "field_placeholder": "10485760",
-    "field_help": "Daha büyük gövdeli istekleri arka uca ulaşmadan reddeder. Sınır olmaması için boş bırakın (Caddy varsayılanı). Ör. 1048576 = 1 MB, 10485760 = 10 MB."
+    "field_label": "İstek gövdesinin en büyük boyutu",
+    "field_help": "Daha büyük istek gövdeleri arka uca ulaşmadan reddedilir. Sınır olmaması için boş bırakın (Caddy varsayılanı)."
   },
   "rewrite": {
     "section_title": "URI yeniden yazma (isteğe bağlı)",
@@ -500,7 +516,7 @@
     "roll_keep_count": "Saklanacak döndürülmüş dosya sayısı",
     "roll_keep_days": "Döndürülmüş dosyaların en fazla yaşı (gün)",
     "roll_compress": "Döndürülmüş dosyaları sıkıştır (gzip)",
-    "roll_help": "Günlük dosyasının sınırsız büyümesini önler. Caddy varsayılanı için boş bırakın (döndürme yok — dosya sonsuza dek büyür)."
+    "roll_help": "Caddy günlük dosyasını varsayılan olarak döndürür. Gri gösterilen Caddy varsayılanını kullanmak için alanı boş bırakın."
   },
   "config_check": {
     "button": "Yapılandırmayı denetle",
@@ -819,7 +835,8 @@
   "named_route": {
     "toggle_label": "Adlandırılmış rota olarak kaydet (invoke)",
     "name_label": "Rota adı",
-    "name_placeholder": "ör. auth-middleware"
+    "name_placeholder": "ör. auth-middleware",
+    "help": "Rotayı ayrıca bir adla kaydeder; diğer rotalar onu invoke <name> ile yeniden kullanabilir."
   },
   "servers": {
     "tab_all": "Tümü",
@@ -912,5 +929,14 @@
     "title": "Parçacıklar",
     "unused": "İçe aktarılmadı",
     "used_by": "İçe aktaranlar: {{sites}}"
+  },
+  "proxy_tabs": {
+    "aria_label": "Vekil ayarları",
+    "has_error": "Hata içeriyor",
+    "general": "Genel",
+    "security": "Güvenlik",
+    "routing": "Yönlendirme",
+    "upstreams": "Upstream'ler",
+    "logging": "Günlükler ve hatalar"
   }
 }

@@ -169,7 +169,7 @@ export function AddRedirectDialog({ existingPorts, onAdd, onClose, initialValues
                 type="number"
                 value={port}
                 onChange={(_e, v) => { setPort(v); setPortErr(null); }}
-                placeholder="80"
+                placeholder={t("common.example_value", { value: "80" })}
                 isDisabled={isLocked}
                 validated={portErr ? "error" : "default"}
               />
@@ -186,7 +186,7 @@ export function AddRedirectDialog({ existingPorts, onAdd, onClose, initialValues
               id="redirect-to"
               value={to}
               onChange={(_e, v) => { setTo(v); setToErr(null); }}
-              placeholder="https://{host}{uri}"
+              placeholder={t("common.example_value", { value: "https://{host}{uri}" })}
               isDisabled={isLocked}
               validated={toErr ? "error" : "default"}
             />

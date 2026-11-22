@@ -16,7 +16,15 @@
     "confirm_apply": "適用",
     "configured": "設定済み",
     "remove_aria": "削除",
-    "header_op_aria": "ヘッダー操作"
+    "header_op_aria": "ヘッダー操作",
+    "default_value": "既定値: {{value}}",
+    "reset_default": "Caddy の既定値に戻す",
+    "size_unit": "単位",
+    "unit_b": "バイト",
+    "unit_kb": "KB",
+    "unit_mb": "MB",
+    "unit_gb": "GB",
+    "example_value": "例: {{value}}"
   },
   "app": {
     "title": "Caddy",
@@ -122,7 +130,7 @@
     "validation_ext_host_duplicate": "「{{host}}」が重複しています。",
     "validation_https_requires_tls": "「https」プロトコルを使うには下で TLS を有効にする必要があります。有効にしないと、Caddy がこのアプリの設定とは無関係に HTTPS を独自に管理してしまいます。TLS を有効にするか、別のプロトコルを選んでください。",
     "field_target_host": "転送先ホスト",
-    "field_target_host_placeholder": "localhost",
+    "field_target_host_placeholder": "例: localhost",
     "field_tls_skip_verify": "バックエンドの TLS 検証をスキップ（自己署名のバックエンド証明書向け）",
     "field_tls": "TLS を有効にする（Caddy の内部 CA）",
     "field_tls_short": "TLS を有効にする（内部 CA）",
@@ -138,7 +146,16 @@
     "validation_target_port_required": "転送先ポートは必須です",
     "validation_target_port_range": "転送先ポートは 1〜65535 の範囲で指定してください",
     "validation_target_host_required": "転送先ホストは必須です",
-    "confirm_body": "リバースプロキシ :{{port}} → {{target}} を作成し、Caddy の設定を再読み込みします。"
+    "confirm_body": "リバースプロキシ :{{port}} → {{target}} を作成し、Caddy の設定を再読み込みします。",
+    "ext_host_label": "外部ホスト",
+    "ext_port_label": "外部ポート",
+    "ext_port_placeholder": "例: 8443",
+    "ext_scheme_custom_input": "カスタムプロトコル",
+    "ext_scheme_label": "プロトコル",
+    "field_label_help": "一覧に表示するサイト名です。例: Grafana",
+    "target_port_label": "ターゲットポート",
+    "target_port_placeholder": "例: 8080",
+    "target_scheme_label": "ターゲットのプロトコル"
   },
   "add_static": {
     "title": "静的ファイルサーバーを追加",
@@ -248,16 +265,15 @@
     "read_header_timeout": "ヘッダー読み取りタイムアウト",
     "write_timeout": "書き込みタイムアウト",
     "idle_timeout": "アイドルタイムアウト",
-    "max_header_bytes": "最大ヘッダーサイズ（バイト）",
-    "max_header_bytes_help": "リクエストヘッダーの最大サイズ（バイト、Caddy の既定値: 16 KiB = 16384）",
+    "max_header_bytes": "最大ヘッダーサイズ",
+    "max_header_bytes_help": "リクエストヘッダーの最大サイズ（Caddy の既定値: 16 KB）",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "HTTP/3 を無効にする",
     "http3_help": "Caddy は TLS が設定されていると、既定で HTTP/1.1、HTTP/2、HTTP/3 を有効にします。HTTP/3 は HTTPS と同じポートの UDP 上で動作します。ファイアウォールが UDP をブロックしている場合は、ここで無効にすると HTTP/1.1 と HTTP/2 のみになります。"
   },
   "request_body": {
-    "field_label": "リクエスト本文の最大サイズ（バイト、任意）",
-    "field_placeholder": "10485760",
-    "field_help": "これより大きい本文のリクエストは、バックエンドに届く前に拒否されます。制限しない場合（Caddy の既定）は空欄にします。例: 1048576 = 1 MB、10485760 = 10 MB。"
+    "field_label": "リクエスト本文の最大サイズ",
+    "field_help": "これより大きいリクエスト本文はバックエンドに届く前に拒否されます。空欄なら無制限です（Caddy の既定）。"
   },
   "rewrite": {
     "section_title": "URI の書き換え（任意）",
@@ -500,7 +516,7 @@
     "roll_keep_count": "保持するローテーション済みファイル数",
     "roll_keep_days": "ローテーション済みファイルの最大保持日数",
     "roll_compress": "ローテーション済みファイルを圧縮（gzip）",
-    "roll_help": "ログファイルが際限なく大きくなるのを防ぎます。Caddy の既定（ローテーションなし — ファイルは増え続けます）を使う場合は空欄にします。"
+    "roll_help": "Caddy は既定でログファイルをローテーションします。Caddy の既定値（灰色で表示）を使うには、欄を空のままにしてください。"
   },
   "config_check": {
     "button": "設定をチェック",
@@ -819,7 +835,8 @@
   "named_route": {
     "toggle_label": "名前付きルートとして登録（invoke）",
     "name_label": "ルート名",
-    "name_placeholder": "例: auth-middleware"
+    "name_placeholder": "例: auth-middleware",
+    "help": "ルートに名前も付けて登録し、他のルートから invoke <name> で再利用できるようにします。"
   },
   "servers": {
     "tab_all": "すべて",
@@ -912,5 +929,14 @@
     "title": "スニペット",
     "unused": "未インポート",
     "used_by": "{{sites}} がインポート"
+  },
+  "proxy_tabs": {
+    "aria_label": "プロキシ設定",
+    "has_error": "エラーがあります",
+    "general": "全般",
+    "security": "セキュリティ",
+    "routing": "ルーティング",
+    "upstreams": "アップストリーム",
+    "logging": "ログとエラー"
   }
 }
