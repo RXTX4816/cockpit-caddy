@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {
   Checkbox,
-  ExpandableSection,
   FormGroup,
   FormHelperText,
   HelperText,
@@ -10,6 +9,7 @@ import {
   TextInput,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
+import { ResettableTextInput, SectionShell } from "./sectionLayout";
 import type { AccessLogConfig, AccessLogFormat, AccessLogLevel, AccessLogOutput } from "../api";
 import { SectionActions } from "./SectionActions";
 
@@ -68,7 +68,7 @@ export function AccessLogSection({ value, onChange, isDisabled, idPrefix = "al",
   const id = (suffix: string) => `${idPrefix}-${suffix}`;
 
   return (
-    <ExpandableSection
+    <SectionShell
       toggleText={value.enabled ? (titleOn ?? t("access_log.section_title_on")) : (title ?? t("access_log.section_title"))}
       isIndented
       isExpanded={expanded}
@@ -114,7 +114,7 @@ export function AccessLogSection({ value, onChange, isDisabled, idPrefix = "al",
                 id={id("file-path")}
                 value={value.filePath}
                 onChange={(_e, v) => set({ filePath: v })}
-                placeholder="/var/log/caddy/access.log"
+                placeholder={t("common.example_value", { value: "/var/log/caddy/access.log" })}
                 validated={filePathErr ? "error" : "default"}
                 isDisabled={isDisabled}
               />
@@ -134,32 +134,32 @@ export function AccessLogSection({ value, onChange, isDisabled, idPrefix = "al",
             <FormGroup label={t("access_log.roll_title")} fieldId={id("roll")} style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
                 <FormGroup label={t("access_log.roll_size_mb")} fieldId={id("roll-size")} style={{ flex: "1 1 8rem" }}>
-                  <TextInput
+                  <ResettableTextInput
                     id={id("roll-size")}
                     type="number"
                     value={value.rollSizeMb}
                     onChange={(_e, v) => set({ rollSizeMb: v })}
-                    placeholder="100"
+                    placeholder={t("common.default_value", { value: "100" })}
                     isDisabled={isDisabled}
                   />
                 </FormGroup>
                 <FormGroup label={t("access_log.roll_keep_count")} fieldId={id("roll-keep")} style={{ flex: "1 1 8rem" }}>
-                  <TextInput
+                  <ResettableTextInput
                     id={id("roll-keep")}
                     type="number"
                     value={value.rollKeepCount}
                     onChange={(_e, v) => set({ rollKeepCount: v })}
-                    placeholder="10"
+                    placeholder={t("common.default_value", { value: "10" })}
                     isDisabled={isDisabled}
                   />
                 </FormGroup>
                 <FormGroup label={t("access_log.roll_keep_days")} fieldId={id("roll-keep-days")} style={{ flex: "1 1 8rem" }}>
-                  <TextInput
+                  <ResettableTextInput
                     id={id("roll-keep-days")}
                     type="number"
                     value={value.rollKeepDays}
                     onChange={(_e, v) => set({ rollKeepDays: v })}
-                    placeholder="30"
+                    placeholder={t("common.default_value", { value: "90" })}
                     isDisabled={isDisabled}
                   />
                 </FormGroup>
@@ -213,7 +213,7 @@ export function AccessLogSection({ value, onChange, isDisabled, idPrefix = "al",
           </FormGroup>
         </>
       )}
-    </ExpandableSection>
+    </SectionShell>
   );
 }
 

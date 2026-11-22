@@ -16,7 +16,15 @@
     "confirm_apply": "Aplică",
     "configured": "Configurat",
     "remove_aria": "Elimină",
-    "header_op_aria": "Operație pe antet"
+    "header_op_aria": "Operație pe antet",
+    "default_value": "Implicit: {{value}}",
+    "reset_default": "Revino la valoarea implicită Caddy",
+    "size_unit": "Unitate",
+    "unit_b": "octeți",
+    "unit_kb": "KB",
+    "unit_mb": "MB",
+    "unit_gb": "GB",
+    "example_value": "de ex. {{value}}"
   },
   "app": {
     "title": "Caddy",
@@ -122,7 +130,7 @@
     "validation_ext_host_duplicate": "„{{host}}” apare de două ori.",
     "validation_https_requires_tls": "Protocolul „https” necesită ca TLS să fie activat mai jos — altfel Caddy ar gestiona HTTPS singur, în afara setărilor acestei aplicații. Activează TLS sau alege alt protocol.",
     "field_target_host": "Gazdă țintă",
-    "field_target_host_placeholder": "localhost",
+    "field_target_host_placeholder": "de ex. localhost",
     "field_tls_skip_verify": "Omite verificarea TLS a backend-ului (pentru certificate de backend autosemnate)",
     "field_tls": "Activează TLS (CA internă Caddy)",
     "field_tls_short": "Activează TLS (CA internă)",
@@ -138,7 +146,16 @@
     "validation_target_port_required": "Portul țintă este obligatoriu",
     "validation_target_port_range": "Portul țintă trebuie să fie între 1 și 65535",
     "validation_target_host_required": "Gazda țintă este obligatorie",
-    "confirm_body": "Va fi creat un reverse proxy :{{port}} → {{target}} și configurația Caddy va fi reîncărcată."
+    "confirm_body": "Va fi creat un reverse proxy :{{port}} → {{target}} și configurația Caddy va fi reîncărcată.",
+    "ext_host_label": "Gazdă externă",
+    "ext_port_label": "Port extern",
+    "ext_port_placeholder": "de ex. 8443",
+    "ext_scheme_custom_input": "Protocol personalizat",
+    "ext_scheme_label": "Protocol",
+    "field_label_help": "Un nume pentru acest site în listă, de ex. Grafana.",
+    "target_port_label": "Port țintă",
+    "target_port_placeholder": "de ex. 8080",
+    "target_scheme_label": "Protocol țintă"
   },
   "add_static": {
     "title": "Adaugă server de fișiere statice",
@@ -248,16 +265,15 @@
     "read_header_timeout": "Timeout pentru citirea antetelor",
     "write_timeout": "Timeout de scriere",
     "idle_timeout": "Timeout de inactivitate",
-    "max_header_bytes": "Dimensiune max. antete (octeți)",
-    "max_header_bytes_help": "Dimensiunea maximă a antetelor cererii în octeți (implicit în Caddy: 16 KiB = 16384)",
+    "max_header_bytes": "Dimensiune max. antete",
+    "max_header_bytes_help": "Dimensiunea maximă a antetelor cererii (implicit în Caddy: 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "Dezactivează HTTP/3",
     "http3_help": "Caddy activează implicit HTTP/1.1, HTTP/2 și HTTP/3 ori de câte ori TLS este configurat. HTTP/3 rulează peste UDP pe același port ca HTTPS — dacă firewall-ul blochează UDP, dezactivarea aici lasă doar HTTP/1.1 și HTTP/2."
   },
   "request_body": {
-    "field_label": "Dimensiune max. a corpului cererii (octeți, opțional)",
-    "field_placeholder": "10485760",
-    "field_help": "Respinge cererile cu un corp mai mare înainte să ajungă la backend. Lasă gol pentru fără limită (implicit Caddy). De ex. 1048576 = 1 MB, 10485760 = 10 MB."
+    "field_label": "Dimensiunea maximă a corpului cererii",
+    "field_help": "Corpurile mai mari sunt respinse înainte să ajungă la backend. Lasă gol pentru fără limită (implicit Caddy)."
   },
   "rewrite": {
     "section_title": "Rescriere URI (opțional)",
@@ -500,7 +516,7 @@
     "roll_keep_count": "Fișiere rotite păstrate",
     "roll_keep_days": "Vechime max. a fișierelor rotite (zile)",
     "roll_compress": "Comprimă fișierele rotite (gzip)",
-    "roll_help": "Împiedică creșterea nelimitată a fișierului jurnal. Lasă gol pentru valoarea implicită Caddy (fără rotire — fișierul crește la nesfârșit)."
+    "roll_help": "Caddy rotește fișierul jurnal în mod implicit. Lăsați un câmp gol pentru a folosi valoarea implicită Caddy, afișată cu gri."
   },
   "config_check": {
     "button": "Verifică configurația",
@@ -819,7 +835,8 @@
   "named_route": {
     "toggle_label": "Înregistrează ca rută denumită (invoke)",
     "name_label": "Numele rutei",
-    "name_placeholder": "de ex. auth-middleware"
+    "name_placeholder": "de ex. auth-middleware",
+    "help": "Înregistrează ruta și sub un nume, ca alte rute să o refolosească cu invoke <name>."
   },
   "servers": {
     "tab_all": "Toate",
@@ -912,5 +929,14 @@
     "title": "Snippeturi",
     "unused": "Neimportat",
     "used_by": "Importat de {{sites}}"
+  },
+  "proxy_tabs": {
+    "aria_label": "Setări proxy",
+    "has_error": "Conține erori",
+    "general": "General",
+    "security": "Securitate",
+    "routing": "Rutare",
+    "upstreams": "Upstream-uri",
+    "logging": "Jurnale și erori"
   }
 }

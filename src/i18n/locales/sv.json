@@ -16,7 +16,15 @@
     "confirm_apply": "Verkställ",
     "configured": "Konfigurerad",
     "remove_aria": "Ta bort",
-    "header_op_aria": "Headeråtgärd"
+    "header_op_aria": "Headeråtgärd",
+    "default_value": "Standard: {{value}}",
+    "reset_default": "Återställ till Caddys standard",
+    "size_unit": "Enhet",
+    "unit_b": "byte",
+    "unit_kb": "KB",
+    "unit_mb": "MB",
+    "unit_gb": "GB",
+    "example_value": "t.ex. {{value}}"
   },
   "app": {
     "title": "Caddy",
@@ -122,7 +130,7 @@
     "validation_ext_host_duplicate": "\"{{host}}\" finns med två gånger.",
     "validation_https_requires_tls": "Protokollet \"https\" kräver att TLS är aktiverat nedan — annars skulle Caddy hantera HTTPS på egen hand, utanför den här appens inställningar. Aktivera TLS eller välj ett annat protokoll.",
     "field_target_host": "Målvärd",
-    "field_target_host_placeholder": "localhost",
+    "field_target_host_placeholder": "t.ex. localhost",
     "field_tls_skip_verify": "Hoppa över TLS-verifiering mot backend (för självsignerade backend-certifikat)",
     "field_tls": "Aktivera TLS (Caddys interna CA)",
     "field_tls_short": "Aktivera TLS (intern CA)",
@@ -138,7 +146,16 @@
     "validation_target_port_required": "Målport krävs",
     "validation_target_port_range": "Målporten måste vara mellan 1 och 65535",
     "validation_target_host_required": "Målvärd krävs",
-    "confirm_body": "En reverse proxy :{{port}} → {{target}} skapas och Caddys konfiguration läses in igen."
+    "confirm_body": "En reverse proxy :{{port}} → {{target}} skapas och Caddys konfiguration läses in igen.",
+    "ext_host_label": "Extern värd",
+    "ext_port_label": "Extern port",
+    "ext_port_placeholder": "t.ex. 8443",
+    "ext_scheme_custom_input": "Eget protokoll",
+    "ext_scheme_label": "Protokoll",
+    "field_label_help": "Ett namn på webbplatsen i listan, t.ex. Grafana.",
+    "target_port_label": "Målport",
+    "target_port_placeholder": "t.ex. 8080",
+    "target_scheme_label": "Målprotokoll"
   },
   "add_static": {
     "title": "Lägg till statisk filserver",
@@ -248,16 +265,15 @@
     "read_header_timeout": "Tidsgräns för läsning av huvuden",
     "write_timeout": "Tidsgräns för skrivning",
     "idle_timeout": "Tidsgräns vid inaktivitet",
-    "max_header_bytes": "Max. storlek på huvuden (byte)",
-    "max_header_bytes_help": "Största storlek på förfrågans headers i byte (Caddys standard: 16 KiB = 16384)",
+    "max_header_bytes": "Max. storlek på huvuden",
+    "max_header_bytes_help": "Största storlek på förfrågans headers (Caddys standard: 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "Inaktivera HTTP/3",
     "http3_help": "Caddy aktiverar HTTP/1.1, HTTP/2 och HTTP/3 som standard när TLS är konfigurerat. HTTP/3 går över UDP på samma port som HTTPS — om brandväggen blockerar UDP gör en inaktivering här att bara HTTP/1.1 och HTTP/2 används."
   },
   "request_body": {
-    "field_label": "Max. storlek på begärans innehåll (byte, valfritt)",
-    "field_placeholder": "10485760",
-    "field_help": "Avvisar begäranden med större innehåll innan de når backend. Lämna tomt för ingen gräns (Caddys standard). T.ex. 1048576 = 1 MB, 10485760 = 10 MB."
+    "field_label": "Största storlek på förfrågans innehåll",
+    "field_help": "Större förfrågningar avvisas innan de når backend. Lämna tomt för ingen gräns (Caddys standard)."
   },
   "rewrite": {
     "section_title": "URI-omskrivning (valfritt)",
@@ -500,7 +516,7 @@
     "roll_keep_count": "Antal roterade filer att behålla",
     "roll_keep_days": "Max. ålder på roterade filer (dagar)",
     "roll_compress": "Komprimera roterade filer (gzip)",
-    "roll_help": "Förhindrar att loggfilen växer obegränsat. Lämna tomt för Caddys standard (ingen rotation — filen växer för evigt)."
+    "roll_help": "Caddy roterar loggfilen som standard. Lämna ett fält tomt för att använda Caddys standardvärde, som visas i grått."
   },
   "config_check": {
     "button": "Kontrollera konfiguration",
@@ -819,7 +835,8 @@
   "named_route": {
     "toggle_label": "Registrera som namngiven route (invoke)",
     "name_label": "Routenamn",
-    "name_placeholder": "t.ex. auth-middleware"
+    "name_placeholder": "t.ex. auth-middleware",
+    "help": "Registrerar även routen under ett namn, så att andra routes kan återanvända den med invoke <name>."
   },
   "servers": {
     "tab_all": "Alla",
@@ -912,5 +929,14 @@
     "title": "Snippets",
     "unused": "Inte importerad",
     "used_by": "Importeras av {{sites}}"
+  },
+  "proxy_tabs": {
+    "aria_label": "Proxyinställningar",
+    "has_error": "Innehåller fel",
+    "general": "Allmänt",
+    "security": "Säkerhet",
+    "routing": "Routing",
+    "upstreams": "Upstreams",
+    "logging": "Loggning och fel"
   }
 }

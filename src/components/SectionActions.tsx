@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Alert, Button } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
+import { useFlatSections } from "./sectionLayout";
 
 type PendingAction = "clear" | "defaults";
 
@@ -13,12 +14,16 @@ interface Props {
 export function SectionActions({ onClear, onDefaults, isDisabled }: Props) {
   const { t } = useTranslation();
   const [pending, setPending] = useState<PendingAction | null>(null);
+  // Inside the tabbed proxy dialog (#260) each field has its own reset instead.
+  const flat = useFlatSections();
 
   function confirm() {
     if (pending === "clear") onClear?.();
     else if (pending === "defaults") onDefaults?.();
     setPending(null);
   }
+
+  if (flat) return null;
 
   if (pending) {
     return (

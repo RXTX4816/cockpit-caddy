@@ -6,7 +6,7 @@
  * proving Caddy actually honors its verdict rather than just writing the directive.
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { readConf, spawnCmd } from './helpers';
+import { readConf, spawnCmd, openSection } from './helpers';
 import { waitForListener, curlStatus } from './live';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
@@ -53,7 +53,7 @@ test('configuring forward_auth writes the correct Caddyfile directive', async ({
   await modal.locator('#target-port').fill('19371');
   await modal.locator('#tls').selectOption('off');
 
-  await modal.getByRole('button', { name: /forward authentication/i }).click();
+  await openSection(modal, 'forwardAuth');
   await modal.getByRole('button', { name: /enable forward authentication/i }).click();
   await modal.locator('#fa-url').fill('http://localhost:19372');
   await modal.locator('#fa-uri').fill('/verify');
@@ -82,7 +82,7 @@ test('request is rejected when the forward_auth backend denies it', async ({ plu
     await modal.locator('#target-port').fill(String(backendPort));
     await modal.locator('#tls').selectOption('off');
 
-    await modal.getByRole('button', { name: /forward authentication/i }).click();
+    await openSection(modal, 'forwardAuth');
     await modal.getByRole('button', { name: /enable forward authentication/i }).click();
     await modal.locator('#fa-url').fill(`http://localhost:${authPort}`);
     await modal.locator('#fa-uri').fill('/verify');
@@ -117,7 +117,7 @@ test('request passes through to the real backend when forward_auth approves it',
     await modal.locator('#target-port').fill(String(backendPort));
     await modal.locator('#tls').selectOption('off');
 
-    await modal.getByRole('button', { name: /forward authentication/i }).click();
+    await openSection(modal, 'forwardAuth');
     await modal.getByRole('button', { name: /enable forward authentication/i }).click();
     await modal.locator('#fa-url').fill(`http://localhost:${authPort}`);
     await modal.locator('#fa-uri').fill('/verify');

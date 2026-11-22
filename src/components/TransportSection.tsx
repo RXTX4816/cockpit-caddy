@@ -1,12 +1,11 @@
 import { useState } from "react";
 import {
-  ExpandableSection,
   FormGroup,
   HelperText,
   HelperTextItem,
-  TextInput,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
+import { ResettableTextInput, SectionShell } from "./sectionLayout";
 import { SectionActions } from "./SectionActions";
 import { SectionConfiguredDot } from "./SectionConfiguredDot";
 
@@ -41,7 +40,7 @@ export function TransportSection({ value, onChange, isDisabled, isExpanded: isEx
   }
 
   return (
-    <ExpandableSection
+    <SectionShell
       toggleContent={<>{t("transport.section_title")}{hasValues && <SectionConfiguredDot />}</>}
       isIndented
       isExpanded={expanded}
@@ -57,16 +56,16 @@ export function TransportSection({ value, onChange, isDisabled, isExpanded: isEx
       </HelperText>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
         <FormGroup label={t("transport.dial_timeout")} fieldId="transport-dial" style={{ flex: "1 1 10rem" }}>
-          <TextInput
+          <ResettableTextInput
             id="transport-dial"
             value={value.dialTimeout}
             onChange={(_e, v) => set("dialTimeout", v)}
-            placeholder="3s"
+            placeholder={t("common.default_value", { value: "3s" })}
             isDisabled={isDisabled}
           />
         </FormGroup>
         <FormGroup label={t("transport.response_header_timeout")} fieldId="transport-resp" style={{ flex: "1 1 10rem" }}>
-          <TextInput
+          <ResettableTextInput
             id="transport-resp"
             value={value.responseHeaderTimeout}
             onChange={(_e, v) => set("responseHeaderTimeout", v)}
@@ -75,6 +74,6 @@ export function TransportSection({ value, onChange, isDisabled, isExpanded: isEx
           />
         </FormGroup>
       </div>
-    </ExpandableSection>
+    </SectionShell>
   );
 }

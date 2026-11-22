@@ -40,7 +40,7 @@ Use the **Edit Server** and **Delete Server** buttons in the server info card. D
 
 ## Route Matchers
 
-Route matchers restrict which requests a route handles. They are available in all Add/Edit dialogs via the expandable **Route Matchers** section.
+Route matchers restrict which requests a route handles. They are available in all Add/Edit dialogs: on the **Routing** tab of the proxy dialogs, and as the expandable **Route Matchers** section in the others.
 
 When a route has no matchers, it is a **catch-all** — it handles any request that was not matched by an earlier route.
 
@@ -87,11 +87,21 @@ Click **Add Proxy** in the toolbar.
 | Compression | Enable gzip/zstd response compression |
 | Skip TLS verify | Skip verification of the upstream's TLS certificate (for self-signed backends) |
 
-### Optional sections
+### Tabs
 
-Each proxy dialog groups its advanced configuration into a single box of expandable sections — only one is open at a time. Every section has a **Clear** button (with confirm) that resets it, and sections with known defaults also have a **Defaults** button. A section's title gets a small dot indicator once it holds a non-default value, so the group can be scanned at a glance without opening every row.
+The Add and Edit Proxy dialogs split their settings into five tabs. A tab shows a small dot once something in it differs from the defaults, and an error icon when it holds an invalid value; **Add** / **Save** jumps to the first tab with an error. Inside a tab every section is shown open, there are no Clear / Defaults buttons, and a field that falls back to a Caddy default gets a **Reset to Caddy default** button (↶) once it holds a value. Empty fields show the default greyed out ("Default: 5m") or an example ("e.g. 8080").
 
-The **Max request body size** field sits in the main form (not inside the expandable group) since it's a single value, not a sub-form.
+Sizes (max request body size, max header size) are entered as a number and a unit (bytes, KB, MB, GB) and stored in bytes.
+
+| Tab | Sections |
+|---|---|
+| **General** | Label, external address (`[protocol ▾] [host] : [port]`), target (`http` / `https` toggle, host, port), HTTPS certificate, snippet imports |
+| **Security** | HTTP Basic Auth, Forward Authentication, TLS Policy |
+| **Routing** | Route Matchers, URI Rewrite, Request Headers, Response Headers, named route (`invoke`) |
+| **Upstreams** | Additional Upstreams and load-balancing policy, Retry & Failover Tuning (including health checks), Upstream Timeouts |
+| **Logging & errors** | Access logging, Custom error handlers, Server Timeouts & Limits, Max request body size |
+
+The static, redirect, respond and PHP dialogs keep the older layout: expandable sections, one open at a time, each with a **Clear** button (with confirm) and, where Caddy has defaults, a **Defaults** button that empties the fields.
 
 | Section | What it configures |
 |---|---|
@@ -99,7 +109,7 @@ The **Max request body size** field sits in the main form (not inside the expand
 | **Access Log** | Per-server access logging (output, format, level, rotation) |
 | **Error Handlers** | Custom responses for 4xx/5xx errors |
 | **Forward Auth** | Delegate authentication to an external service |
-| **Transport** | Dial timeout, response header timeout |
+| **Upstream Timeouts** | Dial timeout, response header timeout |
 | **Server Timeouts** | Read, write, idle timeouts, max header size, and HTTP/3 opt-out |
 | **Basic Auth** | Username/password protection |
 | **Rewrite** | Strip prefix, add prefix, or regex path rewrite |

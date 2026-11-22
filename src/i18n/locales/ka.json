@@ -16,7 +16,15 @@
     "confirm_apply": "გამოყენება",
     "configured": "მორგებულია",
     "remove_aria": "წაშლა",
-    "header_op_aria": "სათაურის ოპერაცია"
+    "header_op_aria": "სათაურის ოპერაცია",
+    "default_value": "ნაგულისხმევი: {{value}}",
+    "reset_default": "Caddy-ის ნაგულისხმევზე დაბრუნება",
+    "size_unit": "ერთეული",
+    "unit_b": "ბაიტი",
+    "unit_kb": "KB",
+    "unit_mb": "MB",
+    "unit_gb": "GB",
+    "example_value": "მაგ. {{value}}"
   },
   "app": {
     "title": "Caddy",
@@ -122,7 +130,7 @@
     "validation_ext_host_duplicate": "„{{host}}“ ორჯერაა მითითებული.",
     "validation_https_requires_tls": "პროტოკოლი „https“ მოითხოვს ქვემოთ TLS-ის ჩართვას — წინააღმდეგ შემთხვევაში Caddy HTTPS-ს დამოუკიდებლად მართავს, ამ აპის პარამეტრების მიუხედავად. ჩართეთ TLS ან აირჩიეთ სხვა პროტოკოლი.",
     "field_target_host": "სამიზნე ჰოსტი",
-    "field_target_host_placeholder": "localhost",
+    "field_target_host_placeholder": "მაგ. localhost",
     "field_tls_skip_verify": "backend-ის TLS შემოწმების გამოტოვება (თვითხელმოწერილი backend სერტიფიკატებისთვის)",
     "field_tls": "TLS-ის ჩართვა (Caddy-ის შიდა CA)",
     "field_tls_short": "TLS-ის ჩართვა (შიდა CA)",
@@ -138,7 +146,16 @@
     "validation_target_port_required": "სამიზნე პორტი სავალდებულოა",
     "validation_target_port_range": "სამიზნე პორტი უნდა იყოს 1-დან 65535-მდე",
     "validation_target_host_required": "სამიზნე ჰოსტი სავალდებულოა",
-    "confirm_body": "შეიქმნება reverse proxy :{{port}} → {{target}} და Caddy-ის კონფიგურაცია ხელახლა ჩაიტვირთება."
+    "confirm_body": "შეიქმნება reverse proxy :{{port}} → {{target}} და Caddy-ის კონფიგურაცია ხელახლა ჩაიტვირთება.",
+    "ext_host_label": "გარე ჰოსტი",
+    "ext_port_label": "გარე პორტი",
+    "ext_port_placeholder": "მაგ. 8443",
+    "ext_scheme_custom_input": "საკუთარი პროტოკოლი",
+    "ext_scheme_label": "პროტოკოლი",
+    "field_label_help": "საიტის სახელი სიაში, მაგ. Grafana.",
+    "target_port_label": "სამიზნე პორტი",
+    "target_port_placeholder": "მაგ. 8080",
+    "target_scheme_label": "სამიზნე პროტოკოლი"
   },
   "add_static": {
     "title": "სტატიკური ფაილების სერვერის დამატება",
@@ -248,16 +265,15 @@
     "read_header_timeout": "სათაურების წაკითხვის ტაიმაუტი",
     "write_timeout": "ჩაწერის ტაიმაუტი",
     "idle_timeout": "უმოქმედობის ტაიმაუტი",
-    "max_header_bytes": "სათაურების მაქს. ზომა (ბაიტი)",
-    "max_header_bytes_help": "მოთხოვნის სათაურების მაქსიმალური ზომა ბაიტებში (Caddy-ის ნაგულისხმევი: 16 KiB = 16384)",
+    "max_header_bytes": "სათაურების მაქს. ზომა",
+    "max_header_bytes_help": "მოთხოვნის სათაურების მაქსიმალური ზომა (Caddy-ის ნაგულისხმევი: 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "HTTP/3-ის გამორთვა",
     "http3_help": "Caddy ნაგულისხმევად რთავს HTTP/1.1-ს, HTTP/2-ს და HTTP/3-ს, როცა TLS მორგებულია. HTTP/3 მუშაობს UDP-ზე იმავე პორტზე, რომელზეც HTTPS — თუ ბრანდმაუერი UDP-ს ბლოკავს, აქ გამორთვის შემდეგ მხოლოდ HTTP/1.1 და HTTP/2 დარჩება."
   },
   "request_body": {
-    "field_label": "მოთხოვნის ტექსტის მაქს. ზომა (ბაიტი, არასავალდებულო)",
-    "field_placeholder": "10485760",
-    "field_help": "უფრო დიდი ტექსტის მქონე მოთხოვნებს backend-მდე მისვლამდე უარყოფს. ლიმიტის გარეშე (Caddy-ის ნაგულისხმევი) დატოვეთ ცარიელი. მაგ. 1048576 = 1 MB, 10485760 = 10 MB."
+    "field_label": "მოთხოვნის ტანის მაქსიმალური ზომა",
+    "field_help": "უფრო დიდი ტანის მქონე მოთხოვნები უარყოფილია, სანამ ბექენდს მიაღწევს. დატოვეთ ცარიელი ლიმიტის გარეშე (Caddy-ის ნაგულისხმევი)."
   },
   "rewrite": {
     "section_title": "URI-ის გადაწერა (არასავალდებულო)",
@@ -500,7 +516,7 @@
     "roll_keep_count": "შესანახი როტირებული ფაილების რაოდენობა",
     "roll_keep_days": "როტირებული ფაილების მაქს. ასაკი (დღე)",
     "roll_compress": "როტირებული ფაილების შეკუმშვა (gzip)",
-    "roll_help": "ჟურნალის ფაილს უსასრულოდ ზრდას არ აძლევს. Caddy-ის ნაგულისხმევისთვის (როტაციის გარეშე — ფაილი სამუდამოდ იზრდება) დატოვეთ ცარიელი."
+    "roll_help": "Caddy ნაგულისხმევად ახდენს ჟურნალის ფაილის როტაციას. დატოვეთ ველი ცარიელი Caddy-ის ნაგულისხმევი მნიშვნელობისთვის, რომელიც ნაცრისფრად ჩანს."
   },
   "config_check": {
     "button": "კონფიგურაციის შემოწმება",
@@ -819,7 +835,8 @@
   "named_route": {
     "toggle_label": "სახელიან მარშრუტად რეგისტრაცია (invoke)",
     "name_label": "მარშრუტის სახელი",
-    "name_placeholder": "მაგ. auth-middleware"
+    "name_placeholder": "მაგ. auth-middleware",
+    "help": "მარშრუტს სახელითაც არეგისტრირებს, რომ სხვა მარშრუტებმა invoke <name>-ით გამოიყენონ."
   },
   "servers": {
     "tab_all": "ყველა",
@@ -912,5 +929,14 @@
     "title": "სნიპეტები",
     "unused": "არ არის იმპორტირებული",
     "used_by": "იმპორტირებულია: {{sites}}"
+  },
+  "proxy_tabs": {
+    "aria_label": "პროქსის პარამეტრები",
+    "has_error": "შეიცავს შეცდომებს",
+    "general": "ზოგადი",
+    "security": "უსაფრთხოება",
+    "routing": "მარშრუტიზაცია",
+    "upstreams": "Upstream-ები",
+    "logging": "ჟურნალი და შეცდომები"
   }
 }

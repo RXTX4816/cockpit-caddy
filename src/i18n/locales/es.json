@@ -16,7 +16,15 @@
     "confirm_apply": "Aplicar",
     "configured": "Configurado",
     "remove_aria": "Quitar",
-    "header_op_aria": "Operación de cabecera"
+    "header_op_aria": "Operación de cabecera",
+    "default_value": "Predeterminado: {{value}}",
+    "reset_default": "Restablecer al valor predeterminado de Caddy",
+    "size_unit": "Unidad",
+    "unit_b": "bytes",
+    "unit_kb": "KB",
+    "unit_mb": "MB",
+    "unit_gb": "GB",
+    "example_value": "p. ej. {{value}}"
   },
   "app": {
     "title": "Caddy",
@@ -122,7 +130,7 @@
     "validation_ext_host_duplicate": "«{{host}}» aparece dos veces.",
     "validation_https_requires_tls": "El protocolo «https» requiere que TLS esté activado más abajo; de lo contrario, Caddy gestionaría HTTPS por su cuenta, al margen de los ajustes de esta aplicación. Active TLS o elija otro protocolo.",
     "field_target_host": "Host de destino",
-    "field_target_host_placeholder": "localhost",
+    "field_target_host_placeholder": "p. ej. localhost",
     "field_tls_skip_verify": "Omitir la verificación TLS del backend (para certificados autofirmados del backend)",
     "field_tls": "Activar TLS (CA interna de Caddy)",
     "field_tls_short": "Activar TLS (CA interna)",
@@ -138,7 +146,16 @@
     "validation_target_port_required": "El puerto de destino es obligatorio",
     "validation_target_port_range": "El puerto de destino debe estar entre 1 y 65535",
     "validation_target_host_required": "El host de destino es obligatorio",
-    "confirm_body": "Se creará un reverse proxy :{{port}} → {{target}} y se recargará la configuración de Caddy."
+    "confirm_body": "Se creará un reverse proxy :{{port}} → {{target}} y se recargará la configuración de Caddy.",
+    "ext_host_label": "Host externo",
+    "ext_port_label": "Puerto externo",
+    "ext_port_placeholder": "p. ej. 8443",
+    "ext_scheme_custom_input": "Protocolo personalizado",
+    "ext_scheme_label": "Protocolo",
+    "field_label_help": "Un nombre para este sitio en la lista, p. ej. Grafana.",
+    "target_port_label": "Puerto de destino",
+    "target_port_placeholder": "p. ej. 8080",
+    "target_scheme_label": "Protocolo de destino"
   },
   "add_static": {
     "title": "Añadir servidor de archivos estáticos",
@@ -248,16 +265,15 @@
     "read_header_timeout": "Tiempo de lectura de cabeceras",
     "write_timeout": "Tiempo de escritura",
     "idle_timeout": "Tiempo de inactividad",
-    "max_header_bytes": "Tamaño máx. de cabeceras (bytes)",
-    "max_header_bytes_help": "Tamaño máximo de las cabeceras de la petición en bytes (predeterminado de Caddy: 16 KiB = 16384)",
+    "max_header_bytes": "Tamaño máx. de cabeceras",
+    "max_header_bytes_help": "Tamaño máximo de las cabeceras de la petición (predeterminado de Caddy: 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "Desactivar HTTP/3",
     "http3_help": "Caddy activa HTTP/1.1, HTTP/2 y HTTP/3 de forma predeterminada siempre que TLS esté configurado. HTTP/3 funciona sobre UDP en el mismo puerto que HTTPS; si su cortafuegos bloquea UDP, desactivarlo aquí deja solo HTTP/1.1 y HTTP/2."
   },
   "request_body": {
-    "field_label": "Tamaño máx. del cuerpo de la petición (bytes, opcional)",
-    "field_placeholder": "10485760",
-    "field_help": "Rechaza las peticiones con un cuerpo mayor antes de que lleguen al backend. Déjelo vacío para no tener límite (valor predeterminado de Caddy). P. ej. 1048576 = 1 MB, 10485760 = 10 MB."
+    "field_label": "Tamaño máximo del cuerpo de la solicitud",
+    "field_help": "Los cuerpos más grandes se rechazan antes de llegar al backend. Déjalo vacío para no tener límite (valor predeterminado de Caddy)."
   },
   "rewrite": {
     "section_title": "Reescritura de URI (opcional)",
@@ -500,7 +516,7 @@
     "roll_keep_count": "Archivos rotados que se conservan",
     "roll_keep_days": "Antigüedad máx. de los archivos rotados (días)",
     "roll_compress": "Comprimir los archivos rotados (gzip)",
-    "roll_help": "Evita que el archivo de registro crezca sin límite. Déjelo vacío para usar el valor predeterminado de Caddy (sin rotación: el archivo crece indefinidamente)."
+    "roll_help": "Caddy rota el archivo de registro de forma predeterminada. Deja un campo vacío para usar el valor predeterminado de Caddy, que se muestra en gris."
   },
   "config_check": {
     "button": "Comprobar configuración",
@@ -819,7 +835,8 @@
   "named_route": {
     "toggle_label": "Registrar como ruta con nombre (invoke)",
     "name_label": "Nombre de la ruta",
-    "name_placeholder": "p. ej. auth-middleware"
+    "name_placeholder": "p. ej. auth-middleware",
+    "help": "Además registra la ruta con un nombre, para que otras rutas la reutilicen con invoke <name>."
   },
   "servers": {
     "tab_all": "Todos",
@@ -912,5 +929,14 @@
     "title": "Fragmentos",
     "unused": "No importado",
     "used_by": "Importado por {{sites}}"
+  },
+  "proxy_tabs": {
+    "aria_label": "Ajustes del proxy",
+    "has_error": "Tiene errores",
+    "general": "General",
+    "security": "Seguridad",
+    "routing": "Enrutamiento",
+    "upstreams": "Upstreams",
+    "logging": "Registro y errores"
   }
 }

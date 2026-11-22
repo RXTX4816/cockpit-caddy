@@ -16,7 +16,15 @@
     "confirm_apply": "تطبيق",
     "configured": "مُعدّ",
     "remove_aria": "إزالة",
-    "header_op_aria": "عملية الترويسة"
+    "header_op_aria": "عملية الترويسة",
+    "default_value": "الافتراضي: {{value}}",
+    "reset_default": "إعادة إلى قيمة Caddy الافتراضية",
+    "size_unit": "الوحدة",
+    "unit_b": "بايت",
+    "unit_kb": "KB",
+    "unit_mb": "MB",
+    "unit_gb": "GB",
+    "example_value": "مثال: {{value}}"
   },
   "app": {
     "title": "Caddy",
@@ -122,7 +130,7 @@
     "validation_ext_host_duplicate": "\"{{host}}\" مكرر.",
     "validation_https_requires_tls": "يتطلب بروتوكول \"https\" تفعيل TLS أدناه — وإلا سيدير Caddy بروتوكول HTTPS بنفسه بعيدًا عن إعدادات هذا التطبيق. فعّل TLS أو اختر بروتوكولًا آخر.",
     "field_target_host": "المضيف الهدف",
-    "field_target_host_placeholder": "localhost",
+    "field_target_host_placeholder": "مثال: localhost",
     "field_tls_skip_verify": "تخطّي التحقق من TLS للخادم الخلفي (لشهادات الخادم الخلفي الموقّعة ذاتيًا)",
     "field_tls": "تفعيل TLS (المرجع الداخلي في Caddy)",
     "field_tls_short": "تفعيل TLS (مرجع داخلي)",
@@ -138,7 +146,16 @@
     "validation_target_port_required": "المنفذ الهدف مطلوب",
     "validation_target_port_range": "يجب أن يكون المنفذ الهدف بين 1 و65535",
     "validation_target_host_required": "المضيف الهدف مطلوب",
-    "confirm_body": "سيتم إنشاء وكيل عكسي :{{port}} → {{target}} وإعادة تحميل إعدادات Caddy."
+    "confirm_body": "سيتم إنشاء وكيل عكسي :{{port}} → {{target}} وإعادة تحميل إعدادات Caddy.",
+    "ext_host_label": "المضيف الخارجي",
+    "ext_port_label": "المنفذ الخارجي",
+    "ext_port_placeholder": "مثال: 8443",
+    "ext_scheme_custom_input": "بروتوكول مخصص",
+    "ext_scheme_label": "البروتوكول",
+    "field_label_help": "اسم لهذا الموقع في القائمة، مثل Grafana.",
+    "target_port_label": "منفذ الهدف",
+    "target_port_placeholder": "مثال: 8080",
+    "target_scheme_label": "بروتوكول الهدف"
   },
   "add_static": {
     "title": "إضافة خادم ملفات ثابتة",
@@ -248,16 +265,15 @@
     "read_header_timeout": "مهلة قراءة الترويسات",
     "write_timeout": "مهلة الكتابة",
     "idle_timeout": "مهلة الخمول",
-    "max_header_bytes": "الحد الأقصى لحجم الترويسات (بايت)",
-    "max_header_bytes_help": "الحد الأقصى لحجم ترويسات الطلب بالبايت (افتراضي Caddy: ‏16 KiB = 16384)",
+    "max_header_bytes": "الحد الأقصى لحجم الترويسات",
+    "max_header_bytes_help": "الحد الأقصى لحجم ترويسات الطلب (افتراضي Caddy: ‏16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "تعطيل HTTP/3",
     "http3_help": "يفعّل Caddy افتراضيًا HTTP/1.1 وHTTP/2 وHTTP/3 كلما أُعدّ TLS. يعمل HTTP/3 عبر UDP على منفذ HTTPS نفسه — إذا كان جدار الحماية يحظر UDP فإن تعطيله هنا يعيد الاعتماد على HTTP/1.1 وHTTP/2 فقط."
   },
   "request_body": {
-    "field_label": "الحد الأقصى لحجم نص الطلب (بايت، اختياري)",
-    "field_placeholder": "10485760",
-    "field_help": "يرفض الطلبات ذات النص الأكبر قبل وصولها إلى الخادم الخلفي. اتركه فارغًا لعدم وضع حد (الافتراضي في Caddy). مثلًا 1048576 = 1 MB و10485760 = 10 MB."
+    "field_label": "الحد الأقصى لحجم جسم الطلب",
+    "field_help": "تُرفض أجسام الطلبات الأكبر قبل وصولها إلى الخادم الخلفي. اتركه فارغًا لعدم وجود حد (افتراضي Caddy)."
   },
   "rewrite": {
     "section_title": "إعادة كتابة URI (اختياري)",
@@ -500,7 +516,7 @@
     "roll_keep_count": "عدد الملفات المدوَّرة المحتفظ بها",
     "roll_keep_days": "أقصى عمر للملفات المدوَّرة (أيام)",
     "roll_compress": "ضغط الملفات المدوَّرة (gzip)",
-    "roll_help": "يمنع ملف السجل من النمو بلا حدود. اتركه فارغًا لاستخدام الافتراضي في Caddy (دون تدوير — ينمو الملف إلى الأبد)."
+    "roll_help": "يدوّر Caddy ملف السجل افتراضيًا. اترك الحقل فارغًا لاستخدام القيمة الافتراضية لـ Caddy، المعروضة باللون الرمادي."
   },
   "config_check": {
     "button": "فحص الإعدادات",
@@ -819,7 +835,8 @@
   "named_route": {
     "toggle_label": "تسجيل كمسار مسمّى (invoke)",
     "name_label": "اسم المسار",
-    "name_placeholder": "مثل auth-middleware"
+    "name_placeholder": "مثل auth-middleware",
+    "help": "يسجّل المسار أيضًا باسم، لتعيد المسارات الأخرى استخدامه عبر invoke <name>."
   },
   "servers": {
     "tab_all": "الكل",
@@ -912,5 +929,14 @@
     "title": "المقتطفات",
     "unused": "غير مستورد",
     "used_by": "مستورد في {{sites}}"
+  },
+  "proxy_tabs": {
+    "aria_label": "إعدادات الوكيل",
+    "has_error": "يحتوي على أخطاء",
+    "general": "عام",
+    "security": "الأمان",
+    "routing": "التوجيه",
+    "upstreams": "الخوادم الخلفية",
+    "logging": "السجلات والأخطاء"
   }
 }

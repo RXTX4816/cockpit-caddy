@@ -16,7 +16,15 @@
     "confirm_apply": "Terapkan",
     "configured": "Dikonfigurasi",
     "remove_aria": "Hapus",
-    "header_op_aria": "Operasi header"
+    "header_op_aria": "Operasi header",
+    "default_value": "Bawaan: {{value}}",
+    "reset_default": "Kembalikan ke bawaan Caddy",
+    "size_unit": "Satuan",
+    "unit_b": "byte",
+    "unit_kb": "KB",
+    "unit_mb": "MB",
+    "unit_gb": "GB",
+    "example_value": "mis. {{value}}"
   },
   "app": {
     "title": "Caddy",
@@ -122,7 +130,7 @@
     "validation_ext_host_duplicate": "\"{{host}}\" tercantum dua kali.",
     "validation_https_requires_tls": "Protokol \"https\" mengharuskan TLS diaktifkan di bawah — jika tidak, Caddy akan mengelola HTTPS sendiri, di luar pengaturan aplikasi ini. Aktifkan TLS atau pilih protokol lain.",
     "field_target_host": "Host tujuan",
-    "field_target_host_placeholder": "localhost",
+    "field_target_host_placeholder": "mis. localhost",
     "field_tls_skip_verify": "Lewati verifikasi TLS backend (untuk sertifikat backend yang ditandatangani sendiri)",
     "field_tls": "Aktifkan TLS (CA internal Caddy)",
     "field_tls_short": "Aktifkan TLS (CA internal)",
@@ -138,7 +146,16 @@
     "validation_target_port_required": "Port tujuan wajib diisi",
     "validation_target_port_range": "Port tujuan harus antara 1 dan 65535",
     "validation_target_host_required": "Host tujuan wajib diisi",
-    "confirm_body": "Reverse proxy :{{port}} → {{target}} akan dibuat dan konfigurasi Caddy dimuat ulang."
+    "confirm_body": "Reverse proxy :{{port}} → {{target}} akan dibuat dan konfigurasi Caddy dimuat ulang.",
+    "ext_host_label": "Host eksternal",
+    "ext_port_label": "Port eksternal",
+    "ext_port_placeholder": "mis. 8443",
+    "ext_scheme_custom_input": "Protokol kustom",
+    "ext_scheme_label": "Protokol",
+    "field_label_help": "Nama situs ini di daftar, mis. Grafana.",
+    "target_port_label": "Port tujuan",
+    "target_port_placeholder": "mis. 8080",
+    "target_scheme_label": "Protokol tujuan"
   },
   "add_static": {
     "title": "Tambah server berkas statis",
@@ -248,16 +265,15 @@
     "read_header_timeout": "Batas waktu baca header",
     "write_timeout": "Batas waktu tulis",
     "idle_timeout": "Batas waktu menganggur",
-    "max_header_bytes": "Ukuran header maks. (byte)",
-    "max_header_bytes_help": "Ukuran maksimum header permintaan dalam byte (bawaan Caddy: 16 KiB = 16384)",
+    "max_header_bytes": "Ukuran header maks.",
+    "max_header_bytes_help": "Ukuran maksimum header permintaan (bawaan Caddy: 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "Nonaktifkan HTTP/3",
     "http3_help": "Caddy mengaktifkan HTTP/1.1, HTTP/2, dan HTTP/3 secara bawaan setiap kali TLS dikonfigurasi. HTTP/3 berjalan di atas UDP pada port yang sama dengan HTTPS — jika firewall memblokir UDP, menonaktifkannya di sini akan kembali ke HTTP/1.1 dan HTTP/2 saja."
   },
   "request_body": {
-    "field_label": "Ukuran isi permintaan maks. (byte, opsional)",
-    "field_placeholder": "10485760",
-    "field_help": "Menolak permintaan dengan isi lebih besar sebelum mencapai backend. Kosongkan untuk tanpa batas (bawaan Caddy). Mis. 1048576 = 1 MB, 10485760 = 10 MB."
+    "field_label": "Ukuran maksimum body permintaan",
+    "field_help": "Body permintaan yang lebih besar ditolak sebelum sampai ke backend. Kosongkan untuk tanpa batas (bawaan Caddy)."
   },
   "rewrite": {
     "section_title": "Penulisan ulang URI (opsional)",
@@ -500,7 +516,7 @@
     "roll_keep_count": "Jumlah berkas rotasi yang disimpan",
     "roll_keep_days": "Usia maks. berkas rotasi (hari)",
     "roll_compress": "Kompres berkas rotasi (gzip)",
-    "roll_help": "Mencegah berkas log tumbuh tanpa batas. Kosongkan untuk bawaan Caddy (tanpa rotasi — berkas terus membesar)."
+    "roll_help": "Caddy merotasi file log secara bawaan. Biarkan kolom kosong untuk memakai nilai bawaan Caddy, yang ditampilkan abu-abu."
   },
   "config_check": {
     "button": "Periksa konfigurasi",
@@ -819,7 +835,8 @@
   "named_route": {
     "toggle_label": "Daftarkan sebagai rute bernama (invoke)",
     "name_label": "Nama rute",
-    "name_placeholder": "mis. auth-middleware"
+    "name_placeholder": "mis. auth-middleware",
+    "help": "Juga mendaftarkan rute dengan sebuah nama, agar rute lain dapat memakainya dengan invoke <name>."
   },
   "servers": {
     "tab_all": "Semua",
@@ -912,5 +929,14 @@
     "title": "Snippet",
     "unused": "Tidak diimpor",
     "used_by": "Diimpor oleh {{sites}}"
+  },
+  "proxy_tabs": {
+    "aria_label": "Pengaturan proxy",
+    "has_error": "Ada kesalahan",
+    "general": "Umum",
+    "security": "Keamanan",
+    "routing": "Perutean",
+    "upstreams": "Upstream",
+    "logging": "Log & kesalahan"
   }
 }

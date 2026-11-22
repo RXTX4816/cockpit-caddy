@@ -8,8 +8,6 @@ import {
   FormHelperText,
   HelperText,
   HelperTextItem,
-  InputGroup,
-  InputGroupText,
   Label,
   Modal,
   ModalBody,
@@ -19,9 +17,9 @@ import {
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
-import { useToast, ExternalAddressInput } from "@rxtx4816/cockpit-plugin-base-react/components";
+import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { readProxyConf, parseConfExternalAddresses, CaddyApiError, CaddyfileError, routeHosts, hostsConflict, normalizeExternalHost, formatExternalAddressPreview, isPathOnlyMatcher } from "../api";
-import { TlsModeField, defaultTlsMode, hasPublicName, tlsModeOf, tlsModeToEntry, type TlsMode } from "./TlsModeField";
+import { TlsModeField, hasPublicName, tlsModeOf, tlsModeToEntry, type TlsMode } from "./TlsModeField";
 import { EXTERNAL_ADDRESS_BUILTIN_SCHEMES } from "./externalAddressSchemes";
 import { externalHostFieldError } from "./externalHostField";
 import { isValidPort } from "@rxtx4816/cockpit-plugin-base-react/lib/uri";
@@ -32,19 +30,18 @@ import { RewriteSection } from "./RewriteSection";
 import { RequestHeadersSection } from "./RequestHeadersSection";
 import { ResponseHeadersSection } from "./ResponseHeadersSection";
 import { TransportSection, type TransportValues } from "./TransportSection";
-import { TlsSection, type TlsValues, tlsValuesToAdvanced, tlsValuesToMtls, tlsValuesToCustomTls, tlsConfigToValues, tlsValuesHaveErrors } from "./TlsSection";
+import { TlsSection, type TlsValues, tlsValuesToAdvanced, tlsValuesToMtls, tlsValuesToCustomTls, tlsConfigToValues } from "./TlsSection";
 import { ServerTimeoutsSection, type ServerTimeoutValues } from "./ServerTimeoutsSection";
 import { RequestBodyLimitField } from "./RequestBodyLimitField";
 import { AccessLogSection, type AccessLogValues, accessLogValuesToConfig, accessLogConfigToValues } from "./AccessLogSection";
 import { BasicAuthSection, resolveBasicAuth, type AuthEntry } from "./BasicAuthSection";
 import { ErrorHandlersSection } from "./ErrorHandlersSection";
 import { ForwardAuthSection, validateForwardAuth } from "./ForwardAuthSection";
-import { UpstreamsSection, validateUpstreams, type ExtraUpstream } from "./UpstreamsSection";
-import { LbRetrySection, validateLbRetry, lbRetryValuesToConfig, lbRetryConfigToValues, type LbRetryValues } from "./LbRetrySection";
+import { UpstreamsSection, type ExtraUpstream } from "./UpstreamsSection";
+import { LbRetrySection, lbRetryValuesToConfig, lbRetryConfigToValues, type LbRetryValues } from "./LbRetrySection";
 import type { ErrorHandlerConfig, ForwardAuthConfig, LbPolicy } from "../api";
-import { SectionActions } from "./SectionActions";
-import { sectionAccordionProps } from "./sectionAccordion";
-import { AccordionRow } from "./AccordionRow";
+import { ProxyDialogTabs, InlineAddressField, TargetField, NamedRouteField, firstTabWithError, type ProxyTabKey } from "./proxyDialogParts";
+import { proxyTabFlags, type ProxyTabValues } from "./proxyTabFlags";
 
 interface Props {
   proxy: ProxyEntry;
@@ -55,6 +52,8 @@ interface Props {
   onApiError?: (message: string) => void;
   servers?: ServerDef[];
 }
+
+const noop = () => {};
 
 export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiError, servers }: Props) {
   const namedServer = proxy.namedServerKey ? servers?.find(s => s.key === proxy.namedServerKey) : undefined;
@@ -100,7 +99,7 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
   const [errorHandlers, setErrorHandlers] = useState<ErrorHandlerConfig[]>(proxy.errorHandlers ?? []);
   const [forwardAuth, setForwardAuth] = useState<ForwardAuthConfig | undefined>(proxy.forwardAuth);
   const [tlsValues, setTlsValues] = useState<TlsValues>(tlsConfigToValues(proxy.tlsAdvanced, proxy.mtls, proxy.customTls));
-  const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<ProxyTabKey>("general");
   const [matchers, setMatchers] = useState<RouteMatch | undefined>(proxy.matchers);
   const [imports, setImports] = useState<string[] | undefined>(proxy.imports);
   const [handlePath, setHandlePath] = useState(proxy.handlePath ?? false);
@@ -137,31 +136,42 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
 
   const forwardAuthErr = validateForwardAuth(forwardAuth);
 
-  function validateAndConfirm() {
+  function generalError(): string | null {
     const hostErr = externalHostFieldError(externalHost, t);
-    if (hostErr) {
-      setExtHostErr(hostErr);
-      return;
-    }
-    if (externalScheme && !externalHost.trim()) {
-      setExtHostErr(t("add_proxy.validation_ext_host_required_with_scheme"));
-      return;
-    }
+    if (hostErr) return hostErr;
+    if (externalScheme && !externalHost.trim()) return t("add_proxy.validation_ext_host_required_with_scheme");
     // "https://" in the address triggers Caddy's automatic HTTPS on its own, regardless
     // of the TLS toggle below — letting this combination through would silently create
     // TLS behavior this app doesn't know about and isn't tracking.
-    if (externalScheme === "https" && !tls) {
-      setExtHostErr(t("add_proxy.validation_https_requires_tls"));
+    if (externalScheme === "https" && !tls) return t("add_proxy.validation_https_requires_tls");
+    return null;
+  }
+
+  const targetHostErr = targetHost.trim() ? null : t("add_proxy.validation_target_host_required");
+  const targetPortErr = (() => {
+    const n = parseInt(targetPort, 10);
+    if (!targetPort) return t("add_proxy.validation_target_port_required");
+    return isNaN(n) || !isValidPort(n) ? t("add_proxy.validation_target_port_range") : null;
+  })();
+
+  function validateAndConfirm() {
+    const hostErr = proxy.namedServerKey ? null : generalError();
+    setExtHostErr(hostErr);
+    const after = proxyTabFlags(tabValues, !!hostErr || !!portErr || !!targetHostErr || !!targetPortErr);
+    const errorTab = firstTabWithError(after.hasError);
+    if (errorTab) {
+      setActiveTab(errorTab);
       return;
     }
-    if (validateUpstreams(extraUpstreams)) return;
-    if (validateLbRetry(lbRetry)) return;
-    if (forwardAuthErr) return;
-    setExtHostErr(null);
     saveConfirm.confirm();
   }
 
-  const portErr = portError();
+  const portErr = proxy.namedServerKey ? null : portError();
+  const tabValues: ProxyTabValues = {
+    basicAuth, forwardAuth, forwardAuthError: forwardAuthErr, tlsValues, matchers, rewrite, requestHeaders, responseHeaders,
+    isNamedRoute, extraUpstreams, lbPolicy, lbRetry, transport, accessLog, errorHandlers, serverTimeouts, requestBodyMaxSize,
+  };
+  const flags = proxyTabFlags(tabValues, !!extHostErr || !!portErr || !!targetHostErr || !!targetPortErr);
   const isConfirming = saveConfirm.step !== "idle";
   const isBusy = saveConfirm.step === "submitting";
 
@@ -204,210 +214,153 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
           <Label isCompact color="grey">{targetUrl}</Label>
         </div>
 
-        <Form isHorizontal>
-          <FormGroup label={t("add_proxy.field_label")} fieldId="edit-label">
-            <TextInput
-              id="edit-label"
-              value={label}
-              onChange={(_e, v) => setLabel(v)}
-              placeholder={t("add_proxy.field_label_placeholder")}
-              isDisabled={isConfirming}
-            />
-          </FormGroup>
+        <ProxyDialogTabs
+          active={activeTab}
+          onSelect={setActiveTab}
+          tabs={[
+            {
+              key: "general",
+              hasError: flags.hasError.general,
+              content: (
+                <Form isHorizontal>
+                  <FormGroup label={t("add_proxy.field_label")} fieldId="edit-label">
+                    <TextInput id="edit-label" value={label} onChange={(_e, v) => setLabel(v)} isDisabled={isConfirming} />
+                    <FormHelperText><HelperText><HelperTextItem>{t("add_proxy.field_label_help")}</HelperTextItem></HelperText></FormHelperText>
+                  </FormGroup>
 
-          {proxy.namedServerKey ? (
-            <FormGroup label={t("add_proxy.field_external_address")} fieldId="edit-external-port">
-              <Label isCompact color="blue">
-                {namedServer ? `${namedServer.name} (:${proxy.externalPort})` : `:${proxy.externalPort}`}
-              </Label>
-            </FormGroup>
-          ) : (
-            <FormGroup label={t("add_proxy.field_external_address")} fieldId="edit-external-port" isRequired>
-              <ExternalAddressInput
-                scheme={externalScheme}
-                onSchemeChange={v => { setExternalScheme(v); setExtHostErr(null); }}
-                host={externalHost}
-                onHostChange={v => { setExternalHost(v); setExtHostErr(null); }}
-                port={externalPort}
-                onPortChange={setExternalPort}
-                builtinSchemes={EXTERNAL_ADDRESS_BUILTIN_SCHEMES}
-                suggestedSchemes={extraSchemes}
-                isDisabled={isConfirming}
-                hostValidated={extHostErr ? "error" : "default"}
-                portValidated={portErr ? "error" : "default"}
-                portPlaceholder="8443"
-                hostPlaceholder={t("add_proxy.ext_host_placeholder")}
-                schemeNoneLabel={t("add_proxy.ext_scheme_none")}
-                schemeCustomLabel={t("add_proxy.ext_scheme_custom")}
-              />
-              {(portErr || extHostErr) && (
-                <FormHelperText>
-                  <HelperText><HelperTextItem variant="error">{extHostErr ?? portErr}</HelperTextItem></HelperText>
-                </FormHelperText>
-              )}
-            </FormGroup>
-          )}
+                  {proxy.namedServerKey ? (
+                    <FormGroup label={t("add_proxy.field_external_address")} fieldId="edit-external-port">
+                      <Label isCompact color="blue">
+                        {namedServer ? `${namedServer.name} (:${proxy.externalPort})` : `:${proxy.externalPort}`}
+                      </Label>
+                    </FormGroup>
+                  ) : (
+                    <FormGroup label={t("add_proxy.field_external_address")} fieldId="edit-external-port" isRequired>
+                      <InlineAddressField
+                        scheme={externalScheme}
+                        onSchemeChange={v => { setExternalScheme(v); setExtHostErr(null); }}
+                        host={externalHost}
+                        onHostChange={v => { setExternalHost(v); setExtHostErr(null); }}
+                        port={externalPort}
+                        onPortChange={setExternalPort}
+                        builtinSchemes={EXTERNAL_ADDRESS_BUILTIN_SCHEMES}
+                        suggestedSchemes={extraSchemes}
+                        isDisabled={isConfirming}
+                        hostError={!!extHostErr}
+                        portError={!!portErr}
+                      />
+                      {(portErr || extHostErr) && (
+                        <FormHelperText>
+                          <HelperText>
+                            {extHostErr && <HelperTextItem variant="error">{extHostErr}</HelperTextItem>}
+                            {portErr && <HelperTextItem variant="error">{portErr}</HelperTextItem>}
+                          </HelperText>
+                        </FormHelperText>
+                      )}
+                    </FormGroup>
+                  )}
 
-          <FormGroup label={t("add_proxy.field_target_host")} fieldId="edit-target-host" isRequired>
-            <InputGroup>
-              <div style={{ display: "flex", gap: 0, width: "100%" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
-                  <Button
-                    variant={targetScheme === "http" ? "primary" : "plain"}
-                    size="sm"
-                    onClick={() => setTargetScheme("http")}
+                  <TargetField
+                    idPrefix="edit-"
+                    scheme={targetScheme}
+                    onSchemeChange={setTargetScheme}
+                    host={targetHost}
+                    onHostChange={setTargetHost}
+                    port={targetPort}
+                    onPortChange={setTargetPort}
+                    skipVerify={tlsSkipVerify}
+                    onSkipVerifyChange={setTlsSkipVerify}
+                    hostError={targetHostErr ?? undefined}
+                    portError={targetPortErr ?? undefined}
                     isDisabled={isConfirming}
-                  >http</Button>
-                  <Button
-                    variant={targetScheme === "https" ? "primary" : "plain"}
-                    size="sm"
-                    onClick={() => setTargetScheme("https")}
+                  />
+
+                  {!proxy.namedServerKey && (
+                    <TlsModeField id="edit-tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isConfirming} onDemand={tlsOnDemand} onOnDemandChange={setTlsOnDemand} />
+                  )}
+
+                  <FormGroup label={t("add_proxy.field_compress")} fieldId="edit-compress">
+                    <Checkbox
+                      id="edit-compress"
+                      label={t("add_proxy.field_compress_short")}
+                      isChecked={compress}
+                      onChange={(_e, checked) => setCompress(checked)}
+                      isDisabled={isConfirming}
+                    />
+                  </FormGroup>
+                  <SnippetImportsField value={imports} onChange={setImports} snippetSettings={proxy.snippetSettings} isDisabled={isConfirming} />
+                </Form>
+              ),
+            },
+            {
+              key: "security",
+              configured: flags.configured.security,
+              hasError: flags.hasError.security,
+              content: (
+                <>
+                  <BasicAuthSection value={basicAuth} onChange={setBasicAuth} isDisabled={isConfirming} isExpanded onToggleExpanded={noop} />
+                  <ForwardAuthSection value={forwardAuth} onChange={setForwardAuth} isDisabled={isConfirming} uriError={forwardAuthErr ?? undefined} isExpanded onToggleExpanded={noop} />
+                  {!proxy.namedServerKey && (
+                    <TlsSection value={tlsValues} onChange={setTlsValues} isDisabled={isConfirming} hostless={!externalHost.trim()} isExpanded onToggleExpanded={noop} />
+                  )}
+                </>
+              ),
+            },
+            {
+              key: "routing",
+              configured: flags.configured.routing,
+              content: (
+                <>
+                  <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!isPathOnlyMatcher(v)) setHandlePath(false); }} isDisabled={isConfirming} isExpanded onToggleExpanded={noop} />
+                  {isPathOnlyMatcher(matchers) && (
+                    <Checkbox
+                      id="edit-proxy-handle-path"
+                      label={t("handle_path.label")}
+                      isChecked={handlePath}
+                      onChange={(_e, v) => setHandlePath(v)}
+                      isDisabled={isConfirming}
+                    />
+                  )}
+                  <RewriteSection value={rewrite} onChange={setRewrite} isDisabled={isConfirming} isExpanded onToggleExpanded={noop} />
+                  <RequestHeadersSection value={requestHeaders} onChange={setRequestHeaders} isDisabled={isConfirming} isExpanded onToggleExpanded={noop} />
+                  <ResponseHeadersSection value={responseHeaders} onChange={setResponseHeaders} isDisabled={isConfirming} isExpanded onToggleExpanded={noop} />
+                  <NamedRouteField idPrefix="edit-proxy-" enabled={isNamedRoute} onEnabledChange={setIsNamedRoute} name={namedRouteName} onNameChange={setNamedRouteName} isDisabled={isConfirming} />
+                </>
+              ),
+            },
+            {
+              key: "upstreams",
+              configured: flags.configured.upstreams,
+              hasError: flags.hasError.upstreams,
+              content: (
+                <>
+                  <UpstreamsSection
+                    value={extraUpstreams}
+                    lbPolicy={lbPolicy}
+                    onChange={(u, p) => { setExtraUpstreams(u); setLbPolicy(p); }}
                     isDisabled={isConfirming}
-                  >https</Button>
-                </div>
-                <TextInput
-                  id="edit-target-host"
-                  value={targetHost}
-                  onChange={(_e, v) => setTargetHost(v)}
-                  isDisabled={isConfirming}
-                  style={{ flex: 1 }}
-                />
-                <InputGroupText>:</InputGroupText>
-                <TextInput
-                  id="edit-target-port"
-                  type="number"
-                  value={targetPort}
-                  onChange={(_e, v) => setTargetPort(v)}
-                  isDisabled={isConfirming}
-                  style={{ width: 90 }}
-                />
-              </div>
-            </InputGroup>
-            {targetScheme === "https" && (
-              <Checkbox
-                id="edit-tls-skip-verify"
-                label={t("add_proxy.field_tls_skip_verify")}
-                isChecked={tlsSkipVerify}
-                onChange={(_e, checked) => setTlsSkipVerify(checked)}
-                isDisabled={isConfirming}
-                style={{ marginTop: "0.4rem" }}
-              />
-            )}
-          </FormGroup>
-
-          {!proxy.namedServerKey && (
-            <div>
-              <TlsModeField id="edit-tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isConfirming} onDemand={tlsOnDemand} onOnDemandChange={setTlsOnDemand} />
-              <SectionActions onDefaults={() => setTlsModeChoice(defaultTlsMode(externalHost))} isDisabled={isConfirming} />
-            </div>
-          )}
-
-          <FormGroup label={t("add_proxy.field_compress")} fieldId="edit-compress">
-            <Checkbox
-              id="edit-compress"
-              label={t("add_proxy.field_compress_short")}
-              isChecked={compress}
-              onChange={(_e, checked) => setCompress(checked)}
-              isDisabled={isConfirming}
-            />
-          </FormGroup>
-          <RequestBodyLimitField value={requestBodyMaxSize} onChange={setRequestBodyMaxSize} isDisabled={isConfirming} idPrefix="edit-proxy" />
-        </Form>
-        <div
-          style={{
-            border: "1px solid var(--pf-t--global--border--color--default)",
-            borderRadius: "var(--pf-t--global--border--radius--small)",
-            padding: "0 0.75rem",
-            marginTop: "var(--pf-v6-global--spacer--md)",
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          <AccordionRow>
-            <TransportSection value={transport} onChange={setTransport} isDisabled={isConfirming} {...sectionAccordionProps("transport", expandedSection, setExpandedSection)} />
-          </AccordionRow>
-          {!proxy.namedServerKey && (
-            <AccordionRow>
-              <TlsSection value={tlsValues} onChange={setTlsValues} isDisabled={isConfirming} hostless={!externalHost.trim()} {...sectionAccordionProps("tls", expandedSection, setExpandedSection)} />
-            </AccordionRow>
-          )}
-          <AccordionRow>
-            <AccessLogSection value={accessLog} onChange={setAccessLog} isDisabled={isConfirming} {...sectionAccordionProps("accessLog", expandedSection, setExpandedSection)} />
-          </AccordionRow>
-          <AccordionRow>
-            <ErrorHandlersSection value={errorHandlers} onChange={setErrorHandlers} isDisabled={isConfirming} {...sectionAccordionProps("errorHandlers", expandedSection, setExpandedSection)} />
-          </AccordionRow>
-          <AccordionRow>
-            <ForwardAuthSection
-              value={forwardAuth}
-              onChange={setForwardAuth}
-              isDisabled={isConfirming}
-              uriError={forwardAuthErr ?? undefined}
-              {...sectionAccordionProps("forwardAuth", expandedSection, setExpandedSection)}
-            />
-          </AccordionRow>
-          <AccordionRow>
-            <ServerTimeoutsSection value={serverTimeouts} onChange={setServerTimeouts} isDisabled={isConfirming} {...sectionAccordionProps("serverTimeouts", expandedSection, setExpandedSection)} />
-          </AccordionRow>
-          <AccordionRow>
-            <BasicAuthSection value={basicAuth} onChange={setBasicAuth} isDisabled={isConfirming} {...sectionAccordionProps("basicAuth", expandedSection, setExpandedSection)} />
-          </AccordionRow>
-          <AccordionRow>
-            <RewriteSection value={rewrite} onChange={setRewrite} isDisabled={isConfirming} {...sectionAccordionProps("rewrite", expandedSection, setExpandedSection)} />
-          </AccordionRow>
-          <AccordionRow>
-            <RequestHeadersSection value={requestHeaders} onChange={setRequestHeaders} isDisabled={isConfirming} {...sectionAccordionProps("requestHeaders", expandedSection, setExpandedSection)} />
-          </AccordionRow>
-          <AccordionRow>
-            <ResponseHeadersSection value={responseHeaders} onChange={setResponseHeaders} isDisabled={isConfirming} {...sectionAccordionProps("responseHeaders", expandedSection, setExpandedSection)} />
-          </AccordionRow>
-          <AccordionRow>
-            <UpstreamsSection
-              value={extraUpstreams}
-              lbPolicy={lbPolicy}
-              onChange={(u, p) => { setExtraUpstreams(u); setLbPolicy(p); }}
-              isDisabled={isConfirming}
-              {...sectionAccordionProps("upstreams", expandedSection, setExpandedSection)}
-            />
-          </AccordionRow>
-          <AccordionRow>
-            <LbRetrySection value={lbRetry} onChange={setLbRetry} isDisabled={isConfirming} {...sectionAccordionProps("lbRetry", expandedSection, setExpandedSection)} />
-          </AccordionRow>
-          <AccordionRow last>
-            <SnippetImportsField value={imports} onChange={setImports} snippetSettings={proxy.snippetSettings} isDisabled={isConfirming} />
-            <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!isPathOnlyMatcher(v)) setHandlePath(false); }} isDisabled={isConfirming} {...sectionAccordionProps("routeMatchers", expandedSection, setExpandedSection)} />
-          </AccordionRow>
-        </div>
-        {isPathOnlyMatcher(matchers) && (
-          <Checkbox
-            id="edit-proxy-handle-path"
-            label={t("handle_path.label")}
-            isChecked={handlePath}
-            onChange={(_e, v) => setHandlePath(v)}
-            isDisabled={isConfirming}
-            style={{ marginLeft: "1rem", marginBottom: "0.5rem" }}
-          />
-        )}
-        <div style={{ marginLeft: "1rem", marginBottom: "0.5rem", display: "flex", flexDirection: "column", gap: "0.4rem" }}>
-          <Checkbox
-            id="edit-proxy-named-route"
-            label={t("named_route.toggle_label")}
-            isChecked={isNamedRoute}
-            onChange={(_e, v) => { setIsNamedRoute(v); if (!v) setNamedRouteName(""); }}
-            isDisabled={isConfirming}
-          />
-          {isNamedRoute && (
-            <TextInput
-              id="edit-proxy-named-route-name"
-              aria-label={t("named_route.name_label")}
-              placeholder={t("named_route.name_placeholder")}
-              value={namedRouteName}
-              onChange={(_e, v) => setNamedRouteName(v)}
-              isDisabled={isConfirming}
-              style={{ maxWidth: "20rem" }}
-            />
-          )}
-        </div>
+                    isExpanded
+                    onToggleExpanded={noop}
+                  />
+                  <LbRetrySection value={lbRetry} onChange={setLbRetry} isDisabled={isConfirming} isExpanded onToggleExpanded={noop} />
+                  <TransportSection value={transport} onChange={setTransport} isDisabled={isConfirming} isExpanded onToggleExpanded={noop} />
+                </>
+              ),
+            },
+            {
+              key: "logging",
+              configured: flags.configured.logging,
+              content: (
+                <>
+                  <AccessLogSection value={accessLog} onChange={setAccessLog} isDisabled={isConfirming} isExpanded onToggleExpanded={noop} />
+                  <ErrorHandlersSection value={errorHandlers} onChange={setErrorHandlers} isDisabled={isConfirming} isExpanded onToggleExpanded={noop} />
+                  <ServerTimeoutsSection value={serverTimeouts} onChange={setServerTimeouts} isDisabled={isConfirming} isExpanded onToggleExpanded={noop} />
+                  <RequestBodyLimitField value={requestBodyMaxSize} onChange={setRequestBodyMaxSize} isDisabled={isConfirming} idPrefix="edit-proxy" />
+                </>
+              ),
+            },
+          ]}
+        />
 
         {saveConfirm.error && (
           <Alert variant="danger" isInline title={saveConfirm.error} style={{ marginTop: "var(--pf-v6-global--spacer--md)" }} />
@@ -493,7 +446,7 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
           </>
         ) : (
           <>
-            <Button variant="primary" onClick={validateAndConfirm} isDisabled={!!portErr || !!forwardAuthErr || tlsValuesHaveErrors(tlsValues)}>
+            <Button variant="primary" onClick={validateAndConfirm}>
               {t("edit_proxy.save_button")}
             </Button>
             <Button variant="link" onClick={onClose}>{t("common.cancel")}</Button>

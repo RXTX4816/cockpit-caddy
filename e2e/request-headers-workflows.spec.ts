@@ -7,7 +7,7 @@
  */
 import type { Locator } from '@playwright/test';
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { readConf, spawnCmd } from './helpers';
+import { readConf, spawnCmd, openSection } from './helpers';
 import { waitForListener } from './live';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
@@ -25,7 +25,7 @@ function proxyRow(page: import('@playwright/test').Page, port: number) {
  *  the Request Headers region specifically, matching how PatternFly exposes the
  *  ExpandableSection's toggle text as the region's accessible name. */
 function requestHeadersSection(modal: Locator) {
-  return modal.getByLabel('Request Headers (optional)');
+  return modal.getByRole('region', { name: /^request headers/i });
 }
 
 test('add request header preset writes correct Caddyfile directive', async ({ pluginPage: page }) => {
@@ -37,7 +37,7 @@ test('add request header preset writes correct Caddyfile directive', async ({ pl
   await modal.locator('#target-port').fill('3000');
   await modal.locator('#tls').selectOption('off');
 
-  await modal.getByRole('button', { name: /request headers/i }).click();
+  await openSection(modal, 'requestHeaders');
   await modal.getByRole('button', { name: 'X-Forwarded-Proto' }).click();
 
   await modal.getByRole('button', { name: /^add proxy$/i }).click();
@@ -57,7 +57,7 @@ test('custom set/add/delete header operations write correct Caddyfile directives
   await modal.locator('#target-port').fill('3000');
   await modal.locator('#tls').selectOption('off');
 
-  await modal.getByRole('button', { name: /request headers/i }).click();
+  await openSection(modal, 'requestHeaders');
 
   // set
   await requestHeadersSection(modal).getByLabel('Header name').fill('X-Custom-Set');
@@ -122,7 +122,7 @@ test('request headers actually reach the backend', async ({ pluginPage: page }) 
     await modal.locator('#target-port').fill(String(targetPort));
     await modal.locator('#tls').selectOption('off');
 
-    await modal.getByRole('button', { name: /request headers/i }).click();
+    await openSection(modal, 'requestHeaders');
     await requestHeadersSection(modal).getByLabel('Header name').fill('X-E2E-Marker');
     await requestHeadersSection(modal).getByLabel('Value').fill('rh-test-value');
     await requestHeadersSection(modal).getByRole('button', { name: /^add$/i }).last().click();
@@ -160,7 +160,7 @@ test('remove header operation updates the Caddyfile', async ({ pluginPage: page 
   await modal1.getByLabel(/target host/i).fill('localhost');
   await modal1.locator('#target-port').fill('3000');
   await modal1.locator('#tls').selectOption('off');
-  await modal1.getByRole('button', { name: /request headers/i }).click();
+  await openSection(modal1, 'requestHeaders');
   await requestHeadersSection(modal1).getByLabel('Header name').fill('X-To-Remove');
   await requestHeadersSection(modal1).getByLabel('Value').fill('temp');
   await requestHeadersSection(modal1).getByRole('button', { name: /^add$/i }).last().click();
@@ -173,7 +173,7 @@ test('remove header operation updates the Caddyfile', async ({ pluginPage: page 
 
   await proxyRow(page, 19244).getByRole('button', { name: /^edit$/i }).click();
   const modal2 = page.getByRole('dialog');
-  await modal2.getByRole('button', { name: /request headers/i }).click();
+  await openSection(modal2, 'requestHeaders');
   await modal2.getByRole('button', { name: 'remove', exact: true }).click();
   await modal2.getByRole('button', { name: /save changes/i }).click();
   await modal2.getByRole('button', { name: /^confirm$/i }).click();

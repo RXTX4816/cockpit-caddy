@@ -1,13 +1,13 @@
 import { useRef, useState, useEffect } from "react";
 import {
   Button,
-  ExpandableSection,
   Label,
   TextInput,
   ToggleGroup,
   ToggleGroupItem,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
+import { SectionShell } from "./sectionLayout";
 import type { HeaderOperation } from "../api";
 import { SectionActions } from "./SectionActions";
 import { SectionConfiguredDot } from "./SectionConfiguredDot";
@@ -79,7 +79,7 @@ export function ResponseHeadersSection({ value, onChange, isDisabled, isExpanded
   }
 
   return (
-    <ExpandableSection
+    <SectionShell
       toggleContent={<>{t("response_headers.section_title")}{ops.length > 0 && <SectionConfiguredDot />}</>}
       isIndented
       isExpanded={expanded}
@@ -168,6 +168,6 @@ export function ResponseHeadersSection({ value, onChange, isDisabled, isExpanded
 
         <div ref={bottomRef} />
       </div>
-    </ExpandableSection>
+    </SectionShell>
   );
 }

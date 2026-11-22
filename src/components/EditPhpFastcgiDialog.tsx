@@ -155,7 +155,7 @@ export function EditPhpFastcgiDialog({ proxy, existingPorts, onSave, onClose }: 
               id="php-edit-upstream"
               value={upstream}
               onChange={(_e, v) => { setUpstream(v); setUpstreamErr(null); }}
-              placeholder="unix//run/php-fpm.sock"
+              placeholder={t("common.example_value", { value: "unix//run/php-fpm.sock" })}
               isDisabled={isLocked}
               validated={upstreamErr ? "error" : "default"}
             />
@@ -191,7 +191,7 @@ export function EditPhpFastcgiDialog({ proxy, existingPorts, onSave, onClose }: 
               id="php-edit-index"
               value={index}
               onChange={(_e, v) => setIndex(v)}
-              placeholder="index.php"
+              placeholder={t("common.default_value", { value: "index.php" })}
               isDisabled={isLocked}
             />
           </FormGroup>
@@ -201,7 +201,7 @@ export function EditPhpFastcgiDialog({ proxy, existingPorts, onSave, onClose }: 
               id="php-edit-split-path"
               value={splitPath}
               onChange={(_e, v) => setSplitPath(v)}
-              placeholder=".php"
+              placeholder={t("common.default_value", { value: ".php" })}
               isDisabled={isLocked}
             />
             <FormHelperText>

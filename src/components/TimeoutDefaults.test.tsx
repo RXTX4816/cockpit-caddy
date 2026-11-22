@@ -23,10 +23,11 @@ describe("timeout Defaults mean Caddy's defaults (#249)", () => {
       readTimeout: "", readHeaderTimeout: "", writeTimeout: "", idleTimeout: "", maxHeaderBytes: "", disableHttp3: false,
     });
     expect(screen.getByLabelText("Read body timeout").getAttribute("placeholder")).toBe("none");
-    expect(screen.getByLabelText("Read header timeout").getAttribute("placeholder")).toBe("1m");
+    expect(screen.getByLabelText("Read header timeout").getAttribute("placeholder")).toBe("Default: 1m");
     expect(screen.getByLabelText("Write timeout").getAttribute("placeholder")).toBe("none");
-    expect(screen.getByLabelText("Idle timeout").getAttribute("placeholder")).toBe("5m");
-    expect(screen.getByLabelText("Max header size (bytes)").getAttribute("placeholder")).toBe("16384");
+    expect(screen.getByLabelText("Idle timeout").getAttribute("placeholder")).toBe("Default: 5m");
+    // #260: a size field; Caddy's 16384 bytes read as 16 KB whichever unit is selected.
+    expect(screen.getByLabelText("Max header size").getAttribute("placeholder")).toBe("Default: 16 KB");
   });
 
   it("upstream timeouts: Defaults clears both fields and shows Caddy's values as placeholders", () => {
@@ -34,7 +35,7 @@ describe("timeout Defaults mean Caddy's defaults (#249)", () => {
     render(<TransportSection value={{ dialTimeout: "10s", responseHeaderTimeout: "30s" }} onChange={onChange} isExpanded />);
     applyDefaults();
     expect(onChange).toHaveBeenCalledWith({ dialTimeout: "", responseHeaderTimeout: "" });
-    expect(screen.getByLabelText("Connect timeout").getAttribute("placeholder")).toBe("3s");
+    expect(screen.getByLabelText("Connect timeout").getAttribute("placeholder")).toBe("Default: 3s");
     expect(screen.getByLabelText("Response header timeout").getAttribute("placeholder")).toBe("none");
   });
 });

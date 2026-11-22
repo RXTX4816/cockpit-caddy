@@ -1,0 +1,35 @@
+import { describe, it, expect } from "vitest";
+import { proxyTabFlags, type ProxyTabValues } from "./proxyTabFlags";
+import { accessLogConfigToValues } from "./AccessLogSection";
+import { lbRetryConfigToValues } from "./LbRetrySection";
+import { tlsConfigToValues } from "./TlsSection";
+
+const base: ProxyTabValues = {
+  basicAuth: [], forwardAuth: undefined, forwardAuthError: null, tlsValues: tlsConfigToValues(undefined, undefined),
+  matchers: undefined, rewrite: undefined, requestHeaders: undefined, responseHeaders: undefined, isNamedRoute: false,
+  extraUpstreams: [], lbPolicy: "", lbRetry: lbRetryConfigToValues(undefined), transport: { dialTimeout: "", responseHeaderTimeout: "" },
+  accessLog: accessLogConfigToValues(undefined), errorHandlers: [],
+  serverTimeouts: { readTimeout: "", readHeaderTimeout: "", writeTimeout: "", idleTimeout: "", maxHeaderBytes: "", disableHttp3: false },
+  requestBodyMaxSize: "",
+};
+
+const dots = (v: Partial<ProxyTabValues>) => Object.entries(proxyTabFlags({ ...base, ...v }, false).configured).filter(([, on]) => on).map(([k]) => k);
+
+// #260: a dot marks every tab except General that holds a non-default value.
+describe("proxyTabFlags", () => {
+  it("nothing set, no dots", () => {
+    expect(dots({})).toEqual([]);
+  });
+
+  it("each setting marks only its own tab", () => {
+    expect(dots({ basicAuth: [{ username: "a", password: "b" }] })).toEqual(["security"]);
+    expect(dots({ matchers: { not: { path: ["/x"] } } })).toEqual(["routing"]);
+    expect(dots({ transport: { dialTimeout: "5s", responseHeaderTimeout: "" } })).toEqual(["upstreams"]);
+    expect(dots({ requestBodyMaxSize: "1024" })).toEqual(["logging"]);
+  });
+
+  it("errors mark their tab", () => {
+    const flags = proxyTabFlags({ ...base, forwardAuthError: "forward_auth.validation_uri_required", extraUpstreams: [{ host: "", port: "x" }] }, true);
+    expect(flags.hasError).toEqual({ general: true, security: true, routing: false, upstreams: true, logging: false });
+  });
+});

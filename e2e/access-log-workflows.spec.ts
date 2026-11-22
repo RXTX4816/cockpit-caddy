@@ -7,7 +7,7 @@
  * /etc/caddy, or Caddy silently can't write to it despite the config being valid.
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { readFile, readConf, spawnCmd, CADDYFILE_PATH } from './helpers';
+import { readFile, readConf, spawnCmd, CADDYFILE_PATH, openSection } from './helpers';
 import { waitForListener } from './live';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
@@ -24,7 +24,7 @@ test('enabling per-route access log writes the correct log directive', async ({ 
   await modal.locator('#target-port').fill('3000');
   await modal.locator('#tls').selectOption('off');
 
-  await modal.getByRole('button', { name: /access logging/i }).click();
+  await openSection(modal, 'accessLog');
   await modal.locator('#al-enabled').check();
   await modal.locator('#al-output-file').check();
   await modal.locator('#al-file-path').fill('/var/log/caddy/e2e-access-19450.log');
@@ -58,7 +58,7 @@ test('a real request produces a log entry in the configured access log file', as
     await modal.locator('#target-port').fill('19453');
     await modal.locator('#tls').selectOption('off');
 
-    await modal.getByRole('button', { name: /access logging/i }).click();
+    await openSection(modal, 'accessLog');
     await modal.locator('#al-enabled').check();
     await modal.locator('#al-output-file').check();
     await modal.locator('#al-file-path').fill(logPath);

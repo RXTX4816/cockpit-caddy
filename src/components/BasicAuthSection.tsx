@@ -1,11 +1,11 @@
 import { useState } from "react";
 import {
   Button,
-  ExpandableSection,
   FormGroup,
   TextInput,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
+import { SectionShell } from "./sectionLayout";
 import { hashPassword } from "../api";
 import { SectionActions } from "./SectionActions";
 import { SectionConfiguredDot } from "./SectionConfiguredDot";
@@ -59,7 +59,7 @@ export function BasicAuthSection({ value, onChange, isDisabled, isExpanded: isEx
   }
 
   return (
-    <ExpandableSection
+    <SectionShell
       toggleContent={<>{t("basic_auth.section_title")}{value.length > 0 && <SectionConfiguredDot />}</>}
       isIndented
       isExpanded={expanded}
@@ -77,7 +77,7 @@ export function BasicAuthSection({ value, onChange, isDisabled, isExpanded: isEx
                 id={`auth-user-${idx}`}
                 value={entry.username}
                 onChange={(_e, v) => update(idx, { username: v })}
-                placeholder="alice"
+                placeholder={t("common.example_value", { value: "alice" })}
                 isDisabled={isDisabled}
               />
             </FormGroup>
@@ -106,6 +106,6 @@ export function BasicAuthSection({ value, onChange, isDisabled, isExpanded: isEx
           </Button>
         </div>
       </div>
-    </ExpandableSection>
+    </SectionShell>
   );
 }

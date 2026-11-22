@@ -3,7 +3,6 @@ import {
   Alert,
   Button,
   Checkbox,
-  ExpandableSection,
   FormGroup,
   FormHelperText,
   HelperText,
@@ -12,6 +11,7 @@ import {
   TextInput,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
+import { ResettableTextInput, SectionShell } from "./sectionLayout";
 import type { MtlsMode, TlsProtocolVersion } from "../api";
 import { readFile, parseCertDetails, type CertDetails } from "../api";
 import { SectionActions } from "./SectionActions";
@@ -197,7 +197,7 @@ export function TlsSection({ value, onChange, isDisabled, hostless, isExpanded: 
   const caCheck = useFileCheck(value.customCaFile, true);
 
   return (
-    <ExpandableSection
+    <SectionShell
       toggleText={toggleText}
       isIndented
       isExpanded={expanded}
@@ -217,7 +217,7 @@ export function TlsSection({ value, onChange, isDisabled, hostless, isExpanded: 
           id="tls-custom-cert"
           value={value.customCertFile}
           onChange={(_e, v) => set({ customCertFile: v })}
-          placeholder="/etc/caddy/certs/example.com.pem"
+          placeholder={t("common.example_value", { value: "/etc/caddy/certs/example.com.pem" })}
           isDisabled={isDisabled}
         />
         <FileCheckStatus state={certCheck} />
@@ -228,7 +228,7 @@ export function TlsSection({ value, onChange, isDisabled, hostless, isExpanded: 
           id="tls-custom-key"
           value={value.customKeyFile}
           onChange={(_e, v) => set({ customKeyFile: v })}
-          placeholder="/etc/caddy/certs/example.com.key"
+          placeholder={t("common.example_value", { value: "/etc/caddy/certs/example.com.key" })}
           isDisabled={isDisabled}
         />
         <FileCheckStatus state={keyCheck} />
@@ -242,7 +242,7 @@ export function TlsSection({ value, onChange, isDisabled, hostless, isExpanded: 
           id="tls-custom-ca"
           value={value.customCaFile}
           onChange={(_e, v) => set({ customCaFile: v })}
-          placeholder="/etc/caddy/certs/intermediate.pem"
+          placeholder={t("common.example_value", { value: "/etc/caddy/certs/intermediate.pem" })}
           isDisabled={isDisabled}
         />
         <FileCheckStatus state={caCheck} />
@@ -348,7 +348,7 @@ export function TlsSection({ value, onChange, isDisabled, hostless, isExpanded: 
               id="tls-cert-lifetime"
               value={value.certLifetime}
               onChange={(_e, v) => set({ certLifetime: v })}
-              placeholder={t("tls_policy.cert_lifetime_placeholder")}
+              placeholder={t("common.example_value", { value: t("tls_policy.cert_lifetime_placeholder") })}
               validated={certLifetimeErr ? "error" : "default"}
               isDisabled={isDisabled}
             />
@@ -363,11 +363,11 @@ export function TlsSection({ value, onChange, isDisabled, hostless, isExpanded: 
             <FormHelperText style={{ marginBottom: "0.25rem" }}>
               <HelperText><HelperTextItem>{t("tls_policy.renewal_window_ratio_help")}</HelperTextItem></HelperText>
             </FormHelperText>
-            <TextInput
+            <ResettableTextInput
               id="tls-renewal-ratio"
               value={value.renewalWindowRatio}
               onChange={(_e, v) => set({ renewalWindowRatio: v })}
-              placeholder="0.33"
+              placeholder={t("common.default_value", { value: "0.33" })}
               validated={renewalWindowRatioErr ? "error" : "default"}
               isDisabled={isDisabled}
             />
@@ -417,12 +417,12 @@ export function TlsSection({ value, onChange, isDisabled, hostless, isExpanded: 
             id="tls-trusted-ca"
             value={value.trustedCaFile}
             onChange={(_e, v) => set({ trustedCaFile: v })}
-            placeholder="/etc/caddy/certs/ca.pem"
+            placeholder={t("common.example_value", { value: "/etc/caddy/certs/ca.pem" })}
             isDisabled={isDisabled}
           />
         </FormGroup>
       )}
-    </ExpandableSection>
+    </SectionShell>
   );
 }
 

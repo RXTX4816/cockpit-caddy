@@ -6,7 +6,7 @@
  * and server-level edit/delete.
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { addServer, addProxy, readConf, rowAction } from './helpers';
+import { addServer, addProxy, readConf, rowAction, openSection } from './helpers';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
   await dismissAdminBanner(page);
@@ -54,7 +54,7 @@ async function addRouteToActiveServer(
   await modal.getByLabel(/target host/i).fill(target.host);
   await modal.locator('#target-port').fill(String(target.port));
   if (pathMatcher) {
-    await modal.getByText(/route matchers/i).click();
+    await openSection(modal, 'routeMatchers');
     await modal.getByLabel('Path', { exact: true }).fill(pathMatcher);
     await modal.getByRole('button', { name: /^add path$/i }).click();
   }

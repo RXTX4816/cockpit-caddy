@@ -16,7 +16,15 @@
     "confirm_apply": "החלה",
     "configured": "מוגדר",
     "remove_aria": "הסרה",
-    "header_op_aria": "פעולת כותרת"
+    "header_op_aria": "פעולת כותרת",
+    "default_value": "ברירת מחדל: {{value}}",
+    "reset_default": "איפוס לברירת המחדל של Caddy",
+    "size_unit": "יחידה",
+    "unit_b": "בתים",
+    "unit_kb": "KB",
+    "unit_mb": "MB",
+    "unit_gb": "GB",
+    "example_value": "לדוגמה {{value}}"
   },
   "app": {
     "title": "Caddy",
@@ -122,7 +130,7 @@
     "validation_ext_host_duplicate": "\"{{host}}\" מופיע פעמיים.",
     "validation_https_requires_tls": "הפרוטוקול \"https\" מחייב להפעיל TLS למטה — אחרת Caddy ינהל HTTPS בעצמו, בלי קשר להגדרות האפליקציה הזו. יש להפעיל TLS או לבחור פרוטוקול אחר.",
     "field_target_host": "מארח יעד",
-    "field_target_host_placeholder": "localhost",
+    "field_target_host_placeholder": "לדוגמה localhost",
     "field_tls_skip_verify": "דילוג על אימות TLS מול השרת האחורי (לתעודות חתומות עצמית בשרת האחורי)",
     "field_tls": "הפעלת TLS (ה-CA הפנימי של Caddy)",
     "field_tls_short": "הפעלת TLS (CA פנימי)",
@@ -138,7 +146,16 @@
     "validation_target_port_required": "נדרש פורט יעד",
     "validation_target_port_range": "פורט היעד חייב להיות בין 1 ל-65535",
     "validation_target_host_required": "נדרש מארח יעד",
-    "confirm_body": "ייווצר reverse proxy ‏:{{port}} → {{target}} ותצורת Caddy תיטען מחדש."
+    "confirm_body": "ייווצר reverse proxy ‏:{{port}} → {{target}} ותצורת Caddy תיטען מחדש.",
+    "ext_host_label": "מארח חיצוני",
+    "ext_port_label": "פורט חיצוני",
+    "ext_port_placeholder": "לדוגמה 8443",
+    "ext_scheme_custom_input": "פרוטוקול מותאם",
+    "ext_scheme_label": "פרוטוקול",
+    "field_label_help": "שם לאתר הזה ברשימה, לדוגמה Grafana.",
+    "target_port_label": "פורט יעד",
+    "target_port_placeholder": "לדוגמה 8080",
+    "target_scheme_label": "פרוטוקול יעד"
   },
   "add_static": {
     "title": "הוספת שרת קבצים סטטי",
@@ -248,16 +265,15 @@
     "read_header_timeout": "מגבלת זמן לקריאת הכותרות",
     "write_timeout": "מגבלת זמן לכתיבה",
     "idle_timeout": "מגבלת זמן לחוסר פעילות",
-    "max_header_bytes": "גודל כותרות מרבי (בייטים)",
-    "max_header_bytes_help": "הגודל המרבי של כותרות הבקשה בבתים (ברירת המחדל של Caddy:‏ 16 KiB = 16384)",
+    "max_header_bytes": "גודל כותרות מרבי",
+    "max_header_bytes_help": "הגודל המרבי של כותרות הבקשה (ברירת המחדל של Caddy:‏ 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "השבתת HTTP/3",
     "http3_help": "Caddy מפעיל כברירת מחדל HTTP/1.1, ‏HTTP/2 ו-HTTP/3 כשמוגדר TLS. HTTP/3 רץ על UDP באותו פורט כמו HTTPS — אם חומת האש חוסמת UDP, השבתה כאן תשאיר רק HTTP/1.1 ו-HTTP/2."
   },
   "request_body": {
-    "field_label": "גודל מרבי לגוף הבקשה (בייטים, אופציונלי)",
-    "field_placeholder": "10485760",
-    "field_help": "דוחה בקשות עם גוף גדול יותר לפני שהן מגיעות לשרת האחורי. יש להשאיר ריק ללא מגבלה (ברירת המחדל של Caddy). למשל ‎1048576 = 1 MB, ‏10485760 = 10 MB."
+    "field_label": "גודל מרבי של גוף הבקשה",
+    "field_help": "גופי בקשה גדולים יותר נדחים לפני שהם מגיעים לשרת. השאירו ריק ללא מגבלה (ברירת המחדל של Caddy)."
   },
   "rewrite": {
     "section_title": "שכתוב URI (אופציונלי)",
@@ -500,7 +516,7 @@
     "roll_keep_count": "מספר קבצים מוחלפים לשמירה",
     "roll_keep_days": "גיל מרבי של קבצים מוחלפים (ימים)",
     "roll_compress": "דחיסת קבצים מוחלפים (gzip)",
-    "roll_help": "מונע מקובץ היומן לגדול ללא הגבלה. יש להשאיר ריק לברירת המחדל של Caddy (ללא סבב — הקובץ גדל לנצח)."
+    "roll_help": "Caddy מבצע רוטציה לקובץ היומן כברירת מחדל. השאירו שדה ריק כדי להשתמש בברירת המחדל של Caddy, המוצגת באפור."
   },
   "config_check": {
     "button": "בדיקת תצורה",
@@ -819,7 +835,8 @@
   "named_route": {
     "toggle_label": "רישום כנתיב בעל שם (invoke)",
     "name_label": "שם הנתיב",
-    "name_placeholder": "למשל auth-middleware"
+    "name_placeholder": "למשל auth-middleware",
+    "help": "רושם את הנתיב גם תחת שם, כך שנתיבים אחרים יוכלו להשתמש בו עם invoke <name>."
   },
   "servers": {
     "tab_all": "הכול",
@@ -912,5 +929,14 @@
     "title": "קטעים",
     "unused": "לא מיובא",
     "used_by": "מיובא על ידי {{sites}}"
+  },
+  "proxy_tabs": {
+    "aria_label": "הגדרות פרוקסי",
+    "has_error": "יש שגיאות",
+    "general": "כללי",
+    "security": "אבטחה",
+    "routing": "ניתוב",
+    "upstreams": "שרתי יעד",
+    "logging": "יומנים ושגיאות"
   }
 }

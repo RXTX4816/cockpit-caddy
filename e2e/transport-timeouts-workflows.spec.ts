@@ -8,7 +8,7 @@
  * the right Caddyfile shape and Caddy doesn't reject it.
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { readConf, readFile, CADDYFILE_PATH } from './helpers';
+import { readConf, readFile, CADDYFILE_PATH, openSection } from './helpers';
 import { expectCaddyActive } from './live';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
@@ -25,7 +25,7 @@ test('custom upstream dial/response timeouts are written to the transport block'
   await modal.locator('#target-port').fill('3000');
   await modal.locator('#tls').selectOption('off');
 
-  await modal.getByRole('button', { name: /upstream timeouts/i }).click();
+  await openSection(modal, 'upstreamTimeouts');
   await modal.locator('#transport-dial').fill('3s');
   await modal.locator('#transport-resp').fill('7s');
 
@@ -48,7 +48,7 @@ test('server-level timeouts round-trip through edit and persist in the Caddyfile
   await modal1.locator('#target-port').fill('3000');
   await modal1.locator('#tls').selectOption('off');
 
-  await modal1.getByRole('button', { name: /server timeouts/i }).click();
+  await openSection(modal1, 'serverTimeouts');
   await modal1.locator('#st-read').fill('5s');
   await modal1.locator('#st-write').fill('10s');
   await modal1.locator('#st-idle').fill('2m');

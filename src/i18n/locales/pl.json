@@ -16,7 +16,15 @@
     "confirm_apply": "Zastosuj",
     "configured": "Skonfigurowano",
     "remove_aria": "Usuń",
-    "header_op_aria": "Operacja na nagłówku"
+    "header_op_aria": "Operacja na nagłówku",
+    "default_value": "Domyślnie: {{value}}",
+    "reset_default": "Przywróć domyślne Caddy",
+    "size_unit": "Jednostka",
+    "unit_b": "bajty",
+    "unit_kb": "KB",
+    "unit_mb": "MB",
+    "unit_gb": "GB",
+    "example_value": "np. {{value}}"
   },
   "app": {
     "title": "Caddy",
@@ -122,7 +130,7 @@
     "validation_ext_host_duplicate": "„{{host}}” występuje dwa razy.",
     "validation_https_requires_tls": "Protokół „https” wymaga włączenia TLS poniżej — w przeciwnym razie Caddy zarządzałby HTTPS samodzielnie, poza ustawieniami tej aplikacji. Włącz TLS lub wybierz inny protokół.",
     "field_target_host": "Host docelowy",
-    "field_target_host_placeholder": "localhost",
+    "field_target_host_placeholder": "np. localhost",
     "field_tls_skip_verify": "Pomiń weryfikację TLS backendu (dla samopodpisanych certyfikatów backendu)",
     "field_tls": "Włącz TLS (wewnętrzne CA Caddy)",
     "field_tls_short": "Włącz TLS (wewnętrzne CA)",
@@ -138,7 +146,16 @@
     "validation_target_port_required": "Port docelowy jest wymagany",
     "validation_target_port_range": "Port docelowy musi mieścić się w zakresie 1–65535",
     "validation_target_host_required": "Host docelowy jest wymagany",
-    "confirm_body": "Zostanie utworzone reverse proxy :{{port}} → {{target}}, a konfiguracja Caddy zostanie przeładowana."
+    "confirm_body": "Zostanie utworzone reverse proxy :{{port}} → {{target}}, a konfiguracja Caddy zostanie przeładowana.",
+    "ext_host_label": "Host zewnętrzny",
+    "ext_port_label": "Port zewnętrzny",
+    "ext_port_placeholder": "np. 8443",
+    "ext_scheme_custom_input": "Własny protokół",
+    "ext_scheme_label": "Protokół",
+    "field_label_help": "Nazwa tej witryny na liście, np. Grafana.",
+    "target_port_label": "Port docelowy",
+    "target_port_placeholder": "np. 8080",
+    "target_scheme_label": "Protokół docelowy"
   },
   "add_static": {
     "title": "Dodaj statyczny serwer plików",
@@ -248,16 +265,15 @@
     "read_header_timeout": "Limit czasu odczytu nagłówków",
     "write_timeout": "Limit czasu zapisu",
     "idle_timeout": "Limit czasu bezczynności",
-    "max_header_bytes": "Maks. rozmiar nagłówków (bajty)",
-    "max_header_bytes_help": "Maksymalny rozmiar nagłówków żądania w bajtach (domyślnie w Caddy: 16 KiB = 16384)",
+    "max_header_bytes": "Maks. rozmiar nagłówków",
+    "max_header_bytes_help": "Maksymalny rozmiar nagłówków żądania (domyślnie w Caddy: 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "Wyłącz HTTP/3",
     "http3_help": "Caddy domyślnie włącza HTTP/1.1, HTTP/2 i HTTP/3, gdy skonfigurowano TLS. HTTP/3 działa przez UDP na tym samym porcie co HTTPS — jeśli zapora blokuje UDP, wyłączenie go tutaj pozostawia tylko HTTP/1.1 i HTTP/2."
   },
   "request_body": {
-    "field_label": "Maks. rozmiar treści żądania (bajty, opcjonalnie)",
-    "field_placeholder": "10485760",
-    "field_help": "Odrzuca żądania z większą treścią, zanim dotrą do backendu. Pozostaw puste, aby nie ustawiać limitu (domyślne zachowanie Caddy). Np. 1048576 = 1 MB, 10485760 = 10 MB."
+    "field_label": "Maksymalny rozmiar treści żądania",
+    "field_help": "Większe treści żądań są odrzucane, zanim dotrą do backendu. Zostaw puste, aby nie było limitu (domyślne Caddy)."
   },
   "rewrite": {
     "section_title": "Przepisywanie URI (opcjonalnie)",
@@ -500,7 +516,7 @@
     "roll_keep_count": "Liczba zachowanych plików po rotacji",
     "roll_keep_days": "Maks. wiek plików po rotacji (dni)",
     "roll_compress": "Kompresuj pliki po rotacji (gzip)",
-    "roll_help": "Zapobiega nieograniczonemu rozrostowi pliku logu. Pozostaw puste, aby użyć domyślnego zachowania Caddy (bez rotacji — plik rośnie bez końca)."
+    "roll_help": "Caddy domyślnie rotuje plik dziennika. Zostaw pole puste, aby użyć wartości domyślnej Caddy, pokazanej na szaro."
   },
   "config_check": {
     "button": "Sprawdź konfigurację",
@@ -819,7 +835,8 @@
   "named_route": {
     "toggle_label": "Zarejestruj jako nazwaną trasę (invoke)",
     "name_label": "Nazwa trasy",
-    "name_placeholder": "np. auth-middleware"
+    "name_placeholder": "np. auth-middleware",
+    "help": "Rejestruje też trasę pod nazwą, żeby inne trasy mogły jej użyć przez invoke <name>."
   },
   "servers": {
     "tab_all": "Wszystkie",
@@ -912,5 +929,14 @@
     "title": "Snippety",
     "unused": "Nieimportowany",
     "used_by": "Importują {{sites}}"
+  },
+  "proxy_tabs": {
+    "aria_label": "Ustawienia proxy",
+    "has_error": "Zawiera błędy",
+    "general": "Ogólne",
+    "security": "Bezpieczeństwo",
+    "routing": "Routing",
+    "upstreams": "Upstreamy",
+    "logging": "Logi i błędy"
   }
 }

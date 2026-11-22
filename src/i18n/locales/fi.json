@@ -16,7 +16,15 @@
     "confirm_apply": "Käytä",
     "configured": "Määritetty",
     "remove_aria": "Poista",
-    "header_op_aria": "Otsaketoiminto"
+    "header_op_aria": "Otsaketoiminto",
+    "default_value": "Oletus: {{value}}",
+    "reset_default": "Palauta Caddyn oletus",
+    "size_unit": "Yksikkö",
+    "unit_b": "tavua",
+    "unit_kb": "KB",
+    "unit_mb": "MB",
+    "unit_gb": "GB",
+    "example_value": "esim. {{value}}"
   },
   "app": {
     "title": "Caddy",
@@ -122,7 +130,7 @@
     "validation_ext_host_duplicate": "\"{{host}}\" on luettelossa kahdesti.",
     "validation_https_requires_tls": "Protokolla \"https\" vaatii, että TLS on käytössä alla — muuten Caddy hallitsisi HTTPS:ää itse, tämän sovelluksen asetuksista riippumatta. Ota TLS käyttöön tai valitse toinen protokolla.",
     "field_target_host": "Kohdeisäntä",
-    "field_target_host_placeholder": "localhost",
+    "field_target_host_placeholder": "esim. localhost",
     "field_tls_skip_verify": "Ohita taustapalvelimen TLS-tarkistus (itse allekirjoitetuille varmenteille)",
     "field_tls": "Ota TLS käyttöön (Caddyn sisäinen CA)",
     "field_tls_short": "Ota TLS käyttöön (sisäinen CA)",
@@ -138,7 +146,16 @@
     "validation_target_port_required": "Kohdeportti on pakollinen",
     "validation_target_port_range": "Kohdeportin on oltava välillä 1–65535",
     "validation_target_host_required": "Kohdeisäntä on pakollinen",
-    "confirm_body": "Luodaan reverse proxy :{{port}} → {{target}} ja Caddyn asetukset ladataan uudelleen."
+    "confirm_body": "Luodaan reverse proxy :{{port}} → {{target}} ja Caddyn asetukset ladataan uudelleen.",
+    "ext_host_label": "Ulkoinen isäntä",
+    "ext_port_label": "Ulkoinen portti",
+    "ext_port_placeholder": "esim. 8443",
+    "ext_scheme_custom_input": "Oma protokolla",
+    "ext_scheme_label": "Protokolla",
+    "field_label_help": "Sivuston nimi listassa, esim. Grafana.",
+    "target_port_label": "Kohdeportti",
+    "target_port_placeholder": "esim. 8080",
+    "target_scheme_label": "Kohdeprotokolla"
   },
   "add_static": {
     "title": "Lisää staattinen tiedostopalvelin",
@@ -248,16 +265,15 @@
     "read_header_timeout": "Otsakkeiden lukemisen aikakatkaisu",
     "write_timeout": "Kirjoituksen aikakatkaisu",
     "idle_timeout": "Joutoajan aikakatkaisu",
-    "max_header_bytes": "Otsakkeiden enimmäiskoko (tavua)",
-    "max_header_bytes_help": "Pyynnön otsakkeiden enimmäiskoko tavuina (Caddyn oletus: 16 KiB = 16384)",
+    "max_header_bytes": "Otsakkeiden enimmäiskoko",
+    "max_header_bytes_help": "Pyynnön otsakkeiden enimmäiskoko (Caddyn oletus: 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "Poista HTTP/3 käytöstä",
     "http3_help": "Caddy ottaa HTTP/1.1:n, HTTP/2:n ja HTTP/3:n oletuksena käyttöön aina, kun TLS on määritetty. HTTP/3 kulkee UDP:n yli samassa portissa kuin HTTPS — jos palomuuri estää UDP:n, sen poistaminen käytöstä tässä jättää käyttöön vain HTTP/1.1:n ja HTTP/2:n."
   },
   "request_body": {
-    "field_label": "Pyynnön rungon enimmäiskoko (tavua, valinnainen)",
-    "field_placeholder": "10485760",
-    "field_help": "Hylkää pyynnöt, joiden runko on suurempi, ennen kuin ne päätyvät taustapalvelimelle. Jätä tyhjäksi, jos rajaa ei tarvita (Caddyn oletus). Esim. 1048576 = 1 Mt, 10485760 = 10 Mt."
+    "field_label": "Pyynnön rungon enimmäiskoko",
+    "field_help": "Suuremmat pyyntörungot hylätään ennen kuin ne päätyvät taustapalveluun. Jätä tyhjäksi, jos rajaa ei tarvita (Caddyn oletus)."
   },
   "rewrite": {
     "section_title": "URI-uudelleenkirjoitus (valinnainen)",
@@ -500,7 +516,7 @@
     "roll_keep_count": "Säilytettävät kierrätetyt tiedostot",
     "roll_keep_days": "Kierrätettyjen tiedostojen enimmäisikä (päivää)",
     "roll_compress": "Pakkaa kierrätetyt tiedostot (gzip)",
-    "roll_help": "Estää lokitiedostoa kasvamasta rajattomasti. Jätä tyhjäksi käyttääksesi Caddyn oletusta (ei kierrätystä — tiedosto kasvaa loputtomiin)."
+    "roll_help": "Caddy kierrättää lokitiedoston oletuksena. Jätä kenttä tyhjäksi käyttääksesi Caddyn oletusta, joka näkyy harmaana."
   },
   "config_check": {
     "button": "Tarkista asetukset",
@@ -819,7 +835,8 @@
   "named_route": {
     "toggle_label": "Rekisteröi nimettynä reittinä (invoke)",
     "name_label": "Reitin nimi",
-    "name_placeholder": "esim. auth-middleware"
+    "name_placeholder": "esim. auth-middleware",
+    "help": "Rekisteröi reitin myös nimellä, jotta muut reitit voivat käyttää sitä komennolla invoke <name>."
   },
   "servers": {
     "tab_all": "Kaikki",
@@ -912,5 +929,14 @@
     "title": "Katkelmat",
     "unused": "Ei tuotu",
     "used_by": "Tuovat {{sites}}"
+  },
+  "proxy_tabs": {
+    "aria_label": "Välityspalvelimen asetukset",
+    "has_error": "Sisältää virheitä",
+    "general": "Yleiset",
+    "security": "Suojaus",
+    "routing": "Reititys",
+    "upstreams": "Upstreamit",
+    "logging": "Lokit ja virheet"
   }
 }

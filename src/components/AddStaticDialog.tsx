@@ -173,7 +173,7 @@ export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues, 
                 type="number"
                 value={port}
                 onChange={(_e, v) => { setPort(v); setPortErr(null); }}
-                placeholder="8080"
+                placeholder={t("common.example_value", { value: "8080" })}
                 isDisabled={isLocked}
                 validated={portErr ? "error" : "default"}
               />

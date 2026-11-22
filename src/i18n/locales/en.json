@@ -16,7 +16,15 @@
     "confirm_apply": "Apply",
     "configured": "Configured",
     "remove_aria": "remove",
-    "header_op_aria": "Header operation"
+    "header_op_aria": "Header operation",
+    "default_value": "Default: {{value}}",
+    "reset_default": "Reset to Caddy default",
+    "size_unit": "Unit",
+    "unit_b": "bytes",
+    "unit_kb": "KB",
+    "unit_mb": "MB",
+    "unit_gb": "GB",
+    "example_value": "e.g. {{value}}"
   },
   "app": {
     "title": "Caddy",
@@ -122,7 +130,7 @@
     "validation_ext_host_duplicate": "\"{{host}}\" is listed twice.",
     "validation_https_requires_tls": "The \"https\" protocol requires TLS to be enabled below — Caddy would otherwise manage HTTPS on its own, ungoverned by this app's settings. Enable TLS or choose a different protocol.",
     "field_target_host": "Target Host",
-    "field_target_host_placeholder": "localhost",
+    "field_target_host_placeholder": "e.g. localhost",
     "field_tls_skip_verify": "Skip TLS verification on backend (for self-signed backend certs)",
     "field_tls": "Enable TLS (Caddy's internal CA)",
     "field_tls_short": "Enable TLS (internal CA)",
@@ -138,7 +146,16 @@
     "validation_target_port_required": "Target port is required",
     "validation_target_port_range": "Target port must be between 1 and 65535",
     "validation_target_host_required": "Target host is required",
-    "confirm_body": "This will create a reverse proxy :{{port}} → {{target}} and reload Caddy's configuration."
+    "confirm_body": "This will create a reverse proxy :{{port}} → {{target}} and reload Caddy's configuration.",
+    "ext_host_label": "External host",
+    "ext_port_label": "External port",
+    "ext_port_placeholder": "e.g. 8443",
+    "ext_scheme_custom_input": "Custom protocol",
+    "ext_scheme_label": "Protocol",
+    "field_label_help": "A name for this site in the list, e.g. Grafana.",
+    "target_port_label": "Target port",
+    "target_port_placeholder": "e.g. 8080",
+    "target_scheme_label": "Target protocol"
   },
   "add_static": {
     "title": "Add Static File Server",
@@ -248,16 +265,15 @@
     "read_header_timeout": "Read header timeout",
     "write_timeout": "Write timeout",
     "idle_timeout": "Idle timeout",
-    "max_header_bytes": "Max header size (bytes)",
-    "max_header_bytes_help": "Maximum request header size in bytes (Caddy's default: 16 KiB = 16384)",
+    "max_header_bytes": "Max header size",
+    "max_header_bytes_help": "Maximum request header size (Caddy's default: 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "Disable HTTP/3",
     "http3_help": "Caddy enables HTTP/1.1, HTTP/2, and HTTP/3 by default whenever TLS is configured. HTTP/3 runs over UDP on the same port as HTTPS — if UDP is blocked by your firewall, disabling it here falls back to HTTP/1.1 and HTTP/2 only."
   },
   "request_body": {
-    "field_label": "Max request body size (bytes, optional)",
-    "field_placeholder": "10485760",
-    "field_help": "Rejects requests with a larger body before it reaches the backend. Leave blank for no limit (Caddy's own default). E.g. 1048576 = 1 MB, 10485760 = 10 MB."
+    "field_label": "Max request body size",
+    "field_help": "Larger request bodies are rejected before they reach the backend. Leave empty for no limit (Caddy's default)."
   },
   "rewrite": {
     "section_title": "URI Rewrite (optional)",
@@ -500,7 +516,7 @@
     "roll_keep_count": "Rolled files to keep",
     "roll_keep_days": "Max age of rolled files (days)",
     "roll_compress": "Compress rolled files (gzip)",
-    "roll_help": "Prevents the log file from growing unbounded. Leave blank for Caddy's own default (no rotation — the file grows forever)."
+    "roll_help": "Caddy rotates the log file by default. Leave a field empty to use Caddy's default, shown greyed out."
   },
   "config_check": {
     "button": "Check Config",
@@ -819,7 +835,8 @@
   "named_route": {
     "toggle_label": "Register as named route (invoke)",
     "name_label": "Route name",
-    "name_placeholder": "e.g. auth-middleware"
+    "name_placeholder": "e.g. auth-middleware",
+    "help": "Also registers the route under a name, so other routes can reuse it with invoke <name>."
   },
   "servers": {
     "tab_all": "All",
@@ -912,5 +929,14 @@
     "title": "Snippets",
     "unused": "Not imported",
     "used_by": "Imported by {{sites}}"
+  },
+  "proxy_tabs": {
+    "aria_label": "Proxy settings",
+    "has_error": "Has errors",
+    "general": "General",
+    "security": "Security",
+    "routing": "Routing",
+    "upstreams": "Upstreams",
+    "logging": "Logging & errors"
   }
 }

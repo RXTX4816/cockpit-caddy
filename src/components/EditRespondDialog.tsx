@@ -90,7 +90,7 @@ export function EditRespondDialog({ proxy, existingPorts: _existingPorts, onSave
               type="number"
               value={statusCode}
               onChange={(_e, v) => { setStatusCode(v); setStatusErr(null); }}
-              placeholder="200"
+              placeholder={t("common.example_value", { value: "200" })}
               isDisabled={isLocked}
               validated={statusErr ? "error" : "default"}
             />

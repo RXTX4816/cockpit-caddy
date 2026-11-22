@@ -6,7 +6,7 @@
  * enforcement through real curl -u round trips.
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { readConf, spawnCmd } from './helpers';
+import { readConf, spawnCmd, openSection } from './helpers';
 import { waitForListener, curlStatus } from './live';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
@@ -37,7 +37,7 @@ test('add basic auth user requires credentials for the route', async ({ pluginPa
     await modal.locator('#target-port').fill(String(targetPort));
     await modal.locator('#tls').selectOption('off');
 
-    await modal.getByRole('button', { name: /http basic auth/i }).click();
+    await openSection(modal, 'basicAuth');
     await modal.getByRole('button', { name: /add account/i }).click();
     await modal.locator('#auth-user-0').fill('alice');
     await modal.locator('#auth-pass-0').fill('s3cret-pw');
@@ -64,7 +64,7 @@ test('basic auth password is stored as a bcrypt hash, not plaintext', async ({ p
   await modal.locator('#target-port').fill('3000');
   await modal.locator('#tls').selectOption('off');
 
-  await modal.getByRole('button', { name: /http basic auth/i }).click();
+  await openSection(modal, 'basicAuth');
   await modal.getByRole('button', { name: /add account/i }).click();
   await modal.locator('#auth-user-0').fill('bob');
   await modal.locator('#auth-pass-0').fill('do-not-leak-me');
@@ -91,7 +91,7 @@ test('remove basic auth user allows unauthenticated access again', async ({ plug
     await modal1.getByLabel(/target host/i).fill('localhost');
     await modal1.locator('#target-port').fill(String(targetPort));
     await modal1.locator('#tls').selectOption('off');
-    await modal1.getByRole('button', { name: /http basic auth/i }).click();
+    await openSection(modal1, 'basicAuth');
     await modal1.getByRole('button', { name: /add account/i }).click();
     await modal1.locator('#auth-user-0').fill('carol');
     await modal1.locator('#auth-pass-0').fill('pw12345');
@@ -104,7 +104,7 @@ test('remove basic auth user allows unauthenticated access again', async ({ plug
 
     await proxyRow(page, 19283).getByRole('button', { name: /^edit$/i }).click();
     const modal2 = page.getByRole('dialog');
-    await modal2.getByRole('button', { name: /http basic auth/i }).click();
+    await openSection(modal2, 'basicAuth');
     await modal2.getByRole('button', { name: /remove account/i }).click();
     await modal2.getByRole('button', { name: /save changes/i }).click();
     await modal2.getByRole('button', { name: /^confirm$/i }).click();
@@ -130,7 +130,7 @@ test('edit password re-hashes and old password stops working', async ({ pluginPa
     await modal1.getByLabel(/target host/i).fill('localhost');
     await modal1.locator('#target-port').fill(String(targetPort));
     await modal1.locator('#tls').selectOption('off');
-    await modal1.getByRole('button', { name: /http basic auth/i }).click();
+    await openSection(modal1, 'basicAuth');
     await modal1.getByRole('button', { name: /add account/i }).click();
     await modal1.locator('#auth-user-0').fill('dave');
     await modal1.locator('#auth-pass-0').fill('old-password');
@@ -143,7 +143,7 @@ test('edit password re-hashes and old password stops working', async ({ pluginPa
 
     await proxyRow(page, 19285).getByRole('button', { name: /^edit$/i }).click();
     const modal2 = page.getByRole('dialog');
-    await modal2.getByRole('button', { name: /http basic auth/i }).click();
+    await openSection(modal2, 'basicAuth');
     await modal2.locator('#auth-pass-0').fill('new-password');
     await modal2.getByRole('button', { name: /save changes/i }).click();
     await modal2.getByRole('button', { name: /^confirm$/i }).click();

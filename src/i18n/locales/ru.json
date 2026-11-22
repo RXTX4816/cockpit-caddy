@@ -16,7 +16,15 @@
     "confirm_apply": "Применить",
     "configured": "Настроено",
     "remove_aria": "Удалить",
-    "header_op_aria": "Операция с заголовком"
+    "header_op_aria": "Операция с заголовком",
+    "default_value": "По умолчанию: {{value}}",
+    "reset_default": "Сбросить к значению Caddy по умолчанию",
+    "size_unit": "Единица",
+    "unit_b": "байты",
+    "unit_kb": "КБ",
+    "unit_mb": "МБ",
+    "unit_gb": "ГБ",
+    "example_value": "напр. {{value}}"
   },
   "app": {
     "title": "Caddy",
@@ -122,7 +130,7 @@
     "validation_ext_host_duplicate": "«{{host}}» указан дважды.",
     "validation_https_requires_tls": "Протокол «https» требует включить TLS ниже — иначе Caddy будет управлять HTTPS сам, в обход настроек этого приложения. Включите TLS или выберите другой протокол.",
     "field_target_host": "Целевой хост",
-    "field_target_host_placeholder": "localhost",
+    "field_target_host_placeholder": "напр. localhost",
     "field_tls_skip_verify": "Не проверять TLS бэкенда (для самоподписанных сертификатов бэкенда)",
     "field_tls": "Включить TLS (внутренний CA Caddy)",
     "field_tls_short": "Включить TLS (внутренний CA)",
@@ -138,7 +146,16 @@
     "validation_target_port_required": "Укажите целевой порт",
     "validation_target_port_range": "Целевой порт должен быть в диапазоне 1–65535",
     "validation_target_host_required": "Укажите целевой хост",
-    "confirm_body": "Будет создан reverse proxy :{{port}} → {{target}}, конфигурация Caddy будет перезагружена."
+    "confirm_body": "Будет создан reverse proxy :{{port}} → {{target}}, конфигурация Caddy будет перезагружена.",
+    "ext_host_label": "Внешний хост",
+    "ext_port_label": "Внешний порт",
+    "ext_port_placeholder": "напр. 8443",
+    "ext_scheme_custom_input": "Свой протокол",
+    "ext_scheme_label": "Протокол",
+    "field_label_help": "Название сайта в списке, напр. Grafana.",
+    "target_port_label": "Целевой порт",
+    "target_port_placeholder": "напр. 8080",
+    "target_scheme_label": "Целевой протокол"
   },
   "add_static": {
     "title": "Добавить сервер статических файлов",
@@ -248,16 +265,15 @@
     "read_header_timeout": "Тайм-аут чтения заголовков",
     "write_timeout": "Тайм-аут записи",
     "idle_timeout": "Тайм-аут простоя",
-    "max_header_bytes": "Макс. размер заголовков (байт)",
-    "max_header_bytes_help": "Максимальный размер заголовков запроса в байтах (по умолчанию в Caddy: 16 КиБ = 16384)",
+    "max_header_bytes": "Макс. размер заголовков",
+    "max_header_bytes_help": "Максимальный размер заголовков запроса (по умолчанию в Caddy: 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "Отключить HTTP/3",
     "http3_help": "Caddy по умолчанию включает HTTP/1.1, HTTP/2 и HTTP/3, если настроен TLS. HTTP/3 работает поверх UDP на том же порту, что и HTTPS — если ваш межсетевой экран блокирует UDP, после отключения здесь останутся только HTTP/1.1 и HTTP/2."
   },
   "request_body": {
-    "field_label": "Макс. размер тела запроса (байт, необязательно)",
-    "field_placeholder": "10485760",
-    "field_help": "Отклоняет запросы с телом большего размера до того, как они дойдут до бэкенда. Оставьте пустым, чтобы не ограничивать (поведение Caddy по умолчанию). Например, 1048576 = 1 МБ, 10485760 = 10 МБ."
+    "field_label": "Максимальный размер тела запроса",
+    "field_help": "Запросы с телом больше этого отклоняются, не доходя до бэкенда. Оставьте пустым для отсутствия ограничения (по умолчанию в Caddy)."
   },
   "rewrite": {
     "section_title": "Перезапись URI (необязательно)",
@@ -500,7 +516,7 @@
     "roll_keep_count": "Сколько ротированных файлов хранить",
     "roll_keep_days": "Макс. возраст ротированных файлов (дней)",
     "roll_compress": "Сжимать ротированные файлы (gzip)",
-    "roll_help": "Не даёт файлу журнала расти бесконечно. Оставьте пустым для поведения Caddy по умолчанию (без ротации — файл растёт бесконечно)."
+    "roll_help": "Caddy по умолчанию ротирует файл журнала. Оставьте поле пустым, чтобы использовать значение Caddy по умолчанию (показано серым)."
   },
   "config_check": {
     "button": "Проверить конфигурацию",
@@ -819,7 +835,8 @@
   "named_route": {
     "toggle_label": "Зарегистрировать как именованный маршрут (invoke)",
     "name_label": "Имя маршрута",
-    "name_placeholder": "например, auth-middleware"
+    "name_placeholder": "например, auth-middleware",
+    "help": "Дополнительно регистрирует маршрут под именем, чтобы другие маршруты могли использовать его через invoke <name>."
   },
   "servers": {
     "tab_all": "Все",
@@ -912,5 +929,14 @@
     "title": "Сниппеты",
     "unused": "Не импортирован",
     "used_by": "Импортируют: {{sites}}"
+  },
+  "proxy_tabs": {
+    "aria_label": "Настройки прокси",
+    "has_error": "Есть ошибки",
+    "general": "Общие",
+    "security": "Безопасность",
+    "routing": "Маршрутизация",
+    "upstreams": "Апстримы",
+    "logging": "Журналы и ошибки"
   }
 }

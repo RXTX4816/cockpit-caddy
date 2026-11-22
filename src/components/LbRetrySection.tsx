@@ -1,12 +1,11 @@
 import { useState } from "react";
 import {
-  ExpandableSection,
   FormGroup,
   HelperText,
   HelperTextItem,
-  TextInput,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
+import { ResettableTextInput, SectionShell } from "./sectionLayout";
 import type { LbRetryConfig } from "../api";
 import { SectionActions } from "./SectionActions";
 import { SectionConfiguredDot } from "./SectionConfiguredDot";
@@ -139,7 +138,7 @@ export function LbRetrySection({ value, onChange, isDisabled, isExpanded: isExpa
   function field(key: keyof LbRetryValues, id: string, label: string, placeholder: string, invalid: boolean, opts: { type?: "number"; flex?: string } = {}) {
     return (
       <FormGroup label={label} fieldId={id} style={{ flex: opts.flex ?? "1 1 10rem" }}>
-        <TextInput
+        <ResettableTextInput
           id={id}
           type={opts.type}
           value={value[key]}
@@ -170,7 +169,7 @@ export function LbRetrySection({ value, onChange, isDisabled, isExpanded: isExpa
   const heading = { marginTop: "1rem", marginBottom: "0.4rem", fontWeight: 600 };
 
   return (
-    <ExpandableSection
+    <SectionShell
       toggleContent={<>{t("lb_retry.section_title")}{hasValues && <SectionConfiguredDot />}</>}
       isIndented
       isExpanded={expanded}
@@ -196,11 +195,11 @@ export function LbRetrySection({ value, onChange, isDisabled, isExpanded: isExpa
         {field("maxFails", "lbr-max-fails", t("lb_retry.max_fails"), "1", !isPositiveInt(value.maxFails), { type: "number", flex: "1 1 8rem" })}
       </div>
       <FormGroup label={t("lb_retry.unhealthy_status")} fieldId="lbr-unhealthy-status" style={{ marginTop: "0.6rem" }}>
-        <TextInput
+        <ResettableTextInput
           id="lbr-unhealthy-status"
           value={value.unhealthyStatus}
           onChange={(_e, v) => set("unhealthyStatus", v)}
-          placeholder="500 502 503"
+          placeholder={t("common.example_value", { value: "500 502 503" })}
           isDisabled={isDisabled}
           validated={!isStatusList(value.unhealthyStatus) ? "error" : "default"}
         />
@@ -223,6 +222,6 @@ export function LbRetrySection({ value, onChange, isDisabled, isExpanded: isExpa
           {t(activeErr ?? "lb_retry.active_help")}
         </HelperTextItem>
       </HelperText>
-    </ExpandableSection>
+    </SectionShell>
   );
 }

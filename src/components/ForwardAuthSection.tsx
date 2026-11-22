@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {
   Button,
-  ExpandableSection,
   FormGroup,
   FormHelperText,
   HelperText,
@@ -9,6 +8,7 @@ import {
   TextInput,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
+import { SectionShell } from "./sectionLayout";
 import type { ForwardAuthConfig } from "../api";
 import { SectionActions } from "./SectionActions";
 
@@ -71,7 +71,7 @@ export function ForwardAuthSection({ value, onChange, isDisabled, uriError, urlE
     : t("forward_auth.section_title");
 
   return (
-    <ExpandableSection
+    <SectionShell
       toggleText={toggleLabel}
       isIndented
       isExpanded={expanded}
@@ -93,7 +93,7 @@ export function ForwardAuthSection({ value, onChange, isDisabled, uriError, urlE
                 id="fa-url"
                 value={value.upstreamUrl}
                 onChange={(_e, v) => update({ upstreamUrl: v })}
-                placeholder="http://localhost:9091"
+                placeholder={t("common.example_value", { value: "http://localhost:9091" })}
                 validated={urlError ? "error" : "default"}
                 isDisabled={isDisabled}
               />
@@ -111,7 +111,7 @@ export function ForwardAuthSection({ value, onChange, isDisabled, uriError, urlE
                 id="fa-uri"
                 value={value.uri ?? ""}
                 onChange={(_e, v) => update({ uri: v || undefined })}
-                placeholder="/api/authz/forward-auth"
+                placeholder={t("common.example_value", { value: "/api/authz/forward-auth" })}
                 validated={uriError ? "error" : "default"}
                 isDisabled={isDisabled}
               />
@@ -132,7 +132,7 @@ export function ForwardAuthSection({ value, onChange, isDisabled, uriError, urlE
                   setHeadersInput(v);
                   update({ copyHeaders: parseHeaders(v) });
                 }}
-                placeholder="Remote-User, Remote-Groups, Remote-Name"
+                placeholder={t("common.example_value", { value: "Remote-User, Remote-Groups, Remote-Name" })}
                 isDisabled={isDisabled}
               />
               <FormHelperText>
@@ -148,6 +148,6 @@ export function ForwardAuthSection({ value, onChange, isDisabled, uriError, urlE
           </>
         )}
       </div>
-    </ExpandableSection>
+    </SectionShell>
   );
 }

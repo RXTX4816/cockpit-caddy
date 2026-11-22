@@ -16,7 +16,15 @@
     "confirm_apply": "Použít",
     "configured": "Nastaveno",
     "remove_aria": "Odebrat",
-    "header_op_aria": "Operace s hlavičkou"
+    "header_op_aria": "Operace s hlavičkou",
+    "default_value": "Výchozí: {{value}}",
+    "reset_default": "Obnovit výchozí hodnotu Caddy",
+    "size_unit": "Jednotka",
+    "unit_b": "bajty",
+    "unit_kb": "KB",
+    "unit_mb": "MB",
+    "unit_gb": "GB",
+    "example_value": "např. {{value}}"
   },
   "app": {
     "title": "Caddy",
@@ -122,7 +130,7 @@
     "validation_ext_host_duplicate": "„{{host}}“ je uveden dvakrát.",
     "validation_https_requires_tls": "Protokol „https“ vyžaduje zapnuté TLS níže — jinak by Caddy spravoval HTTPS sám, mimo nastavení této aplikace. Zapněte TLS nebo zvolte jiný protokol.",
     "field_target_host": "Cílový hostitel",
-    "field_target_host_placeholder": "localhost",
+    "field_target_host_placeholder": "např. localhost",
     "field_tls_skip_verify": "Přeskočit ověření TLS backendu (pro backendy s certifikáty podepsanými samy sebou)",
     "field_tls": "Zapnout TLS (interní CA Caddy)",
     "field_tls_short": "Zapnout TLS (interní CA)",
@@ -138,7 +146,16 @@
     "validation_target_port_required": "Cílový port je povinný",
     "validation_target_port_range": "Cílový port musí být v rozsahu 1–65535",
     "validation_target_host_required": "Cílový hostitel je povinný",
-    "confirm_body": "Vytvoří se reverse proxy :{{port}} → {{target}} a konfigurace Caddy se znovu načte."
+    "confirm_body": "Vytvoří se reverse proxy :{{port}} → {{target}} a konfigurace Caddy se znovu načte.",
+    "ext_host_label": "Externí hostitel",
+    "ext_port_label": "Externí port",
+    "ext_port_placeholder": "např. 8443",
+    "ext_scheme_custom_input": "Vlastní protokol",
+    "ext_scheme_label": "Protokol",
+    "field_label_help": "Název webu v seznamu, např. Grafana.",
+    "target_port_label": "Cílový port",
+    "target_port_placeholder": "např. 8080",
+    "target_scheme_label": "Cílový protokol"
   },
   "add_static": {
     "title": "Přidat statický souborový server",
@@ -248,16 +265,15 @@
     "read_header_timeout": "Časový limit čtení hlaviček",
     "write_timeout": "Časový limit zápisu",
     "idle_timeout": "Časový limit nečinnosti",
-    "max_header_bytes": "Max. velikost hlaviček (bajty)",
-    "max_header_bytes_help": "Maximální velikost hlaviček požadavku v bajtech (výchozí v Caddy: 16 KiB = 16384)",
+    "max_header_bytes": "Max. velikost hlaviček",
+    "max_header_bytes_help": "Maximální velikost hlaviček požadavku (výchozí v Caddy: 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "Vypnout HTTP/3",
     "http3_help": "Caddy ve výchozím stavu zapíná HTTP/1.1, HTTP/2 a HTTP/3, jakmile je nastaveno TLS. HTTP/3 běží přes UDP na stejném portu jako HTTPS — pokud firewall blokuje UDP, jeho vypnutím zde zůstane jen HTTP/1.1 a HTTP/2."
   },
   "request_body": {
-    "field_label": "Max. velikost těla požadavku (bajty, volitelné)",
-    "field_placeholder": "10485760",
-    "field_help": "Odmítá požadavky s větším tělem dřív, než dorazí na backend. Ponechte prázdné pro žádný limit (výchozí chování Caddy). Např. 1048576 = 1 MB, 10485760 = 10 MB."
+    "field_label": "Maximální velikost těla požadavku",
+    "field_help": "Větší těla požadavků se odmítnou dřív, než dorazí k backendu. Prázdné pole znamená bez limitu (výchozí v Caddy)."
   },
   "rewrite": {
     "section_title": "Přepis URI (volitelné)",
@@ -500,7 +516,7 @@
     "roll_keep_count": "Počet ponechaných rotovaných souborů",
     "roll_keep_days": "Max. stáří rotovaných souborů (dny)",
     "roll_compress": "Komprimovat rotované soubory (gzip)",
-    "roll_help": "Zabraňuje neomezenému růstu souboru logu. Ponechte prázdné pro výchozí chování Caddy (bez rotace — soubor roste donekonečna)."
+    "roll_help": "Caddy soubor protokolu ve výchozím stavu rotuje. Ponechte pole prázdné pro výchozí hodnotu Caddy, zobrazenou šedě."
   },
   "config_check": {
     "button": "Zkontrolovat konfiguraci",
@@ -819,7 +835,8 @@
   "named_route": {
     "toggle_label": "Zaregistrovat jako pojmenovanou trasu (invoke)",
     "name_label": "Název trasy",
-    "name_placeholder": "např. auth-middleware"
+    "name_placeholder": "např. auth-middleware",
+    "help": "Navíc zaregistruje trasu pod názvem, aby ji jiné trasy mohly použít přes invoke <name>."
   },
   "servers": {
     "tab_all": "Vše",
@@ -912,5 +929,14 @@
     "title": "Snippety",
     "unused": "Neimportováno",
     "used_by": "Importují {{sites}}"
+  },
+  "proxy_tabs": {
+    "aria_label": "Nastavení proxy",
+    "has_error": "Obsahuje chyby",
+    "general": "Obecné",
+    "security": "Zabezpečení",
+    "routing": "Směrování",
+    "upstreams": "Upstreamy",
+    "logging": "Logování a chyby"
   }
 }

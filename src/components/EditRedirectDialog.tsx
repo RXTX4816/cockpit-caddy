@@ -88,7 +88,7 @@ export function EditRedirectDialog({ proxy, existingPorts, onSave, onClose }: Pr
               id="edit-redirect-to"
               value={to}
               onChange={(_e, v) => { setTo(v); setToErr(null); }}
-              placeholder="https://{host}{uri}"
+              placeholder={t("common.example_value", { value: "https://{host}{uri}" })}
               isDisabled={isLocked}
               validated={toErr ? "error" : "default"}
             />
