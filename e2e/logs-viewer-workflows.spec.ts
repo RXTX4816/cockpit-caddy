@@ -33,3 +33,22 @@ test('log filter narrows visible entries to matching text', async ({ pluginPage:
   // Filtering is debounced ~1s before it actually narrows the visible lines.
   await expect(page.getByText(/no log lines match your search/i)).toBeVisible({ timeout: 5000 });
 });
+
+// #257: Caddy's JSON lines are a table by default; a row opens to the full JSON, Raw is the old view.
+test('logs table shows columns, opens a row to its JSON, and switches to Raw', async ({ pluginPage: page }) => {
+  await waitForToolbar(page);
+  await addProxy(page, { port: 19462, target: 'localhost:3000' });
+
+  await page.getByRole('tab', { name: /logs/i }).click();
+  const table = page.getByRole('table', { name: 'Log entries' });
+  await expect(table).toBeVisible({ timeout: 15000 });
+  await expect(table.getByRole('columnheader', { name: 'Logger' })).toBeVisible();
+  const row = table.getByRole('row').filter({ hasText: 'admin.api' }).first();
+  await row.click();
+  await expect(row).toHaveAttribute('aria-expanded', 'true');
+  await expect(table.locator('pre').first()).toContainText('"logger"');
+
+  await page.getByRole('button', { name: 'Raw' }).click();
+  await expect(table).not.toBeVisible();
+  await expect(page.getByText(/"logger"/).first()).toBeVisible();
+});

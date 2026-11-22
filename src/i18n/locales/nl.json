@@ -379,7 +379,19 @@
     "level_all": "Alle",
     "level_error": "Fout",
     "level_warn": "Waarschuwing",
-    "level_info": "Info"
+    "level_info": "Info",
+    "view_label": "Logweergave",
+    "view_table": "Tabel",
+    "view_raw": "Ruw",
+    "col_time": "Tijd",
+    "col_level": "Niveau",
+    "col_logger": "Logger",
+    "col_host": "Host",
+    "col_request": "Verzoek",
+    "col_status": "Status",
+    "col_message": "Bericht",
+    "table_label": "Logregels",
+    "saved_to": "Opgeslagen in {{path}}"
   },
   "tabs": {
     "proxy_list": "Proxylijst",

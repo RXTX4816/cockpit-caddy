@@ -379,7 +379,19 @@
     "level_all": "الكل",
     "level_error": "خطأ",
     "level_warn": "تحذير",
-    "level_info": "معلومات"
+    "level_info": "معلومات",
+    "view_label": "عرض السجل",
+    "view_table": "جدول",
+    "view_raw": "خام",
+    "col_time": "الوقت",
+    "col_level": "المستوى",
+    "col_logger": "المسجِّل",
+    "col_host": "المضيف",
+    "col_request": "الطلب",
+    "col_status": "الحالة",
+    "col_message": "الرسالة",
+    "table_label": "إدخالات السجل",
+    "saved_to": "تم الحفظ في {{path}}"
   },
   "tabs": {
     "proxy_list": "قائمة الوكلاء",

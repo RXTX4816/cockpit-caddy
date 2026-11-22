@@ -379,7 +379,19 @@
     "level_all": "Усі",
     "level_error": "Помилка",
     "level_warn": "Попередження",
-    "level_info": "Інфо"
+    "level_info": "Інфо",
+    "view_label": "Вигляд журналу",
+    "view_table": "Таблиця",
+    "view_raw": "Як є",
+    "col_time": "Час",
+    "col_level": "Рівень",
+    "col_logger": "Логер",
+    "col_host": "Хост",
+    "col_request": "Запит",
+    "col_status": "Статус",
+    "col_message": "Повідомлення",
+    "table_label": "Записи журналу",
+    "saved_to": "Збережено в {{path}}"
   },
   "tabs": {
     "proxy_list": "Список проксі",

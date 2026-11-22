@@ -379,7 +379,19 @@
     "level_all": "Tous",
     "level_error": "Erreur",
     "level_warn": "Avertissement",
-    "level_info": "Info"
+    "level_info": "Info",
+    "view_label": "Vue du journal",
+    "view_table": "Tableau",
+    "view_raw": "Brut",
+    "col_time": "Heure",
+    "col_level": "Niveau",
+    "col_logger": "Logger",
+    "col_host": "Hôte",
+    "col_request": "Requête",
+    "col_status": "Statut",
+    "col_message": "Message",
+    "table_label": "Entrées du journal",
+    "saved_to": "Enregistré dans {{path}}"
   },
   "tabs": {
     "proxy_list": "Liste des proxys",

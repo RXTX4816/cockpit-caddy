@@ -379,7 +379,19 @@
     "level_all": "Alla",
     "level_error": "Fel",
     "level_warn": "Varning",
-    "level_info": "Info"
+    "level_info": "Info",
+    "view_label": "Loggvy",
+    "view_table": "Tabell",
+    "view_raw": "Rå",
+    "col_time": "Tid",
+    "col_level": "Nivå",
+    "col_logger": "Loggare",
+    "col_host": "Värd",
+    "col_request": "Förfrågan",
+    "col_status": "Status",
+    "col_message": "Meddelande",
+    "table_label": "Loggposter",
+    "saved_to": "Sparad i {{path}}"
   },
   "tabs": {
     "proxy_list": "Proxylista",

@@ -379,7 +379,19 @@
     "level_all": "Všetko",
     "level_error": "Chyba",
     "level_warn": "Varovanie",
-    "level_info": "Info"
+    "level_info": "Info",
+    "view_label": "Zobrazenie logu",
+    "view_table": "Tabuľka",
+    "view_raw": "Surový",
+    "col_time": "Čas",
+    "col_level": "Úroveň",
+    "col_logger": "Logger",
+    "col_host": "Hostiteľ",
+    "col_request": "Požiadavka",
+    "col_status": "Stav",
+    "col_message": "Správa",
+    "table_label": "Záznamy logu",
+    "saved_to": "Uložené do {{path}}"
   },
   "tabs": {
     "proxy_list": "Zoznam proxy",

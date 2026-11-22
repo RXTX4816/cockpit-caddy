@@ -379,7 +379,19 @@
     "level_all": "ყველა",
     "level_error": "შეცდომა",
     "level_warn": "გაფრთხილება",
-    "level_info": "ინფორმაცია"
+    "level_info": "ინფორმაცია",
+    "view_label": "ჟურნალის ხედი",
+    "view_table": "ცხრილი",
+    "view_raw": "ნედლი",
+    "col_time": "დრო",
+    "col_level": "დონე",
+    "col_logger": "ლოგერი",
+    "col_host": "ჰოსტი",
+    "col_request": "მოთხოვნა",
+    "col_status": "სტატუსი",
+    "col_message": "შეტყობინება",
+    "table_label": "ჟურნალის ჩანაწერები",
+    "saved_to": "შენახულია: {{path}}"
   },
   "tabs": {
     "proxy_list": "პროქსების სია",

@@ -379,7 +379,19 @@
     "level_all": "Kaikki",
     "level_error": "Virhe",
     "level_warn": "Varoitus",
-    "level_info": "Info"
+    "level_info": "Info",
+    "view_label": "Lokinäkymä",
+    "view_table": "Taulukko",
+    "view_raw": "Raaka",
+    "col_time": "Aika",
+    "col_level": "Taso",
+    "col_logger": "Lokittaja",
+    "col_host": "Isäntä",
+    "col_request": "Pyyntö",
+    "col_status": "Tila",
+    "col_message": "Viesti",
+    "table_label": "Lokimerkinnät",
+    "saved_to": "Tallennettu: {{path}}"
   },
   "tabs": {
     "proxy_list": "Proxyluettelo",

@@ -379,7 +379,19 @@
     "level_all": "全部",
     "level_error": "错误",
     "level_warn": "警告",
-    "level_info": "信息"
+    "level_info": "信息",
+    "view_label": "日志视图",
+    "view_table": "表格",
+    "view_raw": "原始",
+    "col_time": "时间",
+    "col_level": "级别",
+    "col_logger": "记录器",
+    "col_host": "主机",
+    "col_request": "请求",
+    "col_status": "状态",
+    "col_message": "消息",
+    "table_label": "日志条目",
+    "saved_to": "已保存到 {{path}}"
   },
   "tabs": {
     "proxy_list": "代理列表",
