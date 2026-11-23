@@ -62,3 +62,21 @@ describe("LbRetrySection error placement (#252)", () => {
     expect(active.textContent).not.toContain("fail duration");
   });
 });
+
+// #301: bare placeholders looked like values someone had typed. Caddy's defaults read
+// "Default: …", values that only illustrate an option (off by default) read "e.g. …".
+describe("LbRetrySection placeholders (#301)", () => {
+  it("marks Caddy defaults and examples", () => {
+    render(<LbRetrySection value={empty} onChange={() => {}} isExpanded />);
+    const ph = (id: string) => document.getElementById(id)!.getAttribute("placeholder");
+    expect(ph("lbr-retries")).toBe("e.g. 3");
+    expect(ph("lbr-try-duration")).toBe("e.g. 5s");
+    expect(ph("lbr-try-interval")).toBe("Default: 250ms");
+    expect(ph("lbr-fail-duration")).toBe("e.g. 30s");
+    expect(ph("lbr-max-fails")).toBe("Default: 1");
+    expect(ph("lbr-health-uri")).toBe("e.g. /healthz");
+    expect(ph("lbr-health-interval")).toBe("Default: 30s");
+    expect(ph("lbr-health-timeout")).toBe("Default: 5s");
+    expect(ph("lbr-health-status")).toBe("Default: 2xx");
+  });
+});
