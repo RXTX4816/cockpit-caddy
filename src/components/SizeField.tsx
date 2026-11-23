@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { FormSelect, FormSelectOption } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
-import { ResettableTextInput } from "./sectionLayout";
+import { ResettableTextInput, useFlatSections } from "./sectionLayout";
 
 export type SizeUnit = "B" | "KB" | "MB" | "GB";
 const FACTOR: Record<SizeUnit, number> = { B: 1, KB: 1024, MB: 1024 ** 2, GB: 1024 ** 3 };
@@ -38,6 +38,7 @@ interface Props {
 /** A size as number + unit (#260), stored as bytes. */
 export function SizeField({ id, value, onChange, isDisabled, defaultBytes, emptyUnit = "MB" }: Props) {
   const { t } = useTranslation();
+  const flat = useFlatSections();
   const [unit, setUnit] = useState<SizeUnit>(() => (value ? bytesToSize(value).unit : emptyUnit));
   // The amount is derived from the stored bytes in the chosen unit, so an outside reset shows up.
   // A byte count that isn't a whole multiple of the unit shows as a fraction (1536 in KB → 1.5).
@@ -48,29 +49,33 @@ export function SizeField({ id, value, onChange, isDisabled, defaultBytes, empty
   const def = defaultBytes === undefined ? undefined : bytesToSize(String(defaultBytes));
   const placeholder = def && t("common.default_value", { value: `${def.amount} ${t(`common.unit_${def.unit.toLowerCase()}`)}` });
 
+  // Fixed widths: as flex items the number box collapsed to a sliver next to a stretched unit
+  // select. Wide enough for "Default: 16 KB" or a 10-digit byte count, plus the reset button.
   return (
-    <span style={{ display: "flex", gap: "0.25rem", alignItems: "center", maxWidth: "20rem" }}>
-      <ResettableTextInput
-        id={id}
-        type="number"
-        min={0}
-        value={amount}
-        placeholder={placeholder}
-        onChange={(_e, v) => { setDraft(v); onChange(sizeToBytes(v, unit)); }}
-        onBlur={() => setDraft(null)}
-        isDisabled={isDisabled}
-        style={{ flex: "1 1 6rem" }}
-      />
-      <FormSelect
-        id={`${id}-unit`}
-        aria-label={t("common.size_unit")}
-        value={unit}
-        onChange={(_e, v) => { const u = v as SizeUnit; setUnit(u); if (amount) onChange(sizeToBytes(amount, u)); }}
-        isDisabled={isDisabled}
-        style={{ width: "6rem" }}
-      >
-        {UNITS.map(u => <FormSelectOption key={u} value={u} label={t(`common.unit_${u.toLowerCase()}`)} />)}
-      </FormSelect>
+    <span style={{ display: "flex", gap: "0.25rem", alignItems: "center" }}>
+      <span style={{ width: flat ? "13.5rem" : "11rem", minWidth: "8rem", flexShrink: 1 }}>
+        <ResettableTextInput
+          id={id}
+          type="number"
+          min={0}
+          value={amount}
+          placeholder={placeholder}
+          onChange={(_e, v) => { setDraft(v); onChange(sizeToBytes(v, unit)); }}
+          onBlur={() => setDraft(null)}
+          isDisabled={isDisabled}
+        />
+      </span>
+      <span style={{ width: "7rem", flexShrink: 0 }}>
+        <FormSelect
+          id={`${id}-unit`}
+          aria-label={t("common.size_unit")}
+          value={unit}
+          onChange={(_e, v) => { const u = v as SizeUnit; setUnit(u); if (amount) onChange(sizeToBytes(amount, u)); }}
+          isDisabled={isDisabled}
+        >
+          {UNITS.map(u => <FormSelectOption key={u} value={u} label={t(`common.unit_${u.toLowerCase()}`)} />)}
+        </FormSelect>
+      </span>
     </span>
   );
 }

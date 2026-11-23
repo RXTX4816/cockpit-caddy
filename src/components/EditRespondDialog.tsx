@@ -79,7 +79,7 @@ export function EditRespondDialog({ proxy, existingPorts: _existingPorts, onSave
               id="er-label"
               value={label}
               onChange={(_e, v) => setLabel(v)}
-              placeholder={t("add_proxy.field_label_placeholder")}
+              placeholder={t("common.example_value", { value: t("add_proxy.field_label_placeholder") })}
               isDisabled={isLocked}
             />
           </FormGroup>
