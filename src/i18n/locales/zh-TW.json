@@ -132,8 +132,6 @@
     "field_target_host": "目標主機",
     "field_target_host_placeholder": "例如 localhost",
     "field_tls_skip_verify": "略過後端 TLS 驗證（適用於自我簽署的後端憑證）",
-    "field_tls": "啟用 TLS（Caddy 內部 CA）",
-    "field_tls_short": "啟用 TLS（內部 CA）",
     "field_compress": "壓縮",
     "field_compress_short": "啟用 gzip / zstd 回應壓縮",
     "field_label": "標籤（選填）",
@@ -839,6 +837,9 @@
     "help": "同時以一個名稱註冊此路由，讓其他路由能用 invoke <name> 重複使用。"
   },
   "servers": {
+    "field_https": "HTTPS",
+    "field_https_internal": "已啟用，使用 Caddy 內部 CA",
+    "field_https_help": "伺服器只監聽連接埠，因此無法取得自動（ACME）憑證。未勾選時以一般 HTTP 提供服務。",
     "tab_all": "全部",
     "tab_ungrouped": "未分組",
     "add_server": "新增伺服器",

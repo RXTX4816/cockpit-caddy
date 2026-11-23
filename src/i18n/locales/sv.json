@@ -132,8 +132,6 @@
     "field_target_host": "Målvärd",
     "field_target_host_placeholder": "t.ex. localhost",
     "field_tls_skip_verify": "Hoppa över TLS-verifiering mot backend (för självsignerade backend-certifikat)",
-    "field_tls": "Aktivera TLS (Caddys interna CA)",
-    "field_tls_short": "Aktivera TLS (intern CA)",
     "field_compress": "Komprimering",
     "field_compress_short": "Aktivera gzip-/zstd-komprimering av svar",
     "field_label": "Etikett (valfritt)",
@@ -839,6 +837,9 @@
     "help": "Registrerar även routen under ett namn, så att andra routes kan återanvända den med invoke <name>."
   },
   "servers": {
+    "field_https": "HTTPS",
+    "field_https_internal": "Aktiverad, med Caddys interna CA",
+    "field_https_help": "En server lyssnar bara på portar och kan därför inte få ett automatiskt certifikat (ACME). Utan bock serveras vanlig HTTP.",
     "tab_all": "Alla",
     "tab_ungrouped": "Ogrupperade",
     "add_server": "Lägg till server",

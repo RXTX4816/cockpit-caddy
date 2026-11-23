@@ -132,8 +132,6 @@
     "field_target_host": "Host tujuan",
     "field_target_host_placeholder": "mis. localhost",
     "field_tls_skip_verify": "Lewati verifikasi TLS backend (untuk sertifikat backend yang ditandatangani sendiri)",
-    "field_tls": "Aktifkan TLS (CA internal Caddy)",
-    "field_tls_short": "Aktifkan TLS (CA internal)",
     "field_compress": "Kompresi",
     "field_compress_short": "Aktifkan kompresi respons gzip / zstd",
     "field_label": "Label (opsional)",
@@ -839,6 +837,9 @@
     "help": "Juga mendaftarkan rute dengan sebuah nama, agar rute lain dapat memakainya dengan invoke <name>."
   },
   "servers": {
+    "field_https": "HTTPS",
+    "field_https_internal": "Aktif, dengan CA internal Caddy",
+    "field_https_help": "Server hanya mendengarkan port, jadi tidak bisa mendapat sertifikat otomatis (ACME). Jika tidak dicentang, server melayani HTTP biasa.",
     "tab_all": "Semua",
     "tab_ungrouped": "Tanpa grup",
     "add_server": "Tambah server",

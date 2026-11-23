@@ -26,8 +26,8 @@ test('create server with TLS enabled — Caddyfile block contains tls directive'
   await modal.getByLabel(/display name/i).fill('TLS Server');
   await modal.getByLabel(/\+ add port/i).fill('19400');
   await modal.getByRole('button', { name: /\+ add port/i }).click();
-  // Enable TLS
-  await modal.getByRole('checkbox', { name: /enable tls/i }).check();
+  // HTTPS with Caddy's internal CA
+  await modal.getByRole('checkbox', { name: /caddy's internal ca/i }).check();
   await modal.getByRole('button', { name: /add server/i }).click();
   await modal.getByRole('button', { name: /^confirm$/i }).click();
   await expect(modal).not.toBeVisible({ timeout: 15000 });
@@ -55,7 +55,7 @@ test('edit server: enable TLS on existing server — Caddyfile block updated wit
   await tablist.getByRole('tab', { name: /e2e server/i }).click();
   await page.getByRole('button', { name: /edit server/i }).click();
   const modal = page.getByRole('dialog');
-  await modal.getByRole('checkbox', { name: /enable tls/i }).check();
+  await modal.getByRole('checkbox', { name: /caddy's internal ca/i }).check();
   await modal.getByRole('button', { name: /save/i }).click();
   await modal.getByRole('button', { name: /^confirm$/i }).click();
   await expect(modal).not.toBeVisible({ timeout: 15000 });

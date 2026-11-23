@@ -132,8 +132,6 @@
     "field_target_host": "სამიზნე ჰოსტი",
     "field_target_host_placeholder": "მაგ. localhost",
     "field_tls_skip_verify": "backend-ის TLS შემოწმების გამოტოვება (თვითხელმოწერილი backend სერტიფიკატებისთვის)",
-    "field_tls": "TLS-ის ჩართვა (Caddy-ის შიდა CA)",
-    "field_tls_short": "TLS-ის ჩართვა (შიდა CA)",
     "field_compress": "შეკუმშვა",
     "field_compress_short": "პასუხების gzip / zstd შეკუმშვის ჩართვა",
     "field_label": "იარლიყი (არასავალდებულო)",
@@ -839,6 +837,9 @@
     "help": "მარშრუტს სახელითაც არეგისტრირებს, რომ სხვა მარშრუტებმა invoke <name>-ით გამოიყენონ."
   },
   "servers": {
+    "field_https": "HTTPS",
+    "field_https_internal": "ჩართულია, Caddy-ის შიდა CA-ით",
+    "field_https_help": "სერვერი მხოლოდ პორტებს უსმენს, ამიტომ ავტომატურ (ACME) სერტიფიკატს ვერ მიიღებს. მოუნიშნავად ის ჩვეულებრივ HTTP-ს ემსახურება.",
     "tab_all": "ყველა",
     "tab_ungrouped": "დაუჯგუფებელი",
     "add_server": "სერვერის დამატება",

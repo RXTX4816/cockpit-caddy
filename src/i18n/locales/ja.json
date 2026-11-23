@@ -132,8 +132,6 @@
     "field_target_host": "転送先ホスト",
     "field_target_host_placeholder": "例: localhost",
     "field_tls_skip_verify": "バックエンドの TLS 検証をスキップ（自己署名のバックエンド証明書向け）",
-    "field_tls": "TLS を有効にする（Caddy の内部 CA）",
-    "field_tls_short": "TLS を有効にする（内部 CA）",
     "field_compress": "圧縮",
     "field_compress_short": "レスポンスの gzip / zstd 圧縮を有効にする",
     "field_label": "ラベル（任意）",
@@ -839,6 +837,9 @@
     "help": "ルートに名前も付けて登録し、他のルートから invoke <name> で再利用できるようにします。"
   },
   "servers": {
+    "field_https": "HTTPS",
+    "field_https_internal": "有効（Caddy の内部 CA を使用）",
+    "field_https_help": "サーバーはポートのみで待ち受けるため、自動証明書（ACME）は取得できません。オフの場合はプレーンな HTTP で配信します。",
     "tab_all": "すべて",
     "tab_ungrouped": "グループなし",
     "add_server": "サーバーを追加",

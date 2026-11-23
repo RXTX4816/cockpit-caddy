@@ -132,8 +132,6 @@
     "field_target_host": "目标主机",
     "field_target_host_placeholder": "例如 localhost",
     "field_tls_skip_verify": "跳过后端 TLS 验证（适用于自签名的后端证书）",
-    "field_tls": "启用 TLS（Caddy 内部 CA）",
-    "field_tls_short": "启用 TLS（内部 CA）",
     "field_compress": "压缩",
     "field_compress_short": "启用 gzip / zstd 响应压缩",
     "field_label": "标签（可选）",
@@ -839,6 +837,9 @@
     "help": "同时以一个名称注册该路由，其他路由可用 invoke <name> 复用。"
   },
   "servers": {
+    "field_https": "HTTPS",
+    "field_https_internal": "已启用，使用 Caddy 内部 CA",
+    "field_https_help": "服务器只监听端口，因此无法获取自动（ACME）证书。不勾选时以普通 HTTP 提供服务。",
     "tab_all": "全部",
     "tab_ungrouped": "未分组",
     "add_server": "添加服务器",

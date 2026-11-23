@@ -132,8 +132,6 @@
     "field_target_host": "Doelhost",
     "field_target_host_placeholder": "bijv. localhost",
     "field_tls_skip_verify": "TLS-verificatie van de backend overslaan (voor zelfondertekende backend-certificaten)",
-    "field_tls": "TLS inschakelen (interne CA van Caddy)",
-    "field_tls_short": "TLS inschakelen (interne CA)",
     "field_compress": "Compressie",
     "field_compress_short": "gzip-/zstd-compressie van antwoorden inschakelen",
     "field_label": "Label (optioneel)",
@@ -839,6 +837,9 @@
     "help": "Registreert de route ook onder een naam, zodat andere routes hem met invoke <name> kunnen hergebruiken."
   },
   "servers": {
+    "field_https": "HTTPS",
+    "field_https_internal": "Ingeschakeld, met de interne CA van Caddy",
+    "field_https_help": "Een server luistert alleen op poorten en kan daarom geen automatisch certificaat (ACME) krijgen. Uitgevinkt levert hij gewone HTTP.",
     "tab_all": "Alle",
     "tab_ungrouped": "Niet gegroepeerd",
     "add_server": "Server toevoegen",

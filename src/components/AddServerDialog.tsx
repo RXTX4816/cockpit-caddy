@@ -219,10 +219,11 @@ export function AddServerDialog({ existingKeys, onAdd, onClose }: Props) {
             )}
           </FormGroup>
 
-          <FormGroup label={t("add_proxy.field_tls")} fieldId="server-tls">
+          <FormGroup label={t("servers.field_https")} fieldId="server-tls">
             <Checkbox
               id="server-tls"
-              label={t("add_proxy.field_tls_short")}
+              label={t("servers.field_https_internal")}
+              description={t("servers.field_https_help")}
               isChecked={tls}
               onChange={(_e, v) => setTls(v)}
               isDisabled={isLocked}

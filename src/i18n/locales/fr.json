@@ -132,8 +132,6 @@
     "field_target_host": "Hôte cible",
     "field_target_host_placeholder": "p. ex. localhost",
     "field_tls_skip_verify": "Ignorer la vérification TLS du backend (pour les certificats backend auto-signés)",
-    "field_tls": "Activer TLS (CA interne de Caddy)",
-    "field_tls_short": "Activer TLS (CA interne)",
     "field_compress": "Compression",
     "field_compress_short": "Activer la compression gzip / zstd des réponses",
     "field_label": "Libellé (facultatif)",
@@ -839,6 +837,9 @@
     "help": "Enregistre aussi la route sous un nom, pour que d’autres routes la réutilisent avec invoke <name>."
   },
   "servers": {
+    "field_https": "HTTPS",
+    "field_https_internal": "Activé, avec la CA interne de Caddy",
+    "field_https_help": "Un serveur n'écoute que sur des ports et ne peut donc pas obtenir de certificat automatique (ACME). Décoché, il sert du HTTP simple.",
     "tab_all": "Tous",
     "tab_ungrouped": "Non groupés",
     "add_server": "Ajouter un serveur",

@@ -132,8 +132,6 @@
     "field_target_host": "المضيف الهدف",
     "field_target_host_placeholder": "مثال: localhost",
     "field_tls_skip_verify": "تخطّي التحقق من TLS للخادم الخلفي (لشهادات الخادم الخلفي الموقّعة ذاتيًا)",
-    "field_tls": "تفعيل TLS (المرجع الداخلي في Caddy)",
-    "field_tls_short": "تفعيل TLS (مرجع داخلي)",
     "field_compress": "الضغط",
     "field_compress_short": "تفعيل ضغط الاستجابات بـ gzip / zstd",
     "field_label": "التسمية (اختياري)",
@@ -839,6 +837,9 @@
     "help": "يسجّل المسار أيضًا باسم، لتعيد المسارات الأخرى استخدامه عبر invoke <name>."
   },
   "servers": {
+    "field_https": "HTTPS",
+    "field_https_internal": "مفعّل، عبر المرجع الداخلي في Caddy",
+    "field_https_help": "يستمع الخادم إلى المنافذ فقط، لذا لا يمكنه الحصول على شهادة تلقائية (ACME). عند إلغاء التحديد يقدّم HTTP عاديًا.",
     "tab_all": "الكل",
     "tab_ungrouped": "غير مجمّعة",
     "add_server": "إضافة خادم",

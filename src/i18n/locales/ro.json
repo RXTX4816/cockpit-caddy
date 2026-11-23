@@ -132,8 +132,6 @@
     "field_target_host": "Gazdă țintă",
     "field_target_host_placeholder": "de ex. localhost",
     "field_tls_skip_verify": "Omite verificarea TLS a backend-ului (pentru certificate de backend autosemnate)",
-    "field_tls": "Activează TLS (CA internă Caddy)",
-    "field_tls_short": "Activează TLS (CA internă)",
     "field_compress": "Compresie",
     "field_compress_short": "Activează compresia gzip / zstd a răspunsurilor",
     "field_label": "Etichetă (opțional)",
@@ -839,6 +837,9 @@
     "help": "Înregistrează ruta și sub un nume, ca alte rute să o refolosească cu invoke <name>."
   },
   "servers": {
+    "field_https": "HTTPS",
+    "field_https_internal": "Activat, cu CA internă Caddy",
+    "field_https_help": "Un server ascultă doar pe porturi, deci nu poate obține un certificat automat (ACME). Nebifat, servește HTTP simplu.",
     "tab_all": "Toate",
     "tab_ungrouped": "Negrupate",
     "add_server": "Adaugă server",

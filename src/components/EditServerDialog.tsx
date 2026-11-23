@@ -182,10 +182,11 @@ export function EditServerDialog({ def, onSave, onClose }: Props) {
             )}
           </FormGroup>
 
-          <FormGroup label={t("add_proxy.field_tls")} fieldId="edit-server-tls">
+          <FormGroup label={t("servers.field_https")} fieldId="edit-server-tls">
             <Checkbox
               id="edit-server-tls"
-              label={t("add_proxy.field_tls_short")}
+              label={t("servers.field_https_internal")}
+              description={t("servers.field_https_help")}
               isChecked={tls}
               onChange={(_e, v) => setTls(v)}
               isDisabled={isLocked}

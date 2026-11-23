@@ -132,8 +132,6 @@
     "field_target_host": "Cieľový hostiteľ",
     "field_target_host_placeholder": "napr. localhost",
     "field_tls_skip_verify": "Preskočiť overenie TLS backendu (pre backendy s certifikátmi podpísanými samými sebou)",
-    "field_tls": "Zapnúť TLS (interná CA Caddy)",
-    "field_tls_short": "Zapnúť TLS (interná CA)",
     "field_compress": "Kompresia",
     "field_compress_short": "Zapnúť kompresiu odpovedí gzip / zstd",
     "field_label": "Označenie (voliteľné)",
@@ -839,6 +837,9 @@
     "help": "Navyše zaregistruje trasu pod názvom, aby ju iné trasy mohli použiť cez invoke <name>."
   },
   "servers": {
+    "field_https": "HTTPS",
+    "field_https_internal": "Zapnuté, s internou CA Caddy",
+    "field_https_help": "Server počúva len na portoch, preto nemôže získať automatický certifikát (ACME). Bez zaškrtnutia beží na obyčajnom HTTP.",
     "tab_all": "Všetko",
     "tab_ungrouped": "Nezoskupené",
     "add_server": "Pridať server",
