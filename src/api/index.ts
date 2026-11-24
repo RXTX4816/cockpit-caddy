@@ -9,3 +9,5 @@ export type { RawBlock, PkiCaInfo, CertDetails, GlobalOptions, ConfigFinding, Ac
 export { getServiceStatus, startService, stopService, restartService, reloadService, readCaddyfile, writeCaddyfile, fetchServiceLogs, fetchContainerLogs, testDockerContainer, fetchServiceFailureReason, validateCaddyfile, readFile, writeFile, listConfDFiles } from "./systemd";
 export type { DockerTestResult } from "./systemd";
 export type { CaddyConfig, ProxyEntry, ServiceStatus, CaddyServer, UpstreamStatus, RedirectConfig, FileServerConfig, StaticResponseConfig, RewriteConfig, HeaderOperation, LbPolicy, LbRetryConfig, AccessLogConfig, AccessLogOutput, AccessLogFormat, AccessLogLevel, ErrorHandlerConfig, ErrorMatchType, ErrorHandlerType, ForwardAuthConfig, TlsAdvancedConfig, TlsProtocolVersion, MtlsConfig, MtlsMode, CustomTlsConfig, TrustedProxiesConfig, ProxyProtocolConfig, RouteMatch, RouteMatchFields, ServerDef } from "./types";
+export { hostCertStatus, tlsLogEvents, certCovers, listStoredCertificates, readStoredCertificatePem, fetchTlsLogLines } from "./certStatus";
+export type { StoredCert, HostCertStatus, CertState, TlsLogEvent } from "./certStatus";

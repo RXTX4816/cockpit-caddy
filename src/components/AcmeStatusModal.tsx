@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { i18n } from "@rxtx4816/cockpit-plugin-base-react/i18n";
 import {
   Alert,
   Button,
@@ -20,10 +21,104 @@ import {
   ModalFooter,
   ModalHeader,
   Spinner,
+  Stack,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
-import { fetchCaddyConfig, classifyAcmeHosts, readGlobalOptions } from "../api";
-import type { AcmeHostStatus, GlobalOptions } from "../api";
+import {
+  fetchCaddyConfig, classifyAcmeHosts, readGlobalOptions, fetchStorageInfo,
+  listStoredCertificates, fetchTlsLogLines, tlsLogEvents, hostCertStatus, readStoredCertificatePem,
+} from "../api";
+import type { AcmeHostStatus, GlobalOptions, HostCertStatus, StoredCert } from "../api";
+import { PemBlock, useCertDownload } from "./CertificateView";
+
+const formatDate = (d: Date) => d.toLocaleDateString(i18n.language, { year: "numeric", month: "short", day: "numeric" });
+
+/** Certificate status of one host (#282): stored certificate, or what the tls log says. */
+function CertStatusCell({ status }: { status: HostCertStatus | undefined }) {
+  const { t } = useTranslation();
+  if (!status) return <Spinner size="sm" aria-label={t("acme.state_loading")} />;
+  switch (status.state) {
+    case "valid":
+      return (
+        <Stack>
+          <span><Label isCompact color="green">{t("acme.state_valid", { date: formatDate(status.notAfter!) })}</Label></span>
+          <small>{t("acme.state_renews", { date: formatDate(status.renewAt!) })}</small>
+        </Stack>
+      );
+    case "renewal-due":
+      return <Label isCompact color="orange">{t("acme.state_renewal_due", { date: formatDate(status.notAfter!) })}</Label>;
+    case "obtaining":
+      return (
+        <Stack>
+          <span><Label isCompact color="blue">{t("acme.state_obtaining")}</Label></span>
+          {status.lastError && <small>{t("acme.last_error", { error: status.lastError })}</small>}
+        </Stack>
+      );
+    case "failed":
+      return (
+        <Stack>
+          <span><Label isCompact color="red">{t("acme.state_failed")}</Label></span>
+          <small style={{ wordBreak: "break-word" }} data-testid="cert-error">{status.lastError}</small>
+        </Stack>
+      );
+    default:
+      return <Label isCompact color="grey">{t("acme.state_none")}</Label>;
+  }
+}
+
+/** One stored certificate: names, issuer, validity, fingerprint and the PEM. Never the key. */
+function CertificateDetails({ host, cert, storagePath, onBack }: { host: string; cert: StoredCert; storagePath: string; onBack: () => void }) {
+  const { t } = useTranslation();
+  const [pem, setPem] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const { download, result } = useCertDownload();
+
+  useEffect(() => {
+    readStoredCertificatePem(storagePath, cert.path)
+      .then(setPem)
+      .catch(e => setError(e instanceof Error ? e.message : String(e)));
+  }, [storagePath, cert.path]);
+
+  const rows: [string, ReactNode][] = [
+    [t("acme.cert_subject"), cert.subject],
+    [t("acme.cert_sans"), cert.sans.join(", ")],
+    [t("acme.cert_issuer"), cert.issuer],
+    [t("ca.valid_from"), cert.notBefore.toLocaleString(i18n.language)],
+    [t("ca.valid_until"), cert.notAfter.toLocaleString(i18n.language)],
+    [t("ca.fingerprint"), <code key="fp" style={{ fontSize: "0.78rem", wordBreak: "break-all" }}>{cert.fingerprint}</code>],
+  ];
+
+  return (
+    <div data-testid="acme-cert-view">
+      <Button variant="link" isInline onClick={onBack} style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}>
+        {t("acme.back")}
+      </Button>
+      <h3 style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>{t("acme.cert_title", { host })}</h3>
+      <DescriptionList isHorizontal isCompact style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}>
+        {rows.map(([term, value]) => (
+          <DescriptionListGroup key={term}>
+            <DescriptionListTerm>{term}</DescriptionListTerm>
+            <DescriptionListDescription>{value}</DescriptionListDescription>
+          </DescriptionListGroup>
+        ))}
+      </DescriptionList>
+      {error && <Alert variant="danger" isInline title={t("acme.cert_load_error")}>{error}</Alert>}
+      {!pem && !error && <Spinner size="md" />}
+      {pem && (
+        <PemBlock
+          pem={pem}
+          copyLabel={t("acme.cert_copy")}
+          actions={
+            <Button variant="secondary" size="sm" onClick={() => void download(pem, `${host.replace(/^\*\./, "wildcard.")}.pem`)}>
+              {t("acme.cert_download")}
+            </Button>
+          }
+        />
+      )}
+      {result}
+    </div>
+  );
+}
 
 interface Props {
   onClose: () => void;
@@ -41,14 +136,36 @@ export function AcmeStatusModal({ onClose }: Props) {
   const [hosts, setHosts] = useState<AcmeHostStatus[] | null>(null);
   const [globalOptions, setGlobalOptions] = useState<GlobalOptions | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [certStatus, setCertStatus] = useState<Record<string, HostCertStatus> | null>(null);
+  const [storagePath, setStoragePath] = useState<string | null>(null);
+  const [openHost, setOpenHost] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchCaddyConfig()
-      .then(config => setHosts(classifyAcmeHosts(config)))
-      .catch(e => setError(e instanceof Error ? e.message : String(e)));
-    readGlobalOptions()
-      .then(setGlobalOptions)
-      .catch(() => {});
+    const hostsLoaded = fetchCaddyConfig().then(config => {
+      const list = classifyAcmeHosts(config);
+      setHosts(list);
+      return list;
+    });
+    hostsLoaded.catch(e => setError(e instanceof Error ? e.message : String(e)));
+    const optionsLoaded = readGlobalOptions();
+    optionsLoaded.then(setGlobalOptions).catch(() => {});
+
+    // #282: certificates from Caddy's storage plus the tls log, per host.
+    void (async () => {
+      try {
+        const [list, opts] = await Promise.all([hostsLoaded, optionsLoaded.catch(() => null)]);
+        const storage = await fetchStorageInfo(opts?.storagePath);
+        setStoragePath(storage.path);
+        const [certs, lines] = await Promise.all([listStoredCertificates(storage.path), fetchTlsLogLines()]);
+        const events = tlsLogEvents(lines);
+        const now = new Date();
+        setCertStatus(Object.fromEntries(
+          list.filter(h => h.issuer !== "none").map(h => [h.host, hostCertStatus(h.host, certs, events, now)]),
+        ));
+      } catch {
+        setCertStatus({});
+      }
+    })();
   }, []);
 
   const acmeHosts = (hosts ?? []).filter(h => h.issuer === "acme");
@@ -91,7 +208,16 @@ export function AcmeStatusModal({ onClose }: Props) {
           </EmptyState>
         )}
 
-        {hosts && hasAnyHost && (
+        {openHost && certStatus?.[openHost]?.cert && storagePath && (
+          <CertificateDetails
+            host={openHost}
+            cert={certStatus[openHost].cert!}
+            storagePath={storagePath}
+            onBack={() => setOpenHost(null)}
+          />
+        )}
+
+        {hosts && hasAnyHost && !openHost && (
           <>
             <Alert variant="info" isInline title={t("acme.intro")} style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }} />
             <DataList aria-label={t("acme.title")} isCompact>
@@ -101,6 +227,7 @@ export function AcmeStatusModal({ onClose }: Props) {
                     <DataListCell key="host" width={2}><strong>{t("acme.col_host")}</strong></DataListCell>,
                     <DataListCell key="issuer" width={2}><strong>{t("acme.col_issuer")}</strong></DataListCell>,
                     <DataListCell key="source" width={1}><strong>{t("acme.col_source")}</strong></DataListCell>,
+                    <DataListCell key="cert" width={2}><strong>{t("acme.col_certificate")}</strong></DataListCell>,
                   ]} />
                 </DataListItemRow>
               </DataListItem>
@@ -111,10 +238,19 @@ export function AcmeStatusModal({ onClose }: Props) {
                     <DataListItemRow>
                       <DataListItemCells dataListCells={[
                         <DataListCell key="host" width={2}>
-                          <code id={`acme-host-${status.host}`}>{status.host}</code>
+                          {certStatus?.[status.host]?.cert ? (
+                            <Button variant="link" isInline onClick={() => setOpenHost(status.host)}>
+                              <code id={`acme-host-${status.host}`}>{status.host}</code>
+                            </Button>
+                          ) : (
+                            <code id={`acme-host-${status.host}`}>{status.host}</code>
+                          )}
                         </DataListCell>,
                         <DataListCell key="issuer" width={2}>{issuerLabel(status)}</DataListCell>,
                         <DataListCell key="source" width={1}>{sourceBadge(status)}</DataListCell>,
+                        <DataListCell key="cert" width={2}>
+                          {status.issuer === "none" ? "–" : <CertStatusCell status={certStatus ? certStatus[status.host] ?? { host: status.host, state: "none" } : undefined} />}
+                        </DataListCell>,
                       ]} />
                     </DataListItemRow>
                   </DataListItem>
