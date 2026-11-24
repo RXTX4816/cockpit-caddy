@@ -328,9 +328,9 @@ const SECTIONS = {
 export type DialogSection = keyof typeof SECTIONS;
 
 /**
- * Show a settings section in a site dialog. The proxy dialogs put each section on a tab
- * (General, Security, Routing, Upstreams, Logging & errors, Limits); the other dialogs keep the
- * accordions, where this expands the section instead.
+ * Show a settings section in a site dialog. Every site dialog puts its sections on tabs
+ * (General, Security, Routing, Upstreams, Logging & errors, Limits; fewer outside the proxy
+ * dialog, #293); a dialog without tabs keeps the accordions, where this expands the section.
  */
 export async function openSection(modal: Locator, section: DialogSection): Promise<void> {
   const { tab, toggle } = SECTIONS[section];

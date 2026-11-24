@@ -191,6 +191,7 @@
     "field_split_path": "Разделение пути (необязательно)",
     "field_split_path_help": "Расширения, по которым URI делится на путь к скрипту и информацию о пути. Через пробел. Оставьте пустым, чтобы использовать значение Caddy по умолчанию (.php).",
     "validation_upstream_required": "Укажите upstream FastCGI",
+    "env_heading": "Переменные окружения",
     "env_section_title": "Переменные окружения",
     "env_field_key": "Имя",
     "env_field_value": "Значение",

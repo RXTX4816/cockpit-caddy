@@ -191,6 +191,7 @@
     "field_split_path": "Розділення шляху (необов'язково)",
     "field_split_path_help": "Розширення, за якими URI ділиться на шлях до скрипту та інформацію про шлях. Через пробіл. Залиште порожнім, щоб використати типове значення Caddy (.php).",
     "validation_upstream_required": "Вкажіть upstream FastCGI",
+    "env_heading": "Змінні середовища",
     "env_section_title": "Змінні середовища",
     "env_field_key": "Назва",
     "env_field_value": "Значення",

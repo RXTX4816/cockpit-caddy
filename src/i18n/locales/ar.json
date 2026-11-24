@@ -191,6 +191,7 @@
     "field_split_path": "تقسيم المسار (اختياري)",
     "field_split_path_help": "الامتدادات المستخدمة لتقسيم URI إلى مسار السكربت ومعلومات المسار، مفصولة بمسافات. اتركه فارغًا لاستخدام القيمة الافتراضية لـ Caddy (.php).",
     "validation_upstream_required": "خادم FastCGI الأعلى مطلوب",
+    "env_heading": "متغيرات البيئة",
     "env_section_title": "متغيرات البيئة",
     "env_field_key": "الاسم",
     "env_field_value": "القيمة",

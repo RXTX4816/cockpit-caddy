@@ -21,10 +21,12 @@ import {
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
-import { CaddyApiError, isPathOnlyMatcher } from "../api";
-import type { ProxyEntry, RouteMatch, ServerDef } from "../api";
-import { RouteMatchersSection } from "./RouteMatchersSection";
+import { CaddyApiError } from "../api";
+import type { ProxyEntry, ServerDef } from "../api";
 import { SnippetImportsField } from "./SnippetImportsField";
+import { ProxyTabs } from "./ProxyTabs";
+import { firstTabWithError, type ProxyTabKey } from "./proxyDialogParts";
+import { proxyTabStateFlags, useProxyTabState, type ProxyTabState } from "./proxyTabState";
 import { parseListenPort } from "./AddServerDialog";
 import type { ServerContext } from "./AddRedirectDialog";
 
@@ -33,14 +35,14 @@ interface Props {
   onAdd: (entry: Omit<ProxyEntry, "id" | "serverKey">) => Promise<void>;
   onClose: () => void;
   initialValues?: { port?: string; statusCode?: string; body?: string; close?: boolean; label?: string };
-  initialMatchers?: RouteMatch;
+  /** Duplicate: the source's route matchers (#293). */
+  initialTabState?: Partial<ProxyTabState>;
   initialImports?: string[];
-  initialHandlePath?: boolean;
   servers?: ServerDef[];
   initialServerKey?: string;
 }
 
-export function AddRespondDialog({ existingPorts, onAdd, onClose, initialValues, initialMatchers, initialImports, initialHandlePath, servers, initialServerKey }: Props) {
+export function AddRespondDialog({ existingPorts, onAdd, onClose, initialValues, initialTabState, initialImports, servers, initialServerKey }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
   const confirmAction = useConfirmAction();
@@ -50,9 +52,9 @@ export function AddRespondDialog({ existingPorts, onAdd, onClose, initialValues,
   const [body, setBody] = useState(initialValues?.body ?? "");
   const [close, setClose] = useState(initialValues?.close ?? false);
   const [label, setLabel] = useState(initialValues?.label ?? "");
-  const [matchers, setMatchers] = useState<RouteMatch | undefined>(initialMatchers);
+  const [tabState, updateTabState] = useProxyTabState(initialTabState);
+  const [activeTab, setActiveTab] = useState<ProxyTabKey>("general");
   const [imports, setImports] = useState<string[] | undefined>(initialImports);
-  const [handlePath, setHandlePath] = useState(initialHandlePath ?? false);
   const [selectedServerKey, setSelectedServerKey] = useState(initialServerKey ?? "");
   const [portErr, setPortErr] = useState<string | null>(null);
   const [statusErr, setStatusErr] = useState<string | null>(null);
@@ -84,7 +86,12 @@ export function AddRespondDialog({ existingPorts, onAdd, onClose, initialValues,
   }
 
   function handleAdd() {
-    if (validate()) confirmAction.confirm();
+    const errorTab = firstTabWithError(proxyTabStateFlags(tabState, !validate(), "route").hasError);
+    if (errorTab) {
+      setActiveTab(errorTab);
+      return;
+    }
+    confirmAction.confirm();
   }
 
   const isLocked = confirmAction.step !== "idle";
@@ -102,114 +109,115 @@ export function AddRespondDialog({ existingPorts, onAdd, onClose, initialValues,
             style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}
           />
         )}
-        <Form isHorizontal>
-          <FormGroup label={t("add_proxy.field_label")} fieldId="respond-label">
-            <TextInput
-              id="respond-label"
-              value={label}
-              onChange={(_e, v) => setLabel(v)}
-              placeholder={t("common.example_value", { value: t("add_proxy.field_label_placeholder") })}
-              isDisabled={isLocked}
-            />
-          </FormGroup>
+        <ProxyTabs
+          state={tabState}
+          onChange={updateTabState}
+          active={activeTab}
+          onSelect={setActiveTab}
+          isDisabled={isLocked}
+          idPrefix="add-respond"
+          layout="route"
+          generalHasError={!!(portErr || statusErr)}
+          general={
+            <Form isHorizontal>
+              <FormGroup label={t("add_proxy.field_label")} fieldId="respond-label">
+                <TextInput
+                  id="respond-label"
+                  value={label}
+                  onChange={(_e, v) => setLabel(v)}
+                  placeholder={t("common.example_value", { value: t("add_proxy.field_label_placeholder") })}
+                  isDisabled={isLocked}
+                />
+              </FormGroup>
 
-          {servers && servers.length > 0 && (
-            <FormGroup label={t("servers.selector_label")} fieldId="respond-server">
-              <FormSelect
-                id="respond-server"
-                value={selectedServerKey}
-                onChange={(_e, v) => { setSelectedServerKey(v); setPortErr(null); }}
-                isDisabled={isLocked}
-              >
-                <FormSelectOption value="" label={t("servers.selector_none")} />
-                {servers.map(s => (
-                  <FormSelectOption key={s.key} value={s.key} label={`${s.name} (${s.listenAddresses[0] ?? ""})`} />
-                ))}
-              </FormSelect>
-            </FormGroup>
-          )}
-
-          {serverCtx ? (
-            <FormGroup label={t("add_redirect.field_from_port")} fieldId="respond-port">
-              <Label isCompact color="blue">{serverCtx.serverName} (:{serverCtx.port})</Label>
-            </FormGroup>
-          ) : (
-            <FormGroup label={t("add_redirect.field_from_port")} fieldId="respond-port" isRequired>
-              <TextInput
-                id="respond-port"
-                type="number"
-                value={port}
-                onChange={(_e, v) => { setPort(v); setPortErr(null); }}
-                placeholder={t("common.example_value", { value: "8080" })}
-                isDisabled={isLocked}
-                validated={portErr ? "error" : "default"}
-              />
-              {portErr && (
-                <FormHelperText>
-                  <HelperText><HelperTextItem variant="error">{portErr}</HelperTextItem></HelperText>
-                </FormHelperText>
+              {servers && servers.length > 0 && (
+                <FormGroup label={t("servers.selector_label")} fieldId="respond-server">
+                  <FormSelect
+                    id="respond-server"
+                    value={selectedServerKey}
+                    onChange={(_e, v) => { setSelectedServerKey(v); setPortErr(null); }}
+                    isDisabled={isLocked}
+                  >
+                    <FormSelectOption value="" label={t("servers.selector_none")} />
+                    {servers.map(s => (
+                      <FormSelectOption key={s.key} value={s.key} label={`${s.name} (${s.listenAddresses[0] ?? ""})`} />
+                    ))}
+                  </FormSelect>
+                </FormGroup>
               )}
-            </FormGroup>
-          )}
 
-          <FormGroup label={t("add_respond.field_status")} fieldId="respond-status" isRequired>
-            <TextInput
-              id="respond-status"
-              type="number"
-              value={statusCode}
-              onChange={(_e, v) => { setStatusCode(v); setStatusErr(null); }}
-              placeholder={t("common.example_value", { value: "200" })}
-              isDisabled={isLocked}
-              validated={statusErr ? "error" : "default"}
-            />
-            {statusErr ? (
-              <FormHelperText>
-                <HelperText><HelperTextItem variant="error">{statusErr}</HelperTextItem></HelperText>
-              </FormHelperText>
-            ) : (
-              <FormHelperText>
-                <HelperText><HelperTextItem>{t("add_respond.field_status_help")}</HelperTextItem></HelperText>
-              </FormHelperText>
-            )}
-          </FormGroup>
+              {serverCtx ? (
+                <FormGroup label={t("add_redirect.field_from_port")} fieldId="respond-port">
+                  <Label isCompact color="blue">{serverCtx.serverName} (:{serverCtx.port})</Label>
+                </FormGroup>
+              ) : (
+                <FormGroup label={t("add_redirect.field_from_port")} fieldId="respond-port" isRequired>
+                  <TextInput
+                    id="respond-port"
+                    type="number"
+                    value={port}
+                    onChange={(_e, v) => { setPort(v); setPortErr(null); }}
+                    placeholder={t("common.example_value", { value: "8080" })}
+                    isDisabled={isLocked}
+                    validated={portErr ? "error" : "default"}
+                  />
+                  {portErr && (
+                    <FormHelperText>
+                      <HelperText><HelperTextItem variant="error">{portErr}</HelperTextItem></HelperText>
+                    </FormHelperText>
+                  )}
+                </FormGroup>
+              )}
 
-          <FormGroup label={t("add_respond.field_body")} fieldId="respond-body">
-            <TextArea
-              id="respond-body"
-              value={body}
-              onChange={(_e, v) => setBody(v)}
-              placeholder={t("add_respond.field_body_placeholder")}
-              isDisabled={isLocked}
-              rows={4}
-              resizeOrientation="vertical"
-            />
-            <FormHelperText>
-              <HelperText><HelperTextItem>{t("add_respond.field_body_help")}</HelperTextItem></HelperText>
-            </FormHelperText>
-          </FormGroup>
+              <FormGroup label={t("add_respond.field_status")} fieldId="respond-status" isRequired>
+                <TextInput
+                  id="respond-status"
+                  type="number"
+                  value={statusCode}
+                  onChange={(_e, v) => { setStatusCode(v); setStatusErr(null); }}
+                  placeholder={t("common.example_value", { value: "200" })}
+                  isDisabled={isLocked}
+                  validated={statusErr ? "error" : "default"}
+                />
+                {statusErr ? (
+                  <FormHelperText>
+                    <HelperText><HelperTextItem variant="error">{statusErr}</HelperTextItem></HelperText>
+                  </FormHelperText>
+                ) : (
+                  <FormHelperText>
+                    <HelperText><HelperTextItem>{t("add_respond.field_status_help")}</HelperTextItem></HelperText>
+                  </FormHelperText>
+                )}
+              </FormGroup>
 
-          <FormGroup fieldId="respond-close">
-            <Checkbox
-              id="respond-close"
-              label={t("add_respond.field_close")}
-              isChecked={close}
-              onChange={(_e, v) => setClose(v)}
-              isDisabled={isLocked}
-            />
-          </FormGroup>
-        </Form>
-        <SnippetImportsField value={imports} onChange={setImports} isDisabled={isLocked} />
-        <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!isPathOnlyMatcher(v)) setHandlePath(false); }} isDisabled={isLocked} />
-        {isPathOnlyMatcher(matchers) && (
-          <Checkbox
-            id="add-respond-handle-path"
-            label={t("handle_path.label")}
-            isChecked={handlePath}
-            onChange={(_e, v) => setHandlePath(v)}
-            isDisabled={isLocked}
-            style={{ marginLeft: "1rem", marginBottom: "0.5rem" }}
-          />
-        )}
+              <FormGroup label={t("add_respond.field_body")} fieldId="respond-body">
+                <TextArea
+                  id="respond-body"
+                  value={body}
+                  onChange={(_e, v) => setBody(v)}
+                  placeholder={t("add_respond.field_body_placeholder")}
+                  isDisabled={isLocked}
+                  rows={4}
+                  resizeOrientation="vertical"
+                />
+                <FormHelperText>
+                  <HelperText><HelperTextItem>{t("add_respond.field_body_help")}</HelperTextItem></HelperText>
+                </FormHelperText>
+              </FormGroup>
+
+              <FormGroup fieldId="respond-close">
+                <Checkbox
+                  id="respond-close"
+                  label={t("add_respond.field_close")}
+                  isChecked={close}
+                  onChange={(_e, v) => setClose(v)}
+                  isDisabled={isLocked}
+                />
+              </FormGroup>
+              <SnippetImportsField value={imports} onChange={setImports} isDisabled={isLocked} />
+            </Form>
+          }
+        />
 
         {confirmAction.error && (
           <Alert variant="danger" isInline title={confirmAction.error} style={{ marginTop: "var(--pf-v6-global--spacer--md)" }} />
@@ -239,9 +247,9 @@ export function AddRespondDialog({ existingPorts, onAdd, onClose, initialValues,
                       body: body.trim() || undefined,
                       close: close || undefined,
                     },
-                    matchers: matchers ?? undefined,
+                    matchers: tabState.matchers ?? undefined,
                     imports,
-                    handlePath: handlePath || undefined,
+                    handlePath: tabState.handlePath || undefined,
                     namedServerKey: serverCtx?.serverKey,
                   });
                 } catch (e) {

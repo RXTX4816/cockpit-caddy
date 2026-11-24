@@ -191,6 +191,7 @@
     "field_split_path": "Pemisahan jalur (opsional)",
     "field_split_path_help": "Ekstensi yang dipakai untuk memisahkan URI menjadi jalur skrip dan info jalur. Dipisahkan spasi. Kosongkan untuk bawaan Caddy (.php).",
     "validation_upstream_required": "Upstream FastCGI wajib diisi",
+    "env_heading": "Variabel lingkungan",
     "env_section_title": "Variabel lingkungan",
     "env_field_key": "Nama",
     "env_field_value": "Nilai",

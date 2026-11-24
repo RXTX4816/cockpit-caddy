@@ -191,6 +191,7 @@
     "field_split_path": "Delning av sökväg (valfritt)",
     "field_split_path_help": "Filändelser som används för att dela upp URI:n i skriptsökväg och sökvägsinformation. Separerade med blanksteg. Lämna tomt för Caddys standard (.php).",
     "validation_upstream_required": "FastCGI-upstream krävs",
+    "env_heading": "Miljövariabler",
     "env_section_title": "Miljövariabler",
     "env_field_key": "Namn",
     "env_field_value": "Värde",

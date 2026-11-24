@@ -191,6 +191,7 @@
     "field_split_path": "路徑分割（選填）",
     "field_split_path_help": "用來將 URI 分割為指令碼路徑與路徑資訊的副檔名，以空格分隔。留空則使用 Caddy 的預設值（.php）。",
     "validation_upstream_required": "必須填寫 FastCGI 上游",
+    "env_heading": "環境變數",
     "env_section_title": "環境變數",
     "env_field_key": "名稱",
     "env_field_value": "值",

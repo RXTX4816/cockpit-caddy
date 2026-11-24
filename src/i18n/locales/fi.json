@@ -191,6 +191,7 @@
     "field_split_path": "Polun jako (valinnainen)",
     "field_split_path_help": "Tiedostopäätteet, joiden kohdalta URI jaetaan skriptin poluksi ja polkutiedoksi. Välilyönneillä erotettuina. Jätä tyhjäksi käyttääksesi Caddyn oletusta (.php).",
     "validation_upstream_required": "FastCGI-upstream on pakollinen",
+    "env_heading": "Ympäristömuuttujat",
     "env_section_title": "Ympäristömuuttujat",
     "env_field_key": "Nimi",
     "env_field_value": "Arvo",

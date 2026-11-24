@@ -191,6 +191,7 @@
     "field_split_path": "路径拆分（可选）",
     "field_split_path_help": "用于将 URI 拆分为脚本路径和路径信息的扩展名，以空格分隔。留空则使用 Caddy 的默认值（.php）。",
     "validation_upstream_required": "必须填写 FastCGI 上游",
+    "env_heading": "环境变量",
     "env_section_title": "环境变量",
     "env_field_key": "名称",
     "env_field_value": "值",

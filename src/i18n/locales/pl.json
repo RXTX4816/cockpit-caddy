@@ -191,6 +191,7 @@
     "field_split_path": "Podział ścieżki (opcjonalnie)",
     "field_split_path_help": "Rozszerzenia, według których URI jest dzielony na ścieżkę skryptu i informację o ścieżce. Oddzielone spacjami. Pozostaw puste, aby użyć domyślnej wartości Caddy (.php).",
     "validation_upstream_required": "Upstream FastCGI jest wymagany",
+    "env_heading": "Zmienne środowiskowe",
     "env_section_title": "Zmienne środowiskowe",
     "env_field_key": "Nazwa",
     "env_field_value": "Wartość",

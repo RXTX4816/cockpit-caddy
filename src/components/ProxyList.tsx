@@ -69,8 +69,6 @@ import { UpstreamStatusDot } from "./UpstreamStatusDot";
 import { buildRouteUrl } from "./routeUrl";
 import type { ProxyEntry, ServerDef } from "../api";
 import { formatExternalHostPort } from "../api";
-import { accessLogConfigToValues } from "./AccessLogSection";
-import { tlsConfigToValues } from "./TlsSection";
 import { proxyTabStateFromEntry } from "./proxyTabState";
 
 type ProxyLayout = "list" | "card";
@@ -810,9 +808,8 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
             code: duplicating.redirect.code,
             label: duplicating.label ? t("proxies.copy_label", { label: duplicating.label }) : "",
           }}
-          initialMatchers={duplicating.matchers}
+          initialTabState={proxyTabStateFromEntry(duplicating)}
           initialImports={duplicating.imports}
-          initialHandlePath={duplicating.handlePath}
         />
       ) : duplicating.staticResponse ? (
         <AddRespondDialog
@@ -828,9 +825,8 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
             close: duplicating.staticResponse.close ?? false,
             label: duplicating.label ? t("proxies.copy_label", { label: duplicating.label }) : "",
           }}
-          initialMatchers={duplicating.matchers}
+          initialTabState={proxyTabStateFromEntry(duplicating)}
           initialImports={duplicating.imports}
-          initialHandlePath={duplicating.handlePath}
         />
       ) : duplicating.fileServer ? (
         <AddStaticDialog
@@ -847,24 +843,8 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
             compress: duplicating.compress ?? false,
             label: duplicating.label ? t("proxies.copy_label", { label: duplicating.label }) : "",
           }}
-          initialBasicAuth={(duplicating.basicAuth ?? []).map(a => ({ username: a.username, password: "", existingHash: a.passwordHash }))}
-          initialResponseHeaders={duplicating.responseHeaders}
-          initialRequestHeaders={duplicating.requestHeaders}
-          initialAccessLog={duplicating.accessLog ? accessLogConfigToValues(duplicating.accessLog) : undefined}
-          initialServerTimeouts={{
-            readTimeout: duplicating.serverReadTimeout ?? "",
-            readHeaderTimeout: duplicating.serverReadHeaderTimeout ?? "",
-            writeTimeout: duplicating.serverWriteTimeout ?? "",
-            idleTimeout: duplicating.serverIdleTimeout ?? "",
-            maxHeaderBytes: duplicating.maxHeaderBytes != null ? String(duplicating.maxHeaderBytes) : "",
-            disableHttp3: duplicating.disableHttp3 ?? false,
-          }}
-          initialRequestBodyMaxSize={duplicating.requestBodyMaxSize != null ? String(duplicating.requestBodyMaxSize) : ""}
-          initialErrorHandlers={duplicating.errorHandlers}
-          initialTlsValues={tlsConfigToValues(duplicating.tlsAdvanced, duplicating.mtls, duplicating.customTls)}
-          initialMatchers={duplicating.matchers}
+          initialTabState={proxyTabStateFromEntry(duplicating)}
           initialImports={duplicating.imports}
-          initialHandlePath={duplicating.handlePath}
         />
       ) : duplicating.phpFastcgi ? (
         <AddPhpFastcgiDialog
@@ -882,24 +862,8 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
             label: duplicating.label ? t("proxies.copy_label", { label: duplicating.label }) : "",
           }}
           initialEnv={envRecordToEntries(duplicating.phpFastcgi.env)}
-          initialBasicAuth={(duplicating.basicAuth ?? []).map(a => ({ username: a.username, password: "", existingHash: a.passwordHash }))}
-          initialResponseHeaders={duplicating.responseHeaders}
-          initialRequestHeaders={duplicating.requestHeaders}
-          initialAccessLog={duplicating.accessLog ? accessLogConfigToValues(duplicating.accessLog) : undefined}
-          initialServerTimeouts={{
-            readTimeout: duplicating.serverReadTimeout ?? "",
-            readHeaderTimeout: duplicating.serverReadHeaderTimeout ?? "",
-            writeTimeout: duplicating.serverWriteTimeout ?? "",
-            idleTimeout: duplicating.serverIdleTimeout ?? "",
-            maxHeaderBytes: duplicating.maxHeaderBytes != null ? String(duplicating.maxHeaderBytes) : "",
-            disableHttp3: duplicating.disableHttp3 ?? false,
-          }}
-          initialRequestBodyMaxSize={duplicating.requestBodyMaxSize != null ? String(duplicating.requestBodyMaxSize) : ""}
-          initialErrorHandlers={duplicating.errorHandlers}
-          initialTlsValues={tlsConfigToValues(duplicating.tlsAdvanced, duplicating.mtls, duplicating.customTls)}
-          initialMatchers={duplicating.matchers}
+          initialTabState={proxyTabStateFromEntry(duplicating)}
           initialImports={duplicating.imports}
-          initialHandlePath={duplicating.handlePath}
         />
       ) : (
         <AddProxyDialog

@@ -191,6 +191,7 @@
     "field_split_path": "გზის დაყოფა (არასავალდებულო)",
     "field_split_path_help": "გაფართოებები, რომლითაც URI სკრიპტის გზად და გზის ინფორმაციად იყოფა. გამოყავით ჰარით. Caddy-ის ნაგულისხმევისთვის (.php) დატოვეთ ცარიელი.",
     "validation_upstream_required": "FastCGI upstream სავალდებულოა",
+    "env_heading": "გარემოს ცვლადები",
     "env_section_title": "გარემოს ცვლადები",
     "env_field_key": "სახელი",
     "env_field_value": "მნიშვნელობა",

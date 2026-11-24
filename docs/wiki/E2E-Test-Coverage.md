@@ -32,7 +32,7 @@ Helper reference (`e2e/helpers.ts`, `e2e/live.ts`, `e2e/fixtures.ts`):
 | `startHttpBackend()` | Starts a real `python3 -m http.server` process on the VM to prove traffic actually reaches it |
 | `curlStatus()` / `waitForListener()` | Live HTTP checks against the real Caddy instance |
 | `expectCaddyActive()` | Cheapest "did this config change break the daemon" check |
-| `openSection(modal, section)` | Shows a settings section in a site dialog: clicks its tab in the proxy dialogs, expands the accordion in the others |
+| `openSection(modal, section)` | Shows a settings section in a site dialog: clicks the tab that holds it (falls back to expanding an accordion in a dialog without tabs) |
 
 ## Coverage by area
 

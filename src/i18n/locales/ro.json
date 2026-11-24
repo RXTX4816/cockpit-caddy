@@ -191,6 +191,7 @@
     "field_split_path": "Împărțirea căii (opțional)",
     "field_split_path_help": "Extensii folosite pentru a împărți URI-ul în calea scriptului și informații de cale. Separate prin spații. Lasă gol pentru valoarea implicită Caddy (.php).",
     "validation_upstream_required": "Upstream-ul FastCGI este obligatoriu",
+    "env_heading": "Variabile de mediu",
     "env_section_title": "Variabile de mediu",
     "env_field_key": "Nume",
     "env_field_value": "Valoare",
