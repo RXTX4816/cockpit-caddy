@@ -23,6 +23,7 @@
     "test:e2e:codegen": "playwright codegen",
     "build:watch": "npm run watch",
     "vm": "node_modules/@rxtx4816/cockpit-plugin-base-react/scripts/test-vm.sh",
+    "vm:seed": "bash scripts/seed-vm/apply.sh",
     "base:add": "echo '⚠ Run `yalc push` in cockpit-plugin-base-react first' && yalc add @rxtx4816/cockpit-plugin-base-react && npm install",
     "base:reset": "yalc retreat --all && npm install"
   },
