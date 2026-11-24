@@ -3,7 +3,7 @@
 A catalog of every Playwright end-to-end spec in `e2e/`: what it exercises, and how.
 Use this page to see what's already covered before adding new tests, and to spot gaps.
 
-**Current totals:** 39 spec files, 139 tests, run against real Cockpit + Caddy on QEMU
+**Current totals:** 43 spec files, 175 tests, run against real Cockpit + Caddy on QEMU
 VMs (see [VM Testing](VM-Testing)). All specs share one Caddy instance per VM
 (`workers: 1` in `playwright.config.ts`), so they run serially and each test resets
 config state via the `pluginPage` fixture before it starts.
@@ -92,6 +92,7 @@ Helper reference (`e2e/helpers.ts`, `e2e/live.ts`, `e2e/fixtures.ts`):
 
 | File | What it covers | Tests |
 |---|---|---|
+| `dns-challenge-workflows.spec.ts` | ACME DNS challenge provider (#261) | without a DNS module, the setting explains what is needed and links the module list · credentials go to the root-only env file, never into the Caddyfile (skips without a Caddy build that has caddy-dns/cloudflare) |
 | `global-options-workflows.spec.ts` | Settings save doesn't corrupt unrelated existing proxies | saving Settings does not strip labels from existing TLS proxies |
 | `metrics-workflows.spec.ts` | Prometheus metrics global option + dedicated site block | enabling metrics writes the global option and a dedicated site block Caddy accepts · a custom path and plain-format option round-trip correctly · disabling metrics removes both the global option and the site block · enabling without a listen address is blocked before saving |
 | `storage-workflows.spec.ts` | Certificate storage backend path, including systemd sandbox write-permission checks | Settings shows the detected default storage path with disk usage and cert count · saving a custom storage root writes a valid global option Caddy accepts · an unwritable storage path is rejected before ever being saved · a path outside the systemd sandbox ReadWritePaths is rejected even though root can create it · a fresh directory under an allowed path is usable by the caddy user, not just root |
@@ -103,6 +104,7 @@ Helper reference (`e2e/helpers.ts`, `e2e/live.ts`, `e2e/fixtures.ts`):
 
 | File | What it covers | Tests |
 |---|---|---|
+| `caddyfile-highlighting-workflows.spec.ts` | Caddyfile syntax highlighting (#283), light and dark | Caddyfile viewer and editor are highlighted (light) · (dark); visual baselines only in the pinned Playwright image |
 | `caddyfile-editor-workflows.spec.ts` | Raw Caddyfile tab (CodeMirror editor), validate-before-save | raw Caddyfile tab shows current on-disk content · editing and saving a valid Caddyfile updates the file and reloads successfully · saving an invalid Caddyfile surfaces a validation error and does not overwrite the file · saving unrelated changes does not drop an existing proxy route |
 | `backup-restore-workflows.spec.ts` | tar-based config backup/restore | backup produces a tar archive containing the /etc/caddy config · restore from a backup tar replaces current config exactly · restore of a corrupt archive is rejected without touching existing config |
 | `admin-address-workflows.spec.ts` | Admin API address dialog (TCP/Unix socket, localStorage-persisted) | test-connection button reports success against the real reachable admin socket · test-connection button reports failure against an unreachable address · save is disabled until a connection test succeeds, then persists the value · reset to defaults restores default fields and clears test results |

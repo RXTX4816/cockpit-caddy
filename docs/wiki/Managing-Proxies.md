@@ -53,7 +53,7 @@ When multiple matchers are set (e.g. path + host), they are combined with AND lo
 | **Method** | `POST`, `PUT` | One or more HTTP methods |
 | **Header** | `X-Auth: Bearer*` | Header name + optional value pattern; leave value blank to match header presence |
 | **Query param** | `debug=true` | URL query parameter name + optional value |
-| **Remote IP / CIDR** | `10.0.0.0/8` | Source IP range |
+| **IP address** | `10.0.0.0/8` | **Client IP** (`client_ip`, the default for new matchers): the visitor's IP, read from the forwarded header when the request comes through a trusted proxy (Settings → Trusted proxies); without trusted proxies it is the connection IP. **Connection IP** (`remote_ip`): the TCP peer, which behind a proxy or CDN is the proxy. Existing `remote_ip` matchers stay `remote_ip` |
 
 ### Strip matched path prefix (handle_path)
 
@@ -102,7 +102,7 @@ Sizes (max request body size, max header size) are entered as a number and a uni
 | **Logging & errors** | Access logging, Custom error handlers |
 | **Limits** | Server Timeouts & Limits (read/write/idle timeouts, max header size, HTTP/3 opt-out), Max request body size |
 
-The static, redirect, respond and PHP dialogs use the same tabs, with fewer of them: static and PHP have General, Security (HTTP Basic Auth, TLS Policy), Routing (Route Matchers, Request Headers, Response Headers), Logging & errors and Limits; redirect and respond have General and Routing (Route Matchers). The PHP environment variables sit on General.
+The static, redirect, respond and PHP dialogs use the same tabs, with fewer of them: static and PHP have General, Security (HTTP Basic Auth, TLS Policy), Routing (Route Matchers, Request Headers, Response Headers), Logging & errors and Limits; redirect and respond have General and Routing (Route Matchers). The PHP environment variables sit on General, next to the optional **Try files** field (`try_files`, e.g. `{path} {path}/ /index.php?{query}` for a front-controller app).
 
 | Section | What it configures |
 |---|---|
@@ -116,9 +116,9 @@ The static, redirect, respond and PHP dialogs use the same tabs, with fewer of t
 | **Rewrite** | Strip prefix, add prefix, or regex path rewrite |
 | **Request Headers** | Add, set, or delete upstream request headers |
 | **Response Headers** | Add, set, or delete downstream response headers |
-| **Extra Upstreams** | Additional upstream targets with a load-balancing policy |
+| **Extra Upstreams** | Additional upstream targets with a load-balancing policy: random (Caddy's default), round robin, least connections, first available, weighted round robin (one weight per upstream, the main target included), best of random n, connection IP hash, client IP hash, request path hash, request header, or cookie (sticky sessions, optional cookie name and secret) |
 | **Retry & Failover Tuning** | Max retries, retry duration/interval, and which upstream response codes count as a failure worth retrying — applies even with a single upstream |
-| **Route Matchers** | Path, host, method, header, query, and remote IP matchers |
+| **Route Matchers** | Path, host, method, header, query, and client / connection IP matchers |
 
 ---
 
@@ -139,6 +139,8 @@ Click **Add Static** in the toolbar.
 |---|---|
 | Label | Human-readable name |
 | Browse | Enable directory listing |
+| SPA mode | `try_files {path} /index.html`: existing files are served as they are, every other path gets `index.html`, so a single-page app's deep links work |
+| File server options | Index file names, hidden files or patterns, and precompressed formats (zstd, br, gzip) for `file.zst` / `file.br` / `file.gz` sidecar files |
 | HTTPS certificate | Caddy's internal CA (default) or Off; a site with a public hostname can also use Automatic (Let's Encrypt / ACME) |
 | Compression | Enable gzip/zstd compression |
 

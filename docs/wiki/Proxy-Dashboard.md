@@ -80,9 +80,17 @@ See [Managing Entries](Managing-Proxies) for field details.
 | Tab | Description |
 |---|---|
 | **Logs** | Live Caddy log viewer with level filtering and search |
-| **Caddyfile** | Raw Caddyfile editor with syntax validation |
+| **Caddyfile** | Raw Caddyfile viewer and editor with syntax highlighting (addresses, directives, matchers, placeholders, strings, heredocs, comments; `{ }` blocks fold) and validation before saving |
 | **Settings** | Global Caddy options (ports, debug mode, shutdown delays) and Internal CA viewer |
 
 ## Empty state
 
 If no entries are configured, the list shows a prompt to add the first rule. This does not indicate a problem with Caddy — it simply means the Caddyfile has no managed blocks yet.
+
+## Fresh install: the distro's Caddyfile
+
+The Caddyfile a distro package ships (Arch, Debian/Ubuntu, Fedora) only holds a welcome page on port 80. The plugin recognises it by its structure and shows no migration warning for it. The first change you save moves the welcome site into conf.d as a static site labelled **Distro welcome page**, which you can edit or delete like any other. A Caddyfile with your own sites still shows the warning: its sites move to conf.d when you click **Migrate**, and **Details** shows the paths involved.
+
+## ACME / Let's Encrypt window
+
+**Tools → ACME / Let's Encrypt** lists each hostname with its issuer and a certificate status: *valid until* (and when Caddy renews it, at a third of the lifetime left), *renewal due*, *obtaining…*, *failed* with Caddy's error message, or *no certificate*. The status comes from the certificates in Caddy's storage and the `tls` entries of Caddy's log. Click a hostname to see its certificate: subject, names, issuer, validity, SHA-256 fingerprint and the PEM to copy or download. The private key is never read.
