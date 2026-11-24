@@ -18,7 +18,7 @@ Settings are written and validated on **Save**, but — unlike adding or editing
 
 Registration email, ACME CA directory URL (with Let's Encrypt / staging / ZeroSSL presets), a custom trusted CA root, and External Account Binding (EAB) credentials for providers that require them (e.g. ZeroSSL).
 
-ACME only applies to routes with a real public hostname — a bare `:443` with the internal CA doesn't use these settings at all. See the **ACME / Let's Encrypt** status modal (toolbar) for a live per-hostname view of which routes are actually using it.
+ACME only applies to routes with a real public hostname — a bare `:443` with the internal CA doesn't use these settings at all. See **Tools → ACME / Let's Encrypt** for a live per-hostname view of which routes are actually using it.
 
 ## DNS challenge
 
@@ -58,20 +58,22 @@ Caddy's own startup/reload/error log — separate from each proxy's own access l
 
 ## Trusted proxies
 
-*(added in a later release)*
-
 If Caddy sits behind another reverse proxy, load balancer, or CDN, it otherwise logs and matches on that intermediary's IP instead of the real client. Enable **Trust upstream proxy headers for the real client IP** and set which CIDR ranges are allowed to set that header — typically `private_ranges` (all private IPv4/IPv6 space) or your CDN's published IP list.
 
 Only trust ranges you actually control the network path from — trusting an arbitrary/public range lets anyone spoof their client IP by sending the header themselves.
 
-Applies globally, including to any port that also has its own HTTP/3 or timeout override.
+Applies globally, including to any port that also has its own HTTP/3 or timeout override. Route matchers of type **Client IP** (`client_ip`) then match the visitor's IP from that header.
 
 ## PROXY protocol
-
-*(added in a later release)*
 
 For a TCP-level load balancer that doesn't terminate TLS or add HTTP headers (e.g. AWS NLB, HAProxy in TCP mode) — Caddy reads the real client IP from the PROXY protocol preamble instead. This replaces the need for **Trusted proxies** above, which relies on an HTTP header a TCP-level LB can't add.
 
 An optional allow-list restricts which source IPs may send a PROXY protocol header, and a timeout bounds how long Caddy waits for it.
 
 **Once enabled, every connection must speak the PROXY protocol** — a normal browser or `curl` request without it will be rejected outright. Only enable this if the load balancer in front of Caddy is actually configured to send it.
+
+## Snippets
+
+Snippets are reusable pieces of Caddyfile (`(name) { … }`) that several sites can import, e.g. a set of security headers. **Settings → Snippets** lists them with the sites that use each one. **Add snippet** asks for a name (letters, digits, dots, dashes, underscores) and the directives as they would appear inside a site block. Saving checks the whole configuration first. The plugin keeps its snippets in `/etc/caddy/conf.d/cockpit-caddy-snippets.conf`; snippets written by hand in the main Caddyfile show up as **In Caddyfile** and can be imported but not edited here.
+
+A site imports snippets on its **General** tab (**Snippets** → **Import snippet**), written as `import <name>` lines at the top of its block. Settings a snippet supplies are shown on the site as coming from that snippet. Migrating a Caddyfile keeps snippets and their imports.

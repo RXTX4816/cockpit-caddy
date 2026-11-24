@@ -4,19 +4,23 @@ Cockpit Caddy is a web-based UI for managing [Caddy](https://caddyserver.com/), 
 
 ## What you can do
 
-- Manage reverse proxies, static file servers, redirects, and static HTTP responses
+- Manage reverse proxies, static file servers (with SPA fallback and precompressed files), PHP sites, redirects, and static HTTP responses
+- Several hostnames per site, and an IP as host to bind only that address
 - **Named virtual servers** — group multiple routes under one port with per-route matchers
-- **Route matchers** — match requests by path, host, method, header, query param, or remote IP
+- **Route matchers** — match requests by path, host, method, header, query param, client or connection IP, with an exclude group and CEL expressions
 - **Strip path prefix** (`handle_path`) — remove the matched prefix before forwarding to the upstream
 - Search and filter entries by port, target, or label
 - Add, edit, duplicate, and delete rules from the web UI
 - Start, stop, restart, and reload the Caddy service
 - Works with Caddy running externally (e.g. Docker) — see [Service Control: External mode](Service-Control#external-mode)
-- TLS certificates handled automatically via Caddy's internal CA — no DNS or Let's Encrypt required — or bring your own certificate, or let Caddy issue via ACME/Let's Encrypt
+- HTTPS per site: automatic certificates (ACME / Let's Encrypt) for public hostnames, Caddy's internal CA for local names, or your own certificate; on-demand TLS per site
+- ACME DNS challenge (for wildcards and hosts not reachable on ports 80/443), globally or per site, with credentials kept out of the Caddyfile
 - Per-server access logging (with rotation), request body size limits, server timeouts, and transport tuning
-- Load-balancer retry/failover tuning and extra upstreams for a single route
+- Extra upstreams with every Caddy load-balancing policy (including sticky sessions), retry/failover tuning, and passive and active health checks
+- **Snippets** shared between sites (`import`)
 - Trusted proxies and PROXY protocol support for running behind another load balancer or CDN
-- Global Caddy options, Caddyfile editor, log viewer, config health check, and internal CA / ACME status viewers
+- Global Caddy options, Caddyfile viewer and editor with syntax highlighting, log table with filters, config health check, backup and restore, and internal CA / ACME certificate status windows
+- Available in 24 languages; the UI follows Cockpit's language setting
 
 ## Pages
 
@@ -24,7 +28,7 @@ Cockpit Caddy is a web-based UI for managing [Caddy](https://caddyserver.com/), 
 |---|---|
 | [Proxy Dashboard](Proxy-Dashboard) | The main screen — entry list, status, search, and actions |
 | [Managing Proxies](Managing-Proxies) | Add, edit, and delete rules |
-| [Global Options](Global-Options) | Ports, ACME, on-demand TLS, storage, metrics, trusted proxies, PROXY protocol |
+| [Global Options](Global-Options) | Ports, ACME, DNS challenge, on-demand TLS, storage, metrics, trusted proxies, PROXY protocol, snippets |
 | [Service Control](Service-Control) | Start, stop, restart, and reload the Caddy service |
 | [Troubleshooting](Troubleshooting) | Fixes for common installation and runtime problems |
 | [Development](Development) | Dev setup, build commands, plugin-base, and VM testing |

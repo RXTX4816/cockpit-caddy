@@ -6,9 +6,11 @@ The Proxy Dashboard is the main screen of the Cockpit Caddy plugin. It lists all
 
 The page is divided into three areas:
 
-1. **Tab bar** — switches between Proxies, Logs, Caddyfile, and Settings tabs.
-2. **Service Control bar** — shows the Caddy service status (running/stopped) and action buttons (Start, Stop, Restart, Reload). See [Service Control](Service-Control).
-3. **Entry list** — entries grouped by server tabs (see below).
+1. **Header** — the Caddy service status and its actions (see [Service Control](Service-Control)), the **Tools** menu (Internal CA, ACME / Let's Encrypt, config check, backup and restore) and the gear icon for the Admin API address.
+2. **Tab bar** — Proxy List, Caddyfile, Logs and Settings.
+3. **Entry list** — entries grouped by server tabs (see below), with **Add Proxy**, **Add Server**, search, the **Health Monitor** switch and a refresh button above it.
+
+The list re-reads Caddy's config every 5 seconds and right after every change, so edits made outside the plugin (a hand-edited Caddyfile, `caddy reload`) show up without reloading the page. At phone width the header, toolbar and list rearrange to fit the screen without sideways scrolling.
 
 ## Server tabs
 
@@ -17,6 +19,7 @@ The entry list is split into tabs:
 | Tab | What it shows |
 |---|---|
 | **All** | Every entry across all servers and standalone rules |
+| **Ungrouped** | Standalone entries only (those that aren't routes of a named server) |
 | **[Server name]** | Routes belonging to a specific named server — one tab per server |
 
 The **All** tab shows standalone entries and all named-server routes in a flat list with a server badge on each row that belongs to a named server.
@@ -31,18 +34,17 @@ Each named-server tab shows a **server info card** at the top (listen addresses 
 | **Static** | Serves files from a directory (`file_server`) |
 | **Redirect** | Issues an HTTP redirect to another URL |
 | **Respond** | Returns a static HTTP response (status code + optional body) |
+| **PHP** | Runs a PHP app through PHP-FPM (`php_fastcgi` + `file_server`) |
 
 ## All-tab columns
 
 | Column | Description |
 |---|---|
 | Label | Optional human-readable name for the rule |
-| Port | The external port Caddy listens on — click to open the URL in a new tab |
-| Type | Proxy, Static, Redirect, or Respond |
-| Target / Root | Upstream address (proxy) or root directory (static) |
-| TLS | Where the certificate comes from: ACME (automatic HTTPS), Internal CA, Custom cert, or none |
-| Flags | Active optional features (compress, auth, access log, handle_path, …) |
-| Actions | Edit, duplicate, and delete buttons |
+| Type | Proxy, Static, PHP, Redirect, or Respond |
+| Address | The site address (port, or hostnames and port) — click to open it in a new tab. Badges after it show where the certificate comes from (ACME, Internal CA, custom) and the active options (Compress, Logging, LB, Auth, Forward Auth, matcher, browse, redirect code, …) |
+| Target | Upstream addresses (proxy), root directory (static), FastCGI upstream (PHP), redirect target or response |
+| Actions | Edit (pencil) and a menu with Duplicate and Delete |
 
 ## Server-tab route columns
 
@@ -58,16 +60,21 @@ Each named-server tab shows a **server info card** at the top (listen addresses 
 
 The search bar in the All tab filters entries in real time across port, target/root, label, and type.
 
+## Health Monitor
+
+The **Health Monitor** switch (after a confirmation) probes each proxy's upstream from the server every 5 seconds and shows a dot: **Reachable** for any HTTP answer, even 4xx/5xx, **Unreachable** for a refused connection or a timeout. Probing stops when you turn the switch off. This is the plugin's own check; Caddy's health checks, which take upstreams out of rotation, are set per site under Retry & Failover (see [Managing Entries](Managing-Proxies)).
+
 ## Adding entries
 
 ### Standalone entries
 
-The toolbar has four **Add** buttons in the All tab:
+**Add Proxy** adds a reverse proxy. The arrow next to it (**More site types**) offers the other kinds:
 
-- **Add Proxy** — reverse proxy to an upstream service
-- **Add Static** — static file server from a directory
-- **Add Redirect** — HTTP redirect rule
-- **Add Respond** — static HTTP response
+- **Reverse proxy** — forward to an upstream service
+- **Static files** — serve a directory
+- **PHP site** — a PHP app behind PHP-FPM
+- **Redirect** — HTTP redirect rule
+- **Fixed response** — a static HTTP response
 
 ### Named servers
 
@@ -79,9 +86,9 @@ See [Managing Entries](Managing-Proxies) for field details.
 
 | Tab | Description |
 |---|---|
-| **Logs** | Live Caddy log viewer with level filtering and search |
+| **Logs** | Caddy's log lines as a table (Time, Level, Logger, Host, Request, Status, Message). Filter by level and logger, search, and click a row to see its full JSON. **Raw** switches to the plain lines. Admin API requests are hidden unless **Show admin API requests** is on |
 | **Caddyfile** | Raw Caddyfile viewer and editor with syntax highlighting (addresses, directives, matchers, placeholders, strings, heredocs, comments; `{ }` blocks fold) and validation before saving |
-| **Settings** | Global Caddy options (ports, debug mode, shutdown delays) and Internal CA viewer |
+| **Settings** | Global Caddy options (ports, ACME, DNS challenge, on-demand TLS, storage, metrics, trusted proxies, …) and Snippets. See [Global Options](Global-Options) |
 
 ## Empty state
 
@@ -94,3 +101,7 @@ The Caddyfile a distro package ships (Arch, Debian/Ubuntu, Fedora) only holds a 
 ## ACME / Let's Encrypt window
 
 **Tools → ACME / Let's Encrypt** lists each hostname with its issuer and a certificate status: *valid until* (and when Caddy renews it, at a third of the lifetime left), *renewal due*, *obtaining…*, *failed* with Caddy's error message, or *no certificate*. The status comes from the certificates in Caddy's storage and the `tls` entries of Caddy's log. Click a hostname to see its certificate: subject, names, issuer, validity, SHA-256 fingerprint and the PEM to copy or download. The private key is never read.
+
+## Internal CA window
+
+**Tools → Internal CA** shows Caddy's local certificate authority: the root and intermediate certificate names, the root's **Valid from** / **Valid until** dates and SHA-256 fingerprint, buttons to copy or download each PEM, and how to install the root in browsers and operating systems. When no site uses the internal CA, a notice says so: visitors then get certificates from ACME or your own files instead.
