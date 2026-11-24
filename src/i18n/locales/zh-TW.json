@@ -485,7 +485,6 @@
     "gate_continue_warning": "未移轉就繼續，可能導致 Caddy 因重複項目而拒絕設定。",
     "backup_warning_title": "請先備份設定",
     "backup_warning_body": "移轉只會備份 Caddyfile 本身。請建立完整的設定備份，以便出問題時能還原所有內容。",
-    "welcome_label": "發行版歡迎頁",
     "banner_details_toggle": "詳細資訊",
     "banner_details": "站台區塊會原封不動地從 /etc/caddy/Caddyfile 移到 /etc/caddy/conf.d/cockpit-caddy.conf，Caddyfile 會加上一行匯入 conf.d 的 import。原始 Caddyfile 備份為 /etc/caddy/Caddyfile.bak。在此之前，外掛的變更可能與 Caddyfile 中的站台衝突。"
   },

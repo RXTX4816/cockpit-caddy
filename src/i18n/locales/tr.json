@@ -485,7 +485,6 @@
     "gate_continue_warning": "Taşımadan devam etmek, Caddy'nin yinelenen girdiler nedeniyle yapılandırmayı reddetmesine yol açabilir.",
     "backup_warning_title": "Önce yapılandırmanızı yedekleyin",
     "backup_warning_body": "Taşıma yalnızca Caddyfile'ın kendisini yedekler. Bir sorun olursa her şeyi geri yükleyebilmek için yapılandırmanın tam yedeğini oluşturun.",
-    "welcome_label": "Dağıtımın karşılama sayfası",
     "banner_details_toggle": "Ayrıntılar",
     "banner_details": "Site blokları /etc/caddy/Caddyfile dosyasından /etc/caddy/conf.d/cockpit-caddy.conf dosyasına değiştirilmeden taşınır ve Caddyfile'a conf.d için bir import satırı eklenir. Özgün Caddyfile /etc/caddy/Caddyfile.bak olarak yedeklenir. O zamana kadar eklentinin değişiklikleri Caddyfile'daki sitelerle çakışabilir."
   },

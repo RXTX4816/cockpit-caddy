@@ -485,7 +485,6 @@
     "gate_continue_warning": "마이그레이션 없이 계속하면 중복 항목 때문에 Caddy가 설정을 거부할 수 있습니다.",
     "backup_warning_title": "먼저 설정을 백업하세요",
     "backup_warning_body": "마이그레이션은 Caddyfile 자체만 백업합니다. 문제가 생겨도 모두 복원할 수 있도록 전체 설정 백업을 만드세요.",
-    "welcome_label": "배포판 환영 페이지",
     "banner_details_toggle": "세부 정보",
     "banner_details": "사이트 블록은 /etc/caddy/Caddyfile에서 /etc/caddy/conf.d/cockpit-caddy.conf로 그대로 이동되며, Caddyfile에는 conf.d용 import 줄이 추가됩니다. 원래 Caddyfile은 /etc/caddy/Caddyfile.bak에 백업됩니다. 그 전까지는 플러그인의 변경 사항이 Caddyfile의 사이트와 충돌할 수 있습니다."
   },

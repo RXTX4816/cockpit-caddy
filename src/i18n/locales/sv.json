@@ -485,7 +485,6 @@
     "gate_continue_warning": "Att fortsätta utan migrering kan göra att Caddy avvisar konfigurationen på grund av dubbletter.",
     "backup_warning_title": "Säkerhetskopiera konfigurationen först",
     "backup_warning_body": "Migreringen säkerhetskopierar bara själva Caddyfile. Skapa en fullständig säkerhetskopia av konfigurationen så att du kan återställa allt om något går fel.",
-    "welcome_label": "Distributionens välkomstsida",
     "banner_details_toggle": "Detaljer",
     "banner_details": "Webbplatsblocken flyttas oförändrade från /etc/caddy/Caddyfile till /etc/caddy/conf.d/cockpit-caddy.conf, och Caddyfile får en import-rad för conf.d. Den ursprungliga Caddyfile säkerhetskopieras till /etc/caddy/Caddyfile.bak. Till dess kan insticksprogrammets ändringar krocka med webbplatserna i Caddyfile."
   },

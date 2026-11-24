@@ -268,7 +268,7 @@ export async function ensureConfDImported(): Promise<void> {
   const content = await readCaddyfile();
   if (isStockCaddyfile(content)) {
     // The distro's welcome site moves into conf.d on the first save (#256), no gate needed.
-    const { caddyfile, confD } = migrateStockCaddyfile(content, await readProxyConf(), i18n.t("migration.welcome_label"));
+    const { caddyfile, confD } = migrateStockCaddyfile(content, await readProxyConf(), STOCK_WELCOME_LABEL);
     await cockpit.spawn(["mkdir", "-p", "/etc/caddy/conf.d"], { superuser: "try" });
     await fsWriteFile(PROXY_CONF_PATH, confD, "try");
     await writeCaddyfile(caddyfile);
@@ -481,6 +481,12 @@ export function migrateCaddyfile(content: string): { blocks: RawBlock[]; caddyfi
   rest = rest.replace(/\n{3,}/g, "\n\n").replace(/^\n+/, "");
   return { blocks, caddyfile: withConfDImport(rest.trimEnd() + "\n") };
 }
+
+/**
+ * The label the distro's welcome site gets in conf.d (#256). It's written into the file, so it
+ * stays the same whatever language the UI is in.
+ */
+export const STOCK_WELCOME_LABEL = "Distro welcome page";
 
 /** The addresses a distro's welcome site listens on: the plain-HTTP catch-all (#256). */
 const STOCK_WELCOME_ADDRESSES = new Set([":80", "http://", "http://:80"]);
