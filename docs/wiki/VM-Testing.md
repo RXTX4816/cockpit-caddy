@@ -68,6 +68,7 @@ npm run vm wait arch
 | `npm run vm logs <vm>` | Tail serial console output |
 | `npm run vm clean <vm>` | Wipe disk + re-provision on next start |
 | `npm run vm reset <distro>` | Remove all files including base image |
+| `npm run vm:seed [vm]` | Fill a running VM with example sites for [manual testing](Manual-Testing) (backs up `/etc/caddy` first) |
 
 ## Live editing
 

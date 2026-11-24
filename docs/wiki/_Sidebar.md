@@ -17,4 +17,5 @@
 
 - [Development](Development)
 - [VM Testing](VM-Testing)
+- [Manual Testing](Manual-Testing)
 - [E2E Test Coverage](E2E-Test-Coverage)
