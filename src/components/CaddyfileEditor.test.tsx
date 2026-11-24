@@ -16,7 +16,7 @@ vi.mock("../api", () => ({
 
 // Only CodeEditor is used from this module; a stub keeps CodeMirror out of jsdom.
 vi.mock("@rxtx4816/cockpit-plugin-base-react/components", () => ({
-  CodeEditor: ({ value }: { value: string }) => <pre>{value}</pre>,
+  CodeEditor: ({ content }: { content: string }) => <pre>{content}</pre>,
 }));
 
 import { CaddyfileEditor } from "./CaddyfileEditor";
