@@ -18,11 +18,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { fetchPkiCa, parseCertDetails, fetchCaddyConfig } from "../api";
 import type { PkiCaInfo, CertDetails } from "../api";
-import { readFile as fsReadFile, writeFile as fsWriteFile } from "@rxtx4816/cockpit-plugin-base-react/lib/cockpit-fs";
-
-type ShowSaveFilePicker = (opts: object) => Promise<{
-  createWritable(): Promise<{ write(s: string): Promise<void>; close(): Promise<void> }>;
-}>;
+import { PemBlock, useCertDownload } from "./CertificateView";
 
 interface Props {
   onClose: () => void;
@@ -32,11 +28,7 @@ export function InternalCaModal({ onClose }: Props) {
   const { t } = useTranslation();
   const [ca, setCa] = useState<PkiCaInfo | null>(null);
   const [details, setDetails] = useState<CertDetails | null>(null);
-  const [copied, setCopied] = useState(false);
-  const [copiedIntermediate, setCopiedIntermediate] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [savedPath, setSavedPath] = useState<{ path: string; overwritten: boolean } | null>(null);
-  const [downloadError, setDownloadError] = useState<string | null>(null);
   const [usesInternalCa, setUsesInternalCa] = useState(true);
 
   useEffect(() => {
@@ -64,63 +56,13 @@ export function InternalCaModal({ onClose }: Props) {
       .catch(() => {});
   }, []);
 
-  const downloadCert = useCallback(async (pem: string, filename: string) => {
-    setSavedPath(null);
-    setDownloadError(null);
-
-    // Prefer the File System Access API — opens the OS save dialog without any URL
-    // navigation, so Cockpit's iframe CSP cannot block it.
-    if ("showSaveFilePicker" in window) {
-      try {
-        const handle = await (window as Window & { showSaveFilePicker: ShowSaveFilePicker }).showSaveFilePicker({
-          suggestedName: filename,
-          types: [{ description: t("ca.pem_file_type"), accept: { "application/x-pem-file": [".pem"] } }],
-        });
-        const writable = await handle.createWritable();
-        await writable.write(pem);
-        await writable.close();
-        return;
-      } catch (e) {
-        if ((e as { name?: string }).name === "AbortError") return;
-        // SecurityError — showSaveFilePicker is blocked in Cockpit's iframe; fall through.
-      }
-    }
-
-    // Fallback: Firefox blocks blob:/data: navigation in iframes via frame-src CSP.
-    // Write the file to ~/Downloads/ on the server instead.
-    try {
-      const user = await cockpit.user();
-      const savePath = `${user.home}/Downloads/${filename}`;
-      await cockpit.spawn(["mkdir", "-p", "--", `${user.home}/Downloads`], { err: "message" });
-      const existing = await fsReadFile(savePath);
-      await fsWriteFile(savePath, pem);
-      setSavedPath({ path: savePath, overwritten: existing !== null });
-    } catch (err) {
-      setDownloadError((err as { message?: string })?.message ?? String(err));
-    }
-  }, [t]);
+  const { download: downloadCert, result: downloadResult } = useCertDownload();
 
   const downloadPem = useCallback(() => downloadCert(ca?.rootPem ?? "", "caddy-root-ca.pem"), [ca, downloadCert]);
   const downloadIntermediatePem = useCallback(
     () => downloadCert(ca?.intermediatePem ?? "", "caddy-intermediate-ca.pem"),
     [ca, downloadCert],
   );
-
-  function copyPem() {
-    if (!ca) return;
-    void navigator.clipboard.writeText(ca.rootPem).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  }
-
-  function copyIntermediatePem() {
-    if (!ca) return;
-    void navigator.clipboard.writeText(ca.intermediatePem).then(() => {
-      setCopiedIntermediate(true);
-      setTimeout(() => setCopiedIntermediate(false), 2000);
-    });
-  }
 
   return (
     <Modal isOpen onClose={onClose} aria-label={t("ca.title")} variant="medium">
@@ -173,64 +115,21 @@ export function InternalCaModal({ onClose }: Props) {
               )}
             </DescriptionList>
 
-            <div style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}>
-              <pre style={{
-                fontFamily: "monospace",
-                fontSize: "0.78rem",
-                background: "var(--pf-t--global--background--color--secondary--default)",
-                padding: "0.75rem",
-                borderRadius: "var(--pf-t--global--border--radius--100, 4px)",
-                whiteSpace: "pre-wrap",
-                wordBreak: "break-all",
-                maxHeight: "12rem",
-                overflowY: "auto",
-                margin: 0,
-                marginBottom: "0.5rem",
-                border: "1px solid var(--pf-t--global--border--color--default)",
-              }}>{ca.rootPem.trim()}</pre>
-              <Button variant="secondary" size="sm" onClick={copyPem}>
-                {copied ? t("ca.copied_tip") : t("ca.copy_tip")}
-              </Button>
-            </div>
+            <PemBlock pem={ca.rootPem} copyLabel={t("ca.copy_tip")} />
 
             <ExpandableSection toggleText={t("ca.intermediate_cn")} isIndented style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}>
-              <pre style={{
-                fontFamily: "monospace",
-                fontSize: "0.78rem",
-                background: "var(--pf-t--global--background--color--secondary--default)",
-                padding: "0.75rem",
-                borderRadius: "var(--pf-t--global--border--radius--100, 4px)",
-                whiteSpace: "pre-wrap",
-                wordBreak: "break-all",
-                maxHeight: "12rem",
-                overflowY: "auto",
-                margin: 0,
-                marginBottom: "0.5rem",
-                border: "1px solid var(--pf-t--global--border--color--default)",
-              }}>{ca.intermediatePem.trim()}</pre>
-              <div style={{ display: "flex", gap: "0.5rem" }}>
-                <Button variant="secondary" size="sm" onClick={copyIntermediatePem}>
-                  {copiedIntermediate ? t("ca.copied_tip") : t("ca.copy_intermediate_tip")}
-                </Button>
-                <Button variant="secondary" size="sm" onClick={() => void downloadIntermediatePem()}>
-                  {t("ca.download_intermediate_button")}
-                </Button>
-              </div>
+              <PemBlock
+                pem={ca.intermediatePem}
+                copyLabel={t("ca.copy_intermediate_tip")}
+                actions={
+                  <Button variant="secondary" size="sm" onClick={() => void downloadIntermediatePem()}>
+                    {t("ca.download_intermediate_button")}
+                  </Button>
+                }
+              />
             </ExpandableSection>
 
-            {savedPath && (
-              <Alert
-                variant={savedPath.overwritten ? "warning" : "success"}
-                isInline
-                title={savedPath.overwritten
-                  ? t("ca.download_overwritten", { path: savedPath.path })
-                  : t("ca.download_saved", { path: savedPath.path })}
-                style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}
-              />
-            )}
-            {downloadError && (
-              <Alert variant="danger" isInline title={t("ca.download_error")} style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>{downloadError}</Alert>
-            )}
+            {downloadResult}
 
             <ExpandableSection toggleText={t("ca.install_instructions_title")} isIndented>
               <Content>

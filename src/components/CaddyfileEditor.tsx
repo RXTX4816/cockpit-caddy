@@ -16,9 +16,19 @@ import {
 import { useTranslation } from "react-i18next";
 import { CodeEditor } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { useCaddyfile } from "../hooks/useCaddyfile";
+import { caddyfile } from "./caddyfileLanguage";
 import { listConfDFiles, validateCaddyfile, reloadCaddy, applyCurrentCaddyfileViaApi, isCaddyManaged } from "../api";
 
 const MAIN_PATH = "/etc/caddy/Caddyfile";
+
+/** Module-level so the editor isn't rebuilt on every render (the extensions are effect deps). */
+const CADDYFILE_EXTENSIONS = [caddyfile()];
+const PLAIN_EXTENSIONS = [[]]; // same length as CADDYFILE_EXTENSIONS: the base spreads them into effect deps
+
+/** conf.d can hold other files (e.g. the legacy servers JSON); only Caddyfiles get highlighting (#283). */
+function extensionsFor(path: string) {
+  return /\.json$/i.test(path) ? PLAIN_EXTENSIONS : CADDYFILE_EXTENSIONS;
+}
 
 interface FileEntry {
   path: string;
@@ -259,29 +269,18 @@ export function CaddyfileEditor({ unmanaged = false }: Props) {
         {diskContent !== null && (
           editMode ? (
             <div style={{ minHeight: "25rem" }}>
-              <CodeEditor content={draft} onChange={setDraft} />
+              <CodeEditor content={draft} onChange={setDraft} extensions={extensionsFor(selectedPath)} />
             </div>
           ) : (
-            <pre style={{
-              fontFamily: "monospace",
-              fontSize: "0.875rem",
-              padding: "1rem",
-              margin: 0,
-              background: "var(--pf-v6-global--BackgroundColor--200)",
-              color: "var(--pf-v6-global--Color--100)",
-              border: "1px solid var(--pf-v6-global--BorderColor--100)",
-              borderRadius: "var(--pf-v6-global--BorderRadius--sm, 3px)",
-              overflow: "auto",
-              minHeight: "20rem",
-              whiteSpace: "pre-wrap",
-              wordBreak: "break-all",
-            }}>
-              {diskContent || (
-                <em style={{ color: "var(--pf-v6-global--Color--200)" }}>
-                  {t("caddyfile.empty")}
-                </em>
-              )}
-            </pre>
+            diskContent ? (
+              <div style={{ minHeight: "20rem" }} data-testid="caddyfile-viewer">
+                <CodeEditor content={diskContent} readOnly extensions={extensionsFor(selectedPath)} />
+              </div>
+            ) : (
+              <em style={{ color: "var(--pf-v6-global--Color--200)" }}>
+                {t("caddyfile.empty")}
+              </em>
+            )
           )
         )}
       </StackItem>

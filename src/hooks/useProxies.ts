@@ -6,7 +6,7 @@ import {
   readCaddyfile, writeCaddyfile, readProxyConf,
   parseLabelsFromCaddyfile, parseConfTlsMap, parseConfExternalAddresses, parseConfAccessLogMap, parseConfForwardAuthMap, parseConfCustomTlsCaMap, parseClientAuthCaFile, parseConfTlsIssuerMap, parseConfTlsOnDemandMap,
   surgicallyWriteProxy, surgicallyEditProxy, surgicallyRemoveBlock,
-  migrateCaddyfile, mergeMigratedConfContent, writeRawProxyConf, writeRawProxyConfValidated,
+  migrateCaddyfile, isStockCaddyfile, mergeMigratedConfContent, writeRawProxyConf, writeRawProxyConfValidated,
   CaddyfileError,
   writeFile, reloadCaddy, syncGlobalTimeouts,
   removeLegacyServerDefsFile, parseServerDefsFromConf,
@@ -87,7 +87,10 @@ function withOnDemand(map: Record<string, boolean>, oldKey: string | undefined, 
  */
 function needsCaddyfileReload(p: ProxyEntry): boolean {
   // Snippet imports (#288) only exist in the Caddyfile; hand-built JSON would drop what they add.
-  return !!p.phpFastcgi || reliesOnCaddyfileTls(p) || !!p.imports?.length;
+  // A client_ip matcher (#286) needs the server's trusted_proxies, which the global options set
+  // and only Caddy's adapter puts on the server; the hand-built JSON server has none.
+  return !!p.phpFastcgi || reliesOnCaddyfileTls(p) || !!p.imports?.length
+    || !!p.matchers?.client_ip?.ranges.length || !!p.matchers?.not?.client_ip?.ranges.length;
 }
 
 /**
@@ -192,8 +195,10 @@ export function useProxies() {
   // Any site-address block left in the main Caddyfile means migration is needed —
   // whether it's a legacy file with no conf.d import at all, or one that already
   // imports conf.d but also has extra hand-added blocks sitting alongside it.
+  // The distro's own Caddyfile (#256) isn't a migration case: its welcome site moves into
+  // conf.d on the first save (ensureConfDImported), without a warning or a gate.
   const needsMigration = useMemo(
-    () => migrateCaddyfile(caddyfileContent).blocks.length > 0,
+    () => !isStockCaddyfile(caddyfileContent) && migrateCaddyfile(caddyfileContent).blocks.length > 0,
     [caddyfileContent],
   );
 
@@ -339,11 +344,10 @@ export function useProxies() {
       ];
       // Validate + persist server-level timeouts in global Caddyfile first; throws CaddyfileError on failure.
       await syncGlobalTimeouts(afterProxies);
-      const [, , current] = await Promise.all([
-        ensureConfDImported(),
-        cockpit.spawn(["mkdir", "-p", "/etc/caddy/conf.d"], { superuser: "try" }),
-        readProxyConf(),
-      ]);
+      // Sequential: a stock Caddyfile's migration (#256) writes conf.d before it is read.
+      await ensureConfDImported();
+      await cockpit.spawn(["mkdir", "-p", "/etc/caddy/conf.d"], { superuser: "try" });
+      const current = await readProxyConf();
       const written = surgicallyWriteProxy(current, newProxy);
       await writeRawProxyConfValidated(written);
       noteConfSites(written);
@@ -395,6 +399,7 @@ export function useProxies() {
         else delete newRouteLabels[entry.id];
         const updatedDef = { ...def, routeLabels: newRouteLabels };
 
+        await ensureConfDImported();
         const current = await readProxyConf();
         await writeRawProxyConfValidated(surgicallyWriteServerBlock(current, updatedDef, allRoutes));
         await apply(mergeNamedServer(config, updatedDef, allRoutes));
@@ -437,10 +442,8 @@ export function useProxies() {
       // Validate + persist server-level timeouts in global Caddyfile first; throws CaddyfileError on failure.
       await syncGlobalTimeouts(afterProxies);
 
-      const [, current] = await Promise.all([
-        ensureConfDImported(),
-        readProxyConf(),
-      ]);
+      await ensureConfDImported(); // before the read: may migrate a stock Caddyfile (#256)
+      const current = await readProxyConf();
 
       const written = surgicallyEditProxy(current, originalProxy, entry);
       await writeRawProxyConfValidated(written);
@@ -470,7 +473,10 @@ export function useProxies() {
       // See addProxy: a hand-built single-route JSON push can't represent a listener
       // shared by multiple hosts (#139), nor a php_fastcgi route's four-route Caddyfile
       // macro expansion (#35) — reload instead so Caddy's own Caddyfile adapter builds it.
-      if (sharesPortWithOtherHost(afterProxies, entry) || needsCaddyfileReload(entry)) {
+      // patchServer leaves a live route's matchers as they were, so a matcher change (e.g.
+      // client_ip ↔ remote_ip, #286) goes through Caddy's adapter as well.
+      const matchersChanged = JSON.stringify(originalProxy?.matchers ?? null) !== JSON.stringify(entry.matchers ?? null);
+      if (sharesPortWithOtherHost(afterProxies, entry) || needsCaddyfileReload(entry) || matchersChanged) {
         await reloadCaddy(); // refetches the config (onConfigChanged)
         return;
       }
@@ -483,6 +489,7 @@ export function useProxies() {
     async (proxyId: string) => {
       const proxy = proxies.find(p => p.id === proxyId);
       if (!proxy) return;
+      await ensureConfDImported(); // may migrate a stock Caddyfile first (#256)
 
       if (proxy.namedServerKey) {
         const def = servers.find(s => s.key === proxy.namedServerKey);
@@ -571,6 +578,7 @@ export function useProxies() {
         def = { ...def, tlsAdvanced: applyGlobalInternalLifetimeToServer(def, globalOpts.internalCertLifetime) };
       }
       const routes = proxies.filter(p => p.namedServerKey === def.key);
+      await ensureConfDImported();
       const current = await readProxyConf();
       await writeRawProxyConfValidated(surgicallyWriteServerBlock(current, def, routes));
       if (routes.length > 0) {
@@ -584,6 +592,7 @@ export function useProxies() {
 
   const deleteServer = useCallback(
     async (key: string) => {
+      await ensureConfDImported();
       const current = await readProxyConf();
       await writeRawProxyConf(surgicallyRemoveServerBlock(current, key));
       await apply(removeNamedServer(config, key));

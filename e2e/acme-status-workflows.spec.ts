@@ -141,3 +141,55 @@ test('editing an ACME-managed host keeps it on automatic HTTPS', async ({ plugin
   expect(conf).toContain('default-acme.example.test:19505 {');
   expect(conf).not.toMatch(/\btls\b/);
 });
+
+// #282: per-host certificate status from Caddy's storage and its tls log.
+test('an internal-CA host shows "valid until" and opens its certificate with the PEM', async ({ pluginPage: page }) => {
+  test.setTimeout(120000);
+  const host = 'cert282.example.test';
+  await writeConf(page, [CONF_HEADER, '', `${host}:19830 {`, '\ttls internal', '\trespond "ok"', '}', ''].join('\n'));
+
+  // Caddy issues the certificate right after the reload; reopen the window until it's stored.
+  const modal = page.getByRole('dialog');
+  const row = modal.locator('li').filter({ hasText: host });
+  await expect(async () => {
+    if (await modal.isVisible()) await modal.getByRole('button', { name: /^close$/i }).last().click();
+    await openTool(page, /acme.*let.?s encrypt/i);
+    await expect(row).toContainText(/Valid until/, { timeout: 5000 });
+  }).toPass({ timeout: 60000 });
+  await expect(row).toContainText(/renews around/);
+
+  await row.getByRole('button', { name: host }).click();
+  const view = modal.getByTestId('acme-cert-view');
+  await expect(view).toContainText(`Certificate for ${host}`);
+  await expect(view).toContainText(host);
+  await expect(view).toContainText(/SHA-256 fingerprint/);
+  const pem = (await view.getByTestId('cert-pem').textContent()) ?? '';
+  expect(pem).toContain('-----BEGIN CERTIFICATE-----');
+  expect(pem).not.toMatch(/PRIVATE KEY/);
+
+  // The PEM shown is a real certificate for this host.
+  const parsed = await page.evaluate(([p]) =>
+    new Promise<string>((resolve, reject) =>
+      (window as any).cockpit.spawn(['openssl', 'x509', '-noout', '-ext', 'subjectAltName'], { err: 'out' })
+        .input(p).then(resolve).catch(reject)), [pem] as [string]);
+  expect(parsed).toContain(`DNS:${host}`);
+
+  await view.getByRole('button', { name: /back to the list/i }).click();
+  await expect(row).toBeVisible();
+});
+
+test('an ACME host whose challenge cannot succeed shows "failed" with Caddy\'s error', async ({ pluginPage: page }) => {
+  // Let's Encrypt refuses example.com names outright, so the failure comes back fast.
+  test.setTimeout(150000);
+  const host = 'acme-fail-282.example.com';
+  await writeConf(page, [CONF_HEADER, '', `${host}:19831 {`, '\trespond "ok"', '}', ''].join('\n'));
+
+  const modal = page.getByRole('dialog');
+  const row = modal.locator('li').filter({ hasText: host });
+  await expect(async () => {
+    if (await modal.isVisible()) await modal.getByRole('button', { name: /^close$/i }).last().click();
+    await openTool(page, /acme.*let.?s encrypt/i);
+    await expect(row).toContainText('Failed', { timeout: 5000 });
+  }).toPass({ timeout: 90000 });
+  await expect(row.getByTestId('cert-error')).toContainText(/rejectedIdentifier|forbidden by policy|could not|challenge/i);
+});

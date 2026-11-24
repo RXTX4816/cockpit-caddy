@@ -18,6 +18,8 @@ import {
   TextInput,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
+import type { FileServerConfig } from "../api";
+import { FileServerOptionsFields, fileServerOptionsDraft, fileServerOptionsFromDraft } from "./FileServerOptionsFields";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { CaddyApiError } from "../api";
@@ -35,7 +37,7 @@ interface Props {
   existingPorts: number[];
   onAdd: (entry: Omit<ProxyEntry, "id" | "serverKey">) => Promise<void>;
   onClose: () => void;
-  initialValues?: { port?: string; root?: string; browse?: boolean; tls?: boolean; compress?: boolean; label?: string };
+  initialValues?: { port?: string; root?: string; browse?: boolean; tls?: boolean; compress?: boolean; label?: string; fileServer?: FileServerConfig };
   /** Duplicate: the source's Security / Routing / Logging / Limits settings (#293). */
   initialTabState?: Partial<ProxyTabState>;
   initialImports?: string[];
@@ -51,6 +53,7 @@ export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues, 
   const [port, setPort] = useState(initialValues?.port ?? "");
   const [root, setRoot] = useState(initialValues?.root ?? "");
   const [browse, setBrowse] = useState(initialValues?.browse ?? false);
+  const [fsOptions, setFsOptions] = useState(() => fileServerOptionsDraft(initialValues?.fileServer));
   // #246: where the certificate comes from; ACME needs a public name in the site address.
   const [tlsModeChoice, setTlsModeChoice] = useState<TlsMode>((initialValues?.tls ?? true) ? "internal" : "off");
   const publicName = hasPublicName(undefined);
@@ -205,6 +208,8 @@ export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues, 
                 />
               </FormGroup>
 
+              <FileServerOptionsFields idPrefix="static" value={fsOptions} onChange={setFsOptions} isDisabled={isLocked} />
+
               {!serverCtx && (
                 <TlsModeField id="static-tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isLocked} onDemand={tlsOnDemand} onOnDemandChange={setTlsOnDemand} />
               )}
@@ -249,7 +254,7 @@ export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues, 
                     tlsSkipVerify: false,
                     compress: compress || undefined,
                     label: label.trim() || undefined,
-                    fileServer: { root: root.trim(), browse: browse || undefined },
+                    fileServer: { root: root.trim(), browse: browse || undefined, ...fileServerOptionsFromDraft(fsOptions) },
                     ...tabEntry,
                     imports,
                     namedServerKey: serverCtx?.serverKey,

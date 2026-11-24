@@ -168,7 +168,16 @@
     "validation_port_range": "Porten måste vara mellan 1 och 65535",
     "validation_port_duplicate": "Port {{port}} används redan",
     "validation_root_required": "Rotkatalog krävs",
-    "confirm_body": "En statisk filserver skapas på :{{port}} som serverar {{root}}, och Caddys konfiguration läses in igen."
+    "confirm_body": "En statisk filserver skapas på :{{port}} som serverar {{root}}, och Caddys konfiguration läses in igen.",
+    "field_spa": "SPA-läge (servera index.html för okända sökvägar)",
+    "field_spa_help": "För enkelsidesappar (React, Vue, Svelte): befintliga filer serveras som de är, alla andra sökvägar får index.html så att djuplänkar fungerar.",
+    "advanced": "Alternativ för filservern",
+    "field_index": "Indexfiler",
+    "field_index_help": "Filnamn som provas i tur och ordning för en katalog, åtskilda med mellanslag.",
+    "field_hide": "Dolda filer",
+    "field_hide_help": "Namn eller mönster som aldrig serveras, åtskilda med mellanslag.",
+    "field_precompressed": "Förkomprimerade filer",
+    "field_precompressed_help": "Servera file.zst, file.br eller file.gz bredvid originalet när webbläsaren accepterar den kodningen."
   },
   "edit_static": {
     "title": "Redigera statisk server — :{{port}}",
@@ -195,7 +204,9 @@
     "env_section_title": "Miljövariabler",
     "env_field_key": "Namn",
     "env_field_value": "Värde",
-    "env_add_button": "Lägg till variabel"
+    "env_add_button": "Lägg till variabel",
+    "field_try_files": "Prova filer (try_files)",
+    "field_try_files_help": "Valfritt. Kandidater som provas i tur och ordning före PHP; en app med front controller behöver oftast {path} {path}/ /index.php?{query}."
   },
   "add_respond": {
     "title": "Lägg till statiskt svar",
@@ -319,7 +330,37 @@
     "policy_least_conn": "Minst anslutningar",
     "policy_first": "Första tillgängliga",
     "validation_host": "Värd krävs",
-    "validation_port": "Porten måste vara mellan 1 och 65535"
+    "validation_port": "Porten måste vara mellan 1 och 65535",
+    "policy_default": "Caddys standard (slumpmässig)",
+    "policy_default_help": "Caddy väljer en uppströmsserver slumpmässigt.",
+    "policy_random_help": "Väljer en slumpmässig uppströmsserver för varje begäran.",
+    "policy_round_robin_help": "Använder uppströmsservrarna i tur och ordning.",
+    "policy_least_conn_help": "Väljer den uppströmsserver som har minst antal öppna begäranden.",
+    "policy_first_help": "Alltid den första tillgängliga uppströmsservern i listan; de andra är reserver.",
+    "policy_weighted_round_robin": "Viktad round robin",
+    "policy_weighted_round_robin_help": "Använder uppströmsservrarna i tur och ordning, var och en lika ofta som dess vikt; vikt 0 tar bort den.",
+    "policy_random_choose": "Bästa av n slumpvisa",
+    "policy_random_choose_help": "Väljer n uppströmsservrar slumpvis och använder den minst belastade.",
+    "policy_ip_hash": "Hash av anslutnings-IP",
+    "policy_ip_hash_help": "Samma anslutnings-IP når alltid samma uppströmsserver.",
+    "policy_client_ip_hash": "Hash av klient-IP",
+    "policy_client_ip_hash_help": "Som hash av anslutnings-IP, men använder klientens verkliga IP bakom betrodda proxyservrar.",
+    "policy_uri_hash": "Hash av begärans sökväg",
+    "policy_uri_hash_help": "Samma sökväg når alltid samma uppströmsserver, bra för cachar.",
+    "policy_header": "Begärans rubrik",
+    "policy_header_help": "Värdet i en begärandrubrik väljer uppströmsservern; samma värde når alltid samma.",
+    "policy_cookie": "Cookie (klistriga sessioner)",
+    "policy_cookie_help": "Klistriga sessioner: Caddy sätter en cookie i första svaret, och senare begäranden med den når samma uppströmsserver.",
+    "field_header": "Rubrikfält",
+    "field_cookie_name": "Cookie-namn",
+    "field_cookie_secret": "Cookie-hemlighet",
+    "field_cookie_secret_help": "Valfritt. Signerar cookie-värdet så att klienter inte själva kan välja uppströmsserver.",
+    "field_weight": "Vikt",
+    "field_weight_main": "Vikt för huvudmålet",
+    "field_choose": "Kandidater per begäran",
+    "validation_header": "Ange rubrikfältet.",
+    "validation_weights": "Ange en heltalsvikt för var och en av de {{count}} uppströmsservrarna.",
+    "validation_choose": "Ange ett heltal som är minst 1."
   },
   "lb_retry": {
     "heading": "Omförsök och failover",
@@ -431,7 +472,7 @@
   },
   "migration": {
     "banner_title": "Migrera Caddyfile till conf.d",
-    "banner_body": "Proxyposter är definierade direkt i /etc/caddy/Caddyfile. Migrera dem till /etc/caddy/conf.d så att det här tillägget kan hantera dem. Originalfilen säkerhetskopieras till /etc/caddy/Caddyfile.bak.",
+    "banner_body": "Webbplatserna i din Caddyfile flyttas till insticksprogrammets conf.d-fil så att det kan hantera dem.",
     "button": "Migrera…",
     "confirm_title": "Migrera Caddyfile?",
     "confirm_body": "Alla proxyposter flyttas oförändrade till /etc/caddy/conf.d/cockpit-caddy.conf och /etc/caddy/Caddyfile ersätts med en import-sats. Originalet säkerhetskopieras till /etc/caddy/Caddyfile.bak. Caddy läses in igen automatiskt.",
@@ -443,7 +484,10 @@
     "gate_continue": "Fortsätt ändå",
     "gate_continue_warning": "Att fortsätta utan migrering kan göra att Caddy avvisar konfigurationen på grund av dubbletter.",
     "backup_warning_title": "Säkerhetskopiera konfigurationen först",
-    "backup_warning_body": "Migreringen säkerhetskopierar bara själva Caddyfile. Skapa en fullständig säkerhetskopia av konfigurationen så att du kan återställa allt om något går fel."
+    "backup_warning_body": "Migreringen säkerhetskopierar bara själva Caddyfile. Skapa en fullständig säkerhetskopia av konfigurationen så att du kan återställa allt om något går fel.",
+    "welcome_label": "Distributionens välkomstsida",
+    "banner_details_toggle": "Detaljer",
+    "banner_details": "Webbplatsblocken flyttas oförändrade från /etc/caddy/Caddyfile till /etc/caddy/conf.d/cockpit-caddy.conf, och Caddyfile får en import-rad för conf.d. Den ursprungliga Caddyfile säkerhetskopieras till /etc/caddy/Caddyfile.bak. Till dess kan insticksprogrammets ändringar krocka med webbplatserna i Caddyfile."
   },
   "backup": {
     "button": "Säkerhetskopiera",
@@ -696,7 +740,24 @@
     "field_eab": "Nyckel-ID för External Account Binding",
     "value_default": "(inte angivet — Caddys standardinställningar används)",
     "value_default_ca": "(inte angivet — Let's Encrypts produktionsslutpunkt används)",
-    "value_none": "(inget)"
+    "value_none": "(inget)",
+    "col_certificate": "Certifikat",
+    "state_loading": "Läser certifikatets status…",
+    "state_valid": "Giltigt till {{date}}",
+    "state_renews": "förnyas runt {{date}}",
+    "state_renewal_due": "Förnyelse väntar (går ut {{date}})",
+    "state_obtaining": "Hämtas…",
+    "state_failed": "Misslyckades",
+    "state_none": "Inget certifikat",
+    "last_error": "Senaste försöket misslyckades: {{error}}",
+    "cert_title": "Certifikat för {{host}}",
+    "cert_subject": "Innehavare",
+    "cert_sans": "Namn (SAN)",
+    "cert_issuer": "Utfärdat av",
+    "cert_copy": "Kopiera PEM",
+    "cert_download": "Ladda ned (.pem)",
+    "back": "Tillbaka till listan",
+    "cert_load_error": "Certifikatet kunde inte läsas"
   },
   "admin_address": {
     "title": "Adress till Admin API",
@@ -821,7 +882,6 @@
     "type_method": "Metod",
     "type_header": "Huvud",
     "type_query": "Frågeparameter",
-    "type_remote_ip": "Fjärr-IP / CIDR",
     "add_path": "Lägg till sökväg",
     "add_host": "Lägg till värd",
     "add_cidr": "Lägg till CIDR-intervall",
@@ -842,7 +902,14 @@
     "expression_label": "Uttryck (CEL)",
     "expression_help": "Ett villkor som också måste vara sant, med platshållare som {path} eller {method}. Caddy kontrollerar det när du sparar.",
     "expression_docs": "Dokumentation för expression-matcharen",
-    "chip_not": "utom"
+    "chip_not": "utom",
+    "type_ip": "IP-adress",
+    "ip_kind": "Matcha IP för",
+    "ip_kind_client": "Klientens IP",
+    "ip_kind_remote": "Anslutningens IP",
+    "ip_kind_client_help": "Besökarens IP, hämtad ur vidarebefordringsrubriken när begäran kommer via någon av de betrodda proxyservrarna (Inställningar). Utan betrodda proxyservrar är den samma som anslutningens IP.",
+    "ip_kind_remote_help": "TCP-anslutningens IP. Bakom en proxy eller ett CDN är det proxyns adress, inte besökarens.",
+    "ip_range": "IP-adress eller intervall"
   },
   "handle_path": {
     "label": "Ta bort det matchade sökvägsprefixet (handle_path)"
@@ -957,5 +1024,29 @@
     "upstreams": "Upstreams",
     "logging": "Loggning och fel",
     "limits": "Gränser"
+  },
+  "dns": {
+    "global_title": "DNS-utmaning",
+    "global_enabled": "Använd DNS-utmaningen för ACME-certifikat",
+    "global_enabled_help": "Behövs för jokerteckencertifikat och för värdar som inte nås på port 80/443. Caddy visar att du styr domänen med en DNS-post som den sätter via leverantörens API.",
+    "no_modules_title": "Ingen DNS-leverantörsmodul installerad",
+    "no_modules_body": "DNS-utmaningen kräver en Caddy-version med en DNS-leverantörsmodul (dns.providers.*), som distributionernas paket oftast saknar. Använd en Caddy-version med modulen för din DNS-leverantör. Det här insticksprogrammet installerar ingen: att byta ut den paketerade binären förstör paketuppdateringar.",
+    "no_modules_link": "Caddy-moduler (filter: dns.providers)",
+    "provider": "DNS-leverantör",
+    "provider_choose": "Välj en leverantör",
+    "credentials": "Inloggningsuppgifter",
+    "credentials_help": "Värdena sparas i /etc/caddy/dns.env (endast root, läge 600) och når Caddy som miljövariabler; Caddyfile hänvisar bara till dem. Ett sparat värde visas aldrig igen.",
+    "option_name": "Alternativets namn",
+    "option_value": "Värde",
+    "value_keep": "Sparat; lämna tomt för att behålla",
+    "value_set": "Angivet",
+    "add_option": "Lägg till alternativ",
+    "remove_option": "Ta bort alternativ",
+    "validation_option": "Alternativnamn består av bokstäver, siffror och understreck.",
+    "validation_duplicate": "Varje alternativ får bara förekomma en gång.",
+    "validation_value": "Ange ett värde för varje nytt alternativ.",
+    "validation_provider": "Välj en DNS-leverantör.",
+    "restart_needed": "Starta om Caddy för att läsa in de ändrade DNS-uppgifterna. En omläsning räcker inte: tjänsten läser sin miljö bara när den startar.",
+    "restart_button": "Starta om Caddy"
   }
 }

@@ -65,7 +65,10 @@ export interface RouteMatch {
   header?: Record<string, string[]>;
   /** Query param name → list of value patterns. */
   query?: Record<string, string[]>;
+  /** The TCP peer address. Behind a proxy that is the proxy, not the visitor. */
   remote_ip?: { ranges: string[] };
+  /** The real client IP (#286): honours trusted_proxies, else the same as remote_ip. */
+  client_ip?: { ranges: string[] };
   /** Exclude group (#287): the route matches only when these fields do NOT all match. */
   not?: RouteMatchFields;
   /** CEL expression (#287), as written in a Caddyfile (placeholder shorthands like `{path}`). */
@@ -280,6 +283,14 @@ export interface RedirectConfig {
 export interface FileServerConfig {
   root: string;
   browse?: boolean;
+  /** SPA mode (#262): `try_files {path} /index.html`, so deep links get the app's index.html. */
+  spa?: boolean;
+  /** `file_server { index … }`: index file names. Omit for Caddy's default (index.html, index.txt). */
+  index?: string[];
+  /** `file_server { hide … }`: files or patterns never served. */
+  hide?: string[];
+  /** `file_server { precompressed … }`: encodings of precompressed sidecar files, in order. */
+  precompressed?: string[];
 }
 
 export interface PhpFastcgiConfig {
@@ -294,6 +305,8 @@ export interface PhpFastcgiConfig {
   splitPath?: string[];
   /** Extra environment variables passed to the FastCGI process. */
   env?: Record<string, string>;
+  /** `try_files` before php_fastcgi (#262), e.g. `{path} {path}/ /index.php?{query}`. */
+  tryFiles?: string;
 }
 
 export interface StaticResponseConfig {
@@ -302,7 +315,23 @@ export interface StaticResponseConfig {
   close?: boolean;
 }
 
-export type LbPolicy = "round_robin" | "random" | "least_conn" | "first";
+export type LbPolicy =
+  | "round_robin" | "random" | "least_conn" | "first"
+  | "ip_hash" | "client_ip_hash" | "uri_hash"
+  | "header" | "cookie" | "weighted_round_robin" | "random_choose";
+
+/** Arguments of the load-balancing policies that take some (#285). */
+export interface LbPolicyArgs {
+  /** `header <field>`: the request header whose value picks the upstream. */
+  headerField?: string;
+  /** `cookie [<name> [<secret>]]`: sticky sessions. Caddy's default name is `lb`. */
+  cookieName?: string;
+  cookieSecret?: string;
+  /** `weighted_round_robin`: one weight per upstream, the main target first. */
+  weights?: number[];
+  /** `random_choose <n>`. */
+  chooseCount?: number;
+}
 
 /** reverse_proxy retry/failover tuning (#156) — how many times, for how long, and how
  *  often to retry a different upstream after a failed connection, plus passive and active
@@ -403,6 +432,8 @@ export interface ProxyEntry {
   extraUpstreams?: Array<{ host: string; port: number }>;
   /** Load-balancing policy when multiple upstreams are configured */
   lbPolicy?: LbPolicy;
+  /** Arguments of lbPolicy, when it takes any (#285). */
+  lbPolicyArgs?: LbPolicyArgs;
   /** Retry/failover tuning (#156) — applies even with a single upstream. */
   lbRetry?: LbRetryConfig;
   /** Incoming connection timeouts (Go duration strings e.g. "30s", "5m") */
@@ -465,3 +496,21 @@ export interface UpstreamStatus {
   num_requests: number;
   fails: number;
 }
+
+/**
+ * The ACME DNS challenge provider (#261, global `acme_dns`; #289 per site `tls { dns }`).
+ * Credentials never sit in the model as values: `credentials` maps each provider option to the
+ * name of an environment variable in the root-only env file, written as `{env.NAME}`.
+ */
+export interface DnsChallengeConfig {
+  /** The provider module name, e.g. "cloudflare" for dns.providers.cloudflare. */
+  provider: string;
+  /** Provider option → environment variable name. */
+  credentials: Record<string, string>;
+  /**
+   * Options a hand-written config sets to a literal value. Kept as written when saved back
+   * unchanged, never shown. The key "" holds arguments written inline after the provider.
+   */
+  literal?: Record<string, string>;
+}
+

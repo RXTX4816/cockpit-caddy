@@ -168,7 +168,16 @@
     "validation_port_range": "連接埠必須介於 1 到 65535 之間",
     "validation_port_duplicate": "連接埠 {{port}} 已被使用",
     "validation_root_required": "必須填寫根目錄",
-    "confirm_body": "將在 :{{port}} 上建立提供 {{root}} 的靜態檔案伺服器，並重新載入 Caddy 設定。"
+    "confirm_body": "將在 :{{port}} 上建立提供 {{root}} 的靜態檔案伺服器，並重新載入 Caddy 設定。",
+    "field_spa": "SPA 模式（未知路徑回傳 index.html）",
+    "field_spa_help": "用於單頁應用（React、Vue、Svelte 建置）：既有檔案照常回傳，其他路徑一律回傳 index.html，深層連結才能正常運作。",
+    "advanced": "檔案伺服器選項",
+    "field_index": "索引檔案",
+    "field_index_help": "存取目錄時依序嘗試的檔名，以空格分隔。",
+    "field_hide": "隱藏的檔案",
+    "field_hide_help": "永不回傳的名稱或模式，以空格分隔。",
+    "field_precompressed": "預先壓縮的檔案",
+    "field_precompressed_help": "瀏覽器接受相應編碼時，回傳原檔旁的 file.zst、file.br 或 file.gz。"
   },
   "edit_static": {
     "title": "編輯靜態伺服器 — :{{port}}",
@@ -195,7 +204,9 @@
     "env_section_title": "環境變數",
     "env_field_key": "名稱",
     "env_field_value": "值",
-    "env_add_button": "新增變數"
+    "env_add_button": "新增變數",
+    "field_try_files": "嘗試檔案（try_files）",
+    "field_try_files_help": "選填。在 PHP 之前依序嘗試的候選項；前端控制器應用通常需要 {path} {path}/ /index.php?{query}。"
   },
   "add_respond": {
     "title": "新增靜態回應",
@@ -319,7 +330,37 @@
     "policy_least_conn": "最少連線",
     "policy_first": "第一個可用",
     "validation_host": "必須填寫主機",
-    "validation_port": "連接埠必須介於 1 到 65535 之間"
+    "validation_port": "連接埠必須介於 1 到 65535 之間",
+    "policy_default": "Caddy 預設（隨機）",
+    "policy_default_help": "Caddy 隨機選擇上游。",
+    "policy_random_help": "每個請求隨機選擇一個上游。",
+    "policy_round_robin_help": "依序輪流使用上游。",
+    "policy_least_conn_help": "選擇未完成請求最少的上游。",
+    "policy_first_help": "一律使用清單中第一個可用的上游，其餘作為備援。",
+    "policy_weighted_round_robin": "加權輪詢",
+    "policy_weighted_round_robin_help": "依序使用上游，每個按其權重的次數；權重 0 表示不使用。",
+    "policy_random_choose": "隨機 n 個中最佳",
+    "policy_random_choose_help": "隨機選出 n 個上游，使用其中最空閒的一個。",
+    "policy_ip_hash": "連線 IP 雜湊",
+    "policy_ip_hash_help": "同一連線 IP 一律到達同一個上游。",
+    "policy_client_ip_hash": "用戶端 IP 雜湊",
+    "policy_client_ip_hash_help": "與連線 IP 雜湊相同，但在受信任代理之後使用真實用戶端 IP。",
+    "policy_uri_hash": "請求路徑雜湊",
+    "policy_uri_hash_help": "同一請求路徑一律到達同一個上游，適合快取。",
+    "policy_header": "請求標頭",
+    "policy_header_help": "由請求標頭的值選擇上游；相同的值一律到達同一個上游。",
+    "policy_cookie": "Cookie（工作階段黏著）",
+    "policy_cookie_help": "工作階段黏著：Caddy 在第一個回應中設定 Cookie，之後帶著該 Cookie 的請求都會到達同一個上游。",
+    "field_header": "標頭欄位",
+    "field_cookie_name": "Cookie 名稱",
+    "field_cookie_secret": "Cookie 密鑰",
+    "field_cookie_secret_help": "選填。對 Cookie 值簽章，防止用戶端自行選擇上游。",
+    "field_weight": "權重",
+    "field_weight_main": "主要目標的權重",
+    "field_choose": "每個請求的候選數",
+    "validation_header": "請輸入標頭欄位。",
+    "validation_weights": "請為 {{count}} 個上游各輸入一個整數權重。",
+    "validation_choose": "請輸入不小於 1 的整數。"
   },
   "lb_retry": {
     "heading": "重試與容錯移轉",
@@ -431,7 +472,7 @@
   },
   "migration": {
     "banner_title": "將 Caddyfile 移轉至 conf.d",
-    "banner_body": "代理項目直接定義在 /etc/caddy/Caddyfile 中。請將其移轉至 /etc/caddy/conf.d，讓此外掛可以管理。原始檔案會備份至 /etc/caddy/Caddyfile.bak。",
+    "banner_body": "Caddyfile 中的站台將移到外掛的 conf.d 檔案中，讓外掛能夠管理它們。",
     "button": "移轉…",
     "confirm_title": "要移轉 Caddyfile 嗎？",
     "confirm_body": "所有代理項目將原封不動移至 /etc/caddy/conf.d/cockpit-caddy.conf，/etc/caddy/Caddyfile 則會改為一行 import 敘述。原始檔案會備份至 /etc/caddy/Caddyfile.bak。Caddy 會自動重新載入。",
@@ -443,7 +484,10 @@
     "gate_continue": "仍要繼續",
     "gate_continue_warning": "未移轉就繼續，可能導致 Caddy 因重複項目而拒絕設定。",
     "backup_warning_title": "請先備份設定",
-    "backup_warning_body": "移轉只會備份 Caddyfile 本身。請建立完整的設定備份，以便出問題時能還原所有內容。"
+    "backup_warning_body": "移轉只會備份 Caddyfile 本身。請建立完整的設定備份，以便出問題時能還原所有內容。",
+    "welcome_label": "發行版歡迎頁",
+    "banner_details_toggle": "詳細資訊",
+    "banner_details": "站台區塊會原封不動地從 /etc/caddy/Caddyfile 移到 /etc/caddy/conf.d/cockpit-caddy.conf，Caddyfile 會加上一行匯入 conf.d 的 import。原始 Caddyfile 備份為 /etc/caddy/Caddyfile.bak。在此之前，外掛的變更可能與 Caddyfile 中的站台衝突。"
   },
   "backup": {
     "button": "備份",
@@ -696,7 +740,24 @@
     "field_eab": "External Account Binding 金鑰 ID",
     "value_default": "（未設定——使用 Caddy 預設值）",
     "value_default_ca": "（未設定——使用 Let's Encrypt 正式環境端點）",
-    "value_none": "（無）"
+    "value_none": "（無）",
+    "col_certificate": "憑證",
+    "state_loading": "正在讀取憑證狀態…",
+    "state_valid": "有效期至 {{date}}",
+    "state_renews": "約於 {{date}} 續期",
+    "state_renewal_due": "應續期（{{date}} 到期）",
+    "state_obtaining": "正在取得…",
+    "state_failed": "失敗",
+    "state_none": "無憑證",
+    "last_error": "上次嘗試失敗：{{error}}",
+    "cert_title": "{{host}} 的憑證",
+    "cert_subject": "主體",
+    "cert_sans": "名稱（SAN）",
+    "cert_issuer": "簽發者",
+    "cert_copy": "複製 PEM",
+    "cert_download": "下載（.pem）",
+    "back": "返回清單",
+    "cert_load_error": "無法讀取憑證"
   },
   "admin_address": {
     "title": "Admin API 位址",
@@ -821,7 +882,6 @@
     "type_method": "方法",
     "type_header": "標頭",
     "type_query": "查詢參數",
-    "type_remote_ip": "遠端 IP / CIDR",
     "add_path": "新增路徑",
     "add_host": "新增主機",
     "add_cidr": "新增 CIDR 範圍",
@@ -842,7 +902,14 @@
     "expression_label": "運算式 (CEL)",
     "expression_help": "也必須為真的條件，可使用 {path} 或 {method} 等預留位置。儲存時由 Caddy 檢查。",
     "expression_docs": "expression 比對器文件",
-    "chip_not": "排除"
+    "chip_not": "排除",
+    "type_ip": "IP 位址",
+    "ip_kind": "比對的 IP",
+    "ip_kind_client": "用戶端 IP",
+    "ip_kind_remote": "連線 IP",
+    "ip_kind_client_help": "訪客的 IP。請求經過受信任代理（設定）時從轉送標頭取得；沒有受信任代理時與連線 IP 相同。",
+    "ip_kind_remote_help": "TCP 連線的 IP。在代理或 CDN 之後，這是代理的位址，而不是訪客的。",
+    "ip_range": "IP 位址或範圍"
   },
   "handle_path": {
     "label": "移除符合的路徑前綴（handle_path）"
@@ -957,5 +1024,29 @@
     "upstreams": "上游",
     "logging": "日誌與錯誤",
     "limits": "限制"
+  },
+  "dns": {
+    "global_title": "DNS 挑戰",
+    "global_enabled": "為 ACME 憑證使用 DNS 挑戰",
+    "global_enabled_help": "萬用字元憑證以及無法透過 80/443 連接埠存取的主機需要它。Caddy 透過供應商 API 設定的 DNS 紀錄證明對網域的控制權。",
+    "no_modules_title": "未安裝 DNS 供應商模組",
+    "no_modules_body": "DNS 挑戰需要包含 DNS 供應商模組（dns.providers.*）的 Caddy 建置，發行版的套件通常不含。請使用包含你的 DNS 供應商模組的 Caddy 建置。本外掛不負責安裝：替換套件中的程式會破壞套件更新。",
+    "no_modules_link": "Caddy 模組（篩選：dns.providers）",
+    "provider": "DNS 供應商",
+    "provider_choose": "選擇供應商",
+    "credentials": "憑證資料",
+    "credentials_help": "這些值保存在 /etc/caddy/dns.env（僅 root，權限 600）中，以環境變數傳給 Caddy；Caddyfile 只參照它們。儲存後的值不會再顯示。",
+    "option_name": "選項名稱",
+    "option_value": "值",
+    "value_keep": "已儲存；留空即維持不變",
+    "value_set": "已設定",
+    "add_option": "新增選項",
+    "remove_option": "移除選項",
+    "validation_option": "選項名稱只能包含字母、數字和底線。",
+    "validation_duplicate": "每個選項只能出現一次。",
+    "validation_value": "請為每個新選項輸入值。",
+    "validation_provider": "請選擇 DNS 供應商。",
+    "restart_needed": "請重新啟動 Caddy 以載入變更後的 DNS 憑證資料。重新載入不夠：服務只在啟動時讀取環境變數。",
+    "restart_button": "重新啟動 Caddy"
   }
 }

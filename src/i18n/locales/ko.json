@@ -168,7 +168,16 @@
     "validation_port_range": "포트는 1~65535 사이여야 합니다",
     "validation_port_duplicate": "포트 {{port}}은(는) 이미 사용 중입니다",
     "validation_root_required": "루트 디렉터리를 입력하세요",
-    "confirm_body": ":{{port}}에 {{root}}을(를) 제공하는 정적 파일 서버를 만들고 Caddy 설정을 다시 불러옵니다."
+    "confirm_body": ":{{port}}에 {{root}}을(를) 제공하는 정적 파일 서버를 만들고 Caddy 설정을 다시 불러옵니다.",
+    "field_spa": "SPA 모드(알 수 없는 경로에 index.html 제공)",
+    "field_spa_help": "단일 페이지 앱(React, Vue, Svelte 빌드)용: 기존 파일은 그대로 제공하고 그 밖의 모든 경로에는 index.html을 제공해 딥 링크가 동작합니다.",
+    "advanced": "파일 서버 옵션",
+    "field_index": "인덱스 파일",
+    "field_index_help": "디렉터리에 대해 순서대로 시도할 파일 이름(공백으로 구분).",
+    "field_hide": "숨긴 파일",
+    "field_hide_help": "절대 제공하지 않을 이름이나 패턴(공백으로 구분).",
+    "field_precompressed": "미리 압축된 파일",
+    "field_precompressed_help": "브라우저가 해당 인코딩을 받으면 원본 옆의 file.zst, file.br, file.gz를 제공합니다."
   },
   "edit_static": {
     "title": "정적 서버 편집 — :{{port}}",
@@ -195,7 +204,9 @@
     "env_section_title": "환경 변수",
     "env_field_key": "이름",
     "env_field_value": "값",
-    "env_add_button": "변수 추가"
+    "env_add_button": "변수 추가",
+    "field_try_files": "시도할 파일(try_files)",
+    "field_try_files_help": "선택 사항. PHP 전에 순서대로 시도할 후보입니다. 프런트 컨트롤러 앱에는 보통 {path} {path}/ /index.php?{query}가 필요합니다."
   },
   "add_respond": {
     "title": "정적 응답 추가",
@@ -319,7 +330,37 @@
     "policy_least_conn": "최소 연결",
     "policy_first": "첫 번째 사용 가능",
     "validation_host": "호스트를 입력하세요",
-    "validation_port": "포트는 1~65535 사이여야 합니다"
+    "validation_port": "포트는 1~65535 사이여야 합니다",
+    "policy_default": "Caddy 기본값(무작위)",
+    "policy_default_help": "Caddy가 업스트림을 무작위로 고릅니다.",
+    "policy_random_help": "요청마다 무작위 업스트림을 고릅니다.",
+    "policy_round_robin_help": "업스트림을 차례로 사용합니다.",
+    "policy_least_conn_help": "열린 요청이 가장 적은 업스트림을 고릅니다.",
+    "policy_first_help": "항상 목록에서 처음으로 사용할 수 있는 업스트림을 쓰고, 나머지는 예비로 둡니다.",
+    "policy_weighted_round_robin": "가중 라운드 로빈",
+    "policy_weighted_round_robin_help": "업스트림을 차례로, 각각 가중치만큼 사용합니다. 가중치 0은 제외입니다.",
+    "policy_random_choose": "무작위 n개 중 최선",
+    "policy_random_choose_help": "업스트림 n개를 무작위로 골라 가장 한가한 것을 사용합니다.",
+    "policy_ip_hash": "연결 IP 해시",
+    "policy_ip_hash_help": "같은 연결 IP는 항상 같은 업스트림으로 갑니다.",
+    "policy_client_ip_hash": "클라이언트 IP 해시",
+    "policy_client_ip_hash_help": "연결 IP 해시와 같지만 신뢰할 수 있는 프록시 뒤에서는 실제 클라이언트 IP를 씁니다.",
+    "policy_uri_hash": "요청 경로 해시",
+    "policy_uri_hash_help": "같은 요청 경로는 항상 같은 업스트림으로 가므로 캐시에 좋습니다.",
+    "policy_header": "요청 헤더",
+    "policy_header_help": "요청 헤더 값으로 업스트림을 고르며, 같은 값은 항상 같은 곳으로 갑니다.",
+    "policy_cookie": "쿠키(고정 세션)",
+    "policy_cookie_help": "고정 세션: Caddy가 첫 응답에 쿠키를 설정하고, 그 쿠키가 있는 이후 요청은 같은 업스트림으로 갑니다.",
+    "field_header": "헤더 필드",
+    "field_cookie_name": "쿠키 이름",
+    "field_cookie_secret": "쿠키 비밀 값",
+    "field_cookie_secret_help": "선택 사항. 쿠키 값에 서명해 클라이언트가 업스트림을 직접 고르지 못하게 합니다.",
+    "field_weight": "가중치",
+    "field_weight_main": "기본 대상의 가중치",
+    "field_choose": "요청당 후보 수",
+    "validation_header": "헤더 필드를 입력하세요.",
+    "validation_weights": "{{count}}개 업스트림마다 정수 가중치를 하나씩 입력하세요.",
+    "validation_choose": "1 이상의 정수를 입력하세요."
   },
   "lb_retry": {
     "heading": "재시도 및 장애 조치",
@@ -431,7 +472,7 @@
   },
   "migration": {
     "banner_title": "Caddyfile을 conf.d로 마이그레이션",
-    "banner_body": "프록시 항목이 /etc/caddy/Caddyfile에 직접 정의되어 있습니다. 이 플러그인이 관리할 수 있도록 /etc/caddy/conf.d로 옮기세요. 원본 파일은 /etc/caddy/Caddyfile.bak에 백업됩니다.",
+    "banner_body": "Caddyfile의 사이트가 플러그인이 관리할 수 있도록 플러그인의 conf.d 파일로 이동됩니다.",
     "button": "마이그레이션…",
     "confirm_title": "Caddyfile을 마이그레이션할까요?",
     "confirm_body": "모든 프록시 항목을 그대로 /etc/caddy/conf.d/cockpit-caddy.conf로 옮기고 /etc/caddy/Caddyfile은 import 문으로 바꿉니다. 원본은 /etc/caddy/Caddyfile.bak에 백업됩니다. Caddy는 자동으로 다시 불러옵니다.",
@@ -443,7 +484,10 @@
     "gate_continue": "그래도 계속",
     "gate_continue_warning": "마이그레이션 없이 계속하면 중복 항목 때문에 Caddy가 설정을 거부할 수 있습니다.",
     "backup_warning_title": "먼저 설정을 백업하세요",
-    "backup_warning_body": "마이그레이션은 Caddyfile 자체만 백업합니다. 문제가 생겨도 모두 복원할 수 있도록 전체 설정 백업을 만드세요."
+    "backup_warning_body": "마이그레이션은 Caddyfile 자체만 백업합니다. 문제가 생겨도 모두 복원할 수 있도록 전체 설정 백업을 만드세요.",
+    "welcome_label": "배포판 환영 페이지",
+    "banner_details_toggle": "세부 정보",
+    "banner_details": "사이트 블록은 /etc/caddy/Caddyfile에서 /etc/caddy/conf.d/cockpit-caddy.conf로 그대로 이동되며, Caddyfile에는 conf.d용 import 줄이 추가됩니다. 원래 Caddyfile은 /etc/caddy/Caddyfile.bak에 백업됩니다. 그 전까지는 플러그인의 변경 사항이 Caddyfile의 사이트와 충돌할 수 있습니다."
   },
   "backup": {
     "button": "백업",
@@ -696,7 +740,24 @@
     "field_eab": "External Account Binding 키 ID",
     "value_default": "(설정 안 됨 — Caddy 기본값 사용)",
     "value_default_ca": "(설정 안 됨 — Let's Encrypt 프로덕션 엔드포인트 사용)",
-    "value_none": "(없음)"
+    "value_none": "(없음)",
+    "col_certificate": "인증서",
+    "state_loading": "인증서 상태를 읽는 중…",
+    "state_valid": "{{date}}까지 유효",
+    "state_renews": "{{date}}경 갱신",
+    "state_renewal_due": "갱신 필요({{date}} 만료)",
+    "state_obtaining": "발급 중…",
+    "state_failed": "실패",
+    "state_none": "인증서 없음",
+    "last_error": "마지막 시도 실패: {{error}}",
+    "cert_title": "{{host}} 인증서",
+    "cert_subject": "주체",
+    "cert_sans": "이름(SAN)",
+    "cert_issuer": "발급자",
+    "cert_copy": "PEM 복사",
+    "cert_download": "다운로드(.pem)",
+    "back": "목록으로 돌아가기",
+    "cert_load_error": "인증서를 읽을 수 없습니다"
   },
   "admin_address": {
     "title": "Admin API 주소",
@@ -821,7 +882,6 @@
     "type_method": "메서드",
     "type_header": "헤더",
     "type_query": "쿼리 매개변수",
-    "type_remote_ip": "원격 IP / CIDR",
     "add_path": "경로 추가",
     "add_host": "호스트 추가",
     "add_cidr": "CIDR 범위 추가",
@@ -842,7 +902,14 @@
     "expression_label": "표현식 (CEL)",
     "expression_help": "함께 참이어야 하는 조건입니다. {path}, {method} 같은 플레이스홀더를 쓸 수 있습니다. 저장할 때 Caddy가 검사합니다.",
     "expression_docs": "expression 매처 문서",
-    "chip_not": "제외"
+    "chip_not": "제외",
+    "type_ip": "IP 주소",
+    "ip_kind": "비교할 IP",
+    "ip_kind_client": "클라이언트 IP",
+    "ip_kind_remote": "연결 IP",
+    "ip_kind_client_help": "방문자의 IP입니다. 신뢰할 수 있는 프록시(설정)를 거친 요청이면 전달 헤더에서 가져옵니다. 신뢰할 수 있는 프록시가 없으면 연결 IP와 같습니다.",
+    "ip_kind_remote_help": "TCP 연결의 IP입니다. 프록시나 CDN 뒤에서는 방문자가 아닌 프록시의 주소입니다.",
+    "ip_range": "IP 주소 또는 범위"
   },
   "handle_path": {
     "label": "일치한 경로 접두사 제거(handle_path)"
@@ -957,5 +1024,29 @@
     "upstreams": "업스트림",
     "logging": "로그 및 오류",
     "limits": "한도"
+  },
+  "dns": {
+    "global_title": "DNS 챌린지",
+    "global_enabled": "ACME 인증서에 DNS 챌린지 사용",
+    "global_enabled_help": "와일드카드 인증서와 80/443 포트로 접근할 수 없는 호스트에 필요합니다. Caddy는 제공자 API로 설정한 DNS 레코드로 도메인 소유를 증명합니다.",
+    "no_modules_title": "설치된 DNS 제공자 모듈이 없습니다",
+    "no_modules_body": "DNS 챌린지에는 DNS 제공자 모듈(dns.providers.*)이 포함된 Caddy 빌드가 필요하며, 배포판 패키지에는 보통 포함되어 있지 않습니다. 사용하는 DNS 제공자의 모듈이 포함된 Caddy 빌드를 쓰세요. 이 플러그인은 모듈을 설치하지 않습니다. 패키지 바이너리를 바꾸면 패키지 업데이트가 깨지기 때문입니다.",
+    "no_modules_link": "Caddy 모듈(필터: dns.providers)",
+    "provider": "DNS 제공자",
+    "provider_choose": "제공자 선택",
+    "credentials": "자격 증명",
+    "credentials_help": "값은 /etc/caddy/dns.env(root 전용, 모드 600)에 저장되어 환경 변수로 Caddy에 전달되며, Caddyfile은 이를 참조만 합니다. 저장된 값은 다시 표시되지 않습니다.",
+    "option_name": "옵션 이름",
+    "option_value": "값",
+    "value_keep": "저장됨. 유지하려면 비워 두세요",
+    "value_set": "설정됨",
+    "add_option": "옵션 추가",
+    "remove_option": "옵션 제거",
+    "validation_option": "옵션 이름에는 영문자, 숫자, 밑줄을 사용합니다.",
+    "validation_duplicate": "각 옵션은 한 번만 지정할 수 있습니다.",
+    "validation_value": "새 옵션마다 값을 입력하세요.",
+    "validation_provider": "DNS 제공자를 선택하세요.",
+    "restart_needed": "변경된 DNS 자격 증명을 불러오려면 Caddy를 다시 시작하세요. 다시 로드로는 부족합니다. 서비스는 시작할 때만 환경을 읽습니다.",
+    "restart_button": "Caddy 다시 시작"
   }
 }

@@ -168,7 +168,16 @@
     "validation_port_range": "ポートは 1〜65535 の範囲で指定してください",
     "validation_port_duplicate": "ポート {{port}} はすでに使用されています",
     "validation_root_required": "ルートディレクトリは必須です",
-    "confirm_body": ":{{port}} に {{root}} を配信する静的ファイルサーバーを作成し、Caddy の設定を再読み込みします。"
+    "confirm_body": ":{{port}} に {{root}} を配信する静的ファイルサーバーを作成し、Caddy の設定を再読み込みします。",
+    "field_spa": "SPA モード（不明なパスには index.html を返す）",
+    "field_spa_help": "シングルページアプリ（React、Vue、Svelte のビルド）向け: 既存のファイルはそのまま返し、それ以外のパスには index.html を返すのでディープリンクが機能します。",
+    "advanced": "ファイルサーバーのオプション",
+    "field_index": "インデックスファイル",
+    "field_index_help": "ディレクトリに対して順に試すファイル名（スペース区切り）。",
+    "field_hide": "非表示のファイル",
+    "field_hide_help": "決して返さない名前やパターン（スペース区切り）。",
+    "field_precompressed": "事前圧縮済みファイル",
+    "field_precompressed_help": "ブラウザーがそのエンコーディングを受け付ける場合、元ファイルの隣にある file.zst、file.br、file.gz を返します。"
   },
   "edit_static": {
     "title": "静的サーバーを編集 — :{{port}}",
@@ -195,7 +204,9 @@
     "env_section_title": "環境変数",
     "env_field_key": "名前",
     "env_field_value": "値",
-    "env_add_button": "変数を追加"
+    "env_add_button": "変数を追加",
+    "field_try_files": "試行するファイル（try_files）",
+    "field_try_files_help": "任意。PHP の前に順に試す候補です。フロントコントローラー型のアプリでは通常 {path} {path}/ /index.php?{query} が必要です。"
   },
   "add_respond": {
     "title": "静的レスポンスを追加",
@@ -319,7 +330,37 @@
     "policy_least_conn": "最小接続数",
     "policy_first": "最初に利用可能なもの",
     "validation_host": "ホストは必須です",
-    "validation_port": "ポートは 1〜65535 の範囲で指定してください"
+    "validation_port": "ポートは 1〜65535 の範囲で指定してください",
+    "policy_default": "Caddy の既定（ランダム）",
+    "policy_default_help": "Caddy がアップストリームをランダムに選びます。",
+    "policy_random_help": "リクエストごとにランダムなアップストリームを選びます。",
+    "policy_round_robin_help": "アップストリームを順番に使います。",
+    "policy_least_conn_help": "処理中のリクエストが最も少ないアップストリームを選びます。",
+    "policy_first_help": "常にリストで最初に利用できるアップストリームを使い、他は予備になります。",
+    "policy_weighted_round_robin": "重み付きラウンドロビン",
+    "policy_weighted_round_robin_help": "アップストリームを順番に、それぞれ重みの回数だけ使います。重み 0 は除外です。",
+    "policy_random_choose": "ランダムな n 個から最良",
+    "policy_random_choose_help": "n 個のアップストリームをランダムに選び、最も空いているものを使います。",
+    "policy_ip_hash": "接続 IP ハッシュ",
+    "policy_ip_hash_help": "同じ接続 IP は常に同じアップストリームに届きます。",
+    "policy_client_ip_hash": "クライアント IP ハッシュ",
+    "policy_client_ip_hash_help": "接続 IP ハッシュと同じですが、信頼済みプロキシの背後では実際のクライアント IP を使います。",
+    "policy_uri_hash": "リクエストパスのハッシュ",
+    "policy_uri_hash_help": "同じリクエストパスは常に同じアップストリームに届くため、キャッシュに向いています。",
+    "policy_header": "リクエストヘッダー",
+    "policy_header_help": "リクエストヘッダーの値でアップストリームを選び、同じ値は常に同じ先に届きます。",
+    "policy_cookie": "Cookie（スティッキーセッション）",
+    "policy_cookie_help": "スティッキーセッション: Caddy が最初の応答で Cookie を設定し、それを持つ以降のリクエストは同じアップストリームに届きます。",
+    "field_header": "ヘッダーフィールド",
+    "field_cookie_name": "Cookie 名",
+    "field_cookie_secret": "Cookie のシークレット",
+    "field_cookie_secret_help": "任意。Cookie の値に署名し、クライアントが自分でアップストリームを選べないようにします。",
+    "field_weight": "重み",
+    "field_weight_main": "メインターゲットの重み",
+    "field_choose": "リクエストごとの候補数",
+    "validation_header": "ヘッダーフィールドを入力してください。",
+    "validation_weights": "{{count}} 個のアップストリームそれぞれに整数の重みを 1 つ入力してください。",
+    "validation_choose": "1 以上の整数を入力してください。"
   },
   "lb_retry": {
     "heading": "リトライとフェイルオーバー",
@@ -431,7 +472,7 @@
   },
   "migration": {
     "banner_title": "Caddyfile を conf.d に移行",
-    "banner_body": "プロキシのエントリーが /etc/caddy/Caddyfile に直接定義されています。このプラグインで管理できるよう、/etc/caddy/conf.d に移行してください。元のファイルは /etc/caddy/Caddyfile.bak にバックアップされます。",
+    "banner_body": "Caddyfile 内のサイトは、プラグインが管理できるようにプラグインの conf.d ファイルへ移動されます。",
     "button": "移行…",
     "confirm_title": "Caddyfile を移行しますか？",
     "confirm_body": "すべてのプロキシエントリーをそのまま /etc/caddy/conf.d/cockpit-caddy.conf に移動し、/etc/caddy/Caddyfile は import 文に置き換えます。元のファイルは /etc/caddy/Caddyfile.bak にバックアップされます。Caddy は自動的に再読み込みされます。",
@@ -443,7 +484,10 @@
     "gate_continue": "このまま続行",
     "gate_continue_warning": "移行せずに続行すると、重複したエントリーのために Caddy が設定を拒否する場合があります。",
     "backup_warning_title": "先に設定をバックアップしてください",
-    "backup_warning_body": "移行でバックアップされるのは Caddyfile 本体だけです。問題が起きたときにすべてを復元できるよう、設定全体のバックアップを作成してください。"
+    "backup_warning_body": "移行でバックアップされるのは Caddyfile 本体だけです。問題が起きたときにすべてを復元できるよう、設定全体のバックアップを作成してください。",
+    "welcome_label": "ディストリビューションのウェルカムページ",
+    "banner_details_toggle": "詳細",
+    "banner_details": "サイトブロックは /etc/caddy/Caddyfile から /etc/caddy/conf.d/cockpit-caddy.conf へそのまま移動され、Caddyfile には conf.d の import 行が追加されます。元の Caddyfile は /etc/caddy/Caddyfile.bak にバックアップされます。それまでは、プラグインの変更が Caddyfile 内のサイトと衝突することがあります。"
   },
   "backup": {
     "button": "バックアップ",
@@ -696,7 +740,24 @@
     "field_eab": "External Account Binding キー ID",
     "value_default": "（未設定 — Caddy の既定値を使用）",
     "value_default_ca": "（未設定 — Let's Encrypt の本番エンドポイントを使用）",
-    "value_none": "（なし）"
+    "value_none": "（なし）",
+    "col_certificate": "証明書",
+    "state_loading": "証明書の状態を読み込み中…",
+    "state_valid": "{{date}} まで有効",
+    "state_renews": "{{date}} 頃に更新",
+    "state_renewal_due": "更新期限超過（{{date}} に失効）",
+    "state_obtaining": "取得中…",
+    "state_failed": "失敗",
+    "state_none": "証明書なし",
+    "last_error": "前回の試行は失敗しました: {{error}}",
+    "cert_title": "{{host}} の証明書",
+    "cert_subject": "サブジェクト",
+    "cert_sans": "名前 (SAN)",
+    "cert_issuer": "発行者",
+    "cert_copy": "PEM をコピー",
+    "cert_download": "ダウンロード (.pem)",
+    "back": "一覧に戻る",
+    "cert_load_error": "証明書を読み込めませんでした"
   },
   "admin_address": {
     "title": "Admin API アドレス",
@@ -821,7 +882,6 @@
     "type_method": "メソッド",
     "type_header": "ヘッダー",
     "type_query": "クエリパラメーター",
-    "type_remote_ip": "リモート IP / CIDR",
     "add_path": "パスを追加",
     "add_host": "ホストを追加",
     "add_cidr": "CIDR 範囲を追加",
@@ -842,7 +902,14 @@
     "expression_label": "式 (CEL)",
     "expression_help": "あわせて真である必要がある条件です。{path} や {method} などのプレースホルダーを使えます。保存時に Caddy が検証します。",
     "expression_docs": "expression マッチャーのドキュメント",
-    "chip_not": "除外"
+    "chip_not": "除外",
+    "type_ip": "IP アドレス",
+    "ip_kind": "照合する IP",
+    "ip_kind_client": "クライアント IP",
+    "ip_kind_remote": "接続 IP",
+    "ip_kind_client_help": "訪問者の IP です。信頼済みプロキシ（設定）経由のリクエストでは転送ヘッダーから取得します。信頼済みプロキシがなければ接続 IP と同じです。",
+    "ip_kind_remote_help": "TCP 接続の IP です。プロキシや CDN の背後では訪問者ではなくプロキシのアドレスになります。",
+    "ip_range": "IP アドレスまたは範囲"
   },
   "handle_path": {
     "label": "一致したパスのプレフィックスを除去（handle_path）"
@@ -957,5 +1024,29 @@
     "upstreams": "アップストリーム",
     "logging": "ログとエラー",
     "limits": "制限"
+  },
+  "dns": {
+    "global_title": "DNS チャレンジ",
+    "global_enabled": "ACME 証明書に DNS チャレンジを使う",
+    "global_enabled_help": "ワイルドカード証明書や、ポート 80/443 で到達できないホストに必要です。Caddy はプロバイダーの API で設定した DNS レコードでドメインの管理を証明します。",
+    "no_modules_title": "DNS プロバイダーモジュールがインストールされていません",
+    "no_modules_body": "DNS チャレンジには DNS プロバイダーモジュール（dns.providers.*）を含む Caddy ビルドが必要ですが、ディストリビューションのパッケージには通常含まれていません。お使いの DNS プロバイダーのモジュールを含む Caddy ビルドを使ってください。このプラグインはモジュールをインストールしません。パッケージのバイナリを置き換えるとパッケージ更新が壊れるためです。",
+    "no_modules_link": "Caddy モジュール（フィルター: dns.providers）",
+    "provider": "DNS プロバイダー",
+    "provider_choose": "プロバイダーを選択",
+    "credentials": "認証情報",
+    "credentials_help": "値は /etc/caddy/dns.env（root のみ、モード 600）に保存され、環境変数として Caddy に渡されます。Caddyfile はそれを参照するだけです。保存した値が再び表示されることはありません。",
+    "option_name": "オプション名",
+    "option_value": "値",
+    "value_keep": "保存済み。空欄のままにすると保持されます",
+    "value_set": "設定済み",
+    "add_option": "オプションを追加",
+    "remove_option": "オプションを削除",
+    "validation_option": "オプション名には英字、数字、アンダースコアを使います。",
+    "validation_duplicate": "各オプションは 1 回だけ指定できます。",
+    "validation_value": "新しいオプションごとに値を入力してください。",
+    "validation_provider": "DNS プロバイダーを選択してください。",
+    "restart_needed": "変更した DNS 認証情報を読み込むには Caddy を再起動してください。再読み込みでは足りません。サービスは起動時にしか環境を読み込みません。",
+    "restart_button": "Caddy を再起動"
   }
 }

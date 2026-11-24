@@ -15,6 +15,7 @@ import {
   TextInput,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
+import { PhpTryFilesField } from "./FileServerOptionsFields";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { CaddyApiError } from "../api";
@@ -43,6 +44,7 @@ export function EditPhpFastcgiDialog({ proxy, existingPorts, onSave, onClose }: 
   const [root, setRoot] = useState(proxy.phpFastcgi?.root ?? "");
   const [index, setIndex] = useState(proxy.phpFastcgi?.index ?? "");
   const [splitPath, setSplitPath] = useState(proxy.phpFastcgi?.splitPath?.join(" ") ?? "");
+  const [tryFiles, setTryFiles] = useState(proxy.phpFastcgi?.tryFiles ?? "");
   const [env, setEnv] = useState<EnvEntry[]>(envRecordToEntries(proxy.phpFastcgi?.env));
   // #246: where the certificate comes from; ACME needs a public name in the site address.
   const [tlsModeChoice, setTlsModeChoice] = useState<TlsMode>(tlsModeOf(proxy));
@@ -198,6 +200,8 @@ export function EditPhpFastcgiDialog({ proxy, existingPorts, onSave, onClose }: 
                 </FormHelperText>
               </FormGroup>
 
+              <PhpTryFilesField id="php-edit-try-files" value={tryFiles} onChange={setTryFiles} isDisabled={isLocked} />
+
               <TlsModeField id="php-edit-tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isLocked} onDemand={tlsOnDemand} onOnDemandChange={setTlsOnDemand} />
 
               <FormGroup fieldId="php-edit-compress">
@@ -241,6 +245,7 @@ export function EditPhpFastcgiDialog({ proxy, existingPorts, onSave, onClose }: 
                       root: root.trim(),
                       index: index.trim() || undefined,
                       splitPath: splitPath.trim() ? splitPath.trim().split(/\s+/) : undefined,
+                      tryFiles: tryFiles.trim() || undefined,
                       env: envEntriesToRecord(env),
                     },
                     ...tabEntry,

@@ -168,7 +168,16 @@
     "validation_port_range": "Порт должен быть в диапазоне 1–65535",
     "validation_port_duplicate": "Порт {{port}} уже используется",
     "validation_root_required": "Укажите корневой каталог",
-    "confirm_body": "На :{{port}} будет создан сервер статических файлов, отдающий {{root}}, конфигурация Caddy будет перезагружена."
+    "confirm_body": "На :{{port}} будет создан сервер статических файлов, отдающий {{root}}, конфигурация Caddy будет перезагружена.",
+    "field_spa": "Режим SPA (отдавать index.html для неизвестных путей)",
+    "field_spa_help": "Для одностраничных приложений (React, Vue, Svelte): существующие файлы отдаются как есть, любой другой путь получает index.html, чтобы работали прямые ссылки.",
+    "advanced": "Параметры файлового сервера",
+    "field_index": "Индексные файлы",
+    "field_index_help": "Имена файлов, которые по очереди проверяются для каталога, через пробел.",
+    "field_hide": "Скрытые файлы",
+    "field_hide_help": "Имена или шаблоны, которые никогда не отдаются, через пробел.",
+    "field_precompressed": "Предварительно сжатые файлы",
+    "field_precompressed_help": "Отдавать file.zst, file.br или file.gz рядом с оригиналом, если браузер принимает это кодирование."
   },
   "edit_static": {
     "title": "Изменить статический сервер — :{{port}}",
@@ -195,7 +204,9 @@
     "env_section_title": "Переменные окружения",
     "env_field_key": "Имя",
     "env_field_value": "Значение",
-    "env_add_button": "Добавить переменную"
+    "env_add_button": "Добавить переменную",
+    "field_try_files": "Пробовать файлы (try_files)",
+    "field_try_files_help": "Необязательно. Варианты, проверяемые по порядку перед PHP; приложению с фронт-контроллером обычно нужно {path} {path}/ /index.php?{query}."
   },
   "add_respond": {
     "title": "Добавить статический ответ",
@@ -319,7 +330,37 @@
     "policy_least_conn": "Наименьшее число соединений",
     "policy_first": "Первый доступный",
     "validation_host": "Укажите хост",
-    "validation_port": "Порт должен быть в диапазоне 1–65535"
+    "validation_port": "Порт должен быть в диапазоне 1–65535",
+    "policy_default": "По умолчанию в Caddy (случайно)",
+    "policy_default_help": "Caddy выбирает upstream случайно.",
+    "policy_random_help": "Для каждого запроса выбирает случайный upstream.",
+    "policy_round_robin_help": "Использует upstream по очереди.",
+    "policy_least_conn_help": "Выбирает upstream с наименьшим числом открытых запросов.",
+    "policy_first_help": "Всегда первый доступный upstream из списка; остальные — резервные.",
+    "policy_weighted_round_robin": "Взвешенный round robin",
+    "policy_weighted_round_robin_help": "Использует upstream по очереди, каждый столько раз, каков его вес; вес 0 исключает его.",
+    "policy_random_choose": "Лучший из n случайных",
+    "policy_random_choose_help": "Случайно выбирает n upstream и использует наименее загруженный.",
+    "policy_ip_hash": "Хеш IP соединения",
+    "policy_ip_hash_help": "Один и тот же IP соединения всегда попадает на тот же upstream.",
+    "policy_client_ip_hash": "Хеш IP клиента",
+    "policy_client_ip_hash_help": "Как хеш IP соединения, но за доверенными прокси использует реальный IP клиента.",
+    "policy_uri_hash": "Хеш пути запроса",
+    "policy_uri_hash_help": "Один и тот же путь всегда попадает на тот же upstream, удобно для кешей.",
+    "policy_header": "Заголовок запроса",
+    "policy_header_help": "Значение заголовка запроса выбирает upstream; одно значение всегда попадает на тот же.",
+    "policy_cookie": "Cookie (липкие сессии)",
+    "policy_cookie_help": "Липкие сессии: Caddy ставит cookie в первом ответе, и последующие запросы с ним попадают на тот же upstream.",
+    "field_header": "Поле заголовка",
+    "field_cookie_name": "Имя cookie",
+    "field_cookie_secret": "Секрет cookie",
+    "field_cookie_secret_help": "Необязательно. Подписывает значение cookie, чтобы клиенты не могли сами выбрать upstream.",
+    "field_weight": "Вес",
+    "field_weight_main": "Вес основной цели",
+    "field_choose": "Кандидатов на запрос",
+    "validation_header": "Укажите поле заголовка.",
+    "validation_weights": "Укажите по одному целому весу для каждого из {{count}} upstream.",
+    "validation_choose": "Укажите целое число не меньше 1."
   },
   "lb_retry": {
     "heading": "Повторы и переключение при сбое",
@@ -431,7 +472,7 @@
   },
   "migration": {
     "banner_title": "Перенести Caddyfile в conf.d",
-    "banner_body": "Записи прокси определены прямо в /etc/caddy/Caddyfile. Перенесите их в /etc/caddy/conf.d, чтобы этот плагин мог ими управлять. Резервная копия исходного файла будет сохранена в /etc/caddy/Caddyfile.bak.",
+    "banner_body": "Сайты из вашего Caddyfile будут перенесены в файл conf.d плагина, чтобы он мог ими управлять.",
     "button": "Перенести…",
     "confirm_title": "Перенести Caddyfile?",
     "confirm_body": "Все записи прокси будут перенесены без изменений в /etc/caddy/conf.d/cockpit-caddy.conf, а /etc/caddy/Caddyfile будет заменён инструкцией import. Оригинал сохраняется в /etc/caddy/Caddyfile.bak. Caddy будет перезагружен автоматически.",
@@ -443,7 +484,10 @@
     "gate_continue": "Всё равно продолжить",
     "gate_continue_warning": "Если продолжить без переноса, Caddy может отклонить конфигурацию из-за повторяющихся записей.",
     "backup_warning_title": "Сначала сделайте резервную копию конфигурации",
-    "backup_warning_body": "Перенос сохраняет копию только самого Caddyfile. Создайте полную резервную копию конфигурации, чтобы можно было всё восстановить, если что-то пойдёт не так."
+    "backup_warning_body": "Перенос сохраняет копию только самого Caddyfile. Создайте полную резервную копию конфигурации, чтобы можно было всё восстановить, если что-то пойдёт не так.",
+    "welcome_label": "Приветственная страница дистрибутива",
+    "banner_details_toggle": "Подробности",
+    "banner_details": "Блоки сайтов переносятся без изменений из /etc/caddy/Caddyfile в /etc/caddy/conf.d/cockpit-caddy.conf, а в Caddyfile добавляется строка import для conf.d. Исходный Caddyfile сохраняется в /etc/caddy/Caddyfile.bak. До этого изменения плагина могут конфликтовать с сайтами в Caddyfile."
   },
   "backup": {
     "button": "Резервная копия",
@@ -696,7 +740,24 @@
     "field_eab": "ID ключа External Account Binding",
     "value_default": "(не задано — используются значения Caddy по умолчанию)",
     "value_default_ca": "(не задано — используется рабочий endpoint Let's Encrypt)",
-    "value_none": "(нет)"
+    "value_none": "(нет)",
+    "col_certificate": "Сертификат",
+    "state_loading": "Чтение состояния сертификата…",
+    "state_valid": "Действителен до {{date}}",
+    "state_renews": "продление около {{date}}",
+    "state_renewal_due": "Пора продлить (истекает {{date}})",
+    "state_obtaining": "Получение…",
+    "state_failed": "Ошибка",
+    "state_none": "Нет сертификата",
+    "last_error": "Последняя попытка не удалась: {{error}}",
+    "cert_title": "Сертификат для {{host}}",
+    "cert_subject": "Субъект",
+    "cert_sans": "Имена (SAN)",
+    "cert_issuer": "Выдан",
+    "cert_copy": "Копировать PEM",
+    "cert_download": "Скачать (.pem)",
+    "back": "Назад к списку",
+    "cert_load_error": "Не удалось прочитать сертификат"
   },
   "admin_address": {
     "title": "Адрес Admin API",
@@ -821,7 +882,6 @@
     "type_method": "Метод",
     "type_header": "Заголовок",
     "type_query": "Параметр запроса",
-    "type_remote_ip": "Удалённый IP / CIDR",
     "add_path": "Добавить путь",
     "add_host": "Добавить хост",
     "add_cidr": "Добавить диапазон CIDR",
@@ -842,7 +902,14 @@
     "expression_label": "Выражение (CEL)",
     "expression_help": "Условие, которое тоже должно выполняться, с подстановками вроде {path} или {method}. Caddy проверяет его при сохранении.",
     "expression_docs": "Документация по матчеру expression",
-    "chip_not": "кроме"
+    "chip_not": "кроме",
+    "type_ip": "IP-адрес",
+    "ip_kind": "Сравнивать IP",
+    "ip_kind_client": "IP клиента",
+    "ip_kind_remote": "IP соединения",
+    "ip_kind_client_help": "IP посетителя, берётся из заголовка пересылки, если запрос пришёл через один из доверенных прокси (Настройки). Без доверенных прокси совпадает с IP соединения.",
+    "ip_kind_remote_help": "IP TCP-соединения. За прокси или CDN это адрес прокси, а не посетителя.",
+    "ip_range": "IP-адрес или диапазон"
   },
   "handle_path": {
     "label": "Удалять совпавший префикс пути (handle_path)"
@@ -957,5 +1024,29 @@
     "upstreams": "Апстримы",
     "logging": "Журналы и ошибки",
     "limits": "Лимиты"
+  },
+  "dns": {
+    "global_title": "DNS-проверка",
+    "global_enabled": "Использовать DNS-проверку для сертификатов ACME",
+    "global_enabled_help": "Нужно для wildcard-сертификатов и хостов, недоступных на портах 80/443. Caddy подтверждает владение доменом DNS-записью, которую создаёт через API вашего провайдера.",
+    "no_modules_title": "Модуль DNS-провайдера не установлен",
+    "no_modules_body": "Для DNS-проверки нужна сборка Caddy с модулем DNS-провайдера (dns.providers.*), которого обычно нет в пакетах дистрибутивов. Используйте сборку Caddy с модулем вашего DNS-провайдера. Этот плагин его не устанавливает: замена бинарника из пакета ломает обновления пакета.",
+    "no_modules_link": "Модули Caddy (фильтр: dns.providers)",
+    "provider": "DNS-провайдер",
+    "provider_choose": "Выберите провайдера",
+    "credentials": "Учётные данные",
+    "credentials_help": "Значения хранятся в /etc/caddy/dns.env (только root, режим 600) и попадают в Caddy как переменные окружения; Caddyfile лишь ссылается на них. Сохранённое значение больше не показывается.",
+    "option_name": "Имя параметра",
+    "option_value": "Значение",
+    "value_keep": "Сохранено; оставьте пустым, чтобы не менять",
+    "value_set": "Задано",
+    "add_option": "Добавить параметр",
+    "remove_option": "Удалить параметр",
+    "validation_option": "Имена параметров состоят из букв, цифр и подчёркиваний.",
+    "validation_duplicate": "Каждый параметр может встречаться только один раз.",
+    "validation_value": "Укажите значение для каждого нового параметра.",
+    "validation_provider": "Выберите DNS-провайдера.",
+    "restart_needed": "Перезапустите Caddy, чтобы загрузить изменённые учётные данные DNS. Перезагрузки конфигурации недостаточно: служба читает окружение только при запуске.",
+    "restart_button": "Перезапустить Caddy"
   }
 }

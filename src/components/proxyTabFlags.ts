@@ -1,5 +1,5 @@
 import { hasAnyMatcher } from "../api";
-import type { ErrorHandlerConfig, ForwardAuthConfig, HeaderOperation, RewriteConfig, RouteMatch } from "../api";
+import type { ErrorHandlerConfig, ForwardAuthConfig, LbPolicy, HeaderOperation, RewriteConfig, RouteMatch } from "../api";
 import type { AccessLogValues } from "./AccessLogSection";
 import { accessLogValuesToConfig } from "./AccessLogSection";
 import type { AuthEntry } from "./BasicAuthSection";
@@ -7,7 +7,7 @@ import { lbRetryValuesToConfig, validateLbRetry, type LbRetryValues } from "./Lb
 import type { ServerTimeoutValues } from "./ServerTimeoutsSection";
 import { tlsValuesHaveErrors, tlsValuesToAdvanced, tlsValuesToCustomTls, tlsValuesToMtls, type TlsValues } from "./TlsSection";
 import type { TransportValues } from "./TransportSection";
-import { validateUpstreams, type ExtraUpstream } from "./UpstreamsSection";
+import { validateLbArgs, validateUpstreams, type ExtraUpstream, type LbArgsValues } from "./UpstreamsSection";
 import type { ProxyTabKey } from "./proxyDialogParts";
 
 /** Everything the proxy dialog's tabs (#260) look at, minus General's own fields. */
@@ -23,6 +23,7 @@ export interface ProxyTabValues {
   isNamedRoute: boolean;
   extraUpstreams: ExtraUpstream[];
   lbPolicy: string;
+  lbArgs: LbArgsValues;
   lbRetry: LbRetryValues;
   transport: TransportValues;
   accessLog: AccessLogValues;
@@ -54,7 +55,8 @@ export function proxyTabFlags(v: ProxyTabValues, generalHasError: boolean): TabF
       general: generalHasError,
       security: !!v.forwardAuthError || tlsValuesHaveErrors(v.tlsValues),
       routing: false,
-      upstreams: !!validateUpstreams(v.extraUpstreams) || !!validateLbRetry(v.lbRetry),
+      upstreams: !!validateUpstreams(v.extraUpstreams) || !!validateLbRetry(v.lbRetry)
+        || (v.extraUpstreams.length > 0 && !!validateLbArgs(v.lbPolicy as LbPolicy | "", v.lbArgs, v.extraUpstreams.length + 1)),
       logging: false,
       limits: false,
     },

@@ -168,7 +168,16 @@
     "validation_port_range": "Bağlantı noktası 1 ile 65535 arasında olmalıdır",
     "validation_port_duplicate": "{{port}} bağlantı noktası zaten kullanılıyor",
     "validation_root_required": "Kök dizin zorunludur",
-    "confirm_body": ":{{port}} üzerinde {{root}} dizinini sunan bir statik dosya sunucusu oluşturulacak ve Caddy yapılandırması yeniden yüklenecek."
+    "confirm_body": ":{{port}} üzerinde {{root}} dizinini sunan bir statik dosya sunucusu oluşturulacak ve Caddy yapılandırması yeniden yüklenecek.",
+    "field_spa": "SPA modu (bilinmeyen yollar için index.html sun)",
+    "field_spa_help": "Tek sayfalık uygulamalar için (React, Vue, Svelte): var olan dosyalar olduğu gibi sunulur, diğer tüm yollar index.html alır ve derin bağlantılar çalışır.",
+    "advanced": "Dosya sunucusu seçenekleri",
+    "field_index": "Dizin dosyaları",
+    "field_index_help": "Bir dizin için sırayla denenen dosya adları, boşlukla ayrılmış.",
+    "field_hide": "Gizli dosyalar",
+    "field_hide_help": "Hiçbir zaman sunulmayan adlar veya kalıplar, boşlukla ayrılmış.",
+    "field_precompressed": "Önceden sıkıştırılmış dosyalar",
+    "field_precompressed_help": "Tarayıcı bu kodlamayı kabul ediyorsa özgün dosyanın yanındaki file.zst, file.br veya file.gz sunulur."
   },
   "edit_static": {
     "title": "Statik sunucuyu düzenle — :{{port}}",
@@ -195,7 +204,9 @@
     "env_section_title": "Ortam değişkenleri",
     "env_field_key": "Ad",
     "env_field_value": "Değer",
-    "env_add_button": "Değişken ekle"
+    "env_add_button": "Değişken ekle",
+    "field_try_files": "Denenecek dosyalar (try_files)",
+    "field_try_files_help": "İsteğe bağlı. PHP'den önce sırayla denenen adaylar; ön denetleyicili bir uygulama genellikle {path} {path}/ /index.php?{query} gerektirir."
   },
   "add_respond": {
     "title": "Statik yanıt ekle",
@@ -319,7 +330,37 @@
     "policy_least_conn": "En az bağlantı",
     "policy_first": "İlk kullanılabilir",
     "validation_host": "Ana bilgisayar zorunludur",
-    "validation_port": "Bağlantı noktası 1 ile 65535 arasında olmalıdır"
+    "validation_port": "Bağlantı noktası 1 ile 65535 arasında olmalıdır",
+    "policy_default": "Caddy varsayılanı (rastgele)",
+    "policy_default_help": "Caddy rastgele bir upstream seçer.",
+    "policy_random_help": "Her istek için rastgele bir upstream seçer.",
+    "policy_round_robin_help": "Upstream'leri sırayla kullanır.",
+    "policy_least_conn_help": "En az açık isteği olan upstream'i seçer.",
+    "policy_first_help": "Her zaman listedeki ilk kullanılabilir upstream; diğerleri yedektir.",
+    "policy_weighted_round_robin": "Ağırlıklı sıralı",
+    "policy_weighted_round_robin_help": "Upstream'leri sırayla, her birini ağırlığı kadar kullanır; ağırlık 0 onu dışarıda bırakır.",
+    "policy_random_choose": "Rastgele n içinden en iyisi",
+    "policy_random_choose_help": "Rastgele n upstream seçer ve en az meşgul olanı kullanır.",
+    "policy_ip_hash": "Bağlantı IP karması",
+    "policy_ip_hash_help": "Aynı bağlantı IP'si her zaman aynı upstream'e gider.",
+    "policy_client_ip_hash": "İstemci IP karması",
+    "policy_client_ip_hash_help": "Bağlantı IP karması gibi, ancak güvenilen proxy'lerin arkasında gerçek istemci IP'sini kullanır.",
+    "policy_uri_hash": "İstek yolu karması",
+    "policy_uri_hash_help": "Aynı istek yolu her zaman aynı upstream'e gider, önbellekler için iyidir.",
+    "policy_header": "İstek başlığı",
+    "policy_header_help": "Bir istek başlığının değeri upstream'i seçer; aynı değer her zaman aynısına gider.",
+    "policy_cookie": "Çerez (yapışkan oturumlar)",
+    "policy_cookie_help": "Yapışkan oturumlar: Caddy ilk yanıtta bir çerez ayarlar, onu taşıyan sonraki istekler aynı upstream'e gider.",
+    "field_header": "Başlık alanı",
+    "field_cookie_name": "Çerez adı",
+    "field_cookie_secret": "Çerez gizli anahtarı",
+    "field_cookie_secret_help": "İsteğe bağlı. Çerez değerini imzalar, böylece istemciler upstream'i kendileri seçemez.",
+    "field_weight": "Ağırlık",
+    "field_weight_main": "Ana hedefin ağırlığı",
+    "field_choose": "İstek başına aday",
+    "validation_header": "Başlık alanını girin.",
+    "validation_weights": "{{count}} upstream'in her biri için bir tam sayı ağırlık girin.",
+    "validation_choose": "En az 1 olan bir tam sayı girin."
   },
   "lb_retry": {
     "heading": "Yeniden deneme ve yedeğe geçiş",
@@ -431,7 +472,7 @@
   },
   "migration": {
     "banner_title": "Caddyfile'ı conf.d'ye taşı",
-    "banner_body": "Proxy girdileri doğrudan /etc/caddy/Caddyfile içinde tanımlı. Bu eklentinin onları yönetebilmesi için /etc/caddy/conf.d'ye taşıyın. Özgün dosya /etc/caddy/Caddyfile.bak olarak yedeklenecek.",
+    "banner_body": "Caddyfile içindeki siteler, eklentinin yönetebilmesi için eklentinin conf.d dosyasına taşınacak.",
     "button": "Taşı…",
     "confirm_title": "Caddyfile taşınsın mı?",
     "confirm_body": "Tüm proxy girdileri olduğu gibi /etc/caddy/conf.d/cockpit-caddy.conf dosyasına taşınacak ve /etc/caddy/Caddyfile bir import ifadesiyle değiştirilecek. Özgün dosya /etc/caddy/Caddyfile.bak olarak yedeklenir. Caddy otomatik olarak yeniden yüklenecek.",
@@ -443,7 +484,10 @@
     "gate_continue": "Yine de devam et",
     "gate_continue_warning": "Taşımadan devam etmek, Caddy'nin yinelenen girdiler nedeniyle yapılandırmayı reddetmesine yol açabilir.",
     "backup_warning_title": "Önce yapılandırmanızı yedekleyin",
-    "backup_warning_body": "Taşıma yalnızca Caddyfile'ın kendisini yedekler. Bir sorun olursa her şeyi geri yükleyebilmek için yapılandırmanın tam yedeğini oluşturun."
+    "backup_warning_body": "Taşıma yalnızca Caddyfile'ın kendisini yedekler. Bir sorun olursa her şeyi geri yükleyebilmek için yapılandırmanın tam yedeğini oluşturun.",
+    "welcome_label": "Dağıtımın karşılama sayfası",
+    "banner_details_toggle": "Ayrıntılar",
+    "banner_details": "Site blokları /etc/caddy/Caddyfile dosyasından /etc/caddy/conf.d/cockpit-caddy.conf dosyasına değiştirilmeden taşınır ve Caddyfile'a conf.d için bir import satırı eklenir. Özgün Caddyfile /etc/caddy/Caddyfile.bak olarak yedeklenir. O zamana kadar eklentinin değişiklikleri Caddyfile'daki sitelerle çakışabilir."
   },
   "backup": {
     "button": "Yedekle",
@@ -696,7 +740,24 @@
     "field_eab": "External Account Binding anahtar kimliği",
     "value_default": "(ayarlanmamış — Caddy varsayılanları kullanılıyor)",
     "value_default_ca": "(ayarlanmamış — Let's Encrypt üretim uç noktası kullanılıyor)",
-    "value_none": "(yok)"
+    "value_none": "(yok)",
+    "col_certificate": "Sertifika",
+    "state_loading": "Sertifika durumu okunuyor…",
+    "state_valid": "{{date}} tarihine kadar geçerli",
+    "state_renews": "yaklaşık {{date}} tarihinde yenilenir",
+    "state_renewal_due": "Yenileme zamanı geldi ({{date}} tarihinde sona erer)",
+    "state_obtaining": "Alınıyor…",
+    "state_failed": "Başarısız",
+    "state_none": "Sertifika yok",
+    "last_error": "Son deneme başarısız oldu: {{error}}",
+    "cert_title": "{{host}} sertifikası",
+    "cert_subject": "Konu",
+    "cert_sans": "Adlar (SAN)",
+    "cert_issuer": "Veren",
+    "cert_copy": "PEM'i kopyala",
+    "cert_download": "İndir (.pem)",
+    "back": "Listeye dön",
+    "cert_load_error": "Sertifika okunamadı"
   },
   "admin_address": {
     "title": "Admin API adresi",
@@ -821,7 +882,6 @@
     "type_method": "Yöntem",
     "type_header": "Başlık",
     "type_query": "Sorgu parametresi",
-    "type_remote_ip": "Uzak IP / CIDR",
     "add_path": "Yol ekle",
     "add_host": "Ana bilgisayar ekle",
     "add_cidr": "CIDR aralığı ekle",
@@ -842,7 +902,14 @@
     "expression_label": "İfade (CEL)",
     "expression_help": "Ayrıca doğru olması gereken bir koşul; {path} veya {method} gibi yer tutucular kullanılabilir. Caddy kaydederken denetler.",
     "expression_docs": "expression eşleştirici belgeleri",
-    "chip_not": "hariç"
+    "chip_not": "hariç",
+    "type_ip": "IP adresi",
+    "ip_kind": "Eşleşecek IP",
+    "ip_kind_client": "İstemci IP'si",
+    "ip_kind_remote": "Bağlantı IP'si",
+    "ip_kind_client_help": "Ziyaretçinin IP'si; istek güvenilen proxy'lerden (Ayarlar) biri üzerinden geldiğinde yönlendirme başlığından alınır. Güvenilen proxy yoksa bağlantı IP'siyle aynıdır.",
+    "ip_kind_remote_help": "TCP bağlantısının IP'si. Bir proxy veya CDN arkasında bu, ziyaretçinin değil proxy'nin adresidir.",
+    "ip_range": "IP adresi veya aralığı"
   },
   "handle_path": {
     "label": "Eşleşen yol önekini kaldır (handle_path)"
@@ -957,5 +1024,29 @@
     "upstreams": "Upstream'ler",
     "logging": "Günlükler ve hatalar",
     "limits": "Sınırlar"
+  },
+  "dns": {
+    "global_title": "DNS doğrulaması",
+    "global_enabled": "ACME sertifikaları için DNS doğrulamasını kullan",
+    "global_enabled_help": "Joker sertifikalar ve 80/443 portlarından erişilemeyen ana makineler için gerekir. Caddy, sağlayıcınızın API'si ile oluşturduğu bir DNS kaydıyla alan adının denetimini kanıtlar.",
+    "no_modules_title": "Kurulu DNS sağlayıcı modülü yok",
+    "no_modules_body": "DNS doğrulaması için DNS sağlayıcı modülü (dns.providers.*) içeren bir Caddy derlemesi gerekir; dağıtım paketlerinde genellikle bulunmaz. DNS sağlayıcınızın modülünü içeren bir Caddy derlemesi kullanın. Bu eklenti modül kurmaz: paketteki ikili dosyayı değiştirmek paket güncellemelerini bozar.",
+    "no_modules_link": "Caddy modülleri (filtre: dns.providers)",
+    "provider": "DNS sağlayıcısı",
+    "provider_choose": "Bir sağlayıcı seçin",
+    "credentials": "Kimlik bilgileri",
+    "credentials_help": "Değerler /etc/caddy/dns.env dosyasında (yalnızca root, mod 600) tutulur ve Caddy'ye ortam değişkeni olarak ulaşır; Caddyfile yalnızca onlara başvurur. Kaydedilen bir değer bir daha gösterilmez.",
+    "option_name": "Seçenek adı",
+    "option_value": "Değer",
+    "value_keep": "Kaydedildi; korumak için boş bırakın",
+    "value_set": "Ayarlandı",
+    "add_option": "Seçenek ekle",
+    "remove_option": "Seçeneği kaldır",
+    "validation_option": "Seçenek adları harf, rakam ve alt çizgi içerir.",
+    "validation_duplicate": "Her seçenek yalnızca bir kez yer alabilir.",
+    "validation_value": "Her yeni seçenek için bir değer girin.",
+    "validation_provider": "Bir DNS sağlayıcısı seçin.",
+    "restart_needed": "Değişen DNS kimlik bilgilerini yüklemek için Caddy'yi yeniden başlatın. Yeniden yükleme yetmez: hizmet ortamını yalnızca başlarken okur.",
+    "restart_button": "Caddy'yi yeniden başlat"
   }
 }

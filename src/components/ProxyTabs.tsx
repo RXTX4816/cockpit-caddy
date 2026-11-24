@@ -114,7 +114,7 @@ export function ProxyTabs({ state: s, onChange, general, generalHasError, active
         hasError: flags.hasError.upstreams,
         content: (
           <>
-            <UpstreamsSection value={s.extraUpstreams} lbPolicy={s.lbPolicy} onChange={(u, p) => onChange({ extraUpstreams: u, lbPolicy: p })} isDisabled={isDisabled} />
+            <UpstreamsSection value={s.extraUpstreams} lbPolicy={s.lbPolicy} onChange={(u, p) => onChange({ extraUpstreams: u, lbPolicy: p })} lbArgs={s.lbArgs} onLbArgsChange={a => onChange({ lbArgs: a })} isDisabled={isDisabled} />
             <LbRetrySection value={s.lbRetry} onChange={v => onChange({ lbRetry: v })} isDisabled={isDisabled} />
             <TransportSection value={s.transport} onChange={v => onChange({ transport: v })} isDisabled={isDisabled} />
           </>

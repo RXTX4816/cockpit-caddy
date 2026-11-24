@@ -703,3 +703,118 @@ describe.runIf(available || required)("per-site on-demand TLS (#253)", () => {
     expect(readBack(edited)[0]).toMatchObject({ tlsIssuer: "acme", tlsOnDemand: true, targetPort: 8001 });
   });
 });
+
+describe.runIf(available || required)("static and PHP site options round-trip through caddy adapt (#262)", () => {
+  const sites: [string, Partial<ProxyEntry>][] = [
+    ["hostless", { tls: false, externalPort: 8080 }],
+    ["host-matched", { tls: false, externalPort: 8080, externalHost: "static.example.test", externalScheme: "http" }],
+  ];
+
+  it.each(sites)("SPA mode (%s)", (_, site) => {
+    const conf = proxiesToCaddyfile([entry({ ...site, fileServer: { root: "/srv/app", spa: true } })]);
+    expect(conf).toContain("\ttry_files {path} /index.html\n");
+    const [p] = readBack(conf);
+    expect(p.fileServer).toEqual({ root: "/srv/app", browse: false, spa: true });
+  });
+
+  it.each(sites)("index, hide and precompressed (%s)", (_, site) => {
+    const fileServer = { root: "/srv/app", browse: true, index: ["index.html", "default.htm"], hide: [".git", "*.bak"], precompressed: ["zstd", "br", "gzip"] };
+    const conf = proxiesToCaddyfile([entry({ ...site, fileServer })]);
+    expect(conf).toContain("\tfile_server browse {\n\t\tindex index.html default.htm\n\t\thide .git *.bak\n\t\tprecompressed zstd br gzip\n\t}");
+    const [p] = readBack(conf);
+    expect(p.fileServer).toEqual(fileServer);
+  });
+
+  it.each(sites)("each option on its own (%s)", (_, site) => {
+    for (const extra of [{ index: ["home.html"] }, { hide: ["secret"] }, { precompressed: ["gzip"] }]) {
+      const fileServer = { root: "/srv/app", browse: false, ...extra };
+      const [p] = readBack(proxiesToCaddyfile([entry({ ...site, fileServer })]));
+      expect(p.fileServer).toEqual(fileServer);
+    }
+  });
+
+  it.each(sites)("PHP try_files (%s)", (_, site) => {
+    const phpFastcgi = { upstream: "localhost:9000", root: "/srv/php", tryFiles: "{path} {path}/ /index.php?{query}" };
+    const conf = proxiesToCaddyfile([entry({ ...site, phpFastcgi })]);
+    expect(conf).toContain("\ttry_files {path} {path}/ /index.php?{query}\n");
+    const [p] = readBack(conf);
+    expect(p.phpFastcgi).toEqual(phpFastcgi);
+  });
+
+  it("PHP try_files keeps a custom index", () => {
+    const phpFastcgi = { upstream: "localhost:9000", root: "/srv/php", index: "app.php", tryFiles: "{path} /app.php" };
+    const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, phpFastcgi })]));
+    expect(p.phpFastcgi).toEqual(phpFastcgi);
+  });
+
+  it("the plugin's own JSON push carries the same options", () => {
+    const fileServer = { root: "/srv/app", browse: false, spa: true, index: ["a.html"], hide: [".env"], precompressed: ["br", "gzip"] };
+    const pushed = buildServerEntry(entry({ tls: false, externalPort: 8080, fileServer }));
+    const [back] = parseProxies({ apps: { http: { servers: { srv0: pushed } } } });
+    expect(back.fileServer).toEqual(fileServer);
+    const adaptedFs = JSON.stringify(adapt(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, fileServer })])));
+    expect(adaptedFs).toContain('"index_names":["a.html"]');
+    expect(adaptedFs).toContain('"precompressed_order":["br","gzip"]');
+  });
+
+  it("sites without the new options write the same lines as before", () => {
+    expect(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, fileServer: { root: "/srv/app", browse: true } })]))
+      .toContain("\troot * /srv/app\n\tfile_server browse\n}");
+    expect(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, phpFastcgi: { upstream: "localhost:9000", root: "/srv/php" } })]))
+      .toContain("\troot * /srv/php\n\tphp_fastcgi localhost:9000\n\tfile_server\n}");
+  });
+});
+
+describe.runIf(available || required)("every load-balancing policy round-trips (#285)", () => {
+  const extraUpstreams = [{ host: "localhost", port: 8001 }];
+  const cases: [string, Partial<ProxyEntry>, string][] = [
+    ["ip_hash", { lbPolicy: "ip_hash" }, "lb_policy ip_hash"],
+    ["client_ip_hash", { lbPolicy: "client_ip_hash" }, "lb_policy client_ip_hash"],
+    ["uri_hash", { lbPolicy: "uri_hash" }, "lb_policy uri_hash"],
+    ["header", { lbPolicy: "header", lbPolicyArgs: { headerField: "X-User" } }, "lb_policy header X-User"],
+    ["cookie, defaults", { lbPolicy: "cookie" }, "lb_policy cookie\n"],
+    ["cookie, name", { lbPolicy: "cookie", lbPolicyArgs: { cookieName: "sid" } }, "lb_policy cookie sid\n"],
+    ["cookie, name and secret", { lbPolicy: "cookie", lbPolicyArgs: { cookieName: "sid", cookieSecret: "s3cr3t" } }, "lb_policy cookie sid s3cr3t"],
+    ["weighted_round_robin", { lbPolicy: "weighted_round_robin", lbPolicyArgs: { weights: [3, 1] } }, "lb_policy weighted_round_robin 3 1"],
+    ["random_choose", { lbPolicy: "random_choose", lbPolicyArgs: { chooseCount: 3 } }, "lb_policy random_choose 3"],
+  ];
+
+  it.each(cases)("%s", (_, policy, line) => {
+    const p = entry({ tls: false, externalPort: 8080, extraUpstreams, ...policy });
+    const conf = proxiesToCaddyfile([p]);
+    expect(conf).toContain(`\t\t${line}`);
+    const [back] = readBack(conf);
+    expect(back.lbPolicy).toBe(policy.lbPolicy);
+    expect(back.lbPolicyArgs).toEqual(policy.lbPolicyArgs);
+    // The plugin's own JSON push is what Caddy adapts the line to.
+    const adapted = adapt(conf).apps?.http?.servers;
+    const adaptedLb = JSON.stringify(Object.values(adapted ?? {})[0]).match(/"load_balancing":(\{[^}]*\}\})/)?.[1];
+    const pushedLb = JSON.stringify(buildServerEntry(p)).match(/"load_balancing":(\{[^}]*\}\})/)?.[1];
+    expect(JSON.parse(pushedLb!)).toEqual(JSON.parse(adaptedLb!));
+    const [pushedBack] = parseProxies({ apps: { http: { servers: { srv0: buildServerEntry(p) } } } });
+    expect(pushedBack.lbPolicyArgs).toEqual(policy.lbPolicyArgs);
+  });
+
+  it.each(["round_robin", "random", "least_conn", "first"] as const)("the old policy %s writes the same line", policy => {
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, extraUpstreams, lbPolicy: policy })]);
+    expect(conf).toContain(`\t\tlb_policy ${policy}\n`);
+    expect(readBack(conf)[0].lbPolicyArgs).toBeUndefined();
+  });
+});
+
+describe.runIf(available || required)("client_ip matcher (#286)", () => {
+  it.each(["client_ip", "remote_ip"] as const)("%s round-trips through the Caddyfile and the JSON push", kind => {
+    const matchers = { path: ["/admin/*"], [kind]: { ranges: ["10.0.0.0/8", "192.168.1.5"] } };
+    const p = entry({ tls: false, externalPort: 8080, matchers });
+    const conf = proxiesToCaddyfile([p]);
+    expect(conf).toContain(`${kind} 10.0.0.0/8 192.168.1.5`);
+    expect(readBack(conf)[0].matchers).toEqual(matchers);
+    const [pushed] = parseProxies({ apps: { http: { servers: { srv0: buildServerEntry(p) } } } });
+    expect(pushed.matchers).toEqual(matchers);
+  });
+
+  it("works in an exclude group too", () => {
+    const matchers = { path: ["/x/*"], not: { client_ip: { ranges: ["10.0.0.0/8"] } } };
+    expect(readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, matchers })]))[0].matchers).toEqual(matchers);
+  });
+});

@@ -20,6 +20,18 @@ Registration email, ACME CA directory URL (with Let's Encrypt / staging / ZeroSS
 
 ACME only applies to routes with a real public hostname — a bare `:443` with the internal CA doesn't use these settings at all. See the **ACME / Let's Encrypt** status modal (toolbar) for a live per-hostname view of which routes are actually using it.
 
+## DNS challenge
+
+The ACME DNS challenge (`acme_dns`) is the only way to get wildcard certificates, or certificates for hosts that aren't reachable on ports 80/443. It needs a Caddy build with a DNS provider module (`dns.providers.*`); distro packages usually have none, and the setting then says so and links the [module list](https://caddyserver.com/docs/modules/). The plugin doesn't install modules: replacing the packaged binary breaks package updates.
+
+With a module installed, pick the provider and enter its credentials (option names are prefilled for Cloudflare, Hetzner, DuckDNS and deSEC). The values never go into the Caddyfile:
+
+- they are written to `/etc/caddy/dns.env` (root:root, mode 600)
+- a systemd drop-in, `/etc/systemd/system/caddy.service.d/cockpit-caddy-dns.conf`, loads that file into `caddy.service`
+- the Caddyfile gets `acme_dns <provider> { <option> {env.CADDY_DNS_<OPTION>} }`
+
+Caddy reads its environment only when it starts, so after a credential change the page asks for a **restart** (a reload isn't enough). A saved value shows as "Set" and is never displayed again. Turning the setting off removes the `acme_dns` block, the env file and the drop-in.
+
 ## On-demand TLS
 
 On-demand TLS gets a site's certificate at the first TLS handshake instead of up front, for names that aren't known in advance. It is turned on **per site**: the site's HTTPS settings have an "On-demand" checkbox, written as `tls { on_demand }`.

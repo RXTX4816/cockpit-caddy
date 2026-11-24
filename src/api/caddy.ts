@@ -1,6 +1,7 @@
 import type { CaddyConfig, CaddyHandler, CaddyReverseProxyHandler, CaddyRoute, CaddyServer, CaddyTLSClientAuthentication, CaddyTLSConnectionPolicy, ProxyEntry } from "./types";
 import { readFile as fsReadFile, writeFile as fsWriteFile } from "@rxtx4816/cockpit-plugin-base-react/lib/cockpit-fs";
 import { reloadService as reloadSystemdService } from "@rxtx4816/cockpit-plugin-base-react/systemd";
+import { applyDnsSecrets, dnsEnviron } from "./dnsChallenge";
 import { i18n } from "@rxtx4816/cockpit-plugin-base-react/i18n";
 import { listConfDFiles, readCaddyfile, writeCaddyfile } from "./systemd";
 import { externalHostList } from "./externalHosts";
@@ -265,6 +266,14 @@ export function withConfDImport(caddyfile: string): string {
  */
 export async function ensureConfDImported(): Promise<void> {
   const content = await readCaddyfile();
+  if (isStockCaddyfile(content)) {
+    // The distro's welcome site moves into conf.d on the first save (#256), no gate needed.
+    const { caddyfile, confD } = migrateStockCaddyfile(content, await readProxyConf(), i18n.t("migration.welcome_label"));
+    await cockpit.spawn(["mkdir", "-p", "/etc/caddy/conf.d"], { superuser: "try" });
+    await fsWriteFile(PROXY_CONF_PATH, confD, "try");
+    await writeCaddyfile(caddyfile);
+    return;
+  }
   const next = withConfDImport(content);
   if (next !== content) await writeCaddyfile(next);
 }
@@ -322,7 +331,19 @@ const SNIPPETS_CONF_PATH = "/etc/caddy/conf.d/cockpit-caddy-snippets.conf";
  */
 function addressPortKey(address: string): string | undefined {
   const m = address.match(/:(\d+)$/);
-  return m ? m[1] : undefined;
+  if (m) return m[1];
+  return schemeOnlyPort(parseSiteAddresses(address))?.toString();
+}
+
+/**
+ * The port of a header made only of hostless schemes, such as the distros' `http:// {`
+ * welcome site (#256): 80 for `http://`, 443 for `https://`. Undefined for anything else.
+ */
+function schemeOnlyPort(addresses: SiteAddress[] | undefined): number | undefined {
+  if (!addresses?.length || addresses.some(a => a.host || a.port !== undefined || a.path || !a.scheme)) return undefined;
+  if (addresses.every(a => a.scheme === "http")) return 80;
+  if (addresses.every(a => a.scheme === "https")) return 443;
+  return undefined;
 }
 
 /**
@@ -459,6 +480,64 @@ export function migrateCaddyfile(content: string): { blocks: RawBlock[]; caddyfi
   }
   rest = rest.replace(/\n{3,}/g, "\n\n").replace(/^\n+/, "");
   return { blocks, caddyfile: withConfDImport(rest.trimEnd() + "\n") };
+}
+
+/** The addresses a distro's welcome site listens on: the plain-HTTP catch-all (#256). */
+const STOCK_WELCOME_ADDRESSES = new Set([":80", "http://", "http://:80"]);
+
+/** Strips `#` comments (outside quotes) and blank lines, leaving trimmed directive lines. */
+function significantLines(text: string): string[] {
+  return text.split("\n").map(stripLineComment).map(l => l.trim()).filter(Boolean);
+}
+
+function stripLineComment(line: string): string {
+  let quote: string | null = null;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (quote) {
+      if (c === "\\" && quote === '"') i++;
+      else if (c === quote) quote = null;
+    } else if (c === '"' || c === "`") quote = c;
+    else if (c === "#" && (i === 0 || /\s/.test(line[i - 1]))) return line.slice(0, i);
+  }
+  return line;
+}
+
+/**
+ * True when the main Caddyfile is the one the distro package ships (#256): its only site
+ * is the welcome page, a port-80 catch-all with nothing but `root [*] /usr/share/caddy` and
+ * `file_server`. Comments, blank lines, the global options block and import lines don't
+ * count; anything else (another site, a snippet, an extra directive) means it isn't stock.
+ */
+export function isStockCaddyfile(content: string): boolean {
+  const { blocks, caddyfile: rest } = migrateCaddyfile(content);
+  if (blocks.length !== 1) return false;
+  const [site] = blocks;
+  if (!STOCK_WELCOME_ADDRESSES.has(site.address)) return false;
+
+  const body = significantLines(site.raw).slice(1, -1);
+  const want = ["file_server", "root /usr/share/caddy"];
+  const got = body.map(l => l.replace(/\s+/g, " ").replace(/^root \* /, "root ")).sort();
+  if (got.length !== want.length || got.some((l, i) => l !== want[i])) return false;
+
+  // Whatever is left besides the site: only the global options block and imports.
+  const globalBlock = findGlobalBlock(rest);
+  const outside = globalBlock ? rest.slice(0, globalBlock.open) + rest.slice(globalBlock.close + 1) : rest;
+  return significantLines(outside).every(l => /^import\s/.test(l));
+}
+
+/**
+ * Moves a stock Caddyfile's welcome site into conf.d (#256), labelled so it shows up as an
+ * ordinary static site, and adds the conf.d import. Existing conf.d content stays as it is.
+ */
+export function migrateStockCaddyfile(
+  content: string, existingConfD: string, label: string,
+): { caddyfile: string; confD: string } {
+  const { blocks, caddyfile } = migrateCaddyfile(content);
+  return {
+    caddyfile,
+    confD: mergeMigratedConfContent(existingConfD, blocks.map(b => ({ ...b, label }))),
+  };
 }
 
 /** Builds the conf.d file content from raw blocks, preserving all original syntax. */
@@ -920,6 +999,9 @@ function matcherFieldLines(m: import("./types").RouteMatchFields, indent: string
   if (m.remote_ip?.ranges.length) {
     lines.push(`${indent}remote_ip ${m.remote_ip.ranges.join(" ")}`);
   }
+  if (m.client_ip?.ranges.length) {
+    lines.push(`${indent}client_ip ${m.client_ip.ranges.join(" ")}`);
+  }
   return lines;
 }
 
@@ -954,6 +1036,7 @@ function matcherFieldsJson(m: import("./types").RouteMatchFields): Record<string
     obj.query = q;
   }
   if (m.remote_ip?.ranges.length) obj.remote_ip = { ranges: m.remote_ip.ranges };
+  if (m.client_ip?.ranges.length) obj.client_ip = { ranges: m.client_ip.ranges };
   return obj;
 }
 
@@ -985,6 +1068,10 @@ function parseMatcherFieldsJson(match: Record<string, unknown>): import("./types
     const ri = (match.remote_ip as { ranges?: string[] }).ranges;
     if (ri?.length) m.remote_ip = { ranges: ri };
   }
+  if (match.client_ip && typeof match.client_ip === "object") {
+    const ci = (match.client_ip as { ranges?: string[] }).ranges;
+    if (ci?.length) m.client_ip = { ranges: ci };
+  }
   return m;
 }
 
@@ -1011,13 +1098,13 @@ export function hasAnyMatcher(m: import("./types").RouteMatch | undefined): m is
 
 /** Returns true when only path matchers are set (needed for handle_path eligibility). */
 export function isPathOnlyMatcher(m: import("./types").RouteMatch | undefined): boolean {
-  return !!m && !!(m.path?.length) && !m.host?.length && !m.method?.length && !m.header && !m.query && !m.remote_ip
+  return !!m && !!(m.path?.length) && !m.host?.length && !m.method?.length && !m.header && !m.query && !m.remote_ip && !m.client_ip
     && !(m.not && Object.keys(matcherFieldsJson(m.not)).length) && !m.expression?.trim();
 }
 
 /** True when the matcher is a host list and nothing else (a hostname-only site block). */
 function isHostOnlyMatcher(m: import("./types").RouteMatch | undefined): m is import("./types").RouteMatch & { host: string[] } {
-  return !!m?.host?.length && !m.path && !m.method && !m.header && !m.query && !m.remote_ip && !m.not && !m.expression;
+  return !!m?.host?.length && !m.path && !m.method && !m.header && !m.query && !m.remote_ip && !m.client_ip && !m.not && !m.expression;
 }
 
 // Caddyfile placeholder shorthands (#287), as Caddy 2.11's adapter expands them. Exact ones first,
@@ -1388,12 +1475,55 @@ function buildUpstreamList(p: Pick<ProxyEntry, "targetScheme" | "targetHost" | "
   return [primary, ...extra];
 }
 
-const LB_POLICY_MAP: Record<string, string> = {
-  round_robin: "round_robin",
-  random: "random",
-  least_conn: "least_conn",
-  first: "first",
-};
+const LB_POLICIES: ReadonlySet<string> = new Set<import("./types").LbPolicy>([
+  "round_robin", "random", "least_conn", "first", "ip_hash", "client_ip_hash", "uri_hash",
+  "header", "cookie", "weighted_round_robin", "random_choose",
+]);
+
+type LbFields = Pick<ProxyEntry, "lbPolicy" | "lbPolicyArgs">;
+
+/** The `lb_policy` arguments (#285), Caddyfile tokens. */
+function lbPolicyTokens(p: LbFields): string[] {
+  const a = p.lbPolicyArgs ?? {};
+  switch (p.lbPolicy) {
+    case "header": return a.headerField ? [caddyQuote(a.headerField)] : [];
+    case "cookie":
+      if (a.cookieSecret) return [caddyQuote(a.cookieName || "lb"), caddyQuote(a.cookieSecret)];
+      return a.cookieName ? [caddyQuote(a.cookieName)] : [];
+    case "weighted_round_robin": return (a.weights ?? []).map(String);
+    case "random_choose": return a.chooseCount != null ? [String(a.chooseCount)] : [];
+    default: return [];
+  }
+}
+
+/** `load_balancing.selection_policy` as Caddy's adapter writes it for the policy (#285). */
+function lbSelectionPolicyJson(p: LbFields): Record<string, unknown> {
+  const a = p.lbPolicyArgs ?? {};
+  const out: Record<string, unknown> = { policy: p.lbPolicy };
+  if (p.lbPolicy === "header" && a.headerField) out.field = a.headerField;
+  if (p.lbPolicy === "cookie") {
+    if (a.cookieName || a.cookieSecret) out.name = a.cookieName || "lb";
+    if (a.cookieSecret) out.secret = a.cookieSecret;
+  }
+  if (p.lbPolicy === "weighted_round_robin" && a.weights?.length) out.weights = a.weights;
+  if (p.lbPolicy === "random_choose" && a.chooseCount != null) out.choose = a.chooseCount;
+  return out;
+}
+
+/** The policy and its arguments from `selection_policy` JSON; unknown policies come back undefined. */
+function parseLbSelectionPolicy(sp: Record<string, unknown> | undefined): LbFields {
+  const policy = typeof sp?.policy === "string" && LB_POLICIES.has(sp.policy) ? sp.policy as import("./types").LbPolicy : undefined;
+  if (!policy || !sp) return {};
+  const args: import("./types").LbPolicyArgs = {};
+  if (policy === "header" && typeof sp.field === "string") args.headerField = sp.field;
+  if (policy === "cookie") {
+    if (typeof sp.name === "string" && (sp.name !== "lb" || typeof sp.secret === "string")) args.cookieName = sp.name;
+    if (typeof sp.secret === "string") args.cookieSecret = sp.secret;
+  }
+  if (policy === "weighted_round_robin" && Array.isArray(sp.weights)) args.weights = sp.weights as number[];
+  if (policy === "random_choose" && typeof sp.choose === "number") args.chooseCount = sp.choose;
+  return Object.keys(args).length ? { lbPolicy: policy, lbPolicyArgs: args } : { lbPolicy: policy };
+}
 
 /** Builds the reverse_proxy directive lines for a proxy (tab-indented). */
 function buildLbRetryLines(lbRetry: import("./types").LbRetryConfig | undefined): string[] {
@@ -1419,7 +1549,7 @@ function buildLbRetryLines(lbRetry: import("./types").LbRetryConfig | undefined)
 }
 
 function buildReverseProxyLines(
-  p: Pick<ProxyEntry, "targetScheme" | "targetHost" | "targetPort" | "tlsSkipVerify" | "requestHeaders" | "dialTimeout" | "responseHeaderTimeout" | "extraUpstreams" | "lbPolicy" | "lbRetry" | "replaceUpstreamErrors">,
+  p: Pick<ProxyEntry, "targetScheme" | "targetHost" | "targetPort" | "tlsSkipVerify" | "requestHeaders" | "dialTimeout" | "responseHeaderTimeout" | "extraUpstreams" | "lbPolicy" | "lbPolicyArgs" | "lbRetry" | "replaceUpstreamErrors">,
   errorHandlers?: import("./types").ErrorHandlerConfig[],
 ): string[] {
   const upstreams = buildUpstreamList(p);
@@ -1429,8 +1559,8 @@ function buildReverseProxyLines(
   });
 
   const transportLines = buildTransportLines(p);
-  const lbLines = (p.lbPolicy && upstreams.length > 1 && LB_POLICY_MAP[p.lbPolicy])
-    ? [`\t\tlb_policy ${LB_POLICY_MAP[p.lbPolicy]}`]
+  const lbLines = (p.lbPolicy && upstreams.length > 1 && LB_POLICIES.has(p.lbPolicy))
+    ? [[`\t\tlb_policy`, p.lbPolicy, ...lbPolicyTokens(p)].join(" ")]
     : [];
   const lbRetryLines = buildLbRetryLines(p.lbRetry);
 
@@ -1749,6 +1879,31 @@ function buildTlsPolicyBlockLines(
   return lines;
 }
 
+/** True when a static site has any `file_server` sub-directive set (#262). */
+function hasFileServerOptions(fs: import("./types").FileServerConfig): boolean {
+  return !!(fs.index?.length || fs.hide?.length || fs.precompressed?.length);
+}
+
+/**
+ * `root`, the SPA fallback and `file_server` with its options for a static site (#262). A site
+ * without the new options writes exactly the lines it always did.
+ */
+function buildFileServerLines(fs: import("./types").FileServerConfig, indent: string): string[] {
+  const lines = [`${indent}root * ${caddyQuote(fs.root)}`];
+  if (fs.spa) lines.push(`${indent}try_files {path} /index.html`);
+  const head = fs.browse ? `${indent}file_server browse` : `${indent}file_server`;
+  if (!hasFileServerOptions(fs)) {
+    lines.push(head);
+    return lines;
+  }
+  lines.push(`${head} {`);
+  if (fs.index?.length) lines.push(`${indent}\tindex ${fs.index.map(v => caddyQuote(v)).join(" ")}`);
+  if (fs.hide?.length) lines.push(`${indent}\thide ${fs.hide.map(v => caddyQuote(v)).join(" ")}`);
+  if (fs.precompressed?.length) lines.push(`${indent}\tprecompressed ${fs.precompressed.join(" ")}`);
+  lines.push(`${indent}}`);
+  return lines;
+}
+
 /**
  * `root` + `php_fastcgi` + `file_server` for a PHP site. php_fastcgi only proxies `*.php` and
  * rewrites other existing files to themselves, so without file_server nothing serves CSS, JS or
@@ -1756,6 +1911,7 @@ function buildTlsPolicyBlockLines(
  */
 function buildPhpFastcgiLines(php: import("./types").PhpFastcgiConfig, indent: string): string[] {
   const lines = [`${indent}root * ${caddyQuote(php.root)}`];
+  if (php.tryFiles?.trim()) lines.push(`${indent}try_files ${php.tryFiles.trim()}`);
   const { upstream, index, splitPath, env } = php;
   const envEntries = env ? Object.entries(env) : [];
   if (index || splitPath?.length || envEntries.length) {
@@ -1816,8 +1972,7 @@ function buildRouteHandlerLines(p: ProxyEntry, indent: string): string[] {
     for (const h of p.responseHeaders ?? []) {
       lines.push(headerOpLine(`${indent}header`, h, { quoteSet: true }));
     }
-    lines.push(`${indent}root * ${caddyQuote(p.fileServer.root)}`);
-    lines.push(p.fileServer.browse ? `${indent}file_server browse` : `${indent}file_server`);
+    lines.push(...buildFileServerLines(p.fileServer, indent));
   } else if (p.phpFastcgi) {
     if (p.compress) lines.push(`${indent}encode gzip zstd`);
     if (p.basicAuth?.length) {
@@ -1929,6 +2084,8 @@ function patchRawBlock(raw: string, proxy: ProxyEntry): string {
 
   // The directives the plugin writes again below are dropped here, each with its whole block.
   const rewritten = ["tls", "encode", "root", "file_server", "header", "basic_auth", "forward_auth", "reverse_proxy", "php_fastcgi"];
+  // try_files belongs to the static and PHP forms (#262); on any other site it's the user's.
+  if (proxy.fileServer || proxy.phpFastcgi) rewritten.push("try_files");
 
   while (i < closingIdx) {
     const line = lines[i];
@@ -1965,8 +2122,7 @@ function patchRawBlock(raw: string, proxy: ProxyEntry): string {
     for (const h of proxy.responseHeaders ?? []) {
       kept.push(headerOpLine(`\theader`, h, { quoteSet: true }));
     }
-    kept.push(`\troot * ${caddyQuote(proxy.fileServer.root)}`);
-    kept.push(proxy.fileServer.browse ? "\tfile_server browse" : "\tfile_server");
+    kept.push(...buildFileServerLines(proxy.fileServer, "\t"));
   } else if (proxy.phpFastcgi) {
     // A hand-written PHP site (#247): its root/php_fastcgi/file_server were skipped above.
     if (proxy.compress) kept.push("\tencode gzip zstd");
@@ -2129,6 +2285,8 @@ function blockHeaderTarget(header: string): { port: number; hosts: string[] } | 
     const hostMatch = header.match(/^(?:[\w+.-]+:\/\/)?([^\s{:]*):\d+[^{]*\{$/);
     return { port, hosts: hostMatch?.[1] ? [hostMatch[1]] : [] };
   }
+  const schemePort = schemeOnlyPort(addresses);
+  if (schemePort !== undefined) return { port: schemePort, hosts: [] };
   if (!addresses || addresses.some(a => !a.host || a.port !== undefined)) return undefined;
   const port = addresses.every(a => a.scheme === "http") ? 80 : 443;
   return { port, hosts: [...new Set(addresses.map(a => a.host!))] };
@@ -2250,6 +2408,65 @@ export async function writeProxyConf(proxies: ProxyEntry[]): Promise<void> {
 
 type AnyHandler = { handler: string; routes?: Array<{ handle?: AnyHandler[]; [key: string]: unknown }>; [key: string]: unknown };
 
+type JsonRoute = { match?: Array<Record<string, unknown>>; handle?: AnyHandler[] };
+
+/**
+ * The user's `try_files` (#262) from the routes Caddy adapts it to: a `file` matcher with the
+ * candidate list plus a rewrite to `{http.matchers.file.relative}` and, per candidate group, the
+ * part of the target after it (`?{query}`). php_fastcgi's own file routes (with `split_path`)
+ * and the trailing-slash redirect aren't the user's and are skipped. Subroute handlers are
+ * searched too, so the plugin's own JSON form is found as well.
+ */
+function findTryFiles(routes: JsonRoute[]): string | undefined {
+  const parts: string[] = [];
+  const visit = (rs: JsonRoute[]) => {
+    for (const r of rs) {
+      const file = r.match?.[0]?.file as { try_files?: string[]; split_path?: unknown; try_policy?: unknown } | undefined;
+      const rewrite = (r.handle ?? []).find(h => h.handler === "rewrite") as { uri?: string } | undefined;
+      if (file?.try_files?.length && !file.split_path && !file.try_policy && rewrite?.uri?.startsWith("{http.matchers.file.relative}")) {
+        const suffix = rewrite.uri.slice("{http.matchers.file.relative}".length);
+        parts.push(...file.try_files.map(f => collapsePlaceholderShorthands(f + suffix)));
+      }
+      for (const h of r.handle ?? []) {
+        const sub = (h as { routes?: JsonRoute[] }).routes;
+        if (h.handler === "subroute" && sub) visit(sub);
+      }
+    }
+  };
+  visit(routes);
+  return parts.length ? parts.join(" ") : undefined;
+}
+
+/** Top-level routes that together make one hostless static site: one file_server, no hosts, no proxy. */
+function isHostlessStaticGroup(routes: JsonRoute[]): boolean {
+  const handles = routes.flatMap(r => r.handle ?? []);
+  return handles.filter(h => h.handler === "file_server").length === 1
+    && !handles.some(h => h.handler === "reverse_proxy" || h.handler === "static_response" || h.handler === "subroute")
+    && routes.every(r => !(r.match ?? []).some(m => "host" in m));
+}
+
+/** A path Caddy adds to `hide` itself: the file the site block came from. */
+function isConfigSourcePath(p: string): boolean {
+  return /(^|\/)Caddyfile$/.test(p) || (p.startsWith("/") && /\.(conf|caddyfile)$/.test(p));
+}
+
+/** The `file_server` options (#262) of a static site, from its JSON handler and routes. */
+function parseFileServerOptions(
+  fsHandle: Record<string, unknown>, routes: JsonRoute[],
+): Pick<import("./types").FileServerConfig, "spa" | "index" | "hide" | "precompressed"> {
+  const out: Pick<import("./types").FileServerConfig, "spa" | "index" | "hide" | "precompressed"> = {};
+  if (findTryFiles(routes) === "{path} /index.html") out.spa = true;
+  const index = fsHandle.index_names;
+  if (Array.isArray(index) && index.length) out.index = index as string[];
+  const hide = Array.isArray(fsHandle.hide) ? (fsHandle.hide as string[]).filter(h => !isConfigSourcePath(h)) : [];
+  if (hide.length) out.hide = hide;
+  const order = fsHandle.precompressed_order;
+  const pre = fsHandle.precompressed;
+  if (Array.isArray(order) && order.length) out.precompressed = order as string[];
+  else if (pre && typeof pre === "object" && Object.keys(pre).length) out.precompressed = Object.keys(pre);
+  return out;
+}
+
 /**
  * Detects Caddy's `php_fastcgi` Caddyfile-macro expansion from a group of routes (#35).
  * The macro isn't a single JSON handler — it expands into up to four separate routes
@@ -2270,7 +2487,11 @@ function detectPhpFastcgiFromRoutes(
   if (!rp) return undefined;
 
   const varsH = allHandles.find(h => h.handler === "vars" && typeof h.root === "string");
-  const rewriteRoute = routes.find(r => (r.handle ?? []).some(h => h.handler === "rewrite"));
+  // php_fastcgi's own rewrite carries split_path; a user's try_files (#262) adapts to rewrites without it.
+  const rewriteRoute = routes.find(r =>
+    (r.handle ?? []).some(h => h.handler === "rewrite") && !!(r.match?.[0]?.file as { split_path?: unknown } | undefined)?.split_path,
+  ) ?? routes.find(r => (r.handle ?? []).some(h => h.handler === "rewrite"));
+  const userTryFiles = findTryFiles(routes);
   const tryFiles = (rewriteRoute?.match?.[0]?.file as { try_files?: string[] } | undefined)?.try_files;
   const index = tryFiles?.length ? tryFiles[tryFiles.length - 1] : undefined;
 
@@ -2285,6 +2506,7 @@ function detectPhpFastcgiFromRoutes(
     index: index && index !== "index.php" ? index : undefined,
     splitPath: Array.isArray(splitPath) && !isDefaultSplit ? splitPath : undefined,
     env: env && Object.keys(env).length ? env : undefined,
+    ...(userTryFiles ? { tryFiles: userTryFiles } : {}),
   };
 }
 
@@ -2487,7 +2709,7 @@ function parseRouteToEntry(
 
   // Detect file_server
   const fsHandle = effectiveHandles.find(h => h.handler === "file_server") as
-    { handler: string; root?: string; browse?: Record<string, unknown> } | undefined;
+    { handler: string; root?: string; browse?: Record<string, unknown>; [k: string]: unknown } | undefined;
   if (fsHandle) {
     const fsCompress = effectiveHandles.some(h => h.handler === "encode");
     const fsAuthHandle = effectiveHandles.find(h => h.handler === "authentication");
@@ -2515,6 +2737,7 @@ function parseRouteToEntry(
           ?? (effectiveHandles.find(h => h.handler === "vars" && typeof (h as { root?: unknown }).root === "string") as { root?: string } | undefined)?.root
           ?? "",
         browse: fsHandle.browse !== undefined,
+        ...parseFileServerOptions(fsHandle, subrouteH?.routes?.length ? subrouteH.routes : [route]),
       },
       requestBodyMaxSize: parseRequestBodyMaxSize(effectiveHandles),
       compress: fsCompress || undefined,
@@ -2564,8 +2787,9 @@ function parseRouteToEntry(
     const c = d.lastIndexOf(":");
     return { host: c > 0 ? d.slice(0, c) : d, port: c > 0 ? parseInt(d.slice(c + 1), 10) : 80 };
   });
-  const lbRaw = (rp.load_balancing as { selection_policy?: { policy?: string } } | undefined)?.selection_policy?.policy;
-  const lbPolicy = (lbRaw && lbRaw in LB_POLICY_MAP) ? lbRaw as import("./types").LbPolicy : undefined;
+  const { lbPolicy, lbPolicyArgs } = parseLbSelectionPolicy(
+    (rp.load_balancing as { selection_policy?: Record<string, unknown> } | undefined)?.selection_policy,
+  );
   const lbRetry = parseLbRetry(rp);
 
   const targetScheme: "http" | "https" = rp.transport?.tls !== undefined ? "https" : "http";
@@ -2621,6 +2845,7 @@ function parseRouteToEntry(
     responseHeaders: responseHeadersParsed.length ? responseHeadersParsed : undefined,
     extraUpstreams: extraUpstreams.length ? extraUpstreams : undefined,
     lbPolicy,
+    lbPolicyArgs,
     lbRetry,
     matchers,
     handlePath,
@@ -2728,6 +2953,20 @@ export function parseProxies(config: CaddyConfig, serverDefs?: import("./types")
         disableHttp3: phpDisableHttp3, accessLog,
         errorHandlers: parseErrorHandlers(server),
       });
+      continue;
+    }
+
+    // A hostless static site with try_files (#262) adapts to several top-level routes too
+    // (root vars, the file-matcher rewrite, file_server). Parse them as one site, as if they
+    // were the subroute a host-matched block gets.
+    const staticGroup = !namedDef && contentRoutes.length > 1 && isHostlessStaticGroup(contentRoutes);
+    if (staticGroup) {
+      const entry = parseRouteToEntry(
+        { handle: [{ handler: "subroute", routes: contentRoutes } as CaddyHandler] } as CaddyRoute, key, externalPort, externalHost, server, accessLog,
+        serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
+        String(externalPort), undefined, automationPolicies, certLoadFiles,
+      );
+      if (entry) proxies.push(entry);
       continue;
     }
 
@@ -2855,7 +3094,7 @@ function parseResponseHeadersJson(h: AnyHandler): import("./types").HeaderOperat
 const UPSTREAM_ERROR_MESSAGE = "upstream error";
 
 function buildReverseProxyHandler(
-  proxy: Pick<ProxyEntry, "targetHost" | "targetPort" | "targetScheme" | "tlsSkipVerify" | "requestHeaders" | "dialTimeout" | "responseHeaderTimeout" | "extraUpstreams" | "lbPolicy" | "lbRetry" | "replaceUpstreamErrors">,
+  proxy: Pick<ProxyEntry, "targetHost" | "targetPort" | "targetScheme" | "tlsSkipVerify" | "requestHeaders" | "dialTimeout" | "responseHeaderTimeout" | "extraUpstreams" | "lbPolicy" | "lbPolicyArgs" | "lbRetry" | "replaceUpstreamErrors">,
   errorHandlers?: import("./types").ErrorHandlerConfig[],
 ): CaddyReverseProxyHandler {
   const primaryDial = `${proxy.targetHost}:${proxy.targetPort}`;
@@ -2868,8 +3107,8 @@ function buildReverseProxyHandler(
   if (transport) rp.transport = transport;
   const hdrs = buildRequestHeadersJson(proxy.requestHeaders);
   if (hdrs) rp.headers = hdrs;
-  if (proxy.lbPolicy && (proxy.extraUpstreams?.length ?? 0) > 0 && LB_POLICY_MAP[proxy.lbPolicy]) {
-    rp.load_balancing = { selection_policy: { policy: proxy.lbPolicy } };
+  if (proxy.lbPolicy && (proxy.extraUpstreams?.length ?? 0) > 0 && LB_POLICIES.has(proxy.lbPolicy)) {
+    rp.load_balancing = { selection_policy: lbSelectionPolicyJson(proxy) };
   }
   const lbRetry = proxy.lbRetry;
   if (lbRetry?.retries != null || lbRetry?.tryDuration || lbRetry?.tryInterval) {
@@ -3541,10 +3780,8 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
     if (proxy.compress) fsHandles.push(buildEncodeHandler());
     if (proxy.basicAuth?.length) fsHandles.push(buildBasicAuthHandler(proxy.basicAuth));
     if (proxy.responseHeaders?.length) fsHandles.push(buildResponseHeadersHandler(proxy.responseHeaders));
-    const fsHandler: Record<string, unknown> = { handler: "file_server", root: proxy.fileServer.root };
-    if (proxy.fileServer.browse) fsHandler["browse"] = {};
-    fsHandles.push(fsHandler as CaddyHandler);
-    const route: CaddyRoute = { handle: fsHandles, terminal: isTerminal };
+    fsHandles.push(buildFileServerJson(proxy.fileServer));
+    const route: CaddyRoute = { handle: withSpaFallback(proxy.fileServer, fsHandles), terminal: isTerminal };
     if (matchArr) route.match = matchArr;
     const server: CaddyServer = { listen: [listenAddr], routes: [route] };
     if (proxy.tls) server.tls_connection_policies = [buildTlsPolicy(proxy)];
@@ -3574,6 +3811,37 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
   return applyServerTimeouts(server, proxy);
 }
 
+/** The `file_server` handler with its options (#262). */
+function buildFileServerJson(fs: import("./types").FileServerConfig): CaddyHandler {
+  const h: Record<string, unknown> = { handler: "file_server", root: fs.root };
+  if (fs.browse) h.browse = {};
+  if (fs.index?.length) h.index_names = fs.index;
+  if (fs.hide?.length) h.hide = fs.hide;
+  if (fs.precompressed?.length) {
+    h.precompressed = Object.fromEntries(fs.precompressed.map(e => [e, {}]));
+    h.precompressed_order = fs.precompressed;
+  }
+  return h as CaddyHandler;
+}
+
+/**
+ * SPA mode (#262) the way `try_files` adapts: a subroute whose first route rewrites to the
+ * first existing file of `{path}` / `/index.html`, then the site's own handlers.
+ */
+function withSpaFallback(fs: import("./types").FileServerConfig, handles: CaddyHandler[]): CaddyHandler[] {
+  if (!fs.spa) return handles;
+  return [{
+    handler: "subroute",
+    routes: [
+      {
+        match: [{ file: { root: fs.root, try_files: ["{http.request.uri.path}", "/index.html"] } }],
+        handle: [{ handler: "rewrite", uri: "{http.matchers.file.relative}" }],
+      },
+      { handle: handles },
+    ],
+  } as CaddyHandler];
+}
+
 /** Patch handles in-place: update reverse_proxy and rewrite handlers, leave everything else untouched. */
 function patchHandles(handles: CaddyHandler[], proxy: ProxyEntry): CaddyHandler[] {
   if (proxy.fileServer) {
@@ -3582,10 +3850,8 @@ function patchHandles(handles: CaddyHandler[], proxy: ProxyEntry): CaddyHandler[
     if (proxy.compress) fsHandles.push(buildEncodeHandler());
     if (proxy.basicAuth?.length) fsHandles.push(buildBasicAuthHandler(proxy.basicAuth));
     if (proxy.responseHeaders?.length) fsHandles.push(buildResponseHeadersHandler(proxy.responseHeaders));
-    const fsHandler: Record<string, unknown> = { handler: "file_server", root: proxy.fileServer.root };
-    if (proxy.fileServer.browse) fsHandler["browse"] = {};
-    fsHandles.push(fsHandler as CaddyHandler);
-    return fsHandles;
+    fsHandles.push(buildFileServerJson(proxy.fileServer));
+    return withSpaFallback(proxy.fileServer, fsHandles);
   }
   let found = false;
   // Strip any existing encode/authentication/rewrite/headers/file_server/forward_auth/
@@ -4273,10 +4539,8 @@ function buildRouteHandlesForEntry(proxy: ProxyEntry): CaddyHandler[] {
     if (proxy.compress) handles.push(buildEncodeHandler());
     if (proxy.basicAuth?.length) handles.push(buildBasicAuthHandler(proxy.basicAuth));
     if (proxy.responseHeaders?.length) handles.push(buildResponseHeadersHandler(proxy.responseHeaders));
-    const fsH: Record<string, unknown> = { handler: "file_server", root: proxy.fileServer.root };
-    if (proxy.fileServer.browse) fsH["browse"] = {};
-    handles.push(fsH as CaddyHandler);
-    return handles;
+    handles.push(buildFileServerJson(proxy.fileServer));
+    return withSpaFallback(proxy.fileServer, handles);
   }
   const handles: CaddyHandler[] = [];
   if (handlePathRw) handles.push(handlePathRw);
@@ -4318,9 +4582,12 @@ async function runCaddyValidate(): Promise<void> {
     return;
   }
   let output = "";
+  // DNS provider credentials (#261) live in the service's env file; a provider that checks them
+  // while provisioning would fail validation without them. Passed as environment, not argv.
+  const environ = await dnsEnviron();
   const proc = cockpit.spawn(
     ["caddy", "validate", "--config", MAIN_CADDYFILE, "--adapter", "caddyfile"],
-    { superuser: "try", err: "out" },
+    { superuser: "try", err: "out", ...(environ.length ? { environ } : {}) },
   ).stream(chunk => { output += chunk; });
   try {
     await proc;
@@ -4792,6 +5059,8 @@ export interface GlobalOptions {
   acmeEabKeyId?: string;
   /** External Account Binding MAC key */
   acmeEabMacKey?: string;
+  /** Global ACME DNS challenge provider (#261), `acme_dns`. */
+  acmeDns?: import("./types").DnsChallengeConfig;
   /** Enable on-demand TLS certificate provisioning */
   onDemandEnabled?: boolean;
   /** Authorization URL Caddy queries before issuing an on-demand certificate */
@@ -4854,7 +5123,7 @@ export interface GlobalOptions {
  */
 const KNOWN_GLOBAL_OPTION_KEYS = new Set([
   "http_port", "https_port", "debug", "grace_period", "shutdown_delay",
-  "email", "acme_ca", "acme_ca_root", "acme_eab", "on_demand_tls",
+  "email", "acme_ca", "acme_ca_root", "acme_eab", "acme_dns", "on_demand_tls",
   "renewal_window_ratio", "storage", "metrics", "log",
 ]);
 
@@ -4872,6 +5141,50 @@ const KNOWN_GLOBAL_OPTION_KEYS = new Set([
  * shared value is stored so it can be applied uniformly (see applyHostlessLifetime).
  */
 const INTERNAL_LIFETIME_MARKER = "# cockpit-caddy:internal-cert-lifetime";
+
+/**
+ * `<directive> <provider> [{ <option> {env.NAME} … }]` (#261 acme_dns, #289 tls { dns }).
+ * Credentials are written only as env references; literal values from a hand-written config
+ * come back as they were.
+ */
+export function dnsProviderLines(directive: string, cfg: import("./types").DnsChallengeConfig, indent: string): string[] {
+  const inline = cfg.literal?.[""];
+  const head = `${indent}${directive} ${cfg.provider}${inline ? ` ${inline}` : ""}`;
+  const entries = [
+    ...Object.entries(cfg.credentials).map(([k, v]) => `${indent}\t${k} {env.${v}}`),
+    ...Object.entries(cfg.literal ?? {}).filter(([k]) => k).map(([k, v]) => `${indent}\t${k} ${v}`),
+  ];
+  return entries.length ? [`${head} {`, ...entries, `${indent}}`] : [head];
+}
+
+/**
+ * Reads a DNS provider directive whose arguments are `val` (the rest of line i). Returns the
+ * config and the index of the first line after it (after the closing brace of a block).
+ */
+export function parseDnsProviderDirective(val: string, lines: string[], i: number): { config?: import("./types").DnsChallengeConfig; next: number } {
+  const isBlock = val.trim().endsWith("{");
+  const args = val.replace(/\{\s*$/, "").trim().split(/\s+/).filter(Boolean);
+  if (!args.length) return { next: i + 1 };
+  const config: import("./types").DnsChallengeConfig = { provider: args[0], credentials: {} };
+  const literal: Record<string, string> = {};
+  if (args.length > 1) literal[""] = args.slice(1).join(" ");
+  let j = i + 1;
+  if (isBlock) {
+    let depth = 1;
+    for (; j < lines.length; j++) {
+      const inner = lines[j].trim();
+      depth += (inner.match(/\{/g) ?? []).length - (inner.match(/\}/g) ?? []).length;
+      if (depth <= 0) { j++; break; }
+      const im = inner.match(/^(\S+)\s+(.+)$/);
+      if (!im || depth > 1) continue;
+      const env = im[2].trim().match(/^\{env\.([A-Za-z_][A-Za-z0-9_]*)\}$/);
+      if (env) config.credentials[im[1]] = env[1];
+      else literal[im[1]] = im[2].trim();
+    }
+  }
+  if (Object.keys(literal).length) config.literal = literal;
+  return { config, next: j };
+}
 
 /** Parse the recognized global option directives out of a block of Caddyfile lines. */
 function parseOptionLines(lines: string[]): GlobalOptions {
@@ -4902,6 +5215,11 @@ function parseOptionLines(lines: string[]): GlobalOptions {
         }
         i++;
       }
+    } else if (key === "acme_dns" && val) {
+      const { config, next } = parseDnsProviderDirective(val, lines, i);
+      if (config) opts.acmeDns = config;
+      i = next;
+      continue;
     } else if (key === "on_demand_tls" && line.endsWith("{")) {
       opts.onDemandEnabled = true;
       i++;
@@ -5103,6 +5421,7 @@ function buildGlobalOptionsLines(opts: GlobalOptions): string {
     lines.push(`\t\tmac_key ${opts.acmeEabMacKey}`);
     lines.push("\t}");
   }
+  if (opts.acmeDns?.provider) lines.push(...dnsProviderLines("acme_dns", opts.acmeDns, "\t"));
   if (opts.onDemandEnabled) {
     lines.push("\ton_demand_tls {");
     if (opts.onDemandAsk) lines.push(`\t\task ${opts.onDemandAsk}`);
@@ -5282,7 +5601,17 @@ function patchTopLevelMarkedSection(content: string, beginMarker: string, endMar
   return base + "\n\n" + beginMarker + "\n" + body + "\n" + endMarker + "\n";
 }
 
-export async function syncGlobalOptions(opts: GlobalOptions): Promise<void> {
+/**
+ * Saves the global options. `dnsSecrets` (#261) are DNS provider credentials for the root-only
+ * env file, applied first so validation sees them. `restartNeeded` is true when that env
+ * changed: Caddy only reads it on a restart, not on a reload.
+ */
+export async function syncGlobalOptions(
+  opts: GlobalOptions,
+  dnsSecrets?: { set: Record<string, string>; remove: string[] },
+): Promise<{ restartNeeded: boolean }> {
+  await ensureConfDImported(); // a stock Caddyfile is migrated first (#256)
+  const restartNeeded = dnsSecrets ? (await applyDnsSecrets(dnsSecrets.set, dnsSecrets.remove)).changed : false;
   const diskContent = (await fsReadFile(MAIN_CADDYFILE, "try")) ?? "";
   let patched = buildGlobalOptionsPatch(diskContent, opts);
 
@@ -5304,7 +5633,7 @@ export async function syncGlobalOptions(opts: GlobalOptions): Promise<void> {
   let proxyConfPatched = await applyInternalLifetimeToProxyConf(proxyConfDisk, opts.internalCertLifetime);
   proxyConfPatched = patchTopLevelMarkedSection(proxyConfPatched, METRICS_SITE_BEGIN, METRICS_SITE_END, buildMetricsSiteBlock(opts));
 
-  if (patched === diskContent && proxyConfPatched === proxyConfDisk) return;
+  if (patched === diskContent && proxyConfPatched === proxyConfDisk) return { restartNeeded };
 
   // #158's runtime logger lives in the main Caddyfile's global options, not conf.d — check
   // both files for log paths that would otherwise get poisoned by validate (see
@@ -5328,6 +5657,7 @@ export async function syncGlobalOptions(opts: GlobalOptions): Promise<void> {
   }
   await fixAccessLogFileOwnership(patched);
   if (proxyConfPatched !== proxyConfDisk) await fixAccessLogFileOwnership(proxyConfPatched);
+  return { restartNeeded };
 }
 
 /** Read current global options from the main Caddyfile, merged with the metrics site

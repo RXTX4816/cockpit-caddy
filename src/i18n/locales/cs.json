@@ -168,7 +168,16 @@
     "validation_port_range": "Port musí být v rozsahu 1–65535",
     "validation_port_duplicate": "Port {{port}} se už používá",
     "validation_root_required": "Kořenový adresář je povinný",
-    "confirm_body": "Na :{{port}} se vytvoří statický souborový server poskytující {{root}} a konfigurace Caddy se znovu načte."
+    "confirm_body": "Na :{{port}} se vytvoří statický souborový server poskytující {{root}} a konfigurace Caddy se znovu načte.",
+    "field_spa": "Režim SPA (pro neznámé cesty vrátit index.html)",
+    "field_spa_help": "Pro jednostránkové aplikace (React, Vue, Svelte): existující soubory se vydají tak, jak jsou, každá jiná cesta dostane index.html, aby fungovaly přímé odkazy.",
+    "advanced": "Možnosti souborového serveru",
+    "field_index": "Indexové soubory",
+    "field_index_help": "Názvy souborů zkoušené pro adresář, oddělené mezerami, v daném pořadí.",
+    "field_hide": "Skryté soubory",
+    "field_hide_help": "Názvy nebo vzory, které se nikdy nevydají, oddělené mezerami.",
+    "field_precompressed": "Předkomprimované soubory",
+    "field_precompressed_help": "Vydat file.zst, file.br nebo file.gz vedle originálu, pokud prohlížeč toto kódování přijímá."
   },
   "edit_static": {
     "title": "Upravit statický server — :{{port}}",
@@ -195,7 +204,9 @@
     "env_section_title": "Proměnné prostředí",
     "env_field_key": "Název",
     "env_field_value": "Hodnota",
-    "env_add_button": "Přidat proměnnou"
+    "env_add_button": "Přidat proměnnou",
+    "field_try_files": "Zkoušené soubory (try_files)",
+    "field_try_files_help": "Volitelné. Kandidáti zkoušení v pořadí před PHP; aplikace s front controllerem obvykle potřebuje {path} {path}/ /index.php?{query}."
   },
   "add_respond": {
     "title": "Přidat statickou odpověď",
@@ -319,7 +330,37 @@
     "policy_least_conn": "Nejméně spojení",
     "policy_first": "První dostupný",
     "validation_host": "Hostitel je povinný",
-    "validation_port": "Port musí být v rozsahu 1–65535"
+    "validation_port": "Port musí být v rozsahu 1–65535",
+    "policy_default": "Výchozí v Caddy (náhodně)",
+    "policy_default_help": "Caddy vybere upstream náhodně.",
+    "policy_random_help": "Pro každý požadavek vybere náhodný upstream.",
+    "policy_round_robin_help": "Střídá upstreamy po řadě.",
+    "policy_least_conn_help": "Vybere upstream s nejmenším počtem otevřených požadavků.",
+    "policy_first_help": "Vždy první dostupný upstream v seznamu; ostatní jsou záložní.",
+    "policy_weighted_round_robin": "Vážené střídání",
+    "policy_weighted_round_robin_help": "Střídá upstreamy, každý tak často, jaká je jeho váha; váha 0 upstream vyřadí.",
+    "policy_random_choose": "Nejlepší z n náhodných",
+    "policy_random_choose_help": "Náhodně vybere n upstreamů a použije nejméně vytížený.",
+    "policy_ip_hash": "Hash IP spojení",
+    "policy_ip_hash_help": "Stejná IP spojení vždy dojde ke stejnému upstreamu.",
+    "policy_client_ip_hash": "Hash IP klienta",
+    "policy_client_ip_hash_help": "Jako hash IP spojení, ale za důvěryhodnými proxy použije skutečnou IP klienta.",
+    "policy_uri_hash": "Hash cesty požadavku",
+    "policy_uri_hash_help": "Stejná cesta požadavku vždy dojde ke stejnému upstreamu, vhodné pro cache.",
+    "policy_header": "Hlavička požadavku",
+    "policy_header_help": "Hodnota hlavičky požadavku určí upstream; stejná hodnota vždy dojde ke stejnému.",
+    "policy_cookie": "Cookie (pevné relace)",
+    "policy_cookie_help": "Pevné relace: Caddy v první odpovědi nastaví cookie a další požadavky s ní dojdou ke stejnému upstreamu.",
+    "field_header": "Pole hlavičky",
+    "field_cookie_name": "Název cookie",
+    "field_cookie_secret": "Tajný klíč cookie",
+    "field_cookie_secret_help": "Volitelné. Podepíše hodnotu cookie, aby si klienti nemohli upstream vybrat sami.",
+    "field_weight": "Váha",
+    "field_weight_main": "Váha hlavního cíle",
+    "field_choose": "Kandidátů na požadavek",
+    "validation_header": "Zadejte pole hlavičky.",
+    "validation_weights": "Zadejte jednu celočíselnou váhu pro každý z {{count}} upstreamů.",
+    "validation_choose": "Zadejte celé číslo alespoň 1."
   },
   "lb_retry": {
     "heading": "Opakování a převzetí služeb",
@@ -431,7 +472,7 @@
   },
   "migration": {
     "banner_title": "Přesunout Caddyfile do conf.d",
-    "banner_body": "Záznamy proxy jsou definované přímo v /etc/caddy/Caddyfile. Přesuňte je do /etc/caddy/conf.d, aby je tento doplněk mohl spravovat. Původní soubor se zálohuje do /etc/caddy/Caddyfile.bak.",
+    "banner_body": "Weby z vašeho Caddyfile se přesunou do souboru conf.d doplňku, aby je mohl spravovat.",
     "button": "Přesunout…",
     "confirm_title": "Přesunout Caddyfile?",
     "confirm_body": "Všechny záznamy proxy se beze změny přesunou do /etc/caddy/conf.d/cockpit-caddy.conf a /etc/caddy/Caddyfile se nahradí příkazem import. Originál se zálohuje do /etc/caddy/Caddyfile.bak. Caddy se automaticky znovu načte.",
@@ -443,7 +484,10 @@
     "gate_continue": "Přesto pokračovat",
     "gate_continue_warning": "Pokračování bez migrace může vést k tomu, že Caddy odmítne konfiguraci kvůli duplicitním záznamům.",
     "backup_warning_title": "Nejprve zálohujte konfiguraci",
-    "backup_warning_body": "Migrace zálohuje jen samotný Caddyfile. Vytvořte úplnou zálohu konfigurace, abyste mohli vše obnovit, kdyby se něco pokazilo."
+    "backup_warning_body": "Migrace zálohuje jen samotný Caddyfile. Vytvořte úplnou zálohu konfigurace, abyste mohli vše obnovit, kdyby se něco pokazilo.",
+    "welcome_label": "Uvítací stránka distribuce",
+    "banner_details_toggle": "Podrobnosti",
+    "banner_details": "Bloky webů se beze změny přesunou z /etc/caddy/Caddyfile do /etc/caddy/conf.d/cockpit-caddy.conf a Caddyfile dostane řádek import pro conf.d. Původní Caddyfile se zálohuje do /etc/caddy/Caddyfile.bak. Do té doby se změny doplňku mohou střetávat s weby v Caddyfile."
   },
   "backup": {
     "button": "Záloha",
@@ -696,7 +740,24 @@
     "field_eab": "ID klíče External Account Binding",
     "value_default": "(nenastaveno — používají se výchozí hodnoty Caddy)",
     "value_default_ca": "(nenastaveno — používá se produkční endpoint Let's Encrypt)",
-    "value_none": "(žádné)"
+    "value_none": "(žádné)",
+    "col_certificate": "Certifikát",
+    "state_loading": "Načítá se stav certifikátu…",
+    "state_valid": "Platný do {{date}}",
+    "state_renews": "obnoví se kolem {{date}}",
+    "state_renewal_due": "Čeká na obnovení (vyprší {{date}})",
+    "state_obtaining": "Získává se…",
+    "state_failed": "Selhalo",
+    "state_none": "Žádný certifikát",
+    "last_error": "Poslední pokus selhal: {{error}}",
+    "cert_title": "Certifikát pro {{host}}",
+    "cert_subject": "Subjekt",
+    "cert_sans": "Názvy (SAN)",
+    "cert_issuer": "Vydal",
+    "cert_copy": "Kopírovat PEM",
+    "cert_download": "Stáhnout (.pem)",
+    "back": "Zpět na seznam",
+    "cert_load_error": "Certifikát nelze přečíst"
   },
   "admin_address": {
     "title": "Adresa Admin API",
@@ -821,7 +882,6 @@
     "type_method": "Metoda",
     "type_header": "Hlavička",
     "type_query": "Parametr dotazu",
-    "type_remote_ip": "Vzdálená IP / CIDR",
     "add_path": "Přidat cestu",
     "add_host": "Přidat hostitele",
     "add_cidr": "Přidat rozsah CIDR",
@@ -842,7 +902,14 @@
     "expression_label": "Výraz (CEL)",
     "expression_help": "Podmínka, která musí také platit, se zástupnými symboly jako {path} nebo {method}. Caddy ji zkontroluje při uložení.",
     "expression_docs": "Dokumentace k matcheru expression",
-    "chip_not": "kromě"
+    "chip_not": "kromě",
+    "type_ip": "IP adresa",
+    "ip_kind": "Porovnat IP",
+    "ip_kind_client": "IP klienta",
+    "ip_kind_remote": "IP spojení",
+    "ip_kind_client_help": "IP návštěvníka, převzatá z přeposílací hlavičky, když požadavek přijde přes některou z důvěryhodných proxy (Nastavení). Bez důvěryhodných proxy je stejná jako IP spojení.",
+    "ip_kind_remote_help": "IP spojení TCP. Za proxy nebo CDN je to adresa proxy, ne návštěvníka.",
+    "ip_range": "IP adresa nebo rozsah"
   },
   "handle_path": {
     "label": "Odebrat odpovídající prefix cesty (handle_path)"
@@ -957,5 +1024,29 @@
     "upstreams": "Upstreamy",
     "logging": "Logování a chyby",
     "limits": "Limity"
+  },
+  "dns": {
+    "global_title": "Ověření přes DNS",
+    "global_enabled": "Pro certifikáty ACME použít ověření přes DNS",
+    "global_enabled_help": "Potřebné pro wildcard certifikáty a pro hostitele nedostupné na portech 80/443. Caddy prokáže kontrolu nad doménou záznamem DNS, který nastaví přes API vašeho poskytovatele.",
+    "no_modules_title": "Není nainstalován žádný modul poskytovatele DNS",
+    "no_modules_body": "Ověření přes DNS potřebuje build Caddy s modulem poskytovatele DNS (dns.providers.*), který balíčky distribucí obvykle nemají. Použijte build Caddy s modulem pro svého poskytovatele DNS. Tento doplněk žádný neinstaluje: nahrazení zabalené binárky rozbije aktualizace balíčku.",
+    "no_modules_link": "Moduly Caddy (filtr: dns.providers)",
+    "provider": "Poskytovatel DNS",
+    "provider_choose": "Vyberte poskytovatele",
+    "credentials": "Přihlašovací údaje",
+    "credentials_help": "Hodnoty se ukládají do /etc/caddy/dns.env (jen pro root, režim 600) a Caddy je dostane jako proměnné prostředí; Caddyfile na ně jen odkazuje. Uložená hodnota se už nikdy nezobrazí.",
+    "option_name": "Název volby",
+    "option_value": "Hodnota",
+    "value_keep": "Uloženo; ponechte prázdné, aby zůstalo",
+    "value_set": "Nastaveno",
+    "add_option": "Přidat volbu",
+    "remove_option": "Odebrat volbu",
+    "validation_option": "Názvy voleb obsahují písmena, číslice a podtržítka.",
+    "validation_duplicate": "Každá volba smí být uvedena jen jednou.",
+    "validation_value": "Zadejte hodnotu pro každou novou volbu.",
+    "validation_provider": "Vyberte poskytovatele DNS.",
+    "restart_needed": "Restartujte Caddy, aby načetl změněné přihlašovací údaje DNS. Opětovné načtení nestačí: služba čte své prostředí jen při startu.",
+    "restart_button": "Restartovat Caddy"
   }
 }

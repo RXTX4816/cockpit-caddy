@@ -168,7 +168,16 @@
     "validation_port_range": "Port musi mieścić się w zakresie 1–65535",
     "validation_port_duplicate": "Port {{port}} jest już używany",
     "validation_root_required": "Katalog główny jest wymagany",
-    "confirm_body": "Na :{{port}} zostanie utworzony statyczny serwer plików serwujący {{root}}, a konfiguracja Caddy zostanie przeładowana."
+    "confirm_body": "Na :{{port}} zostanie utworzony statyczny serwer plików serwujący {{root}}, a konfiguracja Caddy zostanie przeładowana.",
+    "field_spa": "Tryb SPA (dla nieznanych ścieżek zwracaj index.html)",
+    "field_spa_help": "Dla aplikacji jednostronicowych (React, Vue, Svelte): istniejące pliki są zwracane bez zmian, każda inna ścieżka dostaje index.html, więc działają bezpośrednie linki.",
+    "advanced": "Opcje serwera plików",
+    "field_index": "Pliki indeksu",
+    "field_index_help": "Nazwy plików sprawdzane kolejno dla katalogu, rozdzielone spacjami.",
+    "field_hide": "Ukryte pliki",
+    "field_hide_help": "Nazwy lub wzorce, które nigdy nie są udostępniane, rozdzielone spacjami.",
+    "field_precompressed": "Pliki wstępnie skompresowane",
+    "field_precompressed_help": "Zwracaj file.zst, file.br lub file.gz obok oryginału, gdy przeglądarka akceptuje to kodowanie."
   },
   "edit_static": {
     "title": "Edytuj serwer statyczny — :{{port}}",
@@ -195,7 +204,9 @@
     "env_section_title": "Zmienne środowiskowe",
     "env_field_key": "Nazwa",
     "env_field_value": "Wartość",
-    "env_add_button": "Dodaj zmienną"
+    "env_add_button": "Dodaj zmienną",
+    "field_try_files": "Próbowane pliki (try_files)",
+    "field_try_files_help": "Opcjonalne. Kandydaci sprawdzani kolejno przed PHP; aplikacja z front controllerem zwykle potrzebuje {path} {path}/ /index.php?{query}."
   },
   "add_respond": {
     "title": "Dodaj odpowiedź statyczną",
@@ -319,7 +330,37 @@
     "policy_least_conn": "Najmniej połączeń",
     "policy_first": "Pierwszy dostępny",
     "validation_host": "Host jest wymagany",
-    "validation_port": "Port musi mieścić się w zakresie 1–65535"
+    "validation_port": "Port musi mieścić się w zakresie 1–65535",
+    "policy_default": "Domyślne Caddy (losowo)",
+    "policy_default_help": "Caddy wybiera upstream losowo.",
+    "policy_random_help": "Dla każdego żądania wybiera losowy upstream.",
+    "policy_round_robin_help": "Używa upstreamów po kolei.",
+    "policy_least_conn_help": "Wybiera upstream z najmniejszą liczbą otwartych żądań.",
+    "policy_first_help": "Zawsze pierwszy dostępny upstream z listy; pozostałe są zapasowe.",
+    "policy_weighted_round_robin": "Ważony round robin",
+    "policy_weighted_round_robin_help": "Używa upstreamów po kolei, każdego tyle razy, ile wynosi jego waga; waga 0 go wyłącza.",
+    "policy_random_choose": "Najlepszy z n losowych",
+    "policy_random_choose_help": "Losuje n upstreamów i używa najmniej obciążonego.",
+    "policy_ip_hash": "Skrót IP połączenia",
+    "policy_ip_hash_help": "To samo IP połączenia zawsze trafia do tego samego upstreamu.",
+    "policy_client_ip_hash": "Skrót IP klienta",
+    "policy_client_ip_hash_help": "Jak skrót IP połączenia, ale za zaufanymi proxy używa prawdziwego IP klienta.",
+    "policy_uri_hash": "Skrót ścieżki żądania",
+    "policy_uri_hash_help": "Ta sama ścieżka zawsze trafia do tego samego upstreamu, dobre dla pamięci podręcznych.",
+    "policy_header": "Nagłówek żądania",
+    "policy_header_help": "Wartość nagłówka żądania wybiera upstream; ta sama wartość zawsze trafia do tego samego.",
+    "policy_cookie": "Cookie (sesje przyklejone)",
+    "policy_cookie_help": "Sesje przyklejone: Caddy ustawia cookie w pierwszej odpowiedzi, a kolejne żądania z nim trafiają do tego samego upstreamu.",
+    "field_header": "Pole nagłówka",
+    "field_cookie_name": "Nazwa cookie",
+    "field_cookie_secret": "Sekret cookie",
+    "field_cookie_secret_help": "Opcjonalne. Podpisuje wartość cookie, aby klienci nie mogli sami wybrać upstreamu.",
+    "field_weight": "Waga",
+    "field_weight_main": "Waga głównego celu",
+    "field_choose": "Kandydaci na żądanie",
+    "validation_header": "Podaj pole nagłówka.",
+    "validation_weights": "Podaj jedną całkowitą wagę dla każdego z {{count}} upstreamów.",
+    "validation_choose": "Podaj liczbę całkowitą co najmniej 1."
   },
   "lb_retry": {
     "heading": "Ponowienia i przełączanie awaryjne",
@@ -431,7 +472,7 @@
   },
   "migration": {
     "banner_title": "Przenieś Caddyfile do conf.d",
-    "banner_body": "Wpisy proxy są zdefiniowane bezpośrednio w /etc/caddy/Caddyfile. Przenieś je do /etc/caddy/conf.d, aby ta wtyczka mogła nimi zarządzać. Kopia zapasowa oryginalnego pliku trafi do /etc/caddy/Caddyfile.bak.",
+    "banner_body": "Witryny z pliku Caddyfile zostaną przeniesione do pliku conf.d wtyczki, aby mogła nimi zarządzać.",
     "button": "Przenieś…",
     "confirm_title": "Przenieść Caddyfile?",
     "confirm_body": "Wszystkie wpisy proxy zostaną przeniesione bez zmian do /etc/caddy/conf.d/cockpit-caddy.conf, a /etc/caddy/Caddyfile zostanie zastąpiony instrukcją import. Oryginał trafi do /etc/caddy/Caddyfile.bak. Caddy zostanie automatycznie przeładowany.",
@@ -443,7 +484,10 @@
     "gate_continue": "Kontynuuj mimo to",
     "gate_continue_warning": "Kontynuowanie bez migracji może spowodować odrzucenie konfiguracji przez Caddy z powodu zduplikowanych wpisów.",
     "backup_warning_title": "Najpierw utwórz kopię zapasową konfiguracji",
-    "backup_warning_body": "Migracja tworzy kopię tylko samego Caddyfile. Utwórz pełną kopię zapasową konfiguracji, aby móc wszystko przywrócić, gdyby coś poszło nie tak."
+    "backup_warning_body": "Migracja tworzy kopię tylko samego Caddyfile. Utwórz pełną kopię zapasową konfiguracji, aby móc wszystko przywrócić, gdyby coś poszło nie tak.",
+    "welcome_label": "Strona powitalna dystrybucji",
+    "banner_details_toggle": "Szczegóły",
+    "banner_details": "Bloki witryn zostaną przeniesione bez zmian z /etc/caddy/Caddyfile do /etc/caddy/conf.d/cockpit-caddy.conf, a Caddyfile otrzyma wiersz import dla conf.d. Oryginalny Caddyfile zostanie zapisany jako kopia w /etc/caddy/Caddyfile.bak. Do tego czasu zmiany wtyczki mogą kolidować z witrynami w Caddyfile."
   },
   "backup": {
     "button": "Kopia zapasowa",
@@ -696,7 +740,24 @@
     "field_eab": "ID klucza External Account Binding",
     "value_default": "(nie ustawiono — używane są domyślne ustawienia Caddy)",
     "value_default_ca": "(nie ustawiono — używany jest produkcyjny endpoint Let's Encrypt)",
-    "value_none": "(brak)"
+    "value_none": "(brak)",
+    "col_certificate": "Certyfikat",
+    "state_loading": "Odczytywanie stanu certyfikatu…",
+    "state_valid": "Ważny do {{date}}",
+    "state_renews": "odnowienie około {{date}}",
+    "state_renewal_due": "Wymaga odnowienia (wygasa {{date}})",
+    "state_obtaining": "Pobieranie…",
+    "state_failed": "Niepowodzenie",
+    "state_none": "Brak certyfikatu",
+    "last_error": "Ostatnia próba nie powiodła się: {{error}}",
+    "cert_title": "Certyfikat dla {{host}}",
+    "cert_subject": "Podmiot",
+    "cert_sans": "Nazwy (SAN)",
+    "cert_issuer": "Wystawca",
+    "cert_copy": "Kopiuj PEM",
+    "cert_download": "Pobierz (.pem)",
+    "back": "Wróć do listy",
+    "cert_load_error": "Nie można odczytać certyfikatu"
   },
   "admin_address": {
     "title": "Adres Admin API",
@@ -821,7 +882,6 @@
     "type_method": "Metoda",
     "type_header": "Nagłówek",
     "type_query": "Parametr zapytania",
-    "type_remote_ip": "Zdalne IP / CIDR",
     "add_path": "Dodaj ścieżkę",
     "add_host": "Dodaj host",
     "add_cidr": "Dodaj zakres CIDR",
@@ -842,7 +902,14 @@
     "expression_label": "Wyrażenie (CEL)",
     "expression_help": "Warunek, który też musi być spełniony, z symbolami zastępczymi jak {path} lub {method}. Caddy sprawdza go przy zapisie.",
     "expression_docs": "Dokumentacja matchera expression",
-    "chip_not": "oprócz"
+    "chip_not": "oprócz",
+    "type_ip": "Adres IP",
+    "ip_kind": "Dopasuj IP",
+    "ip_kind_client": "IP klienta",
+    "ip_kind_remote": "IP połączenia",
+    "ip_kind_client_help": "IP odwiedzającego, pobierane z nagłówka przekazania, gdy żądanie przychodzi przez jedno z zaufanych proxy (Ustawienia). Bez zaufanych proxy jest takie samo jak IP połączenia.",
+    "ip_kind_remote_help": "IP połączenia TCP. Za proxy lub CDN jest to adres proxy, a nie odwiedzającego.",
+    "ip_range": "Adres IP lub zakres"
   },
   "handle_path": {
     "label": "Usuń dopasowany prefiks ścieżki (handle_path)"
@@ -957,5 +1024,29 @@
     "upstreams": "Upstreamy",
     "logging": "Logi i błędy",
     "limits": "Limity"
+  },
+  "dns": {
+    "global_title": "Wyzwanie DNS",
+    "global_enabled": "Używaj wyzwania DNS dla certyfikatów ACME",
+    "global_enabled_help": "Potrzebne dla certyfikatów wildcard i hostów nieosiągalnych na portach 80/443. Caddy udowadnia kontrolę nad domeną rekordem DNS ustawianym przez API dostawcy.",
+    "no_modules_title": "Brak zainstalowanego modułu dostawcy DNS",
+    "no_modules_body": "Wyzwanie DNS wymaga kompilacji Caddy z modułem dostawcy DNS (dns.providers.*), którego pakiety dystrybucji zwykle nie zawierają. Użyj kompilacji Caddy z modułem twojego dostawcy DNS. Ta wtyczka go nie instaluje: podmiana pliku z pakietu psuje aktualizacje pakietu.",
+    "no_modules_link": "Moduły Caddy (filtr: dns.providers)",
+    "provider": "Dostawca DNS",
+    "provider_choose": "Wybierz dostawcę",
+    "credentials": "Dane uwierzytelniające",
+    "credentials_help": "Wartości są przechowywane w /etc/caddy/dns.env (tylko root, tryb 600) i trafiają do Caddy jako zmienne środowiskowe; Caddyfile tylko się do nich odwołuje. Zapisana wartość nie jest już nigdy pokazywana.",
+    "option_name": "Nazwa opcji",
+    "option_value": "Wartość",
+    "value_keep": "Zapisano; zostaw puste, aby zachować",
+    "value_set": "Ustawiono",
+    "add_option": "Dodaj opcję",
+    "remove_option": "Usuń opcję",
+    "validation_option": "Nazwy opcji składają się z liter, cyfr i podkreśleń.",
+    "validation_duplicate": "Każda opcja może wystąpić tylko raz.",
+    "validation_value": "Podaj wartość dla każdej nowej opcji.",
+    "validation_provider": "Wybierz dostawcę DNS.",
+    "restart_needed": "Uruchom ponownie Caddy, aby wczytać zmienione dane DNS. Przeładowanie nie wystarczy: usługa czyta swoje środowisko tylko przy starcie.",
+    "restart_button": "Uruchom ponownie Caddy"
   }
 }

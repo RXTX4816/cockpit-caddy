@@ -15,6 +15,7 @@ import {
   TextInput,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
+import { FileServerOptionsFields, fileServerOptionsDraft, fileServerOptionsFromDraft } from "./FileServerOptionsFields";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { CaddyApiError } from "../api";
@@ -40,6 +41,7 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
   const [port, setPort] = useState(String(proxy.externalPort));
   const [root, setRoot] = useState(proxy.fileServer?.root ?? "");
   const [browse, setBrowse] = useState(proxy.fileServer?.browse ?? false);
+  const [fsOptions, setFsOptions] = useState(() => fileServerOptionsDraft(proxy.fileServer));
   // #246: where the certificate comes from; ACME needs a public name in the site address.
   const [tlsModeChoice, setTlsModeChoice] = useState<TlsMode>(tlsModeOf(proxy));
   const publicName = hasPublicName(proxy.externalHost);
@@ -157,6 +159,8 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
                 />
               </FormGroup>
 
+              <FileServerOptionsFields idPrefix="static-edit" value={fsOptions} onChange={setFsOptions} isDisabled={isLocked} />
+
               {!proxy.namedServerKey && (
                 <TlsModeField id="static-edit-tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isLocked} onDemand={tlsOnDemand} onOnDemandChange={setTlsOnDemand} />
               )}
@@ -196,7 +200,7 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
                     tlsOnDemand: tlsMode !== "off" && tlsOnDemand ? true : undefined,
                     compress: compress || undefined,
                     label: label.trim() || undefined,
-                    fileServer: { root: root.trim(), browse: browse || undefined },
+                    fileServer: { root: root.trim(), browse: browse || undefined, ...fileServerOptionsFromDraft(fsOptions) },
                     ...tabEntry,
                     imports,
                   });

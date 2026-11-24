@@ -20,8 +20,9 @@ import {
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
-import { readGlobalOptions, syncGlobalOptions, reloadCaddy, fetchStorageInfo, checkStoragePathWritable } from "../api";
-import type { GlobalOptions, StorageInfo } from "../api";
+import { readGlobalOptions, syncGlobalOptions, reloadCaddy, fetchStorageInfo, checkStoragePathWritable, listDnsProviders, readDnsEnvNames, restartService, notifyConfigChanged } from "../api";
+import type { DnsChallengeConfig, GlobalOptions, StorageInfo } from "../api";
+import { DnsChallengeFields, dnsDraftFromConfig, dnsDraftToConfig, validateDnsDraft, type DnsDraft } from "./DnsChallengeFields";
 import { CertLifetimeSelect } from "./CertLifetimeSelect";
 import { AccessLogSection, type AccessLogValues, accessLogConfigToValues, accessLogValuesToConfig } from "./AccessLogSection";
 
@@ -97,6 +98,20 @@ export function GlobalOptionsTab() {
   const [proxyProtocolEnabled, setProxyProtocolEnabled] = useState(false);
   const [proxyProtocolTimeout, setProxyProtocolTimeout] = useState("");
   const [proxyProtocolAllow, setProxyProtocolAllow] = useState("");
+  // ACME DNS challenge (#261)
+  const [dnsProviders, setDnsProviders] = useState<string[] | null>(null);
+  const [dnsEnvNames, setDnsEnvNames] = useState<string[]>([]);
+  const [dnsEnabled, setDnsEnabled] = useState(false);
+  const [dnsDraft, setDnsDraft] = useState<DnsDraft>(() => dnsDraftFromConfig(undefined));
+  const [loadedAcmeDns, setLoadedAcmeDns] = useState<DnsChallengeConfig | undefined>(undefined);
+  const [restartNeeded, setRestartNeeded] = useState(false);
+  const [restarting, setRestarting] = useState(false);
+
+  const loadDns = useCallback(() => {
+    void listDnsProviders().then(setDnsProviders);
+    void readDnsEnvNames().then(setDnsEnvNames).catch(() => setDnsEnvNames([]));
+  }, []);
+  useEffect(() => { loadDns(); }, [loadDns]);
 
   const loadStorageInfo = useCallback((configuredPath: string | undefined) => {
     setStorageInfo(null);
@@ -142,6 +157,9 @@ export function GlobalOptionsTab() {
         setProxyProtocolEnabled(!!opts.proxyProtocol);
         setProxyProtocolTimeout(opts.proxyProtocol?.timeout ?? "");
         setProxyProtocolAllow(opts.proxyProtocol?.allow?.join(" ") ?? "");
+        setDnsEnabled(!!opts.acmeDns);
+        setDnsDraft(dnsDraftFromConfig(opts.acmeDns));
+        setLoadedAcmeDns(opts.acmeDns);
       })
       .catch(e => setLoadError(e instanceof Error ? e.message : String(e)))
       .finally(() => setLoading(false));
@@ -171,7 +189,8 @@ export function GlobalOptionsTab() {
   const metricsPathErr = metricsPath.trim() && !metricsPath.trim().startsWith("/") ? t("global_opts.metrics_path_invalid") : null;
   const trustedProxiesRangesErr = trustedProxiesEnabled && !trustedProxiesRanges.trim();
   const proxyProtocolTimeoutErr = proxyProtocolEnabled && !isDuration(proxyProtocolTimeout) ? t("global_opts.validation_duration") : null;
-  const hasErrors = !!(
+  const dnsErr = dnsEnabled ? (dnsDraft.provider ? validateDnsDraft(dnsDraft, dnsEnvNames) : "dns.validation_provider") : null;
+  const hasErrors = !!(dnsErr || 
     httpPortErr || httpsPortErr || gracePeriodErr || shutdownDelayErr || onDemandBurstErr || onDemandIntervalErr
     || internalCertLifetimeErr || renewalWindowRatioErr || metricsListenAddressErr || metricsPathErr
     || trustedProxiesRangesErr || proxyProtocolTimeoutErr
@@ -221,7 +240,27 @@ export function GlobalOptionsTab() {
       {reloadOk && (
         <Alert variant="success" isInline title={t("caddyfile.reloaded")} style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }} />
       )}
-      {needsReload && !reloadOk && (
+      {restartNeeded && (
+        <Alert
+          variant="warning"
+          title={t("dns.restart_needed")}
+          data-testid="dns-restart-needed"
+          style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}
+          actionLinks={
+            <Button variant="warning" size="sm" isLoading={restarting} isDisabled={restarting} onClick={() => {
+              setRestarting(true);
+              setReloadError(null);
+              restartService("caddy")
+                .then(() => { setRestartNeeded(false); setNeedsReload(false); void notifyConfigChanged(); })
+                .catch(e => setReloadError(e instanceof Error ? e.message : String(e)))
+                .finally(() => setRestarting(false));
+            }}>
+              {t("dns.restart_button")}
+            </Button>
+          }
+        />
+      )}
+      {needsReload && !reloadOk && !restartNeeded && (
         <Alert
           variant="warning"
           title={t("global_opts.needs_reload")}
@@ -422,6 +461,31 @@ export function GlobalOptionsTab() {
             </FormHelperText>
           </FormGroup>
         </div>
+
+        <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
+
+        <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+          {t("dns.global_title")}
+        </Title>
+        {dnsProviders && !dnsProviders.length && !dnsEnabled ? (
+          <DnsChallengeFields idPrefix="go-dns" providers={dnsProviders} envNames={dnsEnvNames} value={dnsDraft} onChange={setDnsDraft} isDisabled={isConfirming} />
+        ) : (
+          <>
+            <FormGroup fieldId="go-dns-enabled">
+              <Checkbox
+                id="go-dns-enabled"
+                label={t("dns.global_enabled")}
+                description={t("dns.global_enabled_help")}
+                isChecked={dnsEnabled}
+                onChange={(_e, v) => setDnsEnabled(v)}
+                isDisabled={isConfirming}
+              />
+            </FormGroup>
+            {dnsEnabled && (
+              <DnsChallengeFields idPrefix="go-dns" providers={dnsProviders} envNames={dnsEnvNames} value={dnsDraft} onChange={setDnsDraft} isDisabled={isConfirming} />
+            )}
+          </>
+        )}
 
         <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
 
@@ -891,9 +955,16 @@ export function GlobalOptionsTab() {
                     const writeErr = await checkStoragePathWritable(opts.storagePath);
                     if (writeErr) throw new Error(t("global_opts.storage_not_writable", { error: writeErr }));
                   }
-                  await syncGlobalOptions(opts).catch(e => {
+                  const dns = dnsDraftToConfig(dnsEnabled ? dnsDraft : dnsDraftFromConfig(undefined), loadedAcmeDns);
+                  opts.acmeDns = dns.config;
+                  const { restartNeeded: mustRestart } = await syncGlobalOptions(opts, { set: dns.set, remove: dns.remove }).catch(e => {
                     throw e instanceof Error ? e : new Error(String(e));
                   });
+                  if (mustRestart) setRestartNeeded(true);
+                  // The values went to the env file; the form keeps only the option names.
+                  setLoadedAcmeDns(dns.config);
+                  setDnsDraft(dnsDraftFromConfig(dns.config));
+                  loadDns();
                   setHasAnyOption(Object.values(opts).some(v => v !== undefined));
                   setNeedsReload(true);
                   setSaveOk(true);

@@ -8,7 +8,7 @@
  * - Edit flows: adding and removing matchers on existing proxies
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { readConf, spawnCmd, openSection } from './helpers';
+import { readConf, spawnCmd, openSection, readFile, writeFile, startHttpBackend, CADDYFILE_PATH } from './helpers';
 import { waitForListener } from './live';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
@@ -305,5 +305,55 @@ test('strip prefix on two paths: the Caddyfile validates and both paths reach th
     }
   } finally {
     await spawnCmd(page, ['bash', '-c', `fuser -k ${targetPort}/tcp 2>&1; true`]);
+  }
+});
+
+// #286: behind trusted proxies, client_ip matches the forwarded visitor IP; remote_ip matches
+// the connection (here 127.0.0.1) and ignores the header.
+test('client_ip honours trusted_proxies, remote_ip with the same range does not', async ({ pluginPage: page }) => {
+  test.setTimeout(120000);
+  const baseline = await readFile(page, CADDYFILE_PATH);
+  const backend = await startHttpBackend(page, 19851);
+  try {
+    await writeFile(page, CADDYFILE_PATH, baseline.replace(
+      /^\{\n/, '{\n\tservers {\n\t\ttrusted_proxies static 127.0.0.1/8 ::1\n\t}\n',
+    ));
+    const out = await spawnCmd(page, ['bash', '-c', `caddy reload --config ${CADDYFILE_PATH} 2>&1 || true`]);
+    expect(out).not.toMatch(/Error/);
+    await page.reload({ waitUntil: 'networkidle' });
+    await waitForToolbar(page);
+
+    await page.getByRole('button', { name: /add proxy/i }).first().click();
+    const modal = page.getByRole('dialog');
+    await modal.getByLabel('External port').fill('19850');
+    await modal.getByLabel(/target host/i).fill('localhost');
+    await modal.locator('#target-port').fill('19851');
+    await modal.locator('#tls').selectOption('off');
+    await openSection(modal, 'routeMatchers');
+    await expect(modal.getByLabel('Match IP of', { exact: true })).toHaveValue('client_ip');
+    await modal.getByLabel('IP address or range', { exact: true }).fill('203.0.113.0/24');
+    await modal.getByRole('button', { name: /^add cidr range$/i }).click();
+    await submitAndConfirm(modal);
+    expect(await readConf(page)).toContain('client_ip 203.0.113.0/24');
+
+    const fetch = (xff: string) => spawnCmd(page, ['bash', '-c', `curl -s -H 'X-Forwarded-For: ${xff}' 'http://localhost:19850/'; true`]);
+    await waitForListener(page, 'http://localhost:19850/');
+    await expect.poll(() => fetch('203.0.113.7'), { timeout: 10000 }).toContain('Directory listing');
+    expect(await fetch('198.51.100.1')).not.toContain('Directory listing');
+
+    // The same range as a connection-IP matcher: the forwarded header no longer counts.
+    await page.locator('li').filter({ has: page.locator('#proxy-19850') }).getByRole('button', { name: /^edit$/i }).click();
+    const edit = page.getByRole('dialog');
+    await openSection(edit, 'routeMatchers');
+    await edit.getByLabel('Match IP of', { exact: true }).selectOption('remote_ip');
+    await edit.getByRole('button', { name: /save changes/i }).click();
+    await edit.getByRole('button', { name: /^confirm$/i }).click();
+    await expect(edit).not.toBeVisible({ timeout: 15000 });
+    expect(await readConf(page)).toContain('remote_ip 203.0.113.0/24');
+    await expect.poll(() => fetch('203.0.113.7'), { timeout: 10000 }).not.toContain('Directory listing');
+  } finally {
+    await backend.stop();
+    await writeFile(page, CADDYFILE_PATH, baseline);
+    await spawnCmd(page, ['caddy', 'reload', '--config', CADDYFILE_PATH]);
   }
 });

@@ -168,7 +168,16 @@
     "validation_port_range": "Port harus antara 1 dan 65535",
     "validation_port_duplicate": "Port {{port}} sudah digunakan",
     "validation_root_required": "Direktori akar wajib diisi",
-    "confirm_body": "Server berkas statis yang menyajikan {{root}} akan dibuat di :{{port}} dan konfigurasi Caddy dimuat ulang."
+    "confirm_body": "Server berkas statis yang menyajikan {{root}} akan dibuat di :{{port}} dan konfigurasi Caddy dimuat ulang.",
+    "field_spa": "Mode SPA (sajikan index.html untuk jalur yang tidak dikenal)",
+    "field_spa_help": "Untuk aplikasi satu halaman (React, Vue, Svelte): berkas yang ada disajikan apa adanya, jalur lain mendapat index.html agar tautan dalam berfungsi.",
+    "advanced": "Opsi server berkas",
+    "field_index": "Berkas indeks",
+    "field_index_help": "Nama berkas yang dicoba untuk direktori, dipisahkan spasi, sesuai urutan.",
+    "field_hide": "Berkas tersembunyi",
+    "field_hide_help": "Nama atau pola yang tidak pernah disajikan, dipisahkan spasi.",
+    "field_precompressed": "Berkas yang sudah dikompresi",
+    "field_precompressed_help": "Sajikan file.zst, file.br, atau file.gz di samping aslinya jika peramban menerima pengodean itu."
   },
   "edit_static": {
     "title": "Edit server statis — :{{port}}",
@@ -195,7 +204,9 @@
     "env_section_title": "Variabel lingkungan",
     "env_field_key": "Nama",
     "env_field_value": "Nilai",
-    "env_add_button": "Tambah variabel"
+    "env_add_button": "Tambah variabel",
+    "field_try_files": "Berkas yang dicoba (try_files)",
+    "field_try_files_help": "Opsional. Kandidat yang dicoba berurutan sebelum PHP; aplikasi front controller biasanya butuh {path} {path}/ /index.php?{query}."
   },
   "add_respond": {
     "title": "Tambah respons statis",
@@ -319,7 +330,37 @@
     "policy_least_conn": "Koneksi paling sedikit",
     "policy_first": "Yang pertama tersedia",
     "validation_host": "Host wajib diisi",
-    "validation_port": "Port harus antara 1 dan 65535"
+    "validation_port": "Port harus antara 1 dan 65535",
+    "policy_default": "Bawaan Caddy (acak)",
+    "policy_default_help": "Caddy memilih upstream secara acak.",
+    "policy_random_help": "Memilih upstream acak untuk setiap permintaan.",
+    "policy_round_robin_help": "Memakai upstream secara bergiliran.",
+    "policy_least_conn_help": "Memilih upstream dengan permintaan terbuka paling sedikit.",
+    "policy_first_help": "Selalu upstream pertama yang tersedia di daftar; yang lain sebagai cadangan.",
+    "policy_weighted_round_robin": "Round robin berbobot",
+    "policy_weighted_round_robin_help": "Memakai upstream bergiliran, masing-masing sesering bobotnya; bobot 0 mengeluarkannya.",
+    "policy_random_choose": "Terbaik dari n acak",
+    "policy_random_choose_help": "Memilih n upstream secara acak dan memakai yang paling tidak sibuk.",
+    "policy_ip_hash": "Hash IP koneksi",
+    "policy_ip_hash_help": "IP koneksi yang sama selalu sampai ke upstream yang sama.",
+    "policy_client_ip_hash": "Hash IP klien",
+    "policy_client_ip_hash_help": "Seperti hash IP koneksi, tetapi memakai IP klien sebenarnya di balik proxy tepercaya.",
+    "policy_uri_hash": "Hash jalur permintaan",
+    "policy_uri_hash_help": "Jalur permintaan yang sama selalu sampai ke upstream yang sama, cocok untuk cache.",
+    "policy_header": "Header permintaan",
+    "policy_header_help": "Nilai header permintaan memilih upstream; nilai yang sama selalu ke upstream yang sama.",
+    "policy_cookie": "Cookie (sesi lengket)",
+    "policy_cookie_help": "Sesi lengket: Caddy memasang cookie pada respons pertama, dan permintaan berikutnya dengan cookie itu sampai ke upstream yang sama.",
+    "field_header": "Kolom header",
+    "field_cookie_name": "Nama cookie",
+    "field_cookie_secret": "Rahasia cookie",
+    "field_cookie_secret_help": "Opsional. Menandatangani nilai cookie agar klien tidak bisa memilih upstream sendiri.",
+    "field_weight": "Bobot",
+    "field_weight_main": "Bobot target utama",
+    "field_choose": "Kandidat per permintaan",
+    "validation_header": "Masukkan kolom header.",
+    "validation_weights": "Masukkan satu bobot bilangan bulat untuk masing-masing dari {{count}} upstream.",
+    "validation_choose": "Masukkan bilangan bulat minimal 1."
   },
   "lb_retry": {
     "heading": "Percobaan ulang & failover",
@@ -431,7 +472,7 @@
   },
   "migration": {
     "banner_title": "Migrasikan Caddyfile ke conf.d",
-    "banner_body": "Entri proxy didefinisikan langsung di /etc/caddy/Caddyfile. Migrasikan ke /etc/caddy/conf.d agar plugin ini dapat mengelolanya. Berkas asli akan dicadangkan ke /etc/caddy/Caddyfile.bak.",
+    "banner_body": "Situs di Caddyfile Anda akan dipindahkan ke berkas conf.d plugin agar dapat dikelola.",
     "button": "Migrasikan…",
     "confirm_title": "Migrasikan Caddyfile?",
     "confirm_body": "Semua entri proxy akan dipindahkan apa adanya ke /etc/caddy/conf.d/cockpit-caddy.conf dan /etc/caddy/Caddyfile akan diganti dengan pernyataan import. Berkas asli dicadangkan ke /etc/caddy/Caddyfile.bak. Caddy akan dimuat ulang secara otomatis.",
@@ -443,7 +484,10 @@
     "gate_continue": "Tetap lanjutkan",
     "gate_continue_warning": "Melanjutkan tanpa migrasi dapat membuat Caddy menolak konfigurasi karena entri ganda.",
     "backup_warning_title": "Cadangkan konfigurasi Anda terlebih dahulu",
-    "backup_warning_body": "Migrasi hanya mencadangkan Caddyfile itu sendiri. Buat cadangan konfigurasi lengkap agar Anda dapat memulihkan semuanya jika terjadi masalah."
+    "backup_warning_body": "Migrasi hanya mencadangkan Caddyfile itu sendiri. Buat cadangan konfigurasi lengkap agar Anda dapat memulihkan semuanya jika terjadi masalah.",
+    "welcome_label": "Halaman sambutan distro",
+    "banner_details_toggle": "Detail",
+    "banner_details": "Blok situs dipindahkan tanpa perubahan dari /etc/caddy/Caddyfile ke /etc/caddy/conf.d/cockpit-caddy.conf, dan Caddyfile mendapat baris import untuk conf.d. Caddyfile asli dicadangkan ke /etc/caddy/Caddyfile.bak. Sampai saat itu, perubahan plugin dapat berbenturan dengan situs di Caddyfile."
   },
   "backup": {
     "button": "Cadangkan",
@@ -696,7 +740,24 @@
     "field_eab": "ID kunci External Account Binding",
     "value_default": "(tidak diatur — memakai bawaan Caddy)",
     "value_default_ca": "(tidak diatur — memakai endpoint produksi Let's Encrypt)",
-    "value_none": "(tidak ada)"
+    "value_none": "(tidak ada)",
+    "col_certificate": "Sertifikat",
+    "state_loading": "Membaca status sertifikat…",
+    "state_valid": "Berlaku hingga {{date}}",
+    "state_renews": "diperbarui sekitar {{date}}",
+    "state_renewal_due": "Perlu diperbarui (kedaluwarsa {{date}})",
+    "state_obtaining": "Sedang diperoleh…",
+    "state_failed": "Gagal",
+    "state_none": "Tidak ada sertifikat",
+    "last_error": "Percobaan terakhir gagal: {{error}}",
+    "cert_title": "Sertifikat untuk {{host}}",
+    "cert_subject": "Subjek",
+    "cert_sans": "Nama (SAN)",
+    "cert_issuer": "Diterbitkan oleh",
+    "cert_copy": "Salin PEM",
+    "cert_download": "Unduh (.pem)",
+    "back": "Kembali ke daftar",
+    "cert_load_error": "Sertifikat tidak dapat dibaca"
   },
   "admin_address": {
     "title": "Alamat Admin API",
@@ -821,7 +882,6 @@
     "type_method": "Metode",
     "type_header": "Header",
     "type_query": "Parameter kueri",
-    "type_remote_ip": "IP jarak jauh / CIDR",
     "add_path": "Tambah jalur",
     "add_host": "Tambah host",
     "add_cidr": "Tambah rentang CIDR",
@@ -842,7 +902,14 @@
     "expression_label": "Ekspresi (CEL)",
     "expression_help": "Kondisi yang juga harus benar, dengan placeholder seperti {path} atau {method}. Caddy memeriksanya saat menyimpan.",
     "expression_docs": "Dokumentasi matcher expression",
-    "chip_not": "kecuali"
+    "chip_not": "kecuali",
+    "type_ip": "Alamat IP",
+    "ip_kind": "Cocokkan IP dari",
+    "ip_kind_client": "IP klien",
+    "ip_kind_remote": "IP koneksi",
+    "ip_kind_client_help": "IP pengunjung, diambil dari header penerusan jika permintaan datang melalui salah satu proxy tepercaya (Pengaturan). Tanpa proxy tepercaya, nilainya sama dengan IP koneksi.",
+    "ip_kind_remote_help": "IP dari koneksi TCP. Di balik proxy atau CDN, itu alamat proxy, bukan pengunjung.",
+    "ip_range": "Alamat IP atau rentang"
   },
   "handle_path": {
     "label": "Hapus prefiks jalur yang cocok (handle_path)"
@@ -957,5 +1024,29 @@
     "upstreams": "Upstream",
     "logging": "Log & kesalahan",
     "limits": "Batasan"
+  },
+  "dns": {
+    "global_title": "Tantangan DNS",
+    "global_enabled": "Gunakan tantangan DNS untuk sertifikat ACME",
+    "global_enabled_help": "Diperlukan untuk sertifikat wildcard dan host yang tidak terjangkau di port 80/443. Caddy membuktikan kendali atas domain dengan record DNS yang dipasang melalui API penyedia Anda.",
+    "no_modules_title": "Tidak ada modul penyedia DNS yang terpasang",
+    "no_modules_body": "Tantangan DNS memerlukan build Caddy dengan modul penyedia DNS (dns.providers.*), yang biasanya tidak ada di paket distro. Gunakan build Caddy dengan modul untuk penyedia DNS Anda. Plugin ini tidak memasangnya: mengganti biner paket merusak pembaruan paket.",
+    "no_modules_link": "Modul Caddy (filter: dns.providers)",
+    "provider": "Penyedia DNS",
+    "provider_choose": "Pilih penyedia",
+    "credentials": "Kredensial",
+    "credentials_help": "Nilai disimpan di /etc/caddy/dns.env (hanya root, mode 600) dan sampai ke Caddy sebagai variabel lingkungan; Caddyfile hanya merujuknya. Nilai yang tersimpan tidak pernah ditampilkan lagi.",
+    "option_name": "Nama opsi",
+    "option_value": "Nilai",
+    "value_keep": "Tersimpan; biarkan kosong untuk mempertahankannya",
+    "value_set": "Diatur",
+    "add_option": "Tambah opsi",
+    "remove_option": "Hapus opsi",
+    "validation_option": "Nama opsi memakai huruf, angka, dan garis bawah.",
+    "validation_duplicate": "Setiap opsi hanya boleh muncul sekali.",
+    "validation_value": "Masukkan nilai untuk setiap opsi baru.",
+    "validation_provider": "Pilih penyedia DNS.",
+    "restart_needed": "Mulai ulang Caddy untuk memuat kredensial DNS yang berubah. Memuat ulang tidak cukup: layanan hanya membaca lingkungannya saat mulai.",
+    "restart_button": "Mulai ulang Caddy"
   }
 }

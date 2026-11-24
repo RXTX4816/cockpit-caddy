@@ -168,7 +168,16 @@
     "validation_port_range": "הפורט חייב להיות בין 1 ל-65535",
     "validation_port_duplicate": "פורט {{port}} כבר בשימוש",
     "validation_root_required": "נדרשת תיקיית שורש",
-    "confirm_body": "ייווצר ב-:{{port}} שרת קבצים סטטי שמגיש את {{root}}, ותצורת Caddy תיטען מחדש."
+    "confirm_body": "ייווצר ב-:{{port}} שרת קבצים סטטי שמגיש את {{root}}, ותצורת Caddy תיטען מחדש.",
+    "field_spa": "מצב SPA (הגשת index.html לנתיבים לא מוכרים)",
+    "field_spa_help": "ליישומי עמוד יחיד (React,‏ Vue,‏ Svelte): קבצים קיימים מוגשים כפי שהם, וכל נתיב אחר מקבל index.html כדי שקישורים עמוקים יעבדו.",
+    "advanced": "אפשרויות שרת הקבצים",
+    "field_index": "קובצי אינדקס",
+    "field_index_help": "שמות הקבצים שנבדקים עבור תיקייה, מופרדים ברווחים ולפי הסדר.",
+    "field_hide": "קבצים מוסתרים",
+    "field_hide_help": "שמות או תבניות שלעולם לא מוגשים, מופרדים ברווחים.",
+    "field_precompressed": "קבצים דחוסים מראש",
+    "field_precompressed_help": "הגשת file.zst,‏ file.br או file.gz שליד המקור כשהדפדפן מקבל את הקידוד הזה."
   },
   "edit_static": {
     "title": "עריכת שרת סטטי — :{{port}}",
@@ -195,7 +204,9 @@
     "env_section_title": "משתני סביבה",
     "env_field_key": "שם",
     "env_field_value": "ערך",
-    "env_add_button": "הוספת משתנה"
+    "env_add_button": "הוספת משתנה",
+    "field_try_files": "קבצים לניסיון (try_files)",
+    "field_try_files_help": "אופציונלי. מועמדים שנבדקים לפי הסדר לפני PHP; יישום עם front controller צריך בדרך כלל ‎{path} {path}/ /index.php?{query}‎."
   },
   "add_respond": {
     "title": "הוספת תגובה סטטית",
@@ -319,7 +330,37 @@
     "policy_least_conn": "הכי פחות חיבורים",
     "policy_first": "הראשון הזמין",
     "validation_host": "נדרש מארח",
-    "validation_port": "הפורט חייב להיות בין 1 ל-65535"
+    "validation_port": "הפורט חייב להיות בין 1 ל-65535",
+    "policy_default": "ברירת המחדל של Caddy (אקראי)",
+    "policy_default_help": "Caddy בוחר שרת יעד באקראי.",
+    "policy_random_help": "בוחר שרת יעד אקראי לכל בקשה.",
+    "policy_round_robin_help": "משתמש בשרתי היעד לפי התור.",
+    "policy_least_conn_help": "בוחר את שרת היעד עם הכי מעט בקשות פתוחות.",
+    "policy_first_help": "תמיד שרת היעד הזמין הראשון ברשימה; האחרים משמשים כגיבוי.",
+    "policy_weighted_round_robin": "סבב משוקלל",
+    "policy_weighted_round_robin_help": "משתמש בשרתי היעד לפי התור, כל אחד לפי משקלו; משקל 0 מוציא אותו.",
+    "policy_random_choose": "הטוב מבין n אקראיים",
+    "policy_random_choose_help": "בוחר n שרתי יעד באקראי ומשתמש בעמוס פחות מביניהם.",
+    "policy_ip_hash": "גיבוב IP החיבור",
+    "policy_ip_hash_help": "אותה כתובת IP של חיבור תמיד מגיעה לאותו שרת יעד.",
+    "policy_client_ip_hash": "גיבוב IP הלקוח",
+    "policy_client_ip_hash_help": "כמו גיבוב IP החיבור, אבל משתמש ב-IP האמיתי של הלקוח מאחורי פרוקסים מהימנים.",
+    "policy_uri_hash": "גיבוב נתיב הבקשה",
+    "policy_uri_hash_help": "אותו נתיב בקשה תמיד מגיע לאותו שרת יעד, טוב למטמונים.",
+    "policy_header": "כותרת הבקשה",
+    "policy_header_help": "ערך כותרת הבקשה בוחר את שרת היעד; אותו ערך תמיד מגיע לאותו שרת.",
+    "policy_cookie": "עוגייה (סשנים דביקים)",
+    "policy_cookie_help": "סשנים דביקים: Caddy מגדיר עוגייה בתגובה הראשונה, ובקשות מאוחרות יותר איתה מגיעות לאותו שרת יעד.",
+    "field_header": "שדה כותרת",
+    "field_cookie_name": "שם העוגייה",
+    "field_cookie_secret": "סוד העוגייה",
+    "field_cookie_secret_help": "אופציונלי. חותם על ערך העוגייה כדי שלקוחות לא יוכלו לבחור שרת יעד בעצמם.",
+    "field_weight": "משקל",
+    "field_weight_main": "משקל היעד הראשי",
+    "field_choose": "מועמדים לכל בקשה",
+    "validation_header": "הזן את שדה הכותרת.",
+    "validation_weights": "הזן משקל שלם אחד לכל אחד מ-{{count}} שרתי היעד.",
+    "validation_choose": "הזן מספר שלם של 1 לפחות."
   },
   "lb_retry": {
     "heading": "ניסיונות חוזרים ו-failover",
@@ -431,7 +472,7 @@
   },
   "migration": {
     "banner_title": "העברת ה-Caddyfile ל-conf.d",
-    "banner_body": "רשומות פרוקסי מוגדרות ישירות ב-/etc/caddy/Caddyfile. יש להעביר אותן ל-/etc/caddy/conf.d כדי שהתוסף הזה יוכל לנהל אותן. הקובץ המקורי יגובה ל-/etc/caddy/Caddyfile.bak.",
+    "banner_body": "האתרים בקובץ Caddyfile יועברו לקובץ conf.d של התוסף כדי שיוכל לנהל אותם.",
     "button": "העברה…",
     "confirm_title": "להעביר את ה-Caddyfile?",
     "confirm_body": "כל רשומות הפרוקסי יועברו כמות שהן ל-/etc/caddy/conf.d/cockpit-caddy.conf, ו-/etc/caddy/Caddyfile יוחלף בהוראת import. המקור מגובה ל-/etc/caddy/Caddyfile.bak. ‏Caddy ייטען מחדש אוטומטית.",
@@ -443,7 +484,10 @@
     "gate_continue": "להמשיך בכל זאת",
     "gate_continue_warning": "המשך בלי העברה עלול לגרום ל-Caddy לדחות את התצורה בגלל רשומות כפולות.",
     "backup_warning_title": "קודם כדאי לגבות את התצורה",
-    "backup_warning_body": "ההעברה מגבה רק את ה-Caddyfile עצמו. כדאי ליצור גיבוי מלא של התצורה כדי שאפשר יהיה לשחזר הכול אם משהו ישתבש."
+    "backup_warning_body": "ההעברה מגבה רק את ה-Caddyfile עצמו. כדאי ליצור גיבוי מלא של התצורה כדי שאפשר יהיה לשחזר הכול אם משהו ישתבש.",
+    "welcome_label": "דף הפתיחה של ההפצה",
+    "banner_details_toggle": "פרטים",
+    "banner_details": "בלוקי האתרים מועברים ללא שינוי מ-/etc/caddy/Caddyfile אל /etc/caddy/conf.d/cockpit-caddy.conf, ו-Caddyfile מקבל שורת import עבור conf.d. עותק גיבוי של Caddyfile המקורי נשמר ב-/etc/caddy/Caddyfile.bak. עד אז, שינויי התוסף עלולים להתנגש עם האתרים ב-Caddyfile."
   },
   "backup": {
     "button": "גיבוי",
@@ -696,7 +740,24 @@
     "field_eab": "מזהה מפתח External Account Binding",
     "value_default": "(לא מוגדר — נעשה שימוש בברירות המחדל של Caddy)",
     "value_default_ca": "(לא מוגדר — נעשה שימוש בנקודת הקצה של Let's Encrypt בייצור)",
-    "value_none": "(ללא)"
+    "value_none": "(ללא)",
+    "col_certificate": "תעודה",
+    "state_loading": "קורא את מצב התעודה…",
+    "state_valid": "בתוקף עד {{date}}",
+    "state_renews": "יחודש בסביבות {{date}}",
+    "state_renewal_due": "החידוש באיחור (פג ב-{{date}})",
+    "state_obtaining": "מתבצעת השגה…",
+    "state_failed": "נכשל",
+    "state_none": "אין תעודה",
+    "last_error": "הניסיון האחרון נכשל: {{error}}",
+    "cert_title": "תעודה עבור {{host}}",
+    "cert_subject": "נושא",
+    "cert_sans": "שמות (SAN)",
+    "cert_issuer": "הונפק על ידי",
+    "cert_copy": "העתק PEM",
+    "cert_download": "הורדה (.pem)",
+    "back": "חזרה לרשימה",
+    "cert_load_error": "לא ניתן לקרוא את התעודה"
   },
   "admin_address": {
     "title": "כתובת ה-Admin API",
@@ -821,7 +882,6 @@
     "type_method": "שיטה",
     "type_header": "כותרת",
     "type_query": "פרמטר שאילתה",
-    "type_remote_ip": "IP מרוחק / CIDR",
     "add_path": "הוספת נתיב",
     "add_host": "הוספת מארח",
     "add_cidr": "הוספת טווח CIDR",
@@ -842,7 +902,14 @@
     "expression_label": "ביטוי (CEL)",
     "expression_help": "תנאי שחייב להתקיים גם הוא, עם מצייני מיקום כמו {path} או {method}. Caddy בודק אותו בשמירה.",
     "expression_docs": "תיעוד ה-matcher של expression",
-    "chip_not": "מלבד"
+    "chip_not": "מלבד",
+    "type_ip": "כתובת IP",
+    "ip_kind": "התאם IP של",
+    "ip_kind_client": "IP של הלקוח",
+    "ip_kind_remote": "IP של החיבור",
+    "ip_kind_client_help": "כתובת ה-IP של המבקר, נלקחת מכותרת ההעברה כשהבקשה מגיעה דרך אחד הפרוקסים המהימנים (הגדרות). ללא פרוקסים מהימנים היא זהה ל-IP של החיבור.",
+    "ip_kind_remote_help": "כתובת ה-IP של חיבור ה-TCP. מאחורי פרוקסי או CDN זו כתובת הפרוקסי, לא של המבקר.",
+    "ip_range": "כתובת IP או טווח"
   },
   "handle_path": {
     "label": "הסרת קידומת הנתיב התואמת (handle_path)"
@@ -957,5 +1024,29 @@
     "upstreams": "שרתי יעד",
     "logging": "יומנים ושגיאות",
     "limits": "מגבלות"
+  },
+  "dns": {
+    "global_title": "אתגר DNS",
+    "global_enabled": "שימוש באתגר DNS לתעודות ACME",
+    "global_enabled_help": "נחוץ לתעודות wildcard ולמארחים שאינם נגישים בפורטים 80/443. Caddy מוכיח שליטה בדומיין בעזרת רשומת DNS שהוא יוצר דרך ה-API של הספק.",
+    "no_modules_title": "לא מותקן מודול ספק DNS",
+    "no_modules_body": "אתגר DNS דורש גרסת Caddy עם מודול ספק DNS ‏(dns.providers.*), שחבילות ההפצה בדרך כלל אינן כוללות. השתמש בגרסת Caddy עם המודול של ספק ה-DNS שלך. התוסף אינו מתקין מודול: החלפת הקובץ הארוז שוברת את עדכוני החבילה.",
+    "no_modules_link": "מודולים של Caddy (מסנן: dns.providers)",
+    "provider": "ספק DNS",
+    "provider_choose": "בחר ספק",
+    "credentials": "פרטי גישה",
+    "credentials_help": "הערכים נשמרים ב-‎/etc/caddy/dns.env‎ (root בלבד, הרשאה 600) ומגיעים ל-Caddy כמשתני סביבה; קובץ Caddyfile רק מפנה אליהם. ערך שנשמר לא יוצג שוב.",
+    "option_name": "שם האפשרות",
+    "option_value": "ערך",
+    "value_keep": "נשמר; השאר ריק כדי לשמור אותו",
+    "value_set": "מוגדר",
+    "add_option": "הוסף אפשרות",
+    "remove_option": "הסר אפשרות",
+    "validation_option": "שמות אפשרויות משתמשים באותיות, ספרות וקווים תחתונים.",
+    "validation_duplicate": "כל אפשרות יכולה להופיע פעם אחת בלבד.",
+    "validation_value": "הזן ערך לכל אפשרות חדשה.",
+    "validation_provider": "בחר ספק DNS.",
+    "restart_needed": "הפעל מחדש את Caddy כדי לטעון את פרטי הגישה ל-DNS שהשתנו. טעינה מחדש אינה מספיקה: השירות קורא את הסביבה שלו רק בהפעלה.",
+    "restart_button": "הפעל מחדש את Caddy"
   }
 }

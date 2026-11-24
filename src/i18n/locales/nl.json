@@ -168,7 +168,16 @@
     "validation_port_range": "De poort moet tussen 1 en 65535 liggen",
     "validation_port_duplicate": "Poort {{port}} is al in gebruik",
     "validation_root_required": "Hoofdmap is verplicht",
-    "confirm_body": "Er wordt een statische bestandsserver op :{{port}} aangemaakt die {{root}} serveert, en de Caddy-configuratie wordt herladen."
+    "confirm_body": "Er wordt een statische bestandsserver op :{{port}} aangemaakt die {{root}} serveert, en de Caddy-configuratie wordt herladen.",
+    "field_spa": "SPA-modus (index.html serveren voor onbekende paden)",
+    "field_spa_help": "Voor single-page-apps (React, Vue, Svelte): bestaande bestanden worden ongewijzigd geserveerd, elk ander pad krijgt index.html zodat deeplinks werken.",
+    "advanced": "Opties voor de bestandsserver",
+    "field_index": "Indexbestanden",
+    "field_index_help": "Bestandsnamen die voor een map op volgorde worden geprobeerd, gescheiden door spaties.",
+    "field_hide": "Verborgen bestanden",
+    "field_hide_help": "Namen of patronen die nooit worden geserveerd, gescheiden door spaties.",
+    "field_precompressed": "Vooraf gecomprimeerde bestanden",
+    "field_precompressed_help": "file.zst, file.br of file.gz naast het origineel serveren als de browser die codering accepteert."
   },
   "edit_static": {
     "title": "Statische server bewerken — :{{port}}",
@@ -195,7 +204,9 @@
     "env_section_title": "Omgevingsvariabelen",
     "env_field_key": "Naam",
     "env_field_value": "Waarde",
-    "env_add_button": "Variabele toevoegen"
+    "env_add_button": "Variabele toevoegen",
+    "field_try_files": "Bestanden proberen (try_files)",
+    "field_try_files_help": "Optioneel. Kandidaten die vóór PHP op volgorde worden geprobeerd; een front-controller-app heeft meestal {path} {path}/ /index.php?{query} nodig."
   },
   "add_respond": {
     "title": "Statisch antwoord toevoegen",
@@ -319,7 +330,37 @@
     "policy_least_conn": "Minste verbindingen",
     "policy_first": "Eerste beschikbare",
     "validation_host": "Host is verplicht",
-    "validation_port": "De poort moet tussen 1 en 65535 liggen"
+    "validation_port": "De poort moet tussen 1 en 65535 liggen",
+    "policy_default": "Standaard van Caddy (willekeurig)",
+    "policy_default_help": "Caddy kiest willekeurig een upstream.",
+    "policy_random_help": "Kiest voor elk verzoek een willekeurige upstream.",
+    "policy_round_robin_help": "Gebruikt de upstreams om de beurt.",
+    "policy_least_conn_help": "Kiest de upstream met de minste openstaande verzoeken.",
+    "policy_first_help": "Altijd de eerste beschikbare upstream uit de lijst; de rest is reserve.",
+    "policy_weighted_round_robin": "Gewogen round robin",
+    "policy_weighted_round_robin_help": "Gebruikt de upstreams om de beurt, elk zo vaak als zijn gewicht; gewicht 0 sluit er een uit.",
+    "policy_random_choose": "Beste van n willekeurige",
+    "policy_random_choose_help": "Kiest n upstreams willekeurig en gebruikt de minst drukke.",
+    "policy_ip_hash": "Hash van verbindings-IP",
+    "policy_ip_hash_help": "Hetzelfde verbindings-IP komt altijd bij dezelfde upstream.",
+    "policy_client_ip_hash": "Hash van client-IP",
+    "policy_client_ip_hash_help": "Zoals de hash van verbindings-IP, maar gebruikt achter vertrouwde proxy's het echte client-IP.",
+    "policy_uri_hash": "Hash van het verzoekpad",
+    "policy_uri_hash_help": "Hetzelfde pad komt altijd bij dezelfde upstream, handig voor caches.",
+    "policy_header": "Verzoekheader",
+    "policy_header_help": "De waarde van een verzoekheader kiest de upstream; dezelfde waarde komt altijd bij dezelfde.",
+    "policy_cookie": "Cookie (vaste sessies)",
+    "policy_cookie_help": "Vaste sessies: Caddy zet bij het eerste antwoord een cookie, en latere verzoeken met die cookie komen bij dezelfde upstream.",
+    "field_header": "Headerveld",
+    "field_cookie_name": "Cookienaam",
+    "field_cookie_secret": "Cookiegeheim",
+    "field_cookie_secret_help": "Optioneel. Ondertekent de cookiewaarde, zodat clients niet zelf een upstream kunnen kiezen.",
+    "field_weight": "Gewicht",
+    "field_weight_main": "Gewicht van het hoofddoel",
+    "field_choose": "Kandidaten per verzoek",
+    "validation_header": "Voer het headerveld in.",
+    "validation_weights": "Voer voor elk van de {{count}} upstreams één geheel gewicht in.",
+    "validation_choose": "Voer een geheel getal van minstens 1 in."
   },
   "lb_retry": {
     "heading": "Herhaalpogingen & failover",
@@ -431,7 +472,7 @@
   },
   "migration": {
     "banner_title": "Caddyfile migreren naar conf.d",
-    "banner_body": "Proxy-items staan rechtstreeks in /etc/caddy/Caddyfile. Migreer ze naar /etc/caddy/conf.d zodat deze plugin ze kan beheren. Het originele bestand wordt opgeslagen als /etc/caddy/Caddyfile.bak.",
+    "banner_body": "De sites in uw Caddyfile worden naar het conf.d-bestand van de plug-in verplaatst, zodat die ze kan beheren.",
     "button": "Migreren…",
     "confirm_title": "Caddyfile migreren?",
     "confirm_body": "Alle proxy-items worden ongewijzigd verplaatst naar /etc/caddy/conf.d/cockpit-caddy.conf en /etc/caddy/Caddyfile wordt vervangen door een import-instructie. Het origineel wordt opgeslagen als /etc/caddy/Caddyfile.bak. Caddy wordt automatisch herladen.",
@@ -443,7 +484,10 @@
     "gate_continue": "Toch doorgaan",
     "gate_continue_warning": "Doorgaan zonder migratie kan ertoe leiden dat Caddy de configuratie weigert vanwege dubbele items.",
     "backup_warning_title": "Maak eerst een back-up van je configuratie",
-    "backup_warning_body": "De migratie maakt alleen een back-up van de Caddyfile zelf. Maak een volledige back-up van de configuratie zodat je alles kunt herstellen als er iets misgaat."
+    "backup_warning_body": "De migratie maakt alleen een back-up van de Caddyfile zelf. Maak een volledige back-up van de configuratie zodat je alles kunt herstellen als er iets misgaat.",
+    "welcome_label": "Welkomstpagina van de distributie",
+    "banner_details_toggle": "Details",
+    "banner_details": "Siteblokken worden ongewijzigd verplaatst van /etc/caddy/Caddyfile naar /etc/caddy/conf.d/cockpit-caddy.conf, en de Caddyfile krijgt een import-regel voor conf.d. De oorspronkelijke Caddyfile wordt bewaard als /etc/caddy/Caddyfile.bak. Tot die tijd kunnen wijzigingen van de plug-in botsen met de sites in de Caddyfile."
   },
   "backup": {
     "button": "Back-up",
@@ -696,7 +740,24 @@
     "field_eab": "External Account Binding-sleutel-ID",
     "value_default": "(niet ingesteld — standaardinstellingen van Caddy)",
     "value_default_ca": "(niet ingesteld — productie-endpoint van Let's Encrypt)",
-    "value_none": "(geen)"
+    "value_none": "(geen)",
+    "col_certificate": "Certificaat",
+    "state_loading": "Certificaatstatus wordt gelezen…",
+    "state_valid": "Geldig tot {{date}}",
+    "state_renews": "wordt rond {{date}} vernieuwd",
+    "state_renewal_due": "Vernieuwing nodig (verloopt {{date}})",
+    "state_obtaining": "Wordt aangevraagd…",
+    "state_failed": "Mislukt",
+    "state_none": "Geen certificaat",
+    "last_error": "Laatste poging mislukt: {{error}}",
+    "cert_title": "Certificaat voor {{host}}",
+    "cert_subject": "Onderwerp",
+    "cert_sans": "Namen (SAN's)",
+    "cert_issuer": "Uitgegeven door",
+    "cert_copy": "PEM kopiëren",
+    "cert_download": "Downloaden (.pem)",
+    "back": "Terug naar de lijst",
+    "cert_load_error": "Certificaat kon niet worden gelezen"
   },
   "admin_address": {
     "title": "Adres van de Admin API",
@@ -821,7 +882,6 @@
     "type_method": "Methode",
     "type_header": "Header",
     "type_query": "Queryparameter",
-    "type_remote_ip": "Extern IP / CIDR",
     "add_path": "Pad toevoegen",
     "add_host": "Host toevoegen",
     "add_cidr": "CIDR-bereik toevoegen",
@@ -842,7 +902,14 @@
     "expression_label": "Expressie (CEL)",
     "expression_help": "Een voorwaarde die ook waar moet zijn, met placeholders zoals {path} of {method}. Caddy controleert die bij het opslaan.",
     "expression_docs": "Documentatie van de expression-matcher",
-    "chip_not": "behalve"
+    "chip_not": "behalve",
+    "type_ip": "IP-adres",
+    "ip_kind": "IP vergelijken van",
+    "ip_kind_client": "Client-IP",
+    "ip_kind_remote": "Verbindings-IP",
+    "ip_kind_client_help": "Het IP van de bezoeker, uit de doorstuurheader wanneer het verzoek via een van de vertrouwde proxy's (Instellingen) komt. Zonder vertrouwde proxy's is het gelijk aan het verbindings-IP.",
+    "ip_kind_remote_help": "Het IP van de TCP-verbinding. Achter een proxy of CDN is dat het adres van de proxy, niet van de bezoeker.",
+    "ip_range": "IP-adres of bereik"
   },
   "handle_path": {
     "label": "Overeenkomend padprefix verwijderen (handle_path)"
@@ -957,5 +1024,29 @@
     "upstreams": "Upstreams",
     "logging": "Logging & fouten",
     "limits": "Limieten"
+  },
+  "dns": {
+    "global_title": "DNS-challenge",
+    "global_enabled": "DNS-challenge gebruiken voor ACME-certificaten",
+    "global_enabled_help": "Nodig voor wildcardcertificaten en voor hosts die niet bereikbaar zijn op poort 80/443. Caddy bewijst controle over het domein met een DNS-record dat het via de API van uw provider zet.",
+    "no_modules_title": "Geen DNS-providermodule geïnstalleerd",
+    "no_modules_body": "De DNS-challenge vereist een Caddy-build met een DNS-providermodule (dns.providers.*), die distributiepakketten meestal niet hebben. Gebruik een Caddy-build met de module voor uw DNS-provider. Deze plug-in installeert er geen: het verpakte programma vervangen breekt pakketupdates.",
+    "no_modules_link": "Caddy-modules (filter: dns.providers)",
+    "provider": "DNS-provider",
+    "provider_choose": "Kies een provider",
+    "credentials": "Inloggegevens",
+    "credentials_help": "Waarden staan in /etc/caddy/dns.env (alleen root, modus 600) en bereiken Caddy als omgevingsvariabelen; de Caddyfile verwijst er alleen naar. Een opgeslagen waarde wordt nooit meer getoond.",
+    "option_name": "Optienaam",
+    "option_value": "Waarde",
+    "value_keep": "Opgeslagen; leeg laten om te behouden",
+    "value_set": "Ingesteld",
+    "add_option": "Optie toevoegen",
+    "remove_option": "Optie verwijderen",
+    "validation_option": "Optienamen bestaan uit letters, cijfers en underscores.",
+    "validation_duplicate": "Elke optie mag maar één keer voorkomen.",
+    "validation_value": "Voer een waarde in voor elke nieuwe optie.",
+    "validation_provider": "Kies een DNS-provider.",
+    "restart_needed": "Start Caddy opnieuw om de gewijzigde DNS-gegevens te laden. Herladen is niet genoeg: de service leest zijn omgeving alleen bij het starten.",
+    "restart_button": "Caddy opnieuw starten"
   }
 }

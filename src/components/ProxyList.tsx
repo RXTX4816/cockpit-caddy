@@ -29,6 +29,7 @@ import {
   ToolbarContent,
   ToolbarItem,
   Tooltip,
+  ExpandableSection,
 } from "@patternfly/react-core";
 import { ExternalLinkAltIcon, ListAltIcon, SyncAltIcon, ThIcon } from "@patternfly/react-icons";
 import { useTranslation } from "react-i18next";
@@ -305,7 +306,10 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
                 </>
               }
             >
-              {t("migration.banner_body")}
+              <Content component="p">{t("migration.banner_body")}</Content>
+              <ExpandableSection toggleText={t("migration.banner_details_toggle")} data-testid="migration-details">
+                <Content component="p">{t("migration.banner_details")}</Content>
+              </ExpandableSection>
             </Alert>
           </StackItem>
         )}
@@ -660,6 +664,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
             port: duplicating.namedServerKey ? "" : String(duplicating.externalPort),
             root: duplicating.fileServer.root,
             browse: duplicating.fileServer.browse,
+            fileServer: duplicating.fileServer,
             tls: duplicating.tls,
             compress: duplicating.compress ?? false,
             label: duplicating.label ? t("proxies.copy_label", { label: duplicating.label }) : "",
@@ -678,6 +683,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
             root: duplicating.phpFastcgi.root,
             index: duplicating.phpFastcgi.index ?? "",
             splitPath: duplicating.phpFastcgi.splitPath?.join(" ") ?? "",
+            tryFiles: duplicating.phpFastcgi.tryFiles ?? "",
             tls: duplicating.tls,
             compress: duplicating.compress ?? false,
             label: duplicating.label ? t("proxies.copy_label", { label: duplicating.label }) : "",

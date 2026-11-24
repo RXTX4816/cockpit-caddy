@@ -168,7 +168,16 @@
     "validation_port_range": "يجب أن يكون المنفذ بين 1 و65535",
     "validation_port_duplicate": "المنفذ {{port}} مستخدم بالفعل",
     "validation_root_required": "المجلد الجذر مطلوب",
-    "confirm_body": "سيتم إنشاء خادم ملفات ثابتة على :{{port}} يقدّم {{root}} وإعادة تحميل إعدادات Caddy."
+    "confirm_body": "سيتم إنشاء خادم ملفات ثابتة على :{{port}} يقدّم {{root}} وإعادة تحميل إعدادات Caddy.",
+    "field_spa": "وضع SPA (تقديم index.html للمسارات غير المعروفة)",
+    "field_spa_help": "لتطبيقات الصفحة الواحدة (React وVue وSvelte): تُقدَّم الملفات الموجودة كما هي، وكل مسار آخر يحصل على index.html لكي تعمل الروابط العميقة.",
+    "advanced": "خيارات خادم الملفات",
+    "field_index": "ملفات الفهرس",
+    "field_index_help": "أسماء الملفات التي تُجرَّب للمجلد، مفصولة بمسافات وبالترتيب.",
+    "field_hide": "الملفات المخفية",
+    "field_hide_help": "أسماء أو أنماط لا تُقدَّم أبدًا، مفصولة بمسافات.",
+    "field_precompressed": "الملفات المضغوطة مسبقًا",
+    "field_precompressed_help": "تقديم file.zst أو file.br أو file.gz الموجود بجانب الأصلي عندما يقبل المتصفح هذا الترميز."
   },
   "edit_static": {
     "title": "تعديل الخادم الثابت — :{{port}}",
@@ -195,7 +204,9 @@
     "env_section_title": "متغيرات البيئة",
     "env_field_key": "الاسم",
     "env_field_value": "القيمة",
-    "env_add_button": "إضافة متغير"
+    "env_add_button": "إضافة متغير",
+    "field_try_files": "تجربة الملفات (try_files)",
+    "field_try_files_help": "اختياري. مرشحات تُجرَّب بالترتيب قبل PHP؛ تطبيقات وحدة التحكم الأمامية تحتاج عادةً إلى {path} {path}/ /index.php?{query}."
   },
   "add_respond": {
     "title": "إضافة استجابة ثابتة",
@@ -319,7 +330,37 @@
     "policy_least_conn": "أقل الاتصالات",
     "policy_first": "أول متاح",
     "validation_host": "المضيف مطلوب",
-    "validation_port": "يجب أن يكون المنفذ بين 1 و65535"
+    "validation_port": "يجب أن يكون المنفذ بين 1 و65535",
+    "policy_default": "افتراضي Caddy (عشوائي)",
+    "policy_default_help": "يختار Caddy خادمًا خلفيًا عشوائيًا.",
+    "policy_random_help": "يختار خادمًا خلفيًا عشوائيًا لكل طلب.",
+    "policy_round_robin_help": "يستخدم الخوادم الخلفية بالتناوب.",
+    "policy_least_conn_help": "يختار الخادم الخلفي صاحب أقل عدد من الطلبات المفتوحة.",
+    "policy_first_help": "دائمًا أول خادم خلفي متاح في القائمة؛ والبقية احتياطية.",
+    "policy_weighted_round_robin": "تناوب موزون",
+    "policy_weighted_round_robin_help": "يستخدم الخوادم الخلفية بالتناوب، كلٌّ بقدر وزنه؛ الوزن 0 يستبعد الخادم.",
+    "policy_random_choose": "الأفضل من n عشوائية",
+    "policy_random_choose_help": "يختار n من الخوادم الخلفية عشوائيًا ويستخدم أقلها انشغالًا.",
+    "policy_ip_hash": "تجزئة IP الاتصال",
+    "policy_ip_hash_help": "يصل عنوان IP الاتصال نفسه دائمًا إلى الخادم الخلفي نفسه.",
+    "policy_client_ip_hash": "تجزئة IP العميل",
+    "policy_client_ip_hash_help": "مثل تجزئة IP الاتصال، لكنه يستخدم عنوان IP الحقيقي للعميل خلف الوكلاء الموثوقين.",
+    "policy_uri_hash": "تجزئة مسار الطلب",
+    "policy_uri_hash_help": "يصل مسار الطلب نفسه دائمًا إلى الخادم الخلفي نفسه، وهذا مفيد للتخزين المؤقت.",
+    "policy_header": "ترويسة الطلب",
+    "policy_header_help": "قيمة ترويسة الطلب تحدد الخادم الخلفي؛ القيمة نفسها تصل دائمًا إلى الخادم نفسه.",
+    "policy_cookie": "ملف تعريف الارتباط (جلسات ثابتة)",
+    "policy_cookie_help": "جلسات ثابتة: يضع Caddy ملف تعريف ارتباط في أول استجابة، والطلبات اللاحقة التي تحمله تصل إلى الخادم الخلفي نفسه.",
+    "field_header": "حقل الترويسة",
+    "field_cookie_name": "اسم ملف تعريف الارتباط",
+    "field_cookie_secret": "سر ملف تعريف الارتباط",
+    "field_cookie_secret_help": "اختياري. يوقّع قيمة ملف تعريف الارتباط كي لا يختار العملاء الخادم الخلفي بأنفسهم.",
+    "field_weight": "الوزن",
+    "field_weight_main": "وزن الهدف الرئيسي",
+    "field_choose": "المرشحون لكل طلب",
+    "validation_header": "أدخل حقل الترويسة.",
+    "validation_weights": "أدخل وزنًا صحيحًا واحدًا لكل خادم من الخوادم الخلفية البالغ عددها {{count}}.",
+    "validation_choose": "أدخل عددًا صحيحًا لا يقل عن 1."
   },
   "lb_retry": {
     "heading": "إعادة المحاولة وتجاوز الفشل",
@@ -431,7 +472,7 @@
   },
   "migration": {
     "banner_title": "ترحيل Caddyfile إلى conf.d",
-    "banner_body": "إدخالات الوكلاء معرّفة مباشرة في /etc/caddy/Caddyfile. رحّلها إلى /etc/caddy/conf.d لتتمكن هذه الإضافة من إدارتها. سيُنسخ الملف الأصلي احتياطيًا إلى /etc/caddy/Caddyfile.bak.",
+    "banner_body": "ستُنقل المواقع الموجودة في ملف Caddyfile إلى ملف conf.d الخاص بالإضافة لتتمكن من إدارتها.",
     "button": "ترحيل…",
     "confirm_title": "ترحيل Caddyfile؟",
     "confirm_body": "ستُنقل كل إدخالات الوكلاء كما هي إلى /etc/caddy/conf.d/cockpit-caddy.conf وسيُستبدل /etc/caddy/Caddyfile بتعليمة import. يُنسخ الأصل احتياطيًا إلى /etc/caddy/Caddyfile.bak. سيُعاد تحميل Caddy تلقائيًا.",
@@ -443,7 +484,10 @@
     "gate_continue": "المتابعة على أي حال",
     "gate_continue_warning": "قد تؤدي المتابعة دون ترحيل إلى رفض Caddy للإعدادات بسبب إدخالات مكررة.",
     "backup_warning_title": "انسخ إعداداتك احتياطيًا أولًا",
-    "backup_warning_body": "لا ينسخ الترحيل احتياطيًا إلا ملف Caddyfile نفسه. أنشئ نسخة احتياطية كاملة من الإعدادات لتتمكن من استعادة كل شيء إذا حدث خطأ."
+    "backup_warning_body": "لا ينسخ الترحيل احتياطيًا إلا ملف Caddyfile نفسه. أنشئ نسخة احتياطية كاملة من الإعدادات لتتمكن من استعادة كل شيء إذا حدث خطأ.",
+    "welcome_label": "صفحة الترحيب للتوزيعة",
+    "banner_details_toggle": "التفاصيل",
+    "banner_details": "تُنقل كتل المواقع دون تغيير من /etc/caddy/Caddyfile إلى /etc/caddy/conf.d/cockpit-caddy.conf، ويُضاف إلى Caddyfile سطر import لـ conf.d. تُحفظ نسخة احتياطية من Caddyfile الأصلي في /etc/caddy/Caddyfile.bak. وحتى ذلك الحين قد تتعارض تغييرات الإضافة مع المواقع الموجودة في Caddyfile."
   },
   "backup": {
     "button": "نسخ احتياطي",
@@ -696,7 +740,24 @@
     "field_eab": "معرّف مفتاح External Account Binding",
     "value_default": "(غير معيّن — تُستخدم الإعدادات الافتراضية لـ Caddy)",
     "value_default_ca": "(غير معيّن — تُستخدم نقطة الإنتاج الخاصة بـ Let's Encrypt)",
-    "value_none": "(لا شيء)"
+    "value_none": "(لا شيء)",
+    "col_certificate": "الشهادة",
+    "state_loading": "جارٍ قراءة حالة الشهادة…",
+    "state_valid": "صالحة حتى {{date}}",
+    "state_renews": "يُجدَّد في حوالي {{date}}",
+    "state_renewal_due": "حان موعد التجديد (تنتهي في {{date}})",
+    "state_obtaining": "جارٍ الحصول…",
+    "state_failed": "فشل",
+    "state_none": "لا توجد شهادة",
+    "last_error": "فشلت المحاولة الأخيرة: {{error}}",
+    "cert_title": "شهادة {{host}}",
+    "cert_subject": "الموضوع",
+    "cert_sans": "الأسماء (SAN)",
+    "cert_issuer": "صادرة عن",
+    "cert_copy": "نسخ PEM",
+    "cert_download": "تنزيل (.pem)",
+    "back": "العودة إلى القائمة",
+    "cert_load_error": "تعذّرت قراءة الشهادة"
   },
   "admin_address": {
     "title": "عنوان Admin API",
@@ -821,7 +882,6 @@
     "type_method": "الطريقة",
     "type_header": "الترويسة",
     "type_query": "معامل الاستعلام",
-    "type_remote_ip": "IP البعيد / CIDR",
     "add_path": "إضافة مسار",
     "add_host": "إضافة مضيف",
     "add_cidr": "إضافة نطاق CIDR",
@@ -842,7 +902,14 @@
     "expression_label": "تعبير (CEL)",
     "expression_help": "شرط يجب أن يتحقق أيضًا، مع عناصر نائبة مثل {path} أو {method}. يتحقق Caddy منه عند الحفظ.",
     "expression_docs": "توثيق مطابق التعبير",
-    "chip_not": "باستثناء"
+    "chip_not": "باستثناء",
+    "type_ip": "عنوان IP",
+    "ip_kind": "مطابقة IP الخاص بـ",
+    "ip_kind_client": "IP العميل",
+    "ip_kind_remote": "IP الاتصال",
+    "ip_kind_client_help": "عنوان IP للزائر، يؤخذ من ترويسة التمرير عندما يمر الطلب عبر أحد الوكلاء الموثوقين (الإعدادات). بدون وكلاء موثوقين يكون هو نفسه IP الاتصال.",
+    "ip_kind_remote_help": "عنوان IP لاتصال TCP. خلف وكيل أو شبكة CDN يكون عنوان الوكيل، لا عنوان الزائر.",
+    "ip_range": "عنوان IP أو نطاق"
   },
   "handle_path": {
     "label": "إزالة بادئة المسار المطابقة (handle_path)"
@@ -957,5 +1024,29 @@
     "upstreams": "الخوادم الخلفية",
     "logging": "السجلات والأخطاء",
     "limits": "الحدود"
+  },
+  "dns": {
+    "global_title": "تحدي DNS",
+    "global_enabled": "استخدام تحدي DNS لشهادات ACME",
+    "global_enabled_help": "مطلوب لشهادات البدل وللمضيفين غير القابلين للوصول على المنفذين 80/443. يثبت Caddy التحكم في النطاق بسجل DNS يضعه عبر واجهة برمجة مزوّدك.",
+    "no_modules_title": "لا توجد وحدة مزوّد DNS مثبتة",
+    "no_modules_body": "يحتاج تحدي DNS إلى نسخة Caddy تتضمن وحدة مزوّد DNS ‏(dns.providers.*)، ولا تتضمنها حزم التوزيعات عادةً. استخدم نسخة Caddy فيها وحدة مزوّد DNS الخاص بك. لا تثبّت هذه الإضافة واحدة: استبدال الملف التنفيذي المحزّم يعطّل تحديثات الحزمة.",
+    "no_modules_link": "وحدات Caddy (عامل التصفية: dns.providers)",
+    "provider": "مزوّد DNS",
+    "provider_choose": "اختر مزوّدًا",
+    "credentials": "بيانات الاعتماد",
+    "credentials_help": "تُحفظ القيم في ‎/etc/caddy/dns.env‎ (للجذر فقط، الوضع 600) وتصل إلى Caddy كمتغيرات بيئة؛ ويشير إليها ملف Caddyfile فقط. لا تُعرض القيمة المحفوظة مرة أخرى أبدًا.",
+    "option_name": "اسم الخيار",
+    "option_value": "القيمة",
+    "value_keep": "محفوظة؛ اتركها فارغة للإبقاء عليها",
+    "value_set": "مضبوطة",
+    "add_option": "إضافة خيار",
+    "remove_option": "إزالة الخيار",
+    "validation_option": "تستخدم أسماء الخيارات الحروف والأرقام والشرطات السفلية.",
+    "validation_duplicate": "يمكن أن يظهر كل خيار مرة واحدة فقط.",
+    "validation_value": "أدخل قيمة لكل خيار جديد.",
+    "validation_provider": "اختر مزوّد DNS.",
+    "restart_needed": "أعد تشغيل Caddy لتحميل بيانات اعتماد DNS المعدّلة. إعادة التحميل لا تكفي: تقرأ الخدمة بيئتها عند البدء فقط.",
+    "restart_button": "إعادة تشغيل Caddy"
   }
 }

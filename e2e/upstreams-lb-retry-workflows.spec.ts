@@ -80,7 +80,7 @@ test('load balancing distributes requests across both live backends', async ({ p
     await modal.getByRole('button', { name: /add upstream/i }).click();
     await modal.locator('#upstream-host-0').fill('localhost');
     await modal.locator('#upstream-port-0').fill(String(portB));
-    await modal.getByRole('button', { name: /^round robin$/i }).click();
+    await modal.locator('#upstream-lb-policy').selectOption('round_robin');
 
     await modal.getByRole('button', { name: /^add proxy$/i }).click();
     await modal.getByRole('button', { name: /^confirm$/i }).click();
@@ -134,7 +134,7 @@ test('failover: killing one backend still serves via the other', async ({ plugin
     await modal.getByRole('button', { name: /add upstream/i }).click();
     await modal.locator('#upstream-host-0').fill('localhost');
     await modal.locator('#upstream-port-0').fill(String(portB));
-    await modal.getByRole('button', { name: /^round robin$/i }).click();
+    await modal.locator('#upstream-lb-policy').selectOption('round_robin');
 
     // Caddy does not retry a failed upstream within the same request unless
     // lb_try_duration is explicitly set (default is 0 = no retry loop) — without this,
@@ -222,7 +222,7 @@ test('active health checks take a dead upstream out of rotation', async ({ plugi
     await modal.getByRole('button', { name: /add upstream/i }).click();
     await modal.locator('#upstream-host-0').fill('localhost');
     await modal.locator('#upstream-port-0').fill(String(portB));
-    await modal.getByRole('button', { name: /^round robin$/i }).click();
+    await modal.locator('#upstream-lb-policy').selectOption('round_robin');
 
     await openSection(modal, 'lbRetry');
     await modal.locator('#lbr-fail-duration').fill('30s');
@@ -256,4 +256,79 @@ test('active health checks take a dead upstream out of rotation', async ({ plugi
     await stopBackend(page, portA);
     await stopBackend(page, portB);
   }
+});
+
+// #285: the cookie policy gives sticky sessions.
+test('cookie policy: repeat requests with the returned cookie hit the same upstream', async ({ pluginPage: page }) => {
+  const portA = 19840;
+  const portB = 19841;
+  await startTaggedBackend(page, portA);
+  await startTaggedBackend(page, portB);
+
+  try {
+    await waitForToolbar(page);
+    await page.getByRole('button', { name: /add proxy/i }).first().click();
+    const modal = page.getByRole('dialog');
+    await modal.getByLabel('External port').fill('19842');
+    await modal.getByLabel(/target host/i).fill('localhost');
+    await modal.locator('#target-port').fill(String(portA));
+    await modal.locator('#tls').selectOption('off');
+
+    await openSection(modal, 'upstreams');
+    await modal.getByRole('button', { name: /add upstream/i }).click();
+    await modal.locator('#upstream-host-0').fill('localhost');
+    await modal.locator('#upstream-port-0').fill(String(portB));
+    await modal.locator('#upstream-lb-policy').selectOption('cookie');
+    await modal.locator('#upstream-lb-cookie-name').fill('e2e_sticky');
+
+    await modal.getByRole('button', { name: /^add proxy$/i }).click();
+    await modal.getByRole('button', { name: /^confirm$/i }).click();
+    await expect(modal).not.toBeVisible({ timeout: 15000 });
+    expect(await readConf(page)).toContain('lb_policy cookie e2e_sticky');
+
+    await waitForListener(page, 'http://localhost:19842/');
+    await expect.poll(async () => (await spawnCmd(page, ['bash', '-c', "curl -s 'http://localhost:19842/'; true"])).trim(), { timeout: 10000 })
+      .toMatch(/^1984[01]$/);
+
+    for (let round = 0; round < 3; round++) {
+      const jar = `/tmp/e2e-sticky-${round}.txt`;
+      const first = (await spawnCmd(page, ['bash', '-c', `rm -f ${jar}; curl -s -c ${jar} 'http://localhost:19842/'; true`])).trim();
+      expect(await spawnCmd(page, ['cat', jar])).toContain('e2e_sticky');
+      for (let i = 0; i < 6; i++) {
+        const again = (await spawnCmd(page, ['bash', '-c', `curl -s -b ${jar} 'http://localhost:19842/'; true`])).trim();
+        expect(again).toBe(first);
+      }
+    }
+  } finally {
+    await stopBackend(page, portA);
+    await stopBackend(page, portB);
+  }
+});
+
+test('weighted round robin: a weight count that does not match the upstreams is a field error', async ({ pluginPage: page }) => {
+  await waitForToolbar(page);
+  await page.getByRole('button', { name: /add proxy/i }).first().click();
+  const modal = page.getByRole('dialog');
+  await modal.getByLabel('External port').fill('19843');
+  await modal.getByLabel(/target host/i).fill('localhost');
+  await modal.locator('#target-port').fill('19844');
+  await modal.locator('#tls').selectOption('off');
+  await openSection(modal, 'upstreams');
+  await modal.getByRole('button', { name: /add upstream/i }).click();
+  await modal.locator('#upstream-host-0').fill('localhost');
+  await modal.locator('#upstream-port-0').fill('19845');
+  await modal.locator('#upstream-lb-policy').selectOption('weighted_round_robin');
+  await modal.locator('#upstream-weight-0').fill('3');
+  await expect(modal.locator('#upstream-lb-error')).toContainText('each of the 2 upstreams');
+  // Saving is blocked: Add stays on the Upstreams tab instead of asking for confirmation.
+  await modal.getByRole('button', { name: /^add proxy$/i }).click();
+  await expect(modal.getByRole('button', { name: /^confirm$/i })).toHaveCount(0);
+  await expect(modal.locator('#upstream-lb-error')).toBeVisible();
+
+  await modal.locator('#upstream-weight-1').fill('1');
+  await expect(modal.locator('#upstream-lb-error')).toHaveCount(0);
+  await modal.getByRole('button', { name: /^add proxy$/i }).click();
+  await modal.getByRole('button', { name: /^confirm$/i }).click();
+  await expect(modal).not.toBeVisible({ timeout: 15000 });
+  expect(await readConf(page)).toContain('lb_policy weighted_round_robin 3 1');
 });

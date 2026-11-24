@@ -168,7 +168,16 @@
     "validation_port_range": "Portin on oltava välillä 1–65535",
     "validation_port_duplicate": "Portti {{port}} on jo käytössä",
     "validation_root_required": "Juurihakemisto on pakollinen",
-    "confirm_body": "Porttiin :{{port}} luodaan staattinen tiedostopalvelin, joka tarjoilee hakemiston {{root}}, ja Caddyn asetukset ladataan uudelleen."
+    "confirm_body": "Porttiin :{{port}} luodaan staattinen tiedostopalvelin, joka tarjoilee hakemiston {{root}}, ja Caddyn asetukset ladataan uudelleen.",
+    "field_spa": "SPA-tila (tuntemattomille poluille palautetaan index.html)",
+    "field_spa_help": "Yhden sivun sovelluksille (React, Vue, Svelte): olemassa olevat tiedostot palautetaan sellaisenaan, muut polut saavat index.html-tiedoston, jotta syvälinkit toimivat.",
+    "advanced": "Tiedostopalvelimen asetukset",
+    "field_index": "Hakemistotiedostot",
+    "field_index_help": "Hakemistolle kokeiltavat tiedostonimet järjestyksessä välilyönnein erotettuina.",
+    "field_hide": "Piilotetut tiedostot",
+    "field_hide_help": "Nimet tai kuviot, joita ei koskaan palauteta, välilyönnein erotettuina.",
+    "field_precompressed": "Valmiiksi pakatut tiedostot",
+    "field_precompressed_help": "Palauta alkuperäisen vieressä oleva file.zst, file.br tai file.gz, kun selain hyväksyy kyseisen koodauksen."
   },
   "edit_static": {
     "title": "Muokkaa staattista palvelinta — :{{port}}",
@@ -195,7 +204,9 @@
     "env_section_title": "Ympäristömuuttujat",
     "env_field_key": "Nimi",
     "env_field_value": "Arvo",
-    "env_add_button": "Lisää muuttuja"
+    "env_add_button": "Lisää muuttuja",
+    "field_try_files": "Kokeiltavat tiedostot (try_files)",
+    "field_try_files_help": "Valinnainen. Ehdokkaat, joita kokeillaan järjestyksessä ennen PHP:tä; front controller -sovellus tarvitsee yleensä {path} {path}/ /index.php?{query}."
   },
   "add_respond": {
     "title": "Lisää staattinen vastaus",
@@ -319,7 +330,37 @@
     "policy_least_conn": "Vähiten yhteyksiä",
     "policy_first": "Ensimmäinen vapaa",
     "validation_host": "Isäntä on pakollinen",
-    "validation_port": "Portin on oltava välillä 1–65535"
+    "validation_port": "Portin on oltava välillä 1–65535",
+    "policy_default": "Caddyn oletus (satunnainen)",
+    "policy_default_help": "Caddy valitsee taustapalvelimen satunnaisesti.",
+    "policy_random_help": "Valitsee jokaiselle pyynnölle satunnaisen taustapalvelimen.",
+    "policy_round_robin_help": "Käyttää taustapalvelimia vuorotellen.",
+    "policy_least_conn_help": "Valitsee taustapalvelimen, jolla on vähiten avoimia pyyntöjä.",
+    "policy_first_help": "Aina luettelon ensimmäinen käytettävissä oleva taustapalvelin; muut ovat varalla.",
+    "policy_weighted_round_robin": "Painotettu vuorottelu",
+    "policy_weighted_round_robin_help": "Käyttää taustapalvelimia vuorotellen, kutakin painonsa verran; paino 0 jättää palvelimen pois.",
+    "policy_random_choose": "Paras n satunnaisesta",
+    "policy_random_choose_help": "Valitsee n taustapalvelinta satunnaisesti ja käyttää vähiten kuormitettua.",
+    "policy_ip_hash": "Yhteyden IP-tiiviste",
+    "policy_ip_hash_help": "Sama yhteyden IP päätyy aina samalle taustapalvelimelle.",
+    "policy_client_ip_hash": "Asiakkaan IP-tiiviste",
+    "policy_client_ip_hash_help": "Kuten yhteyden IP-tiiviste, mutta käyttää luotettujen välityspalvelimien takana asiakkaan todellista IP:tä.",
+    "policy_uri_hash": "Pyyntöpolun tiiviste",
+    "policy_uri_hash_help": "Sama pyyntöpolku päätyy aina samalle taustapalvelimelle, hyvä välimuisteille.",
+    "policy_header": "Pyynnön otsake",
+    "policy_header_help": "Pyynnön otsakkeen arvo valitsee taustapalvelimen; sama arvo päätyy aina samalle.",
+    "policy_cookie": "Eväste (pysyvät istunnot)",
+    "policy_cookie_help": "Pysyvät istunnot: Caddy asettaa ensimmäiseen vastaukseen evästeen, ja myöhemmät pyynnöt sen kanssa päätyvät samalle taustapalvelimelle.",
+    "field_header": "Otsakekenttä",
+    "field_cookie_name": "Evästeen nimi",
+    "field_cookie_secret": "Evästeen salaisuus",
+    "field_cookie_secret_help": "Valinnainen. Allekirjoittaa evästeen arvon, jotta asiakkaat eivät voi itse valita taustapalvelinta.",
+    "field_weight": "Paino",
+    "field_weight_main": "Pääkohteen paino",
+    "field_choose": "Ehdokkaita pyyntöä kohden",
+    "validation_header": "Anna otsakekenttä.",
+    "validation_weights": "Anna kokonaislukupaino jokaiselle {{count}} taustapalvelimelle.",
+    "validation_choose": "Anna kokonaisluku, joka on vähintään 1."
   },
   "lb_retry": {
     "heading": "Uudelleenyritykset ja vikasieto",
@@ -431,7 +472,7 @@
   },
   "migration": {
     "banner_title": "Siirrä Caddyfile hakemistoon conf.d",
-    "banner_body": "Proxymerkinnät on määritetty suoraan tiedostossa /etc/caddy/Caddyfile. Siirrä ne hakemistoon /etc/caddy/conf.d, jotta tämä liitännäinen voi hallita niitä. Alkuperäinen tiedosto varmuuskopioidaan tiedostoon /etc/caddy/Caddyfile.bak.",
+    "banner_body": "Caddyfile-tiedostosi sivustot siirretään liitännäisen conf.d-tiedostoon, jotta se voi hallita niitä.",
     "button": "Siirrä…",
     "confirm_title": "Siirretäänkö Caddyfile?",
     "confirm_body": "Kaikki proxymerkinnät siirretään sellaisenaan tiedostoon /etc/caddy/conf.d/cockpit-caddy.conf, ja /etc/caddy/Caddyfile korvataan import-lauseella. Alkuperäinen varmuuskopioidaan tiedostoon /etc/caddy/Caddyfile.bak. Caddy ladataan uudelleen automaattisesti.",
@@ -443,7 +484,10 @@
     "gate_continue": "Jatka silti",
     "gate_continue_warning": "Jos jatkat ilman siirtoa, Caddy voi hylätä asetukset päällekkäisten merkintöjen vuoksi.",
     "backup_warning_title": "Varmuuskopioi asetukset ensin",
-    "backup_warning_body": "Siirto varmuuskopioi vain itse Caddyfilen. Tee asetuksista täydellinen varmuuskopio, jotta voit palauttaa kaiken, jos jokin menee pieleen."
+    "backup_warning_body": "Siirto varmuuskopioi vain itse Caddyfilen. Tee asetuksista täydellinen varmuuskopio, jotta voit palauttaa kaiken, jos jokin menee pieleen.",
+    "welcome_label": "Jakelun tervetulosivu",
+    "banner_details_toggle": "Tiedot",
+    "banner_details": "Sivustolohkot siirretään muuttamattomina tiedostosta /etc/caddy/Caddyfile tiedostoon /etc/caddy/conf.d/cockpit-caddy.conf, ja Caddyfileen lisätään conf.d:n import-rivi. Alkuperäinen Caddyfile varmuuskopioidaan tiedostoon /etc/caddy/Caddyfile.bak. Siihen asti liitännäisen muutokset voivat törmätä Caddyfilen sivustoihin."
   },
   "backup": {
     "button": "Varmuuskopio",
@@ -696,7 +740,24 @@
     "field_eab": "External Account Binding -avaimen tunnus",
     "value_default": "(ei asetettu — käytetään Caddyn oletuksia)",
     "value_default_ca": "(ei asetettu — käytetään Let's Encryptin tuotantopäätepistettä)",
-    "value_none": "(ei mitään)"
+    "value_none": "(ei mitään)",
+    "col_certificate": "Varmenne",
+    "state_loading": "Luetaan varmenteen tilaa…",
+    "state_valid": "Voimassa {{date}} asti",
+    "state_renews": "uusitaan noin {{date}}",
+    "state_renewal_due": "Uusinta erääntynyt (vanhenee {{date}})",
+    "state_obtaining": "Haetaan…",
+    "state_failed": "Epäonnistui",
+    "state_none": "Ei varmennetta",
+    "last_error": "Edellinen yritys epäonnistui: {{error}}",
+    "cert_title": "Varmenne: {{host}}",
+    "cert_subject": "Kohde",
+    "cert_sans": "Nimet (SAN)",
+    "cert_issuer": "Myöntäjä",
+    "cert_copy": "Kopioi PEM",
+    "cert_download": "Lataa (.pem)",
+    "back": "Takaisin luetteloon",
+    "cert_load_error": "Varmennetta ei voitu lukea"
   },
   "admin_address": {
     "title": "Admin API:n osoite",
@@ -821,7 +882,6 @@
     "type_method": "Metodi",
     "type_header": "Otsake",
     "type_query": "Kyselyparametri",
-    "type_remote_ip": "Etä-IP / CIDR",
     "add_path": "Lisää polku",
     "add_host": "Lisää isäntä",
     "add_cidr": "Lisää CIDR-alue",
@@ -842,7 +902,14 @@
     "expression_label": "Lauseke (CEL)",
     "expression_help": "Ehto, jonka täytyy myös täyttyä, paikkamerkein kuten {path} tai {method}. Caddy tarkistaa sen tallennettaessa.",
     "expression_docs": "Expression-matcherin ohjeet",
-    "chip_not": "paitsi"
+    "chip_not": "paitsi",
+    "type_ip": "IP-osoite",
+    "ip_kind": "Vertaa IP-osoitetta",
+    "ip_kind_client": "Asiakkaan IP",
+    "ip_kind_remote": "Yhteyden IP",
+    "ip_kind_client_help": "Vierailijan IP, joka otetaan välitysotsakkeesta, kun pyyntö tulee jonkin luotetun välityspalvelimen kautta (Asetukset). Ilman luotettuja välityspalvelimia se on sama kuin yhteyden IP.",
+    "ip_kind_remote_help": "TCP-yhteyden IP. Välityspalvelimen tai CDN:n takana se on välityspalvelimen osoite, ei vierailijan.",
+    "ip_range": "IP-osoite tai -alue"
   },
   "handle_path": {
     "label": "Poista täsmännyt polun etuliite (handle_path)"
@@ -957,5 +1024,29 @@
     "upstreams": "Upstreamit",
     "logging": "Lokit ja virheet",
     "limits": "Rajat"
+  },
+  "dns": {
+    "global_title": "DNS-haaste",
+    "global_enabled": "Käytä DNS-haastetta ACME-varmenteille",
+    "global_enabled_help": "Tarvitaan jokerimerkkivarmenteisiin ja isäntiin, joihin ei pääse porteissa 80/443. Caddy todistaa verkkotunnuksen hallinnan DNS-tietueella, jonka se asettaa palveluntarjoajasi API:n kautta.",
+    "no_modules_title": "DNS-palveluntarjoajan moduulia ei ole asennettu",
+    "no_modules_body": "DNS-haaste tarvitsee Caddy-käännöksen, jossa on DNS-palveluntarjoajan moduuli (dns.providers.*); jakeluiden paketeissa sitä ei yleensä ole. Käytä Caddy-käännöstä, jossa on DNS-palveluntarjoajasi moduuli. Tämä liitännäinen ei asenna sellaista: paketoidun ohjelman korvaaminen rikkoo pakettipäivitykset.",
+    "no_modules_link": "Caddyn moduulit (suodatin: dns.providers)",
+    "provider": "DNS-palveluntarjoaja",
+    "provider_choose": "Valitse palveluntarjoaja",
+    "credentials": "Tunnistetiedot",
+    "credentials_help": "Arvot tallennetaan tiedostoon /etc/caddy/dns.env (vain root, tila 600), ja Caddy saa ne ympäristömuuttujina; Caddyfile vain viittaa niihin. Tallennettua arvoa ei enää näytetä.",
+    "option_name": "Asetuksen nimi",
+    "option_value": "Arvo",
+    "value_keep": "Tallennettu; jätä tyhjäksi, niin se säilyy",
+    "value_set": "Asetettu",
+    "add_option": "Lisää asetus",
+    "remove_option": "Poista asetus",
+    "validation_option": "Asetusten nimissä käytetään kirjaimia, numeroita ja alaviivoja.",
+    "validation_duplicate": "Kukin asetus saa esiintyä vain kerran.",
+    "validation_value": "Anna arvo jokaiselle uudelle asetukselle.",
+    "validation_provider": "Valitse DNS-palveluntarjoaja.",
+    "restart_needed": "Käynnistä Caddy uudelleen, jotta muuttuneet DNS-tunnistetiedot latautuvat. Uudelleenlataus ei riitä: palvelu lukee ympäristönsä vain käynnistyessään.",
+    "restart_button": "Käynnistä Caddy uudelleen"
   }
 }

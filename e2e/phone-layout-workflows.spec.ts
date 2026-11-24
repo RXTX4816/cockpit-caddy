@@ -5,7 +5,7 @@
  * rendering differs between hosts), against the running VM:
  *
  *   docker run --rm --network host -v "$PWD:/work" -w /work \
- *     mcr.microsoft.com/playwright:v1.65.0-noble \
+ *     mcr.microsoft.com/playwright:v1.65.1-noble \
  *     npx playwright test --project=arch e2e/phone-layout-workflows.spec.ts --update-snapshots
  *
  * Run without --update-snapshots to verify. On the host the screenshot step is skipped and

@@ -168,7 +168,16 @@
     "validation_port_range": "Portul trebuie să fie între 1 și 65535",
     "validation_port_duplicate": "Portul {{port}} este deja folosit",
     "validation_root_required": "Directorul rădăcină este obligatoriu",
-    "confirm_body": "Va fi creat pe :{{port}} un server de fișiere statice care servește {{root}}, iar configurația Caddy va fi reîncărcată."
+    "confirm_body": "Va fi creat pe :{{port}} un server de fișiere statice care servește {{root}}, iar configurația Caddy va fi reîncărcată.",
+    "field_spa": "Mod SPA (servește index.html pentru căile necunoscute)",
+    "field_spa_help": "Pentru aplicații cu o singură pagină (React, Vue, Svelte): fișierele existente sunt servite ca atare, orice altă cale primește index.html ca să funcționeze legăturile directe.",
+    "advanced": "Opțiunile serverului de fișiere",
+    "field_index": "Fișiere index",
+    "field_index_help": "Numele de fișiere încercate pentru un director, separate prin spații, în ordine.",
+    "field_hide": "Fișiere ascunse",
+    "field_hide_help": "Nume sau tipare care nu sunt servite niciodată, separate prin spații.",
+    "field_precompressed": "Fișiere precomprimate",
+    "field_precompressed_help": "Servește file.zst, file.br sau file.gz de lângă original când browserul acceptă acea codificare."
   },
   "edit_static": {
     "title": "Editează serverul static — :{{port}}",
@@ -195,7 +204,9 @@
     "env_section_title": "Variabile de mediu",
     "env_field_key": "Nume",
     "env_field_value": "Valoare",
-    "env_add_button": "Adaugă variabilă"
+    "env_add_button": "Adaugă variabilă",
+    "field_try_files": "Fișiere încercate (try_files)",
+    "field_try_files_help": "Opțional. Candidați încercați în ordine înainte de PHP; o aplicație cu front controller are de obicei nevoie de {path} {path}/ /index.php?{query}."
   },
   "add_respond": {
     "title": "Adaugă răspuns static",
@@ -319,7 +330,37 @@
     "policy_least_conn": "Cele mai puține conexiuni",
     "policy_first": "Primul disponibil",
     "validation_host": "Gazda este obligatorie",
-    "validation_port": "Portul trebuie să fie între 1 și 65535"
+    "validation_port": "Portul trebuie să fie între 1 și 65535",
+    "policy_default": "Implicit în Caddy (aleatoriu)",
+    "policy_default_help": "Caddy alege un upstream la întâmplare.",
+    "policy_random_help": "Alege un upstream aleatoriu pentru fiecare cerere.",
+    "policy_round_robin_help": "Folosește upstream-urile pe rând.",
+    "policy_least_conn_help": "Alege upstream-ul cu cele mai puține cereri deschise.",
+    "policy_first_help": "Întotdeauna primul upstream disponibil din listă; celelalte sunt de rezervă.",
+    "policy_weighted_round_robin": "Round robin ponderat",
+    "policy_weighted_round_robin_help": "Folosește upstream-urile pe rând, fiecare de atâtea ori cât îi e ponderea; ponderea 0 îl exclude.",
+    "policy_random_choose": "Cel mai bun din n aleatorii",
+    "policy_random_choose_help": "Alege n upstream-uri la întâmplare și îl folosește pe cel mai puțin ocupat.",
+    "policy_ip_hash": "Hash al IP-ului conexiunii",
+    "policy_ip_hash_help": "Același IP de conexiune ajunge mereu la același upstream.",
+    "policy_client_ip_hash": "Hash al IP-ului clientului",
+    "policy_client_ip_hash_help": "Ca hash-ul IP-ului conexiunii, dar folosește IP-ul real al clientului în spatele proxy-urilor de încredere.",
+    "policy_uri_hash": "Hash al căii cererii",
+    "policy_uri_hash_help": "Aceeași cale ajunge mereu la același upstream, util pentru cache-uri.",
+    "policy_header": "Antetul cererii",
+    "policy_header_help": "Valoarea unui antet alege upstream-ul; aceeași valoare ajunge mereu la același.",
+    "policy_cookie": "Cookie (sesiuni persistente)",
+    "policy_cookie_help": "Sesiuni persistente: Caddy setează un cookie la primul răspuns, iar cererile următoare cu el ajung la același upstream.",
+    "field_header": "Câmp de antet",
+    "field_cookie_name": "Numele cookie-ului",
+    "field_cookie_secret": "Secretul cookie-ului",
+    "field_cookie_secret_help": "Opțional. Semnează valoarea cookie-ului, ca clienții să nu-și poată alege singuri upstream-ul.",
+    "field_weight": "Pondere",
+    "field_weight_main": "Ponderea țintei principale",
+    "field_choose": "Candidați per cerere",
+    "validation_header": "Introduceți câmpul de antet.",
+    "validation_weights": "Introduceți câte o pondere întreagă pentru fiecare dintre cele {{count}} upstream-uri.",
+    "validation_choose": "Introduceți un număr întreg de cel puțin 1."
   },
   "lb_retry": {
     "heading": "Reîncercări și failover",
@@ -431,7 +472,7 @@
   },
   "migration": {
     "banner_title": "Migrează Caddyfile în conf.d",
-    "banner_body": "Intrările proxy sunt definite direct în /etc/caddy/Caddyfile. Migrează-le în /etc/caddy/conf.d ca acest plugin să le poată gestiona. Fișierul original va fi salvat în /etc/caddy/Caddyfile.bak.",
+    "banner_body": "Site-urile din Caddyfile vor fi mutate în fișierul conf.d al pluginului, ca acesta să le poată gestiona.",
     "button": "Migrează…",
     "confirm_title": "Migrezi Caddyfile?",
     "confirm_body": "Toate intrările proxy vor fi mutate neschimbate în /etc/caddy/conf.d/cockpit-caddy.conf, iar /etc/caddy/Caddyfile va fi înlocuit cu o instrucțiune import. Originalul este salvat în /etc/caddy/Caddyfile.bak. Caddy va fi reîncărcat automat.",
@@ -443,7 +484,10 @@
     "gate_continue": "Continuă oricum",
     "gate_continue_warning": "Continuarea fără migrare poate face ca Caddy să respingă configurația din cauza intrărilor duplicate.",
     "backup_warning_title": "Fă mai întâi o copie de siguranță a configurației",
-    "backup_warning_body": "Migrarea salvează doar Caddyfile-ul în sine. Creează o copie de siguranță completă a configurației, ca să poți restaura totul dacă ceva nu merge bine."
+    "backup_warning_body": "Migrarea salvează doar Caddyfile-ul în sine. Creează o copie de siguranță completă a configurației, ca să poți restaura totul dacă ceva nu merge bine.",
+    "welcome_label": "Pagina de bun venit a distribuției",
+    "banner_details_toggle": "Detalii",
+    "banner_details": "Blocurile de site sunt mutate neschimbate din /etc/caddy/Caddyfile în /etc/caddy/conf.d/cockpit-caddy.conf, iar Caddyfile primește o linie import pentru conf.d. Caddyfile-ul original este salvat în /etc/caddy/Caddyfile.bak. Până atunci, modificările pluginului pot intra în conflict cu site-urile din Caddyfile."
   },
   "backup": {
     "button": "Copie de siguranță",
@@ -696,7 +740,24 @@
     "field_eab": "ID cheie External Account Binding",
     "value_default": "(nesetat — se folosesc valorile implicite Caddy)",
     "value_default_ca": "(nesetat — se folosește endpoint-ul de producție Let's Encrypt)",
-    "value_none": "(niciunul)"
+    "value_none": "(niciunul)",
+    "col_certificate": "Certificat",
+    "state_loading": "Se citește starea certificatului…",
+    "state_valid": "Valabil până la {{date}}",
+    "state_renews": "se reînnoiește în jur de {{date}}",
+    "state_renewal_due": "Reînnoire necesară (expiră la {{date}})",
+    "state_obtaining": "Se obține…",
+    "state_failed": "Eșuat",
+    "state_none": "Niciun certificat",
+    "last_error": "Ultima încercare a eșuat: {{error}}",
+    "cert_title": "Certificat pentru {{host}}",
+    "cert_subject": "Subiect",
+    "cert_sans": "Nume (SAN)",
+    "cert_issuer": "Emis de",
+    "cert_copy": "Copiază PEM",
+    "cert_download": "Descarcă (.pem)",
+    "back": "Înapoi la listă",
+    "cert_load_error": "Certificatul nu a putut fi citit"
   },
   "admin_address": {
     "title": "Adresa Admin API",
@@ -821,7 +882,6 @@
     "type_method": "Metodă",
     "type_header": "Antet",
     "type_query": "Parametru de interogare",
-    "type_remote_ip": "IP la distanță / CIDR",
     "add_path": "Adaugă cale",
     "add_host": "Adaugă gazdă",
     "add_cidr": "Adaugă interval CIDR",
@@ -842,7 +902,14 @@
     "expression_label": "Expresie (CEL)",
     "expression_help": "O condiție care trebuie să fie și ea adevărată, cu substituenți precum {path} sau {method}. Caddy o verifică la salvare.",
     "expression_docs": "Documentația matcher-ului expression",
-    "chip_not": "except"
+    "chip_not": "except",
+    "type_ip": "Adresă IP",
+    "ip_kind": "Compară IP-ul",
+    "ip_kind_client": "IP-ul clientului",
+    "ip_kind_remote": "IP-ul conexiunii",
+    "ip_kind_client_help": "IP-ul vizitatorului, luat din antetul de redirecționare când cererea vine printr-unul dintre proxy-urile de încredere (Setări). Fără proxy-uri de încredere este același cu IP-ul conexiunii.",
+    "ip_kind_remote_help": "IP-ul conexiunii TCP. În spatele unui proxy sau CDN este adresa proxy-ului, nu a vizitatorului.",
+    "ip_range": "Adresă IP sau interval"
   },
   "handle_path": {
     "label": "Elimină prefixul de cale potrivit (handle_path)"
@@ -957,5 +1024,29 @@
     "upstreams": "Upstream-uri",
     "logging": "Jurnale și erori",
     "limits": "Limite"
+  },
+  "dns": {
+    "global_title": "Provocarea DNS",
+    "global_enabled": "Folosește provocarea DNS pentru certificatele ACME",
+    "global_enabled_help": "Necesar pentru certificate wildcard și pentru gazde inaccesibile pe porturile 80/443. Caddy dovedește controlul domeniului cu o înregistrare DNS setată prin API-ul furnizorului.",
+    "no_modules_title": "Niciun modul de furnizor DNS instalat",
+    "no_modules_body": "Provocarea DNS necesită o versiune Caddy cu un modul de furnizor DNS (dns.providers.*), pe care pachetele distribuțiilor de obicei nu îl au. Folosiți o versiune Caddy cu modulul furnizorului dvs. DNS. Acest plugin nu instalează unul: înlocuirea binarului din pachet strică actualizările pachetului.",
+    "no_modules_link": "Module Caddy (filtru: dns.providers)",
+    "provider": "Furnizor DNS",
+    "provider_choose": "Alegeți un furnizor",
+    "credentials": "Date de autentificare",
+    "credentials_help": "Valorile sunt păstrate în /etc/caddy/dns.env (doar root, mod 600) și ajung la Caddy ca variabile de mediu; Caddyfile doar le referă. O valoare salvată nu mai este afișată niciodată.",
+    "option_name": "Numele opțiunii",
+    "option_value": "Valoare",
+    "value_keep": "Salvat; lăsați gol ca să rămână",
+    "value_set": "Setat",
+    "add_option": "Adaugă opțiune",
+    "remove_option": "Elimină opțiunea",
+    "validation_option": "Numele opțiunilor folosesc litere, cifre și liniuțe de subliniere.",
+    "validation_duplicate": "Fiecare opțiune poate apărea o singură dată.",
+    "validation_value": "Introduceți o valoare pentru fiecare opțiune nouă.",
+    "validation_provider": "Alegeți un furnizor DNS.",
+    "restart_needed": "Reporniți Caddy pentru a încărca datele DNS modificate. Reîncărcarea nu ajunge: serviciul își citește mediul doar la pornire.",
+    "restart_button": "Repornește Caddy"
   }
 }

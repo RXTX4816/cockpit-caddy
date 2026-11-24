@@ -168,7 +168,16 @@
     "validation_port_range": "El puerto debe estar entre 1 y 65535",
     "validation_port_duplicate": "El puerto {{port}} ya está en uso",
     "validation_root_required": "El directorio raíz es obligatorio",
-    "confirm_body": "Se creará un servidor de archivos estáticos en :{{port}} que servirá {{root}} y se recargará la configuración de Caddy."
+    "confirm_body": "Se creará un servidor de archivos estáticos en :{{port}} que servirá {{root}} y se recargará la configuración de Caddy.",
+    "field_spa": "Modo SPA (servir index.html en rutas desconocidas)",
+    "field_spa_help": "Para aplicaciones de una sola página (React, Vue, Svelte): los archivos existentes se sirven tal cual y cualquier otra ruta recibe index.html para que funcionen los enlaces profundos.",
+    "advanced": "Opciones del servidor de archivos",
+    "field_index": "Archivos de índice",
+    "field_index_help": "Nombres de archivo que se prueban para un directorio, separados por espacios y en orden.",
+    "field_hide": "Archivos ocultos",
+    "field_hide_help": "Nombres o patrones que nunca se sirven, separados por espacios.",
+    "field_precompressed": "Archivos precomprimidos",
+    "field_precompressed_help": "Servir file.zst, file.br o file.gz junto al original cuando el navegador acepta esa codificación."
   },
   "edit_static": {
     "title": "Editar servidor estático — :{{port}}",
@@ -195,7 +204,9 @@
     "env_section_title": "Variables de entorno",
     "env_field_key": "Nombre",
     "env_field_value": "Valor",
-    "env_add_button": "Añadir variable"
+    "env_add_button": "Añadir variable",
+    "field_try_files": "Probar archivos (try_files)",
+    "field_try_files_help": "Opcional. Candidatos que se prueban en orden antes de PHP; una aplicación con front controller suele necesitar {path} {path}/ /index.php?{query}."
   },
   "add_respond": {
     "title": "Añadir respuesta estática",
@@ -319,7 +330,37 @@
     "policy_least_conn": "Menos conexiones",
     "policy_first": "Primero disponible",
     "validation_host": "El host es obligatorio",
-    "validation_port": "El puerto debe estar entre 1 y 65535"
+    "validation_port": "El puerto debe estar entre 1 y 65535",
+    "policy_default": "Predeterminado de Caddy (aleatorio)",
+    "policy_default_help": "Caddy elige un upstream al azar.",
+    "policy_random_help": "Elige un upstream al azar para cada solicitud.",
+    "policy_round_robin_help": "Usa los upstreams por turnos.",
+    "policy_least_conn_help": "Elige el upstream con menos solicitudes abiertas.",
+    "policy_first_help": "Siempre el primer upstream disponible de la lista; los demás son de reserva.",
+    "policy_weighted_round_robin": "Round robin ponderado",
+    "policy_weighted_round_robin_help": "Usa los upstreams por turnos, cada uno tantas veces como su peso; el peso 0 lo excluye.",
+    "policy_random_choose": "El mejor de n aleatorios",
+    "policy_random_choose_help": "Elige n upstreams al azar y usa el menos ocupado.",
+    "policy_ip_hash": "Hash de la IP de conexión",
+    "policy_ip_hash_help": "La misma IP de conexión llega siempre al mismo upstream.",
+    "policy_client_ip_hash": "Hash de la IP del cliente",
+    "policy_client_ip_hash_help": "Como el hash de la IP de conexión, pero usa la IP real del cliente detrás de proxies de confianza.",
+    "policy_uri_hash": "Hash de la ruta de la solicitud",
+    "policy_uri_hash_help": "La misma ruta llega siempre al mismo upstream, útil para cachés.",
+    "policy_header": "Cabecera de la solicitud",
+    "policy_header_help": "El valor de una cabecera elige el upstream; el mismo valor llega siempre al mismo.",
+    "policy_cookie": "Cookie (sesiones persistentes)",
+    "policy_cookie_help": "Sesiones persistentes: Caddy fija una cookie en la primera respuesta y las solicitudes siguientes con ella llegan al mismo upstream.",
+    "field_header": "Campo de cabecera",
+    "field_cookie_name": "Nombre de la cookie",
+    "field_cookie_secret": "Secreto de la cookie",
+    "field_cookie_secret_help": "Opcional. Firma el valor de la cookie para que los clientes no elijan el upstream por su cuenta.",
+    "field_weight": "Peso",
+    "field_weight_main": "Peso del destino principal",
+    "field_choose": "Candidatos por solicitud",
+    "validation_header": "Introduzca el campo de cabecera.",
+    "validation_weights": "Introduzca un peso entero para cada uno de los {{count}} upstreams.",
+    "validation_choose": "Introduzca un número entero de al menos 1."
   },
   "lb_retry": {
     "heading": "Reintentos y conmutación por error",
@@ -431,7 +472,7 @@
   },
   "migration": {
     "banner_title": "Migrar el Caddyfile a conf.d",
-    "banner_body": "Hay entradas de proxy definidas directamente en /etc/caddy/Caddyfile. Mígrelas a /etc/caddy/conf.d para que este plugin pueda gestionarlas. Se hará una copia de seguridad del archivo original en /etc/caddy/Caddyfile.bak.",
+    "banner_body": "Los sitios de su Caddyfile se moverán al archivo conf.d del complemento para que pueda gestionarlos.",
     "button": "Migrar…",
     "confirm_title": "¿Migrar el Caddyfile?",
     "confirm_body": "Todas las entradas de proxy se moverán tal cual a /etc/caddy/conf.d/cockpit-caddy.conf y /etc/caddy/Caddyfile se sustituirá por una instrucción import. Se guarda una copia del original en /etc/caddy/Caddyfile.bak. Caddy se recargará automáticamente.",
@@ -443,7 +484,10 @@
     "gate_continue": "Continuar de todos modos",
     "gate_continue_warning": "Continuar sin migrar puede hacer que Caddy rechace la configuración por entradas duplicadas.",
     "backup_warning_title": "Haga primero una copia de seguridad de su configuración",
-    "backup_warning_body": "La migración solo guarda una copia del propio Caddyfile. Cree una copia de seguridad completa de la configuración para poder restaurarlo todo si algo sale mal."
+    "backup_warning_body": "La migración solo guarda una copia del propio Caddyfile. Cree una copia de seguridad completa de la configuración para poder restaurarlo todo si algo sale mal.",
+    "welcome_label": "Página de bienvenida de la distribución",
+    "banner_details_toggle": "Detalles",
+    "banner_details": "Los bloques de sitio se mueven sin cambios de /etc/caddy/Caddyfile a /etc/caddy/conf.d/cockpit-caddy.conf, y el Caddyfile recibe una línea import para conf.d. El Caddyfile original se respalda en /etc/caddy/Caddyfile.bak. Hasta entonces, los cambios del complemento pueden chocar con los sitios del Caddyfile."
   },
   "backup": {
     "button": "Copia de seguridad",
@@ -696,7 +740,24 @@
     "field_eab": "ID de clave de External Account Binding",
     "value_default": "(sin definir: se usan los valores predeterminados de Caddy)",
     "value_default_ca": "(sin definir: se usa el endpoint de producción de Let's Encrypt)",
-    "value_none": "(ninguno)"
+    "value_none": "(ninguno)",
+    "col_certificate": "Certificado",
+    "state_loading": "Leyendo el estado del certificado…",
+    "state_valid": "Válido hasta {{date}}",
+    "state_renews": "se renueva hacia el {{date}}",
+    "state_renewal_due": "Renovación pendiente (caduca el {{date}})",
+    "state_obtaining": "Obteniendo…",
+    "state_failed": "Error",
+    "state_none": "Sin certificado",
+    "last_error": "El último intento falló: {{error}}",
+    "cert_title": "Certificado de {{host}}",
+    "cert_subject": "Sujeto",
+    "cert_sans": "Nombres (SAN)",
+    "cert_issuer": "Emitido por",
+    "cert_copy": "Copiar PEM",
+    "cert_download": "Descargar (.pem)",
+    "back": "Volver a la lista",
+    "cert_load_error": "No se pudo leer el certificado"
   },
   "admin_address": {
     "title": "Dirección de la API de administración",
@@ -821,7 +882,6 @@
     "type_method": "Método",
     "type_header": "Cabecera",
     "type_query": "Parámetro de consulta",
-    "type_remote_ip": "IP remota / CIDR",
     "add_path": "Añadir ruta",
     "add_host": "Añadir host",
     "add_cidr": "Añadir rango CIDR",
@@ -842,7 +902,14 @@
     "expression_label": "Expresión (CEL)",
     "expression_help": "Una condición que también debe cumplirse, con marcadores como {path} o {method}. Caddy la comprueba al guardar.",
     "expression_docs": "Documentación del matcher expression",
-    "chip_not": "excepto"
+    "chip_not": "excepto",
+    "type_ip": "Dirección IP",
+    "ip_kind": "Comparar la IP de",
+    "ip_kind_client": "IP del cliente",
+    "ip_kind_remote": "IP de la conexión",
+    "ip_kind_client_help": "La IP del visitante, tomada de la cabecera reenviada cuando la solicitud llega a través de uno de los proxies de confianza (Ajustes). Sin proxies de confianza es la misma que la IP de la conexión.",
+    "ip_kind_remote_help": "La IP de la conexión TCP. Detrás de un proxy o CDN es la dirección del proxy, no la del visitante.",
+    "ip_range": "Dirección IP o rango"
   },
   "handle_path": {
     "label": "Quitar el prefijo de ruta coincidente (handle_path)"
@@ -957,5 +1024,29 @@
     "upstreams": "Upstreams",
     "logging": "Registro y errores",
     "limits": "Límites"
+  },
+  "dns": {
+    "global_title": "Desafío DNS",
+    "global_enabled": "Usar el desafío DNS para los certificados ACME",
+    "global_enabled_help": "Necesario para certificados comodín y para hosts no accesibles en los puertos 80/443. Caddy demuestra el control del dominio con un registro DNS que crea mediante la API de su proveedor.",
+    "no_modules_title": "No hay ningún módulo de proveedor DNS instalado",
+    "no_modules_body": "El desafío DNS necesita una compilación de Caddy con un módulo de proveedor DNS (dns.providers.*), que los paquetes de las distribuciones no suelen incluir. Use una compilación de Caddy con el módulo de su proveedor DNS. Este complemento no instala ninguno: sustituir el binario empaquetado rompe las actualizaciones del paquete.",
+    "no_modules_link": "Módulos de Caddy (filtro: dns.providers)",
+    "provider": "Proveedor DNS",
+    "provider_choose": "Elija un proveedor",
+    "credentials": "Credenciales",
+    "credentials_help": "Los valores se guardan en /etc/caddy/dns.env (solo root, modo 600) y llegan a Caddy como variables de entorno; el Caddyfile solo las referencia. Un valor guardado no vuelve a mostrarse.",
+    "option_name": "Nombre de la opción",
+    "option_value": "Valor",
+    "value_keep": "Guardado; déjelo vacío para conservarlo",
+    "value_set": "Establecido",
+    "add_option": "Añadir opción",
+    "remove_option": "Quitar opción",
+    "validation_option": "Los nombres de opción usan letras, dígitos y guiones bajos.",
+    "validation_duplicate": "Cada opción solo puede aparecer una vez.",
+    "validation_value": "Introduzca un valor para cada opción nueva.",
+    "validation_provider": "Elija un proveedor DNS.",
+    "restart_needed": "Reinicie Caddy para cargar las credenciales DNS modificadas. Recargar no basta: el servicio solo lee su entorno al arrancar.",
+    "restart_button": "Reiniciar Caddy"
   }
 }
