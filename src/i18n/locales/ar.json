@@ -882,7 +882,6 @@
     "type_method": "الطريقة",
     "type_header": "الترويسة",
     "type_query": "معامل الاستعلام",
-    "type_remote_ip": "IP البعيد / CIDR",
     "add_path": "إضافة مسار",
     "add_host": "إضافة مضيف",
     "add_cidr": "إضافة نطاق CIDR",
@@ -903,7 +902,14 @@
     "expression_label": "تعبير (CEL)",
     "expression_help": "شرط يجب أن يتحقق أيضًا، مع عناصر نائبة مثل {path} أو {method}. يتحقق Caddy منه عند الحفظ.",
     "expression_docs": "توثيق مطابق التعبير",
-    "chip_not": "باستثناء"
+    "chip_not": "باستثناء",
+    "type_ip": "عنوان IP",
+    "ip_kind": "مطابقة IP الخاص بـ",
+    "ip_kind_client": "IP العميل",
+    "ip_kind_remote": "IP الاتصال",
+    "ip_kind_client_help": "عنوان IP للزائر، يؤخذ من ترويسة التمرير عندما يمر الطلب عبر أحد الوكلاء الموثوقين (الإعدادات). بدون وكلاء موثوقين يكون هو نفسه IP الاتصال.",
+    "ip_kind_remote_help": "عنوان IP لاتصال TCP. خلف وكيل أو شبكة CDN يكون عنوان الوكيل، لا عنوان الزائر.",
+    "ip_range": "عنوان IP أو نطاق"
   },
   "handle_path": {
     "label": "إزالة بادئة المسار المطابقة (handle_path)"

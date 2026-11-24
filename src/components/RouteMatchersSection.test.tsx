@@ -20,9 +20,9 @@ describe("RouteMatchersSection exclude and expression (#287)", () => {
 
   it("an exclude on its own is a valid matcher", () => {
     const onChange = setup(undefined);
-    fireEvent.change(screen.getByLabelText("Exclude: Remote IP / CIDR"), { target: { value: "10.0.0.0/8" } });
+    fireEvent.change(screen.getByLabelText("Exclude: IP address or range"), { target: { value: "10.0.0.0/8" } });
     fireEvent.click(screen.getByRole("button", { name: "Exclude: Add CIDR range" }));
-    expect(onChange).toHaveBeenLastCalledWith({ not: { remote_ip: { ranges: ["10.0.0.0/8"] } } });
+    expect(onChange).toHaveBeenLastCalledWith({ not: { client_ip: { ranges: ["10.0.0.0/8"] } } });
   });
 
   it("removing the last exclude value drops the not group", () => {
@@ -55,5 +55,29 @@ describe("RouteMatchersSection exclude and expression (#287)", () => {
     expect(screen.getByLabelText("Configured")).toBeInTheDocument();
     rerender(<RouteMatchersSection value={{ expression: "true" }} onChange={() => {}} />);
     expect(screen.getByLabelText("Configured")).toBeInTheDocument();
+  });
+});
+
+// #286: client IP (honours trusted_proxies) vs connection IP.
+describe("RouteMatchersSection IP matcher (#286)", () => {
+  it("new ranges default to the client IP", () => {
+    const onChange = setup(undefined);
+    fireEvent.change(screen.getByLabelText("IP address or range"), { target: { value: "10.0.0.0/8" } });
+    fireEvent.click(screen.getByRole("button", { name: "Add CIDR range" }));
+    expect(onChange).toHaveBeenLastCalledWith({ client_ip: { ranges: ["10.0.0.0/8"] } });
+  });
+
+  it("an existing remote_ip matcher shows as connection IP and stays remote_ip", () => {
+    const onChange = setup({ remote_ip: { ranges: ["10.0.0.0/8"] } });
+    expect((screen.getByLabelText("Match IP of") as HTMLSelectElement).value).toBe("remote_ip");
+    fireEvent.change(screen.getByLabelText("IP address or range"), { target: { value: "192.168.0.0/16" } });
+    fireEvent.click(screen.getByRole("button", { name: "Add CIDR range" }));
+    expect(onChange).toHaveBeenLastCalledWith({ remote_ip: { ranges: ["10.0.0.0/8", "192.168.0.0/16"] } });
+  });
+
+  it("switching the kind moves the ranges", () => {
+    const onChange = setup({ remote_ip: { ranges: ["10.0.0.0/8"] } });
+    fireEvent.change(screen.getByLabelText("Match IP of"), { target: { value: "client_ip" } });
+    expect(onChange).toHaveBeenLastCalledWith({ client_ip: { ranges: ["10.0.0.0/8"] } });
   });
 });

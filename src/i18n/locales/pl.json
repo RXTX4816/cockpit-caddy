@@ -882,7 +882,6 @@
     "type_method": "Metoda",
     "type_header": "Nagłówek",
     "type_query": "Parametr zapytania",
-    "type_remote_ip": "Zdalne IP / CIDR",
     "add_path": "Dodaj ścieżkę",
     "add_host": "Dodaj host",
     "add_cidr": "Dodaj zakres CIDR",
@@ -903,7 +902,14 @@
     "expression_label": "Wyrażenie (CEL)",
     "expression_help": "Warunek, który też musi być spełniony, z symbolami zastępczymi jak {path} lub {method}. Caddy sprawdza go przy zapisie.",
     "expression_docs": "Dokumentacja matchera expression",
-    "chip_not": "oprócz"
+    "chip_not": "oprócz",
+    "type_ip": "Adres IP",
+    "ip_kind": "Dopasuj IP",
+    "ip_kind_client": "IP klienta",
+    "ip_kind_remote": "IP połączenia",
+    "ip_kind_client_help": "IP odwiedzającego, pobierane z nagłówka przekazania, gdy żądanie przychodzi przez jedno z zaufanych proxy (Ustawienia). Bez zaufanych proxy jest takie samo jak IP połączenia.",
+    "ip_kind_remote_help": "IP połączenia TCP. Za proxy lub CDN jest to adres proxy, a nie odwiedzającego.",
+    "ip_range": "Adres IP lub zakres"
   },
   "handle_path": {
     "label": "Usuń dopasowany prefiks ścieżki (handle_path)"

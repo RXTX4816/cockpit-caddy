@@ -882,7 +882,6 @@
     "type_method": "Methode",
     "type_header": "Header",
     "type_query": "Query-Parameter",
-    "type_remote_ip": "Remote-IP / CIDR",
     "add_path": "Pfad hinzufügen",
     "add_host": "Host hinzufügen",
     "add_cidr": "CIDR-Bereich hinzufügen",
@@ -903,7 +902,14 @@
     "expression_label": "Ausdruck (CEL)",
     "expression_help": "Eine Bedingung, die zusätzlich erfüllt sein muss, mit Platzhaltern wie {path} oder {method}. Caddy prüft sie beim Speichern.",
     "expression_docs": "Doku zum Expression-Matcher",
-    "chip_not": "außer"
+    "chip_not": "außer",
+    "type_ip": "IP-Adresse",
+    "ip_kind": "IP abgleichen von",
+    "ip_kind_client": "Client-IP",
+    "ip_kind_remote": "Verbindungs-IP",
+    "ip_kind_client_help": "Die IP des Besuchers, aus dem Forwarded-Header, wenn die Anfrage über einen der vertrauenswürdigen Proxys (Einstellungen) kommt. Ohne vertrauenswürdige Proxys ist sie gleich der Verbindungs-IP.",
+    "ip_kind_remote_help": "Die IP der TCP-Verbindung. Hinter einem Proxy oder CDN ist das die Adresse des Proxys, nicht die des Besuchers.",
+    "ip_range": "IP-Adresse oder -Bereich"
   },
   "handle_path": {
     "label": "Getroffenes Pfadpräfix entfernen (handle_path)"

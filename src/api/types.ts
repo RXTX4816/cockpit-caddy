@@ -65,7 +65,10 @@ export interface RouteMatch {
   header?: Record<string, string[]>;
   /** Query param name → list of value patterns. */
   query?: Record<string, string[]>;
+  /** The TCP peer address. Behind a proxy that is the proxy, not the visitor. */
   remote_ip?: { ranges: string[] };
+  /** The real client IP (#286): honours trusted_proxies, else the same as remote_ip. */
+  client_ip?: { ranges: string[] };
   /** Exclude group (#287): the route matches only when these fields do NOT all match. */
   not?: RouteMatchFields;
   /** CEL expression (#287), as written in a Caddyfile (placeholder shorthands like `{path}`). */

@@ -882,7 +882,6 @@
     "type_method": "Metodă",
     "type_header": "Antet",
     "type_query": "Parametru de interogare",
-    "type_remote_ip": "IP la distanță / CIDR",
     "add_path": "Adaugă cale",
     "add_host": "Adaugă gazdă",
     "add_cidr": "Adaugă interval CIDR",
@@ -903,7 +902,14 @@
     "expression_label": "Expresie (CEL)",
     "expression_help": "O condiție care trebuie să fie și ea adevărată, cu substituenți precum {path} sau {method}. Caddy o verifică la salvare.",
     "expression_docs": "Documentația matcher-ului expression",
-    "chip_not": "except"
+    "chip_not": "except",
+    "type_ip": "Adresă IP",
+    "ip_kind": "Compară IP-ul",
+    "ip_kind_client": "IP-ul clientului",
+    "ip_kind_remote": "IP-ul conexiunii",
+    "ip_kind_client_help": "IP-ul vizitatorului, luat din antetul de redirecționare când cererea vine printr-unul dintre proxy-urile de încredere (Setări). Fără proxy-uri de încredere este același cu IP-ul conexiunii.",
+    "ip_kind_remote_help": "IP-ul conexiunii TCP. În spatele unui proxy sau CDN este adresa proxy-ului, nu a vizitatorului.",
+    "ip_range": "Adresă IP sau interval"
   },
   "handle_path": {
     "label": "Elimină prefixul de cale potrivit (handle_path)"

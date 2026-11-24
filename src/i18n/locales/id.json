@@ -882,7 +882,6 @@
     "type_method": "Metode",
     "type_header": "Header",
     "type_query": "Parameter kueri",
-    "type_remote_ip": "IP jarak jauh / CIDR",
     "add_path": "Tambah jalur",
     "add_host": "Tambah host",
     "add_cidr": "Tambah rentang CIDR",
@@ -903,7 +902,14 @@
     "expression_label": "Ekspresi (CEL)",
     "expression_help": "Kondisi yang juga harus benar, dengan placeholder seperti {path} atau {method}. Caddy memeriksanya saat menyimpan.",
     "expression_docs": "Dokumentasi matcher expression",
-    "chip_not": "kecuali"
+    "chip_not": "kecuali",
+    "type_ip": "Alamat IP",
+    "ip_kind": "Cocokkan IP dari",
+    "ip_kind_client": "IP klien",
+    "ip_kind_remote": "IP koneksi",
+    "ip_kind_client_help": "IP pengunjung, diambil dari header penerusan jika permintaan datang melalui salah satu proxy tepercaya (Pengaturan). Tanpa proxy tepercaya, nilainya sama dengan IP koneksi.",
+    "ip_kind_remote_help": "IP dari koneksi TCP. Di balik proxy atau CDN, itu alamat proxy, bukan pengunjung.",
+    "ip_range": "Alamat IP atau rentang"
   },
   "handle_path": {
     "label": "Hapus prefiks jalur yang cocok (handle_path)"

@@ -2,6 +2,8 @@ import { useState } from "react";
 import {
   Button,
   FormGroup,
+  FormSelect,
+  FormSelectOption,
   FormHelperText,
   HelperText,
   HelperTextItem,
@@ -29,6 +31,8 @@ interface Props {
   onToggleExpanded?: (v: boolean) => void;
 }
 
+type IpKind = "client_ip" | "remote_ip";
+
 const HTTP_METHODS = ["GET", "HEAD", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"] as const;
 const EXPRESSION_DOCS = "https://caddyserver.com/docs/caddyfile/matchers#expression";
 
@@ -40,6 +44,7 @@ function cleanFields<T extends RouteMatchFields>(merged: T): T {
   if (merged.header && !Object.keys(merged.header).length) delete merged.header;
   if (merged.query && !Object.keys(merged.query).length) delete merged.query;
   if (!merged.remote_ip?.ranges.length) delete merged.remote_ip;
+  if (!merged.client_ip?.ranges.length) delete merged.client_ip;
   return merged;
 }
 
@@ -217,17 +222,27 @@ function MatcherFields({ value, onChange, isDisabled, idPrefix, labelPrefix }: F
     onChange(patch(value, { query: q }));
   }
 
-  // Remote IP
+  // IP ranges (#286): client_ip (honours trusted_proxies) or remote_ip (the TCP peer). New ranges
+  // go to client_ip; an existing remote_ip stays remote_ip until the user switches it.
+  const [emptyIpKind, setEmptyIpKind] = useState<IpKind>("client_ip");
+  const ipKind: IpKind = value?.client_ip?.ranges.length ? "client_ip" : value?.remote_ip?.ranges.length ? "remote_ip" : emptyIpKind;
+  const otherKind: IpKind = ipKind === "client_ip" ? "remote_ip" : "client_ip";
   function addCidr() {
     const v = newCidr.trim();
     if (!v) return;
-    const existing = value?.remote_ip?.ranges ?? [];
-    onChange(patch(value, { remote_ip: { ranges: [...existing, v] } }));
+    const existing = value?.[ipKind]?.ranges ?? [];
+    onChange(patch(value, { [ipKind]: { ranges: [...existing, v] } }));
     setNewCidr("");
   }
-  function removeCidr(i: number) {
-    const next = (value?.remote_ip?.ranges ?? []).filter((_, idx) => idx !== i);
-    onChange(patch(value, { remote_ip: { ranges: next } }));
+  function removeCidr(kind: IpKind, i: number) {
+    const next = (value?.[kind]?.ranges ?? []).filter((_, idx) => idx !== i);
+    onChange(patch(value, { [kind]: { ranges: next } }));
+  }
+  function switchIpKind(kind: IpKind) {
+    setEmptyIpKind(kind);
+    if (kind === ipKind) return;
+    const ranges = [...(value?.[kind]?.ranges ?? []), ...(value?.[ipKind]?.ranges ?? [])];
+    if (ranges.length) onChange(patch(value, { [ipKind]: { ranges: [] }, [kind]: { ranges } }));
   }
 
   const paths = value?.path ?? [];
@@ -235,7 +250,9 @@ function MatcherFields({ value, onChange, isDisabled, idPrefix, labelPrefix }: F
   const methods = value?.method ?? [];
   const headers = Object.entries(value?.header ?? {});
   const queryParams = Object.entries(value?.query ?? {});
-  const cidrs = value?.remote_ip?.ranges ?? [];
+  const cidrs = value?.[ipKind]?.ranges ?? [];
+  // Both kinds at once only come from a hand-written config; the other one is listed too.
+  const otherCidrs = value?.[otherKind]?.ranges ?? [];
 
   return (
     <>
@@ -397,22 +414,49 @@ function MatcherFields({ value, onChange, isDisabled, idPrefix, labelPrefix }: F
         </div>
       </div>
 
-      {/* Remote IP / CIDR */}
+      {/* Client / connection IP (#286) */}
       <div>
-        <strong style={{ fontSize: "0.9rem" }}>{text("matchers.type_remote_ip")}</strong>
+        <strong style={{ fontSize: "0.9rem" }}>{text("matchers.type_ip")}</strong>
+        <div style={{ display: "flex", gap: "0.4rem", marginTop: "0.35rem", alignItems: "center" }}>
+          <FormSelect
+            id={`${idPrefix}-ip-kind`}
+            aria-label={t("matchers.ip_kind")}
+            value={ipKind}
+            onChange={(_e, v) => switchIpKind(v as IpKind)}
+            isDisabled={isDisabled}
+            style={{ maxWidth: "16rem" }}
+          >
+            <FormSelectOption value="client_ip" label={text("matchers.ip_kind_client")} />
+            <FormSelectOption value="remote_ip" label={text("matchers.ip_kind_remote")} />
+          </FormSelect>
+        </div>
+        <HelperText style={{ marginTop: "0.25rem" }}>
+          <HelperTextItem>{text(ipKind === "client_ip" ? "matchers.ip_kind_client_help" : "matchers.ip_kind_remote_help")}</HelperTextItem>
+        </HelperText>
         {cidrs.length > 0 && (
           <div style={{ display: "flex", gap: "0.3rem", flexWrap: "wrap", marginTop: "0.35rem" }}>
             {cidrs.map((c, i) => (
               <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
                 <code style={{ fontSize: "0.85rem" }}>{c}</code>
-                <Button variant="plain" size="sm" isDanger onClick={() => removeCidr(i)} isDisabled={isDisabled} aria-label={t("matchers.remove_cidr")}>×</Button>
+                <Button variant="plain" size="sm" isDanger onClick={() => removeCidr(ipKind, i)} isDisabled={isDisabled} aria-label={t("matchers.remove_cidr")}>×</Button>
+              </span>
+            ))}
+          </div>
+        )}
+        {otherCidrs.length > 0 && (
+          <div style={{ display: "flex", gap: "0.3rem", flexWrap: "wrap", marginTop: "0.35rem", alignItems: "center" }}>
+            <small>{text(otherKind === "client_ip" ? "matchers.ip_kind_client" : "matchers.ip_kind_remote")}:</small>
+            {otherCidrs.map((c, i) => (
+              <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
+                <code style={{ fontSize: "0.85rem" }}>{c}</code>
+                <Button variant="plain" size="sm" isDanger onClick={() => removeCidr(otherKind, i)} isDisabled={isDisabled} aria-label={t("matchers.remove_cidr")}>×</Button>
               </span>
             ))}
           </div>
         )}
         <div style={{ display: "flex", gap: "0.4rem", marginTop: "0.35rem" }}>
           <TextInput
-            aria-label={t("matchers.type_remote_ip")}
+            aria-label={t("matchers.ip_range")}
             placeholder="10.0.0.0/8"
             value={newCidr}
             onChange={(_e, v) => setNewCidr(v)}

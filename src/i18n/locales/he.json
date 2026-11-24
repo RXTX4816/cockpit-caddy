@@ -882,7 +882,6 @@
     "type_method": "שיטה",
     "type_header": "כותרת",
     "type_query": "פרמטר שאילתה",
-    "type_remote_ip": "IP מרוחק / CIDR",
     "add_path": "הוספת נתיב",
     "add_host": "הוספת מארח",
     "add_cidr": "הוספת טווח CIDR",
@@ -903,7 +902,14 @@
     "expression_label": "ביטוי (CEL)",
     "expression_help": "תנאי שחייב להתקיים גם הוא, עם מצייני מיקום כמו {path} או {method}. Caddy בודק אותו בשמירה.",
     "expression_docs": "תיעוד ה-matcher של expression",
-    "chip_not": "מלבד"
+    "chip_not": "מלבד",
+    "type_ip": "כתובת IP",
+    "ip_kind": "התאם IP של",
+    "ip_kind_client": "IP של הלקוח",
+    "ip_kind_remote": "IP של החיבור",
+    "ip_kind_client_help": "כתובת ה-IP של המבקר, נלקחת מכותרת ההעברה כשהבקשה מגיעה דרך אחד הפרוקסים המהימנים (הגדרות). ללא פרוקסים מהימנים היא זהה ל-IP של החיבור.",
+    "ip_kind_remote_help": "כתובת ה-IP של חיבור ה-TCP. מאחורי פרוקסי או CDN זו כתובת הפרוקסי, לא של המבקר.",
+    "ip_range": "כתובת IP או טווח"
   },
   "handle_path": {
     "label": "הסרת קידומת הנתיב התואמת (handle_path)"

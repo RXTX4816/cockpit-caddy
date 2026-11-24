@@ -882,7 +882,6 @@
     "type_method": "Methode",
     "type_header": "Header",
     "type_query": "Queryparameter",
-    "type_remote_ip": "Extern IP / CIDR",
     "add_path": "Pad toevoegen",
     "add_host": "Host toevoegen",
     "add_cidr": "CIDR-bereik toevoegen",
@@ -903,7 +902,14 @@
     "expression_label": "Expressie (CEL)",
     "expression_help": "Een voorwaarde die ook waar moet zijn, met placeholders zoals {path} of {method}. Caddy controleert die bij het opslaan.",
     "expression_docs": "Documentatie van de expression-matcher",
-    "chip_not": "behalve"
+    "chip_not": "behalve",
+    "type_ip": "IP-adres",
+    "ip_kind": "IP vergelijken van",
+    "ip_kind_client": "Client-IP",
+    "ip_kind_remote": "Verbindings-IP",
+    "ip_kind_client_help": "Het IP van de bezoeker, uit de doorstuurheader wanneer het verzoek via een van de vertrouwde proxy's (Instellingen) komt. Zonder vertrouwde proxy's is het gelijk aan het verbindings-IP.",
+    "ip_kind_remote_help": "Het IP van de TCP-verbinding. Achter een proxy of CDN is dat het adres van de proxy, niet van de bezoeker.",
+    "ip_range": "IP-adres of bereik"
   },
   "handle_path": {
     "label": "Overeenkomend padprefix verwijderen (handle_path)"

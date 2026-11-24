@@ -882,7 +882,6 @@
     "type_method": "Metod",
     "type_header": "Huvud",
     "type_query": "Frågeparameter",
-    "type_remote_ip": "Fjärr-IP / CIDR",
     "add_path": "Lägg till sökväg",
     "add_host": "Lägg till värd",
     "add_cidr": "Lägg till CIDR-intervall",
@@ -903,7 +902,14 @@
     "expression_label": "Uttryck (CEL)",
     "expression_help": "Ett villkor som också måste vara sant, med platshållare som {path} eller {method}. Caddy kontrollerar det när du sparar.",
     "expression_docs": "Dokumentation för expression-matcharen",
-    "chip_not": "utom"
+    "chip_not": "utom",
+    "type_ip": "IP-adress",
+    "ip_kind": "Matcha IP för",
+    "ip_kind_client": "Klientens IP",
+    "ip_kind_remote": "Anslutningens IP",
+    "ip_kind_client_help": "Besökarens IP, hämtad ur vidarebefordringsrubriken när begäran kommer via någon av de betrodda proxyservrarna (Inställningar). Utan betrodda proxyservrar är den samma som anslutningens IP.",
+    "ip_kind_remote_help": "TCP-anslutningens IP. Bakom en proxy eller ett CDN är det proxyns adress, inte besökarens.",
+    "ip_range": "IP-adress eller intervall"
   },
   "handle_path": {
     "label": "Ta bort det matchade sökvägsprefixet (handle_path)"

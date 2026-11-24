@@ -882,7 +882,6 @@
     "type_method": "메서드",
     "type_header": "헤더",
     "type_query": "쿼리 매개변수",
-    "type_remote_ip": "원격 IP / CIDR",
     "add_path": "경로 추가",
     "add_host": "호스트 추가",
     "add_cidr": "CIDR 범위 추가",
@@ -903,7 +902,14 @@
     "expression_label": "표현식 (CEL)",
     "expression_help": "함께 참이어야 하는 조건입니다. {path}, {method} 같은 플레이스홀더를 쓸 수 있습니다. 저장할 때 Caddy가 검사합니다.",
     "expression_docs": "expression 매처 문서",
-    "chip_not": "제외"
+    "chip_not": "제외",
+    "type_ip": "IP 주소",
+    "ip_kind": "비교할 IP",
+    "ip_kind_client": "클라이언트 IP",
+    "ip_kind_remote": "연결 IP",
+    "ip_kind_client_help": "방문자의 IP입니다. 신뢰할 수 있는 프록시(설정)를 거친 요청이면 전달 헤더에서 가져옵니다. 신뢰할 수 있는 프록시가 없으면 연결 IP와 같습니다.",
+    "ip_kind_remote_help": "TCP 연결의 IP입니다. 프록시나 CDN 뒤에서는 방문자가 아닌 프록시의 주소입니다.",
+    "ip_range": "IP 주소 또는 범위"
   },
   "handle_path": {
     "label": "일치한 경로 접두사 제거(handle_path)"

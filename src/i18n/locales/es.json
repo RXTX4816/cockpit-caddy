@@ -882,7 +882,6 @@
     "type_method": "Método",
     "type_header": "Cabecera",
     "type_query": "Parámetro de consulta",
-    "type_remote_ip": "IP remota / CIDR",
     "add_path": "Añadir ruta",
     "add_host": "Añadir host",
     "add_cidr": "Añadir rango CIDR",
@@ -903,7 +902,14 @@
     "expression_label": "Expresión (CEL)",
     "expression_help": "Una condición que también debe cumplirse, con marcadores como {path} o {method}. Caddy la comprueba al guardar.",
     "expression_docs": "Documentación del matcher expression",
-    "chip_not": "excepto"
+    "chip_not": "excepto",
+    "type_ip": "Dirección IP",
+    "ip_kind": "Comparar la IP de",
+    "ip_kind_client": "IP del cliente",
+    "ip_kind_remote": "IP de la conexión",
+    "ip_kind_client_help": "La IP del visitante, tomada de la cabecera reenviada cuando la solicitud llega a través de uno de los proxies de confianza (Ajustes). Sin proxies de confianza es la misma que la IP de la conexión.",
+    "ip_kind_remote_help": "La IP de la conexión TCP. Detrás de un proxy o CDN es la dirección del proxy, no la del visitante.",
+    "ip_range": "Dirección IP o rango"
   },
   "handle_path": {
     "label": "Quitar el prefijo de ruta coincidente (handle_path)"

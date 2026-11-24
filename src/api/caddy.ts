@@ -998,6 +998,9 @@ function matcherFieldLines(m: import("./types").RouteMatchFields, indent: string
   if (m.remote_ip?.ranges.length) {
     lines.push(`${indent}remote_ip ${m.remote_ip.ranges.join(" ")}`);
   }
+  if (m.client_ip?.ranges.length) {
+    lines.push(`${indent}client_ip ${m.client_ip.ranges.join(" ")}`);
+  }
   return lines;
 }
 
@@ -1032,6 +1035,7 @@ function matcherFieldsJson(m: import("./types").RouteMatchFields): Record<string
     obj.query = q;
   }
   if (m.remote_ip?.ranges.length) obj.remote_ip = { ranges: m.remote_ip.ranges };
+  if (m.client_ip?.ranges.length) obj.client_ip = { ranges: m.client_ip.ranges };
   return obj;
 }
 
@@ -1063,6 +1067,10 @@ function parseMatcherFieldsJson(match: Record<string, unknown>): import("./types
     const ri = (match.remote_ip as { ranges?: string[] }).ranges;
     if (ri?.length) m.remote_ip = { ranges: ri };
   }
+  if (match.client_ip && typeof match.client_ip === "object") {
+    const ci = (match.client_ip as { ranges?: string[] }).ranges;
+    if (ci?.length) m.client_ip = { ranges: ci };
+  }
   return m;
 }
 
@@ -1089,13 +1097,13 @@ export function hasAnyMatcher(m: import("./types").RouteMatch | undefined): m is
 
 /** Returns true when only path matchers are set (needed for handle_path eligibility). */
 export function isPathOnlyMatcher(m: import("./types").RouteMatch | undefined): boolean {
-  return !!m && !!(m.path?.length) && !m.host?.length && !m.method?.length && !m.header && !m.query && !m.remote_ip
+  return !!m && !!(m.path?.length) && !m.host?.length && !m.method?.length && !m.header && !m.query && !m.remote_ip && !m.client_ip
     && !(m.not && Object.keys(matcherFieldsJson(m.not)).length) && !m.expression?.trim();
 }
 
 /** True when the matcher is a host list and nothing else (a hostname-only site block). */
 function isHostOnlyMatcher(m: import("./types").RouteMatch | undefined): m is import("./types").RouteMatch & { host: string[] } {
-  return !!m?.host?.length && !m.path && !m.method && !m.header && !m.query && !m.remote_ip && !m.not && !m.expression;
+  return !!m?.host?.length && !m.path && !m.method && !m.header && !m.query && !m.remote_ip && !m.client_ip && !m.not && !m.expression;
 }
 
 // Caddyfile placeholder shorthands (#287), as Caddy 2.11's adapter expands them. Exact ones first,

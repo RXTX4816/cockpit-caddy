@@ -882,7 +882,6 @@
     "type_method": "Método",
     "type_header": "Cabeçalho",
     "type_query": "Parâmetro de consulta",
-    "type_remote_ip": "IP remoto / CIDR",
     "add_path": "Adicionar caminho",
     "add_host": "Adicionar host",
     "add_cidr": "Adicionar faixa CIDR",
@@ -903,7 +902,14 @@
     "expression_label": "Expressão (CEL)",
     "expression_help": "Uma condição que também precisa ser verdadeira, com marcadores como {path} ou {method}. O Caddy a verifica ao salvar.",
     "expression_docs": "Documentação do matcher expression",
-    "chip_not": "exceto"
+    "chip_not": "exceto",
+    "type_ip": "Endereço IP",
+    "ip_kind": "Comparar o IP de",
+    "ip_kind_client": "IP do cliente",
+    "ip_kind_remote": "IP da conexão",
+    "ip_kind_client_help": "O IP do visitante, obtido do cabeçalho encaminhado quando a requisição passa por um dos proxies confiáveis (Configurações). Sem proxies confiáveis, é igual ao IP da conexão.",
+    "ip_kind_remote_help": "O IP da conexão TCP. Por trás de um proxy ou CDN, é o endereço do proxy, não do visitante.",
+    "ip_range": "Endereço IP ou faixa"
   },
   "handle_path": {
     "label": "Remover o prefixo de caminho correspondente (handle_path)"

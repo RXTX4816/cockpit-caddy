@@ -882,7 +882,6 @@
     "type_method": "Méthode",
     "type_header": "En-tête",
     "type_query": "Paramètre de requête",
-    "type_remote_ip": "IP distante / CIDR",
     "add_path": "Ajouter un chemin",
     "add_host": "Ajouter un hôte",
     "add_cidr": "Ajouter une plage CIDR",
@@ -903,7 +902,14 @@
     "expression_label": "Expression (CEL)",
     "expression_help": "Une condition qui doit aussi être vraie, avec des variables comme {path} ou {method}. Caddy la vérifie à l’enregistrement.",
     "expression_docs": "Documentation du matcher expression",
-    "chip_not": "sauf"
+    "chip_not": "sauf",
+    "type_ip": "Adresse IP",
+    "ip_kind": "Comparer l’IP de",
+    "ip_kind_client": "IP du client",
+    "ip_kind_remote": "IP de la connexion",
+    "ip_kind_client_help": "L’IP du visiteur, lue dans l’en-tête transféré quand la requête passe par l’un des proxys de confiance (Paramètres). Sans proxys de confiance, c’est l’IP de la connexion.",
+    "ip_kind_remote_help": "L’IP de la connexion TCP. Derrière un proxy ou un CDN, c’est l’adresse du proxy, pas celle du visiteur.",
+    "ip_range": "Adresse IP ou plage"
   },
   "handle_path": {
     "label": "Retirer le préfixe de chemin correspondant (handle_path)"

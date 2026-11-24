@@ -882,7 +882,6 @@
     "type_method": "Metodi",
     "type_header": "Otsake",
     "type_query": "Kyselyparametri",
-    "type_remote_ip": "Etä-IP / CIDR",
     "add_path": "Lisää polku",
     "add_host": "Lisää isäntä",
     "add_cidr": "Lisää CIDR-alue",
@@ -903,7 +902,14 @@
     "expression_label": "Lauseke (CEL)",
     "expression_help": "Ehto, jonka täytyy myös täyttyä, paikkamerkein kuten {path} tai {method}. Caddy tarkistaa sen tallennettaessa.",
     "expression_docs": "Expression-matcherin ohjeet",
-    "chip_not": "paitsi"
+    "chip_not": "paitsi",
+    "type_ip": "IP-osoite",
+    "ip_kind": "Vertaa IP-osoitetta",
+    "ip_kind_client": "Asiakkaan IP",
+    "ip_kind_remote": "Yhteyden IP",
+    "ip_kind_client_help": "Vierailijan IP, joka otetaan välitysotsakkeesta, kun pyyntö tulee jonkin luotetun välityspalvelimen kautta (Asetukset). Ilman luotettuja välityspalvelimia se on sama kuin yhteyden IP.",
+    "ip_kind_remote_help": "TCP-yhteyden IP. Välityspalvelimen tai CDN:n takana se on välityspalvelimen osoite, ei vierailijan.",
+    "ip_range": "IP-osoite tai -alue"
   },
   "handle_path": {
     "label": "Poista täsmännyt polun etuliite (handle_path)"

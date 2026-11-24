@@ -882,7 +882,6 @@
     "type_method": "Yöntem",
     "type_header": "Başlık",
     "type_query": "Sorgu parametresi",
-    "type_remote_ip": "Uzak IP / CIDR",
     "add_path": "Yol ekle",
     "add_host": "Ana bilgisayar ekle",
     "add_cidr": "CIDR aralığı ekle",
@@ -903,7 +902,14 @@
     "expression_label": "İfade (CEL)",
     "expression_help": "Ayrıca doğru olması gereken bir koşul; {path} veya {method} gibi yer tutucular kullanılabilir. Caddy kaydederken denetler.",
     "expression_docs": "expression eşleştirici belgeleri",
-    "chip_not": "hariç"
+    "chip_not": "hariç",
+    "type_ip": "IP adresi",
+    "ip_kind": "Eşleşecek IP",
+    "ip_kind_client": "İstemci IP'si",
+    "ip_kind_remote": "Bağlantı IP'si",
+    "ip_kind_client_help": "Ziyaretçinin IP'si; istek güvenilen proxy'lerden (Ayarlar) biri üzerinden geldiğinde yönlendirme başlığından alınır. Güvenilen proxy yoksa bağlantı IP'siyle aynıdır.",
+    "ip_kind_remote_help": "TCP bağlantısının IP'si. Bir proxy veya CDN arkasında bu, ziyaretçinin değil proxy'nin adresidir.",
+    "ip_range": "IP adresi veya aralığı"
   },
   "handle_path": {
     "label": "Eşleşen yol önekini kaldır (handle_path)"

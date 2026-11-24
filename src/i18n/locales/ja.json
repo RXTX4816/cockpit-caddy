@@ -882,7 +882,6 @@
     "type_method": "メソッド",
     "type_header": "ヘッダー",
     "type_query": "クエリパラメーター",
-    "type_remote_ip": "リモート IP / CIDR",
     "add_path": "パスを追加",
     "add_host": "ホストを追加",
     "add_cidr": "CIDR 範囲を追加",
@@ -903,7 +902,14 @@
     "expression_label": "式 (CEL)",
     "expression_help": "あわせて真である必要がある条件です。{path} や {method} などのプレースホルダーを使えます。保存時に Caddy が検証します。",
     "expression_docs": "expression マッチャーのドキュメント",
-    "chip_not": "除外"
+    "chip_not": "除外",
+    "type_ip": "IP アドレス",
+    "ip_kind": "照合する IP",
+    "ip_kind_client": "クライアント IP",
+    "ip_kind_remote": "接続 IP",
+    "ip_kind_client_help": "訪問者の IP です。信頼済みプロキシ（設定）経由のリクエストでは転送ヘッダーから取得します。信頼済みプロキシがなければ接続 IP と同じです。",
+    "ip_kind_remote_help": "TCP 接続の IP です。プロキシや CDN の背後では訪問者ではなくプロキシのアドレスになります。",
+    "ip_range": "IP アドレスまたは範囲"
   },
   "handle_path": {
     "label": "一致したパスのプレフィックスを除去（handle_path）"

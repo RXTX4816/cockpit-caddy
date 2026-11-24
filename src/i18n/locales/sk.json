@@ -882,7 +882,6 @@
     "type_method": "Metóda",
     "type_header": "Hlavička",
     "type_query": "Parameter dopytu",
-    "type_remote_ip": "Vzdialená IP / CIDR",
     "add_path": "Pridať cestu",
     "add_host": "Pridať hostiteľa",
     "add_cidr": "Pridať rozsah CIDR",
@@ -903,7 +902,14 @@
     "expression_label": "Výraz (CEL)",
     "expression_help": "Podmienka, ktorá musí tiež platiť, so zástupnými symbolmi ako {path} alebo {method}. Caddy ju skontroluje pri uložení.",
     "expression_docs": "Dokumentácia k matcheru expression",
-    "chip_not": "okrem"
+    "chip_not": "okrem",
+    "type_ip": "IP adresa",
+    "ip_kind": "Porovnať IP",
+    "ip_kind_client": "IP klienta",
+    "ip_kind_remote": "IP spojenia",
+    "ip_kind_client_help": "IP návštevníka, prevzatá z preposielacej hlavičky, keď požiadavka príde cez niektorú z dôveryhodných proxy (Nastavenia). Bez dôveryhodných proxy je rovnaká ako IP spojenia.",
+    "ip_kind_remote_help": "IP spojenia TCP. Za proxy alebo CDN je to adresa proxy, nie návštevníka.",
+    "ip_range": "IP adresa alebo rozsah"
   },
   "handle_path": {
     "label": "Odstrániť zodpovedajúci prefix cesty (handle_path)"

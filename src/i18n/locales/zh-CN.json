@@ -882,7 +882,6 @@
     "type_method": "方法",
     "type_header": "标头",
     "type_query": "查询参数",
-    "type_remote_ip": "远程 IP / CIDR",
     "add_path": "添加路径",
     "add_host": "添加主机",
     "add_cidr": "添加 CIDR 范围",
@@ -903,7 +902,14 @@
     "expression_label": "表达式 (CEL)",
     "expression_help": "还必须为真的条件，可使用 {path} 或 {method} 等占位符。保存时由 Caddy 检查。",
     "expression_docs": "expression 匹配器文档",
-    "chip_not": "排除"
+    "chip_not": "排除",
+    "type_ip": "IP 地址",
+    "ip_kind": "匹配的 IP",
+    "ip_kind_client": "客户端 IP",
+    "ip_kind_remote": "连接 IP",
+    "ip_kind_client_help": "访问者的 IP。请求经过受信任代理（设置）时从转发头中获取；没有受信任代理时与连接 IP 相同。",
+    "ip_kind_remote_help": "TCP 连接的 IP。在代理或 CDN 之后，这是代理的地址，而不是访问者的。",
+    "ip_range": "IP 地址或范围"
   },
   "handle_path": {
     "label": "去除匹配的路径前缀（handle_path）"

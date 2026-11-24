@@ -801,3 +801,20 @@ describe.runIf(available || required)("every load-balancing policy round-trips (
     expect(readBack(conf)[0].lbPolicyArgs).toBeUndefined();
   });
 });
+
+describe.runIf(available || required)("client_ip matcher (#286)", () => {
+  it.each(["client_ip", "remote_ip"] as const)("%s round-trips through the Caddyfile and the JSON push", kind => {
+    const matchers = { path: ["/admin/*"], [kind]: { ranges: ["10.0.0.0/8", "192.168.1.5"] } };
+    const p = entry({ tls: false, externalPort: 8080, matchers });
+    const conf = proxiesToCaddyfile([p]);
+    expect(conf).toContain(`${kind} 10.0.0.0/8 192.168.1.5`);
+    expect(readBack(conf)[0].matchers).toEqual(matchers);
+    const [pushed] = parseProxies({ apps: { http: { servers: { srv0: buildServerEntry(p) } } } });
+    expect(pushed.matchers).toEqual(matchers);
+  });
+
+  it("works in an exclude group too", () => {
+    const matchers = { path: ["/x/*"], not: { client_ip: { ranges: ["10.0.0.0/8"] } } };
+    expect(readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, matchers })]))[0].matchers).toEqual(matchers);
+  });
+});

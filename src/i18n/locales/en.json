@@ -882,7 +882,6 @@
     "type_method": "Method",
     "type_header": "Header",
     "type_query": "Query param",
-    "type_remote_ip": "Remote IP / CIDR",
     "add_path": "Add path",
     "add_host": "Add host",
     "add_cidr": "Add CIDR range",
@@ -903,7 +902,14 @@
     "expression_label": "Expression (CEL)",
     "expression_help": "A condition that must also be true, with placeholders like {path} or {method}. Caddy checks it when you save.",
     "expression_docs": "Expression matcher docs",
-    "chip_not": "except"
+    "chip_not": "except",
+    "type_ip": "IP address",
+    "ip_kind": "Match IP of",
+    "ip_kind_client": "Client IP",
+    "ip_kind_remote": "Connection IP",
+    "ip_kind_client_help": "The visitor's IP, taken from the forwarded header when the request comes through one of the trusted proxies (Settings). Without trusted proxies it is the same as the connection IP.",
+    "ip_kind_remote_help": "The IP of the TCP connection. Behind a proxy or CDN that is the proxy's address, not the visitor's.",
+    "ip_range": "IP address or range"
   },
   "handle_path": {
     "label": "Strip matched path prefix (handle_path)"

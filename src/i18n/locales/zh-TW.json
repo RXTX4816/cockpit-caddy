@@ -882,7 +882,6 @@
     "type_method": "方法",
     "type_header": "標頭",
     "type_query": "查詢參數",
-    "type_remote_ip": "遠端 IP / CIDR",
     "add_path": "新增路徑",
     "add_host": "新增主機",
     "add_cidr": "新增 CIDR 範圍",
@@ -903,7 +902,14 @@
     "expression_label": "運算式 (CEL)",
     "expression_help": "也必須為真的條件，可使用 {path} 或 {method} 等預留位置。儲存時由 Caddy 檢查。",
     "expression_docs": "expression 比對器文件",
-    "chip_not": "排除"
+    "chip_not": "排除",
+    "type_ip": "IP 位址",
+    "ip_kind": "比對的 IP",
+    "ip_kind_client": "用戶端 IP",
+    "ip_kind_remote": "連線 IP",
+    "ip_kind_client_help": "訪客的 IP。請求經過受信任代理（設定）時從轉送標頭取得；沒有受信任代理時與連線 IP 相同。",
+    "ip_kind_remote_help": "TCP 連線的 IP。在代理或 CDN 之後，這是代理的位址，而不是訪客的。",
+    "ip_range": "IP 位址或範圍"
   },
   "handle_path": {
     "label": "移除符合的路徑前綴（handle_path）"

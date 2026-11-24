@@ -58,7 +58,7 @@ function MatcherCell({ matchers }: { matchers?: RouteMatch }) {
   ));
   if (matchers.header) chips.push(<Label key="hdr" isCompact color="teal" variant="outline">{t("matchers.type_header")}</Label>);
   if (matchers.query) chips.push(<Label key="qry" isCompact color="teal" variant="outline">{t("matchers.type_query")}</Label>);
-  if (matchers.remote_ip) chips.push(<Label key="ip" isCompact color="grey" variant="outline">IP</Label>);
+  if (matchers.remote_ip || matchers.client_ip) chips.push(<Label key="ip" isCompact color="grey" variant="outline">IP</Label>);
   if (matchers.not) chips.push(<Label key="not" isCompact color="red" variant="outline">{t("matchers.chip_not")}</Label>);
   if (matchers.expression) chips.push(<Label key="expr" isCompact color="grey" variant="outline" title={matchers.expression}>CEL</Label>);
   return (

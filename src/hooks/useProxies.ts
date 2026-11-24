@@ -87,7 +87,10 @@ function withOnDemand(map: Record<string, boolean>, oldKey: string | undefined, 
  */
 function needsCaddyfileReload(p: ProxyEntry): boolean {
   // Snippet imports (#288) only exist in the Caddyfile; hand-built JSON would drop what they add.
-  return !!p.phpFastcgi || reliesOnCaddyfileTls(p) || !!p.imports?.length;
+  // A client_ip matcher (#286) needs the server's trusted_proxies, which the global options set
+  // and only Caddy's adapter puts on the server; the hand-built JSON server has none.
+  return !!p.phpFastcgi || reliesOnCaddyfileTls(p) || !!p.imports?.length
+    || !!p.matchers?.client_ip?.ranges.length || !!p.matchers?.not?.client_ip?.ranges.length;
 }
 
 /**
@@ -470,7 +473,10 @@ export function useProxies() {
       // See addProxy: a hand-built single-route JSON push can't represent a listener
       // shared by multiple hosts (#139), nor a php_fastcgi route's four-route Caddyfile
       // macro expansion (#35) — reload instead so Caddy's own Caddyfile adapter builds it.
-      if (sharesPortWithOtherHost(afterProxies, entry) || needsCaddyfileReload(entry)) {
+      // patchServer leaves a live route's matchers as they were, so a matcher change (e.g.
+      // client_ip ↔ remote_ip, #286) goes through Caddy's adapter as well.
+      const matchersChanged = JSON.stringify(originalProxy?.matchers ?? null) !== JSON.stringify(entry.matchers ?? null);
+      if (sharesPortWithOtherHost(afterProxies, entry) || needsCaddyfileReload(entry) || matchersChanged) {
         await reloadCaddy(); // refetches the config (onConfigChanged)
         return;
       }

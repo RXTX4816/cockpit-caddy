@@ -882,7 +882,6 @@
     "type_method": "Metodo",
     "type_header": "Header",
     "type_query": "Parametro di query",
-    "type_remote_ip": "IP remoto / CIDR",
     "add_path": "Aggiungi percorso",
     "add_host": "Aggiungi host",
     "add_cidr": "Aggiungi intervallo CIDR",
@@ -903,7 +902,14 @@
     "expression_label": "Espressione (CEL)",
     "expression_help": "Una condizione che deve essere anch’essa vera, con segnaposto come {path} o {method}. Caddy la verifica al salvataggio.",
     "expression_docs": "Documentazione del matcher expression",
-    "chip_not": "tranne"
+    "chip_not": "tranne",
+    "type_ip": "Indirizzo IP",
+    "ip_kind": "Confronta l’IP di",
+    "ip_kind_client": "IP del client",
+    "ip_kind_remote": "IP della connessione",
+    "ip_kind_client_help": "L’IP del visitatore, presa dall’intestazione inoltrata quando la richiesta arriva tramite uno dei proxy fidati (Impostazioni). Senza proxy fidati coincide con l’IP della connessione.",
+    "ip_kind_remote_help": "L’IP della connessione TCP. Dietro un proxy o una CDN è l’indirizzo del proxy, non del visitatore.",
+    "ip_range": "Indirizzo IP o intervallo"
   },
   "handle_path": {
     "label": "Rimuovi il prefisso di percorso corrispondente (handle_path)"
