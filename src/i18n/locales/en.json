@@ -168,7 +168,16 @@
     "validation_port_range": "Port must be between 1 and 65535",
     "validation_port_duplicate": "Port {{port}} is already in use",
     "validation_root_required": "Root directory is required",
-    "confirm_body": "This will create a static file server on :{{port}} serving {{root}} and reload Caddy's configuration."
+    "confirm_body": "This will create a static file server on :{{port}} serving {{root}} and reload Caddy's configuration.",
+    "field_spa": "SPA mode (serve index.html for unknown paths)",
+    "field_spa_help": "For single-page apps (React, Vue, Svelte builds): existing files are served as they are, every other path gets index.html so deep links work.",
+    "advanced": "File server options",
+    "field_index": "Index files",
+    "field_index_help": "File names tried for a directory, separated by spaces, in order.",
+    "field_hide": "Hidden files",
+    "field_hide_help": "Names or patterns that are never served, separated by spaces.",
+    "field_precompressed": "Precompressed files",
+    "field_precompressed_help": "Serve file.zst, file.br or file.gz next to the original when the browser accepts that encoding."
   },
   "edit_static": {
     "title": "Edit Static Server — :{{port}}",
@@ -195,7 +204,9 @@
     "env_section_title": "Environment variables",
     "env_field_key": "Name",
     "env_field_value": "Value",
-    "env_add_button": "Add variable"
+    "env_add_button": "Add variable",
+    "field_try_files": "Try files",
+    "field_try_files_help": "Optional. Candidates tried in order before PHP; a front-controller app usually needs {path} {path}/ /index.php?{query}."
   },
   "add_respond": {
     "title": "Add Static Response",

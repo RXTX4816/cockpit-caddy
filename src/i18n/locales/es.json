@@ -168,7 +168,16 @@
     "validation_port_range": "El puerto debe estar entre 1 y 65535",
     "validation_port_duplicate": "El puerto {{port}} ya está en uso",
     "validation_root_required": "El directorio raíz es obligatorio",
-    "confirm_body": "Se creará un servidor de archivos estáticos en :{{port}} que servirá {{root}} y se recargará la configuración de Caddy."
+    "confirm_body": "Se creará un servidor de archivos estáticos en :{{port}} que servirá {{root}} y se recargará la configuración de Caddy.",
+    "field_spa": "Modo SPA (servir index.html en rutas desconocidas)",
+    "field_spa_help": "Para aplicaciones de una sola página (React, Vue, Svelte): los archivos existentes se sirven tal cual y cualquier otra ruta recibe index.html para que funcionen los enlaces profundos.",
+    "advanced": "Opciones del servidor de archivos",
+    "field_index": "Archivos de índice",
+    "field_index_help": "Nombres de archivo que se prueban para un directorio, separados por espacios y en orden.",
+    "field_hide": "Archivos ocultos",
+    "field_hide_help": "Nombres o patrones que nunca se sirven, separados por espacios.",
+    "field_precompressed": "Archivos precomprimidos",
+    "field_precompressed_help": "Servir file.zst, file.br o file.gz junto al original cuando el navegador acepta esa codificación."
   },
   "edit_static": {
     "title": "Editar servidor estático — :{{port}}",
@@ -195,7 +204,9 @@
     "env_section_title": "Variables de entorno",
     "env_field_key": "Nombre",
     "env_field_value": "Valor",
-    "env_add_button": "Añadir variable"
+    "env_add_button": "Añadir variable",
+    "field_try_files": "Probar archivos (try_files)",
+    "field_try_files_help": "Opcional. Candidatos que se prueban en orden antes de PHP; una aplicación con front controller suele necesitar {path} {path}/ /index.php?{query}."
   },
   "add_respond": {
     "title": "Añadir respuesta estática",

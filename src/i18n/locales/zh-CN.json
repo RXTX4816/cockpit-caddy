@@ -168,7 +168,16 @@
     "validation_port_range": "端口必须在 1 到 65535 之间",
     "validation_port_duplicate": "端口 {{port}} 已被占用",
     "validation_root_required": "必须填写根目录",
-    "confirm_body": "将在 :{{port}} 上创建提供 {{root}} 的静态文件服务器，并重新加载 Caddy 配置。"
+    "confirm_body": "将在 :{{port}} 上创建提供 {{root}} 的静态文件服务器，并重新加载 Caddy 配置。",
+    "field_spa": "SPA 模式（未知路径返回 index.html）",
+    "field_spa_help": "用于单页应用（React、Vue、Svelte 构建）：已有文件照常返回，其他路径都返回 index.html，深层链接才能正常使用。",
+    "advanced": "文件服务器选项",
+    "field_index": "索引文件",
+    "field_index_help": "访问目录时依次尝试的文件名，用空格分隔。",
+    "field_hide": "隐藏的文件",
+    "field_hide_help": "永不返回的名称或模式，用空格分隔。",
+    "field_precompressed": "预压缩文件",
+    "field_precompressed_help": "浏览器接受相应编码时，返回原文件旁的 file.zst、file.br 或 file.gz。"
   },
   "edit_static": {
     "title": "编辑静态服务器 — :{{port}}",
@@ -195,7 +204,9 @@
     "env_section_title": "环境变量",
     "env_field_key": "名称",
     "env_field_value": "值",
-    "env_add_button": "添加变量"
+    "env_add_button": "添加变量",
+    "field_try_files": "尝试文件（try_files）",
+    "field_try_files_help": "可选。在 PHP 之前依次尝试的候选项；前端控制器应用通常需要 {path} {path}/ /index.php?{query}。"
   },
   "add_respond": {
     "title": "添加静态响应",

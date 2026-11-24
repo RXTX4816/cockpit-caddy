@@ -168,7 +168,16 @@
     "validation_port_range": "يجب أن يكون المنفذ بين 1 و65535",
     "validation_port_duplicate": "المنفذ {{port}} مستخدم بالفعل",
     "validation_root_required": "المجلد الجذر مطلوب",
-    "confirm_body": "سيتم إنشاء خادم ملفات ثابتة على :{{port}} يقدّم {{root}} وإعادة تحميل إعدادات Caddy."
+    "confirm_body": "سيتم إنشاء خادم ملفات ثابتة على :{{port}} يقدّم {{root}} وإعادة تحميل إعدادات Caddy.",
+    "field_spa": "وضع SPA (تقديم index.html للمسارات غير المعروفة)",
+    "field_spa_help": "لتطبيقات الصفحة الواحدة (React وVue وSvelte): تُقدَّم الملفات الموجودة كما هي، وكل مسار آخر يحصل على index.html لكي تعمل الروابط العميقة.",
+    "advanced": "خيارات خادم الملفات",
+    "field_index": "ملفات الفهرس",
+    "field_index_help": "أسماء الملفات التي تُجرَّب للمجلد، مفصولة بمسافات وبالترتيب.",
+    "field_hide": "الملفات المخفية",
+    "field_hide_help": "أسماء أو أنماط لا تُقدَّم أبدًا، مفصولة بمسافات.",
+    "field_precompressed": "الملفات المضغوطة مسبقًا",
+    "field_precompressed_help": "تقديم file.zst أو file.br أو file.gz الموجود بجانب الأصلي عندما يقبل المتصفح هذا الترميز."
   },
   "edit_static": {
     "title": "تعديل الخادم الثابت — :{{port}}",
@@ -195,7 +204,9 @@
     "env_section_title": "متغيرات البيئة",
     "env_field_key": "الاسم",
     "env_field_value": "القيمة",
-    "env_add_button": "إضافة متغير"
+    "env_add_button": "إضافة متغير",
+    "field_try_files": "تجربة الملفات (try_files)",
+    "field_try_files_help": "اختياري. مرشحات تُجرَّب بالترتيب قبل PHP؛ تطبيقات وحدة التحكم الأمامية تحتاج عادةً إلى {path} {path}/ /index.php?{query}."
   },
   "add_respond": {
     "title": "إضافة استجابة ثابتة",

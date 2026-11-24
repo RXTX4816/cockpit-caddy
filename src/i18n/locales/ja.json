@@ -168,7 +168,16 @@
     "validation_port_range": "ポートは 1〜65535 の範囲で指定してください",
     "validation_port_duplicate": "ポート {{port}} はすでに使用されています",
     "validation_root_required": "ルートディレクトリは必須です",
-    "confirm_body": ":{{port}} に {{root}} を配信する静的ファイルサーバーを作成し、Caddy の設定を再読み込みします。"
+    "confirm_body": ":{{port}} に {{root}} を配信する静的ファイルサーバーを作成し、Caddy の設定を再読み込みします。",
+    "field_spa": "SPA モード（不明なパスには index.html を返す）",
+    "field_spa_help": "シングルページアプリ（React、Vue、Svelte のビルド）向け: 既存のファイルはそのまま返し、それ以外のパスには index.html を返すのでディープリンクが機能します。",
+    "advanced": "ファイルサーバーのオプション",
+    "field_index": "インデックスファイル",
+    "field_index_help": "ディレクトリに対して順に試すファイル名（スペース区切り）。",
+    "field_hide": "非表示のファイル",
+    "field_hide_help": "決して返さない名前やパターン（スペース区切り）。",
+    "field_precompressed": "事前圧縮済みファイル",
+    "field_precompressed_help": "ブラウザーがそのエンコーディングを受け付ける場合、元ファイルの隣にある file.zst、file.br、file.gz を返します。"
   },
   "edit_static": {
     "title": "静的サーバーを編集 — :{{port}}",
@@ -195,7 +204,9 @@
     "env_section_title": "環境変数",
     "env_field_key": "名前",
     "env_field_value": "値",
-    "env_add_button": "変数を追加"
+    "env_add_button": "変数を追加",
+    "field_try_files": "試行するファイル（try_files）",
+    "field_try_files_help": "任意。PHP の前に順に試す候補です。フロントコントローラー型のアプリでは通常 {path} {path}/ /index.php?{query} が必要です。"
   },
   "add_respond": {
     "title": "静的レスポンスを追加",

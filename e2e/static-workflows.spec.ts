@@ -138,3 +138,58 @@ test('static site on a port already used by a redirect is rejected', async ({ pl
   await modal.getByRole('button', { name: /^add static server$/i }).click();
   await expect(modal.getByText(/port \d+ is already in use/i)).toBeVisible({ timeout: 5000 });
 });
+
+// #262: SPA mode serves index.html for deep links; existing files stay as they are.
+test('static site in SPA mode serves index.html for unknown paths', async ({ pluginPage: page }) => {
+  const root = '/etc/caddy/e2e-static-19168';
+  await spawnCmd(page, ['mkdir', '-p', `${root}/assets`]);
+  await writeFile(page, `${root}/index.html`, '<p>spa index</p>');
+  await writeFile(page, `${root}/assets/app.js`, 'console.log("app")');
+
+  await waitForToolbar(page);
+  await openAddMenu(page, 'Static files');
+  const modal = page.getByRole('dialog');
+  await modal.locator('#static-port').fill('19168');
+  await modal.locator('#static-root').fill(root);
+  await modal.locator('#static-tls').selectOption('off');
+  await modal.locator('#static-spa').check();
+  await modal.getByRole('button', { name: /^add static server$/i }).click();
+  await modal.getByRole('button', { name: /^confirm$/i }).click();
+  await expect(modal).not.toBeVisible({ timeout: 15000 });
+
+  expect(await readConf(page)).toContain('\ttry_files {path} /index.html\n');
+  await waitForListener(page, 'http://localhost:19168/');
+  const deep = await spawnCmd(page, ['bash', '-c', "curl -s -w ' %{http_code}' 'http://localhost:19168/some/deep/link'; true"]);
+  expect(deep.trim()).toBe('<p>spa index</p> 200');
+  const asset = await spawnCmd(page, ['bash', '-c', "curl -s 'http://localhost:19168/assets/app.js'; true"]);
+  expect(asset.trim()).toBe('console.log("app")');
+
+  // Reopened from the running config, SPA mode is still on.
+  await proxyRow(page, 19168).getByRole('button', { name: /^edit$/i }).click();
+  await expect(page.getByRole('dialog').locator('#static-edit-spa')).toBeChecked();
+});
+
+test('file_server options are written and read back', async ({ pluginPage: page }) => {
+  await waitForToolbar(page);
+  await openAddMenu(page, 'Static files');
+  const modal = page.getByRole('dialog');
+  await modal.locator('#static-port').fill('19169');
+  await modal.locator('#static-root').fill('/etc/caddy/e2e-static-19168');
+  await modal.locator('#static-tls').selectOption('off');
+  await modal.getByRole('button', { name: 'File server options' }).click();
+  await modal.locator('#static-index').fill('home.html index.html');
+  await modal.locator('#static-hide').fill('.git *.bak');
+  await modal.locator('#static-precompressed-br').check();
+  await modal.locator('#static-precompressed-gzip').check();
+  await modal.getByRole('button', { name: /^add static server$/i }).click();
+  await modal.getByRole('button', { name: /^confirm$/i }).click();
+  await expect(modal).not.toBeVisible({ timeout: 15000 });
+
+  expect(await readConf(page)).toContain('\tfile_server {\n\t\tindex home.html index.html\n\t\thide .git *.bak\n\t\tprecompressed br gzip\n\t}');
+  await proxyRow(page, 19169).getByRole('button', { name: /^edit$/i }).click();
+  const edit = page.getByRole('dialog');
+  await expect(edit.locator('#static-edit-index')).toHaveValue('home.html index.html');
+  await expect(edit.locator('#static-edit-hide')).toHaveValue('.git *.bak');
+  await expect(edit.locator('#static-edit-precompressed-br')).toBeChecked();
+  await expect(edit.locator('#static-edit-precompressed-zstd')).not.toBeChecked();
+});

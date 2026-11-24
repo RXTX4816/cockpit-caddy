@@ -168,7 +168,16 @@
     "validation_port_range": "連接埠必須介於 1 到 65535 之間",
     "validation_port_duplicate": "連接埠 {{port}} 已被使用",
     "validation_root_required": "必須填寫根目錄",
-    "confirm_body": "將在 :{{port}} 上建立提供 {{root}} 的靜態檔案伺服器，並重新載入 Caddy 設定。"
+    "confirm_body": "將在 :{{port}} 上建立提供 {{root}} 的靜態檔案伺服器，並重新載入 Caddy 設定。",
+    "field_spa": "SPA 模式（未知路徑回傳 index.html）",
+    "field_spa_help": "用於單頁應用（React、Vue、Svelte 建置）：既有檔案照常回傳，其他路徑一律回傳 index.html，深層連結才能正常運作。",
+    "advanced": "檔案伺服器選項",
+    "field_index": "索引檔案",
+    "field_index_help": "存取目錄時依序嘗試的檔名，以空格分隔。",
+    "field_hide": "隱藏的檔案",
+    "field_hide_help": "永不回傳的名稱或模式，以空格分隔。",
+    "field_precompressed": "預先壓縮的檔案",
+    "field_precompressed_help": "瀏覽器接受相應編碼時，回傳原檔旁的 file.zst、file.br 或 file.gz。"
   },
   "edit_static": {
     "title": "編輯靜態伺服器 — :{{port}}",
@@ -195,7 +204,9 @@
     "env_section_title": "環境變數",
     "env_field_key": "名稱",
     "env_field_value": "值",
-    "env_add_button": "新增變數"
+    "env_add_button": "新增變數",
+    "field_try_files": "嘗試檔案（try_files）",
+    "field_try_files_help": "選填。在 PHP 之前依序嘗試的候選項；前端控制器應用通常需要 {path} {path}/ /index.php?{query}。"
   },
   "add_respond": {
     "title": "新增靜態回應",

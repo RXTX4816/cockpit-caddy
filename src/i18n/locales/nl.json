@@ -168,7 +168,16 @@
     "validation_port_range": "De poort moet tussen 1 en 65535 liggen",
     "validation_port_duplicate": "Poort {{port}} is al in gebruik",
     "validation_root_required": "Hoofdmap is verplicht",
-    "confirm_body": "Er wordt een statische bestandsserver op :{{port}} aangemaakt die {{root}} serveert, en de Caddy-configuratie wordt herladen."
+    "confirm_body": "Er wordt een statische bestandsserver op :{{port}} aangemaakt die {{root}} serveert, en de Caddy-configuratie wordt herladen.",
+    "field_spa": "SPA-modus (index.html serveren voor onbekende paden)",
+    "field_spa_help": "Voor single-page-apps (React, Vue, Svelte): bestaande bestanden worden ongewijzigd geserveerd, elk ander pad krijgt index.html zodat deeplinks werken.",
+    "advanced": "Opties voor de bestandsserver",
+    "field_index": "Indexbestanden",
+    "field_index_help": "Bestandsnamen die voor een map op volgorde worden geprobeerd, gescheiden door spaties.",
+    "field_hide": "Verborgen bestanden",
+    "field_hide_help": "Namen of patronen die nooit worden geserveerd, gescheiden door spaties.",
+    "field_precompressed": "Vooraf gecomprimeerde bestanden",
+    "field_precompressed_help": "file.zst, file.br of file.gz naast het origineel serveren als de browser die codering accepteert."
   },
   "edit_static": {
     "title": "Statische server bewerken — :{{port}}",
@@ -195,7 +204,9 @@
     "env_section_title": "Omgevingsvariabelen",
     "env_field_key": "Naam",
     "env_field_value": "Waarde",
-    "env_add_button": "Variabele toevoegen"
+    "env_add_button": "Variabele toevoegen",
+    "field_try_files": "Bestanden proberen (try_files)",
+    "field_try_files_help": "Optioneel. Kandidaten die vóór PHP op volgorde worden geprobeerd; een front-controller-app heeft meestal {path} {path}/ /index.php?{query} nodig."
   },
   "add_respond": {
     "title": "Statisch antwoord toevoegen",

@@ -168,7 +168,16 @@
     "validation_port_range": "Port harus antara 1 dan 65535",
     "validation_port_duplicate": "Port {{port}} sudah digunakan",
     "validation_root_required": "Direktori akar wajib diisi",
-    "confirm_body": "Server berkas statis yang menyajikan {{root}} akan dibuat di :{{port}} dan konfigurasi Caddy dimuat ulang."
+    "confirm_body": "Server berkas statis yang menyajikan {{root}} akan dibuat di :{{port}} dan konfigurasi Caddy dimuat ulang.",
+    "field_spa": "Mode SPA (sajikan index.html untuk jalur yang tidak dikenal)",
+    "field_spa_help": "Untuk aplikasi satu halaman (React, Vue, Svelte): berkas yang ada disajikan apa adanya, jalur lain mendapat index.html agar tautan dalam berfungsi.",
+    "advanced": "Opsi server berkas",
+    "field_index": "Berkas indeks",
+    "field_index_help": "Nama berkas yang dicoba untuk direktori, dipisahkan spasi, sesuai urutan.",
+    "field_hide": "Berkas tersembunyi",
+    "field_hide_help": "Nama atau pola yang tidak pernah disajikan, dipisahkan spasi.",
+    "field_precompressed": "Berkas yang sudah dikompresi",
+    "field_precompressed_help": "Sajikan file.zst, file.br, atau file.gz di samping aslinya jika peramban menerima pengodean itu."
   },
   "edit_static": {
     "title": "Edit server statis — :{{port}}",
@@ -195,7 +204,9 @@
     "env_section_title": "Variabel lingkungan",
     "env_field_key": "Nama",
     "env_field_value": "Nilai",
-    "env_add_button": "Tambah variabel"
+    "env_add_button": "Tambah variabel",
+    "field_try_files": "Berkas yang dicoba (try_files)",
+    "field_try_files_help": "Opsional. Kandidat yang dicoba berurutan sebelum PHP; aplikasi front controller biasanya butuh {path} {path}/ /index.php?{query}."
   },
   "add_respond": {
     "title": "Tambah respons statis",

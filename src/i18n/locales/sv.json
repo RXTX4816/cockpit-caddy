@@ -168,7 +168,16 @@
     "validation_port_range": "Porten måste vara mellan 1 och 65535",
     "validation_port_duplicate": "Port {{port}} används redan",
     "validation_root_required": "Rotkatalog krävs",
-    "confirm_body": "En statisk filserver skapas på :{{port}} som serverar {{root}}, och Caddys konfiguration läses in igen."
+    "confirm_body": "En statisk filserver skapas på :{{port}} som serverar {{root}}, och Caddys konfiguration läses in igen.",
+    "field_spa": "SPA-läge (servera index.html för okända sökvägar)",
+    "field_spa_help": "För enkelsidesappar (React, Vue, Svelte): befintliga filer serveras som de är, alla andra sökvägar får index.html så att djuplänkar fungerar.",
+    "advanced": "Alternativ för filservern",
+    "field_index": "Indexfiler",
+    "field_index_help": "Filnamn som provas i tur och ordning för en katalog, åtskilda med mellanslag.",
+    "field_hide": "Dolda filer",
+    "field_hide_help": "Namn eller mönster som aldrig serveras, åtskilda med mellanslag.",
+    "field_precompressed": "Förkomprimerade filer",
+    "field_precompressed_help": "Servera file.zst, file.br eller file.gz bredvid originalet när webbläsaren accepterar den kodningen."
   },
   "edit_static": {
     "title": "Redigera statisk server — :{{port}}",
@@ -195,7 +204,9 @@
     "env_section_title": "Miljövariabler",
     "env_field_key": "Namn",
     "env_field_value": "Värde",
-    "env_add_button": "Lägg till variabel"
+    "env_add_button": "Lägg till variabel",
+    "field_try_files": "Prova filer (try_files)",
+    "field_try_files_help": "Valfritt. Kandidater som provas i tur och ordning före PHP; en app med front controller behöver oftast {path} {path}/ /index.php?{query}."
   },
   "add_respond": {
     "title": "Lägg till statiskt svar",

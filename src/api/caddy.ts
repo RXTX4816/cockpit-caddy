@@ -1827,6 +1827,31 @@ function buildTlsPolicyBlockLines(
   return lines;
 }
 
+/** True when a static site has any `file_server` sub-directive set (#262). */
+function hasFileServerOptions(fs: import("./types").FileServerConfig): boolean {
+  return !!(fs.index?.length || fs.hide?.length || fs.precompressed?.length);
+}
+
+/**
+ * `root`, the SPA fallback and `file_server` with its options for a static site (#262). A site
+ * without the new options writes exactly the lines it always did.
+ */
+function buildFileServerLines(fs: import("./types").FileServerConfig, indent: string): string[] {
+  const lines = [`${indent}root * ${caddyQuote(fs.root)}`];
+  if (fs.spa) lines.push(`${indent}try_files {path} /index.html`);
+  const head = fs.browse ? `${indent}file_server browse` : `${indent}file_server`;
+  if (!hasFileServerOptions(fs)) {
+    lines.push(head);
+    return lines;
+  }
+  lines.push(`${head} {`);
+  if (fs.index?.length) lines.push(`${indent}\tindex ${fs.index.map(v => caddyQuote(v)).join(" ")}`);
+  if (fs.hide?.length) lines.push(`${indent}\thide ${fs.hide.map(v => caddyQuote(v)).join(" ")}`);
+  if (fs.precompressed?.length) lines.push(`${indent}\tprecompressed ${fs.precompressed.join(" ")}`);
+  lines.push(`${indent}}`);
+  return lines;
+}
+
 /**
  * `root` + `php_fastcgi` + `file_server` for a PHP site. php_fastcgi only proxies `*.php` and
  * rewrites other existing files to themselves, so without file_server nothing serves CSS, JS or
@@ -1834,6 +1859,7 @@ function buildTlsPolicyBlockLines(
  */
 function buildPhpFastcgiLines(php: import("./types").PhpFastcgiConfig, indent: string): string[] {
   const lines = [`${indent}root * ${caddyQuote(php.root)}`];
+  if (php.tryFiles?.trim()) lines.push(`${indent}try_files ${php.tryFiles.trim()}`);
   const { upstream, index, splitPath, env } = php;
   const envEntries = env ? Object.entries(env) : [];
   if (index || splitPath?.length || envEntries.length) {
@@ -1894,8 +1920,7 @@ function buildRouteHandlerLines(p: ProxyEntry, indent: string): string[] {
     for (const h of p.responseHeaders ?? []) {
       lines.push(headerOpLine(`${indent}header`, h, { quoteSet: true }));
     }
-    lines.push(`${indent}root * ${caddyQuote(p.fileServer.root)}`);
-    lines.push(p.fileServer.browse ? `${indent}file_server browse` : `${indent}file_server`);
+    lines.push(...buildFileServerLines(p.fileServer, indent));
   } else if (p.phpFastcgi) {
     if (p.compress) lines.push(`${indent}encode gzip zstd`);
     if (p.basicAuth?.length) {
@@ -2007,6 +2032,8 @@ function patchRawBlock(raw: string, proxy: ProxyEntry): string {
 
   // The directives the plugin writes again below are dropped here, each with its whole block.
   const rewritten = ["tls", "encode", "root", "file_server", "header", "basic_auth", "forward_auth", "reverse_proxy", "php_fastcgi"];
+  // try_files belongs to the static and PHP forms (#262); on any other site it's the user's.
+  if (proxy.fileServer || proxy.phpFastcgi) rewritten.push("try_files");
 
   while (i < closingIdx) {
     const line = lines[i];
@@ -2043,8 +2070,7 @@ function patchRawBlock(raw: string, proxy: ProxyEntry): string {
     for (const h of proxy.responseHeaders ?? []) {
       kept.push(headerOpLine(`\theader`, h, { quoteSet: true }));
     }
-    kept.push(`\troot * ${caddyQuote(proxy.fileServer.root)}`);
-    kept.push(proxy.fileServer.browse ? "\tfile_server browse" : "\tfile_server");
+    kept.push(...buildFileServerLines(proxy.fileServer, "\t"));
   } else if (proxy.phpFastcgi) {
     // A hand-written PHP site (#247): its root/php_fastcgi/file_server were skipped above.
     if (proxy.compress) kept.push("\tencode gzip zstd");
@@ -2342,6 +2368,65 @@ type AnyHandler = { handler: string; routes?: Array<{ handle?: AnyHandler[]; [ke
  * `match`, which the generic subroute-flattening elsewhere in this file (which only
  * collects `.handle` arrays) would otherwise discard, losing the custom index filename.
  */
+type JsonRoute = { match?: Array<Record<string, unknown>>; handle?: AnyHandler[] };
+
+/**
+ * The user's `try_files` (#262) from the routes Caddy adapts it to: a `file` matcher with the
+ * candidate list plus a rewrite to `{http.matchers.file.relative}` and, per candidate group, the
+ * part of the target after it (`?{query}`). php_fastcgi's own file routes (with `split_path`)
+ * and the trailing-slash redirect aren't the user's and are skipped. Subroute handlers are
+ * searched too, so the plugin's own JSON form is found as well.
+ */
+function findTryFiles(routes: JsonRoute[]): string | undefined {
+  const parts: string[] = [];
+  const visit = (rs: JsonRoute[]) => {
+    for (const r of rs) {
+      const file = r.match?.[0]?.file as { try_files?: string[]; split_path?: unknown; try_policy?: unknown } | undefined;
+      const rewrite = (r.handle ?? []).find(h => h.handler === "rewrite") as { uri?: string } | undefined;
+      if (file?.try_files?.length && !file.split_path && !file.try_policy && rewrite?.uri?.startsWith("{http.matchers.file.relative}")) {
+        const suffix = rewrite.uri.slice("{http.matchers.file.relative}".length);
+        parts.push(...file.try_files.map(f => collapsePlaceholderShorthands(f + suffix)));
+      }
+      for (const h of r.handle ?? []) {
+        const sub = (h as { routes?: JsonRoute[] }).routes;
+        if (h.handler === "subroute" && sub) visit(sub);
+      }
+    }
+  };
+  visit(routes);
+  return parts.length ? parts.join(" ") : undefined;
+}
+
+/** Top-level routes that together make one hostless static site: one file_server, no hosts, no proxy. */
+function isHostlessStaticGroup(routes: JsonRoute[]): boolean {
+  const handles = routes.flatMap(r => r.handle ?? []);
+  return handles.filter(h => h.handler === "file_server").length === 1
+    && !handles.some(h => h.handler === "reverse_proxy" || h.handler === "static_response" || h.handler === "subroute")
+    && routes.every(r => !(r.match ?? []).some(m => "host" in m));
+}
+
+/** A path Caddy adds to `hide` itself: the file the site block came from. */
+function isConfigSourcePath(p: string): boolean {
+  return /(^|\/)Caddyfile$/.test(p) || (p.startsWith("/") && /\.(conf|caddyfile)$/.test(p));
+}
+
+/** The `file_server` options (#262) of a static site, from its JSON handler and routes. */
+function parseFileServerOptions(
+  fsHandle: Record<string, unknown>, routes: JsonRoute[],
+): Pick<import("./types").FileServerConfig, "spa" | "index" | "hide" | "precompressed"> {
+  const out: Pick<import("./types").FileServerConfig, "spa" | "index" | "hide" | "precompressed"> = {};
+  if (findTryFiles(routes) === "{path} /index.html") out.spa = true;
+  const index = fsHandle.index_names;
+  if (Array.isArray(index) && index.length) out.index = index as string[];
+  const hide = Array.isArray(fsHandle.hide) ? (fsHandle.hide as string[]).filter(h => !isConfigSourcePath(h)) : [];
+  if (hide.length) out.hide = hide;
+  const order = fsHandle.precompressed_order;
+  const pre = fsHandle.precompressed;
+  if (Array.isArray(order) && order.length) out.precompressed = order as string[];
+  else if (pre && typeof pre === "object" && Object.keys(pre).length) out.precompressed = Object.keys(pre);
+  return out;
+}
+
 function detectPhpFastcgiFromRoutes(
   routes: Array<{ match?: Array<Record<string, unknown>>; handle?: AnyHandler[] }>,
 ): import("./types").PhpFastcgiConfig | undefined {
@@ -2350,7 +2435,11 @@ function detectPhpFastcgiFromRoutes(
   if (!rp) return undefined;
 
   const varsH = allHandles.find(h => h.handler === "vars" && typeof h.root === "string");
-  const rewriteRoute = routes.find(r => (r.handle ?? []).some(h => h.handler === "rewrite"));
+  // php_fastcgi's own rewrite carries split_path; a user's try_files (#262) adapts to rewrites without it.
+  const rewriteRoute = routes.find(r =>
+    (r.handle ?? []).some(h => h.handler === "rewrite") && !!(r.match?.[0]?.file as { split_path?: unknown } | undefined)?.split_path,
+  ) ?? routes.find(r => (r.handle ?? []).some(h => h.handler === "rewrite"));
+  const userTryFiles = findTryFiles(routes);
   const tryFiles = (rewriteRoute?.match?.[0]?.file as { try_files?: string[] } | undefined)?.try_files;
   const index = tryFiles?.length ? tryFiles[tryFiles.length - 1] : undefined;
 
@@ -2365,6 +2454,7 @@ function detectPhpFastcgiFromRoutes(
     index: index && index !== "index.php" ? index : undefined,
     splitPath: Array.isArray(splitPath) && !isDefaultSplit ? splitPath : undefined,
     env: env && Object.keys(env).length ? env : undefined,
+    ...(userTryFiles ? { tryFiles: userTryFiles } : {}),
   };
 }
 
@@ -2567,7 +2657,7 @@ function parseRouteToEntry(
 
   // Detect file_server
   const fsHandle = effectiveHandles.find(h => h.handler === "file_server") as
-    { handler: string; root?: string; browse?: Record<string, unknown> } | undefined;
+    { handler: string; root?: string; browse?: Record<string, unknown>; [k: string]: unknown } | undefined;
   if (fsHandle) {
     const fsCompress = effectiveHandles.some(h => h.handler === "encode");
     const fsAuthHandle = effectiveHandles.find(h => h.handler === "authentication");
@@ -2595,6 +2685,7 @@ function parseRouteToEntry(
           ?? (effectiveHandles.find(h => h.handler === "vars" && typeof (h as { root?: unknown }).root === "string") as { root?: string } | undefined)?.root
           ?? "",
         browse: fsHandle.browse !== undefined,
+        ...parseFileServerOptions(fsHandle, subrouteH?.routes?.length ? subrouteH.routes : [route]),
       },
       requestBodyMaxSize: parseRequestBodyMaxSize(effectiveHandles),
       compress: fsCompress || undefined,
@@ -2808,6 +2899,20 @@ export function parseProxies(config: CaddyConfig, serverDefs?: import("./types")
         disableHttp3: phpDisableHttp3, accessLog,
         errorHandlers: parseErrorHandlers(server),
       });
+      continue;
+    }
+
+    // A hostless static site with try_files (#262) adapts to several top-level routes too
+    // (root vars, the file-matcher rewrite, file_server). Parse them as one site, as if they
+    // were the subroute a host-matched block gets.
+    const staticGroup = !namedDef && contentRoutes.length > 1 && isHostlessStaticGroup(contentRoutes);
+    if (staticGroup) {
+      const entry = parseRouteToEntry(
+        { handle: [{ handler: "subroute", routes: contentRoutes } as CaddyHandler] } as CaddyRoute, key, externalPort, externalHost, server, accessLog,
+        serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
+        String(externalPort), undefined, automationPolicies, certLoadFiles,
+      );
+      if (entry) proxies.push(entry);
       continue;
     }
 
@@ -3621,10 +3726,8 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
     if (proxy.compress) fsHandles.push(buildEncodeHandler());
     if (proxy.basicAuth?.length) fsHandles.push(buildBasicAuthHandler(proxy.basicAuth));
     if (proxy.responseHeaders?.length) fsHandles.push(buildResponseHeadersHandler(proxy.responseHeaders));
-    const fsHandler: Record<string, unknown> = { handler: "file_server", root: proxy.fileServer.root };
-    if (proxy.fileServer.browse) fsHandler["browse"] = {};
-    fsHandles.push(fsHandler as CaddyHandler);
-    const route: CaddyRoute = { handle: fsHandles, terminal: isTerminal };
+    fsHandles.push(buildFileServerJson(proxy.fileServer));
+    const route: CaddyRoute = { handle: withSpaFallback(proxy.fileServer, fsHandles), terminal: isTerminal };
     if (matchArr) route.match = matchArr;
     const server: CaddyServer = { listen: [listenAddr], routes: [route] };
     if (proxy.tls) server.tls_connection_policies = [buildTlsPolicy(proxy)];
@@ -3654,6 +3757,37 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
   return applyServerTimeouts(server, proxy);
 }
 
+/** The `file_server` handler with its options (#262). */
+function buildFileServerJson(fs: import("./types").FileServerConfig): CaddyHandler {
+  const h: Record<string, unknown> = { handler: "file_server", root: fs.root };
+  if (fs.browse) h.browse = {};
+  if (fs.index?.length) h.index_names = fs.index;
+  if (fs.hide?.length) h.hide = fs.hide;
+  if (fs.precompressed?.length) {
+    h.precompressed = Object.fromEntries(fs.precompressed.map(e => [e, {}]));
+    h.precompressed_order = fs.precompressed;
+  }
+  return h as CaddyHandler;
+}
+
+/**
+ * SPA mode (#262) the way `try_files` adapts: a subroute whose first route rewrites to the
+ * first existing file of `{path}` / `/index.html`, then the site's own handlers.
+ */
+function withSpaFallback(fs: import("./types").FileServerConfig, handles: CaddyHandler[]): CaddyHandler[] {
+  if (!fs.spa) return handles;
+  return [{
+    handler: "subroute",
+    routes: [
+      {
+        match: [{ file: { root: fs.root, try_files: ["{http.request.uri.path}", "/index.html"] } }],
+        handle: [{ handler: "rewrite", uri: "{http.matchers.file.relative}" }],
+      },
+      { handle: handles },
+    ],
+  } as CaddyHandler];
+}
+
 /** Patch handles in-place: update reverse_proxy and rewrite handlers, leave everything else untouched. */
 function patchHandles(handles: CaddyHandler[], proxy: ProxyEntry): CaddyHandler[] {
   if (proxy.fileServer) {
@@ -3662,10 +3796,8 @@ function patchHandles(handles: CaddyHandler[], proxy: ProxyEntry): CaddyHandler[
     if (proxy.compress) fsHandles.push(buildEncodeHandler());
     if (proxy.basicAuth?.length) fsHandles.push(buildBasicAuthHandler(proxy.basicAuth));
     if (proxy.responseHeaders?.length) fsHandles.push(buildResponseHeadersHandler(proxy.responseHeaders));
-    const fsHandler: Record<string, unknown> = { handler: "file_server", root: proxy.fileServer.root };
-    if (proxy.fileServer.browse) fsHandler["browse"] = {};
-    fsHandles.push(fsHandler as CaddyHandler);
-    return fsHandles;
+    fsHandles.push(buildFileServerJson(proxy.fileServer));
+    return withSpaFallback(proxy.fileServer, fsHandles);
   }
   let found = false;
   // Strip any existing encode/authentication/rewrite/headers/file_server/forward_auth/
@@ -4353,10 +4485,8 @@ function buildRouteHandlesForEntry(proxy: ProxyEntry): CaddyHandler[] {
     if (proxy.compress) handles.push(buildEncodeHandler());
     if (proxy.basicAuth?.length) handles.push(buildBasicAuthHandler(proxy.basicAuth));
     if (proxy.responseHeaders?.length) handles.push(buildResponseHeadersHandler(proxy.responseHeaders));
-    const fsH: Record<string, unknown> = { handler: "file_server", root: proxy.fileServer.root };
-    if (proxy.fileServer.browse) fsH["browse"] = {};
-    handles.push(fsH as CaddyHandler);
-    return handles;
+    handles.push(buildFileServerJson(proxy.fileServer));
+    return withSpaFallback(proxy.fileServer, handles);
   }
   const handles: CaddyHandler[] = [];
   if (handlePathRw) handles.push(handlePathRw);

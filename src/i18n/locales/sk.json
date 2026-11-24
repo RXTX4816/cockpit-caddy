@@ -168,7 +168,16 @@
     "validation_port_range": "Port musí byť v rozsahu 1–65535",
     "validation_port_duplicate": "Port {{port}} sa už používa",
     "validation_root_required": "Koreňový adresár je povinný",
-    "confirm_body": "Na :{{port}} sa vytvorí statický súborový server poskytujúci {{root}} a konfigurácia Caddy sa znova načíta."
+    "confirm_body": "Na :{{port}} sa vytvorí statický súborový server poskytujúci {{root}} a konfigurácia Caddy sa znova načíta.",
+    "field_spa": "Režim SPA (pre neznáme cesty vrátiť index.html)",
+    "field_spa_help": "Pre jednostránkové aplikácie (React, Vue, Svelte): existujúce súbory sa vydajú tak, ako sú, každá iná cesta dostane index.html, aby fungovali priame odkazy.",
+    "advanced": "Možnosti súborového servera",
+    "field_index": "Indexové súbory",
+    "field_index_help": "Názvy súborov skúšané pre adresár, oddelené medzerami, v danom poradí.",
+    "field_hide": "Skryté súbory",
+    "field_hide_help": "Názvy alebo vzory, ktoré sa nikdy nevydajú, oddelené medzerami.",
+    "field_precompressed": "Predkomprimované súbory",
+    "field_precompressed_help": "Vydať file.zst, file.br alebo file.gz vedľa originálu, ak prehliadač toto kódovanie prijíma."
   },
   "edit_static": {
     "title": "Upraviť statický server — :{{port}}",
@@ -195,7 +204,9 @@
     "env_section_title": "Premenné prostredia",
     "env_field_key": "Názov",
     "env_field_value": "Hodnota",
-    "env_add_button": "Pridať premennú"
+    "env_add_button": "Pridať premennú",
+    "field_try_files": "Skúšané súbory (try_files)",
+    "field_try_files_help": "Voliteľné. Kandidáti skúšaní v poradí pred PHP; aplikácia s front controllerom zvyčajne potrebuje {path} {path}/ /index.php?{query}."
   },
   "add_respond": {
     "title": "Pridať statickú odpoveď",

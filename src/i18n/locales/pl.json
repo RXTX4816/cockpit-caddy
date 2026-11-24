@@ -168,7 +168,16 @@
     "validation_port_range": "Port musi mieścić się w zakresie 1–65535",
     "validation_port_duplicate": "Port {{port}} jest już używany",
     "validation_root_required": "Katalog główny jest wymagany",
-    "confirm_body": "Na :{{port}} zostanie utworzony statyczny serwer plików serwujący {{root}}, a konfiguracja Caddy zostanie przeładowana."
+    "confirm_body": "Na :{{port}} zostanie utworzony statyczny serwer plików serwujący {{root}}, a konfiguracja Caddy zostanie przeładowana.",
+    "field_spa": "Tryb SPA (dla nieznanych ścieżek zwracaj index.html)",
+    "field_spa_help": "Dla aplikacji jednostronicowych (React, Vue, Svelte): istniejące pliki są zwracane bez zmian, każda inna ścieżka dostaje index.html, więc działają bezpośrednie linki.",
+    "advanced": "Opcje serwera plików",
+    "field_index": "Pliki indeksu",
+    "field_index_help": "Nazwy plików sprawdzane kolejno dla katalogu, rozdzielone spacjami.",
+    "field_hide": "Ukryte pliki",
+    "field_hide_help": "Nazwy lub wzorce, które nigdy nie są udostępniane, rozdzielone spacjami.",
+    "field_precompressed": "Pliki wstępnie skompresowane",
+    "field_precompressed_help": "Zwracaj file.zst, file.br lub file.gz obok oryginału, gdy przeglądarka akceptuje to kodowanie."
   },
   "edit_static": {
     "title": "Edytuj serwer statyczny — :{{port}}",
@@ -195,7 +204,9 @@
     "env_section_title": "Zmienne środowiskowe",
     "env_field_key": "Nazwa",
     "env_field_value": "Wartość",
-    "env_add_button": "Dodaj zmienną"
+    "env_add_button": "Dodaj zmienną",
+    "field_try_files": "Próbowane pliki (try_files)",
+    "field_try_files_help": "Opcjonalne. Kandydaci sprawdzani kolejno przed PHP; aplikacja z front controllerem zwykle potrzebuje {path} {path}/ /index.php?{query}."
   },
   "add_respond": {
     "title": "Dodaj odpowiedź statyczną",

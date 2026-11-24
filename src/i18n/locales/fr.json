@@ -168,7 +168,16 @@
     "validation_port_range": "Le port doit être compris entre 1 et 65535",
     "validation_port_duplicate": "Le port {{port}} est déjà utilisé",
     "validation_root_required": "Le répertoire racine est obligatoire",
-    "confirm_body": "Un serveur de fichiers statiques va être créé sur :{{port}} pour servir {{root}}, et la configuration de Caddy rechargée."
+    "confirm_body": "Un serveur de fichiers statiques va être créé sur :{{port}} pour servir {{root}}, et la configuration de Caddy rechargée.",
+    "field_spa": "Mode SPA (servir index.html pour les chemins inconnus)",
+    "field_spa_help": "Pour les applications monopage (React, Vue, Svelte) : les fichiers existants sont servis tels quels, tout autre chemin reçoit index.html pour que les liens profonds fonctionnent.",
+    "advanced": "Options du serveur de fichiers",
+    "field_index": "Fichiers d’index",
+    "field_index_help": "Noms de fichiers essayés pour un répertoire, séparés par des espaces, dans l’ordre.",
+    "field_hide": "Fichiers masqués",
+    "field_hide_help": "Noms ou motifs jamais servis, séparés par des espaces.",
+    "field_precompressed": "Fichiers précompressés",
+    "field_precompressed_help": "Servir file.zst, file.br ou file.gz à côté de l’original quand le navigateur accepte cet encodage."
   },
   "edit_static": {
     "title": "Modifier le serveur statique — :{{port}}",
@@ -195,7 +204,9 @@
     "env_section_title": "Variables d'environnement",
     "env_field_key": "Nom",
     "env_field_value": "Valeur",
-    "env_add_button": "Ajouter une variable"
+    "env_add_button": "Ajouter une variable",
+    "field_try_files": "Fichiers à essayer (try_files)",
+    "field_try_files_help": "Facultatif. Candidats essayés dans l’ordre avant PHP ; une application à contrôleur frontal a en général besoin de {path} {path}/ /index.php?{query}."
   },
   "add_respond": {
     "title": "Ajouter une réponse statique",

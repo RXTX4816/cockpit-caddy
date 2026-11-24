@@ -168,7 +168,16 @@
     "validation_port_range": "Portul trebuie să fie între 1 și 65535",
     "validation_port_duplicate": "Portul {{port}} este deja folosit",
     "validation_root_required": "Directorul rădăcină este obligatoriu",
-    "confirm_body": "Va fi creat pe :{{port}} un server de fișiere statice care servește {{root}}, iar configurația Caddy va fi reîncărcată."
+    "confirm_body": "Va fi creat pe :{{port}} un server de fișiere statice care servește {{root}}, iar configurația Caddy va fi reîncărcată.",
+    "field_spa": "Mod SPA (servește index.html pentru căile necunoscute)",
+    "field_spa_help": "Pentru aplicații cu o singură pagină (React, Vue, Svelte): fișierele existente sunt servite ca atare, orice altă cale primește index.html ca să funcționeze legăturile directe.",
+    "advanced": "Opțiunile serverului de fișiere",
+    "field_index": "Fișiere index",
+    "field_index_help": "Numele de fișiere încercate pentru un director, separate prin spații, în ordine.",
+    "field_hide": "Fișiere ascunse",
+    "field_hide_help": "Nume sau tipare care nu sunt servite niciodată, separate prin spații.",
+    "field_precompressed": "Fișiere precomprimate",
+    "field_precompressed_help": "Servește file.zst, file.br sau file.gz de lângă original când browserul acceptă acea codificare."
   },
   "edit_static": {
     "title": "Editează serverul static — :{{port}}",
@@ -195,7 +204,9 @@
     "env_section_title": "Variabile de mediu",
     "env_field_key": "Nume",
     "env_field_value": "Valoare",
-    "env_add_button": "Adaugă variabilă"
+    "env_add_button": "Adaugă variabilă",
+    "field_try_files": "Fișiere încercate (try_files)",
+    "field_try_files_help": "Opțional. Candidați încercați în ordine înainte de PHP; o aplicație cu front controller are de obicei nevoie de {path} {path}/ /index.php?{query}."
   },
   "add_respond": {
     "title": "Adaugă răspuns static",

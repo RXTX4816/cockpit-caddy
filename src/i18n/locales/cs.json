@@ -168,7 +168,16 @@
     "validation_port_range": "Port musí být v rozsahu 1–65535",
     "validation_port_duplicate": "Port {{port}} se už používá",
     "validation_root_required": "Kořenový adresář je povinný",
-    "confirm_body": "Na :{{port}} se vytvoří statický souborový server poskytující {{root}} a konfigurace Caddy se znovu načte."
+    "confirm_body": "Na :{{port}} se vytvoří statický souborový server poskytující {{root}} a konfigurace Caddy se znovu načte.",
+    "field_spa": "Režim SPA (pro neznámé cesty vrátit index.html)",
+    "field_spa_help": "Pro jednostránkové aplikace (React, Vue, Svelte): existující soubory se vydají tak, jak jsou, každá jiná cesta dostane index.html, aby fungovaly přímé odkazy.",
+    "advanced": "Možnosti souborového serveru",
+    "field_index": "Indexové soubory",
+    "field_index_help": "Názvy souborů zkoušené pro adresář, oddělené mezerami, v daném pořadí.",
+    "field_hide": "Skryté soubory",
+    "field_hide_help": "Názvy nebo vzory, které se nikdy nevydají, oddělené mezerami.",
+    "field_precompressed": "Předkomprimované soubory",
+    "field_precompressed_help": "Vydat file.zst, file.br nebo file.gz vedle originálu, pokud prohlížeč toto kódování přijímá."
   },
   "edit_static": {
     "title": "Upravit statický server — :{{port}}",
@@ -195,7 +204,9 @@
     "env_section_title": "Proměnné prostředí",
     "env_field_key": "Název",
     "env_field_value": "Hodnota",
-    "env_add_button": "Přidat proměnnou"
+    "env_add_button": "Přidat proměnnou",
+    "field_try_files": "Zkoušené soubory (try_files)",
+    "field_try_files_help": "Volitelné. Kandidáti zkoušení v pořadí před PHP; aplikace s front controllerem obvykle potřebuje {path} {path}/ /index.php?{query}."
   },
   "add_respond": {
     "title": "Přidat statickou odpověď",

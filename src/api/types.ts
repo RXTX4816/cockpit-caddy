@@ -280,6 +280,14 @@ export interface RedirectConfig {
 export interface FileServerConfig {
   root: string;
   browse?: boolean;
+  /** SPA mode (#262): `try_files {path} /index.html`, so deep links get the app's index.html. */
+  spa?: boolean;
+  /** `file_server { index … }`: index file names. Omit for Caddy's default (index.html, index.txt). */
+  index?: string[];
+  /** `file_server { hide … }`: files or patterns never served. */
+  hide?: string[];
+  /** `file_server { precompressed … }`: encodings of precompressed sidecar files, in order. */
+  precompressed?: string[];
 }
 
 export interface PhpFastcgiConfig {
@@ -294,6 +302,8 @@ export interface PhpFastcgiConfig {
   splitPath?: string[];
   /** Extra environment variables passed to the FastCGI process. */
   env?: Record<string, string>;
+  /** `try_files` before php_fastcgi (#262), e.g. `{path} {path}/ /index.php?{query}`. */
+  tryFiles?: string;
 }
 
 export interface StaticResponseConfig {

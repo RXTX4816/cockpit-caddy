@@ -168,7 +168,16 @@
     "validation_port_range": "Bağlantı noktası 1 ile 65535 arasında olmalıdır",
     "validation_port_duplicate": "{{port}} bağlantı noktası zaten kullanılıyor",
     "validation_root_required": "Kök dizin zorunludur",
-    "confirm_body": ":{{port}} üzerinde {{root}} dizinini sunan bir statik dosya sunucusu oluşturulacak ve Caddy yapılandırması yeniden yüklenecek."
+    "confirm_body": ":{{port}} üzerinde {{root}} dizinini sunan bir statik dosya sunucusu oluşturulacak ve Caddy yapılandırması yeniden yüklenecek.",
+    "field_spa": "SPA modu (bilinmeyen yollar için index.html sun)",
+    "field_spa_help": "Tek sayfalık uygulamalar için (React, Vue, Svelte): var olan dosyalar olduğu gibi sunulur, diğer tüm yollar index.html alır ve derin bağlantılar çalışır.",
+    "advanced": "Dosya sunucusu seçenekleri",
+    "field_index": "Dizin dosyaları",
+    "field_index_help": "Bir dizin için sırayla denenen dosya adları, boşlukla ayrılmış.",
+    "field_hide": "Gizli dosyalar",
+    "field_hide_help": "Hiçbir zaman sunulmayan adlar veya kalıplar, boşlukla ayrılmış.",
+    "field_precompressed": "Önceden sıkıştırılmış dosyalar",
+    "field_precompressed_help": "Tarayıcı bu kodlamayı kabul ediyorsa özgün dosyanın yanındaki file.zst, file.br veya file.gz sunulur."
   },
   "edit_static": {
     "title": "Statik sunucuyu düzenle — :{{port}}",
@@ -195,7 +204,9 @@
     "env_section_title": "Ortam değişkenleri",
     "env_field_key": "Ad",
     "env_field_value": "Değer",
-    "env_add_button": "Değişken ekle"
+    "env_add_button": "Değişken ekle",
+    "field_try_files": "Denenecek dosyalar (try_files)",
+    "field_try_files_help": "İsteğe bağlı. PHP'den önce sırayla denenen adaylar; ön denetleyicili bir uygulama genellikle {path} {path}/ /index.php?{query} gerektirir."
   },
   "add_respond": {
     "title": "Statik yanıt ekle",

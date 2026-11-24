@@ -168,7 +168,16 @@
     "validation_port_range": "Portin on oltava välillä 1–65535",
     "validation_port_duplicate": "Portti {{port}} on jo käytössä",
     "validation_root_required": "Juurihakemisto on pakollinen",
-    "confirm_body": "Porttiin :{{port}} luodaan staattinen tiedostopalvelin, joka tarjoilee hakemiston {{root}}, ja Caddyn asetukset ladataan uudelleen."
+    "confirm_body": "Porttiin :{{port}} luodaan staattinen tiedostopalvelin, joka tarjoilee hakemiston {{root}}, ja Caddyn asetukset ladataan uudelleen.",
+    "field_spa": "SPA-tila (tuntemattomille poluille palautetaan index.html)",
+    "field_spa_help": "Yhden sivun sovelluksille (React, Vue, Svelte): olemassa olevat tiedostot palautetaan sellaisenaan, muut polut saavat index.html-tiedoston, jotta syvälinkit toimivat.",
+    "advanced": "Tiedostopalvelimen asetukset",
+    "field_index": "Hakemistotiedostot",
+    "field_index_help": "Hakemistolle kokeiltavat tiedostonimet järjestyksessä välilyönnein erotettuina.",
+    "field_hide": "Piilotetut tiedostot",
+    "field_hide_help": "Nimet tai kuviot, joita ei koskaan palauteta, välilyönnein erotettuina.",
+    "field_precompressed": "Valmiiksi pakatut tiedostot",
+    "field_precompressed_help": "Palauta alkuperäisen vieressä oleva file.zst, file.br tai file.gz, kun selain hyväksyy kyseisen koodauksen."
   },
   "edit_static": {
     "title": "Muokkaa staattista palvelinta — :{{port}}",
@@ -195,7 +204,9 @@
     "env_section_title": "Ympäristömuuttujat",
     "env_field_key": "Nimi",
     "env_field_value": "Arvo",
-    "env_add_button": "Lisää muuttuja"
+    "env_add_button": "Lisää muuttuja",
+    "field_try_files": "Kokeiltavat tiedostot (try_files)",
+    "field_try_files_help": "Valinnainen. Ehdokkaat, joita kokeillaan järjestyksessä ennen PHP:tä; front controller -sovellus tarvitsee yleensä {path} {path}/ /index.php?{query}."
   },
   "add_respond": {
     "title": "Lisää staattinen vastaus",

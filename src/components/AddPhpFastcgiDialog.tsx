@@ -15,6 +15,7 @@ import {
   TextInput,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
+import { PhpTryFilesField } from "./FileServerOptionsFields";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { CaddyApiError } from "../api";
@@ -30,7 +31,7 @@ interface Props {
   existingPorts: number[];
   onAdd: (entry: Omit<ProxyEntry, "id" | "serverKey">) => Promise<void>;
   onClose: () => void;
-  initialValues?: { port?: string; upstream?: string; root?: string; index?: string; splitPath?: string; tls?: boolean; compress?: boolean; label?: string };
+  initialValues?: { port?: string; upstream?: string; root?: string; index?: string; splitPath?: string; tryFiles?: string; tls?: boolean; compress?: boolean; label?: string };
   initialEnv?: EnvEntry[];
   /** Duplicate: the source's Security / Routing / Logging / Limits settings (#293). */
   initialTabState?: Partial<ProxyTabState>;
@@ -47,6 +48,7 @@ export function AddPhpFastcgiDialog({ existingPorts, onAdd, onClose, initialValu
   const [root, setRoot] = useState(initialValues?.root ?? "");
   const [index, setIndex] = useState(initialValues?.index ?? "");
   const [splitPath, setSplitPath] = useState(initialValues?.splitPath ?? "");
+  const [tryFiles, setTryFiles] = useState(initialValues?.tryFiles ?? "");
   const [env, setEnv] = useState<EnvEntry[]>(initialEnv ?? []);
   // #246: where the certificate comes from; ACME needs a public name in the site address.
   const [tlsModeChoice, setTlsModeChoice] = useState<TlsMode>((initialValues?.tls ?? true) ? "internal" : "off");
@@ -203,6 +205,8 @@ export function AddPhpFastcgiDialog({ existingPorts, onAdd, onClose, initialValu
                 </FormHelperText>
               </FormGroup>
 
+              <PhpTryFilesField id="php-try-files" value={tryFiles} onChange={setTryFiles} isDisabled={isLocked} />
+
               <TlsModeField id="php-tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isLocked} onDemand={tlsOnDemand} onOnDemandChange={setTlsOnDemand} />
 
               <FormGroup fieldId="php-compress">
@@ -251,6 +255,7 @@ export function AddPhpFastcgiDialog({ existingPorts, onAdd, onClose, initialValu
                       root: root.trim(),
                       index: index.trim() || undefined,
                       splitPath: splitPath.trim() ? splitPath.trim().split(/\s+/) : undefined,
+                      tryFiles: tryFiles.trim() || undefined,
                       env: envEntriesToRecord(env),
                     },
                     ...tabEntry,

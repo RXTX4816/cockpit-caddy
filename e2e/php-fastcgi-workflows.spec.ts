@@ -140,3 +140,21 @@ test('PHP site serves static files next to the PHP ones', async ({ pluginPage: p
   expect(await readConf(page)).toMatch(/php_fastcgi 127\.0\.0\.1:9000\n\tfile_server/);
   await expect.poll(() => curlStatus(page, 'http://localhost:19303/style.css'), { timeout: 10000 }).toBe('200');
 });
+
+// #262: try_files on a PHP site is written and read back from the running config.
+test('PHP site with try_files writes it and reads it back', async ({ pluginPage: page }) => {
+  await waitForToolbar(page);
+  await openAddMenu(page, 'PHP site');
+  const modal = page.getByRole('dialog');
+  await modal.getByLabel(/listen port/i).fill('19309');
+  await modal.getByLabel(/fastcgi upstream/i).fill('127.0.0.1:9000');
+  await modal.getByLabel(/root directory/i).fill('/srv/app/public');
+  await modal.locator('#php-try-files').fill('{path} {path}/ /index.php?{query}');
+  await modal.getByRole('button', { name: /add php site/i }).click();
+  await modal.getByRole('button', { name: /^confirm$/i }).click();
+  await expect(modal).not.toBeVisible({ timeout: 15000 });
+
+  expect(await readConf(page)).toContain('\ttry_files {path} {path}/ /index.php?{query}\n');
+  await proxyRow(page, 19309).getByRole('button', { name: /edit/i }).click();
+  await expect(page.getByRole('dialog').locator('#php-edit-try-files')).toHaveValue('{path} {path}/ /index.php?{query}');
+});

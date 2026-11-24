@@ -703,3 +703,64 @@ describe.runIf(available || required)("per-site on-demand TLS (#253)", () => {
     expect(readBack(edited)[0]).toMatchObject({ tlsIssuer: "acme", tlsOnDemand: true, targetPort: 8001 });
   });
 });
+
+describe.runIf(available || required)("static and PHP site options round-trip through caddy adapt (#262)", () => {
+  const sites: [string, Partial<ProxyEntry>][] = [
+    ["hostless", { tls: false, externalPort: 8080 }],
+    ["host-matched", { tls: false, externalPort: 8080, externalHost: "static.example.test", externalScheme: "http" }],
+  ];
+
+  it.each(sites)("SPA mode (%s)", (_, site) => {
+    const conf = proxiesToCaddyfile([entry({ ...site, fileServer: { root: "/srv/app", spa: true } })]);
+    expect(conf).toContain("\ttry_files {path} /index.html\n");
+    const [p] = readBack(conf);
+    expect(p.fileServer).toEqual({ root: "/srv/app", browse: false, spa: true });
+  });
+
+  it.each(sites)("index, hide and precompressed (%s)", (_, site) => {
+    const fileServer = { root: "/srv/app", browse: true, index: ["index.html", "default.htm"], hide: [".git", "*.bak"], precompressed: ["zstd", "br", "gzip"] };
+    const conf = proxiesToCaddyfile([entry({ ...site, fileServer })]);
+    expect(conf).toContain("\tfile_server browse {\n\t\tindex index.html default.htm\n\t\thide .git *.bak\n\t\tprecompressed zstd br gzip\n\t}");
+    const [p] = readBack(conf);
+    expect(p.fileServer).toEqual(fileServer);
+  });
+
+  it.each(sites)("each option on its own (%s)", (_, site) => {
+    for (const extra of [{ index: ["home.html"] }, { hide: ["secret"] }, { precompressed: ["gzip"] }]) {
+      const fileServer = { root: "/srv/app", browse: false, ...extra };
+      const [p] = readBack(proxiesToCaddyfile([entry({ ...site, fileServer })]));
+      expect(p.fileServer).toEqual(fileServer);
+    }
+  });
+
+  it.each(sites)("PHP try_files (%s)", (_, site) => {
+    const phpFastcgi = { upstream: "localhost:9000", root: "/srv/php", tryFiles: "{path} {path}/ /index.php?{query}" };
+    const conf = proxiesToCaddyfile([entry({ ...site, phpFastcgi })]);
+    expect(conf).toContain("\ttry_files {path} {path}/ /index.php?{query}\n");
+    const [p] = readBack(conf);
+    expect(p.phpFastcgi).toEqual(phpFastcgi);
+  });
+
+  it("PHP try_files keeps a custom index", () => {
+    const phpFastcgi = { upstream: "localhost:9000", root: "/srv/php", index: "app.php", tryFiles: "{path} /app.php" };
+    const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, phpFastcgi })]));
+    expect(p.phpFastcgi).toEqual(phpFastcgi);
+  });
+
+  it("the plugin's own JSON push carries the same options", () => {
+    const fileServer = { root: "/srv/app", browse: false, spa: true, index: ["a.html"], hide: [".env"], precompressed: ["br", "gzip"] };
+    const pushed = buildServerEntry(entry({ tls: false, externalPort: 8080, fileServer }));
+    const [back] = parseProxies({ apps: { http: { servers: { srv0: pushed } } } });
+    expect(back.fileServer).toEqual(fileServer);
+    const adaptedFs = JSON.stringify(adapt(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, fileServer })])));
+    expect(adaptedFs).toContain('"index_names":["a.html"]');
+    expect(adaptedFs).toContain('"precompressed_order":["br","gzip"]');
+  });
+
+  it("sites without the new options write the same lines as before", () => {
+    expect(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, fileServer: { root: "/srv/app", browse: true } })]))
+      .toContain("\troot * /srv/app\n\tfile_server browse\n}");
+    expect(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, phpFastcgi: { upstream: "localhost:9000", root: "/srv/php" } })]))
+      .toContain("\troot * /srv/php\n\tphp_fastcgi localhost:9000\n\tfile_server\n}");
+  });
+});

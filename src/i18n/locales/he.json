@@ -168,7 +168,16 @@
     "validation_port_range": "הפורט חייב להיות בין 1 ל-65535",
     "validation_port_duplicate": "פורט {{port}} כבר בשימוש",
     "validation_root_required": "נדרשת תיקיית שורש",
-    "confirm_body": "ייווצר ב-:{{port}} שרת קבצים סטטי שמגיש את {{root}}, ותצורת Caddy תיטען מחדש."
+    "confirm_body": "ייווצר ב-:{{port}} שרת קבצים סטטי שמגיש את {{root}}, ותצורת Caddy תיטען מחדש.",
+    "field_spa": "מצב SPA (הגשת index.html לנתיבים לא מוכרים)",
+    "field_spa_help": "ליישומי עמוד יחיד (React,‏ Vue,‏ Svelte): קבצים קיימים מוגשים כפי שהם, וכל נתיב אחר מקבל index.html כדי שקישורים עמוקים יעבדו.",
+    "advanced": "אפשרויות שרת הקבצים",
+    "field_index": "קובצי אינדקס",
+    "field_index_help": "שמות הקבצים שנבדקים עבור תיקייה, מופרדים ברווחים ולפי הסדר.",
+    "field_hide": "קבצים מוסתרים",
+    "field_hide_help": "שמות או תבניות שלעולם לא מוגשים, מופרדים ברווחים.",
+    "field_precompressed": "קבצים דחוסים מראש",
+    "field_precompressed_help": "הגשת file.zst,‏ file.br או file.gz שליד המקור כשהדפדפן מקבל את הקידוד הזה."
   },
   "edit_static": {
     "title": "עריכת שרת סטטי — :{{port}}",
@@ -195,7 +204,9 @@
     "env_section_title": "משתני סביבה",
     "env_field_key": "שם",
     "env_field_value": "ערך",
-    "env_add_button": "הוספת משתנה"
+    "env_add_button": "הוספת משתנה",
+    "field_try_files": "קבצים לניסיון (try_files)",
+    "field_try_files_help": "אופציונלי. מועמדים שנבדקים לפי הסדר לפני PHP; יישום עם front controller צריך בדרך כלל ‎{path} {path}/ /index.php?{query}‎."
   },
   "add_respond": {
     "title": "הוספת תגובה סטטית",

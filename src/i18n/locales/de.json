@@ -168,7 +168,16 @@
     "validation_port_range": "Der Port muss zwischen 1 und 65535 liegen",
     "validation_port_duplicate": "Port {{port}} wird bereits verwendet",
     "validation_root_required": "Stammverzeichnis ist erforderlich",
-    "confirm_body": "Damit wird ein statischer Dateiserver auf :{{port}} angelegt, der {{root}} ausliefert, und die Caddy-Konfiguration neu geladen."
+    "confirm_body": "Damit wird ein statischer Dateiserver auf :{{port}} angelegt, der {{root}} ausliefert, und die Caddy-Konfiguration neu geladen.",
+    "field_spa": "SPA-Modus (index.html für unbekannte Pfade ausliefern)",
+    "field_spa_help": "Für Single-Page-Apps (React-, Vue-, Svelte-Builds): vorhandene Dateien werden unverändert ausgeliefert, jeder andere Pfad erhält index.html, damit Deep Links funktionieren.",
+    "advanced": "Dateiserver-Optionen",
+    "field_index": "Indexdateien",
+    "field_index_help": "Dateinamen, die für ein Verzeichnis der Reihe nach probiert werden, durch Leerzeichen getrennt.",
+    "field_hide": "Versteckte Dateien",
+    "field_hide_help": "Namen oder Muster, die nie ausgeliefert werden, durch Leerzeichen getrennt.",
+    "field_precompressed": "Vorkomprimierte Dateien",
+    "field_precompressed_help": "file.zst, file.br oder file.gz neben dem Original ausliefern, wenn der Browser diese Kodierung akzeptiert."
   },
   "edit_static": {
     "title": "Statischen Server bearbeiten – :{{port}}",
@@ -195,7 +204,9 @@
     "env_section_title": "Umgebungsvariablen",
     "env_field_key": "Name",
     "env_field_value": "Wert",
-    "env_add_button": "Variable hinzufügen"
+    "env_add_button": "Variable hinzufügen",
+    "field_try_files": "Dateien probieren (try_files)",
+    "field_try_files_help": "Optional. Kandidaten, die vor PHP der Reihe nach probiert werden; eine Front-Controller-App braucht meist {path} {path}/ /index.php?{query}."
   },
   "add_respond": {
     "title": "Statische Antwort hinzufügen",
