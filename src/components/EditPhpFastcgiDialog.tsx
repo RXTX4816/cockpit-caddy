@@ -18,7 +18,8 @@ import { useTranslation } from "react-i18next";
 import { PhpTryFilesField } from "./FileServerOptionsFields";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
-import { CaddyApiError } from "../api";
+import { CaddyApiError, saveWithDnsSecrets } from "../api";
+import { useSiteDns } from "./SiteDnsChallenge";
 import { TlsModeField, hasPublicName, tlsModeToEntry, type TlsMode, tlsModeOf } from "./TlsModeField";
 import type { ProxyEntry } from "../api";
 import { SnippetImportsField } from "./SnippetImportsField";
@@ -51,6 +52,7 @@ export function EditPhpFastcgiDialog({ proxy, existingPorts, onSave, onClose }: 
   const publicName = hasPublicName(proxy.externalHost);
   const tlsMode: TlsMode = tlsModeChoice === "acme" && !publicName ? "internal" : tlsModeChoice;
   const [tlsOnDemand, setTlsOnDemand] = useState(!!proxy.tlsOnDemand);
+  const siteDns = useSiteDns(proxy.dnsChallenge, tlsMode === "acme");
   const [compress, setCompress] = useState(proxy.compress ?? false);
   const [label, setLabel] = useState(proxy.label ?? "");
   const [tabState, updateTabState] = useProxyTabState(proxyTabStateFromEntry(proxy));
@@ -79,7 +81,8 @@ export function EditPhpFastcgiDialog({ proxy, existingPorts, onSave, onClose }: 
   }
 
   function handleSave() {
-    const errorTab = firstTabWithError(proxyTabStateFlags(tabState, !validate(), "site").hasError);
+    const errorTab = firstTabWithError(proxyTabStateFlags(tabState, !validate(), "site").hasError)
+      ?? (siteDns.error(proxy.externalHost, tlsMode === "acme") ? "general" : undefined);
     if (errorTab) {
       setActiveTab(errorTab);
       return;
@@ -202,7 +205,7 @@ export function EditPhpFastcgiDialog({ proxy, existingPorts, onSave, onClose }: 
 
               <PhpTryFilesField id="php-edit-try-files" value={tryFiles} onChange={setTryFiles} isDisabled={isLocked} />
 
-              <TlsModeField id="php-edit-tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isLocked} onDemand={tlsOnDemand} onOnDemandChange={setTlsOnDemand} />
+              <TlsModeField id="php-edit-tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isLocked} onDemand={tlsOnDemand} onOnDemandChange={setTlsOnDemand} dns={siteDns} host={proxy.externalHost} />
 
               <FormGroup fieldId="php-edit-compress">
                 <Checkbox
@@ -232,12 +235,14 @@ export function EditPhpFastcgiDialog({ proxy, existingPorts, onSave, onClose }: 
               isDisabled={isSaving}
               onClick={() => void confirmAction.submit(async () => {
                 const tabEntry = await proxyTabStateToEntry(tabState);
+                const dns = siteDns.plan(proxy.externalHost, tlsMode === "acme");
                 try {
-                  await onSave({
+                  await saveWithDnsSecrets(dns.secrets, () => onSave({
                     ...proxy,
                     externalPort: parseInt(port, 10),
                     ...tlsModeToEntry(tlsMode, proxy.externalHost),
                     tlsOnDemand: tlsMode !== "off" && tlsOnDemand ? true : undefined,
+                    dnsChallenge: dns.config,
                     compress: compress || undefined,
                     label: label.trim() || undefined,
                     phpFastcgi: {
@@ -250,7 +255,7 @@ export function EditPhpFastcgiDialog({ proxy, existingPorts, onSave, onClose }: 
                     },
                     ...tabEntry,
                     imports,
-                  });
+                  }));
                 } catch (e) {
                   if (e instanceof CaddyApiError) {
                     onClose();

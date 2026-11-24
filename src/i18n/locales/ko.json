@@ -1046,6 +1046,13 @@
     "validation_value": "새 옵션마다 값을 입력하세요.",
     "validation_provider": "DNS 제공자를 선택하세요.",
     "restart_needed": "변경된 DNS 자격 증명을 불러오려면 Caddy를 다시 시작하세요. 다시 로드로는 부족합니다. 서비스는 시작할 때만 환경을 읽습니다.",
-    "restart_button": "Caddy 다시 시작"
+    "restart_button": "Caddy 다시 시작",
+    "site_label": "DNS 챌린지",
+    "site_inherit": "전역 설정 상속 ({{provider}})",
+    "site_inherit_none": "전역 설정 상속 (설정 안 됨: HTTP 챌린지)",
+    "site_override": "재정의: 이 사이트 전용 공급자",
+    "site_inherit_help": "설정 → DNS 챌린지에서 지정한 DNS 공급자를 사용하며, 지정하지 않았으면 HTTP 챌린지를 사용합니다.",
+    "site_override_help": "이 사이트는 자체 DNS 공급자와 자격 증명을 사용합니다. 새 자격 증명을 저장하면 Caddy가 다시 시작됩니다. Caddy는 시작할 때만 이를 읽기 때문입니다.",
+    "site_wildcard_warning": "와일드카드 인증서에는 DNS 챌린지가 필요합니다. 이 사이트용 DNS 공급자를 지정하거나 설정 → DNS 챌린지에서 지정하세요."
   }
 }

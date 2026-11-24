@@ -1046,6 +1046,13 @@
     "validation_value": "Saisissez une valeur pour chaque nouvelle option.",
     "validation_provider": "Choisissez un fournisseur DNS.",
     "restart_needed": "Redémarrez Caddy pour charger les identifiants DNS modifiés. Un rechargement ne suffit pas : le service ne lit son environnement qu’au démarrage.",
-    "restart_button": "Redémarrer Caddy"
+    "restart_button": "Redémarrer Caddy",
+    "site_label": "Défi DNS",
+    "site_inherit": "Hériter du global ({{provider}})",
+    "site_inherit_none": "Hériter du global (non défini : défi HTTP)",
+    "site_override": "Remplacer : fournisseur propre à ce site",
+    "site_inherit_help": "Utilise le fournisseur DNS défini dans Paramètres → Défi DNS, ou le défi HTTP s'il n'y en a pas.",
+    "site_override_help": "Ce site utilise son propre fournisseur DNS et ses propres identifiants. Enregistrer de nouveaux identifiants redémarre Caddy, qui ne les lit qu'au démarrage.",
+    "site_wildcard_warning": "Les certificats génériques nécessitent le défi DNS. Définissez un fournisseur DNS pour ce site, ou dans Paramètres → Défi DNS."
   }
 }

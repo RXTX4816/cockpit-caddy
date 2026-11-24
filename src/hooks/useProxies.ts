@@ -4,7 +4,7 @@ import { i18n } from "@rxtx4816/cockpit-plugin-base-react/i18n";
 import {
   parseProxies, mergeProxy, removeProxy,
   readCaddyfile, writeCaddyfile, readProxyConf,
-  parseLabelsFromCaddyfile, parseConfTlsMap, parseConfExternalAddresses, parseConfAccessLogMap, parseConfForwardAuthMap, parseConfCustomTlsCaMap, parseClientAuthCaFile, parseConfTlsIssuerMap, parseConfTlsOnDemandMap,
+  parseLabelsFromCaddyfile, parseConfTlsMap, parseConfExternalAddresses, parseConfAccessLogMap, parseConfForwardAuthMap, parseConfCustomTlsCaMap, parseClientAuthCaFile, parseConfTlsIssuerMap, parseConfTlsOnDemandMap, parseConfTlsDnsMap, applyDnsSecrets, isSiteDnsVar,
   surgicallyWriteProxy, surgicallyEditProxy, surgicallyRemoveBlock,
   migrateCaddyfile, isStockCaddyfile, mergeMigratedConfContent, writeRawProxyConf, writeRawProxyConfValidated,
   CaddyfileError,
@@ -19,7 +19,7 @@ import {
   routeHosts, hostsConflict, standaloneProxyId,
   readSnippetsConf, parseSnippets, parseConfSiteBlocks, parseConfSiteImports, separateSnippetSettings, mergeSnippetLists,
 } from "../api";
-import type { CaddyConfig, ProxyEntry, ServerDef, SnippetDef } from "../api";
+import type { CaddyConfig, DnsChallengeConfig, ProxyEntry, ServerDef, SnippetDef } from "../api";
 import { useCaddyConfig } from "./useCaddyConfig";
 
 const CADDYFILE_BAK = "/etc/caddy/Caddyfile.bak";
@@ -79,6 +79,15 @@ function withOnDemand(map: Record<string, boolean>, oldKey: string | undefined, 
   return n;
 }
 
+/** The conf.d per-site DNS map (#289) after writing `p` under `key` (dropping `oldKey`). */
+function withDns(map: Record<string, DnsChallengeConfig>, oldKey: string | undefined, key: string, p: ProxyEntry): Record<string, DnsChallengeConfig> {
+  const n = { ...map };
+  if (oldKey) delete n[oldKey];
+  if (p.tls && !p.customTls && p.tlsIssuer === "acme" && p.dnsChallenge) n[key] = p.dnsChallenge;
+  else delete n[key];
+  return n;
+}
+
 /**
  * Sites whose JSON only Caddy's own Caddyfile adapter builds correctly, so they are applied
  * by reloading instead of pushing hand-built JSON: php_fastcgi (#35) expands into several
@@ -123,6 +132,7 @@ export function useProxies() {
   const [confCustomTlsCa, setConfCustomTlsCa] = useState<Record<string, string>>({});
   const [confTlsIssuer, setConfTlsIssuer] = useState<Record<string, "acme" | "internal">>({});
   const [confTlsOnDemand, setConfTlsOnDemand] = useState<Record<string, boolean>>({});
+  const [confTlsDns, setConfTlsDns] = useState<Record<string, DnsChallengeConfig>>({});
   const [confSiteBlocks, setConfSiteBlocks] = useState<Record<string, string>>({});
   const [confImports, setConfImports] = useState<Record<string, string[]>>({});
   const [pluginSnippets, setPluginSnippets] = useState<SnippetDef[]>([]);
@@ -168,6 +178,7 @@ export function useProxies() {
       setConfCustomTlsCa(parseConfCustomTlsCaMap(c));
       setConfTlsIssuer(parseConfTlsIssuerMap(c));
       setConfTlsOnDemand(parseConfTlsOnDemandMap(c));
+      setConfTlsDns(parseConfTlsDnsMap(c));
       noteConfSites(c);
       setPluginSnippets(parseSnippets(await readSnippetsConf(), "plugin"));
       const defs = parseServerDefsFromConf(c);
@@ -263,9 +274,11 @@ export function useProxies() {
         tlsIssuer: tls && !p.customTls ? lookup(confTlsIssuer) : undefined,
         // Per-site on-demand TLS (#253), likewise read from the Caddyfile.
         tlsOnDemand: tls && !p.customTls && lookup(confTlsOnDemand) ? true : undefined,
+        // The site's own DNS provider (#289), for automatic HTTPS only.
+        dnsChallenge: tls && !p.customTls && lookup(confTlsIssuer) === "acme" ? lookup(confTlsDns) : undefined,
       }, lookup(confSiteBlocks), snippets);
     }),
-    [config, labels, confTls, confExternal, confAccessLog, confForwardAuth, confCustomTlsCa, confTlsIssuer, confTlsOnDemand, confSiteBlocks, confImports, snippets, servers, serversLoaded],
+    [config, labels, confTls, confExternal, confAccessLog, confForwardAuth, confCustomTlsCa, confTlsIssuer, confTlsOnDemand, confTlsDns, confSiteBlocks, confImports, snippets, servers, serversLoaded],
   );
 
   // #246: while any site relies on automatic HTTPS, Caddy's own Caddyfile adapter has to build
@@ -361,6 +374,7 @@ export function useProxies() {
       setConfTls(prev => ({ ...prev, [newProxyKey]: newProxy.tls }));
       setConfTlsIssuer(prev => withIssuer(prev, undefined, newProxyKey, newProxy));
       setConfTlsOnDemand(prev => withOnDemand(prev, undefined, newProxyKey, newProxy));
+      setConfTlsDns(prev => withDns(prev, undefined, newProxyKey, newProxy));
       setConfExternal(prev => ({
         ...prev,
         [newProxyKey]: { scheme: newProxy.externalScheme, host: newProxy.externalHost },
@@ -464,6 +478,7 @@ export function useProxies() {
       });
       setConfTlsIssuer(prev => withIssuer(prev, originalKey, entryKey, entry));
       setConfTlsOnDemand(prev => withOnDemand(prev, originalKey, entryKey, entry));
+      setConfTlsDns(prev => withDns(prev, originalKey, entryKey, entry));
       setConfExternal(prev => {
         const n = { ...prev };
         delete n[originalKey];
@@ -539,6 +554,10 @@ export function useProxies() {
       setLabels(prev => { const n = { ...prev }; delete n[proxyKey]; return n; });
       setConfTls(prev => { const n = { ...prev }; delete n[proxyKey]; return n; });
       setConfExternal(prev => { const n = { ...prev }; delete n[proxyKey]; return n; });
+      setConfTlsDns(prev => { const n = { ...prev }; delete n[proxyKey]; return n; });
+      // #289: the site's own DNS credentials leave the env file with it.
+      const siteVars = Object.values(proxy.dnsChallenge?.credentials ?? {}).filter(isSiteDnsVar);
+      if (siteVars.length) await applyDnsSecrets({}, siteVars);
       // A shared listener's live JSON server object holds every sibling's route (#139) —
       // removing it by serverKey would delete a still-live sibling too. Reload instead so
       // Caddy's own Caddyfile adapter rebuilds the listener from the (now-correct) text.

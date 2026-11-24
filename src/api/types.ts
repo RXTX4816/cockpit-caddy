@@ -413,6 +413,11 @@ export interface ProxyEntry {
    *  (`tls { on_demand }`). The global `on_demand_tls` option only configures the ask
    *  endpoint; it doesn't turn this on. */
   tlsOnDemand?: boolean;
+  /** Per-site DNS challenge (#289), only for automatic HTTPS: when set, the site uses this
+   *  provider (`tls { dns <provider> … }`) instead of the global `acme_dns` one. Unset means
+   *  it inherits the global provider, or the HTTP challenge when none is set. Credentials are
+   *  env variable names; the values live in the root-only env file. */
+  dnsChallenge?: DnsChallengeConfig;
   /** Skip TLS verification when connecting to an https upstream */
   tlsSkipVerify: boolean;
   label?: string;

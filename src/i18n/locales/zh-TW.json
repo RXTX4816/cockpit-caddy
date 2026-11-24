@@ -1046,6 +1046,13 @@
     "validation_value": "請為每個新選項輸入值。",
     "validation_provider": "請選擇 DNS 供應商。",
     "restart_needed": "請重新啟動 Caddy 以載入變更後的 DNS 憑證資料。重新載入不夠：服務只在啟動時讀取環境變數。",
-    "restart_button": "重新啟動 Caddy"
+    "restart_button": "重新啟動 Caddy",
+    "site_label": "DNS 驗證",
+    "site_inherit": "繼承全域設定（{{provider}}）",
+    "site_inherit_none": "繼承全域設定（未設定：HTTP 驗證）",
+    "site_override": "覆寫：此網站使用獨立的供應商",
+    "site_inherit_help": "使用「設定 → DNS 驗證」中設定的 DNS 供應商；未設定時使用 HTTP 驗證。",
+    "site_override_help": "此網站使用自己的 DNS 供應商和憑證。儲存新憑證會重新啟動 Caddy，因為它只在啟動時讀取憑證。",
+    "site_wildcard_warning": "萬用字元憑證需要 DNS 驗證。請為此網站設定 DNS 供應商，或在「設定 → DNS 驗證」中設定。"
   }
 }

@@ -84,6 +84,7 @@ Click **Add Proxy** in the toolbar.
 |---|---|
 | Label | Human-readable name (e.g. `Nextcloud`) |
 | HTTPS certificate | **Automatic (Let's Encrypt / ACME)** — the default for a public hostname: Caddy gets and renews a public certificate, no `tls` line is written. **Caddy's internal CA** — the default for a bare port, an IP or a local name (`tls internal`); browsers trust it only where the CA's root is installed. **Off** — plain HTTP. A certificate file under TLS settings overrides the issuer. Inside a named server, TLS is set on the server. |
+| DNS challenge | Shown under Automatic HTTPS. **Inherit global** (default) uses the provider from Settings → DNS challenge, or the HTTP challenge when none is set. **Override** gives the site its own provider and credentials (`tls { dns <provider> {env.CADDY_DNS_SITE_…} }`); the values go to `/etc/caddy/dns.env` under per-site names, and saving new ones restarts Caddy, since it reads them only at start. A wildcard host without any DNS provider gets a warning. Deleting the site removes its variables. |
 | Compression | Enable gzip/zstd response compression |
 | Skip TLS verify | Skip verification of the upstream's TLS certificate (for self-signed backends) |
 

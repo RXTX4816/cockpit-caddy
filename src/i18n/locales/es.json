@@ -1046,6 +1046,13 @@
     "validation_value": "Introduzca un valor para cada opción nueva.",
     "validation_provider": "Elija un proveedor DNS.",
     "restart_needed": "Reinicie Caddy para cargar las credenciales DNS modificadas. Recargar no basta: el servicio solo lee su entorno al arrancar.",
-    "restart_button": "Reiniciar Caddy"
+    "restart_button": "Reiniciar Caddy",
+    "site_label": "Desafío DNS",
+    "site_inherit": "Heredar global ({{provider}})",
+    "site_inherit_none": "Heredar global (sin definir: desafío HTTP)",
+    "site_override": "Sobrescribir: proveedor propio para este sitio",
+    "site_inherit_help": "Usa el proveedor DNS de Ajustes → Desafío DNS, o el desafío HTTP si no hay ninguno.",
+    "site_override_help": "Este sitio usa su propio proveedor DNS y credenciales. Guardar credenciales nuevas reinicia Caddy, porque solo las lee al arrancar.",
+    "site_wildcard_warning": "Los certificados comodín necesitan el desafío DNS. Define un proveedor DNS para este sitio o en Ajustes → Desafío DNS."
   }
 }

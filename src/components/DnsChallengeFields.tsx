@@ -2,7 +2,7 @@ import {
   Alert, Button, FormGroup, FormHelperText, FormSelect, FormSelectOption, HelperText, HelperTextItem, Label, TextInput,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
-import { DNS_MODULES_DOCS, DNS_PROVIDER_PRESETS, dnsEnvVarName } from "../api";
+import { DNS_MODULES_DOCS, DNS_PROVIDER_PRESETS, dnsEnvVarName, isSiteDnsVar } from "../api";
 import type { DnsChallengeConfig } from "../api";
 
 /** One credential as edited: the provider option, a new value (empty = keep), the variable it lives in. */
@@ -31,9 +31,16 @@ export function dnsDraftFromConfig(cfg: DnsChallengeConfig | undefined): DnsDraf
 
 const OPTION_NAME = /^[A-Za-z_][A-Za-z0-9_]*$/;
 
-/** The variable a row writes to: the loaded one while the option keeps its name, else ours. */
+/**
+ * The variable a row writes to: the loaded one while the option keeps its name, else ours.
+ * A per-site variable named for another host (the site was renamed) moves to this host's
+ * name, so a later site with the old name can't share it (#289).
+ */
 function rowEnvName(row: DnsCredentialRow, site?: string): string {
-  return row.envName && row.loadedKey === row.key.trim() ? row.envName : dnsEnvVarName(row.key.trim(), site);
+  const key = row.key.trim();
+  const ours = dnsEnvVarName(key, site);
+  if (!row.envName || row.loadedKey !== key) return ours;
+  return site && isSiteDnsVar(row.envName) && row.envName !== ours ? ours : row.envName;
 }
 
 /**

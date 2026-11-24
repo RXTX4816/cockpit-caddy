@@ -7,7 +7,7 @@
  * and expose the intermediate certificate chain in addition to the root.
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { addProxy, openTool } from './helpers';
+import { addProxy, openTool, spawnCmd } from './helpers';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
   await dismissAdminBanner(page);
@@ -35,4 +35,22 @@ test('CA modal shows no warning and offers intermediate chain when a proxy uses 
 
   await modal.getByRole('button', { name: /intermediate certificate/i }).click();
   await expect(modal.getByRole('button', { name: /download intermediate ca/i })).toBeVisible({ timeout: 5000 });
+});
+
+// #315: the root certificate's dates and fingerprint come from openssl, which only gets the PEM on stdin.
+test('CA modal shows the root certificate dates and fingerprint', async ({ pluginPage: page }) => {
+  await waitForToolbar(page);
+  await addProxy(page, { port: 19504, target: 'localhost:19505', tls: 'internal' });
+  await page.waitForTimeout(3500);
+
+  await openTool(page, /internal ca/i);
+  const modal = page.getByRole('dialog', { name: /internal certificate authority/i });
+  await expect(modal.getByText('Valid from')).toBeVisible({ timeout: 10000 });
+  await expect(modal.getByText('Valid until')).toBeVisible();
+  const shown = (await modal.locator('code').first().textContent())?.trim() ?? '';
+  expect(shown).toMatch(/^([0-9A-F]{2}:){31}[0-9A-F]{2}$/);
+
+  const expected = await spawnCmd(page, ['bash', '-c',
+    'curl -s --unix-socket /run/caddy/admin.socket http://localhost/pki/ca/local | python3 -c "import json,sys; print(json.load(sys.stdin)[\'root_certificate\'])" | openssl x509 -noout -fingerprint -sha256']);
+  expect(expected.trim().replace(/^sha256 Fingerprint=/i, '')).toBe(shown);
 });

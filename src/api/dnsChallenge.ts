@@ -49,6 +49,11 @@ export function dnsEnvVarName(option: string, site?: string): string {
   return `CADDY_DNS_SITE_${envPart(site)}_${h.toString(36).toUpperCase()}_${envPart(option)}`;
 }
 
+/** True for a variable the plugin named for one site (#289), as opposed to the global ones or a hand-written name. */
+export function isSiteDnsVar(name: string): boolean {
+  return name.startsWith("CADDY_DNS_SITE_");
+}
+
 /** systemd EnvironmentFile lines, every value double-quoted with `\` and `"` escaped. */
 export function formatEnvFile(vars: Record<string, string>): string {
   return Object.entries(vars)
@@ -80,12 +85,41 @@ async function rootWithInput(args: string[], data: string): Promise<void> {
   await proc;
 }
 
-async function readEnvFile(): Promise<Record<string, string> | null> {
+async function readEnvText(): Promise<string | null> {
   try {
-    return parseEnvFile(await root(["cat", "--", DNS_ENV_PATH]));
+    return await root(["cat", "--", DNS_ENV_PATH]);
   } catch {
     return null;
   }
+}
+
+async function readEnvFile(): Promise<Record<string, string> | null> {
+  const text = await readEnvText();
+  return text === null ? null : parseEnvFile(text);
+}
+
+async function exists(path: string): Promise<boolean> {
+  try {
+    await root(["test", "-e", path]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Writes the env file root:root mode 600: umask 077 from the start, then an atomic rename. */
+function writeEnvText(text: string): Promise<void> {
+  return rootWithInput(
+    ["sh", "-c", `umask 077 && cat > ${DNS_ENV_PATH}.tmp && chown root:root ${DNS_ENV_PATH}.tmp && chmod 600 ${DNS_ENV_PATH}.tmp && mv ${DNS_ENV_PATH}.tmp ${DNS_ENV_PATH}`],
+    text,
+  );
+}
+
+function writeDropin(): Promise<void> {
+  return rootWithInput(
+    ["sh", "-c", `mkdir -p ${DNS_DROPIN_DIR} && cat > ${DNS_DROPIN_PATH}`],
+    "# Written by the Cockpit Caddy plugin: credentials for the ACME DNS challenge.\n[Service]\nEnvironmentFile=-" + DNS_ENV_PATH + "\n",
+  );
 }
 
 /** The names of the variables in the env file (never their values). */
@@ -103,35 +137,44 @@ export async function dnsEnviron(): Promise<string[]> {
 }
 
 /**
- * Sets and removes credential variables in the env file. Writes it root:root mode 600 (umask
- * 077 from the start, then an atomic rename), adds the systemd drop-in that loads it, and
- * runs `systemctl daemon-reload`. With no variable left, the file and the drop-in go. The
- * new environment only reaches Caddy on a restart; `changed` says one is needed.
+ * Sets and removes credential variables in the env file. Writes it root:root mode 600, adds
+ * the systemd drop-in that loads it, and runs `systemctl daemon-reload`. With no variable
+ * left, the file and the drop-in go. The new environment only reaches Caddy on a restart;
+ * `changed` says one is needed. `restore` puts the file and the drop-in back as they were
+ * before this call (#316), for a save that fails afterwards; the old text stays in this
+ * module and goes back through stdin.
  */
-export async function applyDnsSecrets(set: Record<string, string>, remove: string[]): Promise<{ changed: boolean }> {
+export async function applyDnsSecrets(
+  set: Record<string, string>,
+  remove: string[],
+): Promise<{ changed: boolean; restore: () => Promise<void> }> {
   for (const [k, v] of Object.entries(set)) {
     if (/[\r\n]/.test(v)) throw new Error(`The value of ${k} has a line break`);
     if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(k)) throw new Error(`Invalid variable name: ${k}`);
   }
-  const current = (await readEnvFile()) ?? {};
+  const beforeText = await readEnvText();
+  const current = beforeText === null ? {} : parseEnvFile(beforeText);
   const next = { ...current };
   for (const k of remove) delete next[k];
   Object.assign(next, set);
   const changed = formatEnvFile(next) !== formatEnvFile(current);
-  if (!changed) return { changed: false };
+  if (!changed) return { changed: false, restore: async () => {} };
 
+  const hadDropin = await exists(DNS_DROPIN_PATH);
   if (!Object.keys(next).length) {
     await root(["rm", "-f", DNS_ENV_PATH, DNS_DROPIN_PATH]);
   } else {
-    await rootWithInput(
-      ["sh", "-c", `umask 077 && cat > ${DNS_ENV_PATH}.tmp && chown root:root ${DNS_ENV_PATH}.tmp && chmod 600 ${DNS_ENV_PATH}.tmp && mv ${DNS_ENV_PATH}.tmp ${DNS_ENV_PATH}`],
-      formatEnvFile(next),
-    );
-    await rootWithInput(
-      ["sh", "-c", `mkdir -p ${DNS_DROPIN_DIR} && cat > ${DNS_DROPIN_PATH}`],
-      "# Written by the Cockpit Caddy plugin: credentials for the ACME DNS challenge.\n[Service]\nEnvironmentFile=-" + DNS_ENV_PATH + "\n",
-    );
+    await writeEnvText(formatEnvFile(next));
+    await writeDropin();
   }
   await root(["systemctl", "daemon-reload"]);
-  return { changed: true };
+
+  const restore = async () => {
+    if (beforeText === null) await root(["rm", "-f", DNS_ENV_PATH]);
+    else await writeEnvText(beforeText);
+    if (hadDropin) await writeDropin();
+    else await root(["rm", "-f", DNS_DROPIN_PATH]);
+    await root(["systemctl", "daemon-reload"]);
+  };
+  return { changed: true, restore };
 }

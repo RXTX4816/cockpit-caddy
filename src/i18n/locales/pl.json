@@ -1046,6 +1046,13 @@
     "validation_value": "Podaj wartość dla każdej nowej opcji.",
     "validation_provider": "Wybierz dostawcę DNS.",
     "restart_needed": "Uruchom ponownie Caddy, aby wczytać zmienione dane DNS. Przeładowanie nie wystarczy: usługa czyta swoje środowisko tylko przy starcie.",
-    "restart_button": "Uruchom ponownie Caddy"
+    "restart_button": "Uruchom ponownie Caddy",
+    "site_label": "Wyzwanie DNS",
+    "site_inherit": "Dziedzicz globalne ({{provider}})",
+    "site_inherit_none": "Dziedzicz globalne (nie ustawiono: wyzwanie HTTP)",
+    "site_override": "Zastąp: własny dostawca dla tej witryny",
+    "site_inherit_help": "Używa dostawcy DNS ustawionego w Ustawienia → Wyzwanie DNS albo wyzwania HTTP, jeśli żaden nie jest ustawiony.",
+    "site_override_help": "Ta witryna używa własnego dostawcy DNS i danych logowania. Zapisanie nowych danych uruchamia ponownie Caddy, bo odczytuje je tylko przy starcie.",
+    "site_wildcard_warning": "Certyfikaty wieloznaczne wymagają wyzwania DNS. Ustaw dostawcę DNS dla tej witryny albo w Ustawienia → Wyzwanie DNS."
   }
 }

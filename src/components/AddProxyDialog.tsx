@@ -18,8 +18,9 @@ import {
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
-import { readProxyConf, parseConfExternalAddresses, CaddyApiError, CaddyfileError, routeHosts, hostsConflict, normalizeExternalHost, formatExternalAddressPreview } from "../api";
+import { readProxyConf, parseConfExternalAddresses, CaddyApiError, CaddyfileError, saveWithDnsSecrets, routeHosts, hostsConflict, normalizeExternalHost, formatExternalAddressPreview } from "../api";
 import type { ProxyEntry, ServerDef } from "../api";
+import { useSiteDns } from "./SiteDnsChallenge";
 import { TlsModeField, defaultTlsMode, hasPublicName, tlsModeToEntry, type TlsMode } from "./TlsModeField";
 import { SnippetImportsField } from "./SnippetImportsField";
 import { parseListenPort } from "./AddServerDialog";
@@ -102,6 +103,8 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
   const chosenMode = tlsModeChoice ?? defaultTlsMode(form.externalHost);
   const tlsMode: TlsMode = chosenMode === "acme" && !publicName ? "internal" : chosenMode;
   const [tlsOnDemand, setTlsOnDemand] = useState(initialTlsOnDemand ?? false);
+  // #289: a duplicate starts without the original's DNS override, whose variables belong to it.
+  const siteDns = useSiteDns(undefined, tlsMode === "acme");
 
   const selectedServer = servers?.find(s => s.key === selectedServerKey);
   const serverCtx: ServerContext | undefined = selectedServer ? {
@@ -158,7 +161,7 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
   function handleAddClick() {
     const errs = validate();
     const after = proxyTabStateFlags(tabState, Object.keys(errs).length > 0);
-    const errorTab = firstTabWithError(after.hasError);
+    const errorTab = firstTabWithError(after.hasError) ?? (!serverCtx && siteDns.error(form.externalHost, tlsMode === "acme") ? "general" : undefined);
     if (errorTab) {
       setErrors(errs);
       setActiveTab(errorTab);
@@ -288,7 +291,7 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
             />
 
             {!serverCtx && (
-              <TlsModeField id="tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isLocked} onDemand={tlsOnDemand} onOnDemandChange={setTlsOnDemand} />
+              <TlsModeField id="tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isLocked} onDemand={tlsOnDemand} onOnDemandChange={setTlsOnDemand} dns={siteDns} host={form.externalHost} />
             )}
 
             <FormGroup label={t("add_proxy.field_compress")} fieldId="compress">
@@ -315,8 +318,9 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
             <Button
               variant="primary"
               onClick={() => void confirmAction.submit(async () => {
+                const dns = siteDns.plan(form.externalHost, !serverCtx && tlsMode === "acme");
                 try {
-                  await onAdd({
+                  await saveWithDnsSecrets(dns.secrets, async () => onAdd({
                     externalScheme: serverCtx ? undefined : (form.externalScheme || undefined),
                     externalHost: serverCtx ? undefined : normalizeExternalHost(form.externalHost),
                     externalPort: serverCtx ? serverCtx.port : parseInt(form.externalPort, 10),
@@ -325,13 +329,14 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
                     targetScheme: form.targetScheme,
                     ...(serverCtx ? { tls: form.tls } : tlsModeToEntry(tlsMode, form.externalHost)),
                     tlsOnDemand: tlsMode !== "off" && tlsOnDemand ? true : undefined,
+                    dnsChallenge: dns.config,
                     tlsSkipVerify: form.targetScheme === "https" ? form.tlsSkipVerify : false,
                     compress: form.compress || undefined,
                     label: form.label.trim() || undefined,
                     ...(await proxyTabStateToEntry(tabState)),
                     imports,
                     namedServerKey: serverCtx?.serverKey,
-                  });
+                  }));
                 } catch (e) {
                   if (e instanceof CaddyfileError) {
                     throw new Error(t("proxies.caddyfile_error_title") + ": " + e.message);

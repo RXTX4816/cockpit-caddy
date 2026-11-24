@@ -1046,6 +1046,13 @@
     "validation_value": "Enter a value for each new option.",
     "validation_provider": "Choose a DNS provider.",
     "restart_needed": "Restart Caddy to load the changed DNS credentials. A reload isn't enough: the service reads its environment only when it starts.",
-    "restart_button": "Restart Caddy"
+    "restart_button": "Restart Caddy",
+    "site_label": "DNS challenge",
+    "site_inherit": "Inherit global ({{provider}})",
+    "site_inherit_none": "Inherit global (none set: HTTP challenge)",
+    "site_override": "Override: own provider for this site",
+    "site_inherit_help": "Uses the DNS provider set under Settings → DNS challenge, or the HTTP challenge when none is set.",
+    "site_override_help": "This site uses its own DNS provider and credentials. Saving new credentials restarts Caddy, because it reads them only when it starts.",
+    "site_wildcard_warning": "Wildcard certificates need the DNS challenge. Set a DNS provider for this site, or one under Settings → DNS challenge."
   }
 }

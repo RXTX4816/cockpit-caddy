@@ -32,6 +32,8 @@ With a module installed, pick the provider and enter its credentials (option nam
 
 Caddy reads its environment only when it starts, so after a credential change the page asks for a **restart** (a reload isn't enough). A saved value shows as "Set" and is never displayed again. Turning the setting off removes the `acme_dns` block, the env file and the drop-in.
 
+A site on automatic HTTPS can use its own provider instead: see **DNS challenge** in the site dialog ([Managing Proxies](Managing-Proxies.md)). The global provider applies to every other ACME site; Caddy has no per-site way to opt out of `acme_dns`.
+
 ## On-demand TLS
 
 On-demand TLS gets a site's certificate at the first TLS handshake instead of up front, for names that aren't known in advance. It is turned on **per site**: the site's HTTPS settings have an "On-demand" checkbox, written as `tls { on_demand }`.

@@ -1046,6 +1046,13 @@
     "validation_value": "Anna arvo jokaiselle uudelle asetukselle.",
     "validation_provider": "Valitse DNS-palveluntarjoaja.",
     "restart_needed": "Käynnistä Caddy uudelleen, jotta muuttuneet DNS-tunnistetiedot latautuvat. Uudelleenlataus ei riitä: palvelu lukee ympäristönsä vain käynnistyessään.",
-    "restart_button": "Käynnistä Caddy uudelleen"
+    "restart_button": "Käynnistä Caddy uudelleen",
+    "site_label": "DNS-haaste",
+    "site_inherit": "Peri yleinen ({{provider}})",
+    "site_inherit_none": "Peri yleinen (ei asetettu: HTTP-haaste)",
+    "site_override": "Ohita: oma palveluntarjoaja tälle sivustolle",
+    "site_inherit_help": "Käyttää kohdassa Asetukset → DNS-haaste asetettua DNS-palveluntarjoajaa tai HTTP-haastetta, jos sitä ei ole asetettu.",
+    "site_override_help": "Tämä sivusto käyttää omaa DNS-palveluntarjoajaa ja tunnuksia. Uusien tunnusten tallentaminen käynnistää Caddyn uudelleen, koska se lukee ne vain käynnistyessään.",
+    "site_wildcard_warning": "Jokerimerkkivarmenteet tarvitsevat DNS-haasteen. Aseta DNS-palveluntarjoaja tälle sivustolle tai kohdassa Asetukset → DNS-haaste."
   }
 }

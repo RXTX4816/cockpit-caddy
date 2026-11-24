@@ -1046,6 +1046,13 @@
     "validation_value": "新しいオプションごとに値を入力してください。",
     "validation_provider": "DNS プロバイダーを選択してください。",
     "restart_needed": "変更した DNS 認証情報を読み込むには Caddy を再起動してください。再読み込みでは足りません。サービスは起動時にしか環境を読み込みません。",
-    "restart_button": "Caddy を再起動"
+    "restart_button": "Caddy を再起動",
+    "site_label": "DNS チャレンジ",
+    "site_inherit": "グローバル設定を継承 ({{provider}})",
+    "site_inherit_none": "グローバル設定を継承（未設定: HTTP チャレンジ）",
+    "site_override": "上書き: このサイト専用のプロバイダー",
+    "site_inherit_help": "設定 → DNS チャレンジで設定した DNS プロバイダーを使います。未設定なら HTTP チャレンジを使います。",
+    "site_override_help": "このサイトは専用の DNS プロバイダーと認証情報を使います。新しい認証情報を保存すると Caddy が再起動します（起動時にのみ読み込むため）。",
+    "site_wildcard_warning": "ワイルドカード証明書には DNS チャレンジが必要です。このサイト用、または 設定 → DNS チャレンジ で DNS プロバイダーを設定してください。"
   }
 }
