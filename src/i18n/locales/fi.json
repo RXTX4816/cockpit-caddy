@@ -431,7 +431,7 @@
   },
   "migration": {
     "banner_title": "Siirrä Caddyfile hakemistoon conf.d",
-    "banner_body": "Proxymerkinnät on määritetty suoraan tiedostossa /etc/caddy/Caddyfile. Siirrä ne hakemistoon /etc/caddy/conf.d, jotta tämä liitännäinen voi hallita niitä. Alkuperäinen tiedosto varmuuskopioidaan tiedostoon /etc/caddy/Caddyfile.bak.",
+    "banner_body": "Caddyfile-tiedostosi sivustot siirretään liitännäisen conf.d-tiedostoon, jotta se voi hallita niitä.",
     "button": "Siirrä…",
     "confirm_title": "Siirretäänkö Caddyfile?",
     "confirm_body": "Kaikki proxymerkinnät siirretään sellaisenaan tiedostoon /etc/caddy/conf.d/cockpit-caddy.conf, ja /etc/caddy/Caddyfile korvataan import-lauseella. Alkuperäinen varmuuskopioidaan tiedostoon /etc/caddy/Caddyfile.bak. Caddy ladataan uudelleen automaattisesti.",
@@ -443,7 +443,10 @@
     "gate_continue": "Jatka silti",
     "gate_continue_warning": "Jos jatkat ilman siirtoa, Caddy voi hylätä asetukset päällekkäisten merkintöjen vuoksi.",
     "backup_warning_title": "Varmuuskopioi asetukset ensin",
-    "backup_warning_body": "Siirto varmuuskopioi vain itse Caddyfilen. Tee asetuksista täydellinen varmuuskopio, jotta voit palauttaa kaiken, jos jokin menee pieleen."
+    "backup_warning_body": "Siirto varmuuskopioi vain itse Caddyfilen. Tee asetuksista täydellinen varmuuskopio, jotta voit palauttaa kaiken, jos jokin menee pieleen.",
+    "welcome_label": "Jakelun tervetulosivu",
+    "banner_details_toggle": "Tiedot",
+    "banner_details": "Sivustolohkot siirretään muuttamattomina tiedostosta /etc/caddy/Caddyfile tiedostoon /etc/caddy/conf.d/cockpit-caddy.conf, ja Caddyfileen lisätään conf.d:n import-rivi. Alkuperäinen Caddyfile varmuuskopioidaan tiedostoon /etc/caddy/Caddyfile.bak. Siihen asti liitännäisen muutokset voivat törmätä Caddyfilen sivustoihin."
   },
   "backup": {
     "button": "Varmuuskopio",

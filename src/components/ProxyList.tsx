@@ -29,6 +29,7 @@ import {
   ToolbarContent,
   ToolbarItem,
   Tooltip,
+  ExpandableSection,
 } from "@patternfly/react-core";
 import { ExternalLinkAltIcon, ListAltIcon, SyncAltIcon, ThIcon } from "@patternfly/react-icons";
 import { useTranslation } from "react-i18next";
@@ -305,7 +306,10 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
                 </>
               }
             >
-              {t("migration.banner_body")}
+              <Content component="p">{t("migration.banner_body")}</Content>
+              <ExpandableSection toggleText={t("migration.banner_details_toggle")} data-testid="migration-details">
+                <Content component="p">{t("migration.banner_details")}</Content>
+              </ExpandableSection>
             </Alert>
           </StackItem>
         )}

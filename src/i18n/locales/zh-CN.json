@@ -431,7 +431,7 @@
   },
   "migration": {
     "banner_title": "将 Caddyfile 迁移到 conf.d",
-    "banner_body": "代理条目直接定义在 /etc/caddy/Caddyfile 中。请将其迁移到 /etc/caddy/conf.d，以便此插件管理。原文件将备份到 /etc/caddy/Caddyfile.bak。",
+    "banner_body": "Caddyfile 中的站点将移到插件的 conf.d 文件中，以便插件管理它们。",
     "button": "迁移…",
     "confirm_title": "迁移 Caddyfile？",
     "confirm_body": "所有代理条目将原样移动到 /etc/caddy/conf.d/cockpit-caddy.conf，/etc/caddy/Caddyfile 将替换为一条 import 语句。原文件备份到 /etc/caddy/Caddyfile.bak。Caddy 会自动重新加载。",
@@ -443,7 +443,10 @@
     "gate_continue": "仍然继续",
     "gate_continue_warning": "不迁移就继续，可能导致 Caddy 因重复条目而拒绝配置。",
     "backup_warning_title": "请先备份配置",
-    "backup_warning_body": "迁移只备份 Caddyfile 本身。请创建完整的配置备份，以便出问题时可以恢复全部内容。"
+    "backup_warning_body": "迁移只备份 Caddyfile 本身。请创建完整的配置备份，以便出问题时可以恢复全部内容。",
+    "welcome_label": "发行版欢迎页",
+    "banner_details_toggle": "详细信息",
+    "banner_details": "站点块会原样从 /etc/caddy/Caddyfile 移到 /etc/caddy/conf.d/cockpit-caddy.conf，Caddyfile 会添加一行导入 conf.d 的 import。原始 Caddyfile 备份为 /etc/caddy/Caddyfile.bak。在此之前，插件的更改可能与 Caddyfile 中的站点冲突。"
   },
   "backup": {
     "button": "备份",

@@ -139,3 +139,72 @@ test('migration keeps snippets and the existing conf.d import as written', async
     await reloadCaddy(page);
   }
 });
+
+// #256: the distro's own Caddyfile is no migration case. No warning, no gate; the first
+// save moves the welcome site into conf.d as "Distro welcome page", and it keeps serving.
+test('a stock distro Caddyfile has no migration gate and moves the welcome site on the first save', async ({ pluginPage: page }) => {
+  await dismissAdminBanner(page);
+  const baseline = '{\n\tadmin "unix//run/caddy/admin.socket"\n}\n\nimport /etc/caddy/conf.d/*\n';
+  // The Arch package's Caddyfile, as shipped (comments shortened).
+  const stock = '# The Caddyfile is an easy way to configure your Caddy web server.\n#\n# https://caddyserver.com/docs/caddyfile\n{\n\t# Restrict the admin interface to a local unix file socket.\n\tadmin "unix//run/caddy/admin.socket"\n}\n\nhttp:// {\n\t# Set this path to your site\'s directory.\n\troot * /usr/share/caddy\n\n\t# Enable the static file server.\n\tfile_server\n\n\t# Another common task is to set up a reverse proxy:\n\t# reverse_proxy localhost:8080\n}\n\n# Import additional caddy config files in /etc/caddy/conf.d/\nimport /etc/caddy/conf.d/*\n';
+  try {
+    await writeFile(page, CADDYFILE_PATH, stock);
+    await reloadCaddy(page);
+    await page.reload({ waitUntil: 'networkidle' });
+    await dismissAdminBanner(page);
+
+    await page.getByRole('button', { name: /add proxy/i }).first().waitFor({ state: 'visible', timeout: 15000 });
+    await expect(page.getByText('Migrate Caddyfile to conf.d')).not.toBeVisible();
+
+    await page.getByRole('button', { name: /add proxy/i }).first().click();
+    const modal = page.getByRole('dialog');
+    await expect(modal.getByLabel('External port')).toBeVisible();
+    await modal.getByLabel('External port').fill('19516');
+    await modal.getByLabel(/target host/i).fill('localhost');
+    await modal.locator('#target-port').fill('19517');
+    await modal.getByRole('button', { name: /add proxy/i }).click();
+    await modal.getByRole('button', { name: /^confirm$/i }).click();
+    await expect(modal).not.toBeVisible({ timeout: 15000 });
+
+    const main = await spawnCmd(page, ['cat', CADDYFILE_PATH]);
+    expect(main).not.toContain('root * /usr/share/caddy');
+    expect(main).toContain('import /etc/caddy/conf.d/*\n');
+    const conf = await readConf(page);
+    expect(conf).toContain('# label: Distro welcome page\nhttp:// {');
+    expect(conf).toContain(':19516');
+
+    await expect(page.getByRole('link', { name: ':19516' })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('Distro welcome page')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('Migrate Caddyfile to conf.d')).not.toBeVisible();
+
+    const body = await spawnCmd(page, ['bash', '-c', "curl -s 'http://localhost/'; true"]);
+    expect(body).toContain('Caddy');
+  } finally {
+    await writeFile(page, PROXY_CONF_PATH, `${CONF_HEADER}\n`);
+    await writeFile(page, CADDYFILE_PATH, baseline);
+    await reloadCaddy(page);
+  }
+});
+
+test('a Caddyfile with a user site keeps the shortened warning with details', async ({ pluginPage: page }) => {
+  await dismissAdminBanner(page);
+  const baseline = '{\n\tadmin "unix//run/caddy/admin.socket"\n}\n\nimport /etc/caddy/conf.d/*\n';
+  try {
+    await writeFile(page, CADDYFILE_PATH, '{\n\tadmin "unix//run/caddy/admin.socket"\n}\n\n:19518 {\n\trespond "mine"\n}\n\nimport /etc/caddy/conf.d/*\n');
+    await reloadCaddy(page);
+    await page.reload({ waitUntil: 'networkidle' });
+    await dismissAdminBanner(page);
+
+    await expect(page.getByText('Migrate Caddyfile to conf.d')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText("The sites in your Caddyfile will move to the plugin's conf.d file so it can manage them.")).toBeVisible();
+    await expect(page.getByText(/Caddyfile\.bak/)).not.toBeVisible();
+    await page.getByRole('button', { name: 'Details' }).click();
+    await expect(page.getByText(/Caddyfile\.bak/)).toBeVisible();
+
+    await page.getByRole('button', { name: /add proxy/i }).first().click();
+    await expect(page.getByRole('dialog', { name: /caddyfile migration needed/i })).toBeVisible();
+  } finally {
+    await writeFile(page, CADDYFILE_PATH, baseline);
+    await reloadCaddy(page);
+  }
+});

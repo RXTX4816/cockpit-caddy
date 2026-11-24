@@ -431,7 +431,7 @@
   },
   "migration": {
     "banner_title": "Caddyfile nach conf.d migrieren",
-    "banner_body": "Proxy-Einträge sind direkt in /etc/caddy/Caddyfile definiert. Migrieren Sie sie nach /etc/caddy/conf.d, damit dieses Plugin sie verwalten kann. Die Originaldatei wird nach /etc/caddy/Caddyfile.bak gesichert.",
+    "banner_body": "Die Sites aus Ihrer Caddyfile werden in die conf.d-Datei des Plugins verschoben, damit es sie verwalten kann.",
     "button": "Migrieren…",
     "confirm_title": "Caddyfile migrieren?",
     "confirm_body": "Alle Proxy-Einträge werden unverändert nach /etc/caddy/conf.d/cockpit-caddy.conf verschoben, und /etc/caddy/Caddyfile wird durch eine import-Anweisung ersetzt. Das Original wird nach /etc/caddy/Caddyfile.bak gesichert. Caddy wird automatisch neu geladen.",
@@ -443,7 +443,10 @@
     "gate_continue": "Trotzdem fortfahren",
     "gate_continue_warning": "Ohne Migration fortzufahren kann dazu führen, dass Caddy die Konfiguration wegen doppelter Einträge ablehnt.",
     "backup_warning_title": "Sichern Sie zuerst Ihre Konfiguration",
-    "backup_warning_body": "Die Migration sichert nur die Caddyfile selbst. Erstellen Sie eine vollständige Sicherung der Konfiguration, damit Sie alles wiederherstellen können, falls etwas schiefgeht."
+    "backup_warning_body": "Die Migration sichert nur die Caddyfile selbst. Erstellen Sie eine vollständige Sicherung der Konfiguration, damit Sie alles wiederherstellen können, falls etwas schiefgeht.",
+    "welcome_label": "Willkommensseite der Distribution",
+    "banner_details_toggle": "Details",
+    "banner_details": "Site-Blöcke werden unverändert von /etc/caddy/Caddyfile nach /etc/caddy/conf.d/cockpit-caddy.conf verschoben, und die Caddyfile erhält eine import-Zeile für conf.d. Die ursprüngliche Caddyfile wird unter /etc/caddy/Caddyfile.bak gesichert. Bis dahin können die Änderungen des Plugins mit den Sites in der Caddyfile kollidieren."
   },
   "backup": {
     "button": "Sicherung",

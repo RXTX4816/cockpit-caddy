@@ -431,7 +431,7 @@
   },
   "migration": {
     "banner_title": "Presunúť Caddyfile do conf.d",
-    "banner_body": "Záznamy proxy sú definované priamo v /etc/caddy/Caddyfile. Presuňte ich do /etc/caddy/conf.d, aby ich tento doplnok mohol spravovať. Pôvodný súbor sa zálohuje do /etc/caddy/Caddyfile.bak.",
+    "banner_body": "Weby z vášho Caddyfile sa presunú do súboru conf.d doplnku, aby ich mohol spravovať.",
     "button": "Presunúť…",
     "confirm_title": "Presunúť Caddyfile?",
     "confirm_body": "Všetky záznamy proxy sa bez zmeny presunú do /etc/caddy/conf.d/cockpit-caddy.conf a /etc/caddy/Caddyfile sa nahradí príkazom import. Originál sa zálohuje do /etc/caddy/Caddyfile.bak. Caddy sa automaticky znova načíta.",
@@ -443,7 +443,10 @@
     "gate_continue": "Napriek tomu pokračovať",
     "gate_continue_warning": "Pokračovanie bez migrácie môže viesť k tomu, že Caddy odmietne konfiguráciu pre duplicitné záznamy.",
     "backup_warning_title": "Najprv zálohujte konfiguráciu",
-    "backup_warning_body": "Migrácia zálohuje len samotný Caddyfile. Vytvorte úplnú zálohu konfigurácie, aby ste mohli všetko obnoviť, ak sa niečo pokazí."
+    "backup_warning_body": "Migrácia zálohuje len samotný Caddyfile. Vytvorte úplnú zálohu konfigurácie, aby ste mohli všetko obnoviť, ak sa niečo pokazí.",
+    "welcome_label": "Uvítacia stránka distribúcie",
+    "banner_details_toggle": "Podrobnosti",
+    "banner_details": "Bloky webov sa bez zmeny presunú z /etc/caddy/Caddyfile do /etc/caddy/conf.d/cockpit-caddy.conf a Caddyfile dostane riadok import pre conf.d. Pôvodný Caddyfile sa zálohuje do /etc/caddy/Caddyfile.bak. Dovtedy sa zmeny doplnku môžu stretávať s webmi v Caddyfile."
   },
   "backup": {
     "button": "Záloha",

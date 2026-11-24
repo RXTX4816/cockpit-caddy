@@ -431,7 +431,7 @@
   },
   "migration": {
     "banner_title": "Przenieś Caddyfile do conf.d",
-    "banner_body": "Wpisy proxy są zdefiniowane bezpośrednio w /etc/caddy/Caddyfile. Przenieś je do /etc/caddy/conf.d, aby ta wtyczka mogła nimi zarządzać. Kopia zapasowa oryginalnego pliku trafi do /etc/caddy/Caddyfile.bak.",
+    "banner_body": "Witryny z pliku Caddyfile zostaną przeniesione do pliku conf.d wtyczki, aby mogła nimi zarządzać.",
     "button": "Przenieś…",
     "confirm_title": "Przenieść Caddyfile?",
     "confirm_body": "Wszystkie wpisy proxy zostaną przeniesione bez zmian do /etc/caddy/conf.d/cockpit-caddy.conf, a /etc/caddy/Caddyfile zostanie zastąpiony instrukcją import. Oryginał trafi do /etc/caddy/Caddyfile.bak. Caddy zostanie automatycznie przeładowany.",
@@ -443,7 +443,10 @@
     "gate_continue": "Kontynuuj mimo to",
     "gate_continue_warning": "Kontynuowanie bez migracji może spowodować odrzucenie konfiguracji przez Caddy z powodu zduplikowanych wpisów.",
     "backup_warning_title": "Najpierw utwórz kopię zapasową konfiguracji",
-    "backup_warning_body": "Migracja tworzy kopię tylko samego Caddyfile. Utwórz pełną kopię zapasową konfiguracji, aby móc wszystko przywrócić, gdyby coś poszło nie tak."
+    "backup_warning_body": "Migracja tworzy kopię tylko samego Caddyfile. Utwórz pełną kopię zapasową konfiguracji, aby móc wszystko przywrócić, gdyby coś poszło nie tak.",
+    "welcome_label": "Strona powitalna dystrybucji",
+    "banner_details_toggle": "Szczegóły",
+    "banner_details": "Bloki witryn zostaną przeniesione bez zmian z /etc/caddy/Caddyfile do /etc/caddy/conf.d/cockpit-caddy.conf, a Caddyfile otrzyma wiersz import dla conf.d. Oryginalny Caddyfile zostanie zapisany jako kopia w /etc/caddy/Caddyfile.bak. Do tego czasu zmiany wtyczki mogą kolidować z witrynami w Caddyfile."
   },
   "backup": {
     "button": "Kopia zapasowa",

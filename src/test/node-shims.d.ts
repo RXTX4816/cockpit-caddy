@@ -25,3 +25,9 @@ declare module "node:path" {
 }
 
 declare const process: { env: Record<string, string | undefined> };
+
+// Vite's `?raw` imports: test fixtures read verbatim as strings.
+declare module "*?raw" {
+  const content: string;
+  export default content;
+}

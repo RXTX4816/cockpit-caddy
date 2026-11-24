@@ -431,7 +431,7 @@
   },
   "migration": {
     "banner_title": "ترحيل Caddyfile إلى conf.d",
-    "banner_body": "إدخالات الوكلاء معرّفة مباشرة في /etc/caddy/Caddyfile. رحّلها إلى /etc/caddy/conf.d لتتمكن هذه الإضافة من إدارتها. سيُنسخ الملف الأصلي احتياطيًا إلى /etc/caddy/Caddyfile.bak.",
+    "banner_body": "ستُنقل المواقع الموجودة في ملف Caddyfile إلى ملف conf.d الخاص بالإضافة لتتمكن من إدارتها.",
     "button": "ترحيل…",
     "confirm_title": "ترحيل Caddyfile؟",
     "confirm_body": "ستُنقل كل إدخالات الوكلاء كما هي إلى /etc/caddy/conf.d/cockpit-caddy.conf وسيُستبدل /etc/caddy/Caddyfile بتعليمة import. يُنسخ الأصل احتياطيًا إلى /etc/caddy/Caddyfile.bak. سيُعاد تحميل Caddy تلقائيًا.",
@@ -443,7 +443,10 @@
     "gate_continue": "المتابعة على أي حال",
     "gate_continue_warning": "قد تؤدي المتابعة دون ترحيل إلى رفض Caddy للإعدادات بسبب إدخالات مكررة.",
     "backup_warning_title": "انسخ إعداداتك احتياطيًا أولًا",
-    "backup_warning_body": "لا ينسخ الترحيل احتياطيًا إلا ملف Caddyfile نفسه. أنشئ نسخة احتياطية كاملة من الإعدادات لتتمكن من استعادة كل شيء إذا حدث خطأ."
+    "backup_warning_body": "لا ينسخ الترحيل احتياطيًا إلا ملف Caddyfile نفسه. أنشئ نسخة احتياطية كاملة من الإعدادات لتتمكن من استعادة كل شيء إذا حدث خطأ.",
+    "welcome_label": "صفحة الترحيب للتوزيعة",
+    "banner_details_toggle": "التفاصيل",
+    "banner_details": "تُنقل كتل المواقع دون تغيير من /etc/caddy/Caddyfile إلى /etc/caddy/conf.d/cockpit-caddy.conf، ويُضاف إلى Caddyfile سطر import لـ conf.d. تُحفظ نسخة احتياطية من Caddyfile الأصلي في /etc/caddy/Caddyfile.bak. وحتى ذلك الحين قد تتعارض تغييرات الإضافة مع المواقع الموجودة في Caddyfile."
   },
   "backup": {
     "button": "نسخ احتياطي",

@@ -265,6 +265,14 @@ export function withConfDImport(caddyfile: string): string {
  */
 export async function ensureConfDImported(): Promise<void> {
   const content = await readCaddyfile();
+  if (isStockCaddyfile(content)) {
+    // The distro's welcome site moves into conf.d on the first save (#256), no gate needed.
+    const { caddyfile, confD } = migrateStockCaddyfile(content, await readProxyConf(), i18n.t("migration.welcome_label"));
+    await cockpit.spawn(["mkdir", "-p", "/etc/caddy/conf.d"], { superuser: "try" });
+    await fsWriteFile(PROXY_CONF_PATH, confD, "try");
+    await writeCaddyfile(caddyfile);
+    return;
+  }
   const next = withConfDImport(content);
   if (next !== content) await writeCaddyfile(next);
 }
@@ -322,7 +330,19 @@ const SNIPPETS_CONF_PATH = "/etc/caddy/conf.d/cockpit-caddy-snippets.conf";
  */
 function addressPortKey(address: string): string | undefined {
   const m = address.match(/:(\d+)$/);
-  return m ? m[1] : undefined;
+  if (m) return m[1];
+  return schemeOnlyPort(parseSiteAddresses(address))?.toString();
+}
+
+/**
+ * The port of a header made only of hostless schemes, such as the distros' `http:// {`
+ * welcome site (#256): 80 for `http://`, 443 for `https://`. Undefined for anything else.
+ */
+function schemeOnlyPort(addresses: SiteAddress[] | undefined): number | undefined {
+  if (!addresses?.length || addresses.some(a => a.host || a.port !== undefined || a.path || !a.scheme)) return undefined;
+  if (addresses.every(a => a.scheme === "http")) return 80;
+  if (addresses.every(a => a.scheme === "https")) return 443;
+  return undefined;
 }
 
 /**
@@ -459,6 +479,64 @@ export function migrateCaddyfile(content: string): { blocks: RawBlock[]; caddyfi
   }
   rest = rest.replace(/\n{3,}/g, "\n\n").replace(/^\n+/, "");
   return { blocks, caddyfile: withConfDImport(rest.trimEnd() + "\n") };
+}
+
+/** The addresses a distro's welcome site listens on: the plain-HTTP catch-all (#256). */
+const STOCK_WELCOME_ADDRESSES = new Set([":80", "http://", "http://:80"]);
+
+/** Strips `#` comments (outside quotes) and blank lines, leaving trimmed directive lines. */
+function significantLines(text: string): string[] {
+  return text.split("\n").map(stripLineComment).map(l => l.trim()).filter(Boolean);
+}
+
+function stripLineComment(line: string): string {
+  let quote: string | null = null;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (quote) {
+      if (c === "\\" && quote === '"') i++;
+      else if (c === quote) quote = null;
+    } else if (c === '"' || c === "`") quote = c;
+    else if (c === "#" && (i === 0 || /\s/.test(line[i - 1]))) return line.slice(0, i);
+  }
+  return line;
+}
+
+/**
+ * True when the main Caddyfile is the one the distro package ships (#256): its only site
+ * is the welcome page, a port-80 catch-all with nothing but `root [*] /usr/share/caddy` and
+ * `file_server`. Comments, blank lines, the global options block and import lines don't
+ * count; anything else (another site, a snippet, an extra directive) means it isn't stock.
+ */
+export function isStockCaddyfile(content: string): boolean {
+  const { blocks, caddyfile: rest } = migrateCaddyfile(content);
+  if (blocks.length !== 1) return false;
+  const [site] = blocks;
+  if (!STOCK_WELCOME_ADDRESSES.has(site.address)) return false;
+
+  const body = significantLines(site.raw).slice(1, -1);
+  const want = ["file_server", "root /usr/share/caddy"];
+  const got = body.map(l => l.replace(/\s+/g, " ").replace(/^root \* /, "root ")).sort();
+  if (got.length !== want.length || got.some((l, i) => l !== want[i])) return false;
+
+  // Whatever is left besides the site: only the global options block and imports.
+  const globalBlock = findGlobalBlock(rest);
+  const outside = globalBlock ? rest.slice(0, globalBlock.open) + rest.slice(globalBlock.close + 1) : rest;
+  return significantLines(outside).every(l => /^import\s/.test(l));
+}
+
+/**
+ * Moves a stock Caddyfile's welcome site into conf.d (#256), labelled so it shows up as an
+ * ordinary static site, and adds the conf.d import. Existing conf.d content stays as it is.
+ */
+export function migrateStockCaddyfile(
+  content: string, existingConfD: string, label: string,
+): { caddyfile: string; confD: string } {
+  const { blocks, caddyfile } = migrateCaddyfile(content);
+  return {
+    caddyfile,
+    confD: mergeMigratedConfContent(existingConfD, blocks.map(b => ({ ...b, label }))),
+  };
 }
 
 /** Builds the conf.d file content from raw blocks, preserving all original syntax. */
@@ -2129,6 +2207,8 @@ function blockHeaderTarget(header: string): { port: number; hosts: string[] } | 
     const hostMatch = header.match(/^(?:[\w+.-]+:\/\/)?([^\s{:]*):\d+[^{]*\{$/);
     return { port, hosts: hostMatch?.[1] ? [hostMatch[1]] : [] };
   }
+  const schemePort = schemeOnlyPort(addresses);
+  if (schemePort !== undefined) return { port: schemePort, hosts: [] };
   if (!addresses || addresses.some(a => !a.host || a.port !== undefined)) return undefined;
   const port = addresses.every(a => a.scheme === "http") ? 80 : 443;
   return { port, hosts: [...new Set(addresses.map(a => a.host!))] };
@@ -5283,6 +5363,7 @@ function patchTopLevelMarkedSection(content: string, beginMarker: string, endMar
 }
 
 export async function syncGlobalOptions(opts: GlobalOptions): Promise<void> {
+  await ensureConfDImported(); // a stock Caddyfile is migrated first (#256)
   const diskContent = (await fsReadFile(MAIN_CADDYFILE, "try")) ?? "";
   let patched = buildGlobalOptionsPatch(diskContent, opts);
 

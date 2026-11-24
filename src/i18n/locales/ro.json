@@ -431,7 +431,7 @@
   },
   "migration": {
     "banner_title": "Migrează Caddyfile în conf.d",
-    "banner_body": "Intrările proxy sunt definite direct în /etc/caddy/Caddyfile. Migrează-le în /etc/caddy/conf.d ca acest plugin să le poată gestiona. Fișierul original va fi salvat în /etc/caddy/Caddyfile.bak.",
+    "banner_body": "Site-urile din Caddyfile vor fi mutate în fișierul conf.d al pluginului, ca acesta să le poată gestiona.",
     "button": "Migrează…",
     "confirm_title": "Migrezi Caddyfile?",
     "confirm_body": "Toate intrările proxy vor fi mutate neschimbate în /etc/caddy/conf.d/cockpit-caddy.conf, iar /etc/caddy/Caddyfile va fi înlocuit cu o instrucțiune import. Originalul este salvat în /etc/caddy/Caddyfile.bak. Caddy va fi reîncărcat automat.",
@@ -443,7 +443,10 @@
     "gate_continue": "Continuă oricum",
     "gate_continue_warning": "Continuarea fără migrare poate face ca Caddy să respingă configurația din cauza intrărilor duplicate.",
     "backup_warning_title": "Fă mai întâi o copie de siguranță a configurației",
-    "backup_warning_body": "Migrarea salvează doar Caddyfile-ul în sine. Creează o copie de siguranță completă a configurației, ca să poți restaura totul dacă ceva nu merge bine."
+    "backup_warning_body": "Migrarea salvează doar Caddyfile-ul în sine. Creează o copie de siguranță completă a configurației, ca să poți restaura totul dacă ceva nu merge bine.",
+    "welcome_label": "Pagina de bun venit a distribuției",
+    "banner_details_toggle": "Detalii",
+    "banner_details": "Blocurile de site sunt mutate neschimbate din /etc/caddy/Caddyfile în /etc/caddy/conf.d/cockpit-caddy.conf, iar Caddyfile primește o linie import pentru conf.d. Caddyfile-ul original este salvat în /etc/caddy/Caddyfile.bak. Până atunci, modificările pluginului pot intra în conflict cu site-urile din Caddyfile."
   },
   "backup": {
     "button": "Copie de siguranță",

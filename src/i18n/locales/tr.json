@@ -431,7 +431,7 @@
   },
   "migration": {
     "banner_title": "Caddyfile'ı conf.d'ye taşı",
-    "banner_body": "Proxy girdileri doğrudan /etc/caddy/Caddyfile içinde tanımlı. Bu eklentinin onları yönetebilmesi için /etc/caddy/conf.d'ye taşıyın. Özgün dosya /etc/caddy/Caddyfile.bak olarak yedeklenecek.",
+    "banner_body": "Caddyfile içindeki siteler, eklentinin yönetebilmesi için eklentinin conf.d dosyasına taşınacak.",
     "button": "Taşı…",
     "confirm_title": "Caddyfile taşınsın mı?",
     "confirm_body": "Tüm proxy girdileri olduğu gibi /etc/caddy/conf.d/cockpit-caddy.conf dosyasına taşınacak ve /etc/caddy/Caddyfile bir import ifadesiyle değiştirilecek. Özgün dosya /etc/caddy/Caddyfile.bak olarak yedeklenir. Caddy otomatik olarak yeniden yüklenecek.",
@@ -443,7 +443,10 @@
     "gate_continue": "Yine de devam et",
     "gate_continue_warning": "Taşımadan devam etmek, Caddy'nin yinelenen girdiler nedeniyle yapılandırmayı reddetmesine yol açabilir.",
     "backup_warning_title": "Önce yapılandırmanızı yedekleyin",
-    "backup_warning_body": "Taşıma yalnızca Caddyfile'ın kendisini yedekler. Bir sorun olursa her şeyi geri yükleyebilmek için yapılandırmanın tam yedeğini oluşturun."
+    "backup_warning_body": "Taşıma yalnızca Caddyfile'ın kendisini yedekler. Bir sorun olursa her şeyi geri yükleyebilmek için yapılandırmanın tam yedeğini oluşturun.",
+    "welcome_label": "Dağıtımın karşılama sayfası",
+    "banner_details_toggle": "Ayrıntılar",
+    "banner_details": "Site blokları /etc/caddy/Caddyfile dosyasından /etc/caddy/conf.d/cockpit-caddy.conf dosyasına değiştirilmeden taşınır ve Caddyfile'a conf.d için bir import satırı eklenir. Özgün Caddyfile /etc/caddy/Caddyfile.bak olarak yedeklenir. O zamana kadar eklentinin değişiklikleri Caddyfile'daki sitelerle çakışabilir."
   },
   "backup": {
     "button": "Yedekle",

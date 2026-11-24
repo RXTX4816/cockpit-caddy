@@ -431,7 +431,7 @@
   },
   "migration": {
     "banner_title": "Migrera Caddyfile till conf.d",
-    "banner_body": "Proxyposter är definierade direkt i /etc/caddy/Caddyfile. Migrera dem till /etc/caddy/conf.d så att det här tillägget kan hantera dem. Originalfilen säkerhetskopieras till /etc/caddy/Caddyfile.bak.",
+    "banner_body": "Webbplatserna i din Caddyfile flyttas till insticksprogrammets conf.d-fil så att det kan hantera dem.",
     "button": "Migrera…",
     "confirm_title": "Migrera Caddyfile?",
     "confirm_body": "Alla proxyposter flyttas oförändrade till /etc/caddy/conf.d/cockpit-caddy.conf och /etc/caddy/Caddyfile ersätts med en import-sats. Originalet säkerhetskopieras till /etc/caddy/Caddyfile.bak. Caddy läses in igen automatiskt.",
@@ -443,7 +443,10 @@
     "gate_continue": "Fortsätt ändå",
     "gate_continue_warning": "Att fortsätta utan migrering kan göra att Caddy avvisar konfigurationen på grund av dubbletter.",
     "backup_warning_title": "Säkerhetskopiera konfigurationen först",
-    "backup_warning_body": "Migreringen säkerhetskopierar bara själva Caddyfile. Skapa en fullständig säkerhetskopia av konfigurationen så att du kan återställa allt om något går fel."
+    "backup_warning_body": "Migreringen säkerhetskopierar bara själva Caddyfile. Skapa en fullständig säkerhetskopia av konfigurationen så att du kan återställa allt om något går fel.",
+    "welcome_label": "Distributionens välkomstsida",
+    "banner_details_toggle": "Detaljer",
+    "banner_details": "Webbplatsblocken flyttas oförändrade från /etc/caddy/Caddyfile till /etc/caddy/conf.d/cockpit-caddy.conf, och Caddyfile får en import-rad för conf.d. Den ursprungliga Caddyfile säkerhetskopieras till /etc/caddy/Caddyfile.bak. Till dess kan insticksprogrammets ändringar krocka med webbplatserna i Caddyfile."
   },
   "backup": {
     "button": "Säkerhetskopiera",

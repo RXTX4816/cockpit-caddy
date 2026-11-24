@@ -431,7 +431,7 @@
   },
   "migration": {
     "banner_title": "Перенести Caddyfile до conf.d",
-    "banner_body": "Записи проксі визначено прямо в /etc/caddy/Caddyfile. Перенесіть їх до /etc/caddy/conf.d, щоб цей плагін міг ними керувати. Резервну копію вихідного файлу буде збережено в /etc/caddy/Caddyfile.bak.",
+    "banner_body": "Сайти з вашого Caddyfile буде перенесено у файл conf.d плагіна, щоб він міг ними керувати.",
     "button": "Перенести…",
     "confirm_title": "Перенести Caddyfile?",
     "confirm_body": "Усі записи проксі буде перенесено без змін до /etc/caddy/conf.d/cockpit-caddy.conf, а /etc/caddy/Caddyfile буде замінено інструкцією import. Оригінал зберігається в /etc/caddy/Caddyfile.bak. Caddy буде перезавантажено автоматично.",
@@ -443,7 +443,10 @@
     "gate_continue": "Усе одно продовжити",
     "gate_continue_warning": "Якщо продовжити без перенесення, Caddy може відхилити конфігурацію через дублікати записів.",
     "backup_warning_title": "Спочатку створіть резервну копію конфігурації",
-    "backup_warning_body": "Перенесення зберігає копію лише самого Caddyfile. Створіть повну резервну копію конфігурації, щоб можна було все відновити, якщо щось піде не так."
+    "backup_warning_body": "Перенесення зберігає копію лише самого Caddyfile. Створіть повну резервну копію конфігурації, щоб можна було все відновити, якщо щось піде не так.",
+    "welcome_label": "Вітальна сторінка дистрибутива",
+    "banner_details_toggle": "Подробиці",
+    "banner_details": "Блоки сайтів переносяться без змін з /etc/caddy/Caddyfile до /etc/caddy/conf.d/cockpit-caddy.conf, а до Caddyfile додається рядок import для conf.d. Початковий Caddyfile зберігається в /etc/caddy/Caddyfile.bak. До того зміни плагіна можуть конфліктувати із сайтами в Caddyfile."
   },
   "backup": {
     "button": "Резервна копія",
