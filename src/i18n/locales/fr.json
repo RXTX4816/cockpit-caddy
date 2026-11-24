@@ -485,7 +485,6 @@
     "gate_continue_warning": "Continuer sans migrer peut amener Caddy à rejeter la configuration à cause d'entrées en double.",
     "backup_warning_title": "Sauvegardez d'abord votre configuration",
     "backup_warning_body": "La migration ne sauvegarde que le Caddyfile lui-même. Créez une sauvegarde complète de la configuration pour pouvoir tout restaurer en cas de problème.",
-    "welcome_label": "Page d’accueil de la distribution",
     "banner_details_toggle": "Détails",
     "banner_details": "Les blocs de site sont déplacés tels quels de /etc/caddy/Caddyfile vers /etc/caddy/conf.d/cockpit-caddy.conf, et le Caddyfile reçoit une ligne import pour conf.d. Le Caddyfile d’origine est sauvegardé dans /etc/caddy/Caddyfile.bak. D’ici là, les modifications du plugin peuvent entrer en conflit avec les sites du Caddyfile."
   },

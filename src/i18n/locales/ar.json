@@ -485,7 +485,6 @@
     "gate_continue_warning": "قد تؤدي المتابعة دون ترحيل إلى رفض Caddy للإعدادات بسبب إدخالات مكررة.",
     "backup_warning_title": "انسخ إعداداتك احتياطيًا أولًا",
     "backup_warning_body": "لا ينسخ الترحيل احتياطيًا إلا ملف Caddyfile نفسه. أنشئ نسخة احتياطية كاملة من الإعدادات لتتمكن من استعادة كل شيء إذا حدث خطأ.",
-    "welcome_label": "صفحة الترحيب للتوزيعة",
     "banner_details_toggle": "التفاصيل",
     "banner_details": "تُنقل كتل المواقع دون تغيير من /etc/caddy/Caddyfile إلى /etc/caddy/conf.d/cockpit-caddy.conf، ويُضاف إلى Caddyfile سطر import لـ conf.d. تُحفظ نسخة احتياطية من Caddyfile الأصلي في /etc/caddy/Caddyfile.bak. وحتى ذلك الحين قد تتعارض تغييرات الإضافة مع المواقع الموجودة في Caddyfile."
   },

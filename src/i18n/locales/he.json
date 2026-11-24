@@ -485,7 +485,6 @@
     "gate_continue_warning": "המשך בלי העברה עלול לגרום ל-Caddy לדחות את התצורה בגלל רשומות כפולות.",
     "backup_warning_title": "קודם כדאי לגבות את התצורה",
     "backup_warning_body": "ההעברה מגבה רק את ה-Caddyfile עצמו. כדאי ליצור גיבוי מלא של התצורה כדי שאפשר יהיה לשחזר הכול אם משהו ישתבש.",
-    "welcome_label": "דף הפתיחה של ההפצה",
     "banner_details_toggle": "פרטים",
     "banner_details": "בלוקי האתרים מועברים ללא שינוי מ-/etc/caddy/Caddyfile אל /etc/caddy/conf.d/cockpit-caddy.conf, ו-Caddyfile מקבל שורת import עבור conf.d. עותק גיבוי של Caddyfile המקורי נשמר ב-/etc/caddy/Caddyfile.bak. עד אז, שינויי התוסף עלולים להתנגש עם האתרים ב-Caddyfile."
   },

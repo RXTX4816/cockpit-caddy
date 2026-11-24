@@ -32,8 +32,9 @@ export function fileServerOptionsFromDraft(d: FileServerOptionsDraft): Pick<File
   if (d.spa) out.spa = true;
   if (words(d.index).length) out.index = words(d.index);
   if (words(d.hide).length) out.hide = words(d.hide);
-  // Keep Caddy's preference order (zstd, br, gzip) whatever order they were ticked in.
-  const pre = PRECOMPRESSED_FORMATS.filter(f => d.precompressed.includes(f));
+  // The order is Caddy's preference order: keep the one the site already has (ticking a box
+  // appends), so saving a hand-written `precompressed gzip br` doesn't reorder it.
+  const pre = d.precompressed.filter((f, i, all) => all.indexOf(f) === i);
   if (pre.length) out.precompressed = pre;
   return out;
 }

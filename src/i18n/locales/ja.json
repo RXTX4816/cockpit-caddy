@@ -485,7 +485,6 @@
     "gate_continue_warning": "移行せずに続行すると、重複したエントリーのために Caddy が設定を拒否する場合があります。",
     "backup_warning_title": "先に設定をバックアップしてください",
     "backup_warning_body": "移行でバックアップされるのは Caddyfile 本体だけです。問題が起きたときにすべてを復元できるよう、設定全体のバックアップを作成してください。",
-    "welcome_label": "ディストリビューションのウェルカムページ",
     "banner_details_toggle": "詳細",
     "banner_details": "サイトブロックは /etc/caddy/Caddyfile から /etc/caddy/conf.d/cockpit-caddy.conf へそのまま移動され、Caddyfile には conf.d の import 行が追加されます。元の Caddyfile は /etc/caddy/Caddyfile.bak にバックアップされます。それまでは、プラグインの変更が Caddyfile 内のサイトと衝突することがあります。"
   },

@@ -485,7 +485,6 @@
     "gate_continue_warning": "Continuare senza migrazione può portare Caddy a rifiutare la configurazione per voci duplicate.",
     "backup_warning_title": "Esegui prima un backup della configurazione",
     "backup_warning_body": "La migrazione salva solo il Caddyfile stesso. Crea un backup completo della configurazione per poter ripristinare tutto in caso di problemi.",
-    "welcome_label": "Pagina di benvenuto della distribuzione",
     "banner_details_toggle": "Dettagli",
     "banner_details": "I blocchi dei siti vengono spostati senza modifiche da /etc/caddy/Caddyfile a /etc/caddy/conf.d/cockpit-caddy.conf e il Caddyfile riceve una riga import per conf.d. Il Caddyfile originale viene salvato in /etc/caddy/Caddyfile.bak. Fino ad allora, le modifiche del plugin possono entrare in conflitto con i siti del Caddyfile."
   },

@@ -485,7 +485,6 @@
     "gate_continue_warning": "Якщо продовжити без перенесення, Caddy може відхилити конфігурацію через дублікати записів.",
     "backup_warning_title": "Спочатку створіть резервну копію конфігурації",
     "backup_warning_body": "Перенесення зберігає копію лише самого Caddyfile. Створіть повну резервну копію конфігурації, щоб можна було все відновити, якщо щось піде не так.",
-    "welcome_label": "Вітальна сторінка дистрибутива",
     "banner_details_toggle": "Подробиці",
     "banner_details": "Блоки сайтів переносяться без змін з /etc/caddy/Caddyfile до /etc/caddy/conf.d/cockpit-caddy.conf, а до Caddyfile додається рядок import для conf.d. Початковий Caddyfile зберігається в /etc/caddy/Caddyfile.bak. До того зміни плагіна можуть конфліктувати із сайтами в Caddyfile."
   },

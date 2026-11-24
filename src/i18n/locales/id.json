@@ -485,7 +485,6 @@
     "gate_continue_warning": "Melanjutkan tanpa migrasi dapat membuat Caddy menolak konfigurasi karena entri ganda.",
     "backup_warning_title": "Cadangkan konfigurasi Anda terlebih dahulu",
     "backup_warning_body": "Migrasi hanya mencadangkan Caddyfile itu sendiri. Buat cadangan konfigurasi lengkap agar Anda dapat memulihkan semuanya jika terjadi masalah.",
-    "welcome_label": "Halaman sambutan distro",
     "banner_details_toggle": "Detail",
     "banner_details": "Blok situs dipindahkan tanpa perubahan dari /etc/caddy/Caddyfile ke /etc/caddy/conf.d/cockpit-caddy.conf, dan Caddyfile mendapat baris import untuk conf.d. Caddyfile asli dicadangkan ke /etc/caddy/Caddyfile.bak. Sampai saat itu, perubahan plugin dapat berbenturan dengan situs di Caddyfile."
   },

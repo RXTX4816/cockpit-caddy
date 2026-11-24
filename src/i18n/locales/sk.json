@@ -485,7 +485,6 @@
     "gate_continue_warning": "Pokračovanie bez migrácie môže viesť k tomu, že Caddy odmietne konfiguráciu pre duplicitné záznamy.",
     "backup_warning_title": "Najprv zálohujte konfiguráciu",
     "backup_warning_body": "Migrácia zálohuje len samotný Caddyfile. Vytvorte úplnú zálohu konfigurácie, aby ste mohli všetko obnoviť, ak sa niečo pokazí.",
-    "welcome_label": "Uvítacia stránka distribúcie",
     "banner_details_toggle": "Podrobnosti",
     "banner_details": "Bloky webov sa bez zmeny presunú z /etc/caddy/Caddyfile do /etc/caddy/conf.d/cockpit-caddy.conf a Caddyfile dostane riadok import pre conf.d. Pôvodný Caddyfile sa zálohuje do /etc/caddy/Caddyfile.bak. Dovtedy sa zmeny doplnku môžu stretávať s webmi v Caddyfile."
   },

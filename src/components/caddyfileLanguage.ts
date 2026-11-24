@@ -23,8 +23,8 @@ export type CaddyfileToken =
   | "comment" | "string" | "placeholder" | "brace" | "address" | "snippet"
   | "directive" | "matcher" | "path";
 
-/** Characters a word token can't hold; `{…}` placeholders are allowed inside a word. */
-const WORD = /^(?:[^\s{}"`]|\{[^\s{}]*\})+/;
+/** A word token; a `{…}` placeholder inside it (`/api/{path}`) becomes a token of its own. */
+const WORD = /^[^\s{}"`]+/;
 
 export const caddyfileStreamParser: StreamParser<CaddyfileState> = {
   name: "caddyfile",
@@ -89,8 +89,7 @@ export const caddyfileStreamParser: StreamParser<CaddyfileState> = {
       return "string";
     }
     if (stream.match(/^\{[^\s{}]+\}/)) {
-      // A placeholder on its own, e.g. `{http.request.host}`, possibly followed by more text.
-      stream.match(WORD);
+      // A placeholder, standing alone (`{http.request.host}`) or inside a word (`/api/{path}`).
       state.tokenIndex++;
       return state.depth === 0 && !state.importLine ? "address" : "placeholder";
     }

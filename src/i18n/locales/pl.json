@@ -485,7 +485,6 @@
     "gate_continue_warning": "Kontynuowanie bez migracji może spowodować odrzucenie konfiguracji przez Caddy z powodu zduplikowanych wpisów.",
     "backup_warning_title": "Najpierw utwórz kopię zapasową konfiguracji",
     "backup_warning_body": "Migracja tworzy kopię tylko samego Caddyfile. Utwórz pełną kopię zapasową konfiguracji, aby móc wszystko przywrócić, gdyby coś poszło nie tak.",
-    "welcome_label": "Strona powitalna dystrybucji",
     "banner_details_toggle": "Szczegóły",
     "banner_details": "Bloki witryn zostaną przeniesione bez zmian z /etc/caddy/Caddyfile do /etc/caddy/conf.d/cockpit-caddy.conf, a Caddyfile otrzyma wiersz import dla conf.d. Oryginalny Caddyfile zostanie zapisany jako kopia w /etc/caddy/Caddyfile.bak. Do tego czasu zmiany wtyczki mogą kolidować z witrynami w Caddyfile."
   },

@@ -485,7 +485,6 @@
     "gate_continue_warning": "Continuarea fără migrare poate face ca Caddy să respingă configurația din cauza intrărilor duplicate.",
     "backup_warning_title": "Fă mai întâi o copie de siguranță a configurației",
     "backup_warning_body": "Migrarea salvează doar Caddyfile-ul în sine. Creează o copie de siguranță completă a configurației, ca să poți restaura totul dacă ceva nu merge bine.",
-    "welcome_label": "Pagina de bun venit a distribuției",
     "banner_details_toggle": "Detalii",
     "banner_details": "Blocurile de site sunt mutate neschimbate din /etc/caddy/Caddyfile în /etc/caddy/conf.d/cockpit-caddy.conf, iar Caddyfile primește o linie import pentru conf.d. Caddyfile-ul original este salvat în /etc/caddy/Caddyfile.bak. Până atunci, modificările pluginului pot intra în conflict cu site-urile din Caddyfile."
   },

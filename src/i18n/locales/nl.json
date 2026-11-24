@@ -485,7 +485,6 @@
     "gate_continue_warning": "Doorgaan zonder migratie kan ertoe leiden dat Caddy de configuratie weigert vanwege dubbele items.",
     "backup_warning_title": "Maak eerst een back-up van je configuratie",
     "backup_warning_body": "De migratie maakt alleen een back-up van de Caddyfile zelf. Maak een volledige back-up van de configuratie zodat je alles kunt herstellen als er iets misgaat.",
-    "welcome_label": "Welkomstpagina van de distributie",
     "banner_details_toggle": "Details",
     "banner_details": "Siteblokken worden ongewijzigd verplaatst van /etc/caddy/Caddyfile naar /etc/caddy/conf.d/cockpit-caddy.conf, en de Caddyfile krijgt een import-regel voor conf.d. De oorspronkelijke Caddyfile wordt bewaard als /etc/caddy/Caddyfile.bak. Tot die tijd kunnen wijzigingen van de plug-in botsen met de sites in de Caddyfile."
   },
