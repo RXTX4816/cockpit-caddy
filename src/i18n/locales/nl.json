@@ -242,6 +242,7 @@
     "confirm_body": "Er wordt een omleiding op :{{port}} → {{to}} ({{code}}) aangemaakt en de Caddy-configuratie wordt herladen."
   },
   "basic_auth": {
+    "heading": "HTTP Basic Auth",
     "section_title": "HTTP Basic Auth (optioneel)",
     "field_username": "Gebruikersnaam",
     "field_password": "Wachtwoord",
@@ -250,12 +251,14 @@
     "remove_button": "Account verwijderen"
   },
   "transport": {
+    "heading": "Upstream-time-outs",
     "section_title": "Upstream-time-outs (optioneel)",
     "dial_timeout": "Verbindingstime-out",
     "response_header_timeout": "Time-out voor antwoordheaders",
     "defaults_help": "Laat een veld leeg om de standaardwaarde van Caddy te gebruiken (grijs weergegeven). Een time-out voor response-headers breekt long polling en trage antwoorden af."
   },
   "server_timeouts": {
+    "heading": "Servertime-outs & -limieten",
     "section_title": "Servertime-outs & -limieten (optioneel)",
     "defaults_help": "Laat een veld leeg om de standaardwaarde van Caddy te gebruiken (grijs weergegeven). Een time-out voor het lezen van de body of het schrijven breekt elke upload of download af die langer duurt.",
     "no_timeout": "geen",
@@ -274,6 +277,7 @@
     "field_help": "Grotere request-bodies worden geweigerd voordat ze de backend bereiken. Laat leeg voor geen limiet (Caddy-standaard)."
   },
   "rewrite": {
+    "heading": "URI herschrijven",
     "section_title": "URI herschrijven (optioneel)",
     "type_none": "Geen",
     "type_strip_prefix": "Prefix verwijderen",
@@ -301,6 +305,7 @@
     "confirm_cancel": "Annuleren"
   },
   "upstreams": {
+    "heading": "Extra upstreams",
     "section_title": "Extra upstreams (optioneel)",
     "section_hide": "Extra upstreams",
     "field_host": "Host",
@@ -316,6 +321,7 @@
     "validation_port": "De poort moet tussen 1 en 65535 liggen"
   },
   "lb_retry": {
+    "heading": "Herhaalpogingen & failover",
     "section_title": "Herhaalpogingen & failover (optioneel)",
     "retries": "Max. aantal herhaalpogingen",
     "try_duration": "Tijdsbudget voor herhaalpogingen",
@@ -341,6 +347,7 @@
     "validation_health_status": "Gebruik een statuscode zoals 200 of een klasse zoals 2xx"
   },
   "response_headers": {
+    "heading": "Antwoordheaders",
     "section_title": "Antwoordheaders (optioneel)",
     "op_set": "Instellen",
     "op_add": "Toevoegen",
@@ -356,6 +363,7 @@
     "preset_remove_server": "Server verwijderen"
   },
   "request_headers": {
+    "heading": "Requestheaders",
     "section_title": "Requestheaders (optioneel)",
     "op_set": "Instellen",
     "op_add": "Toevoegen",
@@ -487,6 +495,7 @@
     "continue_button": "Doorgaan op eigen risico"
   },
   "access_log": {
+    "heading": "Toegangslogboek",
     "section_title": "Toegangslogboek",
     "section_title_on": "Toegangslogboek (ingeschakeld)",
     "enable": "Toegangslogboek inschakelen",
@@ -711,6 +720,7 @@
     "save_tooltip": "Test eerst een geslaagde verbinding"
   },
   "forward_auth": {
+    "heading": "Forward-authenticatie",
     "section_title": "Forward-authenticatie (optioneel)",
     "section_title_on": "Forward-authenticatie (ingeschakeld)",
     "enable_button": "Forward-authenticatie inschakelen",
@@ -725,6 +735,7 @@
     "validation_uri_required": "Een auth-URI is verplicht als er een URL van de authenticatieservice is ingesteld"
   },
   "tls_policy": {
+    "heading": "TLS-beleid",
     "section_title": "TLS-beleid (optioneel)",
     "section_title_on": "TLS-beleid (geconfigureerd)",
     "protocol_min": "Minimale TLS-versie",
@@ -772,6 +783,7 @@
     "custom_cert_lifetime_note": "Hierboven is een eigen certificaat geladen — certificaatlevensduur en vernieuwingsvenster zijn niet van toepassing, omdat Caddy zelf niets uitgeeft."
   },
   "error_handler": {
+    "heading": "Eigen foutafhandeling",
     "section_title": "Eigen foutafhandeling (optioneel)",
     "section_title_on": "Eigen foutafhandeling ({{count}})",
     "add_button": "Foutafhandeling toevoegen",
@@ -798,6 +810,7 @@
     "field_file_root_help": "Caddy serveert {status_code}.html uit deze map (bijv. /var/www/errors/404.html)"
   },
   "matchers": {
+    "heading": "Route-matchers",
     "section_title": "Route-matchers (optioneel)",
     "type_path": "Pad",
     "type_host": "Host",

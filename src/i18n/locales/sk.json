@@ -242,6 +242,7 @@
     "confirm_body": "Vytvorí sa presmerovanie :{{port}} → {{to}} ({{code}}) a konfigurácia Caddy sa znova načíta."
   },
   "basic_auth": {
+    "heading": "HTTP Basic Auth",
     "section_title": "HTTP Basic Auth (voliteľné)",
     "field_username": "Používateľské meno",
     "field_password": "Heslo",
@@ -250,12 +251,14 @@
     "remove_button": "Odstrániť účet"
   },
   "transport": {
+    "heading": "Časové limity upstreamu",
     "section_title": "Časové limity upstreamu (voliteľné)",
     "dial_timeout": "Časový limit pripojenia",
     "response_header_timeout": "Časový limit hlavičiek odpovede",
     "defaults_help": "Nechajte pole prázdne a použije sa predvolená hodnota Caddy (zobrazená sivo). Časový limit hlavičiek odpovede preruší long polling a pomalé odpovede."
   },
   "server_timeouts": {
+    "heading": "Časové limity a obmedzenia servera",
     "section_title": "Časové limity a obmedzenia servera (voliteľné)",
     "defaults_help": "Nechajte pole prázdne a použije sa predvolená hodnota Caddy (zobrazená sivo). Časový limit čítania tela alebo zápisu preruší každé dlhšie nahrávanie či sťahovanie.",
     "no_timeout": "žiadny",
@@ -274,6 +277,7 @@
     "field_help": "Väčšie telá požiadaviek sa odmietnu skôr, než sa dostanú k backendu. Prázdne pole znamená bez limitu (predvolené v Caddy)."
   },
   "rewrite": {
+    "heading": "Prepis URI",
     "section_title": "Prepis URI (voliteľné)",
     "type_none": "Žiadny",
     "type_strip_prefix": "Odstrániť prefix",
@@ -301,6 +305,7 @@
     "confirm_cancel": "Zrušiť"
   },
   "upstreams": {
+    "heading": "Ďalšie upstreamy",
     "section_title": "Ďalšie upstreamy (voliteľné)",
     "section_hide": "Ďalšie upstreamy",
     "field_host": "Hostiteľ",
@@ -316,6 +321,7 @@
     "validation_port": "Port musí byť v rozsahu 1–65535"
   },
   "lb_retry": {
+    "heading": "Opakovanie a prevzatie služieb",
     "section_title": "Opakovanie a prevzatie služieb (voliteľné)",
     "retries": "Max. počet opakovaní",
     "try_duration": "Celkový čas na opakovania",
@@ -341,6 +347,7 @@
     "validation_health_status": "Zadajte kód ako 200 alebo triedu ako 2xx"
   },
   "response_headers": {
+    "heading": "Hlavičky odpovede",
     "section_title": "Hlavičky odpovede (voliteľné)",
     "op_set": "Nastaviť",
     "op_add": "Pridať",
@@ -356,6 +363,7 @@
     "preset_remove_server": "Odstrániť Server"
   },
   "request_headers": {
+    "heading": "Hlavičky požiadavky",
     "section_title": "Hlavičky požiadavky (voliteľné)",
     "op_set": "Nastaviť",
     "op_add": "Pridať",
@@ -487,6 +495,7 @@
     "continue_button": "Pokračovať na vlastné riziko"
   },
   "access_log": {
+    "heading": "Protokolovanie prístupov",
     "section_title": "Protokolovanie prístupov",
     "section_title_on": "Protokolovanie prístupov (zapnuté)",
     "enable": "Zapnúť protokolovanie prístupov",
@@ -711,6 +720,7 @@
     "save_tooltip": "Najprv úspešne otestujte spojenie"
   },
   "forward_auth": {
+    "heading": "Delegované overovanie",
     "section_title": "Delegované overovanie (voliteľné)",
     "section_title_on": "Delegované overovanie (zapnuté)",
     "enable_button": "Zapnúť delegované overovanie",
@@ -725,6 +735,7 @@
     "validation_uri_required": "Ak je nastavená URL overovacej služby, URI overenia je povinné"
   },
   "tls_policy": {
+    "heading": "Politika TLS",
     "section_title": "Politika TLS (voliteľné)",
     "section_title_on": "Politika TLS (nastavená)",
     "protocol_min": "Minimálna verzia TLS",
@@ -772,6 +783,7 @@
     "custom_cert_lifetime_note": "Vyššie je načítaný vlastný certifikát — platnosť a okno obnovenia sa neuplatnia, pretože Caddy sám nič nevydáva."
   },
   "error_handler": {
+    "heading": "Vlastné spracovanie chýb",
     "section_title": "Vlastné spracovanie chýb (voliteľné)",
     "section_title_on": "Vlastné spracovanie chýb ({{count}})",
     "add_button": "Pridať spracovanie chýb",
@@ -798,6 +810,7 @@
     "field_file_root_help": "Caddy bude poskytovať {status_code}.html z tohto adresára (napr. /var/www/errors/404.html)"
   },
   "matchers": {
+    "heading": "Matchery trasy",
     "section_title": "Matchery trasy (voliteľné)",
     "type_path": "Cesta",
     "type_host": "Hostiteľ",

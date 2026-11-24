@@ -242,6 +242,7 @@
     "confirm_body": "Verrà creato un reindirizzamento su :{{port}} → {{to}} ({{code}}) e la configurazione di Caddy verrà ricaricata."
   },
   "basic_auth": {
+    "heading": "Autenticazione HTTP Basic",
     "section_title": "Autenticazione HTTP Basic (facoltativa)",
     "field_username": "Nome utente",
     "field_password": "Password",
@@ -250,12 +251,14 @@
     "remove_button": "Rimuovi account"
   },
   "transport": {
+    "heading": "Timeout dell'upstream",
     "section_title": "Timeout dell'upstream (facoltativi)",
     "dial_timeout": "Timeout di connessione",
     "response_header_timeout": "Timeout degli header di risposta",
     "defaults_help": "Lascia un campo vuoto per usare il valore predefinito di Caddy, mostrato in grigio. Un timeout delle intestazioni di risposta interrompe il long polling e le risposte lente."
   },
   "server_timeouts": {
+    "heading": "Timeout e limiti del server",
     "section_title": "Timeout e limiti del server (facoltativi)",
     "defaults_help": "Lascia un campo vuoto per usare il valore predefinito di Caddy, mostrato in grigio. Un timeout di lettura del corpo o di scrittura interrompe ogni upload o download che dura di più.",
     "no_timeout": "nessuno",
@@ -274,6 +277,7 @@
     "field_help": "I corpi più grandi vengono rifiutati prima di arrivare al backend. Lascia vuoto per nessun limite (predefinito di Caddy)."
   },
   "rewrite": {
+    "heading": "Riscrittura URI",
     "section_title": "Riscrittura URI (facoltativa)",
     "type_none": "Nessuna",
     "type_strip_prefix": "Rimuovi prefisso",
@@ -301,6 +305,7 @@
     "confirm_cancel": "Annulla"
   },
   "upstreams": {
+    "heading": "Upstream aggiuntivi",
     "section_title": "Upstream aggiuntivi (facoltativi)",
     "section_hide": "Upstream aggiuntivi",
     "field_host": "Host",
@@ -316,6 +321,7 @@
     "validation_port": "La porta deve essere compresa tra 1 e 65535"
   },
   "lb_retry": {
+    "heading": "Tentativi e failover",
     "section_title": "Tentativi e failover (facoltativi)",
     "retries": "Tentativi massimi",
     "try_duration": "Tempo totale per i tentativi",
@@ -341,6 +347,7 @@
     "validation_health_status": "Usa un codice come 200 o una classe come 2xx"
   },
   "response_headers": {
+    "heading": "Header di risposta",
     "section_title": "Header di risposta (facoltativi)",
     "op_set": "Imposta",
     "op_add": "Aggiungi",
@@ -356,6 +363,7 @@
     "preset_remove_server": "Rimuovi Server"
   },
   "request_headers": {
+    "heading": "Header della richiesta",
     "section_title": "Header della richiesta (facoltativi)",
     "op_set": "Imposta",
     "op_add": "Aggiungi",
@@ -487,6 +495,7 @@
     "continue_button": "Continua a mio rischio"
   },
   "access_log": {
+    "heading": "Log degli accessi",
     "section_title": "Log degli accessi",
     "section_title_on": "Log degli accessi (attivo)",
     "enable": "Attiva il log degli accessi",
@@ -711,6 +720,7 @@
     "save_tooltip": "Prova prima una connessione con esito positivo"
   },
   "forward_auth": {
+    "heading": "Autenticazione delegata",
     "section_title": "Autenticazione delegata (facoltativa)",
     "section_title_on": "Autenticazione delegata (attiva)",
     "enable_button": "Attiva l'autenticazione delegata",
@@ -725,6 +735,7 @@
     "validation_uri_required": "L'URI di autenticazione è obbligatorio quando è impostato un URL del servizio di autenticazione"
   },
   "tls_policy": {
+    "heading": "Policy TLS",
     "section_title": "Policy TLS (facoltativa)",
     "section_title_on": "Policy TLS (configurata)",
     "protocol_min": "Versione TLS minima",
@@ -772,6 +783,7 @@
     "custom_cert_lifetime_note": "Sopra è caricato un certificato personalizzato: durata e finestra di rinnovo non si applicano, perché Caddy non emette nulla da sé."
   },
   "error_handler": {
+    "heading": "Gestori di errori personalizzati",
     "section_title": "Gestori di errori personalizzati (facoltativi)",
     "section_title_on": "Gestori di errori personalizzati ({{count}})",
     "add_button": "Aggiungi gestore di errori",
@@ -798,6 +810,7 @@
     "field_file_root_help": "Caddy servirà {status_code}.html da questa directory (es. /var/www/errors/404.html)"
   },
   "matchers": {
+    "heading": "Matcher di route",
     "section_title": "Matcher di route (facoltativi)",
     "type_path": "Percorso",
     "type_host": "Host",

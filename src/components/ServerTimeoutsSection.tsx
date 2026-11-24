@@ -60,6 +60,7 @@ export function ServerTimeoutsSection({ value, onChange, isDisabled, isExpanded:
 
   return (
     <SectionShell
+      heading={t("server_timeouts.heading")}
       toggleContent={<>{t("server_timeouts.section_title")}{hasValues && <SectionConfiguredDot />}</>}
       isIndented
       isExpanded={expanded}

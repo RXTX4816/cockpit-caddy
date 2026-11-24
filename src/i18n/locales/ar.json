@@ -242,6 +242,7 @@
     "confirm_body": "سيتم إنشاء إعادة توجيه :{{port}} → {{to}} ({{code}}) وإعادة تحميل إعدادات Caddy."
   },
   "basic_auth": {
+    "heading": "مصادقة HTTP Basic",
     "section_title": "مصادقة HTTP Basic (اختياري)",
     "field_username": "اسم المستخدم",
     "field_password": "كلمة المرور",
@@ -250,12 +251,14 @@
     "remove_button": "إزالة الحساب"
   },
   "transport": {
+    "heading": "مهل الخادم الأعلى",
     "section_title": "مهل الخادم الأعلى (اختياري)",
     "dial_timeout": "مهلة الاتصال",
     "response_header_timeout": "مهلة ترويسات الاستجابة",
     "defaults_help": "اترك الحقل فارغًا لاستخدام القيمة الافتراضية في Caddy، وهي معروضة باللون الرمادي. مهلة ترويسات الاستجابة تقطع الاستطلاع الطويل والاستجابات البطيئة."
   },
   "server_timeouts": {
+    "heading": "مهل الخادم وحدوده",
     "section_title": "مهل الخادم وحدوده (اختياري)",
     "defaults_help": "اترك الحقل فارغًا لاستخدام القيمة الافتراضية في Caddy، وهي معروضة باللون الرمادي. مهلة قراءة جسم الطلب أو الكتابة تقطع أي رفع أو تنزيل يستغرق وقتًا أطول.",
     "no_timeout": "بلا",
@@ -274,6 +277,7 @@
     "field_help": "تُرفض أجسام الطلبات الأكبر قبل وصولها إلى الخادم الخلفي. اتركه فارغًا لعدم وجود حد (افتراضي Caddy)."
   },
   "rewrite": {
+    "heading": "إعادة كتابة URI",
     "section_title": "إعادة كتابة URI (اختياري)",
     "type_none": "لا شيء",
     "type_strip_prefix": "إزالة البادئة",
@@ -301,6 +305,7 @@
     "confirm_cancel": "إلغاء"
   },
   "upstreams": {
+    "heading": "خوادم عليا إضافية",
     "section_title": "خوادم عليا إضافية (اختياري)",
     "section_hide": "خوادم عليا إضافية",
     "field_host": "المضيف",
@@ -316,6 +321,7 @@
     "validation_port": "يجب أن يكون المنفذ بين 1 و65535"
   },
   "lb_retry": {
+    "heading": "إعادة المحاولة وتجاوز الفشل",
     "section_title": "إعادة المحاولة وتجاوز الفشل (اختياري)",
     "retries": "أقصى عدد لإعادة المحاولة",
     "try_duration": "المدة الإجمالية لإعادة المحاولة",
@@ -341,6 +347,7 @@
     "validation_health_status": "استخدم رمزًا مثل 200 أو فئة مثل 2xx"
   },
   "response_headers": {
+    "heading": "ترويسات الاستجابة",
     "section_title": "ترويسات الاستجابة (اختياري)",
     "op_set": "تعيين",
     "op_add": "إضافة",
@@ -356,6 +363,7 @@
     "preset_remove_server": "إزالة Server"
   },
   "request_headers": {
+    "heading": "ترويسات الطلب",
     "section_title": "ترويسات الطلب (اختياري)",
     "op_set": "تعيين",
     "op_add": "إضافة",
@@ -487,6 +495,7 @@
     "continue_button": "المتابعة على مسؤوليتي"
   },
   "access_log": {
+    "heading": "سجل الوصول",
     "section_title": "سجل الوصول",
     "section_title_on": "سجل الوصول (مفعّل)",
     "enable": "تفعيل سجل الوصول",
@@ -711,6 +720,7 @@
     "save_tooltip": "اختبر اتصالًا ناجحًا أولًا"
   },
   "forward_auth": {
+    "heading": "المصادقة المُمرَّرة",
     "section_title": "المصادقة المُمرَّرة (اختياري)",
     "section_title_on": "المصادقة المُمرَّرة (مفعّلة)",
     "enable_button": "تفعيل المصادقة المُمرَّرة",
@@ -725,6 +735,7 @@
     "validation_uri_required": "URI المصادقة مطلوب عند تعيين عنوان خدمة المصادقة"
   },
   "tls_policy": {
+    "heading": "سياسة TLS",
     "section_title": "سياسة TLS (اختياري)",
     "section_title_on": "سياسة TLS (مُعدّة)",
     "protocol_min": "أدنى إصدار TLS",
@@ -772,6 +783,7 @@
     "custom_cert_lifetime_note": "حُمّلت شهادة مخصصة أعلاه — لا تنطبق مدة الصلاحية ونافذة التجديد لأن Caddy لا يُصدر شيئًا بنفسه."
   },
   "error_handler": {
+    "heading": "معالجات أخطاء مخصصة",
     "section_title": "معالجات أخطاء مخصصة (اختياري)",
     "section_title_on": "معالجات أخطاء مخصصة ({{count}})",
     "add_button": "إضافة معالج أخطاء",
@@ -798,6 +810,7 @@
     "field_file_root_help": "سيقدّم Caddy الملف {status_code}.html من هذا المجلد (مثل /var/www/errors/404.html)"
   },
   "matchers": {
+    "heading": "مطابِقات المسار",
     "section_title": "مطابِقات المسار (اختياري)",
     "type_path": "المسار",
     "type_host": "المضيف",

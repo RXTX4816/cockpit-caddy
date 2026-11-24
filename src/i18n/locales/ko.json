@@ -242,6 +242,7 @@
     "confirm_body": "리디렉션 :{{port}} → {{to}}({{code}})을(를) 만들고 Caddy 설정을 다시 불러옵니다."
   },
   "basic_auth": {
+    "heading": "HTTP Basic 인증",
     "section_title": "HTTP Basic 인증(선택)",
     "field_username": "사용자 이름",
     "field_password": "비밀번호",
@@ -250,12 +251,14 @@
     "remove_button": "계정 제거"
   },
   "transport": {
+    "heading": "업스트림 시간 제한",
     "section_title": "업스트림 시간 제한(선택)",
     "dial_timeout": "연결 시간 제한",
     "response_header_timeout": "응답 헤더 시간 제한",
     "defaults_help": "필드를 비워 두면 회색으로 표시된 Caddy 기본값이 사용됩니다. 응답 헤더 타임아웃은 롱 폴링과 느린 응답을 끊습니다."
   },
   "server_timeouts": {
+    "heading": "서버 시간 제한 및 한도",
     "section_title": "서버 시간 제한 및 한도(선택)",
     "defaults_help": "필드를 비워 두면 회색으로 표시된 Caddy 기본값이 사용됩니다. 본문 읽기 또는 쓰기 타임아웃은 그보다 오래 걸리는 모든 업로드나 다운로드를 끊습니다.",
     "no_timeout": "없음",
@@ -274,6 +277,7 @@
     "field_help": "이보다 큰 요청 본문은 백엔드에 닿기 전에 거부됩니다. 비워 두면 제한이 없습니다(Caddy 기본값)."
   },
   "rewrite": {
+    "heading": "URI 재작성",
     "section_title": "URI 재작성(선택)",
     "type_none": "없음",
     "type_strip_prefix": "접두사 제거",
@@ -301,6 +305,7 @@
     "confirm_cancel": "취소"
   },
   "upstreams": {
+    "heading": "추가 업스트림",
     "section_title": "추가 업스트림(선택)",
     "section_hide": "추가 업스트림",
     "field_host": "호스트",
@@ -316,6 +321,7 @@
     "validation_port": "포트는 1~65535 사이여야 합니다"
   },
   "lb_retry": {
+    "heading": "재시도 및 장애 조치",
     "section_title": "재시도 및 장애 조치(선택)",
     "retries": "최대 재시도 횟수",
     "try_duration": "재시도 총 시간",
@@ -341,6 +347,7 @@
     "validation_health_status": "200 같은 코드나 2xx 같은 클래스를 입력하세요"
   },
   "response_headers": {
+    "heading": "응답 헤더",
     "section_title": "응답 헤더(선택)",
     "op_set": "설정",
     "op_add": "추가",
@@ -356,6 +363,7 @@
     "preset_remove_server": "Server 제거"
   },
   "request_headers": {
+    "heading": "요청 헤더",
     "section_title": "요청 헤더(선택)",
     "op_set": "설정",
     "op_add": "추가",
@@ -487,6 +495,7 @@
     "continue_button": "위험을 감수하고 계속"
   },
   "access_log": {
+    "heading": "접근 로그",
     "section_title": "접근 로그",
     "section_title_on": "접근 로그(사용 중)",
     "enable": "접근 로그 사용",
@@ -711,6 +720,7 @@
     "save_tooltip": "먼저 연결 테스트에 성공하세요"
   },
   "forward_auth": {
+    "heading": "포워드 인증",
     "section_title": "포워드 인증(선택)",
     "section_title_on": "포워드 인증(사용 중)",
     "enable_button": "포워드 인증 사용",
@@ -725,6 +735,7 @@
     "validation_uri_required": "인증 서비스 URL을 설정하면 인증 URI가 필요합니다"
   },
   "tls_policy": {
+    "heading": "TLS 정책",
     "section_title": "TLS 정책(선택)",
     "section_title_on": "TLS 정책(설정됨)",
     "protocol_min": "최소 TLS 버전",
@@ -772,6 +783,7 @@
     "custom_cert_lifetime_note": "위에 사용자 지정 인증서가 불러와져 있습니다 — Caddy가 직접 발급하지 않으므로 인증서 수명과 갱신 창은 적용되지 않습니다."
   },
   "error_handler": {
+    "heading": "사용자 지정 오류 처리기",
     "section_title": "사용자 지정 오류 처리기(선택)",
     "section_title_on": "사용자 지정 오류 처리기({{count}})",
     "add_button": "오류 처리기 추가",
@@ -798,6 +810,7 @@
     "field_file_root_help": "Caddy가 이 디렉터리에서 {status_code}.html을 제공합니다(예: /var/www/errors/404.html)"
   },
   "matchers": {
+    "heading": "라우트 매처",
     "section_title": "라우트 매처(선택)",
     "type_path": "경로",
     "type_host": "호스트",

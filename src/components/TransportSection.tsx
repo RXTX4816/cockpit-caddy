@@ -41,6 +41,7 @@ export function TransportSection({ value, onChange, isDisabled, isExpanded: isEx
 
   return (
     <SectionShell
+      heading={t("transport.heading")}
       toggleContent={<>{t("transport.section_title")}{hasValues && <SectionConfiguredDot />}</>}
       isIndented
       isExpanded={expanded}

@@ -78,6 +78,7 @@ export function RequestHeadersSection({ value, onChange, isDisabled, isExpanded:
 
   return (
     <SectionShell
+      heading={t("request_headers.heading")}
       toggleContent={<>{t("request_headers.section_title")}{ops.length > 0 && <SectionConfiguredDot />}</>}
       isIndented
       isExpanded={expanded}

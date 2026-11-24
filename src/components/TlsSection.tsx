@@ -198,6 +198,7 @@ export function TlsSection({ value, onChange, isDisabled, hostless, isExpanded: 
 
   return (
     <SectionShell
+      heading={t("tls_policy.heading")}
       toggleText={toggleText}
       isIndented
       isExpanded={expanded}

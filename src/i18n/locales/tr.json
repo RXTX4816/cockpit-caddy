@@ -242,6 +242,7 @@
     "confirm_body": ":{{port}} → {{to}} ({{code}}) yönlendirmesi oluşturulacak ve Caddy yapılandırması yeniden yüklenecek."
   },
   "basic_auth": {
+    "heading": "HTTP Basic Auth",
     "section_title": "HTTP Basic Auth (isteğe bağlı)",
     "field_username": "Kullanıcı adı",
     "field_password": "Parola",
@@ -250,12 +251,14 @@
     "remove_button": "Hesabı kaldır"
   },
   "transport": {
+    "heading": "Upstream zaman aşımları",
     "section_title": "Upstream zaman aşımları (isteğe bağlı)",
     "dial_timeout": "Bağlantı zaman aşımı",
     "response_header_timeout": "Yanıt başlığı zaman aşımı",
     "defaults_help": "Caddy'nin varsayılanını kullanmak için alanı boş bırakın; varsayılan gri gösterilir. Yanıt başlığı zaman aşımı, long polling'i ve yavaş yanıtları keser."
   },
   "server_timeouts": {
+    "heading": "Sunucu zaman aşımları ve sınırları",
     "section_title": "Sunucu zaman aşımları ve sınırları (isteğe bağlı)",
     "defaults_help": "Caddy'nin varsayılanını kullanmak için alanı boş bırakın; varsayılan gri gösterilir. Gövde okuma veya yazma zaman aşımı, daha uzun süren her yüklemeyi ya da indirmeyi keser.",
     "no_timeout": "yok",
@@ -274,6 +277,7 @@
     "field_help": "Daha büyük istek gövdeleri arka uca ulaşmadan reddedilir. Sınır olmaması için boş bırakın (Caddy varsayılanı)."
   },
   "rewrite": {
+    "heading": "URI yeniden yazma",
     "section_title": "URI yeniden yazma (isteğe bağlı)",
     "type_none": "Yok",
     "type_strip_prefix": "Öneki kaldır",
@@ -301,6 +305,7 @@
     "confirm_cancel": "İptal"
   },
   "upstreams": {
+    "heading": "Ek upstream'ler",
     "section_title": "Ek upstream'ler (isteğe bağlı)",
     "section_hide": "Ek upstream'ler",
     "field_host": "Ana bilgisayar",
@@ -316,6 +321,7 @@
     "validation_port": "Bağlantı noktası 1 ile 65535 arasında olmalıdır"
   },
   "lb_retry": {
+    "heading": "Yeniden deneme ve yedeğe geçiş",
     "section_title": "Yeniden deneme ve yedeğe geçiş (isteğe bağlı)",
     "retries": "En fazla yeniden deneme",
     "try_duration": "Yeniden deneme süre bütçesi",
@@ -341,6 +347,7 @@
     "validation_health_status": "200 gibi bir kod ya da 2xx gibi bir sınıf girin"
   },
   "response_headers": {
+    "heading": "Yanıt başlıkları",
     "section_title": "Yanıt başlıkları (isteğe bağlı)",
     "op_set": "Ayarla",
     "op_add": "Ekle",
@@ -356,6 +363,7 @@
     "preset_remove_server": "Server'ı kaldır"
   },
   "request_headers": {
+    "heading": "İstek başlıkları",
     "section_title": "İstek başlıkları (isteğe bağlı)",
     "op_set": "Ayarla",
     "op_add": "Ekle",
@@ -487,6 +495,7 @@
     "continue_button": "Riski üstlenerek devam et"
   },
   "access_log": {
+    "heading": "Erişim günlüğü",
     "section_title": "Erişim günlüğü",
     "section_title_on": "Erişim günlüğü (etkin)",
     "enable": "Erişim günlüğünü etkinleştir",
@@ -711,6 +720,7 @@
     "save_tooltip": "Önce başarılı bir bağlantı sınayın"
   },
   "forward_auth": {
+    "heading": "Yönlendirilmiş kimlik doğrulama",
     "section_title": "Yönlendirilmiş kimlik doğrulama (isteğe bağlı)",
     "section_title_on": "Yönlendirilmiş kimlik doğrulama (etkin)",
     "enable_button": "Yönlendirilmiş kimlik doğrulamayı etkinleştir",
@@ -725,6 +735,7 @@
     "validation_uri_required": "Kimlik doğrulama hizmeti URL'si ayarlandığında kimlik doğrulama URI'si zorunludur"
   },
   "tls_policy": {
+    "heading": "TLS ilkesi",
     "section_title": "TLS ilkesi (isteğe bağlı)",
     "section_title_on": "TLS ilkesi (yapılandırıldı)",
     "protocol_min": "En düşük TLS sürümü",
@@ -772,6 +783,7 @@
     "custom_cert_lifetime_note": "Yukarıda özel bir sertifika yüklü — Caddy kendisi bir şey vermediği için sertifika ömrü ve yenileme penceresi geçerli değildir."
   },
   "error_handler": {
+    "heading": "Özel hata işleyicileri",
     "section_title": "Özel hata işleyicileri (isteğe bağlı)",
     "section_title_on": "Özel hata işleyicileri ({{count}})",
     "add_button": "Hata işleyici ekle",
@@ -798,6 +810,7 @@
     "field_file_root_help": "Caddy bu dizinden {status_code}.html dosyasını sunar (ör. /var/www/errors/404.html)"
   },
   "matchers": {
+    "heading": "Rota matcher'ları",
     "section_title": "Rota matcher'ları (isteğe bağlı)",
     "type_path": "Yol",
     "type_host": "Ana bilgisayar",

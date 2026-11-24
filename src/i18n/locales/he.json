@@ -242,6 +242,7 @@
     "confirm_body": "תיווצר הפניה :{{port}} → {{to}} ‏({{code}}) ותצורת Caddy תיטען מחדש."
   },
   "basic_auth": {
+    "heading": "אימות HTTP Basic",
     "section_title": "אימות HTTP Basic (אופציונלי)",
     "field_username": "שם משתמש",
     "field_password": "סיסמה",
@@ -250,12 +251,14 @@
     "remove_button": "הסרת חשבון"
   },
   "transport": {
+    "heading": "מגבלות זמן ל-upstream",
     "section_title": "מגבלות זמן ל-upstream (אופציונלי)",
     "dial_timeout": "מגבלת זמן להתחברות",
     "response_header_timeout": "מגבלת זמן לכותרות התגובה",
     "defaults_help": "השאירו שדה ריק כדי להשתמש בברירת המחדל של Caddy, המוצגת באפור. מגבלת זמן לכותרות התגובה קוטעת long polling ותגובות איטיות."
   },
   "server_timeouts": {
+    "heading": "מגבלות זמן ומגבלות שרת",
     "section_title": "מגבלות זמן ומגבלות שרת (אופציונלי)",
     "defaults_help": "השאירו שדה ריק כדי להשתמש בברירת המחדל של Caddy, המוצגת באפור. מגבלת זמן לקריאת גוף הבקשה או לכתיבה קוטעת כל העלאה או הורדה שנמשכת יותר.",
     "no_timeout": "ללא",
@@ -274,6 +277,7 @@
     "field_help": "גופי בקשה גדולים יותר נדחים לפני שהם מגיעים לשרת. השאירו ריק ללא מגבלה (ברירת המחדל של Caddy)."
   },
   "rewrite": {
+    "heading": "שכתוב URI",
     "section_title": "שכתוב URI (אופציונלי)",
     "type_none": "ללא",
     "type_strip_prefix": "הסרת קידומת",
@@ -301,6 +305,7 @@
     "confirm_cancel": "ביטול"
   },
   "upstreams": {
+    "heading": "upstreams נוספים",
     "section_title": "upstreams נוספים (אופציונלי)",
     "section_hide": "upstreams נוספים",
     "field_host": "מארח",
@@ -316,6 +321,7 @@
     "validation_port": "הפורט חייב להיות בין 1 ל-65535"
   },
   "lb_retry": {
+    "heading": "ניסיונות חוזרים ו-failover",
     "section_title": "ניסיונות חוזרים ו-failover (אופציונלי)",
     "retries": "מספר ניסיונות חוזרים מרבי",
     "try_duration": "תקציב זמן לניסיונות חוזרים",
@@ -341,6 +347,7 @@
     "validation_health_status": "השתמשו בקוד כמו 200 או במחלקה כמו 2xx"
   },
   "response_headers": {
+    "heading": "כותרות תגובה",
     "section_title": "כותרות תגובה (אופציונלי)",
     "op_set": "הגדרה",
     "op_add": "הוספה",
@@ -356,6 +363,7 @@
     "preset_remove_server": "הסרת Server"
   },
   "request_headers": {
+    "heading": "כותרות בקשה",
     "section_title": "כותרות בקשה (אופציונלי)",
     "op_set": "הגדרה",
     "op_add": "הוספה",
@@ -487,6 +495,7 @@
     "continue_button": "להמשיך על אחריותי"
   },
   "access_log": {
+    "heading": "רישום גישה",
     "section_title": "רישום גישה",
     "section_title_on": "רישום גישה (מופעל)",
     "enable": "הפעלת רישום גישה",
@@ -711,6 +720,7 @@
     "save_tooltip": "קודם יש לבדוק חיבור מוצלח"
   },
   "forward_auth": {
+    "heading": "אימות מועבר",
     "section_title": "אימות מועבר (אופציונלי)",
     "section_title_on": "אימות מועבר (מופעל)",
     "enable_button": "הפעלת אימות מועבר",
@@ -725,6 +735,7 @@
     "validation_uri_required": "כשמוגדרת כתובת שירות אימות, נדרש URI אימות"
   },
   "tls_policy": {
+    "heading": "מדיניות TLS",
     "section_title": "מדיניות TLS (אופציונלי)",
     "section_title_on": "מדיניות TLS (מוגדרת)",
     "protocol_min": "גרסת TLS מינימלית",
@@ -772,6 +783,7 @@
     "custom_cert_lifetime_note": "למעלה נטענה תעודה מותאמת — תוקף התעודה וחלון החידוש לא חלים, כי Caddy לא מנפיק כלום בעצמו."
   },
   "error_handler": {
+    "heading": "מטפלי שגיאות מותאמים",
     "section_title": "מטפלי שגיאות מותאמים (אופציונלי)",
     "section_title_on": "מטפלי שגיאות מותאמים ({{count}})",
     "add_button": "הוספת מטפל שגיאות",
@@ -798,6 +810,7 @@
     "field_file_root_help": "Caddy יגיש את {status_code}.html מהתיקייה הזו (למשל /var/www/errors/404.html)"
   },
   "matchers": {
+    "heading": "matchers של נתיב",
     "section_title": "matchers של נתיב (אופציונלי)",
     "type_path": "נתיב",
     "type_host": "מארח",

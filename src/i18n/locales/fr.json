@@ -242,6 +242,7 @@
     "confirm_body": "Une redirection :{{port}} → {{to}} ({{code}}) va être créée et la configuration de Caddy rechargée."
   },
   "basic_auth": {
+    "heading": "Authentification HTTP Basic",
     "section_title": "Authentification HTTP Basic (facultatif)",
     "field_username": "Nom d'utilisateur",
     "field_password": "Mot de passe",
@@ -250,12 +251,14 @@
     "remove_button": "Supprimer le compte"
   },
   "transport": {
+    "heading": "Délais upstream",
     "section_title": "Délais upstream (facultatif)",
     "dial_timeout": "Délai de connexion",
     "response_header_timeout": "Délai des en-têtes de réponse",
     "defaults_help": "Laissez un champ vide pour utiliser la valeur par défaut de Caddy, affichée en grisé. Un délai d'en-têtes de réponse interrompt le long polling et les réponses lentes."
   },
   "server_timeouts": {
+    "heading": "Délais et limites du serveur",
     "section_title": "Délais et limites du serveur (facultatif)",
     "defaults_help": "Laissez un champ vide pour utiliser la valeur par défaut de Caddy, affichée en grisé. Un délai de lecture du corps ou d'écriture interrompt tout envoi ou téléchargement plus long.",
     "no_timeout": "aucun",
@@ -274,6 +277,7 @@
     "field_help": "Les corps plus volumineux sont refusés avant d’atteindre le backend. Laissez vide pour aucune limite (valeur par défaut de Caddy)."
   },
   "rewrite": {
+    "heading": "Réécriture d'URI",
     "section_title": "Réécriture d'URI (facultatif)",
     "type_none": "Aucune",
     "type_strip_prefix": "Retirer le préfixe",
@@ -301,6 +305,7 @@
     "confirm_cancel": "Annuler"
   },
   "upstreams": {
+    "heading": "Upstreams supplémentaires",
     "section_title": "Upstreams supplémentaires (facultatif)",
     "section_hide": "Upstreams supplémentaires",
     "field_host": "Hôte",
@@ -316,6 +321,7 @@
     "validation_port": "Le port doit être compris entre 1 et 65535"
   },
   "lb_retry": {
+    "heading": "Réessais et basculement",
     "section_title": "Réessais et basculement (facultatif)",
     "retries": "Nombre max. de réessais",
     "try_duration": "Durée totale des réessais",
@@ -341,6 +347,7 @@
     "validation_health_status": "Indiquez un code comme 200 ou une classe comme 2xx"
   },
   "response_headers": {
+    "heading": "En-têtes de réponse",
     "section_title": "En-têtes de réponse (facultatif)",
     "op_set": "Définir",
     "op_add": "Ajouter",
@@ -356,6 +363,7 @@
     "preset_remove_server": "Retirer Server"
   },
   "request_headers": {
+    "heading": "En-têtes de requête",
     "section_title": "En-têtes de requête (facultatif)",
     "op_set": "Définir",
     "op_add": "Ajouter",
@@ -487,6 +495,7 @@
     "continue_button": "Continuer à mes risques"
   },
   "access_log": {
+    "heading": "Journalisation des accès",
     "section_title": "Journalisation des accès",
     "section_title_on": "Journalisation des accès (activée)",
     "enable": "Activer la journalisation des accès",
@@ -711,6 +720,7 @@
     "save_tooltip": "Testez d'abord une connexion avec succès"
   },
   "forward_auth": {
+    "heading": "Authentification déléguée",
     "section_title": "Authentification déléguée (facultatif)",
     "section_title_on": "Authentification déléguée (activée)",
     "enable_button": "Activer l'authentification déléguée",
@@ -725,6 +735,7 @@
     "validation_uri_required": "L'URI d'authentification est obligatoire lorsqu'une URL de service d'authentification est définie"
   },
   "tls_policy": {
+    "heading": "Politique TLS",
     "section_title": "Politique TLS (facultatif)",
     "section_title_on": "Politique TLS (configurée)",
     "protocol_min": "Version TLS minimale",
@@ -772,6 +783,7 @@
     "custom_cert_lifetime_note": "Un certificat personnalisé est chargé ci-dessus — la durée de vie et la fenêtre de renouvellement ne s'appliquent pas, puisque Caddy n'émet rien lui-même."
   },
   "error_handler": {
+    "heading": "Gestionnaires d'erreurs personnalisés",
     "section_title": "Gestionnaires d'erreurs personnalisés (facultatif)",
     "section_title_on": "Gestionnaires d'erreurs personnalisés ({{count}})",
     "add_button": "Ajouter un gestionnaire d'erreurs",
@@ -798,6 +810,7 @@
     "field_file_root_help": "Caddy servira {status_code}.html depuis ce répertoire (par ex. /var/www/errors/404.html)"
   },
   "matchers": {
+    "heading": "Matchers de route",
     "section_title": "Matchers de route (facultatif)",
     "type_path": "Chemin",
     "type_host": "Hôte",

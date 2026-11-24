@@ -242,6 +242,7 @@
     "confirm_body": "En omdirigering på :{{port}} → {{to}} ({{code}}) skapas och Caddys konfiguration läses in igen."
   },
   "basic_auth": {
+    "heading": "HTTP Basic Auth",
     "section_title": "HTTP Basic Auth (valfritt)",
     "field_username": "Användarnamn",
     "field_password": "Lösenord",
@@ -250,12 +251,14 @@
     "remove_button": "Ta bort konto"
   },
   "transport": {
+    "heading": "Tidsgränser för upstream",
     "section_title": "Tidsgränser för upstream (valfritt)",
     "dial_timeout": "Tidsgräns för anslutning",
     "response_header_timeout": "Tidsgräns för svarshuvuden",
     "defaults_help": "Lämna ett fält tomt för att använda Caddys standardvärde, som visas i grått. En tidsgräns för svarets headers avbryter long polling och långsamma svar."
   },
   "server_timeouts": {
+    "heading": "Servertidsgränser och gränser",
     "section_title": "Servertidsgränser och gränser (valfritt)",
     "defaults_help": "Lämna ett fält tomt för att använda Caddys standardvärde, som visas i grått. En tidsgräns för att läsa body eller skriva avbryter varje uppladdning eller nedladdning som tar längre tid.",
     "no_timeout": "ingen",
@@ -274,6 +277,7 @@
     "field_help": "Större förfrågningar avvisas innan de når backend. Lämna tomt för ingen gräns (Caddys standard)."
   },
   "rewrite": {
+    "heading": "URI-omskrivning",
     "section_title": "URI-omskrivning (valfritt)",
     "type_none": "Ingen",
     "type_strip_prefix": "Ta bort prefix",
@@ -301,6 +305,7 @@
     "confirm_cancel": "Avbryt"
   },
   "upstreams": {
+    "heading": "Ytterligare upstreams",
     "section_title": "Ytterligare upstreams (valfritt)",
     "section_hide": "Ytterligare upstreams",
     "field_host": "Värd",
@@ -316,6 +321,7 @@
     "validation_port": "Porten måste vara mellan 1 och 65535"
   },
   "lb_retry": {
+    "heading": "Omförsök och failover",
     "section_title": "Omförsök och failover (valfritt)",
     "retries": "Max antal omförsök",
     "try_duration": "Total tid för omförsök",
@@ -341,6 +347,7 @@
     "validation_health_status": "Ange en statuskod som 200 eller en klass som 2xx"
   },
   "response_headers": {
+    "heading": "Svarshuvuden",
     "section_title": "Svarshuvuden (valfritt)",
     "op_set": "Ange",
     "op_add": "Lägg till",
@@ -356,6 +363,7 @@
     "preset_remove_server": "Ta bort Server"
   },
   "request_headers": {
+    "heading": "Begäranshuvuden",
     "section_title": "Begäranshuvuden (valfritt)",
     "op_set": "Ange",
     "op_add": "Lägg till",
@@ -487,6 +495,7 @@
     "continue_button": "Fortsätt på egen risk"
   },
   "access_log": {
+    "heading": "Åtkomstloggning",
     "section_title": "Åtkomstloggning",
     "section_title_on": "Åtkomstloggning (aktiverad)",
     "enable": "Aktivera åtkomstloggning",
@@ -711,6 +720,7 @@
     "save_tooltip": "Testa en lyckad anslutning först"
   },
   "forward_auth": {
+    "heading": "Vidarebefordrad autentisering",
     "section_title": "Vidarebefordrad autentisering (valfritt)",
     "section_title_on": "Vidarebefordrad autentisering (aktiverad)",
     "enable_button": "Aktivera vidarebefordrad autentisering",
@@ -725,6 +735,7 @@
     "validation_uri_required": "Autentiserings-URI krävs när en URL till autentiseringstjänsten är angiven"
   },
   "tls_policy": {
+    "heading": "TLS-policy",
     "section_title": "TLS-policy (valfritt)",
     "section_title_on": "TLS-policy (konfigurerad)",
     "protocol_min": "Lägsta TLS-version",
@@ -772,6 +783,7 @@
     "custom_cert_lifetime_note": "Ett eget certifikat är inläst ovan — certifikatets livslängd och förnyelsefönster gäller inte, eftersom Caddy inte utfärdar något själv."
   },
   "error_handler": {
+    "heading": "Anpassad felhantering",
     "section_title": "Anpassad felhantering (valfritt)",
     "section_title_on": "Anpassad felhantering ({{count}})",
     "add_button": "Lägg till felhantering",
@@ -798,6 +810,7 @@
     "field_file_root_help": "Caddy serverar {status_code}.html från den här katalogen (t.ex. /var/www/errors/404.html)"
   },
   "matchers": {
+    "heading": "Route-matchers",
     "section_title": "Route-matchers (valfritt)",
     "type_path": "Sökväg",
     "type_host": "Värd",

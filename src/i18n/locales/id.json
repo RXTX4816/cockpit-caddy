@@ -242,6 +242,7 @@
     "confirm_body": "Pengalihan :{{port}} → {{to}} ({{code}}) akan dibuat dan konfigurasi Caddy dimuat ulang."
   },
   "basic_auth": {
+    "heading": "HTTP Basic Auth",
     "section_title": "HTTP Basic Auth (opsional)",
     "field_username": "Nama pengguna",
     "field_password": "Kata sandi",
@@ -250,12 +251,14 @@
     "remove_button": "Hapus akun"
   },
   "transport": {
+    "heading": "Batas waktu upstream",
     "section_title": "Batas waktu upstream (opsional)",
     "dial_timeout": "Batas waktu koneksi",
     "response_header_timeout": "Batas waktu header respons",
     "defaults_help": "Biarkan kolom kosong untuk memakai nilai bawaan Caddy, yang ditampilkan abu-abu. Batas waktu header respons memutus long polling dan respons yang lambat."
   },
   "server_timeouts": {
+    "heading": "Batas waktu & batasan server",
     "section_title": "Batas waktu & batasan server (opsional)",
     "defaults_help": "Biarkan kolom kosong untuk memakai nilai bawaan Caddy, yang ditampilkan abu-abu. Batas waktu baca body atau tulis memutus setiap unggahan atau unduhan yang lebih lama.",
     "no_timeout": "tidak ada",
@@ -274,6 +277,7 @@
     "field_help": "Body permintaan yang lebih besar ditolak sebelum sampai ke backend. Kosongkan untuk tanpa batas (bawaan Caddy)."
   },
   "rewrite": {
+    "heading": "Penulisan ulang URI",
     "section_title": "Penulisan ulang URI (opsional)",
     "type_none": "Tidak ada",
     "type_strip_prefix": "Hapus prefiks",
@@ -301,6 +305,7 @@
     "confirm_cancel": "Batal"
   },
   "upstreams": {
+    "heading": "Upstream tambahan",
     "section_title": "Upstream tambahan (opsional)",
     "section_hide": "Upstream tambahan",
     "field_host": "Host",
@@ -316,6 +321,7 @@
     "validation_port": "Port harus antara 1 dan 65535"
   },
   "lb_retry": {
+    "heading": "Percobaan ulang & failover",
     "section_title": "Percobaan ulang & failover (opsional)",
     "retries": "Percobaan ulang maks.",
     "try_duration": "Anggaran waktu percobaan ulang",
@@ -341,6 +347,7 @@
     "validation_health_status": "Gunakan kode seperti 200 atau kelas seperti 2xx"
   },
   "response_headers": {
+    "heading": "Header respons",
     "section_title": "Header respons (opsional)",
     "op_set": "Atur",
     "op_add": "Tambah",
@@ -356,6 +363,7 @@
     "preset_remove_server": "Hapus Server"
   },
   "request_headers": {
+    "heading": "Header permintaan",
     "section_title": "Header permintaan (opsional)",
     "op_set": "Atur",
     "op_add": "Tambah",
@@ -487,6 +495,7 @@
     "continue_button": "Lanjutkan dengan risiko sendiri"
   },
   "access_log": {
+    "heading": "Log akses",
     "section_title": "Log akses",
     "section_title_on": "Log akses (aktif)",
     "enable": "Aktifkan log akses",
@@ -711,6 +720,7 @@
     "save_tooltip": "Uji koneksi yang berhasil terlebih dahulu"
   },
   "forward_auth": {
+    "heading": "Autentikasi terusan",
     "section_title": "Autentikasi terusan (opsional)",
     "section_title_on": "Autentikasi terusan (aktif)",
     "enable_button": "Aktifkan autentikasi terusan",
@@ -725,6 +735,7 @@
     "validation_uri_required": "URI autentikasi wajib diisi jika URL layanan autentikasi diatur"
   },
   "tls_policy": {
+    "heading": "Kebijakan TLS",
     "section_title": "Kebijakan TLS (opsional)",
     "section_title_on": "Kebijakan TLS (dikonfigurasi)",
     "protocol_min": "Versi TLS minimum",
@@ -772,6 +783,7 @@
     "custom_cert_lifetime_note": "Sertifikat kustom dimuat di atas — masa berlaku sertifikat dan jendela pembaruan tidak berlaku, karena Caddy tidak menerbitkan apa pun sendiri."
   },
   "error_handler": {
+    "heading": "Penangan galat kustom",
     "section_title": "Penangan galat kustom (opsional)",
     "section_title_on": "Penangan galat kustom ({{count}})",
     "add_button": "Tambah penangan galat",
@@ -798,6 +810,7 @@
     "field_file_root_help": "Caddy akan menyajikan {status_code}.html dari direktori ini (mis. /var/www/errors/404.html)"
   },
   "matchers": {
+    "heading": "Matcher rute",
     "section_title": "Matcher rute (opsional)",
     "type_path": "Jalur",
     "type_host": "Host",

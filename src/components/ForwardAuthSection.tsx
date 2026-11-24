@@ -72,6 +72,7 @@ export function ForwardAuthSection({ value, onChange, isDisabled, uriError, urlE
 
   return (
     <SectionShell
+      heading={t("forward_auth.heading")}
       toggleText={toggleLabel}
       isIndented
       isExpanded={expanded}

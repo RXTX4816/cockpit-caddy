@@ -60,6 +60,7 @@ export function BasicAuthSection({ value, onChange, isDisabled, isExpanded: isEx
 
   return (
     <SectionShell
+      heading={t("basic_auth.heading")}
       toggleContent={<>{t("basic_auth.section_title")}{value.length > 0 && <SectionConfiguredDot />}</>}
       isIndented
       isExpanded={expanded}

@@ -63,6 +63,7 @@ export function ErrorHandlersSection({ value, onChange, isDisabled, isExpanded: 
 
   return (
     <SectionShell
+      heading={value.length > 0 ? t("error_handler.section_title_on", { count: value.length }) : t("error_handler.heading")}
       toggleText={toggleLabel}
       isIndented
       isExpanded={expanded}

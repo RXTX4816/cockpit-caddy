@@ -70,6 +70,7 @@ export function RouteMatchersSection({ value, onChange, isDisabled, isExpanded: 
 
   return (
     <SectionShell
+      heading={t("matchers.heading")}
       toggleContent={<>{t("matchers.section_title")}{hasAnyMatcher(value) && <SectionConfiguredDot />}</>}
       isIndented
       isExpanded={expanded}
