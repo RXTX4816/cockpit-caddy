@@ -5611,7 +5611,12 @@ export async function syncGlobalOptions(
   dnsSecrets?: { set: Record<string, string>; remove: string[] },
 ): Promise<{ restartNeeded: boolean }> {
   await ensureConfDImported(); // a stock Caddyfile is migrated first (#256)
-  const restartNeeded = dnsSecrets ? (await applyDnsSecrets(dnsSecrets.set, dnsSecrets.remove)).changed : false;
+  // New values first, so validation sees them; removals only once the Caddyfile no longer
+  // references them (a failed save must not leave an acme_dns block without its credentials).
+  let restartNeeded = dnsSecrets ? (await applyDnsSecrets(dnsSecrets.set, [])).changed : false;
+  const removeDnsSecrets = async () => {
+    if (dnsSecrets?.remove.length) restartNeeded = (await applyDnsSecrets({}, dnsSecrets.remove)).changed || restartNeeded;
+  };
   const diskContent = (await fsReadFile(MAIN_CADDYFILE, "try")) ?? "";
   let patched = buildGlobalOptionsPatch(diskContent, opts);
 
@@ -5633,7 +5638,10 @@ export async function syncGlobalOptions(
   let proxyConfPatched = await applyInternalLifetimeToProxyConf(proxyConfDisk, opts.internalCertLifetime);
   proxyConfPatched = patchTopLevelMarkedSection(proxyConfPatched, METRICS_SITE_BEGIN, METRICS_SITE_END, buildMetricsSiteBlock(opts));
 
-  if (patched === diskContent && proxyConfPatched === proxyConfDisk) return { restartNeeded };
+  if (patched === diskContent && proxyConfPatched === proxyConfDisk) {
+    await removeDnsSecrets();
+    return { restartNeeded };
+  }
 
   // #158's runtime logger lives in the main Caddyfile's global options, not conf.d — check
   // both files for log paths that would otherwise get poisoned by validate (see
@@ -5657,6 +5665,7 @@ export async function syncGlobalOptions(
   }
   await fixAccessLogFileOwnership(patched);
   if (proxyConfPatched !== proxyConfDisk) await fixAccessLogFileOwnership(proxyConfPatched);
+  await removeDnsSecrets();
   return { restartNeeded };
 }
 
