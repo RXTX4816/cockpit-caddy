@@ -28,8 +28,8 @@ test('rejects a request body over the configured limit and allows one under it',
     // Plain HTTP — this test is about the body-size gate, not TLS, so there's no reason
     // to drag the internal CA into it.
     await modal.locator('#tls').selectOption('off');
-    // The body limit sits on the Logging & errors tab as number + unit (#260); 100 bytes.
-    await modal.getByRole('tab', { name: /^Logging & errors/ }).click();
+    // The body limit sits on the Limits tab as number + unit (#260, #292); 100 bytes.
+    await modal.getByRole('tab', { name: /^Limits/ }).click();
     await modal.locator('#add-proxy-request-body-max-size-unit').selectOption('B');
     await modal.locator('#add-proxy-request-body-max-size').fill('100');
     await modal.getByRole('button', { name: /^add proxy$/i }).click();

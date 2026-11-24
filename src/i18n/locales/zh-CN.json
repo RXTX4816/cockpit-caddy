@@ -951,6 +951,7 @@
     "security": "安全",
     "routing": "路由",
     "upstreams": "上游",
-    "logging": "日志与错误"
+    "logging": "日志与错误",
+    "limits": "限制"
   }
 }

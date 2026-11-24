@@ -951,6 +951,7 @@
     "security": "보안",
     "routing": "라우팅",
     "upstreams": "업스트림",
-    "logging": "로그 및 오류"
+    "logging": "로그 및 오류",
+    "limits": "한도"
   }
 }

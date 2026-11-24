@@ -951,6 +951,7 @@
     "security": "Keamanan",
     "routing": "Perutean",
     "upstreams": "Upstream",
-    "logging": "Log & kesalahan"
+    "logging": "Log & kesalahan",
+    "limits": "Batasan"
   }
 }

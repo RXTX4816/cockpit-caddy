@@ -112,6 +112,14 @@ export function ProxyTabs({ state: s, onChange, general, generalHasError, active
             <>
               <AccessLogSection value={s.accessLog} onChange={v => onChange({ accessLog: v })} isDisabled={isDisabled} />
               <ErrorHandlersSection value={s.errorHandlers} onChange={v => onChange({ errorHandlers: v })} isDisabled={isDisabled} />
+            </>
+          ),
+        },
+        {
+          key: "limits",
+          configured: flags.configured.limits,
+          content: (
+            <>
               <ServerTimeoutsSection value={s.serverTimeouts} onChange={v => onChange({ serverTimeouts: v })} isDisabled={isDisabled} />
               <RequestBodyLimitField value={s.requestBodyMaxSize} onChange={v => onChange({ requestBodyMaxSize: v })} isDisabled={isDisabled} idPrefix={idPrefix} />
             </>

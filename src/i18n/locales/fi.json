@@ -951,6 +951,7 @@
     "security": "Suojaus",
     "routing": "Reititys",
     "upstreams": "Upstreamit",
-    "logging": "Lokit ja virheet"
+    "logging": "Lokit ja virheet",
+    "limits": "Rajat"
   }
 }
