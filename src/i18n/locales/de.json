@@ -1024,5 +1024,29 @@
     "upstreams": "Upstreams",
     "logging": "Logging & Fehler",
     "limits": "Limits"
+  },
+  "dns": {
+    "global_title": "DNS-Challenge",
+    "global_enabled": "DNS-Challenge für ACME-Zertifikate verwenden",
+    "global_enabled_help": "Nötig für Wildcard-Zertifikate und für Hosts, die auf Port 80/443 nicht erreichbar sind. Caddy weist die Kontrolle über die Domain mit einem DNS-Eintrag nach, den es über die API Ihres Anbieters setzt.",
+    "no_modules_title": "Kein DNS-Anbieter-Modul installiert",
+    "no_modules_body": "Die DNS-Challenge braucht einen Caddy-Build mit einem DNS-Anbieter-Modul (dns.providers.*), das Distributionspakete meist nicht enthalten. Verwenden Sie einen Caddy-Build mit dem Modul für Ihren DNS-Anbieter. Dieses Plugin installiert keins: Das paketierte Binary zu ersetzen bricht Paket-Updates.",
+    "no_modules_link": "Caddy-Module (Filter: dns.providers)",
+    "provider": "DNS-Anbieter",
+    "provider_choose": "Anbieter wählen",
+    "credentials": "Zugangsdaten",
+    "credentials_help": "Die Werte liegen in /etc/caddy/dns.env (nur root, Modus 600) und erreichen Caddy als Umgebungsvariablen; die Caddyfile verweist nur darauf. Ein gespeicherter Wert wird nie wieder angezeigt.",
+    "option_name": "Optionsname",
+    "option_value": "Wert",
+    "value_keep": "Gespeichert; leer lassen, um ihn zu behalten",
+    "value_set": "Gesetzt",
+    "add_option": "Option hinzufügen",
+    "remove_option": "Option entfernen",
+    "validation_option": "Optionsnamen bestehen aus Buchstaben, Ziffern und Unterstrichen.",
+    "validation_duplicate": "Jede Option darf nur einmal vorkommen.",
+    "validation_value": "Für jede neue Option einen Wert eingeben.",
+    "validation_provider": "DNS-Anbieter wählen.",
+    "restart_needed": "Caddy neu starten, um die geänderten DNS-Zugangsdaten zu laden. Neu laden reicht nicht: Der Dienst liest seine Umgebung nur beim Start.",
+    "restart_button": "Caddy neu starten"
   }
 }

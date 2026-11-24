@@ -1024,5 +1024,29 @@
     "upstreams": "上游",
     "logging": "日誌與錯誤",
     "limits": "限制"
+  },
+  "dns": {
+    "global_title": "DNS 挑戰",
+    "global_enabled": "為 ACME 憑證使用 DNS 挑戰",
+    "global_enabled_help": "萬用字元憑證以及無法透過 80/443 連接埠存取的主機需要它。Caddy 透過供應商 API 設定的 DNS 紀錄證明對網域的控制權。",
+    "no_modules_title": "未安裝 DNS 供應商模組",
+    "no_modules_body": "DNS 挑戰需要包含 DNS 供應商模組（dns.providers.*）的 Caddy 建置，發行版的套件通常不含。請使用包含你的 DNS 供應商模組的 Caddy 建置。本外掛不負責安裝：替換套件中的程式會破壞套件更新。",
+    "no_modules_link": "Caddy 模組（篩選：dns.providers）",
+    "provider": "DNS 供應商",
+    "provider_choose": "選擇供應商",
+    "credentials": "憑證資料",
+    "credentials_help": "這些值保存在 /etc/caddy/dns.env（僅 root，權限 600）中，以環境變數傳給 Caddy；Caddyfile 只參照它們。儲存後的值不會再顯示。",
+    "option_name": "選項名稱",
+    "option_value": "值",
+    "value_keep": "已儲存；留空即維持不變",
+    "value_set": "已設定",
+    "add_option": "新增選項",
+    "remove_option": "移除選項",
+    "validation_option": "選項名稱只能包含字母、數字和底線。",
+    "validation_duplicate": "每個選項只能出現一次。",
+    "validation_value": "請為每個新選項輸入值。",
+    "validation_provider": "請選擇 DNS 供應商。",
+    "restart_needed": "請重新啟動 Caddy 以載入變更後的 DNS 憑證資料。重新載入不夠：服務只在啟動時讀取環境變數。",
+    "restart_button": "重新啟動 Caddy"
   }
 }

@@ -1024,5 +1024,29 @@
     "upstreams": "שרתי יעד",
     "logging": "יומנים ושגיאות",
     "limits": "מגבלות"
+  },
+  "dns": {
+    "global_title": "אתגר DNS",
+    "global_enabled": "שימוש באתגר DNS לתעודות ACME",
+    "global_enabled_help": "נחוץ לתעודות wildcard ולמארחים שאינם נגישים בפורטים 80/443. Caddy מוכיח שליטה בדומיין בעזרת רשומת DNS שהוא יוצר דרך ה-API של הספק.",
+    "no_modules_title": "לא מותקן מודול ספק DNS",
+    "no_modules_body": "אתגר DNS דורש גרסת Caddy עם מודול ספק DNS ‏(dns.providers.*), שחבילות ההפצה בדרך כלל אינן כוללות. השתמש בגרסת Caddy עם המודול של ספק ה-DNS שלך. התוסף אינו מתקין מודול: החלפת הקובץ הארוז שוברת את עדכוני החבילה.",
+    "no_modules_link": "מודולים של Caddy (מסנן: dns.providers)",
+    "provider": "ספק DNS",
+    "provider_choose": "בחר ספק",
+    "credentials": "פרטי גישה",
+    "credentials_help": "הערכים נשמרים ב-‎/etc/caddy/dns.env‎ (root בלבד, הרשאה 600) ומגיעים ל-Caddy כמשתני סביבה; קובץ Caddyfile רק מפנה אליהם. ערך שנשמר לא יוצג שוב.",
+    "option_name": "שם האפשרות",
+    "option_value": "ערך",
+    "value_keep": "נשמר; השאר ריק כדי לשמור אותו",
+    "value_set": "מוגדר",
+    "add_option": "הוסף אפשרות",
+    "remove_option": "הסר אפשרות",
+    "validation_option": "שמות אפשרויות משתמשים באותיות, ספרות וקווים תחתונים.",
+    "validation_duplicate": "כל אפשרות יכולה להופיע פעם אחת בלבד.",
+    "validation_value": "הזן ערך לכל אפשרות חדשה.",
+    "validation_provider": "בחר ספק DNS.",
+    "restart_needed": "הפעל מחדש את Caddy כדי לטעון את פרטי הגישה ל-DNS שהשתנו. טעינה מחדש אינה מספיקה: השירות קורא את הסביבה שלו רק בהפעלה.",
+    "restart_button": "הפעל מחדש את Caddy"
   }
 }

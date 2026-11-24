@@ -1024,5 +1024,29 @@
     "upstreams": "Upstream",
     "logging": "Log ed errori",
     "limits": "Limiti"
+  },
+  "dns": {
+    "global_title": "Sfida DNS",
+    "global_enabled": "Usa la sfida DNS per i certificati ACME",
+    "global_enabled_help": "Necessaria per i certificati wildcard e per gli host non raggiungibili sulle porte 80/443. Caddy dimostra il controllo del dominio con un record DNS impostato tramite l’API del tuo provider.",
+    "no_modules_title": "Nessun modulo di provider DNS installato",
+    "no_modules_body": "La sfida DNS richiede una build di Caddy con un modulo di provider DNS (dns.providers.*), che i pacchetti delle distribuzioni di solito non includono. Usa una build di Caddy con il modulo del tuo provider DNS. Questo plugin non ne installa: sostituire il binario del pacchetto rompe gli aggiornamenti.",
+    "no_modules_link": "Moduli di Caddy (filtro: dns.providers)",
+    "provider": "Provider DNS",
+    "provider_choose": "Scegli un provider",
+    "credentials": "Credenziali",
+    "credentials_help": "I valori sono salvati in /etc/caddy/dns.env (solo root, modalità 600) e arrivano a Caddy come variabili d’ambiente; il Caddyfile si limita a riferirle. Un valore salvato non viene più mostrato.",
+    "option_name": "Nome dell’opzione",
+    "option_value": "Valore",
+    "value_keep": "Salvato; lascia vuoto per mantenerlo",
+    "value_set": "Impostato",
+    "add_option": "Aggiungi opzione",
+    "remove_option": "Rimuovi opzione",
+    "validation_option": "I nomi delle opzioni usano lettere, cifre e trattini bassi.",
+    "validation_duplicate": "Ogni opzione può comparire una sola volta.",
+    "validation_value": "Inserisci un valore per ogni nuova opzione.",
+    "validation_provider": "Scegli un provider DNS.",
+    "restart_needed": "Riavvia Caddy per caricare le credenziali DNS modificate. Ricaricare non basta: il servizio legge il suo ambiente solo all’avvio.",
+    "restart_button": "Riavvia Caddy"
   }
 }

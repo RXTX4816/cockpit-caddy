@@ -496,3 +496,21 @@ export interface UpstreamStatus {
   num_requests: number;
   fails: number;
 }
+
+/**
+ * The ACME DNS challenge provider (#261, global `acme_dns`; #289 per site `tls { dns }`).
+ * Credentials never sit in the model as values: `credentials` maps each provider option to the
+ * name of an environment variable in the root-only env file, written as `{env.NAME}`.
+ */
+export interface DnsChallengeConfig {
+  /** The provider module name, e.g. "cloudflare" for dns.providers.cloudflare. */
+  provider: string;
+  /** Provider option → environment variable name. */
+  credentials: Record<string, string>;
+  /**
+   * Options a hand-written config sets to a literal value. Kept as written when saved back
+   * unchanged, never shown. The key "" holds arguments written inline after the provider.
+   */
+  literal?: Record<string, string>;
+}
+

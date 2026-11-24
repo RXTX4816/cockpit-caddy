@@ -1024,5 +1024,29 @@
     "upstreams": "Upstreamy",
     "logging": "Logi i błędy",
     "limits": "Limity"
+  },
+  "dns": {
+    "global_title": "Wyzwanie DNS",
+    "global_enabled": "Używaj wyzwania DNS dla certyfikatów ACME",
+    "global_enabled_help": "Potrzebne dla certyfikatów wildcard i hostów nieosiągalnych na portach 80/443. Caddy udowadnia kontrolę nad domeną rekordem DNS ustawianym przez API dostawcy.",
+    "no_modules_title": "Brak zainstalowanego modułu dostawcy DNS",
+    "no_modules_body": "Wyzwanie DNS wymaga kompilacji Caddy z modułem dostawcy DNS (dns.providers.*), którego pakiety dystrybucji zwykle nie zawierają. Użyj kompilacji Caddy z modułem twojego dostawcy DNS. Ta wtyczka go nie instaluje: podmiana pliku z pakietu psuje aktualizacje pakietu.",
+    "no_modules_link": "Moduły Caddy (filtr: dns.providers)",
+    "provider": "Dostawca DNS",
+    "provider_choose": "Wybierz dostawcę",
+    "credentials": "Dane uwierzytelniające",
+    "credentials_help": "Wartości są przechowywane w /etc/caddy/dns.env (tylko root, tryb 600) i trafiają do Caddy jako zmienne środowiskowe; Caddyfile tylko się do nich odwołuje. Zapisana wartość nie jest już nigdy pokazywana.",
+    "option_name": "Nazwa opcji",
+    "option_value": "Wartość",
+    "value_keep": "Zapisano; zostaw puste, aby zachować",
+    "value_set": "Ustawiono",
+    "add_option": "Dodaj opcję",
+    "remove_option": "Usuń opcję",
+    "validation_option": "Nazwy opcji składają się z liter, cyfr i podkreśleń.",
+    "validation_duplicate": "Każda opcja może wystąpić tylko raz.",
+    "validation_value": "Podaj wartość dla każdej nowej opcji.",
+    "validation_provider": "Wybierz dostawcę DNS.",
+    "restart_needed": "Uruchom ponownie Caddy, aby wczytać zmienione dane DNS. Przeładowanie nie wystarczy: usługa czyta swoje środowisko tylko przy starcie.",
+    "restart_button": "Uruchom ponownie Caddy"
   }
 }

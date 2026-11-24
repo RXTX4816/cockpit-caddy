@@ -1024,5 +1024,29 @@
     "upstreams": "Upstreams",
     "logging": "Loggning och fel",
     "limits": "Gränser"
+  },
+  "dns": {
+    "global_title": "DNS-utmaning",
+    "global_enabled": "Använd DNS-utmaningen för ACME-certifikat",
+    "global_enabled_help": "Behövs för jokerteckencertifikat och för värdar som inte nås på port 80/443. Caddy visar att du styr domänen med en DNS-post som den sätter via leverantörens API.",
+    "no_modules_title": "Ingen DNS-leverantörsmodul installerad",
+    "no_modules_body": "DNS-utmaningen kräver en Caddy-version med en DNS-leverantörsmodul (dns.providers.*), som distributionernas paket oftast saknar. Använd en Caddy-version med modulen för din DNS-leverantör. Det här insticksprogrammet installerar ingen: att byta ut den paketerade binären förstör paketuppdateringar.",
+    "no_modules_link": "Caddy-moduler (filter: dns.providers)",
+    "provider": "DNS-leverantör",
+    "provider_choose": "Välj en leverantör",
+    "credentials": "Inloggningsuppgifter",
+    "credentials_help": "Värdena sparas i /etc/caddy/dns.env (endast root, läge 600) och når Caddy som miljövariabler; Caddyfile hänvisar bara till dem. Ett sparat värde visas aldrig igen.",
+    "option_name": "Alternativets namn",
+    "option_value": "Värde",
+    "value_keep": "Sparat; lämna tomt för att behålla",
+    "value_set": "Angivet",
+    "add_option": "Lägg till alternativ",
+    "remove_option": "Ta bort alternativ",
+    "validation_option": "Alternativnamn består av bokstäver, siffror och understreck.",
+    "validation_duplicate": "Varje alternativ får bara förekomma en gång.",
+    "validation_value": "Ange ett värde för varje nytt alternativ.",
+    "validation_provider": "Välj en DNS-leverantör.",
+    "restart_needed": "Starta om Caddy för att läsa in de ändrade DNS-uppgifterna. En omläsning räcker inte: tjänsten läser sin miljö bara när den startar.",
+    "restart_button": "Starta om Caddy"
   }
 }

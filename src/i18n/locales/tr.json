@@ -1024,5 +1024,29 @@
     "upstreams": "Upstream'ler",
     "logging": "Günlükler ve hatalar",
     "limits": "Sınırlar"
+  },
+  "dns": {
+    "global_title": "DNS doğrulaması",
+    "global_enabled": "ACME sertifikaları için DNS doğrulamasını kullan",
+    "global_enabled_help": "Joker sertifikalar ve 80/443 portlarından erişilemeyen ana makineler için gerekir. Caddy, sağlayıcınızın API'si ile oluşturduğu bir DNS kaydıyla alan adının denetimini kanıtlar.",
+    "no_modules_title": "Kurulu DNS sağlayıcı modülü yok",
+    "no_modules_body": "DNS doğrulaması için DNS sağlayıcı modülü (dns.providers.*) içeren bir Caddy derlemesi gerekir; dağıtım paketlerinde genellikle bulunmaz. DNS sağlayıcınızın modülünü içeren bir Caddy derlemesi kullanın. Bu eklenti modül kurmaz: paketteki ikili dosyayı değiştirmek paket güncellemelerini bozar.",
+    "no_modules_link": "Caddy modülleri (filtre: dns.providers)",
+    "provider": "DNS sağlayıcısı",
+    "provider_choose": "Bir sağlayıcı seçin",
+    "credentials": "Kimlik bilgileri",
+    "credentials_help": "Değerler /etc/caddy/dns.env dosyasında (yalnızca root, mod 600) tutulur ve Caddy'ye ortam değişkeni olarak ulaşır; Caddyfile yalnızca onlara başvurur. Kaydedilen bir değer bir daha gösterilmez.",
+    "option_name": "Seçenek adı",
+    "option_value": "Değer",
+    "value_keep": "Kaydedildi; korumak için boş bırakın",
+    "value_set": "Ayarlandı",
+    "add_option": "Seçenek ekle",
+    "remove_option": "Seçeneği kaldır",
+    "validation_option": "Seçenek adları harf, rakam ve alt çizgi içerir.",
+    "validation_duplicate": "Her seçenek yalnızca bir kez yer alabilir.",
+    "validation_value": "Her yeni seçenek için bir değer girin.",
+    "validation_provider": "Bir DNS sağlayıcısı seçin.",
+    "restart_needed": "Değişen DNS kimlik bilgilerini yüklemek için Caddy'yi yeniden başlatın. Yeniden yükleme yetmez: hizmet ortamını yalnızca başlarken okur.",
+    "restart_button": "Caddy'yi yeniden başlat"
   }
 }

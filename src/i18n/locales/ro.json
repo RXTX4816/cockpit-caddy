@@ -1024,5 +1024,29 @@
     "upstreams": "Upstream-uri",
     "logging": "Jurnale și erori",
     "limits": "Limite"
+  },
+  "dns": {
+    "global_title": "Provocarea DNS",
+    "global_enabled": "Folosește provocarea DNS pentru certificatele ACME",
+    "global_enabled_help": "Necesar pentru certificate wildcard și pentru gazde inaccesibile pe porturile 80/443. Caddy dovedește controlul domeniului cu o înregistrare DNS setată prin API-ul furnizorului.",
+    "no_modules_title": "Niciun modul de furnizor DNS instalat",
+    "no_modules_body": "Provocarea DNS necesită o versiune Caddy cu un modul de furnizor DNS (dns.providers.*), pe care pachetele distribuțiilor de obicei nu îl au. Folosiți o versiune Caddy cu modulul furnizorului dvs. DNS. Acest plugin nu instalează unul: înlocuirea binarului din pachet strică actualizările pachetului.",
+    "no_modules_link": "Module Caddy (filtru: dns.providers)",
+    "provider": "Furnizor DNS",
+    "provider_choose": "Alegeți un furnizor",
+    "credentials": "Date de autentificare",
+    "credentials_help": "Valorile sunt păstrate în /etc/caddy/dns.env (doar root, mod 600) și ajung la Caddy ca variabile de mediu; Caddyfile doar le referă. O valoare salvată nu mai este afișată niciodată.",
+    "option_name": "Numele opțiunii",
+    "option_value": "Valoare",
+    "value_keep": "Salvat; lăsați gol ca să rămână",
+    "value_set": "Setat",
+    "add_option": "Adaugă opțiune",
+    "remove_option": "Elimină opțiunea",
+    "validation_option": "Numele opțiunilor folosesc litere, cifre și liniuțe de subliniere.",
+    "validation_duplicate": "Fiecare opțiune poate apărea o singură dată.",
+    "validation_value": "Introduceți o valoare pentru fiecare opțiune nouă.",
+    "validation_provider": "Alegeți un furnizor DNS.",
+    "restart_needed": "Reporniți Caddy pentru a încărca datele DNS modificate. Reîncărcarea nu ajunge: serviciul își citește mediul doar la pornire.",
+    "restart_button": "Repornește Caddy"
   }
 }

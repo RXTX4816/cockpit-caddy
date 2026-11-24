@@ -1024,5 +1024,29 @@
     "upstreams": "Upstreamy",
     "logging": "Logování a chyby",
     "limits": "Limity"
+  },
+  "dns": {
+    "global_title": "Ověření přes DNS",
+    "global_enabled": "Pro certifikáty ACME použít ověření přes DNS",
+    "global_enabled_help": "Potřebné pro wildcard certifikáty a pro hostitele nedostupné na portech 80/443. Caddy prokáže kontrolu nad doménou záznamem DNS, který nastaví přes API vašeho poskytovatele.",
+    "no_modules_title": "Není nainstalován žádný modul poskytovatele DNS",
+    "no_modules_body": "Ověření přes DNS potřebuje build Caddy s modulem poskytovatele DNS (dns.providers.*), který balíčky distribucí obvykle nemají. Použijte build Caddy s modulem pro svého poskytovatele DNS. Tento doplněk žádný neinstaluje: nahrazení zabalené binárky rozbije aktualizace balíčku.",
+    "no_modules_link": "Moduly Caddy (filtr: dns.providers)",
+    "provider": "Poskytovatel DNS",
+    "provider_choose": "Vyberte poskytovatele",
+    "credentials": "Přihlašovací údaje",
+    "credentials_help": "Hodnoty se ukládají do /etc/caddy/dns.env (jen pro root, režim 600) a Caddy je dostane jako proměnné prostředí; Caddyfile na ně jen odkazuje. Uložená hodnota se už nikdy nezobrazí.",
+    "option_name": "Název volby",
+    "option_value": "Hodnota",
+    "value_keep": "Uloženo; ponechte prázdné, aby zůstalo",
+    "value_set": "Nastaveno",
+    "add_option": "Přidat volbu",
+    "remove_option": "Odebrat volbu",
+    "validation_option": "Názvy voleb obsahují písmena, číslice a podtržítka.",
+    "validation_duplicate": "Každá volba smí být uvedena jen jednou.",
+    "validation_value": "Zadejte hodnotu pro každou novou volbu.",
+    "validation_provider": "Vyberte poskytovatele DNS.",
+    "restart_needed": "Restartujte Caddy, aby načetl změněné přihlašovací údaje DNS. Opětovné načtení nestačí: služba čte své prostředí jen při startu.",
+    "restart_button": "Restartovat Caddy"
   }
 }

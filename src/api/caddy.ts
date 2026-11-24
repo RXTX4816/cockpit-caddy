@@ -1,6 +1,7 @@
 import type { CaddyConfig, CaddyHandler, CaddyReverseProxyHandler, CaddyRoute, CaddyServer, CaddyTLSClientAuthentication, CaddyTLSConnectionPolicy, ProxyEntry } from "./types";
 import { readFile as fsReadFile, writeFile as fsWriteFile } from "@rxtx4816/cockpit-plugin-base-react/lib/cockpit-fs";
 import { reloadService as reloadSystemdService } from "@rxtx4816/cockpit-plugin-base-react/systemd";
+import { applyDnsSecrets, dnsEnviron } from "./dnsChallenge";
 import { i18n } from "@rxtx4816/cockpit-plugin-base-react/i18n";
 import { listConfDFiles, readCaddyfile, writeCaddyfile } from "./systemd";
 import { externalHostList } from "./externalHosts";
@@ -4581,9 +4582,12 @@ async function runCaddyValidate(): Promise<void> {
     return;
   }
   let output = "";
+  // DNS provider credentials (#261) live in the service's env file; a provider that checks them
+  // while provisioning would fail validation without them. Passed as environment, not argv.
+  const environ = await dnsEnviron();
   const proc = cockpit.spawn(
     ["caddy", "validate", "--config", MAIN_CADDYFILE, "--adapter", "caddyfile"],
-    { superuser: "try", err: "out" },
+    { superuser: "try", err: "out", ...(environ.length ? { environ } : {}) },
   ).stream(chunk => { output += chunk; });
   try {
     await proc;
@@ -5055,6 +5059,8 @@ export interface GlobalOptions {
   acmeEabKeyId?: string;
   /** External Account Binding MAC key */
   acmeEabMacKey?: string;
+  /** Global ACME DNS challenge provider (#261), `acme_dns`. */
+  acmeDns?: import("./types").DnsChallengeConfig;
   /** Enable on-demand TLS certificate provisioning */
   onDemandEnabled?: boolean;
   /** Authorization URL Caddy queries before issuing an on-demand certificate */
@@ -5117,7 +5123,7 @@ export interface GlobalOptions {
  */
 const KNOWN_GLOBAL_OPTION_KEYS = new Set([
   "http_port", "https_port", "debug", "grace_period", "shutdown_delay",
-  "email", "acme_ca", "acme_ca_root", "acme_eab", "on_demand_tls",
+  "email", "acme_ca", "acme_ca_root", "acme_eab", "acme_dns", "on_demand_tls",
   "renewal_window_ratio", "storage", "metrics", "log",
 ]);
 
@@ -5137,6 +5143,50 @@ const KNOWN_GLOBAL_OPTION_KEYS = new Set([
 const INTERNAL_LIFETIME_MARKER = "# cockpit-caddy:internal-cert-lifetime";
 
 /** Parse the recognized global option directives out of a block of Caddyfile lines. */
+/**
+ * `<directive> <provider> [{ <option> {env.NAME} … }]` (#261 acme_dns, #289 tls { dns }).
+ * Credentials are written only as env references; literal values from a hand-written config
+ * come back as they were.
+ */
+export function dnsProviderLines(directive: string, cfg: import("./types").DnsChallengeConfig, indent: string): string[] {
+  const inline = cfg.literal?.[""];
+  const head = `${indent}${directive} ${cfg.provider}${inline ? ` ${inline}` : ""}`;
+  const entries = [
+    ...Object.entries(cfg.credentials).map(([k, v]) => `${indent}\t${k} {env.${v}}`),
+    ...Object.entries(cfg.literal ?? {}).filter(([k]) => k).map(([k, v]) => `${indent}\t${k} ${v}`),
+  ];
+  return entries.length ? [`${head} {`, ...entries, `${indent}}`] : [head];
+}
+
+/**
+ * Reads a DNS provider directive whose arguments are `val` (the rest of line i). Returns the
+ * config and the index of the first line after it (after the closing brace of a block).
+ */
+export function parseDnsProviderDirective(val: string, lines: string[], i: number): { config?: import("./types").DnsChallengeConfig; next: number } {
+  const isBlock = val.trim().endsWith("{");
+  const args = val.replace(/\{\s*$/, "").trim().split(/\s+/).filter(Boolean);
+  if (!args.length) return { next: i + 1 };
+  const config: import("./types").DnsChallengeConfig = { provider: args[0], credentials: {} };
+  const literal: Record<string, string> = {};
+  if (args.length > 1) literal[""] = args.slice(1).join(" ");
+  let j = i + 1;
+  if (isBlock) {
+    let depth = 1;
+    for (; j < lines.length; j++) {
+      const inner = lines[j].trim();
+      depth += (inner.match(/\{/g) ?? []).length - (inner.match(/\}/g) ?? []).length;
+      if (depth <= 0) { j++; break; }
+      const im = inner.match(/^(\S+)\s+(.+)$/);
+      if (!im || depth > 1) continue;
+      const env = im[2].trim().match(/^\{env\.([A-Za-z_][A-Za-z0-9_]*)\}$/);
+      if (env) config.credentials[im[1]] = env[1];
+      else literal[im[1]] = im[2].trim();
+    }
+  }
+  if (Object.keys(literal).length) config.literal = literal;
+  return { config, next: j };
+}
+
 function parseOptionLines(lines: string[]): GlobalOptions {
   const opts: GlobalOptions = {};
   let i = 0;
@@ -5165,6 +5215,11 @@ function parseOptionLines(lines: string[]): GlobalOptions {
         }
         i++;
       }
+    } else if (key === "acme_dns" && val) {
+      const { config, next } = parseDnsProviderDirective(val, lines, i);
+      if (config) opts.acmeDns = config;
+      i = next;
+      continue;
     } else if (key === "on_demand_tls" && line.endsWith("{")) {
       opts.onDemandEnabled = true;
       i++;
@@ -5366,6 +5421,7 @@ function buildGlobalOptionsLines(opts: GlobalOptions): string {
     lines.push(`\t\tmac_key ${opts.acmeEabMacKey}`);
     lines.push("\t}");
   }
+  if (opts.acmeDns?.provider) lines.push(...dnsProviderLines("acme_dns", opts.acmeDns, "\t"));
   if (opts.onDemandEnabled) {
     lines.push("\ton_demand_tls {");
     if (opts.onDemandAsk) lines.push(`\t\task ${opts.onDemandAsk}`);
@@ -5545,8 +5601,17 @@ function patchTopLevelMarkedSection(content: string, beginMarker: string, endMar
   return base + "\n\n" + beginMarker + "\n" + body + "\n" + endMarker + "\n";
 }
 
-export async function syncGlobalOptions(opts: GlobalOptions): Promise<void> {
+/**
+ * Saves the global options. `dnsSecrets` (#261) are DNS provider credentials for the root-only
+ * env file, applied first so validation sees them. `restartNeeded` is true when that env
+ * changed: Caddy only reads it on a restart, not on a reload.
+ */
+export async function syncGlobalOptions(
+  opts: GlobalOptions,
+  dnsSecrets?: { set: Record<string, string>; remove: string[] },
+): Promise<{ restartNeeded: boolean }> {
   await ensureConfDImported(); // a stock Caddyfile is migrated first (#256)
+  const restartNeeded = dnsSecrets ? (await applyDnsSecrets(dnsSecrets.set, dnsSecrets.remove)).changed : false;
   const diskContent = (await fsReadFile(MAIN_CADDYFILE, "try")) ?? "";
   let patched = buildGlobalOptionsPatch(diskContent, opts);
 
@@ -5568,7 +5633,7 @@ export async function syncGlobalOptions(opts: GlobalOptions): Promise<void> {
   let proxyConfPatched = await applyInternalLifetimeToProxyConf(proxyConfDisk, opts.internalCertLifetime);
   proxyConfPatched = patchTopLevelMarkedSection(proxyConfPatched, METRICS_SITE_BEGIN, METRICS_SITE_END, buildMetricsSiteBlock(opts));
 
-  if (patched === diskContent && proxyConfPatched === proxyConfDisk) return;
+  if (patched === diskContent && proxyConfPatched === proxyConfDisk) return { restartNeeded };
 
   // #158's runtime logger lives in the main Caddyfile's global options, not conf.d — check
   // both files for log paths that would otherwise get poisoned by validate (see
@@ -5592,6 +5657,7 @@ export async function syncGlobalOptions(opts: GlobalOptions): Promise<void> {
   }
   await fixAccessLogFileOwnership(patched);
   if (proxyConfPatched !== proxyConfDisk) await fixAccessLogFileOwnership(proxyConfPatched);
+  return { restartNeeded };
 }
 
 /** Read current global options from the main Caddyfile, merged with the metrics site

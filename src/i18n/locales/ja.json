@@ -1024,5 +1024,29 @@
     "upstreams": "アップストリーム",
     "logging": "ログとエラー",
     "limits": "制限"
+  },
+  "dns": {
+    "global_title": "DNS チャレンジ",
+    "global_enabled": "ACME 証明書に DNS チャレンジを使う",
+    "global_enabled_help": "ワイルドカード証明書や、ポート 80/443 で到達できないホストに必要です。Caddy はプロバイダーの API で設定した DNS レコードでドメインの管理を証明します。",
+    "no_modules_title": "DNS プロバイダーモジュールがインストールされていません",
+    "no_modules_body": "DNS チャレンジには DNS プロバイダーモジュール（dns.providers.*）を含む Caddy ビルドが必要ですが、ディストリビューションのパッケージには通常含まれていません。お使いの DNS プロバイダーのモジュールを含む Caddy ビルドを使ってください。このプラグインはモジュールをインストールしません。パッケージのバイナリを置き換えるとパッケージ更新が壊れるためです。",
+    "no_modules_link": "Caddy モジュール（フィルター: dns.providers）",
+    "provider": "DNS プロバイダー",
+    "provider_choose": "プロバイダーを選択",
+    "credentials": "認証情報",
+    "credentials_help": "値は /etc/caddy/dns.env（root のみ、モード 600）に保存され、環境変数として Caddy に渡されます。Caddyfile はそれを参照するだけです。保存した値が再び表示されることはありません。",
+    "option_name": "オプション名",
+    "option_value": "値",
+    "value_keep": "保存済み。空欄のままにすると保持されます",
+    "value_set": "設定済み",
+    "add_option": "オプションを追加",
+    "remove_option": "オプションを削除",
+    "validation_option": "オプション名には英字、数字、アンダースコアを使います。",
+    "validation_duplicate": "各オプションは 1 回だけ指定できます。",
+    "validation_value": "新しいオプションごとに値を入力してください。",
+    "validation_provider": "DNS プロバイダーを選択してください。",
+    "restart_needed": "変更した DNS 認証情報を読み込むには Caddy を再起動してください。再読み込みでは足りません。サービスは起動時にしか環境を読み込みません。",
+    "restart_button": "Caddy を再起動"
   }
 }

@@ -1024,5 +1024,29 @@
     "upstreams": "Upstream",
     "logging": "Log & kesalahan",
     "limits": "Batasan"
+  },
+  "dns": {
+    "global_title": "Tantangan DNS",
+    "global_enabled": "Gunakan tantangan DNS untuk sertifikat ACME",
+    "global_enabled_help": "Diperlukan untuk sertifikat wildcard dan host yang tidak terjangkau di port 80/443. Caddy membuktikan kendali atas domain dengan record DNS yang dipasang melalui API penyedia Anda.",
+    "no_modules_title": "Tidak ada modul penyedia DNS yang terpasang",
+    "no_modules_body": "Tantangan DNS memerlukan build Caddy dengan modul penyedia DNS (dns.providers.*), yang biasanya tidak ada di paket distro. Gunakan build Caddy dengan modul untuk penyedia DNS Anda. Plugin ini tidak memasangnya: mengganti biner paket merusak pembaruan paket.",
+    "no_modules_link": "Modul Caddy (filter: dns.providers)",
+    "provider": "Penyedia DNS",
+    "provider_choose": "Pilih penyedia",
+    "credentials": "Kredensial",
+    "credentials_help": "Nilai disimpan di /etc/caddy/dns.env (hanya root, mode 600) dan sampai ke Caddy sebagai variabel lingkungan; Caddyfile hanya merujuknya. Nilai yang tersimpan tidak pernah ditampilkan lagi.",
+    "option_name": "Nama opsi",
+    "option_value": "Nilai",
+    "value_keep": "Tersimpan; biarkan kosong untuk mempertahankannya",
+    "value_set": "Diatur",
+    "add_option": "Tambah opsi",
+    "remove_option": "Hapus opsi",
+    "validation_option": "Nama opsi memakai huruf, angka, dan garis bawah.",
+    "validation_duplicate": "Setiap opsi hanya boleh muncul sekali.",
+    "validation_value": "Masukkan nilai untuk setiap opsi baru.",
+    "validation_provider": "Pilih penyedia DNS.",
+    "restart_needed": "Mulai ulang Caddy untuk memuat kredensial DNS yang berubah. Memuat ulang tidak cukup: layanan hanya membaca lingkungannya saat mulai.",
+    "restart_button": "Mulai ulang Caddy"
   }
 }

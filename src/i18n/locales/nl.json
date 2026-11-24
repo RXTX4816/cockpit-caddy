@@ -1024,5 +1024,29 @@
     "upstreams": "Upstreams",
     "logging": "Logging & fouten",
     "limits": "Limieten"
+  },
+  "dns": {
+    "global_title": "DNS-challenge",
+    "global_enabled": "DNS-challenge gebruiken voor ACME-certificaten",
+    "global_enabled_help": "Nodig voor wildcardcertificaten en voor hosts die niet bereikbaar zijn op poort 80/443. Caddy bewijst controle over het domein met een DNS-record dat het via de API van uw provider zet.",
+    "no_modules_title": "Geen DNS-providermodule geïnstalleerd",
+    "no_modules_body": "De DNS-challenge vereist een Caddy-build met een DNS-providermodule (dns.providers.*), die distributiepakketten meestal niet hebben. Gebruik een Caddy-build met de module voor uw DNS-provider. Deze plug-in installeert er geen: het verpakte programma vervangen breekt pakketupdates.",
+    "no_modules_link": "Caddy-modules (filter: dns.providers)",
+    "provider": "DNS-provider",
+    "provider_choose": "Kies een provider",
+    "credentials": "Inloggegevens",
+    "credentials_help": "Waarden staan in /etc/caddy/dns.env (alleen root, modus 600) en bereiken Caddy als omgevingsvariabelen; de Caddyfile verwijst er alleen naar. Een opgeslagen waarde wordt nooit meer getoond.",
+    "option_name": "Optienaam",
+    "option_value": "Waarde",
+    "value_keep": "Opgeslagen; leeg laten om te behouden",
+    "value_set": "Ingesteld",
+    "add_option": "Optie toevoegen",
+    "remove_option": "Optie verwijderen",
+    "validation_option": "Optienamen bestaan uit letters, cijfers en underscores.",
+    "validation_duplicate": "Elke optie mag maar één keer voorkomen.",
+    "validation_value": "Voer een waarde in voor elke nieuwe optie.",
+    "validation_provider": "Kies een DNS-provider.",
+    "restart_needed": "Start Caddy opnieuw om de gewijzigde DNS-gegevens te laden. Herladen is niet genoeg: de service leest zijn omgeving alleen bij het starten.",
+    "restart_button": "Caddy opnieuw starten"
   }
 }

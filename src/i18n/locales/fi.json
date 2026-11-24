@@ -1024,5 +1024,29 @@
     "upstreams": "Upstreamit",
     "logging": "Lokit ja virheet",
     "limits": "Rajat"
+  },
+  "dns": {
+    "global_title": "DNS-haaste",
+    "global_enabled": "Käytä DNS-haastetta ACME-varmenteille",
+    "global_enabled_help": "Tarvitaan jokerimerkkivarmenteisiin ja isäntiin, joihin ei pääse porteissa 80/443. Caddy todistaa verkkotunnuksen hallinnan DNS-tietueella, jonka se asettaa palveluntarjoajasi API:n kautta.",
+    "no_modules_title": "DNS-palveluntarjoajan moduulia ei ole asennettu",
+    "no_modules_body": "DNS-haaste tarvitsee Caddy-käännöksen, jossa on DNS-palveluntarjoajan moduuli (dns.providers.*); jakeluiden paketeissa sitä ei yleensä ole. Käytä Caddy-käännöstä, jossa on DNS-palveluntarjoajasi moduuli. Tämä liitännäinen ei asenna sellaista: paketoidun ohjelman korvaaminen rikkoo pakettipäivitykset.",
+    "no_modules_link": "Caddyn moduulit (suodatin: dns.providers)",
+    "provider": "DNS-palveluntarjoaja",
+    "provider_choose": "Valitse palveluntarjoaja",
+    "credentials": "Tunnistetiedot",
+    "credentials_help": "Arvot tallennetaan tiedostoon /etc/caddy/dns.env (vain root, tila 600), ja Caddy saa ne ympäristömuuttujina; Caddyfile vain viittaa niihin. Tallennettua arvoa ei enää näytetä.",
+    "option_name": "Asetuksen nimi",
+    "option_value": "Arvo",
+    "value_keep": "Tallennettu; jätä tyhjäksi, niin se säilyy",
+    "value_set": "Asetettu",
+    "add_option": "Lisää asetus",
+    "remove_option": "Poista asetus",
+    "validation_option": "Asetusten nimissä käytetään kirjaimia, numeroita ja alaviivoja.",
+    "validation_duplicate": "Kukin asetus saa esiintyä vain kerran.",
+    "validation_value": "Anna arvo jokaiselle uudelle asetukselle.",
+    "validation_provider": "Valitse DNS-palveluntarjoaja.",
+    "restart_needed": "Käynnistä Caddy uudelleen, jotta muuttuneet DNS-tunnistetiedot latautuvat. Uudelleenlataus ei riitä: palvelu lukee ympäristönsä vain käynnistyessään.",
+    "restart_button": "Käynnistä Caddy uudelleen"
   }
 }

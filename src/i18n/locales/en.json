@@ -1024,5 +1024,29 @@
     "upstreams": "Upstreams",
     "logging": "Logging & errors",
     "limits": "Limits"
+  },
+  "dns": {
+    "global_title": "DNS challenge",
+    "global_enabled": "Use the DNS challenge for ACME certificates",
+    "global_enabled_help": "Needed for wildcard certificates and for hosts not reachable on ports 80/443. Caddy proves control of the domain with a DNS record it sets through your provider's API.",
+    "no_modules_title": "No DNS provider module installed",
+    "no_modules_body": "The DNS challenge needs a Caddy build with a DNS provider module (dns.providers.*), which distribution packages usually don't include. Use a Caddy build with the module for your DNS provider. This plugin doesn't install one: replacing the packaged binary breaks package updates.",
+    "no_modules_link": "Caddy modules (filter: dns.providers)",
+    "provider": "DNS provider",
+    "provider_choose": "Choose a provider",
+    "credentials": "Credentials",
+    "credentials_help": "Values are kept in /etc/caddy/dns.env (root only, mode 600) and reach Caddy as environment variables; the Caddyfile only references them. A saved value is never shown again.",
+    "option_name": "Option name",
+    "option_value": "Value",
+    "value_keep": "Saved; leave empty to keep it",
+    "value_set": "Set",
+    "add_option": "Add option",
+    "remove_option": "Remove option",
+    "validation_option": "Option names use letters, digits and underscores.",
+    "validation_duplicate": "Each option may appear only once.",
+    "validation_value": "Enter a value for each new option.",
+    "validation_provider": "Choose a DNS provider.",
+    "restart_needed": "Restart Caddy to load the changed DNS credentials. A reload isn't enough: the service reads its environment only when it starts.",
+    "restart_button": "Restart Caddy"
   }
 }

@@ -1024,5 +1024,29 @@
     "upstreams": "Upstreams",
     "logging": "Journaux et erreurs",
     "limits": "Limites"
+  },
+  "dns": {
+    "global_title": "Défi DNS",
+    "global_enabled": "Utiliser le défi DNS pour les certificats ACME",
+    "global_enabled_help": "Nécessaire pour les certificats wildcard et pour les hôtes injoignables sur les ports 80/443. Caddy prouve le contrôle du domaine avec un enregistrement DNS qu’il crée via l’API de votre fournisseur.",
+    "no_modules_title": "Aucun module de fournisseur DNS installé",
+    "no_modules_body": "Le défi DNS nécessite une version de Caddy avec un module de fournisseur DNS (dns.providers.*), que les paquets des distributions n’incluent généralement pas. Utilisez une version de Caddy avec le module de votre fournisseur DNS. Ce plugin n’en installe pas : remplacer le binaire empaqueté casse les mises à jour du paquet.",
+    "no_modules_link": "Modules Caddy (filtre : dns.providers)",
+    "provider": "Fournisseur DNS",
+    "provider_choose": "Choisissez un fournisseur",
+    "credentials": "Identifiants",
+    "credentials_help": "Les valeurs sont conservées dans /etc/caddy/dns.env (root uniquement, mode 600) et parviennent à Caddy comme variables d’environnement ; le Caddyfile ne fait que les référencer. Une valeur enregistrée n’est plus jamais affichée.",
+    "option_name": "Nom de l’option",
+    "option_value": "Valeur",
+    "value_keep": "Enregistrée ; laissez vide pour la conserver",
+    "value_set": "Défini",
+    "add_option": "Ajouter une option",
+    "remove_option": "Supprimer l’option",
+    "validation_option": "Les noms d’option utilisent des lettres, des chiffres et des tirets bas.",
+    "validation_duplicate": "Chaque option ne peut apparaître qu’une fois.",
+    "validation_value": "Saisissez une valeur pour chaque nouvelle option.",
+    "validation_provider": "Choisissez un fournisseur DNS.",
+    "restart_needed": "Redémarrez Caddy pour charger les identifiants DNS modifiés. Un rechargement ne suffit pas : le service ne lit son environnement qu’au démarrage.",
+    "restart_button": "Redémarrer Caddy"
   }
 }

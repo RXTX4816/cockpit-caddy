@@ -1024,5 +1024,29 @@
     "upstreams": "上游",
     "logging": "日志与错误",
     "limits": "限制"
+  },
+  "dns": {
+    "global_title": "DNS 质询",
+    "global_enabled": "为 ACME 证书使用 DNS 质询",
+    "global_enabled_help": "通配符证书以及无法通过 80/443 端口访问的主机需要它。Caddy 通过提供商 API 设置的 DNS 记录证明对域名的控制权。",
+    "no_modules_title": "未安装 DNS 提供商模块",
+    "no_modules_body": "DNS 质询需要包含 DNS 提供商模块（dns.providers.*）的 Caddy 构建，发行版的软件包通常不带。请使用包含你的 DNS 提供商模块的 Caddy 构建。本插件不负责安装：替换软件包中的程序会破坏软件包更新。",
+    "no_modules_link": "Caddy 模块（筛选：dns.providers）",
+    "provider": "DNS 提供商",
+    "provider_choose": "选择提供商",
+    "credentials": "凭据",
+    "credentials_help": "这些值保存在 /etc/caddy/dns.env（仅 root，权限 600）中，作为环境变量传给 Caddy；Caddyfile 只引用它们。保存后的值不会再显示。",
+    "option_name": "选项名称",
+    "option_value": "值",
+    "value_keep": "已保存；留空即保持不变",
+    "value_set": "已设置",
+    "add_option": "添加选项",
+    "remove_option": "移除选项",
+    "validation_option": "选项名称只能包含字母、数字和下划线。",
+    "validation_duplicate": "每个选项只能出现一次。",
+    "validation_value": "请为每个新选项输入值。",
+    "validation_provider": "请选择 DNS 提供商。",
+    "restart_needed": "请重启 Caddy 以加载更改后的 DNS 凭据。重新加载不够：服务只在启动时读取环境变量。",
+    "restart_button": "重启 Caddy"
   }
 }
