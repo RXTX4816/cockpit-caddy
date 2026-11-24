@@ -132,8 +132,6 @@
     "field_target_host": "Целевой хост",
     "field_target_host_placeholder": "напр. localhost",
     "field_tls_skip_verify": "Не проверять TLS бэкенда (для самоподписанных сертификатов бэкенда)",
-    "field_tls": "Включить TLS (внутренний CA Caddy)",
-    "field_tls_short": "Включить TLS (внутренний CA)",
     "field_compress": "Сжатие",
     "field_compress_short": "Включить сжатие ответов gzip / zstd",
     "field_label": "Метка (необязательно)",
@@ -839,6 +837,9 @@
     "help": "Дополнительно регистрирует маршрут под именем, чтобы другие маршруты могли использовать его через invoke <name>."
   },
   "servers": {
+    "field_https": "HTTPS",
+    "field_https_internal": "Включён, с внутренним CA Caddy",
+    "field_https_help": "Сервер слушает только порты, поэтому не может получить автоматический сертификат (ACME). Без отметки он отдаёт обычный HTTP.",
     "tab_all": "Все",
     "tab_ungrouped": "Без группы",
     "add_server": "Добавить сервер",

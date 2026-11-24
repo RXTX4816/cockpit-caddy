@@ -132,8 +132,6 @@
     "field_target_host": "Host docelowy",
     "field_target_host_placeholder": "np. localhost",
     "field_tls_skip_verify": "Pomiń weryfikację TLS backendu (dla samopodpisanych certyfikatów backendu)",
-    "field_tls": "Włącz TLS (wewnętrzne CA Caddy)",
-    "field_tls_short": "Włącz TLS (wewnętrzne CA)",
     "field_compress": "Kompresja",
     "field_compress_short": "Włącz kompresję odpowiedzi gzip / zstd",
     "field_label": "Etykieta (opcjonalnie)",
@@ -839,6 +837,9 @@
     "help": "Rejestruje też trasę pod nazwą, żeby inne trasy mogły jej użyć przez invoke <name>."
   },
   "servers": {
+    "field_https": "HTTPS",
+    "field_https_internal": "Włączony, z wewnętrznym CA Caddy",
+    "field_https_help": "Serwer nasłuchuje tylko na portach, więc nie może uzyskać automatycznego certyfikatu (ACME). Bez zaznaczenia serwuje zwykłe HTTP.",
     "tab_all": "Wszystkie",
     "tab_ungrouped": "Bez grupy",
     "add_server": "Dodaj serwer",

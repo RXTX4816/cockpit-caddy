@@ -132,8 +132,6 @@
     "field_target_host": "Kohdeisäntä",
     "field_target_host_placeholder": "esim. localhost",
     "field_tls_skip_verify": "Ohita taustapalvelimen TLS-tarkistus (itse allekirjoitetuille varmenteille)",
-    "field_tls": "Ota TLS käyttöön (Caddyn sisäinen CA)",
-    "field_tls_short": "Ota TLS käyttöön (sisäinen CA)",
     "field_compress": "Pakkaus",
     "field_compress_short": "Ota vastausten gzip-/zstd-pakkaus käyttöön",
     "field_label": "Nimiö (valinnainen)",
@@ -839,6 +837,9 @@
     "help": "Rekisteröi reitin myös nimellä, jotta muut reitit voivat käyttää sitä komennolla invoke <name>."
   },
   "servers": {
+    "field_https": "HTTPS",
+    "field_https_internal": "Käytössä, Caddyn sisäisellä CA:lla",
+    "field_https_help": "Palvelin kuuntelee vain portteja, joten se ei voi saada automaattista (ACME) varmennetta. Ilman valintaa se käyttää pelkkää HTTP:tä.",
     "tab_all": "Kaikki",
     "tab_ungrouped": "Ryhmittelemättömät",
     "add_server": "Lisää palvelin",

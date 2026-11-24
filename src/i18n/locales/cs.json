@@ -132,8 +132,6 @@
     "field_target_host": "Cílový hostitel",
     "field_target_host_placeholder": "např. localhost",
     "field_tls_skip_verify": "Přeskočit ověření TLS backendu (pro backendy s certifikáty podepsanými samy sebou)",
-    "field_tls": "Zapnout TLS (interní CA Caddy)",
-    "field_tls_short": "Zapnout TLS (interní CA)",
     "field_compress": "Komprese",
     "field_compress_short": "Zapnout kompresi odpovědí gzip / zstd",
     "field_label": "Popisek (volitelné)",
@@ -839,6 +837,9 @@
     "help": "Navíc zaregistruje trasu pod názvem, aby ji jiné trasy mohly použít přes invoke <name>."
   },
   "servers": {
+    "field_https": "HTTPS",
+    "field_https_internal": "Zapnuto, s interní CA Caddy",
+    "field_https_help": "Server naslouchá jen na portech, proto nemůže získat automatický certifikát (ACME). Bez zaškrtnutí běží na prostém HTTP.",
     "tab_all": "Vše",
     "tab_ungrouped": "Neseskupené",
     "add_server": "Přidat server",

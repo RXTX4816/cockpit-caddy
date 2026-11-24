@@ -18,7 +18,7 @@ Click **Add Server** in the toolbar.
 |---|---|
 | Display Name | Human-readable label for the server tab (e.g. `Public HTTPS`) |
 | Listen Ports | One or more ports this server listens on (e.g. `:443`) |
-| TLS | Enable TLS for the whole server via Caddy's internal CA |
+| HTTPS | On (default): HTTPS for the whole server with Caddy's internal CA. A named server only listens on ports, so it can't get an automatic (ACME) certificate. Off: plain HTTP |
 
 The server gets a unique key (slug) derived from its name. Once created it appears as its own tab in the proxy list.
 

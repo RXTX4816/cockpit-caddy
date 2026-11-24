@@ -132,8 +132,6 @@
     "field_target_host": "대상 호스트",
     "field_target_host_placeholder": "예: localhost",
     "field_tls_skip_verify": "백엔드 TLS 검증 건너뛰기(자체 서명 백엔드 인증서용)",
-    "field_tls": "TLS 사용 (Caddy 내부 CA)",
-    "field_tls_short": "TLS 사용 (내부 CA)",
     "field_compress": "압축",
     "field_compress_short": "gzip / zstd 응답 압축 사용",
     "field_label": "레이블(선택)",
@@ -839,6 +837,9 @@
     "help": "경로를 이름으로도 등록해 다른 경로가 invoke <name>으로 재사용할 수 있게 합니다."
   },
   "servers": {
+    "field_https": "HTTPS",
+    "field_https_internal": "사용 (Caddy 내부 CA)",
+    "field_https_help": "서버는 포트에서만 수신하므로 자동(ACME) 인증서를 받을 수 없습니다. 선택하지 않으면 일반 HTTP로 제공합니다.",
     "tab_all": "전체",
     "tab_ungrouped": "그룹 없음",
     "add_server": "서버 추가",

@@ -135,6 +135,8 @@ export function LbRetrySection({ value, onChange, isDisabled, isExpanded: isExpa
     onChange({ ...value, [key]: v });
   }
 
+  // Placeholders: "Default: …" where Caddy has a default, "e.g. …" where the option is off
+  // until set (#301). Caddy accepts any 2xx when no expected status is set.
   function field(key: keyof LbRetryValues, id: string, label: string, placeholder: string, invalid: boolean, opts: { type?: "number"; flex?: string } = {}) {
     return (
       <FormGroup label={label} fieldId={id} style={{ flex: opts.flex ?? "1 1 10rem" }}>
@@ -181,9 +183,9 @@ export function LbRetrySection({ value, onChange, isDisabled, isExpanded: isExpa
         isDisabled={isDisabled}
       />
       <div style={row}>
-        {field("retries", "lbr-retries", t("lb_retry.retries"), "3", retriesErr, { type: "number", flex: "1 1 8rem" })}
-        {field("tryDuration", "lbr-try-duration", t("lb_retry.try_duration"), "5s", !isDuration(value.tryDuration))}
-        {field("tryInterval", "lbr-try-interval", t("lb_retry.try_interval"), "250ms", !isDuration(value.tryInterval))}
+        {field("retries", "lbr-retries", t("lb_retry.retries"), t("common.example_value", { value: "3" }), retriesErr, { type: "number", flex: "1 1 8rem" })}
+        {field("tryDuration", "lbr-try-duration", t("lb_retry.try_duration"), t("common.example_value", { value: "5s" }), !isDuration(value.tryDuration))}
+        {field("tryInterval", "lbr-try-interval", t("lb_retry.try_interval"), t("common.default_value", { value: "250ms" }), !isDuration(value.tryInterval))}
       </div>
       <HelperText data-testid="lbr-retry-help" style={{ marginTop: "0.3rem" }}>
         {retryErr && <HelperTextItem variant="error">{t(retryErr)}</HelperTextItem>}
@@ -191,8 +193,8 @@ export function LbRetrySection({ value, onChange, isDisabled, isExpanded: isExpa
 
       <div style={heading}>{t("lb_retry.passive_title")}</div>
       <div style={row}>
-        {field("failDuration", "lbr-fail-duration", t("lb_retry.fail_duration"), "30s", !isDuration(value.failDuration))}
-        {field("maxFails", "lbr-max-fails", t("lb_retry.max_fails"), "1", !isPositiveInt(value.maxFails), { type: "number", flex: "1 1 8rem" })}
+        {field("failDuration", "lbr-fail-duration", t("lb_retry.fail_duration"), t("common.example_value", { value: "30s" }), !isDuration(value.failDuration))}
+        {field("maxFails", "lbr-max-fails", t("lb_retry.max_fails"), t("common.default_value", { value: "1" }), !isPositiveInt(value.maxFails), { type: "number", flex: "1 1 8rem" })}
       </div>
       <FormGroup label={t("lb_retry.unhealthy_status")} fieldId="lbr-unhealthy-status" style={{ marginTop: "0.6rem" }}>
         <ResettableTextInput
@@ -212,10 +214,10 @@ export function LbRetrySection({ value, onChange, isDisabled, isExpanded: isExpa
 
       <div style={heading}>{t("lb_retry.active_title")}</div>
       <div style={row}>
-        {field("healthUri", "lbr-health-uri", t("lb_retry.health_uri"), "/healthz", uriErr || needsUri)}
-        {field("healthInterval", "lbr-health-interval", t("lb_retry.health_interval"), "30s", !isDuration(value.healthInterval))}
-        {field("healthTimeout", "lbr-health-timeout", t("lb_retry.health_timeout"), "5s", !isDuration(value.healthTimeout))}
-        {field("healthStatus", "lbr-health-status", t("lb_retry.health_status"), "2xx", !isHealthStatus(value.healthStatus), { flex: "1 1 8rem" })}
+        {field("healthUri", "lbr-health-uri", t("lb_retry.health_uri"), t("common.example_value", { value: "/healthz" }), uriErr || needsUri)}
+        {field("healthInterval", "lbr-health-interval", t("lb_retry.health_interval"), t("common.default_value", { value: "30s" }), !isDuration(value.healthInterval))}
+        {field("healthTimeout", "lbr-health-timeout", t("lb_retry.health_timeout"), t("common.default_value", { value: "5s" }), !isDuration(value.healthTimeout))}
+        {field("healthStatus", "lbr-health-status", t("lb_retry.health_status"), t("common.default_value", { value: "2xx" }), !isHealthStatus(value.healthStatus), { flex: "1 1 8rem" })}
       </div>
       <HelperText data-testid="lbr-active-help" style={{ marginTop: "0.3rem" }}>
         <HelperTextItem variant={activeErr ? "error" : "default"}>

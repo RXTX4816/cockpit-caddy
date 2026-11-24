@@ -132,8 +132,6 @@
     "field_target_host": "Hedef ana bilgisayar",
     "field_target_host_placeholder": "örn. localhost",
     "field_tls_skip_verify": "Arka uçta TLS doğrulamasını atla (kendinden imzalı arka uç sertifikaları için)",
-    "field_tls": "TLS'yi etkinleştir (Caddy'nin dahili CA'sı)",
-    "field_tls_short": "TLS'yi etkinleştir (dahili CA)",
     "field_compress": "Sıkıştırma",
     "field_compress_short": "Yanıtlar için gzip / zstd sıkıştırmasını etkinleştir",
     "field_label": "Etiket (isteğe bağlı)",
@@ -839,6 +837,9 @@
     "help": "Rotayı ayrıca bir adla kaydeder; diğer rotalar onu invoke <name> ile yeniden kullanabilir."
   },
   "servers": {
+    "field_https": "HTTPS",
+    "field_https_internal": "Etkin, Caddy'nin dahili CA'sı ile",
+    "field_https_help": "Sunucu yalnızca portları dinler, bu yüzden otomatik (ACME) sertifika alamaz. İşaretsizken düz HTTP sunar.",
     "tab_all": "Tümü",
     "tab_ungrouped": "Gruplanmamış",
     "add_server": "Sunucu ekle",

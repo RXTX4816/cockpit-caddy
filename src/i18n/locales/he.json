@@ -132,8 +132,6 @@
     "field_target_host": "מארח יעד",
     "field_target_host_placeholder": "לדוגמה localhost",
     "field_tls_skip_verify": "דילוג על אימות TLS מול השרת האחורי (לתעודות חתומות עצמית בשרת האחורי)",
-    "field_tls": "הפעלת TLS (ה-CA הפנימי של Caddy)",
-    "field_tls_short": "הפעלת TLS (CA פנימי)",
     "field_compress": "דחיסה",
     "field_compress_short": "הפעלת דחיסת gzip / zstd לתגובות",
     "field_label": "תווית (אופציונלי)",
@@ -839,6 +837,9 @@
     "help": "רושם את הנתיב גם תחת שם, כך שנתיבים אחרים יוכלו להשתמש בו עם invoke <name>."
   },
   "servers": {
+    "field_https": "HTTPS",
+    "field_https_internal": "מופעל, עם ה-CA הפנימי של Caddy",
+    "field_https_help": "שרת מאזין רק לפורטים, ולכן אינו יכול לקבל תעודה אוטומטית (ACME). ללא סימון הוא מגיש HTTP רגיל.",
     "tab_all": "הכול",
     "tab_ungrouped": "ללא קבוצה",
     "add_server": "הוספת שרת",

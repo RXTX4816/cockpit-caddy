@@ -21,8 +21,7 @@ import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { CaddyApiError, isPathOnlyMatcher } from "../api";
-import { TlsModeField, defaultTlsMode, hasPublicName, tlsModeToEntry, type TlsMode } from "./TlsModeField";
-import { SectionActions } from "./SectionActions";
+import { TlsModeField, hasPublicName, tlsModeToEntry, type TlsMode } from "./TlsModeField";
 import type { ProxyEntry, HeaderOperation, ErrorHandlerConfig, RouteMatch } from "../api";
 import { RouteMatchersSection } from "./RouteMatchersSection";
 import { SnippetImportsField } from "./SnippetImportsField";
@@ -216,10 +215,7 @@ export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues, 
           </FormGroup>
 
           {!serverCtx && (
-            <div>
-              <TlsModeField id="static-tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isLocked} onDemand={tlsOnDemand} onOnDemandChange={setTlsOnDemand} />
-              <SectionActions onDefaults={() => setTlsModeChoice(defaultTlsMode(undefined))} isDisabled={isLocked} />
-            </div>
+            <TlsModeField id="static-tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isLocked} onDemand={tlsOnDemand} onOnDemandChange={setTlsOnDemand} />
           )}
 
           <FormGroup fieldId="static-compress">

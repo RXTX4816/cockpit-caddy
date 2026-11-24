@@ -132,8 +132,6 @@
     "field_target_host": "Ziel-Host",
     "field_target_host_placeholder": "z. B. localhost",
     "field_tls_skip_verify": "TLS-Prüfung beim Backend überspringen (für selbstsignierte Backend-Zertifikate)",
-    "field_tls": "TLS aktivieren (interne CA von Caddy)",
-    "field_tls_short": "TLS aktivieren (interne CA)",
     "field_compress": "Komprimierung",
     "field_compress_short": "gzip-/zstd-Komprimierung der Antworten aktivieren",
     "field_label": "Bezeichnung (optional)",
@@ -839,6 +837,9 @@
     "help": "Registriert die Route zusätzlich unter einem Namen, damit andere Routen sie mit invoke <name> nutzen können."
   },
   "servers": {
+    "field_https": "HTTPS",
+    "field_https_internal": "Aktiviert, mit der internen CA von Caddy",
+    "field_https_help": "Ein Server lauscht nur auf Ports und kann daher kein automatisches Zertifikat (ACME) bekommen. Ohne Haken liefert er reines HTTP aus.",
     "tab_all": "Alle",
     "tab_ungrouped": "Ohne Gruppe",
     "add_server": "Server hinzufügen",
