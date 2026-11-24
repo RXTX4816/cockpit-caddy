@@ -1,4 +1,4 @@
-import { Children, Fragment, createContext, isValidElement, useContext, useId, type CSSProperties, type FormEvent, type ReactNode } from "react";
+import { createContext, useContext, useId, type CSSProperties, type FormEvent, type ReactNode } from "react";
 import { Button, ExpandableSection, TextInput, Title, Tooltip, type TextInputProps } from "@patternfly/react-core";
 import { UndoIcon } from "@patternfly/react-icons";
 import { useTranslation } from "react-i18next";
@@ -14,18 +14,9 @@ export function useFlatSections(): boolean {
   return useContext(FlatSectionsContext);
 }
 
-// "Upstream Timeouts (optional)" → "Upstream Timeouts": inside a tab every section is optional.
-const OPTIONAL_SUFFIX = /\s*[(（][^()（）]*[)）]\s*$/;
-
-function withoutOptional(node: ReactNode): ReactNode {
-  if (typeof node === "string") return node.replace(OPTIONAL_SUFFIX, "");
-  if (isValidElement<{ children?: ReactNode }>(node) && node.type === Fragment) {
-    return Children.map(node.props.children, withoutOptional);
-  }
-  return node;
-}
-
 interface ShellProps {
+  /** The section's name as a heading inside a tab (#291), e.g. "HTTP Basic Auth". */
+  heading: string;
   toggleContent?: ReactNode;
   toggleText?: string;
   isIndented?: boolean;
@@ -36,7 +27,7 @@ interface ShellProps {
 }
 
 /** An ExpandableSection, or a headed field group inside the tabbed proxy dialog. */
-export function SectionShell({ toggleContent, toggleText, isIndented, isExpanded, onToggle, style, children }: ShellProps) {
+export function SectionShell({ heading, toggleContent, toggleText, isIndented, isExpanded, onToggle, style, children }: ShellProps) {
   const flat = useFlatSections();
   const id = useId();
   if (!flat) {
@@ -48,7 +39,7 @@ export function SectionShell({ toggleContent, toggleText, isIndented, isExpanded
   }
   return (
     <section aria-labelledby={id} style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-      <Title headingLevel="h4" size="md" id={id}>{withoutOptional(toggleContent ?? toggleText)}</Title>
+      <Title headingLevel="h4" size="md" id={id}>{heading}</Title>
       <div>{children}</div>
     </section>
   );

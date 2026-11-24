@@ -242,6 +242,7 @@
     "confirm_body": "Zostanie utworzone przekierowanie :{{port}} → {{to}} ({{code}}), a konfiguracja Caddy zostanie przeładowana."
   },
   "basic_auth": {
+    "heading": "Uwierzytelnianie HTTP Basic",
     "section_title": "Uwierzytelnianie HTTP Basic (opcjonalnie)",
     "field_username": "Nazwa użytkownika",
     "field_password": "Hasło",
@@ -250,12 +251,14 @@
     "remove_button": "Usuń konto"
   },
   "transport": {
+    "heading": "Limity czasu upstreamu",
     "section_title": "Limity czasu upstreamu (opcjonalnie)",
     "dial_timeout": "Limit czasu połączenia",
     "response_header_timeout": "Limit czasu nagłówków odpowiedzi",
     "defaults_help": "Zostaw pole puste, aby użyć domyślnej wartości Caddy (pokazanej na szaro). Limit czasu nagłówków odpowiedzi przerywa long polling i wolne odpowiedzi."
   },
   "server_timeouts": {
+    "heading": "Limity czasu i ograniczenia serwera",
     "section_title": "Limity czasu i ograniczenia serwera (opcjonalnie)",
     "defaults_help": "Zostaw pole puste, aby użyć domyślnej wartości Caddy (pokazanej na szaro). Limit czasu odczytu treści lub zapisu przerywa każde dłuższe wysyłanie lub pobieranie.",
     "no_timeout": "brak",
@@ -274,6 +277,7 @@
     "field_help": "Większe treści żądań są odrzucane, zanim dotrą do backendu. Zostaw puste, aby nie było limitu (domyślne Caddy)."
   },
   "rewrite": {
+    "heading": "Przepisywanie URI",
     "section_title": "Przepisywanie URI (opcjonalnie)",
     "type_none": "Brak",
     "type_strip_prefix": "Usuń prefiks",
@@ -301,6 +305,7 @@
     "confirm_cancel": "Anuluj"
   },
   "upstreams": {
+    "heading": "Dodatkowe upstreamy",
     "section_title": "Dodatkowe upstreamy (opcjonalnie)",
     "section_hide": "Dodatkowe upstreamy",
     "field_host": "Host",
@@ -316,6 +321,7 @@
     "validation_port": "Port musi mieścić się w zakresie 1–65535"
   },
   "lb_retry": {
+    "heading": "Ponowienia i przełączanie awaryjne",
     "section_title": "Ponowienia i przełączanie awaryjne (opcjonalnie)",
     "retries": "Maks. liczba ponowień",
     "try_duration": "Łączny czas na ponowienia",
@@ -341,6 +347,7 @@
     "validation_health_status": "Podaj kod jak 200 lub klasę jak 2xx"
   },
   "response_headers": {
+    "heading": "Nagłówki odpowiedzi",
     "section_title": "Nagłówki odpowiedzi (opcjonalnie)",
     "op_set": "Ustaw",
     "op_add": "Dodaj",
@@ -356,6 +363,7 @@
     "preset_remove_server": "Usuń Server"
   },
   "request_headers": {
+    "heading": "Nagłówki żądania",
     "section_title": "Nagłówki żądania (opcjonalnie)",
     "op_set": "Ustaw",
     "op_add": "Dodaj",
@@ -487,6 +495,7 @@
     "continue_button": "Kontynuuj na własne ryzyko"
   },
   "access_log": {
+    "heading": "Logowanie dostępu",
     "section_title": "Logowanie dostępu",
     "section_title_on": "Logowanie dostępu (włączone)",
     "enable": "Włącz logowanie dostępu",
@@ -711,6 +720,7 @@
     "save_tooltip": "Najpierw pomyślnie przetestuj połączenie"
   },
   "forward_auth": {
+    "heading": "Uwierzytelnianie delegowane",
     "section_title": "Uwierzytelnianie delegowane (opcjonalnie)",
     "section_title_on": "Uwierzytelnianie delegowane (włączone)",
     "enable_button": "Włącz uwierzytelnianie delegowane",
@@ -725,6 +735,7 @@
     "validation_uri_required": "URI uwierzytelniania jest wymagany, gdy ustawiono URL usługi uwierzytelniania"
   },
   "tls_policy": {
+    "heading": "Polityka TLS",
     "section_title": "Polityka TLS (opcjonalnie)",
     "section_title_on": "Polityka TLS (skonfigurowana)",
     "protocol_min": "Minimalna wersja TLS",
@@ -772,6 +783,7 @@
     "custom_cert_lifetime_note": "Powyżej wczytano własny certyfikat — czas ważności i okno odnowienia nie mają zastosowania, ponieważ Caddy sam niczego nie wystawia."
   },
   "error_handler": {
+    "heading": "Własna obsługa błędów",
     "section_title": "Własna obsługa błędów (opcjonalnie)",
     "section_title_on": "Własna obsługa błędów ({{count}})",
     "add_button": "Dodaj obsługę błędów",
@@ -798,6 +810,7 @@
     "field_file_root_help": "Caddy będzie serwować {status_code}.html z tego katalogu (np. /var/www/errors/404.html)"
   },
   "matchers": {
+    "heading": "Matchery trasy",
     "section_title": "Matchery trasy (opcjonalnie)",
     "type_path": "Ścieżka",
     "type_host": "Host",

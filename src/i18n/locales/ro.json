@@ -242,6 +242,7 @@
     "confirm_body": "Va fi creată o redirecționare :{{port}} → {{to}} ({{code}}) și configurația Caddy va fi reîncărcată."
   },
   "basic_auth": {
+    "heading": "Autentificare HTTP Basic",
     "section_title": "Autentificare HTTP Basic (opțional)",
     "field_username": "Nume de utilizator",
     "field_password": "Parolă",
@@ -250,12 +251,14 @@
     "remove_button": "Elimină contul"
   },
   "transport": {
+    "heading": "Timeout-uri upstream",
     "section_title": "Timeout-uri upstream (opțional)",
     "dial_timeout": "Timeout de conectare",
     "response_header_timeout": "Timeout pentru antetele răspunsului",
     "defaults_help": "Lăsați un câmp gol pentru a folosi valoarea implicită Caddy, afișată cu gri. O limită de timp pentru antetele răspunsului întrerupe long polling-ul și răspunsurile lente."
   },
   "server_timeouts": {
+    "heading": "Timeout-uri și limite ale serverului",
     "section_title": "Timeout-uri și limite ale serverului (opțional)",
     "defaults_help": "Lăsați un câmp gol pentru a folosi valoarea implicită Caddy, afișată cu gri. O limită de timp pentru citirea corpului sau scriere întrerupe orice încărcare sau descărcare mai lungă.",
     "no_timeout": "niciunul",
@@ -274,6 +277,7 @@
     "field_help": "Corpurile mai mari sunt respinse înainte să ajungă la backend. Lasă gol pentru fără limită (implicit Caddy)."
   },
   "rewrite": {
+    "heading": "Rescriere URI",
     "section_title": "Rescriere URI (opțional)",
     "type_none": "Niciuna",
     "type_strip_prefix": "Elimină prefixul",
@@ -301,6 +305,7 @@
     "confirm_cancel": "Anulează"
   },
   "upstreams": {
+    "heading": "Upstream-uri suplimentare",
     "section_title": "Upstream-uri suplimentare (opțional)",
     "section_hide": "Upstream-uri suplimentare",
     "field_host": "Gazdă",
@@ -316,6 +321,7 @@
     "validation_port": "Portul trebuie să fie între 1 și 65535"
   },
   "lb_retry": {
+    "heading": "Reîncercări și failover",
     "section_title": "Reîncercări și failover (opțional)",
     "retries": "Număr max. de reîncercări",
     "try_duration": "Timp total pentru reîncercări",
@@ -341,6 +347,7 @@
     "validation_health_status": "Folosiți un cod ca 200 sau o clasă ca 2xx"
   },
   "response_headers": {
+    "heading": "Antete de răspuns",
     "section_title": "Antete de răspuns (opțional)",
     "op_set": "Setează",
     "op_add": "Adaugă",
@@ -356,6 +363,7 @@
     "preset_remove_server": "Elimină Server"
   },
   "request_headers": {
+    "heading": "Antete ale cererii",
     "section_title": "Antete ale cererii (opțional)",
     "op_set": "Setează",
     "op_add": "Adaugă",
@@ -487,6 +495,7 @@
     "continue_button": "Continuă pe propriul risc"
   },
   "access_log": {
+    "heading": "Jurnalizarea accesului",
     "section_title": "Jurnalizarea accesului",
     "section_title_on": "Jurnalizarea accesului (activată)",
     "enable": "Activează jurnalizarea accesului",
@@ -711,6 +720,7 @@
     "save_tooltip": "Testează mai întâi o conexiune reușită"
   },
   "forward_auth": {
+    "heading": "Autentificare delegată",
     "section_title": "Autentificare delegată (opțional)",
     "section_title_on": "Autentificare delegată (activată)",
     "enable_button": "Activează autentificarea delegată",
@@ -725,6 +735,7 @@
     "validation_uri_required": "URI-ul de autentificare este obligatoriu când este setat un URL al serviciului de autentificare"
   },
   "tls_policy": {
+    "heading": "Politică TLS",
     "section_title": "Politică TLS (opțional)",
     "section_title_on": "Politică TLS (configurată)",
     "protocol_min": "Versiunea TLS minimă",
@@ -772,6 +783,7 @@
     "custom_cert_lifetime_note": "Mai sus este încărcat un certificat propriu — durata de valabilitate și fereastra de reînnoire nu se aplică, deoarece Caddy nu emite nimic singur."
   },
   "error_handler": {
+    "heading": "Handlere de erori personalizate",
     "section_title": "Handlere de erori personalizate (opțional)",
     "section_title_on": "Handlere de erori personalizate ({{count}})",
     "add_button": "Adaugă handler de erori",
@@ -798,6 +810,7 @@
     "field_file_root_help": "Caddy va servi {status_code}.html din acest director (de ex. /var/www/errors/404.html)"
   },
   "matchers": {
+    "heading": "Matchere de rută",
     "section_title": "Matchere de rută (opțional)",
     "type_path": "Cale",
     "type_host": "Gazdă",

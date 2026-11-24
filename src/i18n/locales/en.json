@@ -242,6 +242,7 @@
     "confirm_body": "This will create a redirect on :{{port}} → {{to}} ({{code}}) and reload Caddy's configuration."
   },
   "basic_auth": {
+    "heading": "HTTP Basic Auth",
     "section_title": "HTTP Basic Auth (optional)",
     "field_username": "Username",
     "field_password": "Password",
@@ -250,12 +251,14 @@
     "remove_button": "Remove account"
   },
   "transport": {
+    "heading": "Upstream Timeouts",
     "section_title": "Upstream Timeouts (optional)",
     "dial_timeout": "Connect timeout",
     "response_header_timeout": "Response header timeout",
     "defaults_help": "Leave a field empty to use Caddy's default, shown greyed out. A response header timeout cuts off long polling and slow responses."
   },
   "server_timeouts": {
+    "heading": "Server Timeouts & Limits",
     "section_title": "Server Timeouts & Limits (optional)",
     "defaults_help": "Leave a field empty to use Caddy's default, shown greyed out. A read body or write timeout ends every upload or download that takes longer.",
     "no_timeout": "none",
@@ -274,6 +277,7 @@
     "field_help": "Larger request bodies are rejected before they reach the backend. Leave empty for no limit (Caddy's default)."
   },
   "rewrite": {
+    "heading": "URI Rewrite",
     "section_title": "URI Rewrite (optional)",
     "type_none": "None",
     "type_strip_prefix": "Strip prefix",
@@ -301,6 +305,7 @@
     "confirm_cancel": "Cancel"
   },
   "upstreams": {
+    "heading": "Additional Upstreams",
     "section_title": "Additional Upstreams (optional)",
     "section_hide": "Additional Upstreams",
     "field_host": "Host",
@@ -316,6 +321,7 @@
     "validation_port": "Port must be 1–65535"
   },
   "lb_retry": {
+    "heading": "Retry & Failover Tuning",
     "section_title": "Retry & Failover Tuning (optional)",
     "retries": "Max retries",
     "try_duration": "Retry duration budget",
@@ -341,6 +347,7 @@
     "validation_health_status": "Use a status code like 200 or a class like 2xx"
   },
   "response_headers": {
+    "heading": "Response Headers",
     "section_title": "Response Headers (optional)",
     "op_set": "Set",
     "op_add": "Add",
@@ -356,6 +363,7 @@
     "preset_remove_server": "Remove Server"
   },
   "request_headers": {
+    "heading": "Request Headers",
     "section_title": "Request Headers (optional)",
     "op_set": "Set",
     "op_add": "Add",
@@ -487,6 +495,7 @@
     "continue_button": "Continue on my own risk"
   },
   "access_log": {
+    "heading": "Access logging",
     "section_title": "Access logging",
     "section_title_on": "Access logging (enabled)",
     "enable": "Enable access logging",
@@ -711,6 +720,7 @@
     "save_tooltip": "Test a successful connection first"
   },
   "forward_auth": {
+    "heading": "Forward Authentication",
     "section_title": "Forward Authentication (optional)",
     "section_title_on": "Forward Authentication (enabled)",
     "enable_button": "Enable forward authentication",
@@ -725,6 +735,7 @@
     "validation_uri_required": "Auth URI is required when an auth service URL is set"
   },
   "tls_policy": {
+    "heading": "TLS Policy",
     "section_title": "TLS Policy (optional)",
     "section_title_on": "TLS Policy (configured)",
     "protocol_min": "Minimum TLS version",
@@ -772,6 +783,7 @@
     "custom_cert_lifetime_note": "A custom certificate is loaded above — certificate lifetime and renewal window don't apply, since Caddy isn't issuing anything itself."
   },
   "error_handler": {
+    "heading": "Custom error handlers",
     "section_title": "Custom error handlers (optional)",
     "section_title_on": "Custom error handlers ({{count}})",
     "add_button": "Add error handler",
@@ -798,6 +810,7 @@
     "field_file_root_help": "Caddy will serve {status_code}.html from this directory (e.g. /var/www/errors/404.html)"
   },
   "matchers": {
+    "heading": "Route matchers",
     "section_title": "Route matchers (optional)",
     "type_path": "Path",
     "type_host": "Host",

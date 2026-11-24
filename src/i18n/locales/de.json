@@ -242,6 +242,7 @@
     "confirm_body": "Damit wird eine Weiterleitung auf :{{port}} → {{to}} ({{code}}) angelegt und die Caddy-Konfiguration neu geladen."
   },
   "basic_auth": {
+    "heading": "HTTP Basic Auth",
     "section_title": "HTTP Basic Auth (optional)",
     "field_username": "Benutzername",
     "field_password": "Passwort",
@@ -250,12 +251,14 @@
     "remove_button": "Konto entfernen"
   },
   "transport": {
+    "heading": "Upstream-Timeouts",
     "section_title": "Upstream-Timeouts (optional)",
     "dial_timeout": "Verbindungs-Timeout",
     "response_header_timeout": "Timeout für Antwort-Header",
     "defaults_help": "Ein leeres Feld nutzt Caddys Standardwert (grau angezeigt). Ein Timeout für die Antwort-Header bricht Long Polling und langsame Antworten ab."
   },
   "server_timeouts": {
+    "heading": "Server-Timeouts & -Limits",
     "section_title": "Server-Timeouts & -Limits (optional)",
     "defaults_help": "Ein leeres Feld nutzt Caddys Standardwert (grau angezeigt). Ein Timeout für den Request-Body oder das Schreiben bricht jeden Upload oder Download ab, der länger dauert.",
     "no_timeout": "keins",
@@ -274,6 +277,7 @@
     "field_help": "Größere Request-Bodys werden abgelehnt, bevor sie das Backend erreichen. Leer lassen für kein Limit (Caddy-Standard)."
   },
   "rewrite": {
+    "heading": "URI-Umschreibung",
     "section_title": "URI-Umschreibung (optional)",
     "type_none": "Keine",
     "type_strip_prefix": "Präfix entfernen",
@@ -301,6 +305,7 @@
     "confirm_cancel": "Abbrechen"
   },
   "upstreams": {
+    "heading": "Weitere Upstreams",
     "section_title": "Weitere Upstreams (optional)",
     "section_hide": "Weitere Upstreams",
     "field_host": "Host",
@@ -316,6 +321,7 @@
     "validation_port": "Der Port muss zwischen 1 und 65535 liegen"
   },
   "lb_retry": {
+    "heading": "Wiederholung & Failover",
     "section_title": "Wiederholung & Failover (optional)",
     "retries": "Max. Wiederholungen",
     "try_duration": "Zeitbudget für Wiederholungen",
@@ -341,6 +347,7 @@
     "validation_health_status": "Einen Statuscode wie 200 oder eine Klasse wie 2xx angeben"
   },
   "response_headers": {
+    "heading": "Antwort-Header",
     "section_title": "Antwort-Header (optional)",
     "op_set": "Setzen",
     "op_add": "Hinzufügen",
@@ -356,6 +363,7 @@
     "preset_remove_server": "Server entfernen"
   },
   "request_headers": {
+    "heading": "Request-Header",
     "section_title": "Request-Header (optional)",
     "op_set": "Setzen",
     "op_add": "Hinzufügen",
@@ -487,6 +495,7 @@
     "continue_button": "Auf eigenes Risiko fortfahren"
   },
   "access_log": {
+    "heading": "Zugriffsprotokollierung",
     "section_title": "Zugriffsprotokollierung",
     "section_title_on": "Zugriffsprotokollierung (aktiviert)",
     "enable": "Zugriffsprotokollierung aktivieren",
@@ -711,6 +720,7 @@
     "save_tooltip": "Testen Sie zuerst erfolgreich eine Verbindung"
   },
   "forward_auth": {
+    "heading": "Forward-Authentifizierung",
     "section_title": "Forward-Authentifizierung (optional)",
     "section_title_on": "Forward-Authentifizierung (aktiviert)",
     "enable_button": "Forward-Authentifizierung aktivieren",
@@ -725,6 +735,7 @@
     "validation_uri_required": "Wenn eine URL des Auth-Dienstes gesetzt ist, ist eine Auth-URI erforderlich"
   },
   "tls_policy": {
+    "heading": "TLS-Richtlinie",
     "section_title": "TLS-Richtlinie (optional)",
     "section_title_on": "TLS-Richtlinie (konfiguriert)",
     "protocol_min": "Minimale TLS-Version",
@@ -772,6 +783,7 @@
     "custom_cert_lifetime_note": "Oben ist ein eigenes Zertifikat geladen – Zertifikatslaufzeit und Erneuerungsfenster gelten nicht, da Caddy selbst nichts ausstellt."
   },
   "error_handler": {
+    "heading": "Eigene Fehlerbehandlung",
     "section_title": "Eigene Fehlerbehandlung (optional)",
     "section_title_on": "Eigene Fehlerbehandlung ({{count}})",
     "add_button": "Fehlerbehandlung hinzufügen",
@@ -798,6 +810,7 @@
     "field_file_root_help": "Caddy liefert {status_code}.html aus diesem Verzeichnis aus (z. B. /var/www/errors/404.html)"
   },
   "matchers": {
+    "heading": "Routen-Matcher",
     "section_title": "Routen-Matcher (optional)",
     "type_path": "Pfad",
     "type_host": "Host",

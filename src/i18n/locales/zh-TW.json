@@ -242,6 +242,7 @@
     "confirm_body": "將建立重新導向 :{{port}} → {{to}}（{{code}}），並重新載入 Caddy 設定。"
   },
   "basic_auth": {
+    "heading": "HTTP Basic 驗證",
     "section_title": "HTTP Basic 驗證（選填）",
     "field_username": "使用者名稱",
     "field_password": "密碼",
@@ -250,12 +251,14 @@
     "remove_button": "移除帳號"
   },
   "transport": {
+    "heading": "上游逾時",
     "section_title": "上游逾時（選填）",
     "dial_timeout": "連線逾時",
     "response_header_timeout": "回應標頭逾時",
     "defaults_help": "留空即使用 Caddy 的預設值（以灰色顯示）。回應標頭逾時會中斷長輪詢和較慢的回應。"
   },
   "server_timeouts": {
+    "heading": "伺服器逾時與限制",
     "section_title": "伺服器逾時與限制（選填）",
     "defaults_help": "留空即使用 Caddy 的預設值（以灰色顯示）。設定讀取請求內容或寫入逾時後，任何耗時更長的上傳或下載都會被中斷。",
     "no_timeout": "無",
@@ -274,6 +277,7 @@
     "field_help": "較大的請求本文會在送達後端前被拒絕。留空表示不限制（Caddy 預設）。"
   },
   "rewrite": {
+    "heading": "URI 重寫",
     "section_title": "URI 重寫（選填）",
     "type_none": "無",
     "type_strip_prefix": "移除前綴",
@@ -301,6 +305,7 @@
     "confirm_cancel": "取消"
   },
   "upstreams": {
+    "heading": "其他上游",
     "section_title": "其他上游（選填）",
     "section_hide": "其他上游",
     "field_host": "主機",
@@ -316,6 +321,7 @@
     "validation_port": "連接埠必須介於 1 到 65535 之間"
   },
   "lb_retry": {
+    "heading": "重試與容錯移轉",
     "section_title": "重試與容錯移轉（選填）",
     "retries": "重試次數上限",
     "try_duration": "重試總時間",
@@ -341,6 +347,7 @@
     "validation_health_status": "請填寫 200 這樣的狀態碼或 2xx 這樣的類別"
   },
   "response_headers": {
+    "heading": "回應標頭",
     "section_title": "回應標頭（選填）",
     "op_set": "設定",
     "op_add": "新增",
@@ -356,6 +363,7 @@
     "preset_remove_server": "移除 Server"
   },
   "request_headers": {
+    "heading": "請求標頭",
     "section_title": "請求標頭（選填）",
     "op_set": "設定",
     "op_add": "新增",
@@ -487,6 +495,7 @@
     "continue_button": "自行承擔風險繼續"
   },
   "access_log": {
+    "heading": "存取記錄",
     "section_title": "存取記錄",
     "section_title_on": "存取記錄（已啟用）",
     "enable": "啟用存取記錄",
@@ -711,6 +720,7 @@
     "save_tooltip": "請先成功測試一次連線"
   },
   "forward_auth": {
+    "heading": "轉送驗證",
     "section_title": "轉送驗證（選填）",
     "section_title_on": "轉送驗證（已啟用）",
     "enable_button": "啟用轉送驗證",
@@ -725,6 +735,7 @@
     "validation_uri_required": "設定驗證服務 URL 時必須填寫驗證 URI"
   },
   "tls_policy": {
+    "heading": "TLS 原則",
     "section_title": "TLS 原則（選填）",
     "section_title_on": "TLS 原則（已設定）",
     "protocol_min": "最低 TLS 版本",
@@ -772,6 +783,7 @@
     "custom_cert_lifetime_note": "上方已載入自訂憑證——憑證有效期限與續約時間窗不適用，因為 Caddy 本身不會簽發任何憑證。"
   },
   "error_handler": {
+    "heading": "自訂錯誤處理",
     "section_title": "自訂錯誤處理（選填）",
     "section_title_on": "自訂錯誤處理（{{count}}）",
     "add_button": "新增錯誤處理",
@@ -798,6 +810,7 @@
     "field_file_root_help": "Caddy 會從此目錄提供 {status_code}.html（例如 /var/www/errors/404.html）"
   },
   "matchers": {
+    "heading": "路由比對器",
     "section_title": "路由比對器（選填）",
     "type_path": "路徑",
     "type_host": "主機",

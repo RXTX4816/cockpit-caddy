@@ -172,6 +172,7 @@ export function LbRetrySection({ value, onChange, isDisabled, isExpanded: isExpa
 
   return (
     <SectionShell
+      heading={t("lb_retry.heading")}
       toggleContent={<>{t("lb_retry.section_title")}{hasValues && <SectionConfiguredDot />}</>}
       isIndented
       isExpanded={expanded}

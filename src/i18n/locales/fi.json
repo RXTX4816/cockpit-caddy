@@ -242,6 +242,7 @@
     "confirm_body": "Luodaan uudelleenohjaus :{{port}} → {{to}} ({{code}}) ja Caddyn asetukset ladataan uudelleen."
   },
   "basic_auth": {
+    "heading": "HTTP Basic -todennus",
     "section_title": "HTTP Basic -todennus (valinnainen)",
     "field_username": "Käyttäjätunnus",
     "field_password": "Salasana",
@@ -250,12 +251,14 @@
     "remove_button": "Poista tili"
   },
   "transport": {
+    "heading": "Upstreamin aikakatkaisut",
     "section_title": "Upstreamin aikakatkaisut (valinnainen)",
     "dial_timeout": "Yhteyden aikakatkaisu",
     "response_header_timeout": "Vastausotsakkeiden aikakatkaisu",
     "defaults_help": "Jätä kenttä tyhjäksi käyttääksesi Caddyn oletusta, joka näkyy harmaana. Vastausotsakkeiden aikakatkaisu katkaisee long pollingin ja hitaat vastaukset."
   },
   "server_timeouts": {
+    "heading": "Palvelimen aikakatkaisut ja rajat",
     "section_title": "Palvelimen aikakatkaisut ja rajat (valinnainen)",
     "defaults_help": "Jätä kenttä tyhjäksi käyttääksesi Caddyn oletusta, joka näkyy harmaana. Rungon lukemisen tai kirjoittamisen aikakatkaisu keskeyttää jokaisen sitä pidemmän latauksen.",
     "no_timeout": "ei mitään",
@@ -274,6 +277,7 @@
     "field_help": "Suuremmat pyyntörungot hylätään ennen kuin ne päätyvät taustapalveluun. Jätä tyhjäksi, jos rajaa ei tarvita (Caddyn oletus)."
   },
   "rewrite": {
+    "heading": "URI-uudelleenkirjoitus",
     "section_title": "URI-uudelleenkirjoitus (valinnainen)",
     "type_none": "Ei mitään",
     "type_strip_prefix": "Poista etuliite",
@@ -301,6 +305,7 @@
     "confirm_cancel": "Peruuta"
   },
   "upstreams": {
+    "heading": "Lisä-upstreamit",
     "section_title": "Lisä-upstreamit (valinnainen)",
     "section_hide": "Lisä-upstreamit",
     "field_host": "Isäntä",
@@ -316,6 +321,7 @@
     "validation_port": "Portin on oltava välillä 1–65535"
   },
   "lb_retry": {
+    "heading": "Uudelleenyritykset ja vikasieto",
     "section_title": "Uudelleenyritykset ja vikasieto (valinnainen)",
     "retries": "Uudelleenyritysten enimmäismäärä",
     "try_duration": "Uudelleenyritysten aikabudjetti",
@@ -341,6 +347,7 @@
     "validation_health_status": "Käytä tilakoodia kuten 200 tai luokkaa kuten 2xx"
   },
   "response_headers": {
+    "heading": "Vastausotsakkeet",
     "section_title": "Vastausotsakkeet (valinnainen)",
     "op_set": "Aseta",
     "op_add": "Lisää",
@@ -356,6 +363,7 @@
     "preset_remove_server": "Poista Server"
   },
   "request_headers": {
+    "heading": "Pyyntöotsakkeet",
     "section_title": "Pyyntöotsakkeet (valinnainen)",
     "op_set": "Aseta",
     "op_add": "Lisää",
@@ -487,6 +495,7 @@
     "continue_button": "Jatka omalla vastuulla"
   },
   "access_log": {
+    "heading": "Pääsyloki",
     "section_title": "Pääsyloki",
     "section_title_on": "Pääsyloki (käytössä)",
     "enable": "Ota pääsyloki käyttöön",
@@ -711,6 +720,7 @@
     "save_tooltip": "Testaa ensin onnistunut yhteys"
   },
   "forward_auth": {
+    "heading": "Edelleenohjattu todennus",
     "section_title": "Edelleenohjattu todennus (valinnainen)",
     "section_title_on": "Edelleenohjattu todennus (käytössä)",
     "enable_button": "Ota edelleenohjattu todennus käyttöön",
@@ -725,6 +735,7 @@
     "validation_uri_required": "Todennuksen URI on pakollinen, kun todennuspalvelun URL on asetettu"
   },
   "tls_policy": {
+    "heading": "TLS-käytäntö",
     "section_title": "TLS-käytäntö (valinnainen)",
     "section_title_on": "TLS-käytäntö (määritetty)",
     "protocol_min": "TLS:n vähimmäisversio",
@@ -772,6 +783,7 @@
     "custom_cert_lifetime_note": "Yllä on ladattu oma varmenne — varmenteen voimassaoloaika ja uusimisikkuna eivät koske sitä, koska Caddy ei itse myönnä mitään."
   },
   "error_handler": {
+    "heading": "Mukautetut virheenkäsittelijät",
     "section_title": "Mukautetut virheenkäsittelijät (valinnainen)",
     "section_title_on": "Mukautetut virheenkäsittelijät ({{count}})",
     "add_button": "Lisää virheenkäsittelijä",
@@ -798,6 +810,7 @@
     "field_file_root_help": "Caddy tarjoilee tiedoston {status_code}.html tästä hakemistosta (esim. /var/www/errors/404.html)"
   },
   "matchers": {
+    "heading": "Reitin matcherit",
     "section_title": "Reitin matcherit (valinnainen)",
     "type_path": "Polku",
     "type_host": "Isäntä",

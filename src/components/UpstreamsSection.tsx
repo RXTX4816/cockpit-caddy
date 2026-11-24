@@ -60,6 +60,7 @@ export function UpstreamsSection({ value, lbPolicy, onChange, isDisabled, isExpa
 
   return (
     <SectionShell
+      heading={t("upstreams.heading")}
       toggleContent={<>{expanded && !flat ? t("upstreams.section_hide") : t("upstreams.section_title")}{value.length > 0 && <SectionConfiguredDot />}</>}
       onToggle={(_e, v) => setExpanded(v)}
       isExpanded={expanded}

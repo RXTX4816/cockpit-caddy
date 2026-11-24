@@ -242,6 +242,7 @@
     "confirm_body": "Vytvoří se přesměrování :{{port}} → {{to}} ({{code}}) a konfigurace Caddy se znovu načte."
   },
   "basic_auth": {
+    "heading": "HTTP Basic Auth",
     "section_title": "HTTP Basic Auth (volitelné)",
     "field_username": "Uživatelské jméno",
     "field_password": "Heslo",
@@ -250,12 +251,14 @@
     "remove_button": "Odebrat účet"
   },
   "transport": {
+    "heading": "Časové limity upstreamu",
     "section_title": "Časové limity upstreamu (volitelné)",
     "dial_timeout": "Časový limit připojení",
     "response_header_timeout": "Časový limit hlaviček odpovědi",
     "defaults_help": "Ponechte pole prázdné a použije se výchozí hodnota Caddy (zobrazená šedě). Časový limit hlaviček odpovědi přeruší long polling a pomalé odpovědi."
   },
   "server_timeouts": {
+    "heading": "Časové limity a omezení serveru",
     "section_title": "Časové limity a omezení serveru (volitelné)",
     "defaults_help": "Ponechte pole prázdné a použije se výchozí hodnota Caddy (zobrazená šedě). Časový limit čtení těla nebo zápisu přeruší každé delší nahrávání či stahování.",
     "no_timeout": "žádný",
@@ -274,6 +277,7 @@
     "field_help": "Větší těla požadavků se odmítnou dřív, než dorazí k backendu. Prázdné pole znamená bez limitu (výchozí v Caddy)."
   },
   "rewrite": {
+    "heading": "Přepis URI",
     "section_title": "Přepis URI (volitelné)",
     "type_none": "Žádný",
     "type_strip_prefix": "Odebrat prefix",
@@ -301,6 +305,7 @@
     "confirm_cancel": "Zrušit"
   },
   "upstreams": {
+    "heading": "Další upstreamy",
     "section_title": "Další upstreamy (volitelné)",
     "section_hide": "Další upstreamy",
     "field_host": "Hostitel",
@@ -316,6 +321,7 @@
     "validation_port": "Port musí být v rozsahu 1–65535"
   },
   "lb_retry": {
+    "heading": "Opakování a převzetí služeb",
     "section_title": "Opakování a převzetí služeb (volitelné)",
     "retries": "Max. počet opakování",
     "try_duration": "Celkový čas na opakování",
@@ -341,6 +347,7 @@
     "validation_health_status": "Zadejte kód jako 200 nebo třídu jako 2xx"
   },
   "response_headers": {
+    "heading": "Hlavičky odpovědi",
     "section_title": "Hlavičky odpovědi (volitelné)",
     "op_set": "Nastavit",
     "op_add": "Přidat",
@@ -356,6 +363,7 @@
     "preset_remove_server": "Odebrat Server"
   },
   "request_headers": {
+    "heading": "Hlavičky požadavku",
     "section_title": "Hlavičky požadavku (volitelné)",
     "op_set": "Nastavit",
     "op_add": "Přidat",
@@ -487,6 +495,7 @@
     "continue_button": "Pokračovat na vlastní riziko"
   },
   "access_log": {
+    "heading": "Protokolování přístupů",
     "section_title": "Protokolování přístupů",
     "section_title_on": "Protokolování přístupů (zapnuto)",
     "enable": "Zapnout protokolování přístupů",
@@ -711,6 +720,7 @@
     "save_tooltip": "Nejprve úspěšně otestujte spojení"
   },
   "forward_auth": {
+    "heading": "Delegované ověřování",
     "section_title": "Delegované ověřování (volitelné)",
     "section_title_on": "Delegované ověřování (zapnuto)",
     "enable_button": "Zapnout delegované ověřování",
@@ -725,6 +735,7 @@
     "validation_uri_required": "Pokud je nastavena URL ověřovací služby, je URI ověření povinné"
   },
   "tls_policy": {
+    "heading": "Zásada TLS",
     "section_title": "Zásada TLS (volitelné)",
     "section_title_on": "Zásada TLS (nastaveno)",
     "protocol_min": "Minimální verze TLS",
@@ -772,6 +783,7 @@
     "custom_cert_lifetime_note": "Výše je načten vlastní certifikát — doba platnosti a okno obnovení se neuplatní, protože Caddy sám nic nevydává."
   },
   "error_handler": {
+    "heading": "Vlastní obsluha chyb",
     "section_title": "Vlastní obsluha chyb (volitelné)",
     "section_title_on": "Vlastní obsluha chyb ({{count}})",
     "add_button": "Přidat obsluhu chyb",
@@ -798,6 +810,7 @@
     "field_file_root_help": "Caddy bude poskytovat {status_code}.html z tohoto adresáře (např. /var/www/errors/404.html)"
   },
   "matchers": {
+    "heading": "Matchery trasy",
     "section_title": "Matchery trasy (volitelné)",
     "type_path": "Cesta",
     "type_host": "Hostitel",

@@ -38,6 +38,8 @@ interface Props {
   title?: string;
   titleOn?: string;
   enableLabel?: string;
+  /** The heading inside a tab (#291); the global runtime logger isn't shown in one. */
+  heading?: string;
   /** Controlled expand state, e.g. from a parent accordion coordinating single-open-at-a-time
    *  across sections. Falls back to internal state when omitted. */
   isExpanded?: boolean;
@@ -51,7 +53,7 @@ const LEVELS: Array<AccessLogLevel | ""> = ["", "DEBUG", "INFO", "WARN", "ERROR"
 const ACCESS_LOG_DEFAULTS: AccessLogValues = { enabled: true, output: "stderr", filePath: "", format: "", level: "", rollSizeMb: "", rollKeepCount: "", rollKeepDays: "", rollCompress: true };
 const ACCESS_LOG_EMPTY: AccessLogValues = { enabled: false, output: "stderr", filePath: "", format: "", level: "", rollSizeMb: "", rollKeepCount: "", rollKeepDays: "", rollCompress: true };
 
-export function AccessLogSection({ value, onChange, isDisabled, idPrefix = "al", title, titleOn, enableLabel, isExpanded: isExpandedProp, onToggleExpanded }: Props) {
+export function AccessLogSection({ value, onChange, isDisabled, idPrefix = "al", title, titleOn, enableLabel, heading, isExpanded: isExpandedProp, onToggleExpanded }: Props) {
   const { t } = useTranslation();
   const [internalExpanded, setInternalExpanded] = useState(value.enabled);
   const expanded = isExpandedProp ?? internalExpanded;
@@ -69,6 +71,7 @@ export function AccessLogSection({ value, onChange, isDisabled, idPrefix = "al",
 
   return (
     <SectionShell
+      heading={heading ?? t("access_log.heading")}
       toggleText={value.enabled ? (titleOn ?? t("access_log.section_title_on")) : (title ?? t("access_log.section_title"))}
       isIndented
       isExpanded={expanded}

@@ -242,6 +242,7 @@
     "confirm_body": "リダイレクト :{{port}} → {{to}}（{{code}}）を作成し、Caddy の設定を再読み込みします。"
   },
   "basic_auth": {
+    "heading": "HTTP Basic 認証",
     "section_title": "HTTP Basic 認証（任意）",
     "field_username": "ユーザー名",
     "field_password": "パスワード",
@@ -250,12 +251,14 @@
     "remove_button": "アカウントを削除"
   },
   "transport": {
+    "heading": "アップストリームのタイムアウト",
     "section_title": "アップストリームのタイムアウト（任意）",
     "dial_timeout": "接続タイムアウト",
     "response_header_timeout": "レスポンスヘッダーのタイムアウト",
     "defaults_help": "空欄にすると Caddy の既定値（灰色で表示）が使われます。レスポンスヘッダーのタイムアウトは、ロングポーリングや遅い応答を切断します。"
   },
   "server_timeouts": {
+    "heading": "サーバーのタイムアウトと制限",
     "section_title": "サーバーのタイムアウトと制限（任意）",
     "defaults_help": "空欄にすると Caddy の既定値（灰色で表示）が使われます。ボディ読み取りや書き込みのタイムアウトを設定すると、それより長いアップロードやダウンロードはすべて切断されます。",
     "no_timeout": "なし",
@@ -274,6 +277,7 @@
     "field_help": "これより大きいリクエスト本文はバックエンドに届く前に拒否されます。空欄なら無制限です（Caddy の既定）。"
   },
   "rewrite": {
+    "heading": "URI の書き換え",
     "section_title": "URI の書き換え（任意）",
     "type_none": "なし",
     "type_strip_prefix": "プレフィックスを除去",
@@ -301,6 +305,7 @@
     "confirm_cancel": "キャンセル"
   },
   "upstreams": {
+    "heading": "追加のアップストリーム",
     "section_title": "追加のアップストリーム（任意）",
     "section_hide": "追加のアップストリーム",
     "field_host": "ホスト",
@@ -316,6 +321,7 @@
     "validation_port": "ポートは 1〜65535 の範囲で指定してください"
   },
   "lb_retry": {
+    "heading": "リトライとフェイルオーバー",
     "section_title": "リトライとフェイルオーバー（任意）",
     "retries": "最大リトライ回数",
     "try_duration": "リトライの合計時間",
@@ -341,6 +347,7 @@
     "validation_health_status": "200 のようなコードか 2xx のようなクラスを指定してください"
   },
   "response_headers": {
+    "heading": "レスポンスヘッダー",
     "section_title": "レスポンスヘッダー（任意）",
     "op_set": "設定",
     "op_add": "追加",
@@ -356,6 +363,7 @@
     "preset_remove_server": "Server を削除"
   },
   "request_headers": {
+    "heading": "リクエストヘッダー",
     "section_title": "リクエストヘッダー（任意）",
     "op_set": "設定",
     "op_add": "追加",
@@ -487,6 +495,7 @@
     "continue_button": "自己責任で続行"
   },
   "access_log": {
+    "heading": "アクセスログ",
     "section_title": "アクセスログ",
     "section_title_on": "アクセスログ（有効）",
     "enable": "アクセスログを有効にする",
@@ -711,6 +720,7 @@
     "save_tooltip": "まず接続テストを成功させてください"
   },
   "forward_auth": {
+    "heading": "フォワード認証",
     "section_title": "フォワード認証（任意）",
     "section_title_on": "フォワード認証（有効）",
     "enable_button": "フォワード認証を有効にする",
@@ -725,6 +735,7 @@
     "validation_uri_required": "認証サービスの URL を設定した場合、認証 URI は必須です"
   },
   "tls_policy": {
+    "heading": "TLS ポリシー",
     "section_title": "TLS ポリシー（任意）",
     "section_title_on": "TLS ポリシー（設定済み）",
     "protocol_min": "最小 TLS バージョン",
@@ -772,6 +783,7 @@
     "custom_cert_lifetime_note": "上でカスタム証明書が読み込まれています。Caddy 自身は何も発行しないため、証明書の有効期間と更新ウィンドウは適用されません。"
   },
   "error_handler": {
+    "heading": "カスタムエラーハンドラー",
     "section_title": "カスタムエラーハンドラー（任意）",
     "section_title_on": "カスタムエラーハンドラー（{{count}}）",
     "add_button": "エラーハンドラーを追加",
@@ -798,6 +810,7 @@
     "field_file_root_help": "Caddy はこのディレクトリから {status_code}.html を配信します（例: /var/www/errors/404.html）"
   },
   "matchers": {
+    "heading": "ルートマッチャー",
     "section_title": "ルートマッチャー（任意）",
     "type_path": "パス",
     "type_host": "ホスト",

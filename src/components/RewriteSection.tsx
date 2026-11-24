@@ -59,6 +59,7 @@ export function RewriteSection({ value, onChange, isDisabled, isExpanded: isExpa
 
   return (
     <SectionShell
+      heading={t("rewrite.heading")}
       toggleContent={<>{t("rewrite.section_title")}{type !== "none" && <SectionConfiguredDot />}</>}
       isIndented
       isExpanded={expanded}

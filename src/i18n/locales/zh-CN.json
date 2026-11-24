@@ -242,6 +242,7 @@
     "confirm_body": "将创建重定向 :{{port}} → {{to}}（{{code}}），并重新加载 Caddy 配置。"
   },
   "basic_auth": {
+    "heading": "HTTP Basic 认证",
     "section_title": "HTTP Basic 认证（可选）",
     "field_username": "用户名",
     "field_password": "密码",
@@ -250,12 +251,14 @@
     "remove_button": "移除账户"
   },
   "transport": {
+    "heading": "上游超时",
     "section_title": "上游超时（可选）",
     "dial_timeout": "连接超时",
     "response_header_timeout": "响应头超时",
     "defaults_help": "留空即使用 Caddy 的默认值（以灰色显示）。响应头超时会中断长轮询和较慢的响应。"
   },
   "server_timeouts": {
+    "heading": "服务器超时与限制",
     "section_title": "服务器超时与限制（可选）",
     "defaults_help": "留空即使用 Caddy 的默认值（以灰色显示）。设置读取请求体或写入超时后，任何耗时更长的上传或下载都会被中断。",
     "no_timeout": "无",
@@ -274,6 +277,7 @@
     "field_help": "更大的请求体会在到达后端前被拒绝。留空表示不限制（Caddy 默认）。"
   },
   "rewrite": {
+    "heading": "URI 重写",
     "section_title": "URI 重写（可选）",
     "type_none": "无",
     "type_strip_prefix": "去除前缀",
@@ -301,6 +305,7 @@
     "confirm_cancel": "取消"
   },
   "upstreams": {
+    "heading": "附加上游",
     "section_title": "附加上游（可选）",
     "section_hide": "附加上游",
     "field_host": "主机",
@@ -316,6 +321,7 @@
     "validation_port": "端口必须在 1 到 65535 之间"
   },
   "lb_retry": {
+    "heading": "重试与故障转移",
     "section_title": "重试与故障转移（可选）",
     "retries": "最大重试次数",
     "try_duration": "重试总时长",
@@ -341,6 +347,7 @@
     "validation_health_status": "请填写 200 这样的状态码或 2xx 这样的类别"
   },
   "response_headers": {
+    "heading": "响应头",
     "section_title": "响应头（可选）",
     "op_set": "设置",
     "op_add": "添加",
@@ -356,6 +363,7 @@
     "preset_remove_server": "移除 Server"
   },
   "request_headers": {
+    "heading": "请求头",
     "section_title": "请求头（可选）",
     "op_set": "设置",
     "op_add": "添加",
@@ -487,6 +495,7 @@
     "continue_button": "自行承担风险继续"
   },
   "access_log": {
+    "heading": "访问日志",
     "section_title": "访问日志",
     "section_title_on": "访问日志（已启用）",
     "enable": "启用访问日志",
@@ -711,6 +720,7 @@
     "save_tooltip": "请先成功测试一次连接"
   },
   "forward_auth": {
+    "heading": "转发认证",
     "section_title": "转发认证（可选）",
     "section_title_on": "转发认证（已启用）",
     "enable_button": "启用转发认证",
@@ -725,6 +735,7 @@
     "validation_uri_required": "设置了认证服务 URL 时必须填写认证 URI"
   },
   "tls_policy": {
+    "heading": "TLS 策略",
     "section_title": "TLS 策略（可选）",
     "section_title_on": "TLS 策略（已配置）",
     "protocol_min": "最低 TLS 版本",
@@ -772,6 +783,7 @@
     "custom_cert_lifetime_note": "上方已加载自定义证书——证书有效期和续期窗口不适用，因为 Caddy 自己不签发任何证书。"
   },
   "error_handler": {
+    "heading": "自定义错误处理",
     "section_title": "自定义错误处理（可选）",
     "section_title_on": "自定义错误处理（{{count}}）",
     "add_button": "添加错误处理",
@@ -798,6 +810,7 @@
     "field_file_root_help": "Caddy 将从此目录提供 {status_code}.html（例如 /var/www/errors/404.html）"
   },
   "matchers": {
+    "heading": "路由匹配器",
     "section_title": "路由匹配器（可选）",
     "type_path": "路径",
     "type_host": "主机",
