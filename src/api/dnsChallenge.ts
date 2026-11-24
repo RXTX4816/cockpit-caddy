@@ -49,6 +49,11 @@ export function dnsEnvVarName(option: string, site?: string): string {
   return `CADDY_DNS_SITE_${envPart(site)}_${h.toString(36).toUpperCase()}_${envPart(option)}`;
 }
 
+/** True for a variable the plugin named for one site (#289), as opposed to the global ones or a hand-written name. */
+export function isSiteDnsVar(name: string): boolean {
+  return name.startsWith("CADDY_DNS_SITE_");
+}
+
 /** systemd EnvironmentFile lines, every value double-quoted with `\` and `"` escaped. */
 export function formatEnvFile(vars: Record<string, string>): string {
   return Object.entries(vars)

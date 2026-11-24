@@ -138,3 +138,22 @@ describe("per-site DNS challenge (#289)", () => {
     expect(JSON.parse(screen.getByTestId("plan").textContent!).secrets.remove).toEqual(["CADDY_DNS_SITE_A_1_API_TOKEN"]);
   });
 });
+
+describe("per-site DNS variables after a rename (#289)", () => {
+  it("move to the new host's name and need the value again", async () => {
+    vi.stubGlobal("cockpit", {
+      spawn: (args: string[]) => Object.assign(args[0] === "caddy" ? Promise.resolve("dns.providers.cloudflare\n") : Promise.resolve('OLD="x"\n'), { input: () => {} }),
+      file: () => ({ read: async () => "{\n}\n" }),
+    });
+    const { dnsEnvVarName } = await import("../api");
+    const old = dnsEnvVarName("api_token", "a.example.com");
+    let dns!: ReturnType<typeof useSiteDns>;
+    function H() { dns = useSiteDns({ provider: "cloudflare", credentials: { api_token: old } }, true); return null; }
+    render(<H />);
+    expect(dns.plan("a.example.com", true).config?.credentials.api_token).toBe(old);
+    const renamed = dns.plan("b.example.com", true);
+    expect(renamed.config?.credentials.api_token).toBe(dnsEnvVarName("api_token", "b.example.com"));
+    expect(renamed.secrets.remove).toEqual([old]);
+    expect(dns.error("b.example.com", true)).toBe("dns.validation_value");
+  });
+});

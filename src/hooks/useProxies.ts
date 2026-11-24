@@ -4,7 +4,7 @@ import { i18n } from "@rxtx4816/cockpit-plugin-base-react/i18n";
 import {
   parseProxies, mergeProxy, removeProxy,
   readCaddyfile, writeCaddyfile, readProxyConf,
-  parseLabelsFromCaddyfile, parseConfTlsMap, parseConfExternalAddresses, parseConfAccessLogMap, parseConfForwardAuthMap, parseConfCustomTlsCaMap, parseClientAuthCaFile, parseConfTlsIssuerMap, parseConfTlsOnDemandMap, parseConfTlsDnsMap, applyDnsSecrets,
+  parseLabelsFromCaddyfile, parseConfTlsMap, parseConfExternalAddresses, parseConfAccessLogMap, parseConfForwardAuthMap, parseConfCustomTlsCaMap, parseClientAuthCaFile, parseConfTlsIssuerMap, parseConfTlsOnDemandMap, parseConfTlsDnsMap, applyDnsSecrets, isSiteDnsVar,
   surgicallyWriteProxy, surgicallyEditProxy, surgicallyRemoveBlock,
   migrateCaddyfile, isStockCaddyfile, mergeMigratedConfContent, writeRawProxyConf, writeRawProxyConfValidated,
   CaddyfileError,
@@ -556,7 +556,7 @@ export function useProxies() {
       setConfExternal(prev => { const n = { ...prev }; delete n[proxyKey]; return n; });
       setConfTlsDns(prev => { const n = { ...prev }; delete n[proxyKey]; return n; });
       // #289: the site's own DNS credentials leave the env file with it.
-      const siteVars = Object.values(proxy.dnsChallenge?.credentials ?? {}).filter(v => v.startsWith("CADDY_DNS_SITE_"));
+      const siteVars = Object.values(proxy.dnsChallenge?.credentials ?? {}).filter(isSiteDnsVar);
       if (siteVars.length) await applyDnsSecrets({}, siteVars);
       // A shared listener's live JSON server object holds every sibling's route (#139) —
       // removing it by serverKey would delete a still-live sibling too. Reload instead so
