@@ -24,7 +24,7 @@ The server gets a unique key (slug) derived from its name. Once created it appea
 
 ### Adding routes to a server
 
-Open the server's tab and use the **Add Proxy / Add Redirect / Add Static / Add Respond** buttons. Routes added here belong to the server — they do not have their own port.
+Open the server's tab and use **Add Proxy** or its arrow (**More site types**). Routes added here belong to the server — they do not have their own port.
 
 ### Server detail panel
 
@@ -54,6 +54,8 @@ When multiple matchers are set (e.g. path + host), they are combined with AND lo
 | **Header** | `X-Auth: Bearer*` | Header name + optional value pattern; leave value blank to match header presence |
 | **Query param** | `debug=true` | URL query parameter name + optional value |
 | **IP address** | `10.0.0.0/8` | **Client IP** (`client_ip`, the default for new matchers): the visitor's IP, read from the forwarded header when the request comes through a trusted proxy (Settings → Trusted proxies); without trusted proxies it is the connection IP. **Connection IP** (`remote_ip`): the TCP peer, which behind a proxy or CDN is the proxy. Existing `remote_ip` matchers stay `remote_ip` |
+| **Exclude** | path `/api/private/*` | "Exclude requests that match": a request matching all of these fields is skipped even when it matches the fields above (Caddy's `not` block) |
+| **Expression (CEL)** | `{method} != 'DELETE'` | A condition that must also be true, with placeholders like `{path}` or `{method}`. Caddy checks it when you save. See Caddy's [expression matcher](https://caddyserver.com/docs/caddyfile/matchers#expression) |
 
 ### Strip matched path prefix (handle_path)
 
@@ -74,7 +76,7 @@ Click **Add Proxy** in the toolbar.
 
 | Field | Description |
 |---|---|
-| External Address | Port (and optionally scheme + hostname) Caddy listens on — omitted when adding to a named server. Several hostnames can share one proxy: separate them with commas (`example.com, www.example.com`) and they are written as one site block with every name |
+| External Address | Port (and optionally scheme + hostname) Caddy listens on — omitted when adding to a named server. Several hostnames can share one proxy: separate them with commas (`example.com, www.example.com`) and they are written as one site block with every name. An IP address as the host binds only that IP (`bind`), so the port isn't opened on every interface |
 | Target Host | Upstream host to forward traffic to (default `localhost`) |
 | Target Port | Upstream port |
 
@@ -83,7 +85,7 @@ Click **Add Proxy** in the toolbar.
 | Field | Description |
 |---|---|
 | Label | Human-readable name (e.g. `Nextcloud`) |
-| HTTPS certificate | **Automatic (Let's Encrypt / ACME)** — the default for a public hostname: Caddy gets and renews a public certificate, no `tls` line is written. **Caddy's internal CA** — the default for a bare port, an IP or a local name (`tls internal`); browsers trust it only where the CA's root is installed. **Off** — plain HTTP. A certificate file under TLS settings overrides the issuer. Inside a named server, TLS is set on the server. |
+| HTTPS certificate | **Automatic (Let's Encrypt / ACME)** — the default for a public hostname: Caddy gets and renews a public certificate, no `tls` line is written. **Caddy's internal CA** — the default for a bare port, an IP or a local name (`tls internal`); browsers trust it only where the CA's root is installed. **Off** — plain HTTP. A certificate file under TLS settings overrides the issuer. Inside a named server, TLS is set on the server. The **On-demand** checkbox (while HTTPS is on) gets the certificate at the first TLS handshake instead of up front (`tls { on_demand }`), for names not known in advance; set an ask endpoint under Settings → On-demand TLS first. |
 | DNS challenge | Shown under Automatic HTTPS. **Inherit global** (default) uses the provider from Settings → DNS challenge, or the HTTP challenge when none is set. **Override** gives the site its own provider and credentials (`tls { dns <provider> {env.CADDY_DNS_SITE_…} }`); the values go to `/etc/caddy/dns.env` under per-site names, and saving new ones restarts Caddy, since it reads them only at start. A wildcard host without any DNS provider gets a warning. Deleting the site removes its variables. |
 | Compression | Enable gzip/zstd response compression |
 | Skip TLS verify | Skip verification of the upstream's TLS certificate (for self-signed backends) |
@@ -118,14 +120,14 @@ The static, redirect, respond and PHP dialogs use the same tabs, with fewer of t
 | **Request Headers** | Add, set, or delete upstream request headers |
 | **Response Headers** | Add, set, or delete downstream response headers |
 | **Extra Upstreams** | Additional upstream targets with a load-balancing policy: random (Caddy's default), round robin, least connections, first available, weighted round robin (one weight per upstream, the main target included), best of random n, connection IP hash, client IP hash, request path hash, request header, or cookie (sticky sessions, optional cookie name and secret) |
-| **Retry & Failover Tuning** | Max retries, retry duration/interval, and which upstream response codes count as a failure worth retrying — applies even with a single upstream |
-| **Route Matchers** | Path, host, method, header, query, and client / connection IP matchers |
+| **Retry & Failover Tuning** | Max retries and retry duration/interval — applies even with a single upstream. **Passive health checks**: a fail duration, max fails, and the upstream status codes that count as a failure; an upstream that fails too often is taken out of rotation for the fail duration (Caddy only runs passive checks with a fail duration). **Active health checks**: a path Caddy requests on every upstream, with interval, timeout and expected status (`200` or a class like `2xx`) |
+| **Route Matchers** | Path, host, method, header, query, client / connection IP, an exclude group and a CEL expression |
 
 ---
 
 ## Static File Server
 
-Click **Add Static** in the toolbar.
+Choose **Add Proxy ▾ → Static files**.
 
 ### Required fields
 
@@ -151,9 +153,28 @@ Same as the proxy dialog except Transport, Rewrite, Forward Auth, Extra Upstream
 
 ---
 
+## PHP Site
+
+Choose **Add Proxy ▾ → PHP site**. Caddy passes `.php` requests to PHP-FPM with `php_fastcgi` and serves every other file (CSS, images, JS) itself with `file_server`.
+
+| Field | Description |
+|---|---|
+| Port | External port Caddy listens on |
+| FastCGI Upstream | The PHP-FPM socket (`unix//run/php-fpm/php-fpm.sock`) or TCP address (`127.0.0.1:9000`) |
+| Root Directory | The app's document root |
+| Index file | Optional; Caddy's default is `index.php` |
+| Split path | Optional extensions that split the URI into script and path info; Caddy's default is `.php` |
+| Environment variables | Extra variables passed to PHP |
+| Try files | Optional candidates tried before PHP (`try_files`); a front-controller app (Laravel, Symfony, WordPress) usually needs `{path} {path}/ /index.php?{query}` |
+| HTTPS certificate | As for a static site |
+
+The other settings (Security, Routing, Logging & errors, Limits) are the same as for a static site.
+
+---
+
 ## Redirect
 
-Click **Add Redirect** in the toolbar.
+Choose **Add Proxy ▾ → Redirect**.
 
 | Field | Description |
 |---|---|
@@ -169,7 +190,7 @@ Route Matchers are also available for redirects inside a named server.
 
 ## Static Response
 
-Click **Add Respond** in the toolbar. Returns a fixed HTTP response — useful for maintenance pages or health-check endpoints.
+Choose **Add Proxy ▾ → Fixed response**. Returns a fixed HTTP response — useful for maintenance pages or health-check endpoints.
 
 | Field | Description |
 |---|---|
@@ -190,7 +211,7 @@ Click **Edit** on any row. The same dialog opens pre-filled with current values.
 
 ## Duplicating an entry
 
-Click **Duplicate** on any row. The Add dialog opens pre-filled with all values from the source entry (port field left blank so it doesn't conflict). All optional sections are copied. If the source route belongs to a named server, the duplicate is added to the same server.
+Click **Duplicate** on any row. The Add dialog opens pre-filled with all values from the source entry (port field left blank so it doesn't conflict). All optional sections are copied, except a per-site DNS challenge override, whose credentials belong to the original site. If the source route belongs to a named server, the duplicate is added to the same server.
 
 ## Deleting an entry
 

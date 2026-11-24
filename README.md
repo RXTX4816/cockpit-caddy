@@ -28,23 +28,28 @@ Caddy handles TLS automatically via its internal CA (`tls internal`). No DNS, no
 
 ## Features
 
-- Reverse proxy rules — add / edit / delete with optional load balancing (with retry/failover tuning), forward auth, rewrites, request/response headers, and custom error handlers
-- **Named virtual servers** — group multiple routes under one port with per-route matchers (path, host, method, header, query, remote IP)
-- **Route matchers** — restrict which requests a route handles; catch-all routes handle the rest
+- Reverse proxy rules — add / edit / delete with load balancing (every Caddy policy, including sticky sessions), retry/failover tuning, passive and active health checks, forward auth, rewrites, request/response headers, and custom error handlers
+- Several hostnames per site
+- **Named virtual servers** — group multiple routes under one port with per-route matchers
+- **Route matchers** — path, host, method, header, query, client or connection IP, exclude groups and CEL expressions; catch-all routes handle the rest
 - **Strip path prefix** (`handle_path`) — remove the matched path prefix before forwarding to the upstream
-- Static file servers — serve directories with optional browse, basic auth, and access logs
+- Static file servers — browse, SPA fallback for single-page apps, index/hide options, precompressed files, basic auth, and access logs
+- PHP sites through PHP-FPM, with `try_files` for front-controller apps
 - Redirects and static HTTP responses
 - Start, stop, restart, and reload the Caddy service
 - **Works with Caddy running externally** (Docker container, or any process not managed by `caddy.service`) — proxy management, the Caddyfile editor, and reload all work through the Admin API alone, with log viewing via a configured container name
-- HTTPS per site: automatic Let's Encrypt/ACME certificates for public hostnames, Caddy's internal CA for local names, or your own certificate — with per-route protocol/cipher/mTLS policy
+- HTTPS per site: automatic Let's Encrypt/ACME certificates for public hostnames, Caddy's internal CA for local names, or your own certificate — with per-route protocol/cipher/mTLS policy and on-demand TLS
+- ACME DNS challenge, globally or per site, with credentials in a root-only env file instead of the Caddyfile
+- **Snippets** — reusable Caddyfile pieces imported into sites
 - Per-server access logging with rotation, request body size limits, server timeouts, and transport tuning
 - **Trusted proxies** and **PROXY protocol** support for the real client IP when running behind another load balancer or CDN
 - Search and filter entries by port, target, or label
 - Caddyfile editor with syntax highlighting
-- Log viewer with per-service filtering
-- Global Caddy options (ports, ACME, on-demand TLS, storage, Prometheus metrics, runtime log)
+- Log viewer as a table, with level and logger filters, search and each line's JSON
+- Global Caddy options (ports, ACME, DNS challenge, on-demand TLS, storage, Prometheus metrics, runtime log)
+- A distro's stock Caddyfile is taken over without a prompt on the first save
 - Config health check that finds and fixes known-stale configuration shapes
-- Internal CA and ACME status viewers with PEM export
+- Internal CA and ACME windows: certificate status, expiry and errors, fingerprints, PEM export
 - 24 language support (UI follows Cockpit's language setting)
 
 ## Requirements
