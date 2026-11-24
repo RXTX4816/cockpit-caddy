@@ -3,86 +3,65 @@
 [![CI](https://github.com/RXTX4816/cockpit-caddy/actions/workflows/ci.yml/badge.svg)](https://github.com/RXTX4816/cockpit-caddy/actions/workflows/ci.yml)
 [![Packaging](https://github.com/RXTX4816/cockpit-caddy/actions/workflows/pkg-ci.yml/badge.svg)](https://github.com/RXTX4816/cockpit-caddy/actions/workflows/pkg-ci.yml)
 
-Caddy management plugin for [Cockpit](https://cockpit-project.org)
+[Caddy](https://caddyserver.com) management for [Cockpit](https://cockpit-project.org) — reverse proxies, static sites and HTTPS from a clean web UI, written to a Caddyfile you can still edit by hand.
 
 ![Screenshot](docs/assets/overview.png)
 
-## Concept
-
-Each service gets its own HTTPS port on your local machine:
-
-```
-https://192.168.1.100:8443  →  localhost:8080  (Nextcloud)
-https://192.168.1.100:8444  →  localhost:3000 
-https://192.168.1.100:8445  →  10.0.0.5:9000 
-```
-
-Or use a **named virtual server** to serve multiple services on a single port with route matchers:
-
-```
-https://192.168.1.100:443/api/*   →  localhost:3000  (API, path stripped)
-https://192.168.1.100:443/*       →  localhost:4000  (Frontend, catch-all)
-```
-
-Caddy handles TLS automatically via its internal CA (`tls internal`). No DNS, no subdomains, no Let's Encrypt required.
-
 ## Features
 
-- Reverse proxy rules — add / edit / delete with load balancing (every Caddy policy, including sticky sessions), retry/failover tuning, passive and active health checks, forward auth, rewrites, request/response headers, and custom error handlers
-- Several hostnames per site
-- **Named virtual servers** — group multiple routes under one port with per-route matchers
-- **Route matchers** — path, host, method, header, query, client or connection IP, exclude groups and CEL expressions; catch-all routes handle the rest
-- **Strip path prefix** (`handle_path`) — remove the matched path prefix before forwarding to the upstream
-- Static file servers — browse, SPA fallback for single-page apps, index/hide options, precompressed files, basic auth, and access logs
-- PHP sites through PHP-FPM, with `try_files` for front-controller apps
-- Redirects and static HTTP responses
-- Start, stop, restart, and reload the Caddy service
-- **Works with Caddy running externally** (Docker container, or any process not managed by `caddy.service`) — proxy management, the Caddyfile editor, and reload all work through the Admin API alone, with log viewing via a configured container name
-- HTTPS per site: automatic Let's Encrypt/ACME certificates for public hostnames, Caddy's internal CA for local names, or your own certificate — with per-route protocol/cipher/mTLS policy and on-demand TLS
-- ACME DNS challenge, globally or per site, with credentials in a root-only env file instead of the Caddyfile
-- **Snippets** — reusable Caddyfile pieces imported into sites
-- Per-server access logging with rotation, request body size limits, server timeouts, and transport tuning
-- **Trusted proxies** and **PROXY protocol** support for the real client IP when running behind another load balancer or CDN
-- Search and filter entries by port, target, or label
-- Caddyfile editor with syntax highlighting
-- Log viewer as a table, with level and logger filters, search and each line's JSON
-- Global Caddy options (ports, ACME, DNS challenge, on-demand TLS, storage, Prometheus metrics, runtime log)
-- A distro's stock Caddyfile is taken over without a prompt on the first save
-- Config health check that finds and fixes known-stale configuration shapes
-- Internal CA and ACME windows: certificate status, expiry and errors, fingerprints, PEM export
-- 24 language support (UI follows Cockpit's language setting)
+| | |
+|---|---|
+| **Sites** | Reverse proxies, static files (browse, SPA fallback, precompressed), PHP via PHP-FPM, redirects and fixed responses; several hostnames per site |
+| **Named servers** | Many routes on one port, picked by path, host, method, header, query or client IP, with exclude groups and CEL expressions |
+| **HTTPS** | Automatic Let's Encrypt / ACME certificates for public names, Caddy's internal CA for local ones, or your own files; on-demand TLS; DNS challenge globally or per site, with credentials kept out of the Caddyfile |
+| **Upstreams** | Every Caddy load-balancing policy including sticky sessions, retries, passive and active health checks, and a live reachability monitor |
+| **Security** | Basic auth, forward auth, TLS policy and client certificates, trusted proxies and the PROXY protocol |
+| **Caddyfile** | Highlighted viewer and editor, validation before every save, shared snippets; hand edits are picked up and a distro's stock Caddyfile is taken over on the first save |
+| **Inspect** | Log table with filters, certificate status and errors per hostname, the internal CA, a config check, and backup and restore |
+| **Anywhere** | Caddy as a systemd service, or running elsewhere (Docker, rootless Docker) through its Admin API |
+
+Each feature is described in the [wiki](https://github.com/RXTX4816/cockpit-caddy/wiki).
+
+## How it works
+
+Every site is a block in `/etc/caddy/conf.d/cockpit-caddy.conf`, which the main Caddyfile imports. Saving a site rewrites only its own block, checks the whole config with `caddy validate`, and applies it. Two common setups:
+
+```
+https://192.168.1.100:8443  →  localhost:8080     one port per service, Caddy's internal CA
+https://cloud.example.com   →  localhost:8080     a public name, certificate from Let's Encrypt
+```
 
 ## Requirements
 
 - Cockpit 300+
-- Caddy (any recent version with Admin API support) — installed natively as `caddy.service`, or running externally (e.g. in a Docker container)
-- Caddy Admin API enabled (default: `localhost:2019`)
+- Caddy 2 with its Admin API on (the default: `localhost:2019`, or a Unix socket)
+
+Install Caddy from your distribution (`pacman -S caddy`, `apt install caddy`, `dnf install caddy`) and run `sudo systemctl enable --now caddy`. For Caddy in a container, see [Service Control: External mode](docs/wiki/Service-Control.md#external-mode).
 
 ## Installation
 
-### Arch Linux
+**Arch Linux**
 
 ```bash
 paru -S cockpit-caddy
 ```
 
-### Fedora / RHEL / CentOS Stream / openSUSE
-
-Every release publishes a `-latest.rpm` alias alongside the versioned one, so you can always grab the newest build without checking the [Releases](https://github.com/RXTX4816/cockpit-caddy/releases) page for a version number:
+**Fedora / RHEL / CentOS Stream / openSUSE**
 
 ```bash
 curl -LO https://github.com/RXTX4816/cockpit-caddy/releases/latest/download/cockpit-caddy-latest.rpm
 sudo rpm -i cockpit-caddy-latest.rpm
 ```
 
-### Debian / Ubuntu / Linux Mint / Pop!\_OS
+**Debian / Ubuntu / Linux Mint / Pop!\_OS**
 
 ```bash
 curl -LO https://github.com/RXTX4816/cockpit-caddy/releases/latest/download/cockpit-caddy-latest.deb
 sudo apt install ./cockpit-caddy-latest.deb
 ```
 
-### Manual
+<details>
+<summary><b>Manual install</b></summary>
 
 ```bash
 curl -LO https://github.com/RXTX4816/cockpit-caddy/releases/latest/download/cockpit-caddy-latest.tar.gz
@@ -93,35 +72,23 @@ sudo mkdir -p /usr/share/cockpit/cockpit-caddy
 sudo cp -r cockpit-caddy/* /usr/share/cockpit/cockpit-caddy/
 ```
 
-Then open Cockpit in your browser or hard-refresh the page — **Caddy** appears in the left navigation.
+</details>
 
-## Caddy Setup
+Then reload Cockpit — **Caddy** appears in the left navigation.
 
-Install Caddy and enable it as a systemd service:
+## Translations
 
-```bash
-# Arch
-sudo pacman -S caddy
-sudo systemctl enable --now caddy
+The UI follows Cockpit's language setting.
 
-# Debian/Ubuntu
-sudo apt install caddy
-sudo systemctl enable --now caddy
+<!-- i18n-coverage-start -->
+| Coverage | Languages |
+|---|---|
+| 100% | English (`en`) — source, `ar`, `cs`, `de`, `es`, `fi`, `fr`, `he`, `id`, `it`, `ja`, `ka`, `ko`, `nl`, `pl`, `pt-BR`, `ro`, `ru`, `sk`, `sv`, `tr`, `uk`, `zh-CN`, `zh-TW` |
+<!-- i18n-coverage-end -->
 
-# Fedora
-sudo dnf install caddy
-sudo systemctl enable --now caddy
-```
-
-The Admin API is enabled by default at `localhost:2019`. Verify with:
-
-```bash
-curl http://localhost:2019/config/
-```
+To add a language, copy `src/i18n/locales/en.json`, translate the values, and open a PR.
 
 ## Development
-
-**Requirements:** Node.js 22+, npm
 
 ```bash
 git clone https://github.com/RXTX4816/cockpit-caddy.git
@@ -130,68 +97,14 @@ npm install
 npm run build
 ```
 
-To develop with live reload inside Cockpit, symlink the plugin:
+Requires Node.js 22+. Built on [`@rxtx4816/cockpit-plugin-base-react`](https://github.com/RXTX4816/cockpit-plugin-base-react). See [CONTRIBUTING.md](CONTRIBUTING.md) for live reload, tests and commit conventions, [VM Testing](docs/wiki/VM-Testing.md) for the QEMU test VMs, and [Manual Testing](docs/wiki/Manual-Testing.md) for the release checklist.
 
-```bash
-mkdir -p ~/.local/share/cockpit
-ln -s "$PWD/src" ~/.local/share/cockpit/cockpit-caddy
-npm run watch
-```
+Bugs and feature requests go to [GitHub Issues](https://github.com/RXTX4816/cockpit-caddy/issues). Security issues: please report privately — see [SECURITY.md](SECURITY.md).
 
-Open `http://localhost:9090` — **Caddy** appears in the sidebar automatically.
+## Versioning
 
-| Command | Description |
-|---|---|
-| `npm run build` | Production build |
-| `npm run watch` | Build with file watching |
-| `npm run typecheck` | TypeScript type check |
-| `npm run lint` | ESLint |
-| `npm run test` | Run unit tests |
-| `npm run test:coverage` | Coverage report |
-| `npm run test:e2e` | Run E2E browser tests (requires a running VM) |
-| `npm run test:e2e:ui` | E2E tests in the Playwright visual runner |
-
-### VM Testing
-
-For testing in real browser environments across Arch, Debian, and Fedora, the `npm run vm` command manages local QEMU VMs. See [docs/wiki/VM-Testing.md](docs/wiki/VM-Testing.md) for setup and usage.
-
-### Plugin Base
-
-Build scripts, shared TypeScript/ESLint/Vitest config, the VM test runner, and Playwright fixtures are provided by [`@rxtx4816/cockpit-plugin-base-react`](https://github.com/RXTX4816/cockpit-plugin-base-react), installed automatically as a devDependency via `npm install`. You do not need to clone or configure it separately.
-
-## Translations
-
-The UI language follows Cockpit's language setting.
-
-<!-- i18n-coverage-start -->
-| Coverage | Languages |
-|---|---|
-| 100% | English (`en`) — source, `ar`, `cs`, `de`, `es`, `fi`, `fr`, `he`, `id`, `it`, `ja`, `ka`, `ko`, `nl`, `pl`, `pt-BR`, `ro`, `ru`, `sk`, `sv`, `tr`, `uk`, `zh-CN`, `zh-TW` |
-<!-- i18n-coverage-end -->
-
-To add or improve a translation, copy `src/i18n/locales/en.json`, translate the values, and open a PR.
-
-## Contributing
-
-Bug reports and feature requests: open an issue on [GitHub](https://github.com/RXTX4816/cockpit-caddy/issues).
-
-Pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for commit conventions and development setup.
-
-## Security
-
-Found a security vulnerability? Please report it privately following our [Security Policy](SECURITY.md) rather than opening a public issue.
-
-This repository has GitHub secret scanning and push protection enabled — do not commit secrets (API keys, tokens, passwords, `.env` files with real credentials, etc.). See [SECURITY.md](SECURITY.md) for the bypass process if a push is blocked by mistake.
+Releases follow [semantic versioning](https://semver.org): patch releases fix bugs, minor releases add features, and anything that breaks existing setups waits for a new major version. See [Releases](https://github.com/RXTX4816/cockpit-caddy/releases) for what changed in each version.
 
 ## License
 
-[AGPL-3.0-only](LICENSE) © 2026 RXTX4816.
-
-Free and open-source software (copyleft). If you distribute a modified version —
-or run one as a service that users reach over a network — you must make your
-modified source available under the same license (AGPL §13). Earlier releases
-were under the MIT License; see [LICENSE-HISTORY.md](LICENSE-HISTORY.md).
-
-Bundled third-party components and their licenses are listed in
-[THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt), which is generated at build
-time and installed alongside the plugin.
+[AGPL-3.0-only](LICENSE) © 2026 RXTX4816. Earlier releases were MIT — see [LICENSE-HISTORY.md](LICENSE-HISTORY.md). Bundled third-party licenses are listed in [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt).
