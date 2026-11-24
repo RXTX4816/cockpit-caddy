@@ -1,3 +1,4 @@
+import { saveTextToDownloads } from "@rxtx4816/cockpit-plugin-base-react/lib/saveText";
 import { Fragment, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import {
   Alert,
@@ -57,7 +58,7 @@ function statusColor(status: number): string | undefined {
   return undefined;
 }
 
-/** Saves text through the File System Access API, else to ~/Downloads via cockpit (as the base LogViewer does). */
+/** Saves text through the File System Access API, else to ~/Downloads via cockpit (the helper the base LogViewer uses). */
 async function saveText(fileName: string, text: string, typeLabel: string): Promise<string | null> {
   if ("showSaveFilePicker" in window) {
     try {
@@ -73,12 +74,7 @@ async function saveText(fileName: string, text: string, typeLabel: string): Prom
       // SecurityError inside Cockpit's iframe: fall through to cockpit.file
     }
   }
-  const user = await cockpit.user();
-  const ts = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-  const path = `${user.home}/Downloads/${fileName}-${ts}.txt`;
-  await cockpit.spawn(["mkdir", "-p", "--", `${user.home}/Downloads`], { err: "message" });
-  await cockpit.file(path).replace(text);
-  return path;
+  return saveTextToDownloads(text, fileName);
 }
 
 /** Caddy's log lines as a table (#257): one row per line, the full JSON when a row is opened. */
