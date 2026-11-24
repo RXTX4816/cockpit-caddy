@@ -5617,10 +5617,20 @@ export async function syncGlobalOptions(
   await ensureConfDImported(); // a stock Caddyfile is migrated first (#256)
   // New values first, so validation sees them; removals only once the Caddyfile no longer
   // references them (a failed save must not leave an acme_dns block without its credentials).
-  let restartNeeded = dnsSecrets ? (await applyDnsSecrets(dnsSecrets.set, [])).changed : false;
-  const removeDnsSecrets = async () => {
-    if (dnsSecrets?.remove.length) restartNeeded = (await applyDnsSecrets({}, dnsSecrets.remove)).changed || restartNeeded;
-  };
+  const applied = dnsSecrets ? await applyDnsSecrets(dnsSecrets.set, []) : null;
+  try {
+    await writeGlobalOptions(opts);
+  } catch (e) {
+    // #316: the env file goes back to what it held before this save.
+    await applied?.restore();
+    throw e;
+  }
+  const removed = dnsSecrets?.remove.length ? (await applyDnsSecrets({}, dnsSecrets.remove)).changed : false;
+  return { restartNeeded: (applied?.changed ?? false) || removed };
+}
+
+/** Writes and validates the main Caddyfile and conf.d for syncGlobalOptions, restoring both on failure. */
+async function writeGlobalOptions(opts: GlobalOptions): Promise<void> {
   const diskContent = (await fsReadFile(MAIN_CADDYFILE, "try")) ?? "";
   let patched = buildGlobalOptionsPatch(diskContent, opts);
 
@@ -5642,10 +5652,7 @@ export async function syncGlobalOptions(
   let proxyConfPatched = await applyInternalLifetimeToProxyConf(proxyConfDisk, opts.internalCertLifetime);
   proxyConfPatched = patchTopLevelMarkedSection(proxyConfPatched, METRICS_SITE_BEGIN, METRICS_SITE_END, buildMetricsSiteBlock(opts));
 
-  if (patched === diskContent && proxyConfPatched === proxyConfDisk) {
-    await removeDnsSecrets();
-    return { restartNeeded };
-  }
+  if (patched === diskContent && proxyConfPatched === proxyConfDisk) return;
 
   // #158's runtime logger lives in the main Caddyfile's global options, not conf.d — check
   // both files for log paths that would otherwise get poisoned by validate (see
@@ -5669,8 +5676,6 @@ export async function syncGlobalOptions(
   }
   await fixAccessLogFileOwnership(patched);
   if (proxyConfPatched !== proxyConfDisk) await fixAccessLogFileOwnership(proxyConfPatched);
-  await removeDnsSecrets();
-  return { restartNeeded };
 }
 
 /** Read current global options from the main Caddyfile, merged with the metrics site
