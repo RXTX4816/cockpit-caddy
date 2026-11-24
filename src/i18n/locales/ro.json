@@ -1046,6 +1046,13 @@
     "validation_value": "Introduceți o valoare pentru fiecare opțiune nouă.",
     "validation_provider": "Alegeți un furnizor DNS.",
     "restart_needed": "Reporniți Caddy pentru a încărca datele DNS modificate. Reîncărcarea nu ajunge: serviciul își citește mediul doar la pornire.",
-    "restart_button": "Repornește Caddy"
+    "restart_button": "Repornește Caddy",
+    "site_label": "Provocare DNS",
+    "site_inherit": "Moștenește globalul ({{provider}})",
+    "site_inherit_none": "Moștenește globalul (nesetat: provocare HTTP)",
+    "site_override": "Suprascrie: furnizor propriu pentru acest site",
+    "site_inherit_help": "Folosește furnizorul DNS setat în Setări → Provocare DNS sau provocarea HTTP dacă nu e setat niciunul.",
+    "site_override_help": "Acest site folosește propriul furnizor DNS și propriile date de acces. Salvarea unor date noi repornește Caddy, care le citește doar la pornire.",
+    "site_wildcard_warning": "Certificatele wildcard au nevoie de provocarea DNS. Setează un furnizor DNS pentru acest site sau în Setări → Provocare DNS."
   }
 }

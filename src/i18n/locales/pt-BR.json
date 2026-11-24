@@ -1046,6 +1046,13 @@
     "validation_value": "Informe um valor para cada nova opção.",
     "validation_provider": "Escolha um provedor DNS.",
     "restart_needed": "Reinicie o Caddy para carregar as credenciais DNS alteradas. Recarregar não basta: o serviço só lê seu ambiente ao iniciar.",
-    "restart_button": "Reiniciar o Caddy"
+    "restart_button": "Reiniciar o Caddy",
+    "site_label": "Desafio DNS",
+    "site_inherit": "Herdar global ({{provider}})",
+    "site_inherit_none": "Herdar global (não definido: desafio HTTP)",
+    "site_override": "Substituir: provedor próprio para este site",
+    "site_inherit_help": "Usa o provedor DNS definido em Configurações → Desafio DNS, ou o desafio HTTP se nenhum estiver definido.",
+    "site_override_help": "Este site usa seu próprio provedor DNS e credenciais. Salvar novas credenciais reinicia o Caddy, que só as lê ao iniciar.",
+    "site_wildcard_warning": "Certificados curinga precisam do desafio DNS. Defina um provedor DNS para este site ou em Configurações → Desafio DNS."
   }
 }

@@ -1046,6 +1046,13 @@
     "validation_value": "הזן ערך לכל אפשרות חדשה.",
     "validation_provider": "בחר ספק DNS.",
     "restart_needed": "הפעל מחדש את Caddy כדי לטעון את פרטי הגישה ל-DNS שהשתנו. טעינה מחדש אינה מספיקה: השירות קורא את הסביבה שלו רק בהפעלה.",
-    "restart_button": "הפעל מחדש את Caddy"
+    "restart_button": "הפעל מחדש את Caddy",
+    "site_label": "אתגר DNS",
+    "site_inherit": "ירושה מההגדרה הכללית ({{provider}})",
+    "site_inherit_none": "ירושה מההגדרה הכללית (לא הוגדר: אתגר HTTP)",
+    "site_override": "עקיפה: ספק נפרד לאתר זה",
+    "site_inherit_help": "משתמש בספק ה-DNS שהוגדר בהגדרות ← אתגר DNS, או באתגר HTTP אם לא הוגדר ספק.",
+    "site_override_help": "אתר זה משתמש בספק DNS ובפרטי גישה משלו. שמירת פרטי גישה חדשים מפעילה מחדש את Caddy, כי הוא קורא אותם רק בעת ההפעלה.",
+    "site_wildcard_warning": "תעודות עם תו כללי דורשות אתגר DNS. הגדר ספק DNS לאתר זה, או בהגדרות ← אתגר DNS."
   }
 }

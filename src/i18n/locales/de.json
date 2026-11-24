@@ -1046,6 +1046,13 @@
     "validation_value": "Für jede neue Option einen Wert eingeben.",
     "validation_provider": "DNS-Anbieter wählen.",
     "restart_needed": "Caddy neu starten, um die geänderten DNS-Zugangsdaten zu laden. Neu laden reicht nicht: Der Dienst liest seine Umgebung nur beim Start.",
-    "restart_button": "Caddy neu starten"
+    "restart_button": "Caddy neu starten",
+    "site_label": "DNS-Challenge",
+    "site_inherit": "Global übernehmen ({{provider}})",
+    "site_inherit_none": "Global übernehmen (nicht gesetzt: HTTP-Challenge)",
+    "site_override": "Überschreiben: eigener Anbieter für diese Site",
+    "site_inherit_help": "Nutzt den DNS-Anbieter aus Einstellungen → DNS-Challenge, oder die HTTP-Challenge, wenn keiner gesetzt ist.",
+    "site_override_help": "Diese Site nutzt einen eigenen DNS-Anbieter mit eigenen Zugangsdaten. Neue Zugangsdaten zu speichern startet Caddy neu, weil Caddy sie nur beim Start liest.",
+    "site_wildcard_warning": "Wildcard-Zertifikate brauchen die DNS-Challenge. Setze einen DNS-Anbieter für diese Site oder unter Einstellungen → DNS-Challenge."
   }
 }

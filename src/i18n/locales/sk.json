@@ -1046,6 +1046,13 @@
     "validation_value": "Zadajte hodnotu pre každú novú voľbu.",
     "validation_provider": "Vyberte poskytovateľa DNS.",
     "restart_needed": "Reštartujte Caddy, aby načítal zmenené prihlasovacie údaje DNS. Opätovné načítanie nestačí: služba číta svoje prostredie len pri štarte.",
-    "restart_button": "Reštartovať Caddy"
+    "restart_button": "Reštartovať Caddy",
+    "site_label": "Výzva DNS",
+    "site_inherit": "Prevziať globálne ({{provider}})",
+    "site_inherit_none": "Prevziať globálne (nenastavené: výzva HTTP)",
+    "site_override": "Prepísať: vlastný poskytovateľ pre túto stránku",
+    "site_inherit_help": "Použije poskytovateľa DNS nastaveného v Nastavenia → Výzva DNS, alebo výzvu HTTP, ak nie je nastavený žiadny.",
+    "site_override_help": "Táto stránka používa vlastného poskytovateľa DNS a prihlasovacie údaje. Uloženie nových údajov reštartuje Caddy, pretože ich načíta len pri štarte.",
+    "site_wildcard_warning": "Certifikáty so zástupným znakom vyžadujú výzvu DNS. Nastavte poskytovateľa DNS pre túto stránku alebo v Nastavenia → Výzva DNS."
   }
 }

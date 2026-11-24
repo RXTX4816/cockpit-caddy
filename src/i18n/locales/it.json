@@ -1046,6 +1046,13 @@
     "validation_value": "Inserisci un valore per ogni nuova opzione.",
     "validation_provider": "Scegli un provider DNS.",
     "restart_needed": "Riavvia Caddy per caricare le credenziali DNS modificate. Ricaricare non basta: il servizio legge il suo ambiente solo all’avvio.",
-    "restart_button": "Riavvia Caddy"
+    "restart_button": "Riavvia Caddy",
+    "site_label": "Sfida DNS",
+    "site_inherit": "Eredita globale ({{provider}})",
+    "site_inherit_none": "Eredita globale (non impostato: sfida HTTP)",
+    "site_override": "Sovrascrivi: provider proprio per questo sito",
+    "site_inherit_help": "Usa il provider DNS impostato in Impostazioni → Sfida DNS, oppure la sfida HTTP se non ce n'è uno.",
+    "site_override_help": "Questo sito usa un proprio provider DNS e credenziali proprie. Salvare nuove credenziali riavvia Caddy, che le legge solo all'avvio.",
+    "site_wildcard_warning": "I certificati wildcard richiedono la sfida DNS. Imposta un provider DNS per questo sito o in Impostazioni → Sfida DNS."
   }
 }

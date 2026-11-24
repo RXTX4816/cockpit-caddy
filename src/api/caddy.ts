@@ -1,6 +1,6 @@
 import type { CaddyConfig, CaddyHandler, CaddyReverseProxyHandler, CaddyRoute, CaddyServer, CaddyTLSClientAuthentication, CaddyTLSConnectionPolicy, ProxyEntry } from "./types";
 import { readFile as fsReadFile, writeFile as fsWriteFile } from "@rxtx4816/cockpit-plugin-base-react/lib/cockpit-fs";
-import { reloadService as reloadSystemdService } from "@rxtx4816/cockpit-plugin-base-react/systemd";
+import { reloadService as reloadSystemdService, restartService } from "@rxtx4816/cockpit-plugin-base-react/systemd";
 import { applyDnsSecrets, dnsEnviron } from "./dnsChallenge";
 import { i18n } from "@rxtx4816/cockpit-plugin-base-react/i18n";
 import { listConfDFiles, readCaddyfile, writeCaddyfile } from "./systemd";
@@ -773,6 +773,32 @@ export function parseConfTlsOnDemandMap(content: string): Record<string, boolean
   const result: Record<string, boolean> = {};
   for (const block of extractRawBlocksFromCaddyfile(content)) {
     if (block.raw.split("\n").some(l => l.trim() === "on_demand")) setBlockResult(result, block, true);
+  }
+  return result;
+}
+
+/** Returns address → the site's own DNS provider (#289), from `dns <provider>` in its `tls { }` block. */
+export function parseConfTlsDnsMap(content: string): Record<string, import("./types").DnsChallengeConfig> {
+  const result: Record<string, import("./types").DnsChallengeConfig> = {};
+  for (const block of extractRawBlocksFromCaddyfile(content)) {
+    const lines = block.raw.split("\n");
+    let depth = 0;
+    let tlsDepth = -1;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (tlsDepth >= 0 && depth === tlsDepth + 1) {
+        const m = line.match(/^dns\s+(\S.*)$/);
+        if (m) {
+          const { config, next } = parseDnsProviderDirective(m[1], lines, i);
+          if (config) setBlockResult(result, block, config);
+          i = next - 1;
+          continue;
+        }
+      }
+      if (/^tls(\s.*)?\{$/.test(line) && tlsDepth < 0) tlsDepth = depth;
+      depth += (line.match(/\{/g) ?? []).length - (line.match(/\}/g) ?? []).length;
+      if (tlsDepth >= 0 && depth <= tlsDepth) tlsDepth = -1;
+    }
   }
   return result;
 }
@@ -1791,7 +1817,7 @@ function buildLogCaddyLines(log: import("./types").AccessLogConfig): string[] {
  * that silent, order-dependent overwrite — hostless renewal window only comes from
  * the real global `renewal_window_ratio` Caddyfile option instead.
  */
-function buildTlsCaddyLines(p: Pick<ProxyEntry, "tls" | "tlsIssuer" | "tlsOnDemand" | "tlsAdvanced" | "mtls" | "customTls">, hostless: boolean): string[] {
+function buildTlsCaddyLines(p: Pick<ProxyEntry, "tls" | "tlsIssuer" | "tlsOnDemand" | "dnsChallenge" | "tlsAdvanced" | "mtls" | "customTls">, hostless: boolean): string[] {
   if (!p.tls) return [];
   const adv = p.tlsAdvanced;
   const mtls = p.mtls;
@@ -1829,7 +1855,9 @@ function buildTlsCaddyLines(p: Pick<ProxyEntry, "tls" | "tlsIssuer" | "tlsOnDema
   // issuer at all. It needs a public name, so a hostless site keeps the internal CA. The
   // internal-issuer settings (lifetime, renewal ratio) don't apply here.
   if (p.tlsIssuer === "acme" && !hostless) {
-    const policy = [...buildTlsPolicyBlockLines(adv, mtls), ...onDemandLines];
+    // #289: a site's own DNS provider; Caddy fills in the global acme_dns one only when unset.
+    const dnsLines = p.dnsChallenge?.provider ? dnsProviderLines("dns", p.dnsChallenge, "\t\t") : [];
+    const policy = [...buildTlsPolicyBlockLines(adv, mtls), ...onDemandLines, ...dnsLines];
     return policy.length ? ["\ttls {", ...policy, "\t}"] : [];
   }
 
@@ -5676,6 +5704,30 @@ async function writeGlobalOptions(opts: GlobalOptions): Promise<void> {
   }
   await fixAccessLogFileOwnership(patched);
   if (proxyConfPatched !== proxyConfDisk) await fixAccessLogFileOwnership(proxyConfPatched);
+}
+
+/**
+ * Runs a site save with its own DNS credentials (#289). New values go to the env file first
+ * and Caddy restarts, since it only reads that file at start: the reload that follows the
+ * save would otherwise provision the provider without them. A failed save puts the env file
+ * back as it was (#316), except after a CaddyApiError, when the Caddyfile is already saved.
+ * Variables the site no longer uses go once the save is through.
+ */
+export async function saveWithDnsSecrets<T>(
+  secrets: { set: Record<string, string>; remove: string[] } | undefined,
+  save: () => Promise<T>,
+): Promise<T> {
+  const applied = secrets && Object.keys(secrets.set).length ? await applyDnsSecrets(secrets.set, []) : null;
+  let result: T;
+  try {
+    if (applied?.changed && caddyManaged) await restartService("caddy");
+    result = await save();
+  } catch (e) {
+    if (!(e instanceof CaddyApiError)) await applied?.restore();
+    throw e;
+  }
+  if (secrets?.remove.length) await applyDnsSecrets({}, secrets.remove);
+  return result;
 }
 
 /** Read current global options from the main Caddyfile, merged with the metrics site

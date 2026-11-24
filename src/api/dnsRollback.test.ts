@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { mockSpawn, mockHttp, mockUser } from "../test/setup";
-import { syncGlobalOptions, CaddyfileError } from "./caddy";
+import { syncGlobalOptions, saveWithDnsSecrets, CaddyfileError, CaddyApiError } from "./caddy";
 import { DNS_ENV_PATH, DNS_DROPIN_PATH } from "./dnsChallenge";
 
 // #316: a Settings save that fails validation must leave dns.env as it was before the save.
@@ -75,5 +75,48 @@ describe("failed Settings save and the DNS env file (#316)", () => {
     const lastRm = all.map((c, i) => (c.startsWith("rm ") ? i : -1)).filter(i => i >= 0).pop()!;
     expect(all.slice(lastRm + 1)).toContain("systemctl daemon-reload");
     expect(all.join("\n")).not.toContain(SECRET);
+  });
+});
+
+describe("saveWithDnsSecrets: per-site credentials around a site save (#289)", () => {
+  const SITE_VAR = "CADDY_DNS_SITE_A_1_API_TOKEN";
+
+  it("writes the values, restarts Caddy before the save, and removes the old variables after it", async () => {
+    files[DNS_ENV_PATH] = 'CADDY_DNS_SITE_A_1_OLD="x"\n';
+    files[DNS_DROPIN_PATH] = "dropin";
+    const order: string[] = [];
+    mockSpawn.mock.calls.length = 0;
+    await saveWithDnsSecrets({ set: { [SITE_VAR]: SECRET }, remove: ["CADDY_DNS_SITE_A_1_OLD"] }, async () => {
+      order.push(...argvs());
+      order.push("save");
+    });
+    expect(files[DNS_ENV_PATH]).toBe(`${SITE_VAR}="${SECRET}"\n`);
+    const restartAt = order.findIndex(c => c.startsWith("systemctl restart"));
+    expect(restartAt).toBeGreaterThanOrEqual(0);
+    expect(restartAt).toBeLessThan(order.indexOf("save"));
+    expect(argvs().join("\n")).not.toContain(SECRET);
+  });
+
+  it("restores the env file when the save fails, and rethrows", async () => {
+    const before = `OTHER="keep"\n`;
+    files[DNS_ENV_PATH] = before;
+    files[DNS_DROPIN_PATH] = "dropin";
+    await expect(saveWithDnsSecrets({ set: { [SITE_VAR]: SECRET }, remove: [] }, async () => {
+      throw new CaddyfileError("bad");
+    })).rejects.toThrow("bad");
+    expect(files[DNS_ENV_PATH]).toBe(before);
+  });
+
+  it("keeps the values when only the API push failed (the Caddyfile is saved)", async () => {
+    await expect(saveWithDnsSecrets({ set: { [SITE_VAR]: SECRET }, remove: [] }, async () => {
+      throw new CaddyApiError("push failed");
+    })).rejects.toThrow();
+    expect(files[DNS_ENV_PATH]).toBe(`${SITE_VAR}="${SECRET}"\n`);
+  });
+
+  it("neither touches the env file nor restarts without credentials to change", async () => {
+    await saveWithDnsSecrets({ set: {}, remove: [] }, async () => {});
+    await saveWithDnsSecrets(undefined, async () => {});
+    expect(argvs()).toEqual([]);
   });
 });

@@ -1046,6 +1046,13 @@
     "validation_value": "Her yeni seçenek için bir değer girin.",
     "validation_provider": "Bir DNS sağlayıcısı seçin.",
     "restart_needed": "Değişen DNS kimlik bilgilerini yüklemek için Caddy'yi yeniden başlatın. Yeniden yükleme yetmez: hizmet ortamını yalnızca başlarken okur.",
-    "restart_button": "Caddy'yi yeniden başlat"
+    "restart_button": "Caddy'yi yeniden başlat",
+    "site_label": "DNS doğrulaması",
+    "site_inherit": "Genel ayarı devral ({{provider}})",
+    "site_inherit_none": "Genel ayarı devral (ayarlanmamış: HTTP doğrulaması)",
+    "site_override": "Geçersiz kıl: bu site için ayrı sağlayıcı",
+    "site_inherit_help": "Ayarlar → DNS doğrulaması altındaki DNS sağlayıcısını, ayarlanmamışsa HTTP doğrulamasını kullanır.",
+    "site_override_help": "Bu site kendi DNS sağlayıcısını ve kimlik bilgilerini kullanır. Yeni kimlik bilgilerini kaydetmek Caddy'yi yeniden başlatır, çünkü bunları yalnızca başlarken okur.",
+    "site_wildcard_warning": "Joker karakterli sertifikalar DNS doğrulaması gerektirir. Bu site için ya da Ayarlar → DNS doğrulaması altında bir DNS sağlayıcısı ayarlayın."
   }
 }

@@ -2,6 +2,7 @@ import { Checkbox, FormGroup, FormHelperText, FormSelect, FormSelectOption, Help
 import { useTranslation } from "react-i18next";
 import { externalHostList, tlsSubjectHost } from "../api";
 import type { ProxyEntry } from "../api";
+import { SiteDnsChallengeField, type SiteDns } from "./SiteDnsChallenge";
 
 /** Where a site's certificate comes from (#246). A certificate file set under the TLS
  *  settings section still overrides the issuer, as before. */
@@ -39,9 +40,12 @@ interface Props {
   /** Per-site on-demand TLS (#253); the checkbox shows while TLS is on, when a handler is given. */
   onDemand?: boolean;
   onOnDemandChange?: (v: boolean) => void;
+  /** Per-site DNS challenge (#289), shown under automatic HTTPS when given; `host` is the host field. */
+  dns?: SiteDns;
+  host?: string;
 }
 
-export function TlsModeField({ id, value, onChange, publicName, isDisabled, onDemand, onOnDemandChange }: Props) {
+export function TlsModeField({ id, value, onChange, publicName, isDisabled, onDemand, onOnDemandChange, dns, host }: Props) {
   const { t } = useTranslation();
   const help = value === "acme" ? t("tls_mode.acme_help")
     : value === "internal" ? (publicName ? t("tls_mode.internal_help") : t("tls_mode.acme_needs_name"))
@@ -69,6 +73,7 @@ export function TlsModeField({ id, value, onChange, publicName, isDisabled, onDe
           style={{ marginTop: "0.4rem" }}
         />
       )}
+      {value === "acme" && dns && <SiteDnsChallengeField id={`${id}-dns`} dns={dns} host={host} isDisabled={isDisabled} />}
     </FormGroup>
   );
 }

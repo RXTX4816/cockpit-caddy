@@ -18,7 +18,8 @@ import {
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
-import { readProxyConf, parseConfExternalAddresses, CaddyApiError, CaddyfileError, routeHosts, hostsConflict, normalizeExternalHost, formatExternalAddressPreview } from "../api";
+import { readProxyConf, parseConfExternalAddresses, CaddyApiError, CaddyfileError, saveWithDnsSecrets, routeHosts, hostsConflict, normalizeExternalHost, formatExternalAddressPreview } from "../api";
+import { useSiteDns } from "./SiteDnsChallenge";
 import { TlsModeField, hasPublicName, tlsModeOf, tlsModeToEntry, type TlsMode } from "./TlsModeField";
 import { EXTERNAL_ADDRESS_BUILTIN_SCHEMES } from "./externalAddressSchemes";
 import { externalHostFieldError } from "./externalHostField";
@@ -74,6 +75,7 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
   const publicName = hasPublicName(externalHost);
   const tlsMode: TlsMode = tlsModeChoice === "acme" && !publicName ? "internal" : tlsModeChoice;
   const [tlsOnDemand, setTlsOnDemand] = useState(!!proxy.tlsOnDemand);
+  const siteDns = useSiteDns(proxy.dnsChallenge, tlsMode === "acme");
   const tls = tlsMode !== "off";
 
   function portError(): string | null {
@@ -109,7 +111,7 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
     const hostErr = proxy.namedServerKey ? null : generalError();
     setExtHostErr(hostErr);
     const after = proxyTabStateFlags(tabState, !!hostErr || !!portErr || !!targetHostErr || !!targetPortErr);
-    const errorTab = firstTabWithError(after.hasError);
+    const errorTab = firstTabWithError(after.hasError) ?? (!proxy.namedServerKey && siteDns.error(externalHost, tlsMode === "acme") ? "general" : undefined);
     if (errorTab) {
       setActiveTab(errorTab);
       return;
@@ -226,7 +228,7 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
             />
 
             {!proxy.namedServerKey && (
-              <TlsModeField id="edit-tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isConfirming} onDemand={tlsOnDemand} onOnDemandChange={setTlsOnDemand} />
+              <TlsModeField id="edit-tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isConfirming} onDemand={tlsOnDemand} onOnDemandChange={setTlsOnDemand} dns={siteDns} host={externalHost} />
             )}
 
             <FormGroup label={t("add_proxy.field_compress")} fieldId="edit-compress">
@@ -256,6 +258,7 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
               isDisabled={isBusy}
               onClick={() => void saveConfirm.submit(async () => {
                 const port = parseInt(externalPort, 10);
+                const dns = siteDns.plan(externalHost, !proxy.namedServerKey && tlsMode === "acme");
                 const entry: ProxyEntry = {
                   ...proxy,
                   externalScheme: externalScheme || undefined,
@@ -269,6 +272,7 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
                   targetPort: parseInt(targetPort, 10),
                   ...(proxy.namedServerKey ? { tls } : tlsModeToEntry(tlsMode, externalHost)),
                   tlsOnDemand: tlsMode !== "off" && tlsOnDemand ? true : undefined,
+                  dnsChallenge: dns.config,
                   tlsSkipVerify: targetScheme === "https" ? tlsSkipVerify : false,
                   compress: compress || undefined,
                   label: label.trim() || undefined,
@@ -276,7 +280,7 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
                   imports,
                 };
                 try {
-                  await onSave(entry);
+                  await saveWithDnsSecrets(dns.secrets, () => onSave(entry));
                 } catch (e) {
                   if (e instanceof CaddyfileError) {
                     // Keep dialog open; error is shown via saveConfirm.error

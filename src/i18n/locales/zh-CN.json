@@ -1046,6 +1046,13 @@
     "validation_value": "请为每个新选项输入值。",
     "validation_provider": "请选择 DNS 提供商。",
     "restart_needed": "请重启 Caddy 以加载更改后的 DNS 凭据。重新加载不够：服务只在启动时读取环境变量。",
-    "restart_button": "重启 Caddy"
+    "restart_button": "重启 Caddy",
+    "site_label": "DNS 质询",
+    "site_inherit": "继承全局设置（{{provider}}）",
+    "site_inherit_none": "继承全局设置（未设置：HTTP 质询）",
+    "site_override": "覆盖：为此站点使用单独的提供商",
+    "site_inherit_help": "使用“设置 → DNS 质询”中设置的 DNS 提供商；未设置时使用 HTTP 质询。",
+    "site_override_help": "此站点使用自己的 DNS 提供商和凭据。保存新凭据会重启 Caddy，因为它只在启动时读取凭据。",
+    "site_wildcard_warning": "通配符证书需要 DNS 质询。请为此站点设置 DNS 提供商，或在“设置 → DNS 质询”中设置。"
   }
 }
