@@ -809,7 +809,9 @@
     "field_redirect_to": "Presmerovať na",
     "field_redirect_code": "Kód",
     "field_file_root": "Koreňový adresár súborov",
-    "field_file_root_help": "Caddy bude poskytovať {status_code}.html z tohto adresára (napr. /var/www/errors/404.html)"
+    "field_file_root_help": "Caddy bude poskytovať {status_code}.html z tohto adresára (napr. /var/www/errors/404.html)",
+    "replace_upstream": "Nahradiť aj vlastné chybové stránky aplikácie",
+    "replace_upstream_help": "Bez tejto voľby obslužné rutiny reagujú len na chyby, ktoré vyvolá samotný Caddy (nedostupný upstream, žiadna trasa). S ňou sa nahradia aj chybové odpovede aplikácie (JSON 404, 401 s výzvou na prihlásenie)."
   },
   "matchers": {
     "heading": "Matchery trasy",

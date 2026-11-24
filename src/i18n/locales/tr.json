@@ -809,7 +809,9 @@
     "field_redirect_to": "Yönlendirme hedefi",
     "field_redirect_code": "Kod",
     "field_file_root": "Dosya kök dizini",
-    "field_file_root_help": "Caddy bu dizinden {status_code}.html dosyasını sunar (ör. /var/www/errors/404.html)"
+    "field_file_root_help": "Caddy bu dizinden {status_code}.html dosyasını sunar (ör. /var/www/errors/404.html)",
+    "replace_upstream": "Uygulamanın kendi hata sayfalarını da değiştir",
+    "replace_upstream_help": "Bu olmadan işleyiciler yalnızca Caddy'nin kendi ürettiği hatalara yanıt verir (upstream kapalı, rota yok). Bununla uygulamanın hata yanıtları da (JSON 404, giriş isteyen 401) değiştirilir."
   },
   "matchers": {
     "heading": "Rota matcher'ları",

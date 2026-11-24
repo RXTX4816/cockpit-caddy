@@ -809,7 +809,9 @@
     "field_redirect_to": "Omleiden naar",
     "field_redirect_code": "Code",
     "field_file_root": "Hoofdmap van de bestanden",
-    "field_file_root_help": "Caddy serveert {status_code}.html uit deze map (bijv. /var/www/errors/404.html)"
+    "field_file_root_help": "Caddy serveert {status_code}.html uit deze map (bijv. /var/www/errors/404.html)",
+    "replace_upstream": "Ook de eigen foutpagina’s van de app vervangen",
+    "replace_upstream_help": "Zonder deze optie reageren de handlers alleen op fouten die Caddy zelf geeft (upstream onbereikbaar, geen route). Met deze optie worden ook foutantwoorden van de app vervangen (een JSON-404, een 401 die om inloggen vraagt)."
   },
   "matchers": {
     "heading": "Route-matchers",

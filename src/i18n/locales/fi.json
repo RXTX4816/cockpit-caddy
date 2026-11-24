@@ -809,7 +809,9 @@
     "field_redirect_to": "Ohjaa osoitteeseen",
     "field_redirect_code": "Koodi",
     "field_file_root": "Tiedostojen juurihakemisto",
-    "field_file_root_help": "Caddy tarjoilee tiedoston {status_code}.html tästä hakemistosta (esim. /var/www/errors/404.html)"
+    "field_file_root_help": "Caddy tarjoilee tiedoston {status_code}.html tästä hakemistosta (esim. /var/www/errors/404.html)",
+    "replace_upstream": "Korvaa myös sovelluksen omat virhesivut",
+    "replace_upstream_help": "Ilman tätä käsittelijät vastaavat vain Caddyn itse tuottamiin virheisiin (upstream ei vastaa, ei reittiä). Tämän kanssa myös sovelluksen virhevastaukset korvataan (JSON-404, kirjautumista pyytävä 401)."
   },
   "matchers": {
     "heading": "Reitin matcherit",

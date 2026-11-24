@@ -61,7 +61,8 @@ test('add response header (set) is visible in curl -I output', async ({ pluginPa
     expect(headers.toLowerCase()).toContain('x-e2e-response: resp-value');
 
     const conf = await readConf(page);
-    expect(conf).toContain('header X-E2E-Response "resp-value"');
+    // #255: deferred (`>`), so it replaces an upstream header of the same name after a reload.
+    expect(conf).toContain('header >X-E2E-Response "resp-value"');
   } finally {
     await spawnCmd(page, ['bash', '-c', `fuser -k ${targetPort}/tcp 2>&1; true`]);
   }
@@ -132,4 +133,48 @@ test('response headers persist across edit dialog reopen', async ({ pluginPage: 
   const modal2 = page.getByRole('dialog');
   await openSection(modal2, 'responseHeaders');
   await expect(modal2.getByText('X-Content-Type-Options: nosniff')).toBeVisible();
+});
+
+// #255: a plain `header Name value` in the Caddyfile isn't deferred, so after a reload the
+// upstream's own X-Frame-Options arrived next to the configured one. `>Name` replaces it.
+test('a set header replaces the upstream one after a reload: exactly one X-Frame-Options', async ({ pluginPage: page }) => {
+  const targetPort = 19265;
+  await spawnCmd(page, ['bash', '-c', `fuser -k ${targetPort}/tcp 2>&1; true`]);
+  await spawnCmd(page, ['bash', '-c', `cat > /tmp/e2e-xfo.py <<'PY'
+import http.server
+class H(http.server.BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header("X-Frame-Options", "SAMEORIGIN")
+        self.end_headers()
+        self.wfile.write(b"ok")
+http.server.HTTPServer(("127.0.0.1", ${targetPort}), H).serve_forever()
+PY
+nohup python3 /tmp/e2e-xfo.py >/tmp/e2e-xfo.log 2>&1 & disown`]);
+
+  try {
+    await waitForToolbar(page);
+    await page.getByRole('button', { name: /add proxy/i }).first().click();
+    const modal = page.getByRole('dialog');
+    await modal.getByLabel('External port').fill('19264');
+    await modal.getByLabel(/target host/i).fill('localhost');
+    await modal.locator('#target-port').fill(String(targetPort));
+    await modal.locator('#tls').selectOption('off');
+    await openSection(modal, 'responseHeaders');
+    await responseHeadersSection(modal).getByLabel('Header name').fill('X-Frame-Options');
+    await responseHeadersSection(modal).getByLabel('Value').fill('DENY');
+    await responseHeadersSection(modal).getByRole('button', { name: /^add$/i }).last().click();
+    await modal.getByRole('button', { name: /^add proxy$/i }).click();
+    await modal.getByRole('button', { name: /^confirm$/i }).click();
+    await expect(modal).not.toBeVisible({ timeout: 15000 });
+
+    await spawnCmd(page, ['systemctl', 'reload', 'caddy']);
+    await waitForListener(page, 'http://localhost:19264/');
+    await expect.poll(async () => {
+      const h = await spawnCmd(page, ['bash', '-c', `curl -s -o /dev/null -D - 'http://localhost:19264/'; true`]);
+      return h.toLowerCase().split('\n').filter(l => l.startsWith('x-frame-options:')).map(l => l.trim());
+    }, { timeout: 10000 }).toEqual(['x-frame-options: deny']);
+  } finally {
+    await spawnCmd(page, ['bash', '-c', `fuser -k ${targetPort}/tcp 2>&1; true`]);
+  }
 });

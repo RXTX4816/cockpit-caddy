@@ -31,6 +31,8 @@ export interface ProxyTabState {
   transport: TransportValues;
   accessLog: AccessLogValues;
   errorHandlers: ErrorHandlerConfig[];
+  /** The error handlers also replace the upstream app's own error pages (#255). */
+  replaceUpstreamErrors: boolean;
   serverTimeouts: ServerTimeoutValues;
   requestBodyMaxSize: string;
 }
@@ -53,6 +55,7 @@ export function emptyProxyTabState(): ProxyTabState {
     transport: { dialTimeout: "", responseHeaderTimeout: "" },
     accessLog: accessLogConfigToValues(undefined),
     errorHandlers: [],
+    replaceUpstreamErrors: false,
     serverTimeouts: { readTimeout: "", readHeaderTimeout: "", writeTimeout: "", idleTimeout: "", maxHeaderBytes: "", disableHttp3: false },
     requestBodyMaxSize: "",
   };
@@ -77,6 +80,7 @@ export function proxyTabStateFromEntry(p: ProxyEntry): ProxyTabState {
     transport: { dialTimeout: p.dialTimeout ?? "", responseHeaderTimeout: p.responseHeaderTimeout ?? "" },
     accessLog: accessLogConfigToValues(p.accessLog),
     errorHandlers: p.errorHandlers ?? [],
+    replaceUpstreamErrors: p.replaceUpstreamErrors ?? false,
     serverTimeouts: {
       readTimeout: p.serverReadTimeout ?? "",
       readHeaderTimeout: p.serverReadHeaderTimeout ?? "",
@@ -93,7 +97,7 @@ export type ProxyTabEntryFields = Pick<ProxyEntry,
   | "basicAuth" | "forwardAuth" | "tlsAdvanced" | "mtls" | "customTls"
   | "matchers" | "handlePath" | "rewrite" | "requestHeaders" | "responseHeaders" | "isNamedRoute" | "namedRouteName"
   | "extraUpstreams" | "lbPolicy" | "lbRetry" | "dialTimeout" | "responseHeaderTimeout"
-  | "accessLog" | "errorHandlers"
+  | "accessLog" | "errorHandlers" | "replaceUpstreamErrors"
   | "serverReadTimeout" | "serverReadHeaderTimeout" | "serverWriteTimeout" | "serverIdleTimeout" | "maxHeaderBytes" | "disableHttp3"
   | "requestBodyMaxSize">;
 
@@ -122,6 +126,7 @@ export async function proxyTabStateToEntry(s: ProxyTabState): Promise<ProxyTabEn
     responseHeaderTimeout: s.transport.responseHeaderTimeout.trim() || undefined,
     accessLog: accessLogValuesToConfig(s.accessLog),
     errorHandlers: s.errorHandlers.length ? s.errorHandlers : undefined,
+    replaceUpstreamErrors: (s.replaceUpstreamErrors && s.errorHandlers.length > 0) || undefined,
     serverReadTimeout: st.readTimeout.trim() || undefined,
     serverReadHeaderTimeout: st.readHeaderTimeout.trim() || undefined,
     serverWriteTimeout: st.writeTimeout.trim() || undefined,
@@ -148,6 +153,7 @@ function visibleState(s: ProxyTabState, layout: ProxyTabsLayout): ProxyTabState 
     ...s,
     forwardAuth: empty.forwardAuth, rewrite: empty.rewrite, isNamedRoute: empty.isNamedRoute, namedRouteName: empty.namedRouteName,
     extraUpstreams: empty.extraUpstreams, lbPolicy: empty.lbPolicy, lbRetry: empty.lbRetry, transport: empty.transport,
+    replaceUpstreamErrors: empty.replaceUpstreamErrors,
   };
 }
 

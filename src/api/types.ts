@@ -31,6 +31,9 @@ export interface CaddyRoute {
 
 export interface CaddyTLSClientAuthentication {
   mode?: string;
+  /** The trust pool (`trust_pool` in the Caddyfile); the plugin writes the `file` provider. */
+  ca?: { provider?: string; pem_files?: string[]; [key: string]: unknown };
+  /** Deprecated form, still read so configs pushed by older plugin versions open. */
   trusted_ca_certs_pem_files?: string[];
 }
 
@@ -421,6 +424,12 @@ export interface ProxyEntry {
   accessLog?: AccessLogConfig;
   /** Per-server error handlers (server.errors.routes) */
   errorHandlers?: ErrorHandlerConfig[];
+  /**
+   * The error handlers also replace the upstream app's own error responses (#255): the
+   * reverse_proxy re-raises upstream 4xx/5xx through `handle_response`. Off for new handlers;
+   * an existing config with that interception reads back as on.
+   */
+  replaceUpstreamErrors?: boolean;
   /** Forward authentication handler (delegates auth to an external service) */
   forwardAuth?: ForwardAuthConfig;
   /** Advanced TLS connection policy settings (protocol versions, cipher suites, curves) */
