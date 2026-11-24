@@ -3,11 +3,12 @@ import { proxyTabFlags, type ProxyTabValues } from "./proxyTabFlags";
 import { accessLogConfigToValues } from "./AccessLogSection";
 import { lbRetryConfigToValues } from "./LbRetrySection";
 import { tlsConfigToValues } from "./TlsSection";
+import { emptyLbArgs } from "./UpstreamsSection";
 
 const base: ProxyTabValues = {
   basicAuth: [], forwardAuth: undefined, forwardAuthError: null, tlsValues: tlsConfigToValues(undefined, undefined),
   matchers: undefined, rewrite: undefined, requestHeaders: undefined, responseHeaders: undefined, isNamedRoute: false,
-  extraUpstreams: [], lbPolicy: "", lbRetry: lbRetryConfigToValues(undefined), transport: { dialTimeout: "", responseHeaderTimeout: "" },
+  extraUpstreams: [], lbPolicy: "", lbArgs: emptyLbArgs(), lbRetry: lbRetryConfigToValues(undefined), transport: { dialTimeout: "", responseHeaderTimeout: "" },
   accessLog: accessLogConfigToValues(undefined), errorHandlers: [],
   serverTimeouts: { readTimeout: "", readHeaderTimeout: "", writeTimeout: "", idleTimeout: "", maxHeaderBytes: "", disableHttp3: false },
   requestBodyMaxSize: "",
@@ -38,5 +39,13 @@ describe("proxyTabFlags", () => {
   it("errors mark their tab", () => {
     const flags = proxyTabFlags({ ...base, forwardAuthError: "forward_auth.validation_uri_required", extraUpstreams: [{ host: "", port: "x" }] }, true);
     expect(flags.hasError).toEqual({ general: true, security: true, routing: false, upstreams: true, logging: false, limits: false });
+  });
+});
+
+describe("load-balancing arguments (#285)", () => {
+  it("a weight count that doesn't match the upstreams is an Upstreams error", () => {
+    const v = { ...base, extraUpstreams: [{ host: "a", port: "1" }], lbPolicy: "weighted_round_robin", lbArgs: { ...emptyLbArgs(), weights: ["1"] } };
+    expect(proxyTabFlags(v, false).hasError.upstreams).toBe(true);
+    expect(proxyTabFlags({ ...v, lbArgs: { ...emptyLbArgs(), weights: ["1", "2"] } }, false).hasError.upstreams).toBe(false);
   });
 });

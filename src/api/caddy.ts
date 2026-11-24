@@ -1466,12 +1466,55 @@ function buildUpstreamList(p: Pick<ProxyEntry, "targetScheme" | "targetHost" | "
   return [primary, ...extra];
 }
 
-const LB_POLICY_MAP: Record<string, string> = {
-  round_robin: "round_robin",
-  random: "random",
-  least_conn: "least_conn",
-  first: "first",
-};
+const LB_POLICIES: ReadonlySet<string> = new Set<import("./types").LbPolicy>([
+  "round_robin", "random", "least_conn", "first", "ip_hash", "client_ip_hash", "uri_hash",
+  "header", "cookie", "weighted_round_robin", "random_choose",
+]);
+
+type LbFields = Pick<ProxyEntry, "lbPolicy" | "lbPolicyArgs">;
+
+/** The `lb_policy` arguments (#285), Caddyfile tokens. */
+function lbPolicyTokens(p: LbFields): string[] {
+  const a = p.lbPolicyArgs ?? {};
+  switch (p.lbPolicy) {
+    case "header": return a.headerField ? [caddyQuote(a.headerField)] : [];
+    case "cookie":
+      if (a.cookieSecret) return [caddyQuote(a.cookieName || "lb"), caddyQuote(a.cookieSecret)];
+      return a.cookieName ? [caddyQuote(a.cookieName)] : [];
+    case "weighted_round_robin": return (a.weights ?? []).map(String);
+    case "random_choose": return a.chooseCount != null ? [String(a.chooseCount)] : [];
+    default: return [];
+  }
+}
+
+/** `load_balancing.selection_policy` as Caddy's adapter writes it for the policy (#285). */
+function lbSelectionPolicyJson(p: LbFields): Record<string, unknown> {
+  const a = p.lbPolicyArgs ?? {};
+  const out: Record<string, unknown> = { policy: p.lbPolicy };
+  if (p.lbPolicy === "header" && a.headerField) out.field = a.headerField;
+  if (p.lbPolicy === "cookie") {
+    if (a.cookieName || a.cookieSecret) out.name = a.cookieName || "lb";
+    if (a.cookieSecret) out.secret = a.cookieSecret;
+  }
+  if (p.lbPolicy === "weighted_round_robin" && a.weights?.length) out.weights = a.weights;
+  if (p.lbPolicy === "random_choose" && a.chooseCount != null) out.choose = a.chooseCount;
+  return out;
+}
+
+/** The policy and its arguments from `selection_policy` JSON; unknown policies come back undefined. */
+function parseLbSelectionPolicy(sp: Record<string, unknown> | undefined): LbFields {
+  const policy = typeof sp?.policy === "string" && LB_POLICIES.has(sp.policy) ? sp.policy as import("./types").LbPolicy : undefined;
+  if (!policy || !sp) return {};
+  const args: import("./types").LbPolicyArgs = {};
+  if (policy === "header" && typeof sp.field === "string") args.headerField = sp.field;
+  if (policy === "cookie") {
+    if (typeof sp.name === "string" && (sp.name !== "lb" || typeof sp.secret === "string")) args.cookieName = sp.name;
+    if (typeof sp.secret === "string") args.cookieSecret = sp.secret;
+  }
+  if (policy === "weighted_round_robin" && Array.isArray(sp.weights)) args.weights = sp.weights as number[];
+  if (policy === "random_choose" && typeof sp.choose === "number") args.chooseCount = sp.choose;
+  return Object.keys(args).length ? { lbPolicy: policy, lbPolicyArgs: args } : { lbPolicy: policy };
+}
 
 /** Builds the reverse_proxy directive lines for a proxy (tab-indented). */
 function buildLbRetryLines(lbRetry: import("./types").LbRetryConfig | undefined): string[] {
@@ -1497,7 +1540,7 @@ function buildLbRetryLines(lbRetry: import("./types").LbRetryConfig | undefined)
 }
 
 function buildReverseProxyLines(
-  p: Pick<ProxyEntry, "targetScheme" | "targetHost" | "targetPort" | "tlsSkipVerify" | "requestHeaders" | "dialTimeout" | "responseHeaderTimeout" | "extraUpstreams" | "lbPolicy" | "lbRetry" | "replaceUpstreamErrors">,
+  p: Pick<ProxyEntry, "targetScheme" | "targetHost" | "targetPort" | "tlsSkipVerify" | "requestHeaders" | "dialTimeout" | "responseHeaderTimeout" | "extraUpstreams" | "lbPolicy" | "lbPolicyArgs" | "lbRetry" | "replaceUpstreamErrors">,
   errorHandlers?: import("./types").ErrorHandlerConfig[],
 ): string[] {
   const upstreams = buildUpstreamList(p);
@@ -1507,8 +1550,8 @@ function buildReverseProxyLines(
   });
 
   const transportLines = buildTransportLines(p);
-  const lbLines = (p.lbPolicy && upstreams.length > 1 && LB_POLICY_MAP[p.lbPolicy])
-    ? [`\t\tlb_policy ${LB_POLICY_MAP[p.lbPolicy]}`]
+  const lbLines = (p.lbPolicy && upstreams.length > 1 && LB_POLICIES.has(p.lbPolicy))
+    ? [[`\t\tlb_policy`, p.lbPolicy, ...lbPolicyTokens(p)].join(" ")]
     : [];
   const lbRetryLines = buildLbRetryLines(p.lbRetry);
 
@@ -2735,8 +2778,9 @@ function parseRouteToEntry(
     const c = d.lastIndexOf(":");
     return { host: c > 0 ? d.slice(0, c) : d, port: c > 0 ? parseInt(d.slice(c + 1), 10) : 80 };
   });
-  const lbRaw = (rp.load_balancing as { selection_policy?: { policy?: string } } | undefined)?.selection_policy?.policy;
-  const lbPolicy = (lbRaw && lbRaw in LB_POLICY_MAP) ? lbRaw as import("./types").LbPolicy : undefined;
+  const { lbPolicy, lbPolicyArgs } = parseLbSelectionPolicy(
+    (rp.load_balancing as { selection_policy?: Record<string, unknown> } | undefined)?.selection_policy,
+  );
   const lbRetry = parseLbRetry(rp);
 
   const targetScheme: "http" | "https" = rp.transport?.tls !== undefined ? "https" : "http";
@@ -2792,6 +2836,7 @@ function parseRouteToEntry(
     responseHeaders: responseHeadersParsed.length ? responseHeadersParsed : undefined,
     extraUpstreams: extraUpstreams.length ? extraUpstreams : undefined,
     lbPolicy,
+    lbPolicyArgs,
     lbRetry,
     matchers,
     handlePath,
@@ -3040,7 +3085,7 @@ function parseResponseHeadersJson(h: AnyHandler): import("./types").HeaderOperat
 const UPSTREAM_ERROR_MESSAGE = "upstream error";
 
 function buildReverseProxyHandler(
-  proxy: Pick<ProxyEntry, "targetHost" | "targetPort" | "targetScheme" | "tlsSkipVerify" | "requestHeaders" | "dialTimeout" | "responseHeaderTimeout" | "extraUpstreams" | "lbPolicy" | "lbRetry" | "replaceUpstreamErrors">,
+  proxy: Pick<ProxyEntry, "targetHost" | "targetPort" | "targetScheme" | "tlsSkipVerify" | "requestHeaders" | "dialTimeout" | "responseHeaderTimeout" | "extraUpstreams" | "lbPolicy" | "lbPolicyArgs" | "lbRetry" | "replaceUpstreamErrors">,
   errorHandlers?: import("./types").ErrorHandlerConfig[],
 ): CaddyReverseProxyHandler {
   const primaryDial = `${proxy.targetHost}:${proxy.targetPort}`;
@@ -3053,8 +3098,8 @@ function buildReverseProxyHandler(
   if (transport) rp.transport = transport;
   const hdrs = buildRequestHeadersJson(proxy.requestHeaders);
   if (hdrs) rp.headers = hdrs;
-  if (proxy.lbPolicy && (proxy.extraUpstreams?.length ?? 0) > 0 && LB_POLICY_MAP[proxy.lbPolicy]) {
-    rp.load_balancing = { selection_policy: { policy: proxy.lbPolicy } };
+  if (proxy.lbPolicy && (proxy.extraUpstreams?.length ?? 0) > 0 && LB_POLICIES.has(proxy.lbPolicy)) {
+    rp.load_balancing = { selection_policy: lbSelectionPolicyJson(proxy) };
   }
   const lbRetry = proxy.lbRetry;
   if (lbRetry?.retries != null || lbRetry?.tryDuration || lbRetry?.tryInterval) {

@@ -6,7 +6,7 @@ import { lbRetryConfigToValues, lbRetryValuesToConfig, type LbRetryValues } from
 import type { ServerTimeoutValues } from "./ServerTimeoutsSection";
 import { tlsConfigToValues, tlsValuesToAdvanced, tlsValuesToCustomTls, tlsValuesToMtls, type TlsValues } from "./TlsSection";
 import type { TransportValues } from "./TransportSection";
-import type { ExtraUpstream } from "./UpstreamsSection";
+import { emptyLbArgs, lbArgsFromValues, lbArgsToValues, type ExtraUpstream, type LbArgsValues } from "./UpstreamsSection";
 import { validateForwardAuth } from "./ForwardAuthSection";
 import { proxyTabFlags, type TabFlags } from "./proxyTabFlags";
 
@@ -27,6 +27,8 @@ export interface ProxyTabState {
   namedRouteName: string;
   extraUpstreams: ExtraUpstream[];
   lbPolicy: LbPolicy | "";
+  /** The policy's arguments (#285). */
+  lbArgs: LbArgsValues;
   lbRetry: LbRetryValues;
   transport: TransportValues;
   accessLog: AccessLogValues;
@@ -51,6 +53,7 @@ export function emptyProxyTabState(): ProxyTabState {
     namedRouteName: "",
     extraUpstreams: [],
     lbPolicy: "",
+    lbArgs: emptyLbArgs(),
     lbRetry: lbRetryConfigToValues(undefined),
     transport: { dialTimeout: "", responseHeaderTimeout: "" },
     accessLog: accessLogConfigToValues(undefined),
@@ -76,6 +79,7 @@ export function proxyTabStateFromEntry(p: ProxyEntry): ProxyTabState {
     namedRouteName: p.namedRouteName ?? "",
     extraUpstreams: (p.extraUpstreams ?? []).map(u => ({ host: u.host, port: String(u.port) })),
     lbPolicy: p.lbPolicy ?? "",
+    lbArgs: lbArgsToValues(p.lbPolicyArgs),
     lbRetry: lbRetryConfigToValues(p.lbRetry),
     transport: { dialTimeout: p.dialTimeout ?? "", responseHeaderTimeout: p.responseHeaderTimeout ?? "" },
     accessLog: accessLogConfigToValues(p.accessLog),
@@ -96,7 +100,7 @@ export function proxyTabStateFromEntry(p: ProxyEntry): ProxyTabState {
 export type ProxyTabEntryFields = Pick<ProxyEntry,
   | "basicAuth" | "forwardAuth" | "tlsAdvanced" | "mtls" | "customTls"
   | "matchers" | "handlePath" | "rewrite" | "requestHeaders" | "responseHeaders" | "isNamedRoute" | "namedRouteName"
-  | "extraUpstreams" | "lbPolicy" | "lbRetry" | "dialTimeout" | "responseHeaderTimeout"
+  | "extraUpstreams" | "lbPolicy" | "lbPolicyArgs" | "lbRetry" | "dialTimeout" | "responseHeaderTimeout"
   | "accessLog" | "errorHandlers" | "replaceUpstreamErrors"
   | "serverReadTimeout" | "serverReadHeaderTimeout" | "serverWriteTimeout" | "serverIdleTimeout" | "maxHeaderBytes" | "disableHttp3"
   | "requestBodyMaxSize">;
@@ -121,6 +125,7 @@ export async function proxyTabStateToEntry(s: ProxyTabState): Promise<ProxyTabEn
       ? s.extraUpstreams.map(u => ({ host: u.host.trim(), port: parseInt(u.port, 10) }))
       : undefined,
     lbPolicy: s.lbPolicy || undefined,
+    lbPolicyArgs: s.extraUpstreams.length ? lbArgsFromValues(s.lbPolicy, s.lbArgs) : undefined,
     lbRetry: lbRetryValuesToConfig(s.lbRetry),
     dialTimeout: s.transport.dialTimeout.trim() || undefined,
     responseHeaderTimeout: s.transport.responseHeaderTimeout.trim() || undefined,
@@ -152,7 +157,7 @@ function visibleState(s: ProxyTabState, layout: ProxyTabsLayout): ProxyTabState 
   return {
     ...s,
     forwardAuth: empty.forwardAuth, rewrite: empty.rewrite, isNamedRoute: empty.isNamedRoute, namedRouteName: empty.namedRouteName,
-    extraUpstreams: empty.extraUpstreams, lbPolicy: empty.lbPolicy, lbRetry: empty.lbRetry, transport: empty.transport,
+    extraUpstreams: empty.extraUpstreams, lbPolicy: empty.lbPolicy, lbArgs: empty.lbArgs, lbRetry: empty.lbRetry, transport: empty.transport,
     replaceUpstreamErrors: empty.replaceUpstreamErrors,
   };
 }

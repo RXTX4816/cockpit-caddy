@@ -764,3 +764,40 @@ describe.runIf(available || required)("static and PHP site options round-trip th
       .toContain("\troot * /srv/php\n\tphp_fastcgi localhost:9000\n\tfile_server\n}");
   });
 });
+
+describe.runIf(available || required)("every load-balancing policy round-trips (#285)", () => {
+  const extraUpstreams = [{ host: "localhost", port: 8001 }];
+  const cases: [string, Partial<ProxyEntry>, string][] = [
+    ["ip_hash", { lbPolicy: "ip_hash" }, "lb_policy ip_hash"],
+    ["client_ip_hash", { lbPolicy: "client_ip_hash" }, "lb_policy client_ip_hash"],
+    ["uri_hash", { lbPolicy: "uri_hash" }, "lb_policy uri_hash"],
+    ["header", { lbPolicy: "header", lbPolicyArgs: { headerField: "X-User" } }, "lb_policy header X-User"],
+    ["cookie, defaults", { lbPolicy: "cookie" }, "lb_policy cookie\n"],
+    ["cookie, name", { lbPolicy: "cookie", lbPolicyArgs: { cookieName: "sid" } }, "lb_policy cookie sid\n"],
+    ["cookie, name and secret", { lbPolicy: "cookie", lbPolicyArgs: { cookieName: "sid", cookieSecret: "s3cr3t" } }, "lb_policy cookie sid s3cr3t"],
+    ["weighted_round_robin", { lbPolicy: "weighted_round_robin", lbPolicyArgs: { weights: [3, 1] } }, "lb_policy weighted_round_robin 3 1"],
+    ["random_choose", { lbPolicy: "random_choose", lbPolicyArgs: { chooseCount: 3 } }, "lb_policy random_choose 3"],
+  ];
+
+  it.each(cases)("%s", (_, policy, line) => {
+    const p = entry({ tls: false, externalPort: 8080, extraUpstreams, ...policy });
+    const conf = proxiesToCaddyfile([p]);
+    expect(conf).toContain(`\t\t${line}`);
+    const [back] = readBack(conf);
+    expect(back.lbPolicy).toBe(policy.lbPolicy);
+    expect(back.lbPolicyArgs).toEqual(policy.lbPolicyArgs);
+    // The plugin's own JSON push is what Caddy adapts the line to.
+    const adapted = adapt(conf).apps?.http?.servers;
+    const adaptedLb = JSON.stringify(Object.values(adapted ?? {})[0]).match(/"load_balancing":(\{[^}]*\}\})/)?.[1];
+    const pushedLb = JSON.stringify(buildServerEntry(p)).match(/"load_balancing":(\{[^}]*\}\})/)?.[1];
+    expect(JSON.parse(pushedLb!)).toEqual(JSON.parse(adaptedLb!));
+    const [pushedBack] = parseProxies({ apps: { http: { servers: { srv0: buildServerEntry(p) } } } });
+    expect(pushedBack.lbPolicyArgs).toEqual(policy.lbPolicyArgs);
+  });
+
+  it.each(["round_robin", "random", "least_conn", "first"] as const)("the old policy %s writes the same line", policy => {
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, extraUpstreams, lbPolicy: policy })]);
+    expect(conf).toContain(`\t\tlb_policy ${policy}\n`);
+    expect(readBack(conf)[0].lbPolicyArgs).toBeUndefined();
+  });
+});

@@ -312,7 +312,23 @@ export interface StaticResponseConfig {
   close?: boolean;
 }
 
-export type LbPolicy = "round_robin" | "random" | "least_conn" | "first";
+export type LbPolicy =
+  | "round_robin" | "random" | "least_conn" | "first"
+  | "ip_hash" | "client_ip_hash" | "uri_hash"
+  | "header" | "cookie" | "weighted_round_robin" | "random_choose";
+
+/** Arguments of the load-balancing policies that take some (#285). */
+export interface LbPolicyArgs {
+  /** `header <field>`: the request header whose value picks the upstream. */
+  headerField?: string;
+  /** `cookie [<name> [<secret>]]`: sticky sessions. Caddy's default name is `lb`. */
+  cookieName?: string;
+  cookieSecret?: string;
+  /** `weighted_round_robin`: one weight per upstream, the main target first. */
+  weights?: number[];
+  /** `random_choose <n>`. */
+  chooseCount?: number;
+}
 
 /** reverse_proxy retry/failover tuning (#156) — how many times, for how long, and how
  *  often to retry a different upstream after a failed connection, plus passive and active
@@ -413,6 +429,8 @@ export interface ProxyEntry {
   extraUpstreams?: Array<{ host: string; port: number }>;
   /** Load-balancing policy when multiple upstreams are configured */
   lbPolicy?: LbPolicy;
+  /** Arguments of lbPolicy, when it takes any (#285). */
+  lbPolicyArgs?: LbPolicyArgs;
   /** Retry/failover tuning (#156) — applies even with a single upstream. */
   lbRetry?: LbRetryConfig;
   /** Incoming connection timeouts (Go duration strings e.g. "30s", "5m") */
