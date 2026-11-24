@@ -4,11 +4,7 @@ import {
   AlertActionCloseButton,
   Button,
   Content,
-  DataList,
-  DataListCell,
-  DataListItem,
-  DataListItemCells,
-  DataListItemRow,
+  Divider,
   Dropdown,
   DropdownItem,
   DropdownList,
@@ -16,7 +12,6 @@ import {
   EmptyStateBody,
   EmptyStateFooter,
   Gallery,
-  Label,
   MenuToggle,
   MenuToggleAction,
   Modal,
@@ -44,7 +39,6 @@ import {
   type LayoutOption,
 } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { useLayout, useLocalStorage } from "@rxtx4816/cockpit-plugin-base-react";
-import { TlsBadge } from "./TlsBadge";
 import { tlsModeOf } from "./TlsModeField";
 import { AddProxyDialog } from "./AddProxyDialog";
 import { AddRedirectDialog } from "./AddRedirectDialog";
@@ -61,14 +55,12 @@ import { AddServerDialog } from "./AddServerDialog";
 import { EditServerDialog } from "./EditServerDialog";
 import { ServerDetailPanel } from "./ServerDetailPanel";
 import { ProxyCard } from "./ProxyCard";
-import { RowActions } from "./RowActions";
+import { ProxyRows } from "./ProxyRows";
+import { useIsNarrow } from "./useIsNarrow";
 import { useProxies } from "../hooks/useProxies";
 import { SnippetsContext } from "./SnippetImportsField";
 import { useUpstreamProbe } from "../hooks/useUpstreamProbe";
-import { UpstreamStatusDot } from "./UpstreamStatusDot";
-import { buildRouteUrl } from "./routeUrl";
 import type { ProxyEntry, ServerDef } from "../api";
-import { formatExternalHostPort } from "../api";
 import { proxyTabStateFromEntry } from "./proxyTabState";
 
 type ProxyLayout = "list" | "card";
@@ -87,178 +79,6 @@ function extractLogsSearch(message: string): string {
 
 // Pending action that the gate modal is guarding
 type GateAction = "add" | { type: "edit"; proxy: ProxyEntry } | { type: "delete"; proxy: ProxyEntry };
-
-type EntryTypeColor = "blue" | "purple" | "teal" | "grey" | "green" | "red" | "orange";
-interface EntryType { label: string; color: EntryTypeColor }
-function entryType(proxy: ProxyEntry, t: (k: string) => string): EntryType {
-  if (proxy.redirect) return { label: t("proxies.type_redirect"), color: "purple" };
-  if (proxy.fileServer) return { label: t("proxies.type_static"), color: "green" };
-  if (proxy.staticResponse) return { label: t("proxies.type_respond"), color: "orange" };
-  if (proxy.phpFastcgi) return { label: t("proxies.type_php"), color: "teal" };
-  return { label: t("proxies.type_proxy"), color: "blue" };
-}
-
-/**
- * The badges next to a site's address (#259): TLS issuer when it isn't plain HTTP, and the
- * settings worth knowing at a glance. Nothing at all when there's nothing to say.
- */
-export function SiteBadges({ proxy }: { proxy: ProxyEntry }) {
-  const { t } = useTranslation();
-  const chips: { label: string; color: EntryTypeColor }[] = [];
-  if (proxy.redirect) {
-    chips.push({ label: String(proxy.redirect.code), color: "purple" });
-  }
-  if (proxy.staticResponse?.close) {
-    chips.push({ label: t("proxies.indicator_close"), color: "grey" });
-  }
-  if (!proxy.fileServer && !proxy.redirect && proxy.tlsSkipVerify) chips.push({ label: t("proxies.tls_skip_verify"), color: "orange" });
-  if (proxy.rewrite) chips.push({ label: t(`rewrite.type_${proxy.rewrite.type}`), color: "teal" });
-  if (proxy.fileServer?.browse) chips.push({ label: t("proxies.indicator_browse"), color: "teal" });
-  if (proxy.compress) chips.push({ label: t("proxies.indicator_compress"), color: "teal" });
-  if (proxy.basicAuth?.length) chips.push({ label: t("proxies.indicator_auth"), color: "red" });
-  if (proxy.forwardAuth) chips.push({ label: t("forward_auth.indicator"), color: "purple" });
-  if (proxy.dialTimeout ?? proxy.responseHeaderTimeout) chips.push({ label: t("proxies.indicator_timeouts"), color: "grey" });
-  if (proxy.accessLog) chips.push({ label: t("access_log.indicator"), color: "teal" });
-  if (proxy.serverReadTimeout ?? proxy.serverReadHeaderTimeout ?? proxy.serverWriteTimeout ?? proxy.serverIdleTimeout ?? proxy.maxHeaderBytes ?? proxy.requestBodyMaxSize) chips.push({ label: t("proxies.indicator_limits"), color: "grey" });
-  if (proxy.extraUpstreams?.length) chips.push({ label: t("proxies.indicator_lb"), color: "blue" });
-  if (proxy.mtls) chips.push({ label: t("tls_policy.indicator_mtls"), color: "orange" });
-  if (proxy.tlsAdvanced) chips.push({ label: t("tls_policy.indicator_advanced"), color: "grey" });
-  if (proxy.matchers) chips.push({ label: t("proxies.indicator_matcher"), color: "teal" });
-  if (proxy.isNamedRoute) chips.push({ label: t("proxies.indicator_named_route"), color: "purple" });
-  for (const name of proxy.imports ?? []) chips.push({ label: name, color: "blue" });
-  const showTls = proxy.tls && !proxy.redirect;
-  if (!showTls && chips.length === 0) return null;
-  return (
-    <span style={{ display: "inline-flex", gap: "0.2rem", flexWrap: "nowrap", verticalAlign: "middle" }}>
-      {showTls && <TlsBadge proxy={proxy} />}
-      {chips.map(c => (
-        <Label key={c.label} isCompact color={c.color} variant="outline">{c.label}</Label>
-      ))}
-    </span>
-  );
-}
-
-/** Cells stay one line high (#259); long content is cut with an ellipsis. */
-const ONE_LINE = { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } as const;
-
-function HeaderRow() {
-  const { t } = useTranslation();
-  return (
-    <DataListItem aria-labelledby="proxy-list-header" style={{ background: "var(--pf-v6-global--BackgroundColor--200)", color: "var(--pf-v6-global--Color--100)" }}>
-      <DataListItemRow>
-        <DataListItemCells
-          dataListCells={[
-            <DataListCell key="label" width={2}><strong>{t("proxies.col_label")}</strong></DataListCell>,
-            <DataListCell key="type" width={1}><strong>{t("proxies.col_type")}</strong></DataListCell>,
-            <DataListCell key="port" width={4}><strong>{t("proxies.col_address")}</strong></DataListCell>,
-            <DataListCell key="target" width={3}><strong>{t("proxies.col_target")}</strong></DataListCell>,
-            <DataListCell key="actions" width={1} style={{ textAlign: "end" }}><strong>{t("proxies.col_actions")}</strong></DataListCell>,
-          ]}
-        />
-      </DataListItemRow>
-    </DataListItem>
-  );
-}
-
-function ProxyRow({ proxy, onEdit, onDelete, onDuplicate, probeStatuses, servers }: {
-  proxy: ProxyEntry;
-  onEdit: (p: ProxyEntry) => void;
-  onDelete: (p: ProxyEntry) => void;
-  onDuplicate: (p: ProxyEntry) => void;
-  probeStatuses: Map<string, import("../api/probe").ProbeStatus>;
-  servers: ServerDef[];
-}) {
-  const { t } = useTranslation();
-  const proto = proxy.tls ? "https" : "http";
-  const url = buildRouteUrl(proto, proxy.externalPort, proxy);
-  const serverName = proxy.namedServerKey
-    ? (servers.find(s => s.key === proxy.namedServerKey)?.name ?? proxy.namedServerKey)
-    : null;
-
-  return (
-    <DataListItem aria-labelledby={`proxy-${proxy.id}`}>
-      <DataListItemRow>
-        <DataListItemCells
-          dataListCells={[
-            <DataListCell key="label" width={2} style={ONE_LINE}>
-              {proxy.label
-                ? <strong style={{ fontSize: "1.05em" }}>{proxy.label}</strong>
-                : <span style={{ color: "var(--pf-v6-global--Color--200)" }}>—</span>}
-            </DataListCell>,
-            <DataListCell key="type" width={1}>
-              {(() => { const et = entryType(proxy, t); return <Label color={et.color} isCompact>{et.label}</Label>; })()}
-            </DataListCell>,
-            <DataListCell key="port" width={4} style={ONE_LINE}>
-              <a
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-                id={`proxy-${proxy.id}`}
-                style={{ fontFamily: "monospace", fontWeight: "bold" }}
-              >
-                {formatExternalHostPort(proxy)}
-                {proxy.matchers?.path?.[0] ? proxy.matchers.path[0].replace(/\*$/, "…") : ""}
-              </a>
-              {serverName && (
-                <Label
-                  isCompact
-                  color="green"
-                  variant="outline"
-                  style={{ marginLeft: "0.35rem", fontSize: "0.75em", verticalAlign: "middle" }}
-                >
-                  {serverName}
-                </Label>
-              )}
-              {" "}
-              <SiteBadges proxy={proxy} />
-            </DataListCell>,
-            <DataListCell key="target" width={3} style={ONE_LINE}>
-              {proxy.redirect ? (
-                <code style={{ fontSize: "0.85em" }}>{proxy.redirect.to}</code>
-              ) : proxy.staticResponse ? (
-                <code style={{ fontSize: "0.85em" }}>{proxy.staticResponse.statusCode}{proxy.staticResponse.body ? ` "${proxy.staticResponse.body.slice(0, 30)}${proxy.staticResponse.body.length > 30 ? "…" : ""}"` : ""}</code>
-              ) : proxy.fileServer ? (
-                <code style={{ fontSize: "0.85em" }}>{proxy.fileServer.root}</code>
-              ) : proxy.phpFastcgi ? (
-                <code style={{ fontSize: "0.85em" }}>{proxy.phpFastcgi.upstream}</code>
-              ) : (
-                <span style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", flexWrap: "nowrap" }}>
-                  {(() => {
-                    const primaryKey = `${proxy.targetHost}:${proxy.targetPort}`;
-                    const primaryStatus = probeStatuses.get(primaryKey);
-                    const primaryAddr = `${proxy.targetScheme}://${proxy.targetHost}:${proxy.targetPort}`;
-                    return (
-                      <>
-                        {primaryStatus !== undefined && (
-                          <UpstreamStatusDot status={primaryStatus} address={primaryAddr} />
-                        )}
-                        <code style={{ fontSize: "0.85em" }}>{primaryAddr}</code>
-                        {(proxy.extraUpstreams ?? []).map(u => {
-                          const key = `${u.host}:${u.port}`;
-                          const status = probeStatuses.get(key);
-                          const addr = `${proxy.targetScheme}://${u.host}:${u.port}`;
-                          return (
-                            <span key={key} style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
-                              {status !== undefined && <UpstreamStatusDot status={status} address={addr} />}
-                              <code style={{ fontSize: "0.85em", color: "var(--pf-t--global--text--color--subtle)" }}>{addr}</code>
-                            </span>
-                          );
-                        })}
-                      </>
-                    );
-                  })()}
-                </span>
-              )}
-            </DataListCell>,
-            <DataListCell key="actions" width={1} style={{ textAlign: "end" }}>
-              <RowActions onEdit={() => onEdit(proxy)} onDuplicate={() => onDuplicate(proxy)} onDelete={() => onDelete(proxy)} />
-            </DataListCell>,
-          ]}
-        />
-      </DataListItemRow>
-    </DataListItem>
-  );
-}
 
 interface Props {
   onViewLogs?: (search: string) => void;
@@ -280,6 +100,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
   });
   const [probeConfirming, setProbeConfirming] = useState(false);
   const { statuses: probeStatuses, refresh: refreshProbe } = useUpstreamProbe(proxies, probeEnabled);
+  const narrow = useIsNarrow();
 
   function handleProbeToggle(_e: unknown, checked: boolean) {
     if (checked) {
@@ -572,14 +393,19 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
                     {!initialServerKey && (
                       <DropdownItem onClick={() => setShowAddPhp(true)}>{t("proxies.menu_php")}</DropdownItem>
                     )}
+                    {/* At phone width (#258) Add server joins this menu instead of its own button. */}
+                    {narrow && <Divider component="li" />}
+                    {narrow && <DropdownItem onClick={() => setShowAddServer(true)}>{t("servers.add_server")}</DropdownItem>}
                   </DropdownList>
                 </Dropdown>
               </ToolbarItem>
-              <ToolbarItem>
-                <Button variant="secondary" onClick={() => setShowAddServer(true)}>
-                  {t("servers.add_server")}
-                </Button>
-              </ToolbarItem>
+              {!narrow && (
+                <ToolbarItem>
+                  <Button variant="secondary" onClick={() => setShowAddServer(true)}>
+                    {t("servers.add_server")}
+                  </Button>
+                </ToolbarItem>
+              )}
               <ToolbarItem>
                 <CollapsibleSearch
                   value={search}
@@ -691,20 +517,15 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
               ))}
             </Gallery>
           ) : (
-            <DataList aria-label={t("proxies.title")} isCompact>
-              <HeaderRow />
-              {filtered.map(proxy => (
-                <ProxyRow
-                  key={proxy.id}
-                  proxy={proxy}
-                  onEdit={tryEdit}
-                  onDelete={tryDelete}
-                  onDuplicate={tryDuplicate}
-                  probeStatuses={probeStatuses}
-                  servers={servers}
-                />
-              ))}
-            </DataList>
+            <ProxyRows
+              proxies={filtered}
+              compact={narrow}
+              onEdit={tryEdit}
+              onDelete={tryDelete}
+              onDuplicate={tryDuplicate}
+              probeStatuses={probeStatuses}
+              servers={servers}
+            />
           )}
         </StackItem>
       </Stack>
