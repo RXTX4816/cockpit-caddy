@@ -8,7 +8,7 @@ import {
   surgicallyWriteProxy, surgicallyEditProxy, surgicallyRemoveBlock,
   migrateCaddyfile, isStockCaddyfile, mergeMigratedConfContent, writeRawProxyConf, writeRawProxyConfValidated,
   CaddyfileError,
-  writeFile, reloadCaddy, syncGlobalTimeouts,
+  writeFile, reloadCaddy, saveSiteConfig, ensureConfDDir,
   removeLegacyServerDefsFile, parseServerDefsFromConf,
   surgicallyWriteServerBlock, surgicallyRemoveServerBlock,
   mergeNamedServer, removeNamedServer,
@@ -317,7 +317,7 @@ export function useProxies() {
 
         const allRoutes = [...existingRoutes, newProxy];
         await ensureConfDImported();
-        await cockpit.spawn(["mkdir", "-p", "/etc/caddy/conf.d"], { superuser: "try" });
+        await ensureConfDDir();
         const current = await readProxyConf();
         await writeRawProxyConfValidated(surgicallyWriteServerBlock(current, updatedDef, allRoutes));
         await apply(mergeNamedServer(config, updatedDef, allRoutes));
@@ -355,14 +355,13 @@ export function useProxies() {
         ...proxies.filter(p => !(p.externalPort === newProxy.externalPort && hostsConflict(routeHosts(p), routeHosts(newProxy)))),
         newProxy,
       ];
-      // Validate + persist server-level timeouts in global Caddyfile first; throws CaddyfileError on failure.
-      await syncGlobalTimeouts(afterProxies);
       // Sequential: a stock Caddyfile's migration (#256) writes conf.d before it is read.
       await ensureConfDImported();
-      await cockpit.spawn(["mkdir", "-p", "/etc/caddy/conf.d"], { superuser: "try" });
+      await ensureConfDDir();
       const current = await readProxyConf();
       const written = surgicallyWriteProxy(current, newProxy);
-      await writeRawProxyConfValidated(written);
+      // Timeouts and conf.d are saved as one change: throws CaddyfileError, leaving both as they were.
+      await saveSiteConfig(afterProxies, written);
       noteConfSites(written);
       const newProxyKey = proxyAddressKeys(newProxy)[0];
       setLabels(prev => {
@@ -453,14 +452,12 @@ export function useProxies() {
       // coexisting on the same port via a distinct host (#139) must stay in the timeout-sync
       // input, or its own settings would be silently dropped.
       const afterProxies = [...proxies.filter(p => p.id !== originalProxy?.id), entry];
-      // Validate + persist server-level timeouts in global Caddyfile first; throws CaddyfileError on failure.
-      await syncGlobalTimeouts(afterProxies);
-
       await ensureConfDImported(); // before the read: may migrate a stock Caddyfile (#256)
       const current = await readProxyConf();
 
       const written = surgicallyEditProxy(current, originalProxy, entry);
-      await writeRawProxyConfValidated(written);
+      // Timeouts and conf.d are saved as one change: throws CaddyfileError, leaving both as they were.
+      await saveSiteConfig(afterProxies, written);
       noteConfSites(written);
 
       setLabels(prev => {
@@ -545,10 +542,9 @@ export function useProxies() {
 
       // Standalone route
       const remainingProxies = proxies.filter(p => p.id !== proxy.id);
-      await syncGlobalTimeouts(remainingProxies);
       const current = await readProxyConf();
       const written = surgicallyRemoveBlock(current, proxy.externalPort, routeHosts(proxy)?.join(", "));
-      await writeRawProxyConf(written);
+      await saveSiteConfig(remainingProxies, written);
       noteConfSites(written);
       const proxyKey = proxyAddressKeys(proxy)[0];
       setLabels(prev => { const n = { ...prev }; delete n[proxyKey]; return n; });
@@ -580,7 +576,7 @@ export function useProxies() {
         def = { ...def, tlsAdvanced: applyGlobalInternalLifetimeToServer(def, globalOpts.internalCertLifetime) };
       }
       await ensureConfDImported();
-      await cockpit.spawn(["mkdir", "-p", "/etc/caddy/conf.d"], { superuser: "try" });
+      await ensureConfDDir();
       const current = await readProxyConf();
       await writeRawProxyConfValidated(surgicallyWriteServerBlock(current, def, []));
       lastServersMutationAt.current = Date.now();
@@ -633,7 +629,7 @@ export function useProxies() {
     const content = mergeMigratedConfContent(existingConfD, newBlocks);
 
     await writeFile(CADDYFILE_BAK, caddyfileContent);
-    await cockpit.spawn(["mkdir", "-p", "/etc/caddy/conf.d"], { superuser: "try" });
+    await ensureConfDDir();
     await writeRawProxyConf(content);
     await writeCaddyfile(newCaddyfile);
     await reloadCaddy();

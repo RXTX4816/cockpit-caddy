@@ -1,4 +1,6 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { resetHost } from "@rxtx4816/cockpit-plugin-base-react/host";
+import { installFakeHost } from "@rxtx4816/cockpit-plugin-base-react/testing/host";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { TlsModeField, defaultTlsMode, tlsModeOf, tlsModeToEntry, hasPublicName } from "./TlsModeField";
 import { useSiteDns } from "./SiteDnsChallenge";
@@ -59,14 +61,10 @@ describe("on-demand TLS per site (#253)", () => {
 });
 
 describe("per-site DNS challenge (#289)", () => {
+  afterEach(() => resetHost());
   function stub(caddyfile: string, modules = "dns.providers.cloudflare\n") {
-    vi.stubGlobal("cockpit", {
-      spawn: (args: string[]) => {
-        const p = args[0] === "caddy" ? Promise.resolve(modules) : Promise.reject(new Error("no such file"));
-        return Object.assign(p, { input: () => {} });
-      },
-      file: (path: string) => ({ read: async () => (path === "/etc/caddy/Caddyfile" ? caddyfile : null) }),
-    });
+    const host = installFakeHost({ "/etc/caddy/Caddyfile": caddyfile });
+    host.onRun(["caddy", "list-modules"], modules);
   }
   const NO_GLOBAL = "{\n}\n";
   const GLOBAL = "{\n\tacme_dns hetzner {\n\t\tapi_token {env.CADDY_DNS_API_TOKEN}\n\t}\n}\n";

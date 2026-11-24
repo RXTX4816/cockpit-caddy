@@ -1,5 +1,7 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { mockSpawn } from "../test/setup";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { resetHost } from "@rxtx4816/cockpit-plugin-base-react/host";
+import type { FakeHost } from "@rxtx4816/cockpit-plugin-base-react/testing/host";
+import { installDnsHost } from "../test/dnsHost";
 import { buildGlobalOptionsPatch, parseGlobalOptions } from "./caddy";
 import {
   parseDnsProviders, dnsEnvVarName, formatEnvFile, parseEnvFile, applyDnsSecrets, DNS_ENV_PATH, DNS_DROPIN_PATH,
@@ -62,34 +64,17 @@ describe("credential env file", () => {
 });
 
 describe("applyDnsSecrets", () => {
-  let files: Record<string, string>;
-  beforeEach(() => {
-    files = {};
-    mockSpawn.mockReset();
-    mockSpawn.mockImplementation((args: string[]) => {
-      let input = "";
-      const p = Promise.resolve().then(() => {
-        const cmd = args.join(" ");
-        if (args[0] === "cat") {
-          if (!(args[2] in files)) throw new Error("missing");
-          return files[args[2]];
-        }
-        if (cmd.includes(`> ${DNS_ENV_PATH}.tmp`)) files[DNS_ENV_PATH] = input;
-        if (cmd.includes(`> ${DNS_DROPIN_PATH}`)) files[DNS_DROPIN_PATH] = input;
-        if (args[0] === "rm") for (const f of args.slice(2)) delete files[f];
-        return "";
-      });
-      return Object.assign(p, { input: (d: string) => { input = d; } });
-    });
-  });
+  let host: FakeHost;
+  beforeEach(() => { host = installDnsHost(); });
+  afterEach(() => resetHost());
 
-  const argvs = () => mockSpawn.mock.calls.map(c => (c[0] as string[]).join(" "));
+  const argvs = () => host.commands;
 
   it("writes values root-only through stdin, adds the drop-in and reloads systemd", async () => {
     const r = await applyDnsSecrets({ CADDY_DNS_API_TOKEN: "s3cr3t" }, []);
     expect(r.changed).toBe(true);
-    expect(files[DNS_ENV_PATH]).toBe('CADDY_DNS_API_TOKEN="s3cr3t"\n');
-    expect(files[DNS_DROPIN_PATH]).toContain(`EnvironmentFile=-${DNS_ENV_PATH}`);
+    expect(host.files.get(DNS_ENV_PATH)).toBe('CADDY_DNS_API_TOKEN="s3cr3t"\n');
+    expect(host.files.get(DNS_DROPIN_PATH)).toContain(`EnvironmentFile=-${DNS_ENV_PATH}`);
     const all = argvs().join("\n");
     expect(all).toContain("umask 077");
     expect(all).toContain(`chmod 600 ${DNS_ENV_PATH}`);
@@ -97,28 +82,28 @@ describe("applyDnsSecrets", () => {
     expect(all).toContain("systemctl daemon-reload");
     // The secret travels on stdin only, never in a command line.
     expect(all).not.toContain("s3cr3t");
-    for (const c of mockSpawn.mock.calls) expect((c[1] as { superuser?: string }).superuser).toBe("require");
+    for (const c of host.calls) expect(c.superuser).toBe("require");
   });
 
   it("keeps other variables and drops the removed ones", async () => {
-    files[DNS_ENV_PATH] = 'CADDY_DNS_SITE_X_TOKEN="keep"\nCADDY_DNS_API_TOKEN="old"\n';
-    files[DNS_DROPIN_PATH] = "x";
+    host.files.set(DNS_ENV_PATH, 'CADDY_DNS_SITE_X_TOKEN="keep"\nCADDY_DNS_API_TOKEN="old"\n');
+    host.files.set(DNS_DROPIN_PATH, "x");
     await applyDnsSecrets({}, ["CADDY_DNS_API_TOKEN"]);
-    expect(files[DNS_ENV_PATH]).toBe('CADDY_DNS_SITE_X_TOKEN="keep"\n');
+    expect(host.files.get(DNS_ENV_PATH)).toBe('CADDY_DNS_SITE_X_TOKEN="keep"\n');
   });
 
   it("removes the file and the drop-in when nothing is left", async () => {
-    files[DNS_ENV_PATH] = 'CADDY_DNS_API_TOKEN="old"\n';
-    files[DNS_DROPIN_PATH] = "x";
+    host.files.set(DNS_ENV_PATH, 'CADDY_DNS_API_TOKEN="old"\n');
+    host.files.set(DNS_DROPIN_PATH, "x");
     const r = await applyDnsSecrets({}, ["CADDY_DNS_API_TOKEN"]);
     expect(r.changed).toBe(true);
-    expect(files).toEqual({});
+    expect([...host.files.keys()]).toEqual([]);
     expect(argvs().join("\n")).toContain("systemctl daemon-reload");
   });
 
   it("changes nothing when there is nothing to set or remove", async () => {
-    files[DNS_ENV_PATH] = 'A="1"\n';
-    files[DNS_DROPIN_PATH] = "x";
+    host.files.set(DNS_ENV_PATH, 'A="1"\n');
+    host.files.set(DNS_DROPIN_PATH, "x");
     expect((await applyDnsSecrets({}, ["NOT_THERE"])).changed).toBe(false);
   });
 
