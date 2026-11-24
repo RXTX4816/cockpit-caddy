@@ -951,6 +951,7 @@
     "security": "Seguridad",
     "routing": "Enrutamiento",
     "upstreams": "Upstreams",
-    "logging": "Registro y errores"
+    "logging": "Registro y errores",
+    "limits": "Límites"
   }
 }

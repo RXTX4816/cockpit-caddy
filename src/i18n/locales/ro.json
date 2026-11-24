@@ -951,6 +951,7 @@
     "security": "Securitate",
     "routing": "Rutare",
     "upstreams": "Upstream-uri",
-    "logging": "Jurnale și erori"
+    "logging": "Jurnale și erori",
+    "limits": "Limite"
   }
 }

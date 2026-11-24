@@ -22,8 +22,8 @@ import { ExclamationCircleIcon } from "@patternfly/react-icons";
 import { useTranslation } from "react-i18next";
 import { FlatSectionsContext } from "./sectionLayout";
 
-export type ProxyTabKey = "general" | "security" | "routing" | "upstreams" | "logging";
-export const PROXY_TAB_ORDER: ProxyTabKey[] = ["general", "security", "routing", "upstreams", "logging"];
+export type ProxyTabKey = "general" | "security" | "routing" | "upstreams" | "logging" | "limits";
+export const PROXY_TAB_ORDER: ProxyTabKey[] = ["general", "security", "routing", "upstreams", "logging", "limits"];
 
 export interface ProxyTab {
   key: ProxyTabKey;
@@ -39,7 +39,7 @@ export function firstTabWithError(hasError: Record<ProxyTabKey, boolean>): Proxy
 }
 
 /**
- * The proxy dialog's tabs (#260): General, Security, Routing, Upstreams, Logging & errors. A tab
+ * The proxy dialog's tabs (#260): General, Security, Routing, Upstreams, Logging & errors, Limits (#292). A tab
  * shows a dot when something in it is configured and an error icon when it holds an error. The
  * sections inside render as plain field groups (FlatSectionsContext).
  */

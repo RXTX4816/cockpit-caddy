@@ -951,6 +951,7 @@
     "security": "Säkerhet",
     "routing": "Routing",
     "upstreams": "Upstreams",
-    "logging": "Loggning och fel"
+    "logging": "Loggning och fel",
+    "limits": "Gränser"
   }
 }

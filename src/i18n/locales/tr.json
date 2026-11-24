@@ -951,6 +951,7 @@
     "security": "Güvenlik",
     "routing": "Yönlendirme",
     "upstreams": "Upstream'ler",
-    "logging": "Günlükler ve hatalar"
+    "logging": "Günlükler ve hatalar",
+    "limits": "Sınırlar"
   }
 }

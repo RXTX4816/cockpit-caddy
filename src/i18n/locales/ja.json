@@ -951,6 +951,7 @@
     "security": "セキュリティ",
     "routing": "ルーティング",
     "upstreams": "アップストリーム",
-    "logging": "ログとエラー"
+    "logging": "ログとエラー",
+    "limits": "制限"
   }
 }

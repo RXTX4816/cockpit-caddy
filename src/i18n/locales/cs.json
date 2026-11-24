@@ -951,6 +951,7 @@
     "security": "Zabezpečení",
     "routing": "Směrování",
     "upstreams": "Upstreamy",
-    "logging": "Logování a chyby"
+    "logging": "Logování a chyby",
+    "limits": "Limity"
   }
 }

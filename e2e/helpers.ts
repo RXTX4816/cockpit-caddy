@@ -323,13 +323,13 @@ const SECTIONS = {
   upstreamTimeouts: { tab: 'Upstreams', toggle: /upstream timeouts/i },
   accessLog: { tab: 'Logging & errors', toggle: /access logging/i },
   errorHandlers: { tab: 'Logging & errors', toggle: /custom error handlers/i },
-  serverTimeouts: { tab: 'Logging & errors', toggle: /server timeouts/i },
+  serverTimeouts: { tab: 'Limits', toggle: /server timeouts/i },
 } as const;
 export type DialogSection = keyof typeof SECTIONS;
 
 /**
  * Show a settings section in a site dialog. The proxy dialogs put each section on a tab
- * (General, Security, Routing, Upstreams, Logging & errors); the other dialogs keep the
+ * (General, Security, Routing, Upstreams, Logging & errors, Limits); the other dialogs keep the
  * accordions, where this expands the section instead.
  */
 export async function openSection(modal: Locator, section: DialogSection): Promise<void> {

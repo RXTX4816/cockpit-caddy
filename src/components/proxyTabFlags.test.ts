@@ -25,11 +25,18 @@ describe("proxyTabFlags", () => {
     expect(dots({ basicAuth: [{ username: "a", password: "b" }] })).toEqual(["security"]);
     expect(dots({ matchers: { not: { path: ["/x"] } } })).toEqual(["routing"]);
     expect(dots({ transport: { dialTimeout: "5s", responseHeaderTimeout: "" } })).toEqual(["upstreams"]);
-    expect(dots({ requestBodyMaxSize: "1024" })).toEqual(["logging"]);
+    expect(dots({ errorHandlers: [{ matchType: "all", type: "respond", body: "x" }] })).toEqual(["logging"]);
+  });
+
+  // #292: server timeouts and the body size are limits, not logging.
+  it("server timeouts and the body size mark the Limits tab", () => {
+    expect(dots({ requestBodyMaxSize: "1024" })).toEqual(["limits"]);
+    expect(dots({ serverTimeouts: { ...base.serverTimeouts, idleTimeout: "2m" } })).toEqual(["limits"]);
+    expect(dots({ serverTimeouts: { ...base.serverTimeouts, disableHttp3: true } })).toEqual(["limits"]);
   });
 
   it("errors mark their tab", () => {
     const flags = proxyTabFlags({ ...base, forwardAuthError: "forward_auth.validation_uri_required", extraUpstreams: [{ host: "", port: "x" }] }, true);
-    expect(flags.hasError).toEqual({ general: true, security: true, routing: false, upstreams: true, logging: false });
+    expect(flags.hasError).toEqual({ general: true, security: true, routing: false, upstreams: true, logging: false, limits: false });
   });
 });

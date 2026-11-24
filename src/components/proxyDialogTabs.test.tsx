@@ -79,4 +79,19 @@ describe("proxy dialog tabs (#260)", () => {
     await waitFor(() => expect(onSave).toHaveBeenCalled());
     expect(onSave.mock.calls[0][0]).toMatchObject({ targetScheme: scheme, targetHost: "localhost", targetPort: 8000 });
   });
+
+  // #292: Limits is the sixth tab and holds server timeouts and the body size.
+  it("server timeouts and the body size sit on the Limits tab", () => {
+    const proxy: ProxyEntry = { ...base, serverIdleTimeout: "2m" };
+    render(<EditProxyDialog proxy={proxy} existingRoutes={[]} onSave={vi.fn()} onClose={() => {}} />);
+    expect(screen.getAllByRole("tab").map(t => t.textContent)).toEqual(["General", "Security", "Routing", "Upstreams", "Logging & errors", "Limits"]);
+    expect(hasDot("Limits")).toBe(true);
+    expect(hasDot("Logging & errors")).toBe(false);
+    fireEvent.click(tab("Limits"));
+    const panel = screen.getByRole("tabpanel");
+    expect(within(panel).getByRole("heading", { name: "Server Timeouts & Limits" })).toBeInTheDocument();
+    expect(panel.querySelector("#edit-proxy-request-body-max-size")).not.toBeNull();
+    fireEvent.click(tab("Logging & errors"));
+    expect(within(screen.getByRole("tabpanel")).queryByRole("heading", { name: "Server Timeouts & Limits" })).toBeNull();
+  });
 });

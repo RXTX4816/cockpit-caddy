@@ -89,7 +89,7 @@ Click **Add Proxy** in the toolbar.
 
 ### Tabs
 
-The Add and Edit Proxy dialogs split their settings into five tabs. A tab shows a small dot once something in it differs from the defaults, and an error icon when it holds an invalid value; **Add** / **Save** jumps to the first tab with an error. Inside a tab every section is shown open, there are no Clear / Defaults buttons, and a field that falls back to a Caddy default gets a **Reset to Caddy default** button (↶) once it holds a value. Empty fields show the default greyed out ("Default: 5m") or an example ("e.g. 8080").
+The Add and Edit Proxy dialogs split their settings into six tabs. A tab shows a small dot once something in it differs from the defaults, and an error icon when it holds an invalid value; **Add** / **Save** jumps to the first tab with an error. Inside a tab every section is shown open, there are no Clear / Defaults buttons, and a field that falls back to a Caddy default gets a **Reset to Caddy default** button (↶) once it holds a value. Empty fields show the default greyed out ("Default: 5m") or an example ("e.g. 8080").
 
 Sizes (max request body size, max header size) are entered as a number and a unit (bytes, KB, MB, GB) and stored in bytes.
 
@@ -99,7 +99,8 @@ Sizes (max request body size, max header size) are entered as a number and a uni
 | **Security** | HTTP Basic Auth, Forward Authentication, TLS Policy |
 | **Routing** | Route Matchers, URI Rewrite, Request Headers, Response Headers, named route (`invoke`) |
 | **Upstreams** | Additional Upstreams and load-balancing policy, Retry & Failover Tuning (including health checks), Upstream Timeouts |
-| **Logging & errors** | Access logging, Custom error handlers, Server Timeouts & Limits, Max request body size |
+| **Logging & errors** | Access logging, Custom error handlers |
+| **Limits** | Server Timeouts & Limits (read/write/idle timeouts, max header size, HTTP/3 opt-out), Max request body size |
 
 The static, redirect, respond and PHP dialogs keep the older layout: expandable sections, one open at a time, each with a **Clear** button (with confirm) and, where Caddy has defaults, a **Defaults** button that empties the fields.
 
