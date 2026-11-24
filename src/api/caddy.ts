@@ -4821,15 +4821,13 @@ export async function fetchPkiCa(): Promise<PkiCaInfo> {
 }
 
 export async function parseCertDetails(pem: string): Promise<CertDetails> {
-  // cockpit.spawn supports `input` at runtime; the TypeScript types omit it
-  const spawn = cockpit.spawn as (args: string[], opts: { input?: string; err?: string }) => Promise<string>;
-  const out = await spawn(
-    ["openssl", "x509", "-noout", "-dates", "-fingerprint", "-sha256"],
-    { input: pem, err: "out" },
-  );
+  // cockpit.spawn has no `input` option (#315): the PEM goes to openssl's stdin.
+  const proc = cockpit.spawn(["openssl", "x509", "-noout", "-dates", "-fingerprint", "-sha256"], { err: "out" });
+  proc.input(pem);
+  const out = await proc;
   const notBefore = out.match(/notBefore=(.+)/)?.[1]?.trim() ?? "";
   const notAfter = out.match(/notAfter=(.+)/)?.[1]?.trim() ?? "";
-  const fingerprint = out.match(/SHA256 Fingerprint=(.+)/)?.[1]?.trim() ?? "";
+  const fingerprint = out.match(/SHA256 Fingerprint=(.+)/i)?.[1]?.trim() ?? "";
   return { notBefore, notAfter, fingerprint };
 }
 
