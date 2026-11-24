@@ -2408,18 +2408,6 @@ export async function writeProxyConf(proxies: ProxyEntry[]): Promise<void> {
 
 type AnyHandler = { handler: string; routes?: Array<{ handle?: AnyHandler[]; [key: string]: unknown }>; [key: string]: unknown };
 
-/**
- * Detects Caddy's `php_fastcgi` Caddyfile-macro expansion from a group of routes (#35).
- * The macro isn't a single JSON handler — it expands into up to four separate routes
- * (a `vars` handler setting root, a trailing-slash redirect, a `rewrite`, and finally a
- * `reverse_proxy` with a `fastcgi` transport), verified empirically via `caddy adapt`
- * against a live instance. `routes` should be either a server's own top-level routes (the
- * hostless `:PORT { php_fastcgi ... }` case, where Caddy emits these 4 routes directly on
- * the server) or a `subroute` handler's inner routes (the host-matched case, where Caddy
- * wraps the same 4 routes in one subroute) — either shape preserves each route's own
- * `match`, which the generic subroute-flattening elsewhere in this file (which only
- * collects `.handle` arrays) would otherwise discard, losing the custom index filename.
- */
 type JsonRoute = { match?: Array<Record<string, unknown>>; handle?: AnyHandler[] };
 
 /**
@@ -2479,6 +2467,18 @@ function parseFileServerOptions(
   return out;
 }
 
+/**
+ * Detects Caddy's `php_fastcgi` Caddyfile-macro expansion from a group of routes (#35).
+ * The macro isn't a single JSON handler — it expands into up to four separate routes
+ * (a `vars` handler setting root, a trailing-slash redirect, a `rewrite`, and finally a
+ * `reverse_proxy` with a `fastcgi` transport), verified empirically via `caddy adapt`
+ * against a live instance. `routes` should be either a server's own top-level routes (the
+ * hostless `:PORT { php_fastcgi ... }` case, where Caddy emits these 4 routes directly on
+ * the server) or a `subroute` handler's inner routes (the host-matched case, where Caddy
+ * wraps the same 4 routes in one subroute) — either shape preserves each route's own
+ * `match`, which the generic subroute-flattening elsewhere in this file (which only
+ * collects `.handle` arrays) would otherwise discard, losing the custom index filename.
+ */
 function detectPhpFastcgiFromRoutes(
   routes: Array<{ match?: Array<Record<string, unknown>>; handle?: AnyHandler[] }>,
 ): import("./types").PhpFastcgiConfig | undefined {
@@ -5142,7 +5142,6 @@ const KNOWN_GLOBAL_OPTION_KEYS = new Set([
  */
 const INTERNAL_LIFETIME_MARKER = "# cockpit-caddy:internal-cert-lifetime";
 
-/** Parse the recognized global option directives out of a block of Caddyfile lines. */
 /**
  * `<directive> <provider> [{ <option> {env.NAME} … }]` (#261 acme_dns, #289 tls { dns }).
  * Credentials are written only as env references; literal values from a hand-written config
@@ -5187,6 +5186,7 @@ export function parseDnsProviderDirective(val: string, lines: string[], i: numbe
   return { config, next: j };
 }
 
+/** Parse the recognized global option directives out of a block of Caddyfile lines. */
 function parseOptionLines(lines: string[]): GlobalOptions {
   const opts: GlobalOptions = {};
   let i = 0;
