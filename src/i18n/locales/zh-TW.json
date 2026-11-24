@@ -412,6 +412,7 @@
     "view_label": "日誌檢視",
     "view_table": "表格",
     "view_raw": "原始",
+    "show_admin_requests": "顯示管理 API 請求",
     "col_time": "時間",
     "col_level": "層級",
     "col_logger": "記錄器",

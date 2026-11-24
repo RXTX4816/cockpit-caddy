@@ -83,6 +83,15 @@ export function matchesLogger(l: ParsedLogLine, tab: string): boolean {
   return l.logger === tab;
 }
 
+/**
+ * Caddy logs every Admin API call as `admin.api` "received request" at info level, and the
+ * plugin's own config poll is one of them (#284). The Logs tab hides these by default; other
+ * `admin.api` lines (errors, config loads) are not requests and stay visible.
+ */
+export function isAdminApiRequest(l: ParsedLogLine): boolean {
+  return l.logger === "admin.api" && l.msg === "received request";
+}
+
 /** Same rules as the base LogViewer's search: case-insensitive, on the raw line; a bad regex matches all. */
 export function matchesSearch(l: ParsedLogLine, term: string, isRegex: boolean): boolean {
   if (!term) return true;

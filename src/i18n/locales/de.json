@@ -412,6 +412,7 @@
     "view_label": "Log-Ansicht",
     "view_table": "Tabelle",
     "view_raw": "Roh",
+    "show_admin_requests": "Admin-API-Anfragen anzeigen",
     "col_time": "Zeit",
     "col_level": "Stufe",
     "col_logger": "Logger",

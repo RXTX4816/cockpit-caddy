@@ -412,6 +412,7 @@
     "view_label": "Visualização do log",
     "view_table": "Tabela",
     "view_raw": "Bruto",
+    "show_admin_requests": "Mostrar requisições à API de administração",
     "col_time": "Hora",
     "col_level": "Nível",
     "col_logger": "Logger",

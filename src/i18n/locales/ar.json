@@ -412,6 +412,7 @@
     "view_label": "عرض السجل",
     "view_table": "جدول",
     "view_raw": "خام",
+    "show_admin_requests": "إظهار طلبات واجهة الإدارة",
     "col_time": "الوقت",
     "col_level": "المستوى",
     "col_logger": "المسجِّل",

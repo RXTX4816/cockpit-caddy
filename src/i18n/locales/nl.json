@@ -412,6 +412,7 @@
     "view_label": "Logweergave",
     "view_table": "Tabel",
     "view_raw": "Ruw",
+    "show_admin_requests": "Admin-API-verzoeken tonen",
     "col_time": "Tijd",
     "col_level": "Niveau",
     "col_logger": "Logger",

@@ -412,6 +412,7 @@
     "view_label": "日志视图",
     "view_table": "表格",
     "view_raw": "原始",
+    "show_admin_requests": "显示管理 API 请求",
     "col_time": "时间",
     "col_level": "级别",
     "col_logger": "记录器",

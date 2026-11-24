@@ -412,6 +412,7 @@
     "view_label": "Vue du journal",
     "view_table": "Tableau",
     "view_raw": "Brut",
+    "show_admin_requests": "Afficher les requêtes de l’API d’administration",
     "col_time": "Heure",
     "col_level": "Niveau",
     "col_logger": "Logger",

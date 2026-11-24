@@ -412,6 +412,7 @@
     "view_label": "Tampilan log",
     "view_table": "Tabel",
     "view_raw": "Mentah",
+    "show_admin_requests": "Tampilkan permintaan API admin",
     "col_time": "Waktu",
     "col_level": "Level",
     "col_logger": "Logger",

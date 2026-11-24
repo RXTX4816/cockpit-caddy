@@ -412,6 +412,7 @@
     "view_label": "ログ表示",
     "view_table": "表",
     "view_raw": "生データ",
+    "show_admin_requests": "管理 API リクエストを表示",
     "col_time": "時刻",
     "col_level": "レベル",
     "col_logger": "ロガー",

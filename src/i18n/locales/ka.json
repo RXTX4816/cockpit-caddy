@@ -412,6 +412,7 @@
     "view_label": "ჟურნალის ხედი",
     "view_table": "ცხრილი",
     "view_raw": "ნედლი",
+    "show_admin_requests": "ადმინისტრირების API მოთხოვნების ჩვენება",
     "col_time": "დრო",
     "col_level": "დონე",
     "col_logger": "ლოგერი",

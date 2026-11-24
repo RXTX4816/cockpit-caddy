@@ -412,6 +412,7 @@
     "view_label": "Vizualizare jurnal",
     "view_table": "Tabel",
     "view_raw": "Brut",
+    "show_admin_requests": "Afișează cererile către API-ul de administrare",
     "col_time": "Ora",
     "col_level": "Nivel",
     "col_logger": "Logger",

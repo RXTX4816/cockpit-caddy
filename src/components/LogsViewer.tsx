@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import {
+  Checkbox,
   Label,
   Tab,
   Tabs,
@@ -9,7 +10,7 @@ import {
 } from "@patternfly/react-core";
 import { LogViewer } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { useLocalStorage } from "@rxtx4816/cockpit-plugin-base-react";
-import { ACCESS_LOG_PREFIX, matchesLevel, matchesLogger, parseCaddyLogLine, type LevelFilter, type ParsedLogLine } from "./caddyLog";
+import { ACCESS_LOG_PREFIX, isAdminApiRequest, matchesLevel, matchesLogger, parseCaddyLogLine, type LevelFilter, type ParsedLogLine } from "./caddyLog";
 import { LogTable } from "./LogTable";
 import { useTranslation } from "react-i18next";
 import { useLogs, CONTAINER_NOT_CONFIGURED } from "../hooks/useLogs";
@@ -35,6 +36,7 @@ export function LogsViewer({ filterValue, onFilterChange }: Props) {
 
   const [levelFilter, setLevelFilter] = useState<LevelFilter>("all");
   const [activeLogger, setActiveLogger] = useState<string>("all");
+  const [showAdminRequests, setShowAdminRequests] = useState(false);
 
   const [mode, setMode] = useLocalStorage<ViewMode>("cockpit-caddy:log-view", "table");
   const [tableSearch, setTableSearch] = useState(filterValue ?? "");
@@ -74,8 +76,9 @@ export function LogsViewer({ filterValue, onFilterChange }: Props) {
   );
 
   const filtered = useMemo(
-    () => parsed.filter(l => matchesLogger(l, activeLogger) && matchesLevel(l, levelFilter)),
-    [parsed, activeLogger, levelFilter],
+    () => parsed.filter(l =>
+      matchesLogger(l, activeLogger) && matchesLevel(l, levelFilter) && (showAdminRequests || !isAdminApiRequest(l))),
+    [parsed, activeLogger, levelFilter, showAdminRequests],
   );
   const filteredLines = useMemo(() => filtered.map(l => l.raw), [filtered]);
 
@@ -99,6 +102,12 @@ export function LogsViewer({ filterValue, onFilterChange }: Props) {
           ))}
         </div>
       )}
+      <Checkbox
+        id="log-show-admin-requests"
+        label={t("logs.show_admin_requests")}
+        isChecked={showAdminRequests}
+        onChange={(_e, v) => setShowAdminRequests(v)}
+      />
       <ToggleGroup isCompact aria-label={t("logs.view_label")}>
         <ToggleGroupItem text={t("logs.view_table")} buttonId="log-view-table" isSelected={mode === "table"} onChange={() => setMode("table")} />
         <ToggleGroupItem text={t("logs.view_raw")} buttonId="log-view-raw" isSelected={mode === "raw"} onChange={() => setMode("raw")} />

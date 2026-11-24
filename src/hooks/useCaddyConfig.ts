@@ -1,6 +1,9 @@
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { usePollingFetch } from "@rxtx4816/cockpit-plugin-base-react";
-import { fetchCaddyConfig, pushCaddyConfig, CaddyApiError, type CaddyConfig } from "../api";
+import { fetchCaddyConfig, pushCaddyConfig, onConfigChanged, CaddyApiError, type CaddyConfig } from "../api";
+
+/** Same cadence as the service status and log polls: each poll is a line in Caddy's log (#284). */
+const POLL_INTERVAL = 5000;
 
 /**
  * "read-only file system" from Caddy's own FileWriter (e.g. an access log path) means the
@@ -25,8 +28,11 @@ export function useCaddyConfig() {
   const { data: config, loading, error, refresh } = usePollingFetch<CaddyConfig>(
     fetchCaddyConfig,
     {},
-    1000,
+    POLL_INTERVAL,
   );
+
+  // A save, delete, toggle, reload or Caddyfile apply anywhere in the plugin shows up right away.
+  useEffect(() => onConfigChanged(refresh), [refresh]);
 
   const update = useCallback(
     async (next: CaddyConfig) => {
@@ -36,9 +42,9 @@ export function useCaddyConfig() {
         const message = e instanceof Error ? e.message : String(e);
         throw new CaddyApiError(explainCaddyApiError(message));
       }
-      await refresh();
+      // pushCaddyConfig has already refetched (onConfigChanged above).
     },
-    [refresh],
+    [],
   );
 
   return { config, loading, error, refresh, update };
