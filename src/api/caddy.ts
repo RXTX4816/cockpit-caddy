@@ -198,9 +198,27 @@ export async function fetchCaddyConfig(): Promise<CaddyConfig> {
   return (JSON.parse(data) as CaddyConfig) ?? {};
 }
 
+/**
+ * The running config changed because of something the plugin did (#284). The config poll is
+ * slow (every Admin API request is a line in Caddy's log), so every place that pushes,
+ * loads or reloads a config announces it here and the config hook refetches right away.
+ */
+const configChangeListeners = new Set<() => unknown>();
+
+export function onConfigChanged(listener: () => unknown): () => void {
+  configChangeListeners.add(listener);
+  return () => { configChangeListeners.delete(listener); };
+}
+
+/** Resolves once every listener's refetch has settled, so callers see the new config. */
+export async function notifyConfigChanged(): Promise<void> {
+  await Promise.allSettled([...configChangeListeners].map(l => l()));
+}
+
 export async function pushCaddyConfig(config: CaddyConfig): Promise<void> {
   const body = JSON.stringify(config);
   await (transport === "unix" ? unixPost("/config/", body) : tcpPost("/config/", body));
+  await notifyConfigChanged();
 }
 
 /**
@@ -219,6 +237,7 @@ export async function applyCaddyfileViaApi(content: string): Promise<void> {
   } catch (e) {
     throw new CaddyfileError(e instanceof Error ? e.message : String(e));
   }
+  await notifyConfigChanged();
 }
 
 /** The import line the plugin adds when the main Caddyfile doesn't import conf.d at all. */
@@ -4315,6 +4334,7 @@ export async function reloadCaddy(): Promise<void> {
     return;
   }
   await reloadSystemdService("caddy");
+  await notifyConfigChanged();
 }
 
 /**

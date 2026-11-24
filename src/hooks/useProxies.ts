@@ -263,12 +263,11 @@ export function useProxies() {
   // policy would take over the ACME sites' public names, so reload from the Caddyfile instead.
   const apply = useCallback(async (next: CaddyConfig) => {
     if (proxies.some(reliesOnCaddyfileTls)) {
-      await reloadCaddy();
-      await refresh();
+      await reloadCaddy(); // refetches the config (onConfigChanged)
       return;
     }
     await update(next);
-  }, [proxies, update, refresh]);
+  }, [proxies, update]);
 
   const addProxy = useCallback(
     async (entry: Omit<ProxyEntry, "id" | "serverKey">) => {
@@ -365,13 +364,12 @@ export function useProxies() {
       // reverse_proxy) with no single-handler equivalent — mergeProxy can't construct
       // that either, so it always needs the same reload-from-Caddyfile path.
       if (sharesPortWithOtherHost(afterProxies, newProxy) || needsCaddyfileReload(newProxy)) {
-        await reloadCaddy();
-        await refresh();
+        await reloadCaddy(); // refetches the config (onConfigChanged)
         return;
       }
       await apply(mergeProxy(config, newProxy));
     },
-    [config, proxies, servers, apply, refresh, noteConfSites],
+    [config, proxies, servers, apply, noteConfSites],
   );
 
   const editProxy = useCallback(
@@ -468,13 +466,12 @@ export function useProxies() {
       // shared by multiple hosts (#139), nor a php_fastcgi route's four-route Caddyfile
       // macro expansion (#35) — reload instead so Caddy's own Caddyfile adapter builds it.
       if (sharesPortWithOtherHost(afterProxies, entry) || needsCaddyfileReload(entry)) {
-        await reloadCaddy();
-        await refresh();
+        await reloadCaddy(); // refetches the config (onConfigChanged)
         return;
       }
       await apply(mergeProxy(config, entry));
     },
-    [config, proxies, servers, apply, refresh, noteConfSites],
+    [config, proxies, servers, apply, noteConfSites],
   );
 
   const deleteProxy = useCallback(
@@ -534,13 +531,12 @@ export function useProxies() {
       // removing it by serverKey would delete a still-live sibling too. Reload instead so
       // Caddy's own Caddyfile adapter rebuilds the listener from the (now-correct) text.
       if (sharesPortWithOtherHost(proxies, proxy)) {
-        await reloadCaddy();
-        await refresh();
+        await reloadCaddy(); // refetches the config (onConfigChanged)
         return;
       }
       await apply(removeProxy(config, proxy.serverKey));
     },
-    [config, proxies, servers, apply, refresh, noteConfSites],
+    [config, proxies, servers, apply, noteConfSites],
   );
 
   const addServer = useCallback(

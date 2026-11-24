@@ -412,6 +412,7 @@
     "view_label": "Zobrazení logu",
     "view_table": "Tabulka",
     "view_raw": "Surový",
+    "show_admin_requests": "Zobrazit požadavky na Admin API",
     "col_time": "Čas",
     "col_level": "Úroveň",
     "col_logger": "Logger",

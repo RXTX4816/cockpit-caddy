@@ -43,7 +43,11 @@ test('logs table shows columns, opens a row to its JSON, and switches to Raw', a
   const table = page.getByRole('table', { name: 'Log entries' });
   await expect(table).toBeVisible({ timeout: 15000 });
   await expect(table.getByRole('columnheader', { name: 'Logger' })).toBeVisible();
-  const row = table.getByRole('row').filter({ hasText: 'admin.api' }).first();
+  // #284: the plugin's own admin API requests are hidden until the toggle shows them.
+  const adminRequests = table.getByRole('row').filter({ hasText: 'received request' });
+  await expect(adminRequests).toHaveCount(0);
+  await page.getByRole('checkbox', { name: 'Show admin API requests' }).check();
+  const row = adminRequests.first();
   await row.click();
   await expect(row).toHaveAttribute('aria-expanded', 'true');
   await expect(table.locator('pre').first()).toContainText('"logger"');

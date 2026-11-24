@@ -412,6 +412,7 @@
     "view_label": "Vista del log",
     "view_table": "Tabella",
     "view_raw": "Grezzo",
+    "show_admin_requests": "Mostra richieste all’API di amministrazione",
     "col_time": "Ora",
     "col_level": "Livello",
     "col_logger": "Logger",

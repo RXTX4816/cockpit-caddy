@@ -412,6 +412,7 @@
     "view_label": "Loggvy",
     "view_table": "Tabell",
     "view_raw": "Rå",
+    "show_admin_requests": "Visa förfrågningar till admin-API:t",
     "col_time": "Tid",
     "col_level": "Nivå",
     "col_logger": "Loggare",

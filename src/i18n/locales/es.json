@@ -412,6 +412,7 @@
     "view_label": "Vista del registro",
     "view_table": "Tabla",
     "view_raw": "Sin formato",
+    "show_admin_requests": "Mostrar solicitudes a la API de administración",
     "col_time": "Hora",
     "col_level": "Nivel",
     "col_logger": "Logger",

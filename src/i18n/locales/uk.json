@@ -412,6 +412,7 @@
     "view_label": "Вигляд журналу",
     "view_table": "Таблиця",
     "view_raw": "Як є",
+    "show_admin_requests": "Показувати запити до Admin API",
     "col_time": "Час",
     "col_level": "Рівень",
     "col_logger": "Логер",

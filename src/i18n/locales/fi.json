@@ -412,6 +412,7 @@
     "view_label": "Lokinäkymä",
     "view_table": "Taulukko",
     "view_raw": "Raaka",
+    "show_admin_requests": "Näytä hallinta-API-pyynnöt",
     "col_time": "Aika",
     "col_level": "Taso",
     "col_logger": "Lokittaja",

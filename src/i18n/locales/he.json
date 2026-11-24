@@ -412,6 +412,7 @@
     "view_label": "תצוגת יומן",
     "view_table": "טבלה",
     "view_raw": "גולמי",
+    "show_admin_requests": "הצג בקשות ל-API הניהול",
     "col_time": "זמן",
     "col_level": "רמה",
     "col_logger": "רושם",

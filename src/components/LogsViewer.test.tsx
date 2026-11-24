@@ -7,10 +7,14 @@ const LINES = [
   '{"level":"warn","ts":1794990002,"logger":"tls","msg":"stapling OCSP"}',
   "-- Boot abc --",
 ];
+// #284: the plugin's own config polls; hidden by default.
+const ADMIN_REQUEST = '{"level":"info","ts":1794990003,"logger":"admin.api","msg":"received request","method":"GET","uri":"/config/"}';
+const ADMIN_LOAD = '{"level":"info","ts":1794990004,"logger":"admin.api","msg":"load complete"}';
+let extraLines: string[] = [];
 
 vi.mock("../hooks/useLogs", () => ({
   CONTAINER_NOT_CONFIGURED: "container-not-configured",
-  useLogs: () => ({ logs: LINES.join("\n"), loading: false, error: null, refresh: vi.fn(), paused: false, pause: vi.fn(), resume: vi.fn() }),
+  useLogs: () => ({ logs: [...LINES, ...extraLines].join("\n"), loading: false, error: null, refresh: vi.fn(), paused: false, pause: vi.fn(), resume: vi.fn() }),
 }));
 
 const { LogsViewer } = await import("./LogsViewer");
@@ -21,6 +25,7 @@ const bodyRows = () => within(screen.getByRole("table", { name: "Log entries" })
 describe("LogsViewer table mode", () => {
   beforeEach(() => {
     localStorage.clear();
+    extraLines = [];
   });
 
   it("renders one row per line with the parsed columns", () => {
@@ -67,5 +72,35 @@ describe("LogsViewer table mode", () => {
     unmount();
     render(<LogsViewer />);
     expect(screen.queryByRole("table", { name: "Log entries" })).toBeNull();
+  });
+});
+
+describe("LogsViewer admin API requests (#284)", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    extraLines = [ADMIN_REQUEST, ADMIN_LOAD];
+  });
+
+  it("hides admin API \"received request\" lines by default, keeping other admin.api lines", () => {
+    render(<LogsViewer />);
+    expect(screen.queryByText("received request")).toBeNull();
+    expect(screen.getByText("load complete")).toBeInTheDocument();
+    expect(bodyRows()).toHaveLength(5);
+  });
+
+  it("the toggle shows them again", () => {
+    render(<LogsViewer />);
+    const toggle = screen.getByRole("checkbox", { name: "Show admin API requests" });
+    expect(toggle).not.toBeChecked();
+    fireEvent.click(toggle);
+    expect(screen.getByText("received request")).toBeInTheDocument();
+    expect(bodyRows()).toHaveLength(6);
+  });
+
+  it("the raw view hides them too", () => {
+    render(<LogsViewer />);
+    fireEvent.click(screen.getByRole("button", { name: "Raw" }));
+    expect(screen.queryByText(/received request/)).toBeNull();
+    expect(screen.getByText(/load complete/)).toBeInTheDocument();
   });
 });

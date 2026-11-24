@@ -412,6 +412,7 @@
     "view_label": "Log view",
     "view_table": "Table",
     "view_raw": "Raw",
+    "show_admin_requests": "Show admin API requests",
     "col_time": "Time",
     "col_level": "Level",
     "col_logger": "Logger",

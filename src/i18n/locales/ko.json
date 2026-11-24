@@ -412,6 +412,7 @@
     "view_label": "로그 보기",
     "view_table": "표",
     "view_raw": "원본",
+    "show_admin_requests": "관리 API 요청 표시",
     "col_time": "시간",
     "col_level": "수준",
     "col_logger": "로거",

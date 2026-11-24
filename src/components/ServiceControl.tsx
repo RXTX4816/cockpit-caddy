@@ -4,7 +4,7 @@ import { EllipsisVIcon } from "@patternfly/react-icons";
 import { useTranslation } from "react-i18next";
 import { ServiceStatusBadge, startService, stopService, restartService, reloadService } from "@rxtx4816/cockpit-plugin-base-react/systemd";
 import { ConfirmDialog, useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
-import { reloadCaddy, type ServiceStatus } from "../api";
+import { notifyConfigChanged, reloadCaddy, type ServiceStatus } from "../api";
 
 interface Props {
   status: ServiceStatus;
@@ -36,11 +36,12 @@ export function ServiceControl({ status, loading, onRefresh, extraActions, unman
   const running = status === "active";
   const disabled = busy || loading || status === "not-installed";
 
+  // A start, restart or reload loads the config from disk, so the site list refetches it (#284).
   const run: Record<Action, () => Promise<void>> = {
-    start: () => startService(UNIT),
+    start: () => startService(UNIT).then(notifyConfigChanged),
     stop: () => stopService(UNIT),
-    restart: () => restartService(UNIT),
-    reload: () => (unmanaged ? reloadCaddy() : reloadService(UNIT)),
+    restart: () => restartService(UNIT).then(notifyConfigChanged),
+    reload: () => (unmanaged ? reloadCaddy() : reloadService(UNIT).then(notifyConfigChanged)),
   };
   const success: Record<Action, string> = {
     start: t("toast.service_started"),

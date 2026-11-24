@@ -412,6 +412,7 @@
     "view_label": "Günlük görünümü",
     "view_table": "Tablo",
     "view_raw": "Ham",
+    "show_admin_requests": "Yönetim API isteklerini göster",
     "col_time": "Zaman",
     "col_level": "Düzey",
     "col_logger": "Günlükçü",
