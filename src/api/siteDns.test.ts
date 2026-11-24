@@ -94,7 +94,7 @@ describe.skipIf(!provider && !process.env.CADDY_ADAPT_REQUIRED_DNS)("per-site DN
   it("an overriding site keeps its own provider and credentials", () => {
     const own = { provider: provider!, credentials: { [option]: "CADDY_DNS_SITE_A" } };
     const pols = policies(global + proxyToBlock(site({ dnsChallenge: own })));
-    const mine = pols.find(p => p.subjects?.includes("a.example.com"));
+    const mine = pols.find(p => (p.subjects ?? []).some(s => s === "a.example.com"));
     expect(providerOf(mine!)).toEqual({ name: provider, [option]: "{env.CADDY_DNS_SITE_A}" });
   });
 });
