@@ -809,7 +809,9 @@
     "field_redirect_to": "Alihkan ke",
     "field_redirect_code": "Kode",
     "field_file_root": "Direktori akar berkas",
-    "field_file_root_help": "Caddy akan menyajikan {status_code}.html dari direktori ini (mis. /var/www/errors/404.html)"
+    "field_file_root_help": "Caddy akan menyajikan {status_code}.html dari direktori ini (mis. /var/www/errors/404.html)",
+    "replace_upstream": "Ganti juga halaman galat milik aplikasi",
+    "replace_upstream_help": "Tanpa ini, handler hanya menjawab galat yang dibuat Caddy sendiri (upstream mati, tidak ada rute). Dengan ini, respons galat dari aplikasi (404 JSON, 401 yang meminta login) juga diganti."
   },
   "matchers": {
     "heading": "Matcher rute",

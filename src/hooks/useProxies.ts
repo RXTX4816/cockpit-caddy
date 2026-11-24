@@ -4,7 +4,7 @@ import { i18n } from "@rxtx4816/cockpit-plugin-base-react/i18n";
 import {
   parseProxies, mergeProxy, removeProxy,
   readCaddyfile, writeCaddyfile, readProxyConf,
-  parseLabelsFromCaddyfile, parseConfTlsMap, parseConfExternalAddresses, parseConfAccessLogMap, parseConfForwardAuthMap, parseConfCustomTlsCaMap, parseConfTlsIssuerMap, parseConfTlsOnDemandMap,
+  parseLabelsFromCaddyfile, parseConfTlsMap, parseConfExternalAddresses, parseConfAccessLogMap, parseConfForwardAuthMap, parseConfCustomTlsCaMap, parseClientAuthCaFile, parseConfTlsIssuerMap, parseConfTlsOnDemandMap,
   surgicallyWriteProxy, surgicallyEditProxy, surgicallyRemoveBlock,
   migrateCaddyfile, mergeMigratedConfContent, writeRawProxyConf, writeRawProxyConfValidated,
   CaddyfileError,
@@ -249,6 +249,11 @@ export function useProxies() {
         // The CA bundle path (#152) isn't part of Caddy's own JSON model at all — it only
         // ever lives in the Caddyfile comment, so always layer it in from there.
         customTls: p.customTls ? { ...p.customTls, caFile: lookup(confCustomTlsCa) } : undefined,
+        // The deprecated trusted_ca_cert_file reaches the JSON as an inlined certificate (#255),
+        // so its path is read from the site block.
+        mtls: p.mtls && !p.mtls.trustedCaFile
+          ? { ...p.mtls, trustedCaFile: parseClientAuthCaFile(lookup(confSiteBlocks) ?? "") }
+          : p.mtls,
         // Automatic HTTPS vs the internal CA (#246) is only visible in the Caddyfile text.
         tlsIssuer: tls && !p.customTls ? lookup(confTlsIssuer) : undefined,
         // Per-site on-demand TLS (#253), likewise read from the Caddyfile.

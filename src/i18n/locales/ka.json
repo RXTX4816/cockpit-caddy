@@ -809,7 +809,9 @@
     "field_redirect_to": "გადამისამართება მისამართზე",
     "field_redirect_code": "კოდი",
     "field_file_root": "ფაილების ძირეული საქაღალდე",
-    "field_file_root_help": "Caddy ამ საქაღალდიდან მიაწვდის {status_code}.html-ს (მაგ. /var/www/errors/404.html)"
+    "field_file_root_help": "Caddy ამ საქაღალდიდან მიაწვდის {status_code}.html-ს (მაგ. /var/www/errors/404.html)",
+    "replace_upstream": "აპლიკაციის საკუთარი შეცდომის გვერდების ჩანაცვლებაც",
+    "replace_upstream_help": "ამის გარეშე დამმუშავებლები პასუხობენ მხოლოდ თავად Caddy-ის შეცდომებს (upstream მიუწვდომელია, მარშრუტი არ არის). ჩართვისას ჩანაცვლდება აპლიკაციის შეცდომის პასუხებიც (JSON 404, შესვლის მომთხოვნი 401)."
   },
   "matchers": {
     "heading": "მარშრუტის matcher-ები",

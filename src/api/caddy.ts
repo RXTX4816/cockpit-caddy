@@ -693,6 +693,16 @@ export function parseConfTlsOnDemandMap(content: string): Record<string, boolean
 }
 
 /**
+ * The client-auth CA file in a site block: `trust_pool file <pem>`, or the deprecated
+ * `trusted_ca_cert_file <pem>` (#255). The deprecated form reaches the running JSON only as an
+ * inlined certificate, so the path survives a reload only in the conf.d text.
+ */
+export function parseClientAuthCaFile(siteBlock: string): string | undefined {
+  const m = siteBlock.match(/^[ \t]*(?:trust_pool[ \t]+file|trusted_ca_cert_file)[ \t]+([^\s{}]+)/m);
+  return m?.[1];
+}
+
+/**
  * Returns address → CA bundle path by reading `# tls_ca_bundle: <path>` comments (#152)
  * from conf.d site blocks. Caddy has no field for this on a manually-loaded certificate —
  * it's stored as a comment purely so the UI can show it back to the user, the same way
@@ -863,11 +873,15 @@ export function caddyQuote(value: string, opts: { always?: boolean } = {}): stri
   return `<<${marker}\n${value}\n${marker}`;
 }
 
-/** One `header` / `header_up` line for a header operation, values quoted for Caddy (#251). */
-function headerOpLine(prefix: string, h: import("./types").HeaderOperation, opts: { quoteSet?: boolean } = {}): string {
+/**
+ * One `header` / `header_up` line for a header operation, values quoted for Caddy (#251). `defer` writes a set as `>Name`: the Caddyfile adapter defers only `-`, `?`,
+ * `>` and `defer`, so on a proxied route a plain set runs before reverse_proxy adds the upstream's
+ * header and both reach the client (#255, checked with `caddy adapt` on 2.11.7).
+ */
+function headerOpLine(prefix: string, h: import("./types").HeaderOperation, opts: { quoteSet?: boolean; defer?: boolean } = {}): string {
   if (h.op === "delete") return `${prefix} -${h.name}`;
   if (h.op === "add") return `${prefix} +${h.name} ${caddyQuote(h.value ?? "")}`;
-  return `${prefix} ${h.name} ${caddyQuote(h.value ?? "", { always: opts.quoteSet })}`;
+  return `${prefix} ${opts.defer ? ">" : ""}${h.name} ${caddyQuote(h.value ?? "", { always: opts.quoteSet })}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -1083,14 +1097,32 @@ export function collapsePlaceholderShorthands(text: string): string {
 }
 
 /** Derives the strip-prefix value from the first path pattern, e.g. "/api/*" → "/api". */
+/** The prefix handle_path strips for one path: `/api/*` and `/api*` both strip `/api`. */
+const handlePathPrefix = (path: string) => path.replace(/\/\*$/, "").replace(/\*$/, "");
+
 function handlePathStripPrefix(matchers: import("./types").RouteMatch | undefined): string | undefined {
-  if (!matchers?.path?.length || !isPathOnlyMatcher(matchers)) return undefined;
-  const prefix = matchers.path[0].replace(/\/\*$/, "").replace(/\*$/, "");
-  return prefix || undefined;
+  if (matchers?.path?.length !== 1 || !isPathOnlyMatcher(matchers)) return undefined;
+  return handlePathPrefix(matchers.path[0]) || undefined;
 }
 
-/** Builds the rewrite handler that strip_path_prefix uses for handle_path semantics. */
+/**
+ * Caddy's handle_path accepts a single path (#255). For several strip-prefix paths the plugin
+ * writes the named matcher and `uri path_regexp <this> /`, which strips whichever prefix matched
+ * and keeps the leading slash, as handle_path's strip_path_prefix does. Longest prefix first, so
+ * `/a` doesn't win over `/ab`. Checked live with Caddy 2.11.7: /a/x → /x, /apix → /x.
+ */
+function multiPathStripRegex(matchers: import("./types").RouteMatch | undefined): string | undefined {
+  if (!matchers?.path || matchers.path.length < 2 || !isPathOnlyMatcher(matchers)) return undefined;
+  const prefixes = matchers.path.map(handlePathPrefix).filter(Boolean);
+  if (!prefixes.length) return undefined;
+  const escaped = [...new Set(prefixes)].sort((a, b) => b.length - a.length).map(p => p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  return `^(?:${escaped.join("|")})/?`;
+}
+
+/** Builds the rewrite handler for handle_path semantics: strip_path_prefix, or the regex strip for several paths. */
 function buildHandlePathRewriteJson(matchers: import("./types").RouteMatch | undefined): CaddyHandler | undefined {
+  const regex = multiPathStripRegex(matchers);
+  if (regex) return { handler: "rewrite", path_regexp: [{ find: regex, replace: "/" }] } as CaddyHandler;
   const prefix = handlePathStripPrefix(matchers);
   if (!prefix) return undefined;
   return { handler: "rewrite", strip_path_prefix: prefix } as CaddyHandler;
@@ -1387,7 +1419,7 @@ function buildLbRetryLines(lbRetry: import("./types").LbRetryConfig | undefined)
 }
 
 function buildReverseProxyLines(
-  p: Pick<ProxyEntry, "targetScheme" | "targetHost" | "targetPort" | "tlsSkipVerify" | "requestHeaders" | "dialTimeout" | "responseHeaderTimeout" | "extraUpstreams" | "lbPolicy" | "lbRetry">,
+  p: Pick<ProxyEntry, "targetScheme" | "targetHost" | "targetPort" | "tlsSkipVerify" | "requestHeaders" | "dialTimeout" | "responseHeaderTimeout" | "extraUpstreams" | "lbPolicy" | "lbRetry" | "replaceUpstreamErrors">,
   errorHandlers?: import("./types").ErrorHandlerConfig[],
 ): string[] {
   const upstreams = buildUpstreamList(p);
@@ -1402,26 +1434,23 @@ function buildReverseProxyLines(
     : [];
   const lbRetryLines = buildLbRetryLines(p.lbRetry);
 
-  // When error handlers are configured, intercept upstream HTTP error responses and
-  // re-raise them as Caddy errors so that handle_errors blocks fire. The Caddyfile
-  // `error` directive parses its status argument at config-compile time, not runtime —
-  // a placeholder like `{rp.status_code}` doesn't parse as an integer, so Caddy silently
-  // treats it as an error *message* instead and the status falls back to 500 (verified
-  // against a live reload; see e2e/error-handlers-workflows.spec.ts). Emit one matcher +
-  // handle_response per code instead, each hardcoding a literal status. Exact codes
-  // (matchType "specific") stay perfectly precise; wildcard categories ("4xx"/"5xx") raise
-  // a representative code (400/500) since Caddyfile can't forward the exact runtime value —
-  // handle_errors still matches by category regardless, so routing is unaffected either way.
+  // With "also replace the app's own error pages" on (#255), intercept upstream HTTP error
+  // responses and re-raise them as Caddy errors so that handle_errors blocks fire. Without it
+  // only Caddy's own errors reach handle_errors, as in plain Caddy, and the app's JSON 404s or
+  // a 401 with WWW-Authenticate pass through untouched.
+  // A category (4xx/5xx) uses the two-argument `error "<msg>" {rp.status_code}`, which keeps the
+  // upstream's real code (checked live with Caddy 2.11.7: 404, 418 and 503 stay as they are).
+  // The one-argument `error {rp.status_code}` doesn't: Caddy reads a non-integer single argument
+  // as the message and the status falls back to 500. Exact codes stay literal.
   const errorPassthroughLines: string[] = [];
-  if (errorHandlers?.length) {
+  if (p.replaceUpstreamErrors && errorHandlers?.length) {
     const codes = errorHandlerResponseCodes(errorHandlers);
     codes.forEach((c, i) => {
       const statusToken = c < 10 ? `${c}xx` : String(c);
-      const literalStatus = c < 10 ? c * 100 : c;
       errorPassthroughLines.push(
         `\t\t@upstream_error${i} status ${statusToken}`,
         `\t\thandle_response @upstream_error${i} {`,
-        `\t\t\terror ${literalStatus}`,
+        c < 10 ? `\t\t\terror "${UPSTREAM_ERROR_MESSAGE}" {rp.status_code}` : `\t\t\terror ${c}`,
         `\t\t}`,
       );
     });
@@ -1711,7 +1740,9 @@ function buildTlsPolicyBlockLines(
     lines.push("\t\tclient_auth {");
     lines.push(`\t\t\tmode ${mtls.mode}`);
     if (mtls.trustedCaFile?.trim()) {
-      lines.push(`\t\t\ttrusted_ca_cert_file ${mtls.trustedCaFile.trim()}`);
+      // trust_pool replaces the deprecated trusted_ca_cert_file (#255), and unlike it keeps the
+      // path in the adapted JSON instead of inlining the certificate.
+      lines.push(`\t\t\ttrust_pool file ${mtls.trustedCaFile.trim()}`);
     }
     lines.push("\t\t}");
   }
@@ -1806,7 +1837,7 @@ function buildRouteHandlerLines(p: ProxyEntry, indent: string): string[] {
       lines.push(`${indent}}`);
     }
     for (const h of p.responseHeaders ?? []) {
-      lines.push(headerOpLine(`${indent}header`, h, { quoteSet: true }));
+      lines.push(headerOpLine(`${indent}header`, h, { quoteSet: true, defer: true }));
     }
     if (p.rewrite) lines.push(...buildRewriteCaddyLines(p.rewrite, indent));
     if (p.forwardAuth) {
@@ -1835,60 +1866,18 @@ export function proxyToBlock(p: ProxyEntry): string {
   if (hasAnyMatcher(p.matchers)) {
     const matcherName = `m${p.externalPort}`;
     const useHandlePath = p.handlePath && isPathOnlyMatcher(p.matchers) && !!(p.matchers.path?.length);
+    // handle_path takes one path only (#255); several get a named matcher + a regex strip.
+    const stripRegex = useHandlePath ? multiPathStripRegex(p.matchers) : undefined;
+    const singleHandlePath = useHandlePath && !stripRegex;
 
-    if (useHandlePath) {
-      // handle_path strips the matched prefix automatically — no explicit matcher declaration needed
-      const paths = p.matchers.path!.join(" ");
-      if (p.staticResponse) {
-        if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
-        lines.push(`\thandle_path ${paths} {`);
-        lines.push(...buildRouteHandlerLines(p, "\t\t"));
-        lines.push("\t}");
-      } else if (p.redirect) {
-        if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
-        lines.push(`\thandle_path ${paths} {`);
-        lines.push(...buildRouteHandlerLines(p, "\t\t"));
-        lines.push("\t}");
-      } else if (p.fileServer) {
-        lines.push(...buildTlsCaddyLines(p, hostless));
-        if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
-        lines.push(`\thandle_path ${paths} {`);
-        lines.push(...buildRouteHandlerLines(p, "\t\t"));
-        lines.push("\t}");
-      } else {
-        lines.push(...buildTlsCaddyLines(p, hostless));
-        if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
-        lines.push(`\thandle_path ${paths} {`);
-        lines.push(...buildRouteHandlerLines(p, "\t\t"));
-        lines.push("\t}");
-      }
-    } else {
-      // Standard named matcher + handle block
-      lines.push(...buildMatcherCaddyLines(p.matchers, matcherName, "\t"));
-      if (p.staticResponse) {
-        if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
-        lines.push(`\thandle @${matcherName} {`);
-        lines.push(...buildRouteHandlerLines(p, "\t\t"));
-        lines.push("\t}");
-      } else if (p.redirect) {
-        if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
-        lines.push(`\thandle @${matcherName} {`);
-        lines.push(...buildRouteHandlerLines(p, "\t\t"));
-        lines.push("\t}");
-      } else if (p.fileServer) {
-        lines.push(...buildTlsCaddyLines(p, hostless));
-        if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
-        lines.push(`\thandle @${matcherName} {`);
-        lines.push(...buildRouteHandlerLines(p, "\t\t"));
-        lines.push("\t}");
-      } else {
-        lines.push(...buildTlsCaddyLines(p, hostless));
-        if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
-        lines.push(`\thandle @${matcherName} {`);
-        lines.push(...buildRouteHandlerLines(p, "\t\t"));
-        lines.push("\t}");
-      }
-    }
+    // handle_path strips the matched prefix itself and needs no named matcher.
+    if (!singleHandlePath) lines.push(...buildMatcherCaddyLines(p.matchers, matcherName, "\t"));
+    if (!p.staticResponse && !p.redirect) lines.push(...buildTlsCaddyLines(p, hostless));
+    if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
+    lines.push(singleHandlePath ? `\thandle_path ${p.matchers.path!.join(" ")} {` : `\thandle @${matcherName} {`);
+    if (stripRegex) lines.push(`\t\turi path_regexp ${caddyQuote(stripRegex)} /`);
+    lines.push(...buildRouteHandlerLines(p, "\t\t"));
+    lines.push("\t}");
   } else {
     // No matchers — original flat structure
     if (p.staticResponse) {
@@ -1987,6 +1976,8 @@ function patchRawBlock(raw: string, proxy: ProxyEntry): string {
   } else {
     if (proxy.compress) kept.push("\tencode gzip zstd");
     if (proxy.basicAuth?.length) kept.push(...buildBasicAuthCaddyLines(proxy.basicAuth));
+    // `header` lines were dropped above with the other rewritten directives.
+    for (const h of proxy.responseHeaders ?? []) kept.push(headerOpLine("\theader", h, { quoteSet: true, defer: true }));
     if (proxy.forwardAuth) kept.push(...buildForwardAuthCaddyLines(proxy.forwardAuth));
     kept.push(...buildReverseProxyLines(proxy, proxy.errorHandlers));
   }
@@ -2603,6 +2594,10 @@ function parseRouteToEntry(
       handlePath = true;
       finalRewrite = undefined;
     }
+  } else if (rewrite?.type === "regex" && rewrite.replace === "/" && rewrite.find === multiPathStripRegex(matchers)) {
+    // The several-paths form of handle_path (#255).
+    handlePath = true;
+    finalRewrite = undefined;
   }
 
   return {
@@ -2631,6 +2626,7 @@ function parseRouteToEntry(
     handlePath,
     serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, accessLog,
     errorHandlers: parseErrorHandlers(server),
+    replaceUpstreamErrors: reraisesUpstreamErrors(rp) || undefined,
     forwardAuth,
     tlsAdvanced: tlsPolicy ? parseTlsAdvanced(tlsPolicy, automationPolicies, tlsSubjectHosts(externalHost)[0]) : undefined,
     mtls: tlsPolicy ? parseMtls(tlsPolicy) : undefined,
@@ -2829,12 +2825,11 @@ function buildResponseHeadersHandler(ops: import("./types").HeaderOperation[]): 
     else set[h.name] = val;
   }
   // "deferred" makes response header rewriting apply just before the response is
-  // actually written, after reverse_proxy has copied the upstream's headers in —
-  // without it these ops run too early to affect a proxied response at all. The
-  // Caddyfile `header` directive's own adapter sets this automatically (confirmed via
-  // `caddy adapt`); this hand-rolled JSON path needs to set it explicitly too (verified
-  // against a live reload — omitting it silently no-ops the whole handler for proxied
-  // routes; see e2e/response-headers-workflows.spec.ts).
+  // actually written, after reverse_proxy has copied the upstream's headers in;
+  // without it a set runs too early and the upstream's own value is added next to it.
+  // The Caddyfile adapter does NOT set this for a plain `header Name value`: it defers
+  // only `-`, `?`, `>` and `defer` (#255, checked with `caddy adapt` on 2.11.7), which is
+  // why the Caddyfile writer spells a set on a proxied route `>Name` (headerOpLine).
   const resp: Record<string, unknown> = { deferred: true };
   if (Object.keys(set).length) resp["set"] = set;
   if (Object.keys(add).length) resp["add"] = add;
@@ -2856,8 +2851,11 @@ function parseResponseHeadersJson(h: AnyHandler): import("./types").HeaderOperat
   return ops;
 }
 
+/** The error message upstream errors are re-raised with (#255); handle_errors sees it as {err.message}. */
+const UPSTREAM_ERROR_MESSAGE = "upstream error";
+
 function buildReverseProxyHandler(
-  proxy: Pick<ProxyEntry, "targetHost" | "targetPort" | "targetScheme" | "tlsSkipVerify" | "requestHeaders" | "dialTimeout" | "responseHeaderTimeout" | "extraUpstreams" | "lbPolicy" | "lbRetry">,
+  proxy: Pick<ProxyEntry, "targetHost" | "targetPort" | "targetScheme" | "tlsSkipVerify" | "requestHeaders" | "dialTimeout" | "responseHeaderTimeout" | "extraUpstreams" | "lbPolicy" | "lbRetry" | "replaceUpstreamErrors">,
   errorHandlers?: import("./types").ErrorHandlerConfig[],
 ): CaddyReverseProxyHandler {
   const primaryDial = `${proxy.targetHost}:${proxy.targetPort}`;
@@ -2885,19 +2883,17 @@ function buildReverseProxyHandler(
   const healthChecks = buildHealthChecksJson(lbRetry);
   if (healthChecks) rp.health_checks = healthChecks;
 
-  if (errorHandlers?.length) {
+  if (proxy.replaceUpstreamErrors && errorHandlers?.length) {
     const codes = errorHandlerResponseCodes(errorHandlers);
     if (codes.length) {
-      // Mirrors the Caddyfile-generation fix in buildReverseProxyLines: the "error"
-      // handler module's status_code field does not runtime-resolve the {rp.status_code}
-      // placeholder (verified against a live reload — it silently 500s), so emit one
-      // handle_response per code with a literal status_code instead. Exact codes
-      // (matchType "specific") stay precise; wildcard categories ("4xx"/"5xx") raise a
-      // representative code (400/500) since there's no way to forward the exact runtime
-      // value — handle_errors still matches by category regardless.
+      // Same as the Caddyfile path (buildReverseProxyLines), in the form Caddy adapts it to. The
+      // placeholder needs its full name here: {rp.*} is a Caddyfile-only shorthand, and the JSON
+      // status_code field does resolve a full placeholder at runtime.
       rp.handle_response = codes.map(c => ({
         match: { status_code: [c] },
-        routes: [{ handle: [{ handler: "error", status_code: c < 10 ? c * 100 : c }] }],
+        routes: [{ handle: [c < 10
+          ? { handler: "error", error: UPSTREAM_ERROR_MESSAGE, status_code: "{http.reverse_proxy.status_code}" }
+          : { handler: "error", status_code: c }] }],
       }));
     }
   }
@@ -3245,7 +3241,8 @@ function parseTlsAdvanced(
 function parseMtls(policy: CaddyTLSConnectionPolicy): import("./types").MtlsConfig | undefined {
   const ca = policy.client_authentication;
   if (!ca?.mode) return undefined;
-  const trustedCaFile = ca.trusted_ca_certs_pem_files?.[0] || undefined;
+  const fromPool = ca.ca?.provider === "file" ? ca.ca.pem_files?.[0] : undefined;
+  const trustedCaFile = fromPool || ca.trusted_ca_certs_pem_files?.[0] || undefined;
   return { mode: ca.mode as import("./types").MtlsMode, trustedCaFile };
 }
 
@@ -3331,7 +3328,7 @@ function buildTlsPolicy(
   if (proxy.mtls) {
     const ca: CaddyTLSClientAuthentication = { mode: proxy.mtls.mode };
     if (proxy.mtls.trustedCaFile?.trim()) {
-      ca.trusted_ca_certs_pem_files = [proxy.mtls.trustedCaFile.trim()];
+      ca.ca = { provider: "file", pem_files: [proxy.mtls.trustedCaFile.trim()] };
     }
     policy.client_authentication = ca;
   }
@@ -3403,6 +3400,12 @@ function rebuildTlsAutomationPolicies(
   }
 
   return { automation: { policies } };
+}
+
+/** True when the reverse_proxy re-raises upstream responses as errors (the #255 switch). */
+function reraisesUpstreamErrors(rp: CaddyReverseProxyHandler): boolean {
+  const responses = (rp.handle_response as Array<{ routes?: Array<{ handle?: Array<{ handler?: string }> }> }> | undefined) ?? [];
+  return responses.some(r => r.routes?.some(route => route.handle?.some(h => h.handler === "error")));
 }
 
 function parseErrorHandlers(server: CaddyServer): import("./types").ErrorHandlerConfig[] | undefined {
@@ -3782,12 +3785,15 @@ export function mergeProxy(config: CaddyConfig, proxy: ProxyEntry): CaddyConfig 
   };
 }
 
+/**
+ * Hashes a basic-auth password with `caddy hash-password`. The password goes on stdin, not as
+ * `--plaintext <pw>`: argv is readable by every local user in /proc/<pid>/cmdline (#255).
+ * With stdin not a terminal, caddy reads one newline-terminated line (no confirmation prompt).
+ */
 export async function hashPassword(plaintext: string): Promise<string> {
-  const out = await cockpit.spawn(
-    ["caddy", "hash-password", "--plaintext", plaintext],
-    { superuser: "try", err: "message" },
-  );
-  return out.trim();
+  const proc = cockpit.spawn(["caddy", "hash-password"], { superuser: "try", err: "message" });
+  proc.input(`${plaintext}\n`);
+  return (await proc).trim();
 }
 
 export async function fetchUpstreamStatus(): Promise<import("./types").UpstreamStatus[]> {
@@ -3981,7 +3987,8 @@ export function serverDefToBlock(def: import("./types").ServerDef, routes: Proxy
     const route = matcherRoutes[i];
     const matcherName = `r${i}`;
     const useHandlePath = route.handlePath && isPathOnlyMatcher(route.matchers!) && !!(route.matchers!.path?.length);
-    if (useHandlePath) {
+    const stripRegex = useHandlePath ? multiPathStripRegex(route.matchers) : undefined;
+    if (useHandlePath && !stripRegex) {
       const paths = route.matchers!.path!.join(" ");
       lines.push(`\thandle_path ${paths} {`);
       lines.push(...buildRouteBodyForServer(route));
@@ -3989,6 +3996,8 @@ export function serverDefToBlock(def: import("./types").ServerDef, routes: Proxy
     } else {
       lines.push(...buildMatcherCaddyLines(route.matchers!, matcherName, "\t"));
       lines.push(`\thandle @${matcherName} {`);
+      // handle_path takes one path only (#255); several get a regex strip.
+      if (stripRegex) lines.push(`\t\turi path_regexp ${caddyQuote(stripRegex)} /`);
       lines.push(...buildRouteBodyForServer(route));
       lines.push("\t}");
     }

@@ -17,6 +17,7 @@ import {
   caddyQuote,
   buildServerEntry,
   parseProxies,
+  parseClientAuthCaFile,
   surgicallyReplaceBlock,
   surgicallyRemoveBlock,
   surgicallyWriteProxy,
@@ -511,7 +512,8 @@ describe("proxyToBlock", () => {
     }));
     expect(result).toContain("client_auth {");
     expect(result).toContain("mode require_and_verify");
-    expect(result).toContain("trusted_ca_cert_file /etc/caddy/ca.pem");
+    expect(result).toContain("trust_pool file /etc/caddy/ca.pem");
+    expect(result).not.toContain("trusted_ca_cert_file");
   });
 
   // certLifetime/renewalWindowRatio only take effect for a proxy with a real hostname —
@@ -1697,7 +1699,7 @@ describe("proxyToBlock — responseHeaders", () => {
     const result = proxyToBlock(proxy({ responseHeaders: [{ op: "set", name: "X-Frame-Options", value: "DENY" }] }));
     const lines = result.split("\n");
     const rpIdx = lines.findIndex(l => l.includes("reverse_proxy"));
-    const hIdx = lines.findIndex(l => l.includes('header X-Frame-Options "DENY"'));
+    const hIdx = lines.findIndex(l => l.includes('header >X-Frame-Options "DENY"'));
     expect(hIdx).toBeGreaterThan(-1);
     expect(hIdx).toBeLessThan(rpIdx);
   });
@@ -3356,6 +3358,24 @@ describe("proxyToBlock — matchers", () => {
     expect(result).not.toContain("@m7700");
   });
 
+  // #255: Caddy accepts only one path in handle_path. Several strip-prefix paths become a
+  // named matcher + one `uri path_regexp` that strips whichever prefix matched.
+  it("several strip-prefix paths write a matcher + uri path_regexp, never handle_path with two paths", () => {
+    const m: RouteMatch = { path: ["/a/*", "/bb/*", "/v1.0*"] };
+    const result = proxyToBlock(proxy({ matchers: m, handlePath: true }));
+    expect(result).not.toContain("handle_path");
+    expect(result).toContain("handle @m7700 {");
+    expect(result).toContain('\t\turi path_regexp "^(?:/v1\\.0|/bb|/a)/?" /');
+  });
+
+  it("several strip-prefix paths on a named server route write no handle_path either", () => {
+    const def: ServerDef = { key: "s1", name: "S1", listenAddresses: [":7790"], tls: false };
+    const route = proxy({ id: "s1:0", namedServerKey: "s1", serverKey: "s1", matchers: { path: ["/a/*", "/b/*"] }, handlePath: true });
+    const { block } = serverDefToBlock(def, [route]);
+    expect(block).not.toContain("handle_path");
+    expect(block).toContain("uri path_regexp ^(?:/a|/b)/? /");
+  });
+
   it("does NOT use handle_path when multiple matcher types set", () => {
     const m: RouteMatch = { path: ["/api/*"], host: ["example.com"] };
     const result = proxyToBlock(proxy({ matchers: m, handlePath: true }));
@@ -4497,5 +4517,128 @@ describe("editing hand-written multi-line directive blocks (#253)", () => {
     const conf = `${CONF_HEADER}\n\napp.example.com {\n\theader {\n\t\tX-A 1\n\t}\n\tencode {\n\t\tgzip\n\t}\n\treverse_proxy localhost:8000\n}\n`;
     const out = surgicallyWriteProxy(conf, proxy({ externalHost: "app.example.com", externalPort: 443, tls: true, tlsIssuer: "acme", targetPort: 8001, compress: true }));
     expect(out).toContain("app.example.com {\n\tencode gzip zstd\n\treverse_proxy http://localhost:8001\n}");
+  });
+});
+
+// #255: `trusted_ca_cert_file` is deprecated. `trust_pool file` keeps the path in the adapted
+// JSON (`ca: {provider: "file", pem_files}`); the old form inlined the certificate, so the path
+// is recovered from the conf.d text.
+describe("mTLS trust pool (#255)", () => {
+  const mtlsServer = (clientAuth: import("./types").CaddyTLSClientAuthentication): CaddyConfig => ({
+    apps: {
+      http: {
+        servers: {
+          srv0: {
+            listen: [":7710"],
+            routes: [{ handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:7711" }] }] as import("./types").CaddyHandler[], terminal: true }],
+            tls_connection_policies: [{ client_authentication: clientAuth }],
+          },
+        },
+      },
+    },
+  });
+
+  it("reads the CA file from the trust_pool file form Caddy adapts to", () => {
+    const [p] = parseProxies(mtlsServer({ mode: "require_and_verify", ca: { provider: "file", pem_files: ["/etc/caddy/ca.pem"] } }));
+    expect(p.mtls).toEqual({ mode: "require_and_verify", trustedCaFile: "/etc/caddy/ca.pem" });
+  });
+
+  it("still reads the legacy trusted_ca_certs_pem_files form", () => {
+    const [p] = parseProxies(mtlsServer({ mode: "verify_if_given", trusted_ca_certs_pem_files: ["/etc/caddy/old.pem"] }));
+    expect(p.mtls).toEqual({ mode: "verify_if_given", trustedCaFile: "/etc/caddy/old.pem" });
+  });
+
+  it("the JSON writer uses the file trust pool", () => {
+    const server = buildServerEntry(proxy({ tls: true, mtls: { mode: "require_and_verify", trustedCaFile: "/etc/caddy/ca.pem" } }));
+    expect(server.tls_connection_policies?.[0].client_authentication).toEqual({
+      mode: "require_and_verify",
+      ca: { provider: "file", pem_files: ["/etc/caddy/ca.pem"] },
+    });
+  });
+
+  it("finds the CA file in a site block, in the new and the deprecated form", () => {
+    const block = (line: string) => `https://a.test {\n\ttls internal {\n\t\tclient_auth {\n\t\t\tmode require_and_verify\n\t\t\t${line}\n\t\t}\n\t}\n\treverse_proxy localhost:1\n}`;
+    expect(parseClientAuthCaFile(block("trust_pool file /etc/caddy/ca.pem"))).toBe("/etc/caddy/ca.pem");
+    expect(parseClientAuthCaFile(block("trusted_ca_cert_file /etc/caddy/old.pem"))).toBe("/etc/caddy/old.pem");
+    expect(parseClientAuthCaFile("https://a.test {\n\treverse_proxy localhost:1\n}")).toBeUndefined();
+  });
+});
+
+// #255: the Caddyfile `header` directive defers only `-`, `?`, `>` and `defer`. A plain set runs
+// before reverse_proxy copies the upstream's headers in, so the header shows up twice. On a
+// proxied route a set is written as `>Name`; static and PHP sites have no upstream headers.
+describe("response header set on proxied routes (#255)", () => {
+  const headers: import("./types").HeaderOperation[] = [
+    { op: "set", name: "X-Frame-Options", value: "DENY" },
+    { op: "add", name: "X-Extra", value: "1" },
+    { op: "delete", name: "Server" },
+  ];
+
+  it("proxy blocks defer the set", () => {
+    const result = proxyToBlock(proxy({ responseHeaders: headers }));
+    expect(result).toContain('header >X-Frame-Options "DENY"');
+    expect(result).toContain("header +X-Extra 1");
+    expect(result).toContain("header -Server");
+  });
+
+  it("static sites keep the plain set", () => {
+    const result = proxyToBlock(proxy({ fileServer: { root: "/srv" }, responseHeaders: headers.slice(0, 1) }));
+    expect(result).toContain('header X-Frame-Options "DENY"');
+  });
+
+  it("editing a hand-written proxy block keeps its response headers, deferred", () => {
+    const conf = "example.com {\n\theader X-Frame-Options DENY\n\treverse_proxy localhost:8000\n}\n";
+    const out = surgicallyWriteProxy(conf, proxy({ externalPort: 443, externalHost: "example.com", targetPort: 9000, tls: true, responseHeaders: headers.slice(0, 1) }));
+    expect(out).toContain('header >X-Frame-Options "DENY"');
+    expect(out).toContain("reverse_proxy http://localhost:9000");
+  });
+});
+
+// #255: error handlers on a proxy only replace the app's own error responses (a JSON 404, a 401
+// with WWW-Authenticate) when the "also replace the app's own error pages" switch is on. With it
+// on, a 4xx/5xx category keeps the upstream's real code: the two-argument `error` form resolves
+// {rp.status_code} at runtime (checked live with Caddy 2.11.7: 404, 418 and 503 stay as they are).
+describe("proxy error handlers and upstream error pages (#255)", () => {
+  const handlers: import("./types").ErrorHandlerConfig[] = [
+    { matchType: "4xx", type: "respond", body: "oops" },
+    { matchType: "specific", codes: [502], type: "respond", body: "bad gateway" },
+  ];
+
+  it("without the switch only handle_errors is written, no upstream interception", () => {
+    const result = proxyToBlock(proxy({ errorHandlers: handlers }));
+    expect(result).toContain("handle_errors 4xx {");
+    expect(result).not.toContain("handle_response");
+    const rp = buildServerEntry(proxy({ errorHandlers: handlers })).routes?.[0]?.handle?.find(h => h.handler === "reverse_proxy") as Record<string, unknown>;
+    expect(rp.handle_response).toBeUndefined();
+  });
+
+  it("with the switch a category keeps the upstream status, an exact code stays literal", () => {
+    const result = proxyToBlock(proxy({ errorHandlers: handlers, replaceUpstreamErrors: true }));
+    expect(result).toContain("\t\t@upstream_error0 status 4xx");
+    expect(result).toContain('\t\t\terror "upstream error" {rp.status_code}');
+    expect(result).toContain("\t\t@upstream_error1 status 502");
+    expect(result).toContain("\t\t\terror 502");
+  });
+
+  it("the JSON writer uses the full placeholder name for a category", () => {
+    const rp = buildServerEntry(proxy({ errorHandlers: handlers, replaceUpstreamErrors: true })).routes?.[0]?.handle?.find(h => h.handler === "reverse_proxy") as Record<string, unknown>;
+    expect(rp.handle_response).toEqual([
+      { match: { status_code: [4] }, routes: [{ handle: [{ handler: "error", error: "upstream error", status_code: "{http.reverse_proxy.status_code}" }] }] },
+      { match: { status_code: [502] }, routes: [{ handle: [{ handler: "error", status_code: 502 }] }] },
+    ]);
+  });
+
+  it("the parser turns the switch on when the upstream interception is there", () => {
+    const on = buildServerEntry(proxy({ errorHandlers: handlers, replaceUpstreamErrors: true }));
+    const off = buildServerEntry(proxy({ errorHandlers: handlers }));
+    expect(parseProxies({ apps: { http: { servers: { srv0: on } } } })[0].replaceUpstreamErrors).toBe(true);
+    expect(parseProxies({ apps: { http: { servers: { srv0: off } } } })[0].replaceUpstreamErrors).toBeUndefined();
+  });
+
+  it("configs written before #255 (a literal error 400) open with the switch on", () => {
+    const old = buildServerEntry(proxy({ errorHandlers: handlers }));
+    const rp = old.routes![0].handle!.find(h => h.handler === "reverse_proxy") as Record<string, unknown>;
+    rp.handle_response = [{ match: { status_code: [4] }, routes: [{ handle: [{ handler: "error", status_code: 400 }] }] }];
+    expect(parseProxies({ apps: { http: { servers: { srv0: old } } } })[0].replaceUpstreamErrors).toBe(true);
   });
 });

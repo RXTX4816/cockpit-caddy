@@ -128,7 +128,12 @@ export function ProxyTabs({ state: s, onChange, general, generalHasError, active
         content: (
           <>
             <AccessLogSection value={s.accessLog} onChange={v => onChange({ accessLog: v })} isDisabled={isDisabled} />
-            <ErrorHandlersSection value={s.errorHandlers} onChange={v => onChange({ errorHandlers: v })} isDisabled={isDisabled} />
+            <ErrorHandlersSection
+              value={s.errorHandlers}
+              onChange={v => onChange({ errorHandlers: v })}
+              isDisabled={isDisabled}
+              {...(isProxy ? { replaceUpstream: s.replaceUpstreamErrors, onReplaceUpstreamChange: (v: boolean) => onChange({ replaceUpstreamErrors: v }) } : {})}
+            />
           </>
         ),
       },

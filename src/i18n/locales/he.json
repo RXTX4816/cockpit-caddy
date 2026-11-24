@@ -809,7 +809,9 @@
     "field_redirect_to": "הפניה אל",
     "field_redirect_code": "קוד",
     "field_file_root": "תיקיית שורש לקבצים",
-    "field_file_root_help": "Caddy יגיש את {status_code}.html מהתיקייה הזו (למשל /var/www/errors/404.html)"
+    "field_file_root_help": "Caddy יגיש את {status_code}.html מהתיקייה הזו (למשל /var/www/errors/404.html)",
+    "replace_upstream": "להחליף גם את דפי השגיאה של האפליקציה",
+    "replace_upstream_help": "בלי זה, המטפלים עונים רק לשגיאות ש-Caddy עצמו מעלה (שרת יעד לא זמין, אין נתיב). עם זה, גם תגובות שגיאה מהאפליקציה (404 ב-JSON, ‏401 שמבקש התחברות) מוחלפות."
   },
   "matchers": {
     "heading": "matchers של נתיב",

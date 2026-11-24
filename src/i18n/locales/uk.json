@@ -809,7 +809,9 @@
     "field_redirect_to": "Переспрямовувати на",
     "field_redirect_code": "Код",
     "field_file_root": "Кореневий каталог файлів",
-    "field_file_root_help": "Caddy віддаватиме {status_code}.html з цього каталогу (наприклад, /var/www/errors/404.html)"
+    "field_file_root_help": "Caddy віддаватиме {status_code}.html з цього каталогу (наприклад, /var/www/errors/404.html)",
+    "replace_upstream": "Замінювати й власні сторінки помилок застосунку",
+    "replace_upstream_help": "Без цього обробники відповідають лише на помилки самого Caddy (upstream недоступний, немає маршруту). З цим замінюються й відповіді з помилками від застосунку (JSON 404, 401 із запитом входу)."
   },
   "matchers": {
     "heading": "Matcher-и маршруту",

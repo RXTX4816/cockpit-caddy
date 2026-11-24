@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
   Button,
+  Checkbox,
   FormGroup,
   FormHelperText,
   HelperText,
@@ -20,6 +21,9 @@ interface Props {
    *  across sections. Falls back to internal state when omitted. */
   isExpanded?: boolean;
   onToggleExpanded?: (v: boolean) => void;
+  /** Proxies only (#255): whether the handlers also replace the upstream app's own error pages. */
+  replaceUpstream?: boolean;
+  onReplaceUpstreamChange?: (v: boolean) => void;
 }
 
 const MATCH_TYPES: ErrorMatchType[] = ["specific", "4xx", "5xx", "all"];
@@ -38,7 +42,7 @@ function parseCodes(raw: string): number[] {
   return raw.split(/[\s,]+/).map(s => parseInt(s, 10)).filter(n => !isNaN(n) && n >= 100 && n <= 599);
 }
 
-export function ErrorHandlersSection({ value, onChange, isDisabled, isExpanded: isExpandedProp, onToggleExpanded }: Props) {
+export function ErrorHandlersSection({ value, onChange, isDisabled, isExpanded: isExpandedProp, onToggleExpanded, replaceUpstream, onReplaceUpstreamChange }: Props) {
   const { t } = useTranslation();
   const [internalExpanded, setInternalExpanded] = useState(value.length > 0);
   const expanded = isExpandedProp ?? internalExpanded;
@@ -217,6 +221,17 @@ export function ErrorHandlersSection({ value, onChange, isDisabled, isExpanded: 
             + {t("error_handler.add_button")}
           </Button>
         </div>
+
+        {onReplaceUpstreamChange && value.length > 0 && (
+          <Checkbox
+            id="eh-replace-upstream"
+            label={t("error_handler.replace_upstream")}
+            description={t("error_handler.replace_upstream_help")}
+            isChecked={!!replaceUpstream}
+            onChange={(_e, v) => onReplaceUpstreamChange(v)}
+            isDisabled={isDisabled}
+          />
+        )}
       </div>
     </SectionShell>
   );

@@ -809,7 +809,9 @@
     "field_redirect_to": "重新導向至",
     "field_redirect_code": "狀態碼",
     "field_file_root": "檔案根目錄",
-    "field_file_root_help": "Caddy 會從此目錄提供 {status_code}.html（例如 /var/www/errors/404.html）"
+    "field_file_root_help": "Caddy 會從此目錄提供 {status_code}.html（例如 /var/www/errors/404.html）",
+    "replace_upstream": "同時取代應用程式自己的錯誤頁面",
+    "replace_upstream_help": "關閉時，處理器只回應 Caddy 自身產生的錯誤（上游無法使用、沒有路由）。開啟後，應用程式回傳的錯誤回應（JSON 404、要求登入的 401）也會被取代。"
   },
   "matchers": {
     "heading": "路由比對器",

@@ -809,7 +809,9 @@
     "field_redirect_to": "リダイレクト先",
     "field_redirect_code": "コード",
     "field_file_root": "ファイルのルートディレクトリ",
-    "field_file_root_help": "Caddy はこのディレクトリから {status_code}.html を配信します（例: /var/www/errors/404.html）"
+    "field_file_root_help": "Caddy はこのディレクトリから {status_code}.html を配信します（例: /var/www/errors/404.html）",
+    "replace_upstream": "アプリ自身のエラーページも置き換える",
+    "replace_upstream_help": "オフの場合、ハンドラーは Caddy 自身が発生させたエラー（アップストリーム停止、ルートなし）にのみ応答します。オンにすると、アプリからのエラー応答（JSON の 404、ログインを求める 401）も置き換えます。"
   },
   "matchers": {
     "heading": "ルートマッチャー",

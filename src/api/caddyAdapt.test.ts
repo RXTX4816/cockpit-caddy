@@ -242,6 +242,86 @@ describe.runIf(available || required)("route matchers with not and expression ad
   });
 });
 
+describe.runIf(available || required)("strip prefix on several paths (#255)", () => {
+  const p = entry({ tls: false, externalPort: 8080, matchers: { path: ["/a/*", "/bb/*"] }, handlePath: true });
+
+  it("caddy adapt accepts it and it reads back as handle_path, not a regex rewrite", () => {
+    const [back] = readBack(proxiesToCaddyfile([p]));
+    expect(back.matchers).toEqual({ path: ["/a/*", "/bb/*"] });
+    expect(back.handlePath).toBe(true);
+    expect(back.rewrite).toBeUndefined();
+  });
+
+  it("the instant-apply JSON strips the same way as the adapted Caddyfile", () => {
+    const rewriteOf = (v: unknown): unknown => {
+      if (!v || typeof v !== "object") return undefined;
+      if ((v as { handler?: string }).handler === "rewrite") return v;
+      for (const child of Object.values(v)) {
+        const found = rewriteOf(child);
+        if (found) return found;
+      }
+      return undefined;
+    };
+    const pushed = buildServerEntry(p);
+    expect(rewriteOf(pushed)).toEqual(rewriteOf(adapt(proxiesToCaddyfile([p]))));
+    expect(rewriteOf(pushed)).toMatchObject({ path_regexp: [{ find: "^(?:/bb|/a)/?", replace: "/" }] });
+    const [back] = parseProxies({ apps: { http: { servers: { srv0: pushed } } } });
+    expect(back.handlePath).toBe(true);
+    expect(back.rewrite).toBeUndefined();
+  });
+
+  it("a single path still writes handle_path", () => {
+    const single = entry({ tls: false, externalPort: 8080, matchers: { path: ["/a/*"] }, handlePath: true });
+    const conf = proxiesToCaddyfile([single]);
+    expect(conf).toContain("handle_path /a/* {");
+    expect(readBack(conf)[0].handlePath).toBe(true);
+  });
+});
+
+describe.runIf(available || required)("proxy error handlers replacing upstream error pages (#255)", () => {
+  const rpOf = (servers: Record<string, CaddyServer> | undefined) => {
+    const find = (v: unknown): Record<string, unknown> | undefined => {
+      if (!v || typeof v !== "object") return undefined;
+      if ((v as { handler?: string }).handler === "reverse_proxy") return v as Record<string, unknown>;
+      for (const child of Object.values(v)) {
+        const found = find(child);
+        if (found) return found;
+      }
+      return undefined;
+    };
+    return find(servers);
+  };
+  const p = entry({
+    tls: false, externalPort: 8080, replaceUpstreamErrors: true,
+    errorHandlers: [{ matchType: "4xx", type: "respond", body: "oops" }, { matchType: "specific", codes: [502], type: "respond", body: "bad" }],
+  });
+
+  it("the Caddyfile reads back with the switch on, and the pushed JSON matches the adapted one", () => {
+    const conf = proxiesToCaddyfile([p]);
+    const adapted = adapt(conf);
+    expect(readBack(conf)[0].replaceUpstreamErrors).toBe(true);
+    expect(buildServerEntry(p).routes?.[0]?.handle?.find(h => h.handler === "reverse_proxy")?.handle_response)
+      .toEqual(rpOf(adapted.apps?.http?.servers)?.handle_response);
+  });
+
+  it("without the switch nothing is intercepted and it reads back off", () => {
+    const off = { ...p, replaceUpstreamErrors: undefined };
+    const conf = proxiesToCaddyfile([off]);
+    expect(rpOf(adapt(conf).apps?.http?.servers)?.handle_response).toBeUndefined();
+    expect(readBack(conf)[0].replaceUpstreamErrors).toBeUndefined();
+  });
+
+  it("an existing exact-code config opens with the switch on and saves byte-identical", () => {
+    const exact = entry({ tls: false, externalPort: 8080, errorHandlers: [{ matchType: "specific", codes: [404], type: "respond", body: "nf", statusCode: 404 }] });
+    // What the plugin wrote before #255: the interception was always on.
+    const before = proxiesToCaddyfile([{ ...exact, replaceUpstreamErrors: true }]);
+    expect(before).toContain("error 404");
+    const [back] = readBack(before);
+    expect(back.replaceUpstreamErrors).toBe(true);
+    expect(proxiesToCaddyfile([{ ...exact, ...back, id: exact.id, serverKey: exact.serverKey }])).toBe(before);
+  });
+});
+
 describe.runIf(available || required)("snippets imported into sites (#288)", () => {
   const snippetsConf = snippetsToConf([{ name: "security-headers", body: "header {\n\tX-Frame-Options DENY\n\tReferrer-Policy no-referrer\n}" }]);
   // conf.d/*.conf is read in name order, so the snippets file comes first.

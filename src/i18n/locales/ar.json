@@ -809,7 +809,9 @@
     "field_redirect_to": "إعادة التوجيه إلى",
     "field_redirect_code": "الرمز",
     "field_file_root": "المجلد الجذر للملفات",
-    "field_file_root_help": "سيقدّم Caddy الملف {status_code}.html من هذا المجلد (مثل /var/www/errors/404.html)"
+    "field_file_root_help": "سيقدّم Caddy الملف {status_code}.html من هذا المجلد (مثل /var/www/errors/404.html)",
+    "replace_upstream": "استبدال صفحات الخطأ الخاصة بالتطبيق أيضًا",
+    "replace_upstream_help": "بدون هذا الخيار، تستجيب المعالجات فقط للأخطاء التي يثيرها Caddy نفسه (الخادم الخلفي متوقف، لا يوجد مسار). مع تفعيله، تُستبدل أيضًا استجابات الخطأ من التطبيق (‏404 بصيغة JSON، أو 401 يطلب تسجيل الدخول)."
   },
   "matchers": {
     "heading": "مطابِقات المسار",

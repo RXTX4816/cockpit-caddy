@@ -9,6 +9,7 @@
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
 import { readConf, spawnCmd, openSection } from './helpers';
+import { waitForListener } from './live';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
   await dismissAdminBanner(page);
@@ -266,4 +267,43 @@ test('exclude path and expression are written, adapt, and read back in the edit 
   if (!(await excludeGroup.isVisible())) await openSection(editModal, 'routeMatchers');
   await expect(excludeGroup.getByText('/api/*', { exact: true })).toBeVisible();
   await expect(editModal.getByLabel('Expression (CEL)')).toHaveValue(expression);
+});
+
+// #255: Caddy accepts one path in handle_path. Two strip-prefix paths are written as a named
+// matcher + `uri path_regexp`, which adapts, and both reach the upstream with the prefix stripped.
+test('strip prefix on two paths: the Caddyfile validates and both paths reach the upstream stripped', async ({ pluginPage: page }) => {
+  const targetPort = 19231;
+  await spawnCmd(page, ['bash', '-c', `fuser -k ${targetPort}/tcp 2>&1; mkdir -p /tmp/e2e-hp && echo hit > /tmp/e2e-hp/x; true`]);
+  await spawnCmd(page, ['bash', '-c',
+    `nohup python3 -m http.server ${targetPort} --directory /tmp/e2e-hp >/tmp/e2e-hp.log 2>&1 & disown`]);
+  try {
+    await waitForToolbar(page);
+    await page.getByRole('button', { name: /add proxy/i }).first().click();
+    const modal = page.getByRole('dialog');
+    await modal.getByLabel('External port').fill('19230');
+    await modal.getByLabel(/target host/i).fill('localhost');
+    await modal.locator('#target-port').fill(String(targetPort));
+    await modal.locator('#tls').selectOption('off');
+    await openSection(modal, 'routeMatchers');
+    for (const path of ['/a/*', '/bb/*']) {
+      await modal.getByLabel('Path', { exact: true }).fill(path);
+      await modal.getByRole('button', { name: /^add path$/i }).click();
+    }
+    await modal.getByLabel(/strip matched path prefix/i).check();
+    await submitAndConfirm(modal);
+
+    const conf = await readConf(page);
+    expect(conf).not.toMatch(/handle_path \S+ \S+ \{/);
+    expect(conf).toContain('uri path_regexp ^(?:/bb|/a)/? /');
+    await spawnCmd(page, ['caddy', 'adapt', '--config', '/etc/caddy/Caddyfile', '--adapter', 'caddyfile']);
+
+    await spawnCmd(page, ['systemctl', 'reload', 'caddy']);
+    await waitForListener(page, 'http://localhost:19230/a/x');
+    for (const path of ['/a/x', '/bb/x']) {
+      await expect.poll(() => spawnCmd(page, ['bash', '-c', `curl -s 'http://localhost:19230${path}'; true`]), { timeout: 10000 })
+        .toBe('hit\n');
+    }
+  } finally {
+    await spawnCmd(page, ['bash', '-c', `fuser -k ${targetPort}/tcp 2>&1; true`]);
+  }
 });

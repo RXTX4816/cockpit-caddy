@@ -809,7 +809,9 @@
     "field_redirect_to": "Omdirigera till",
     "field_redirect_code": "Kod",
     "field_file_root": "Rotkatalog för filerna",
-    "field_file_root_help": "Caddy serverar {status_code}.html från den här katalogen (t.ex. /var/www/errors/404.html)"
+    "field_file_root_help": "Caddy serverar {status_code}.html från den här katalogen (t.ex. /var/www/errors/404.html)",
+    "replace_upstream": "Ersätt även appens egna felsidor",
+    "replace_upstream_help": "Utan detta svarar hanterarna bara på fel som Caddy själv ger (upstream nere, ingen route). Med detta ersätts även appens felsvar (en JSON-404, en 401 som ber om inloggning)."
   },
   "matchers": {
     "heading": "Route-matchers",

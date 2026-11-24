@@ -809,7 +809,9 @@
     "field_redirect_to": "Przekieruj do",
     "field_redirect_code": "Kod",
     "field_file_root": "Katalog główny plików",
-    "field_file_root_help": "Caddy będzie serwować {status_code}.html z tego katalogu (np. /var/www/errors/404.html)"
+    "field_file_root_help": "Caddy będzie serwować {status_code}.html z tego katalogu (np. /var/www/errors/404.html)",
+    "replace_upstream": "Zastępuj też własne strony błędów aplikacji",
+    "replace_upstream_help": "Bez tej opcji procedury obsługi reagują tylko na błędy zgłaszane przez sam Caddy (niedostępny upstream, brak trasy). Z nią zastępowane są też odpowiedzi błędów aplikacji (404 w JSON, 401 z prośbą o logowanie)."
   },
   "matchers": {
     "heading": "Matchery trasy",

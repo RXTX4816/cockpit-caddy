@@ -95,3 +95,39 @@ describe("proxy dialog tabs (#260)", () => {
     expect(within(screen.getByRole("tabpanel")).queryByRole("heading", { name: "Server Timeouts & Limits" })).toBeNull();
   });
 });
+
+// #255: error handlers replace the app's own error pages only with this switch on.
+describe("proxy dialog: replace the app's own error pages (#255)", () => {
+  const withHandlers: ProxyEntry = { ...base, errorHandlers: [{ matchType: "4xx", type: "respond", body: "oops" }] };
+  const replaceSwitch = () => screen.getByRole("checkbox", { name: "Also replace the app's own error pages" });
+
+  async function save(onSave: ReturnType<typeof vi.fn>) {
+    fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Confirm" }));
+    await waitFor(() => expect(onSave).toHaveBeenCalled());
+    return onSave.mock.calls[0][0] as ProxyEntry;
+  }
+
+  it("is off for handlers without upstream interception, and turning it on saves it", async () => {
+    const onSave = vi.fn();
+    render(<EditProxyDialog proxy={withHandlers} existingRoutes={[]} onSave={onSave} onClose={() => {}} />);
+    fireEvent.click(tab("Logging & errors"));
+    expect(replaceSwitch()).not.toBeChecked();
+    fireEvent.click(replaceSwitch());
+    expect((await save(onSave)).replaceUpstreamErrors).toBe(true);
+  });
+
+  it("an existing config with it on opens checked and keeps it", async () => {
+    const onSave = vi.fn();
+    render(<EditProxyDialog proxy={{ ...withHandlers, replaceUpstreamErrors: true }} existingRoutes={[]} onSave={onSave} onClose={() => {}} />);
+    fireEvent.click(tab("Logging & errors"));
+    expect(replaceSwitch()).toBeChecked();
+    expect((await save(onSave)).replaceUpstreamErrors).toBe(true);
+  });
+
+  it("is hidden without error handlers", () => {
+    render(<EditProxyDialog proxy={base} existingRoutes={[]} onSave={vi.fn()} onClose={() => {}} />);
+    fireEvent.click(tab("Logging & errors"));
+    expect(screen.queryByRole("checkbox", { name: "Also replace the app's own error pages" })).toBeNull();
+  });
+});

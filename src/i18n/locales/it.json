@@ -809,7 +809,9 @@
     "field_redirect_to": "Reindirizza a",
     "field_redirect_code": "Codice",
     "field_file_root": "Directory radice dei file",
-    "field_file_root_help": "Caddy servirà {status_code}.html da questa directory (es. /var/www/errors/404.html)"
+    "field_file_root_help": "Caddy servirà {status_code}.html da questa directory (es. /var/www/errors/404.html)",
+    "replace_upstream": "Sostituisci anche le pagine di errore dell’app",
+    "replace_upstream_help": "Senza questa opzione i gestori rispondono solo agli errori generati da Caddy (upstream non raggiungibile, nessuna route). Con questa opzione vengono sostituite anche le risposte di errore dell’app (un 404 JSON, un 401 che chiede l’accesso)."
   },
   "matchers": {
     "heading": "Matcher di route",

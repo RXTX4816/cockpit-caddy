@@ -809,7 +809,9 @@
     "field_redirect_to": "리디렉션 대상",
     "field_redirect_code": "코드",
     "field_file_root": "파일 루트 디렉터리",
-    "field_file_root_help": "Caddy가 이 디렉터리에서 {status_code}.html을 제공합니다(예: /var/www/errors/404.html)"
+    "field_file_root_help": "Caddy가 이 디렉터리에서 {status_code}.html을 제공합니다(예: /var/www/errors/404.html)",
+    "replace_upstream": "앱 자체 오류 페이지도 대체",
+    "replace_upstream_help": "끄면 핸들러는 Caddy가 직접 발생시킨 오류(업스트림 중단, 경로 없음)에만 응답합니다. 켜면 앱의 오류 응답(JSON 404, 로그인을 요구하는 401)도 대체합니다."
   },
   "matchers": {
     "heading": "라우트 매처",

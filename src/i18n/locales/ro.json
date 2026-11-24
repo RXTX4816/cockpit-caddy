@@ -809,7 +809,9 @@
     "field_redirect_to": "Redirecționează către",
     "field_redirect_code": "Cod",
     "field_file_root": "Directorul rădăcină al fișierelor",
-    "field_file_root_help": "Caddy va servi {status_code}.html din acest director (de ex. /var/www/errors/404.html)"
+    "field_file_root_help": "Caddy va servi {status_code}.html din acest director (de ex. /var/www/errors/404.html)",
+    "replace_upstream": "Înlocuiește și paginile de eroare ale aplicației",
+    "replace_upstream_help": "Fără această opțiune, handlerele răspund doar la erorile generate chiar de Caddy (upstream indisponibil, nicio rută). Cu ea, sunt înlocuite și răspunsurile de eroare ale aplicației (un 404 JSON, un 401 care cere autentificare)."
   },
   "matchers": {
     "heading": "Matchere de rută",
