@@ -75,6 +75,10 @@ describe("caddyfile tokenizer (#283)", () => {
   it("marks placeholders", () => {
     expect(typeOf(tokens, "{http.request.host}")).toBe("placeholder");
     expect(tokenize("x {\n\tdir {env.TOKEN}\n}")).toContainEqual(["{env.TOKEN}", "placeholder"]);
+    const inWord = tokenize("x {\n\trewrite /api/{path}.json\n}");
+    expect(inWord).toContainEqual(["/api/", "path"]);
+    expect(inWord).toContainEqual(["{path}", "placeholder"]);
+    expect(typeOf(inWord, "rewrite")).toBe("directive");
   });
 
   it("keeps a # inside a quoted string out of comments", () => {
