@@ -47,7 +47,6 @@ import { useLayout, useLocalStorage } from "@rxtx4816/cockpit-plugin-base-react"
 import { TlsBadge } from "./TlsBadge";
 import { tlsModeOf } from "./TlsModeField";
 import { AddProxyDialog } from "./AddProxyDialog";
-import { lbRetryConfigToValues } from "./LbRetrySection";
 import { AddRedirectDialog } from "./AddRedirectDialog";
 import { AddStaticDialog } from "./AddStaticDialog";
 import { AddRespondDialog } from "./AddRespondDialog";
@@ -72,6 +71,7 @@ import type { ProxyEntry, ServerDef } from "../api";
 import { formatExternalHostPort } from "../api";
 import { accessLogConfigToValues } from "./AccessLogSection";
 import { tlsConfigToValues } from "./TlsSection";
+import { proxyTabStateFromEntry } from "./proxyTabState";
 
 type ProxyLayout = "list" | "card";
 /** `label` holds the i18n key; it's translated where the selector is rendered. */
@@ -923,35 +923,8 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
             compress: duplicating.compress ?? false,
             label: duplicating.label ? t("proxies.copy_label", { label: duplicating.label }) : "",
           }}
-          initialRewrite={duplicating.rewrite}
-          initialRequestHeaders={duplicating.requestHeaders}
-          initialResponseHeaders={duplicating.responseHeaders}
-          initialTransport={{
-            dialTimeout: duplicating.dialTimeout ?? "",
-            responseHeaderTimeout: duplicating.responseHeaderTimeout ?? "",
-          }}
-          initialBasicAuth={(duplicating.basicAuth ?? []).map(a => ({ username: a.username, password: "", existingHash: a.passwordHash }))}
-          initialExtraUpstreams={(duplicating.extraUpstreams ?? []).map(u => ({ host: u.host, port: String(u.port) }))}
-          initialLbPolicy={duplicating.lbPolicy}
-          initialLbRetry={lbRetryConfigToValues(duplicating.lbRetry)}
-          initialServerTimeouts={{
-            readTimeout: duplicating.serverReadTimeout ?? "",
-            readHeaderTimeout: duplicating.serverReadHeaderTimeout ?? "",
-            writeTimeout: duplicating.serverWriteTimeout ?? "",
-            idleTimeout: duplicating.serverIdleTimeout ?? "",
-            maxHeaderBytes: duplicating.maxHeaderBytes != null ? String(duplicating.maxHeaderBytes) : "",
-            disableHttp3: duplicating.disableHttp3 ?? false,
-          }}
-          initialRequestBodyMaxSize={duplicating.requestBodyMaxSize != null ? String(duplicating.requestBodyMaxSize) : ""}
-          initialAccessLog={duplicating.accessLog ? accessLogConfigToValues(duplicating.accessLog) : undefined}
-          initialErrorHandlers={duplicating.errorHandlers}
-          initialForwardAuth={duplicating.forwardAuth}
-          initialTlsValues={tlsConfigToValues(duplicating.tlsAdvanced, duplicating.mtls, duplicating.customTls)}
-          initialMatchers={duplicating.matchers}
+          initialTabState={proxyTabStateFromEntry(duplicating)}
           initialImports={duplicating.imports}
-          initialHandlePath={duplicating.handlePath}
-          initialIsNamedRoute={duplicating.isNamedRoute}
-          initialNamedRouteName={duplicating.namedRouteName}
         />
       ))}
 
