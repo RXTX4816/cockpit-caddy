@@ -191,6 +191,7 @@
     "field_split_path": "Suddivisione del percorso (facoltativa)",
     "field_split_path_help": "Estensioni usate per dividere l'URI in percorso dello script e informazioni di percorso. Separate da spazi. Lascia vuoto per il valore predefinito di Caddy (.php).",
     "validation_upstream_required": "L'upstream FastCGI è obbligatorio",
+    "env_heading": "Variabili d'ambiente",
     "env_section_title": "Variabili d'ambiente",
     "env_field_key": "Nome",
     "env_field_value": "Valore",

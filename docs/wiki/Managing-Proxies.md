@@ -40,7 +40,7 @@ Use the **Edit Server** and **Delete Server** buttons in the server info card. D
 
 ## Route Matchers
 
-Route matchers restrict which requests a route handles. They are available in all Add/Edit dialogs: on the **Routing** tab of the proxy dialogs, and as the expandable **Route Matchers** section in the others.
+Route matchers restrict which requests a route handles. They are available in all Add/Edit dialogs, on the **Routing** tab.
 
 When a route has no matchers, it is a **catch-all** — it handles any request that was not matched by an earlier route.
 
@@ -102,7 +102,7 @@ Sizes (max request body size, max header size) are entered as a number and a uni
 | **Logging & errors** | Access logging, Custom error handlers |
 | **Limits** | Server Timeouts & Limits (read/write/idle timeouts, max header size, HTTP/3 opt-out), Max request body size |
 
-The static, redirect, respond and PHP dialogs keep the older layout: expandable sections, one open at a time, each with a **Clear** button (with confirm) and, where Caddy has defaults, a **Defaults** button that empties the fields.
+The static, redirect, respond and PHP dialogs use the same tabs, with fewer of them: static and PHP have General, Security (HTTP Basic Auth, TLS Policy), Routing (Route Matchers, Request Headers, Response Headers), Logging & errors and Limits; redirect and respond have General and Routing (Route Matchers). The PHP environment variables sit on General.
 
 | Section | What it configures |
 |---|---|
@@ -144,7 +144,7 @@ Click **Add Static** in the toolbar.
 
 ### Optional sections
 
-Same as the proxy dialog except Transport, Rewrite, Forward Auth, Extra Upstreams, and Retry & Failover Tuning (which don't apply to a file server, since there's no upstream to dial): TLS Policy (including custom certificates), Access Log, Error Handlers, Server Timeouts, Basic Auth, Request Headers, Response Headers, and Route Matchers. The Max request body size field is also available in the main form.
+Same as the proxy dialog except Transport, Rewrite, Forward Auth, Extra Upstreams, and Retry & Failover Tuning (which don't apply to a file server, since there's no upstream to dial): TLS Policy (including custom certificates), Access Log, Error Handlers, Server Timeouts, Basic Auth, Request Headers, Response Headers, and Route Matchers. The Max request body size field sits on the **Limits** tab.
 
 ---
 

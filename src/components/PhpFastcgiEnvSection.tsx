@@ -1,13 +1,13 @@
 import { useState } from "react";
 import {
   Button,
-  ExpandableSection,
   FormGroup,
   TextInput,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import { SectionActions } from "./SectionActions";
 import { SectionConfiguredDot } from "./SectionConfiguredDot";
+import { SectionShell } from "./sectionLayout";
 
 export interface EnvEntry {
   key: string;
@@ -56,7 +56,8 @@ export function PhpFastcgiEnvSection({ value, onChange, isDisabled, isExpanded: 
   }
 
   return (
-    <ExpandableSection
+    <SectionShell
+      heading={t("php_fastcgi.env_heading")}
       toggleContent={<>{t("php_fastcgi.env_section_title")}{value.length > 0 && <SectionConfiguredDot />}</>}
       isIndented
       isExpanded={expanded}
@@ -102,6 +103,6 @@ export function PhpFastcgiEnvSection({ value, onChange, isDisabled, isExpanded: 
           </Button>
         </div>
       </div>
-    </ExpandableSection>
+    </SectionShell>
   );
 }

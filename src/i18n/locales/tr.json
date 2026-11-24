@@ -191,6 +191,7 @@
     "field_split_path": "Yol bölme (isteğe bağlı)",
     "field_split_path_help": "URI'yi betik yolu ve yol bilgisine bölmek için kullanılan uzantılar. Boşlukla ayrılır. Caddy'nin varsayılanı (.php) için boş bırakın.",
     "validation_upstream_required": "FastCGI upstream zorunludur",
+    "env_heading": "Ortam değişkenleri",
     "env_section_title": "Ortam değişkenleri",
     "env_field_key": "Ad",
     "env_field_value": "Değer",

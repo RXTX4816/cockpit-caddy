@@ -53,9 +53,7 @@ test('PHP site with custom index/split/env round-trips through a reload', async 
   await modal.getByLabel(/fastcgi upstream/i).fill('127.0.0.1:9000');
   await modal.getByLabel(/root directory/i).fill('/srv/app/public');
   await modal.getByLabel(/index file/i).fill('custom.php');
-  // Environment variables section is a collapsed ExpandableSection by default — expand
-  // it before the "Add variable" button inside becomes clickable.
-  await modal.getByRole('button', { name: /environment variables/i }).click();
+  // Environment variables sit on the General tab as a plain section (#293), nothing to expand.
   await modal.getByRole('button', { name: /add variable/i }).click();
   await modal.locator('#php-env-key-0').fill('APP_ENV');
   await modal.locator('#php-env-value-0').fill('production');

@@ -18,10 +18,12 @@ import {
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
-import { CaddyApiError, isPathOnlyMatcher } from "../api";
-import type { ProxyEntry, RouteMatch } from "../api";
-import { RouteMatchersSection } from "./RouteMatchersSection";
+import { CaddyApiError } from "../api";
+import type { ProxyEntry } from "../api";
 import { SnippetImportsField } from "./SnippetImportsField";
+import { ProxyTabs } from "./ProxyTabs";
+import { firstTabWithError, type ProxyTabKey } from "./proxyDialogParts";
+import { proxyTabStateFlags, proxyTabStateFromEntry, useProxyTabState } from "./proxyTabState";
 
 interface Props {
   proxy: ProxyEntry;
@@ -39,9 +41,9 @@ export function EditRespondDialog({ proxy, existingPorts: _existingPorts, onSave
   const [body, setBody] = useState(proxy.staticResponse?.body ?? "");
   const [close, setClose] = useState(proxy.staticResponse?.close ?? false);
   const [label, setLabel] = useState(proxy.label ?? "");
-  const [matchers, setMatchers] = useState<RouteMatch | undefined>(proxy.matchers);
+  const [tabState, updateTabState] = useProxyTabState(proxyTabStateFromEntry(proxy));
+  const [activeTab, setActiveTab] = useState<ProxyTabKey>("general");
   const [imports, setImports] = useState<string[] | undefined>(proxy.imports);
-  const [handlePath, setHandlePath] = useState(proxy.handlePath ?? false);
   const [statusErr, setStatusErr] = useState<string | null>(null);
 
   function validate(): boolean {
@@ -55,7 +57,12 @@ export function EditRespondDialog({ proxy, existingPorts: _existingPorts, onSave
   }
 
   function handleSave() {
-    if (validate()) confirmAction.confirm();
+    const errorTab = firstTabWithError(proxyTabStateFlags(tabState, !validate(), "route").hasError);
+    if (errorTab) {
+      setActiveTab(errorTab);
+      return;
+    }
+    confirmAction.confirm();
   }
 
   const isLocked = confirmAction.step !== "idle";
@@ -73,75 +80,76 @@ export function EditRespondDialog({ proxy, existingPorts: _existingPorts, onSave
             style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}
           />
         )}
-        <Form isHorizontal>
-          <FormGroup label={t("add_proxy.field_label")} fieldId="er-label">
-            <TextInput
-              id="er-label"
-              value={label}
-              onChange={(_e, v) => setLabel(v)}
-              placeholder={t("common.example_value", { value: t("add_proxy.field_label_placeholder") })}
-              isDisabled={isLocked}
-            />
-          </FormGroup>
+        <ProxyTabs
+          state={tabState}
+          onChange={updateTabState}
+          active={activeTab}
+          onSelect={setActiveTab}
+          isDisabled={isLocked}
+          idPrefix="edit-respond"
+          layout="route"
+          generalHasError={!!(statusErr)}
+          general={
+            <Form isHorizontal>
+              <FormGroup label={t("add_proxy.field_label")} fieldId="er-label">
+                <TextInput
+                  id="er-label"
+                  value={label}
+                  onChange={(_e, v) => setLabel(v)}
+                  placeholder={t("common.example_value", { value: t("add_proxy.field_label_placeholder") })}
+                  isDisabled={isLocked}
+                />
+              </FormGroup>
 
-          <FormGroup label={t("add_respond.field_status")} fieldId="er-status" isRequired>
-            <TextInput
-              id="er-status"
-              type="number"
-              value={statusCode}
-              onChange={(_e, v) => { setStatusCode(v); setStatusErr(null); }}
-              placeholder={t("common.example_value", { value: "200" })}
-              isDisabled={isLocked}
-              validated={statusErr ? "error" : "default"}
-            />
-            {statusErr ? (
-              <FormHelperText>
-                <HelperText><HelperTextItem variant="error">{statusErr}</HelperTextItem></HelperText>
-              </FormHelperText>
-            ) : (
-              <FormHelperText>
-                <HelperText><HelperTextItem>{t("add_respond.field_status_help")}</HelperTextItem></HelperText>
-              </FormHelperText>
-            )}
-          </FormGroup>
+              <FormGroup label={t("add_respond.field_status")} fieldId="er-status" isRequired>
+                <TextInput
+                  id="er-status"
+                  type="number"
+                  value={statusCode}
+                  onChange={(_e, v) => { setStatusCode(v); setStatusErr(null); }}
+                  placeholder={t("common.example_value", { value: "200" })}
+                  isDisabled={isLocked}
+                  validated={statusErr ? "error" : "default"}
+                />
+                {statusErr ? (
+                  <FormHelperText>
+                    <HelperText><HelperTextItem variant="error">{statusErr}</HelperTextItem></HelperText>
+                  </FormHelperText>
+                ) : (
+                  <FormHelperText>
+                    <HelperText><HelperTextItem>{t("add_respond.field_status_help")}</HelperTextItem></HelperText>
+                  </FormHelperText>
+                )}
+              </FormGroup>
 
-          <FormGroup label={t("add_respond.field_body")} fieldId="er-body">
-            <TextArea
-              id="er-body"
-              value={body}
-              onChange={(_e, v) => setBody(v)}
-              placeholder={t("add_respond.field_body_placeholder")}
-              isDisabled={isLocked}
-              rows={4}
-              resizeOrientation="vertical"
-            />
-            <FormHelperText>
-              <HelperText><HelperTextItem>{t("add_respond.field_body_help")}</HelperTextItem></HelperText>
-            </FormHelperText>
-          </FormGroup>
+              <FormGroup label={t("add_respond.field_body")} fieldId="er-body">
+                <TextArea
+                  id="er-body"
+                  value={body}
+                  onChange={(_e, v) => setBody(v)}
+                  placeholder={t("add_respond.field_body_placeholder")}
+                  isDisabled={isLocked}
+                  rows={4}
+                  resizeOrientation="vertical"
+                />
+                <FormHelperText>
+                  <HelperText><HelperTextItem>{t("add_respond.field_body_help")}</HelperTextItem></HelperText>
+                </FormHelperText>
+              </FormGroup>
 
-          <FormGroup fieldId="er-close">
-            <Checkbox
-              id="er-close"
-              label={t("add_respond.field_close")}
-              isChecked={close}
-              onChange={(_e, v) => setClose(v)}
-              isDisabled={isLocked}
-            />
-          </FormGroup>
-        </Form>
-        <SnippetImportsField value={imports} onChange={setImports} snippetSettings={proxy.snippetSettings} isDisabled={isLocked} />
-        <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!isPathOnlyMatcher(v)) setHandlePath(false); }} isDisabled={isLocked} />
-        {isPathOnlyMatcher(matchers) && (
-          <Checkbox
-            id="edit-respond-handle-path"
-            label={t("handle_path.label")}
-            isChecked={handlePath}
-            onChange={(_e, v) => setHandlePath(v)}
-            isDisabled={isLocked}
-            style={{ marginLeft: "1rem", marginBottom: "0.5rem" }}
-          />
-        )}
+              <FormGroup fieldId="er-close">
+                <Checkbox
+                  id="er-close"
+                  label={t("add_respond.field_close")}
+                  isChecked={close}
+                  onChange={(_e, v) => setClose(v)}
+                  isDisabled={isLocked}
+                />
+              </FormGroup>
+              <SnippetImportsField value={imports} onChange={setImports} snippetSettings={proxy.snippetSettings} isDisabled={isLocked} />
+            </Form>
+          }
+        />
 
         {confirmAction.error && (
           <Alert variant="danger" isInline title={confirmAction.error} style={{ marginTop: "var(--pf-v6-global--spacer--md)" }} />
@@ -164,9 +172,9 @@ export function EditRespondDialog({ proxy, existingPorts: _existingPorts, onSave
                       body: body.trim() || undefined,
                       close: close || undefined,
                     },
-                    matchers: matchers ?? undefined,
+                    matchers: tabState.matchers ?? undefined,
                     imports,
-                    handlePath: handlePath || undefined,
+                    handlePath: tabState.handlePath || undefined,
                   });
                 } catch (e) {
                   if (e instanceof CaddyApiError) {

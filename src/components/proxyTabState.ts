@@ -132,9 +132,32 @@ export async function proxyTabStateToEntry(s: ProxyTabState): Promise<ProxyTabEn
   };
 }
 
-/** Which tabs show the "configured" dot and which hold an error. */
-export function proxyTabStateFlags(s: ProxyTabState, generalHasError: boolean): TabFlags {
-  return proxyTabFlags({ ...s, forwardAuthError: validateForwardAuth(s.forwardAuth) }, generalHasError);
+/**
+ * Which tabs and sections a dialog shows (#293): "proxy" is the reverse proxy with everything;
+ * "site" (static files, PHP) has no upstreams, forward auth, rewrite or named route; "route"
+ * (redirect, respond) only has its route matchers next to General.
+ */
+export type ProxyTabsLayout = "proxy" | "site" | "route";
+
+/** The state as the layout's sections see it: settings without a section count as unset. */
+function visibleState(s: ProxyTabState, layout: ProxyTabsLayout): ProxyTabState {
+  if (layout === "proxy") return s;
+  const empty = emptyProxyTabState();
+  if (layout === "route") return { ...empty, matchers: s.matchers, handlePath: s.handlePath };
+  return {
+    ...s,
+    forwardAuth: empty.forwardAuth, rewrite: empty.rewrite, isNamedRoute: empty.isNamedRoute, namedRouteName: empty.namedRouteName,
+    extraUpstreams: empty.extraUpstreams, lbPolicy: empty.lbPolicy, lbRetry: empty.lbRetry, transport: empty.transport,
+  };
+}
+
+/**
+ * Which tabs show the "configured" dot and which hold an error. Settings the layout has no
+ * section for (a hand-written static site with forward auth) neither mark a tab nor block Save.
+ */
+export function proxyTabStateFlags(s: ProxyTabState, generalHasError: boolean, layout: ProxyTabsLayout = "proxy"): TabFlags {
+  const v = visibleState(s, layout);
+  return proxyTabFlags({ ...v, forwardAuthError: validateForwardAuth(v.forwardAuth) }, generalHasError);
 }
 
 export type ProxyTabStateUpdate = (patch: Partial<ProxyTabState>) => void;

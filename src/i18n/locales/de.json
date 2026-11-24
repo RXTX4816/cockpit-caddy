@@ -191,6 +191,7 @@
     "field_split_path": "Split-Pfad (optional)",
     "field_split_path_help": "Endungen, an denen die URI in Skriptpfad und Pfadinfo aufgeteilt wird. Durch Leerzeichen getrennt. Leer lassen für den Caddy-Standard (.php).",
     "validation_upstream_required": "FastCGI-Upstream ist erforderlich",
+    "env_heading": "Umgebungsvariablen",
     "env_section_title": "Umgebungsvariablen",
     "env_field_key": "Name",
     "env_field_value": "Wert",

@@ -191,6 +191,7 @@
     "field_split_path": "パス分割（任意）",
     "field_split_path_help": "URI をスクリプトパスとパス情報に分割するための拡張子。スペース区切り。Caddy の既定値（.php）を使う場合は空欄にします。",
     "validation_upstream_required": "FastCGI アップストリームは必須です",
+    "env_heading": "環境変数",
     "env_section_title": "環境変数",
     "env_field_key": "名前",
     "env_field_value": "値",

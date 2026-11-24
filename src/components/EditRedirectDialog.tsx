@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   Alert,
   Button,
-  Checkbox,
   Form,
   FormGroup,
   FormHelperText,
@@ -17,10 +16,12 @@ import {
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
-import { CaddyApiError, isPathOnlyMatcher } from "../api";
-import type { ProxyEntry, RouteMatch } from "../api";
-import { RouteMatchersSection } from "./RouteMatchersSection";
+import { CaddyApiError } from "../api";
+import type { ProxyEntry } from "../api";
 import { SnippetImportsField } from "./SnippetImportsField";
+import { ProxyTabs } from "./ProxyTabs";
+import { firstTabWithError, type ProxyTabKey } from "./proxyDialogParts";
+import { proxyTabStateFlags, proxyTabStateFromEntry, useProxyTabState } from "./proxyTabState";
 
 const REDIRECT_CODES = [301, 302, 307, 308] as const;
 
@@ -39,9 +40,9 @@ export function EditRedirectDialog({ proxy, existingPorts, onSave, onClose }: Pr
   const [to, setTo] = useState(proxy.redirect?.to ?? "");
   const [code, setCode] = useState<301 | 302 | 307 | 308>(proxy.redirect?.code ?? 308);
   const [label, setLabel] = useState(proxy.label ?? "");
-  const [matchers, setMatchers] = useState<RouteMatch | undefined>(proxy.matchers);
+  const [tabState, updateTabState] = useProxyTabState(proxyTabStateFromEntry(proxy));
+  const [activeTab, setActiveTab] = useState<ProxyTabKey>("general");
   const [imports, setImports] = useState<string[] | undefined>(proxy.imports);
-  const [handlePath, setHandlePath] = useState(proxy.handlePath ?? false);
   const [toErr, setToErr] = useState<string | null>(null);
 
   void existingPorts; // port is not editable when editing
@@ -53,7 +54,12 @@ export function EditRedirectDialog({ proxy, existingPorts, onSave, onClose }: Pr
   }
 
   function handleSave() {
-    if (validate()) confirmAction.confirm();
+    const errorTab = firstTabWithError(proxyTabStateFlags(tabState, !validate(), "route").hasError);
+    if (errorTab) {
+      setActiveTab(errorTab);
+      return;
+    }
+    confirmAction.confirm();
   }
 
   const isLocked = confirmAction.step !== "idle";
@@ -72,65 +78,66 @@ export function EditRedirectDialog({ proxy, existingPorts, onSave, onClose }: Pr
           />
         )}
 
-        <Form isHorizontal>
-          <FormGroup label={t("add_proxy.field_label")} fieldId="edit-redirect-label">
-            <TextInput
-              id="edit-redirect-label"
-              value={label}
-              onChange={(_e, v) => setLabel(v)}
-              placeholder={t("common.example_value", { value: t("add_proxy.field_label_placeholder") })}
-              isDisabled={isLocked}
-            />
-          </FormGroup>
-
-          <FormGroup label={t("add_redirect.field_to_url")} fieldId="edit-redirect-to" isRequired>
-            <TextInput
-              id="edit-redirect-to"
-              value={to}
-              onChange={(_e, v) => { setTo(v); setToErr(null); }}
-              placeholder={t("common.example_value", { value: "https://{host}{uri}" })}
-              isDisabled={isLocked}
-              validated={toErr ? "error" : "default"}
-            />
-            {toErr ? (
-              <FormHelperText>
-                <HelperText><HelperTextItem variant="error">{toErr}</HelperTextItem></HelperText>
-              </FormHelperText>
-            ) : (
-              <FormHelperText>
-                <HelperText><HelperTextItem>{t("add_redirect.field_to_url_help")}</HelperTextItem></HelperText>
-              </FormHelperText>
-            )}
-          </FormGroup>
-
-          <FormGroup label={t("add_redirect.field_code")} fieldId="edit-redirect-code" isRequired>
-            <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap" }}>
-              {REDIRECT_CODES.map(c => (
-                <Button
-                  key={c}
-                  variant={code === c ? "primary" : "secondary"}
-                  size="sm"
-                  onClick={() => setCode(c)}
+        <ProxyTabs
+          state={tabState}
+          onChange={updateTabState}
+          active={activeTab}
+          onSelect={setActiveTab}
+          isDisabled={isLocked}
+          idPrefix="edit-redirect"
+          layout="route"
+          generalHasError={!!(toErr)}
+          general={
+            <Form isHorizontal>
+              <FormGroup label={t("add_proxy.field_label")} fieldId="edit-redirect-label">
+                <TextInput
+                  id="edit-redirect-label"
+                  value={label}
+                  onChange={(_e, v) => setLabel(v)}
+                  placeholder={t("common.example_value", { value: t("add_proxy.field_label_placeholder") })}
                   isDisabled={isLocked}
-                >
-                  {t(`add_redirect.code_${c}`)}
-                </Button>
-              ))}
-            </div>
-          </FormGroup>
-        </Form>
-        <SnippetImportsField value={imports} onChange={setImports} snippetSettings={proxy.snippetSettings} isDisabled={isLocked} />
-        <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!isPathOnlyMatcher(v)) setHandlePath(false); }} isDisabled={isLocked} />
-        {isPathOnlyMatcher(matchers) && (
-          <Checkbox
-            id="edit-redirect-handle-path"
-            label={t("handle_path.label")}
-            isChecked={handlePath}
-            onChange={(_e, v) => setHandlePath(v)}
-            isDisabled={isLocked}
-            style={{ marginLeft: "1rem", marginBottom: "0.5rem" }}
-          />
-        )}
+                />
+              </FormGroup>
+
+              <FormGroup label={t("add_redirect.field_to_url")} fieldId="edit-redirect-to" isRequired>
+                <TextInput
+                  id="edit-redirect-to"
+                  value={to}
+                  onChange={(_e, v) => { setTo(v); setToErr(null); }}
+                  placeholder={t("common.example_value", { value: "https://{host}{uri}" })}
+                  isDisabled={isLocked}
+                  validated={toErr ? "error" : "default"}
+                />
+                {toErr ? (
+                  <FormHelperText>
+                    <HelperText><HelperTextItem variant="error">{toErr}</HelperTextItem></HelperText>
+                  </FormHelperText>
+                ) : (
+                  <FormHelperText>
+                    <HelperText><HelperTextItem>{t("add_redirect.field_to_url_help")}</HelperTextItem></HelperText>
+                  </FormHelperText>
+                )}
+              </FormGroup>
+
+              <FormGroup label={t("add_redirect.field_code")} fieldId="edit-redirect-code" isRequired>
+                <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap" }}>
+                  {REDIRECT_CODES.map(c => (
+                    <Button
+                      key={c}
+                      variant={code === c ? "primary" : "secondary"}
+                      size="sm"
+                      onClick={() => setCode(c)}
+                      isDisabled={isLocked}
+                    >
+                      {t(`add_redirect.code_${c}`)}
+                    </Button>
+                  ))}
+                </div>
+              </FormGroup>
+              <SnippetImportsField value={imports} onChange={setImports} snippetSettings={proxy.snippetSettings} isDisabled={isLocked} />
+            </Form>
+          }
+        />
 
         {confirmAction.error && (
           <Alert variant="danger" isInline title={confirmAction.error} style={{ marginTop: "var(--pf-v6-global--spacer--md)" }} />
@@ -148,9 +155,9 @@ export function EditRedirectDialog({ proxy, existingPorts, onSave, onClose }: Pr
                   ...proxy,
                   label: label.trim() || undefined,
                   redirect: { to: to.trim(), code },
-                  matchers: matchers ?? undefined,
+                  matchers: tabState.matchers ?? undefined,
                   imports,
-                  handlePath: handlePath || undefined,
+                  handlePath: tabState.handlePath || undefined,
                 };
                 try {
                   await onSave(updated);

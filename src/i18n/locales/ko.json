@@ -191,6 +191,7 @@
     "field_split_path": "경로 분할(선택)",
     "field_split_path_help": "URI를 스크립트 경로와 경로 정보로 나눌 때 쓰는 확장자. 공백으로 구분합니다. Caddy 기본값(.php)을 쓰려면 비워 두세요.",
     "validation_upstream_required": "FastCGI 업스트림을 입력하세요",
+    "env_heading": "환경 변수",
     "env_section_title": "환경 변수",
     "env_field_key": "이름",
     "env_field_value": "값",

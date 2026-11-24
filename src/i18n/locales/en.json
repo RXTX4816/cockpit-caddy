@@ -191,6 +191,7 @@
     "field_split_path": "Split path (optional)",
     "field_split_path_help": "Extensions used to split the URI into script path and path info. Space-separated. Leave blank for Caddy's own default (.php).",
     "validation_upstream_required": "FastCGI upstream is required",
+    "env_heading": "Environment variables",
     "env_section_title": "Environment variables",
     "env_field_key": "Name",
     "env_field_value": "Value",

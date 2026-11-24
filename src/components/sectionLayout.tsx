@@ -4,9 +4,10 @@ import { UndoIcon } from "@patternfly/react-icons";
 import { useTranslation } from "react-i18next";
 
 /**
- * True inside the tabbed proxy dialog (#260): sections render as plain headed field groups
- * instead of accordions, without the per-section Clear / Defaults buttons, and fields get a
- * per-field "Reset to Caddy default" button instead. Every other dialog keeps the accordions.
+ * True inside the tabbed site dialogs (proxy #260, static / PHP / redirect / respond #293):
+ * sections render as plain headed field groups instead of accordions, without the per-section
+ * Clear / Defaults buttons, and fields get a per-field "Reset to Caddy default" button instead.
+ * The server dialogs and the global options keep the accordions.
  */
 export const FlatSectionsContext = createContext(false);
 
@@ -26,7 +27,7 @@ interface ShellProps {
   children: ReactNode;
 }
 
-/** An ExpandableSection, or a headed field group inside the tabbed proxy dialog. */
+/** An ExpandableSection, or a headed field group inside a tabbed site dialog. */
 export function SectionShell({ heading, toggleContent, toggleText, isIndented, isExpanded, onToggle, style, children }: ShellProps) {
   const flat = useFlatSections();
   const id = useId();

@@ -191,6 +191,7 @@
     "field_split_path": "פיצול נתיב (אופציונלי)",
     "field_split_path_help": "סיומות שלפיהן ה-URI מפוצל לנתיב סקריפט ולמידע נתיב, מופרדות ברווחים. יש להשאיר ריק לברירת המחדל של Caddy ‏(.php).",
     "validation_upstream_required": "נדרש upstream של FastCGI",
+    "env_heading": "משתני סביבה",
     "env_section_title": "משתני סביבה",
     "env_field_key": "שם",
     "env_field_value": "ערך",

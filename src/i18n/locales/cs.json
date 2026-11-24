@@ -191,6 +191,7 @@
     "field_split_path": "Rozdělení cesty (volitelné)",
     "field_split_path_help": "Přípony, podle kterých se URI rozdělí na cestu ke skriptu a informaci o cestě. Oddělené mezerami. Ponechte prázdné pro výchozí hodnotu Caddy (.php).",
     "validation_upstream_required": "Upstream FastCGI je povinný",
+    "env_heading": "Proměnné prostředí",
     "env_section_title": "Proměnné prostředí",
     "env_field_key": "Název",
     "env_field_value": "Hodnota",

@@ -191,6 +191,7 @@
     "field_split_path": "Padsplitsing (optioneel)",
     "field_split_path_help": "Extensies waarop de URI wordt gesplitst in scriptpad en padinformatie. Gescheiden door spaties. Laat leeg voor de standaard van Caddy (.php).",
     "validation_upstream_required": "FastCGI-upstream is verplicht",
+    "env_heading": "Omgevingsvariabelen",
     "env_section_title": "Omgevingsvariabelen",
     "env_field_key": "Naam",
     "env_field_value": "Waarde",

@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   Alert,
   Button,
-  Checkbox,
   Form,
   FormGroup,
   FormHelperText,
@@ -20,10 +19,12 @@ import {
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
-import { CaddyApiError, isPathOnlyMatcher } from "../api";
-import type { ProxyEntry, RouteMatch, ServerDef } from "../api";
-import { RouteMatchersSection } from "./RouteMatchersSection";
+import { CaddyApiError } from "../api";
+import type { ProxyEntry, ServerDef } from "../api";
 import { SnippetImportsField } from "./SnippetImportsField";
+import { ProxyTabs } from "./ProxyTabs";
+import { firstTabWithError, type ProxyTabKey } from "./proxyDialogParts";
+import { proxyTabStateFlags, useProxyTabState, type ProxyTabState } from "./proxyTabState";
 import { parseListenPort } from "./AddServerDialog";
 
 const REDIRECT_CODES = [301, 302, 307, 308] as const;
@@ -46,14 +47,14 @@ interface Props {
   onAdd: (entry: Omit<ProxyEntry, "id" | "serverKey">) => Promise<void>;
   onClose: () => void;
   initialValues?: InitialValues;
-  initialMatchers?: RouteMatch;
+  /** Duplicate: the source's route matchers (#293). */
+  initialTabState?: Partial<ProxyTabState>;
   initialImports?: string[];
-  initialHandlePath?: boolean;
   servers?: ServerDef[];
   initialServerKey?: string;
 }
 
-export function AddRedirectDialog({ existingPorts, onAdd, onClose, initialValues, initialMatchers, initialImports, initialHandlePath, servers, initialServerKey }: Props) {
+export function AddRedirectDialog({ existingPorts, onAdd, onClose, initialValues, initialTabState, initialImports, servers, initialServerKey }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
   const confirmAction = useConfirmAction();
@@ -62,9 +63,9 @@ export function AddRedirectDialog({ existingPorts, onAdd, onClose, initialValues
   const [to, setTo] = useState(initialValues?.to ?? "");
   const [code, setCode] = useState<301 | 302 | 307 | 308>(initialValues?.code ?? 308);
   const [label, setLabel] = useState(initialValues?.label ?? "");
-  const [matchers, setMatchers] = useState<RouteMatch | undefined>(initialMatchers);
+  const [tabState, updateTabState] = useProxyTabState(initialTabState);
+  const [activeTab, setActiveTab] = useState<ProxyTabKey>("general");
   const [imports, setImports] = useState<string[] | undefined>(initialImports);
-  const [handlePath, setHandlePath] = useState(initialHandlePath ?? false);
   const [selectedServerKey, setSelectedServerKey] = useState(initialServerKey ?? "");
   const [portErr, setPortErr] = useState<string | null>(null);
   const [toErr, setToErr] = useState<string | null>(null);
@@ -103,7 +104,12 @@ export function AddRedirectDialog({ existingPorts, onAdd, onClose, initialValues
   }
 
   function handleAdd() {
-    if (validate()) confirmAction.confirm();
+    const errorTab = firstTabWithError(proxyTabStateFlags(tabState, !validate(), "route").hasError);
+    if (errorTab) {
+      setActiveTab(errorTab);
+      return;
+    }
+    confirmAction.confirm();
   }
 
   const isLocked = confirmAction.step !== "idle";
@@ -122,113 +128,116 @@ export function AddRedirectDialog({ existingPorts, onAdd, onClose, initialValues
           />
         )}
 
-        <div style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}>
-          <Button variant="secondary" size="sm" onClick={applyHttpsShortcut} isDisabled={isLocked}>
-            {t("add_redirect.shortcut_http_https")}
-          </Button>
-          <div style={{ fontSize: "0.8rem", color: "var(--pf-t--global--text--color--subtle)", marginTop: "0.25rem" }}>
-            {t("add_redirect.shortcut_http_https_help")}
-          </div>
-        </div>
-
-        <Form isHorizontal>
-          <FormGroup label={t("add_proxy.field_label")} fieldId="redirect-label">
-            <TextInput
-              id="redirect-label"
-              value={label}
-              onChange={(_e, v) => setLabel(v)}
-              placeholder={t("common.example_value", { value: t("add_proxy.field_label_placeholder") })}
-              isDisabled={isLocked}
-            />
-          </FormGroup>
-
-          {servers && servers.length > 0 && (
-            <FormGroup label={t("servers.selector_label")} fieldId="redirect-server">
-              <FormSelect
-                id="redirect-server"
-                value={selectedServerKey}
-                onChange={(_e, v) => { setSelectedServerKey(v); setPortErr(null); }}
-                isDisabled={isLocked}
-              >
-                <FormSelectOption value="" label={t("servers.selector_none")} />
-                {servers.map(s => (
-                  <FormSelectOption key={s.key} value={s.key} label={`${s.name} (${s.listenAddresses[0] ?? ""})`} />
-                ))}
-              </FormSelect>
-            </FormGroup>
-          )}
-
-          {serverCtx ? (
-            <FormGroup label={t("add_redirect.field_from_port")} fieldId="redirect-port">
-              <Label isCompact color="blue">{serverCtx.serverName} (:{serverCtx.port})</Label>
-            </FormGroup>
-          ) : (
-            <FormGroup label={t("add_redirect.field_from_port")} fieldId="redirect-port" isRequired>
-              <TextInput
-                id="redirect-port"
-                type="number"
-                value={port}
-                onChange={(_e, v) => { setPort(v); setPortErr(null); }}
-                placeholder={t("common.example_value", { value: "80" })}
-                isDisabled={isLocked}
-                validated={portErr ? "error" : "default"}
-              />
-              {portErr && (
-                <FormHelperText>
-                  <HelperText><HelperTextItem variant="error">{portErr}</HelperTextItem></HelperText>
-                </FormHelperText>
-              )}
-            </FormGroup>
-          )}
-
-          <FormGroup label={t("add_redirect.field_to_url")} fieldId="redirect-to" isRequired>
-            <TextInput
-              id="redirect-to"
-              value={to}
-              onChange={(_e, v) => { setTo(v); setToErr(null); }}
-              placeholder={t("common.example_value", { value: "https://{host}{uri}" })}
-              isDisabled={isLocked}
-              validated={toErr ? "error" : "default"}
-            />
-            {toErr ? (
-              <FormHelperText>
-                <HelperText><HelperTextItem variant="error">{toErr}</HelperTextItem></HelperText>
-              </FormHelperText>
-            ) : (
-              <FormHelperText>
-                <HelperText><HelperTextItem>{t("add_redirect.field_to_url_help")}</HelperTextItem></HelperText>
-              </FormHelperText>
-            )}
-          </FormGroup>
-
-          <FormGroup label={t("add_redirect.field_code")} fieldId="redirect-code" isRequired>
-            <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap" }}>
-              {REDIRECT_CODES.map(c => (
-                <Button
-                  key={c}
-                  variant={code === c ? "primary" : "secondary"}
-                  size="sm"
-                  onClick={() => setCode(c)}
-                  isDisabled={isLocked}
-                >
-                  {t(`add_redirect.code_${c}`)}
+        <ProxyTabs
+          state={tabState}
+          onChange={updateTabState}
+          active={activeTab}
+          onSelect={setActiveTab}
+          isDisabled={isLocked}
+          idPrefix="add-redirect"
+          layout="route"
+          generalHasError={!!(portErr || toErr)}
+          general={
+            <>
+              <div style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}>
+                <Button variant="secondary" size="sm" onClick={applyHttpsShortcut} isDisabled={isLocked}>
+                  {t("add_redirect.shortcut_http_https")}
                 </Button>
-              ))}
-            </div>
-          </FormGroup>
-        </Form>
-        <SnippetImportsField value={imports} onChange={setImports} isDisabled={isLocked} />
-        <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!isPathOnlyMatcher(v)) setHandlePath(false); }} isDisabled={isLocked} />
-        {isPathOnlyMatcher(matchers) && (
-          <Checkbox
-            id="add-redirect-handle-path"
-            label={t("handle_path.label")}
-            isChecked={handlePath}
-            onChange={(_e, v) => setHandlePath(v)}
-            isDisabled={isLocked}
-            style={{ marginLeft: "1rem", marginBottom: "0.5rem" }}
-          />
-        )}
+                <div style={{ fontSize: "0.8rem", color: "var(--pf-t--global--text--color--subtle)", marginTop: "0.25rem" }}>
+                  {t("add_redirect.shortcut_http_https_help")}
+                </div>
+              </div>
+
+              <Form isHorizontal>
+                <FormGroup label={t("add_proxy.field_label")} fieldId="redirect-label">
+                  <TextInput
+                    id="redirect-label"
+                    value={label}
+                    onChange={(_e, v) => setLabel(v)}
+                    placeholder={t("common.example_value", { value: t("add_proxy.field_label_placeholder") })}
+                    isDisabled={isLocked}
+                  />
+                </FormGroup>
+
+                {servers && servers.length > 0 && (
+                  <FormGroup label={t("servers.selector_label")} fieldId="redirect-server">
+                    <FormSelect
+                      id="redirect-server"
+                      value={selectedServerKey}
+                      onChange={(_e, v) => { setSelectedServerKey(v); setPortErr(null); }}
+                      isDisabled={isLocked}
+                    >
+                      <FormSelectOption value="" label={t("servers.selector_none")} />
+                      {servers.map(s => (
+                        <FormSelectOption key={s.key} value={s.key} label={`${s.name} (${s.listenAddresses[0] ?? ""})`} />
+                      ))}
+                    </FormSelect>
+                  </FormGroup>
+                )}
+
+                {serverCtx ? (
+                  <FormGroup label={t("add_redirect.field_from_port")} fieldId="redirect-port">
+                    <Label isCompact color="blue">{serverCtx.serverName} (:{serverCtx.port})</Label>
+                  </FormGroup>
+                ) : (
+                  <FormGroup label={t("add_redirect.field_from_port")} fieldId="redirect-port" isRequired>
+                    <TextInput
+                      id="redirect-port"
+                      type="number"
+                      value={port}
+                      onChange={(_e, v) => { setPort(v); setPortErr(null); }}
+                      placeholder={t("common.example_value", { value: "80" })}
+                      isDisabled={isLocked}
+                      validated={portErr ? "error" : "default"}
+                    />
+                    {portErr && (
+                      <FormHelperText>
+                        <HelperText><HelperTextItem variant="error">{portErr}</HelperTextItem></HelperText>
+                      </FormHelperText>
+                    )}
+                  </FormGroup>
+                )}
+
+                <FormGroup label={t("add_redirect.field_to_url")} fieldId="redirect-to" isRequired>
+                  <TextInput
+                    id="redirect-to"
+                    value={to}
+                    onChange={(_e, v) => { setTo(v); setToErr(null); }}
+                    placeholder={t("common.example_value", { value: "https://{host}{uri}" })}
+                    isDisabled={isLocked}
+                    validated={toErr ? "error" : "default"}
+                  />
+                  {toErr ? (
+                    <FormHelperText>
+                      <HelperText><HelperTextItem variant="error">{toErr}</HelperTextItem></HelperText>
+                    </FormHelperText>
+                  ) : (
+                    <FormHelperText>
+                      <HelperText><HelperTextItem>{t("add_redirect.field_to_url_help")}</HelperTextItem></HelperText>
+                    </FormHelperText>
+                  )}
+                </FormGroup>
+
+                <FormGroup label={t("add_redirect.field_code")} fieldId="redirect-code" isRequired>
+                  <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap" }}>
+                    {REDIRECT_CODES.map(c => (
+                      <Button
+                        key={c}
+                        variant={code === c ? "primary" : "secondary"}
+                        size="sm"
+                        onClick={() => setCode(c)}
+                        isDisabled={isLocked}
+                      >
+                        {t(`add_redirect.code_${c}`)}
+                      </Button>
+                    ))}
+                  </div>
+                </FormGroup>
+                <SnippetImportsField value={imports} onChange={setImports} isDisabled={isLocked} />
+              </Form>
+            </>
+          }
+        />
 
         {confirmAction.error && (
           <Alert variant="danger" isInline title={confirmAction.error} style={{ marginTop: "var(--pf-v6-global--spacer--md)" }} />
@@ -254,9 +263,9 @@ export function AddRedirectDialog({ existingPorts, onAdd, onClose, initialValues
                     tlsSkipVerify: false,
                     label: label.trim() || undefined,
                     redirect: { to: to.trim(), code },
-                    matchers: matchers ?? undefined,
+                    matchers: tabState.matchers ?? undefined,
                     imports,
-                    handlePath: handlePath || undefined,
+                    handlePath: tabState.handlePath || undefined,
                     namedServerKey: serverCtx?.serverKey,
                   });
                 } catch (e) {

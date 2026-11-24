@@ -17,21 +17,13 @@ import {
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
-import { CaddyApiError, isPathOnlyMatcher } from "../api";
+import { CaddyApiError } from "../api";
 import { TlsModeField, hasPublicName, tlsModeToEntry, type TlsMode, tlsModeOf } from "./TlsModeField";
-import type { ProxyEntry, ErrorHandlerConfig, RouteMatch } from "../api";
-import { RouteMatchersSection } from "./RouteMatchersSection";
+import type { ProxyEntry } from "../api";
 import { SnippetImportsField } from "./SnippetImportsField";
-import { BasicAuthSection, resolveBasicAuth, type AuthEntry } from "./BasicAuthSection";
-import { ResponseHeadersSection } from "./ResponseHeadersSection";
-import { RequestHeadersSection } from "./RequestHeadersSection";
-import { AccessLogSection, type AccessLogValues, accessLogConfigToValues, accessLogValuesToConfig } from "./AccessLogSection";
-import { ServerTimeoutsSection, type ServerTimeoutValues } from "./ServerTimeoutsSection";
-import { RequestBodyLimitField } from "./RequestBodyLimitField";
-import { ErrorHandlersSection } from "./ErrorHandlersSection";
-import { TlsSection, type TlsValues, tlsValuesToAdvanced, tlsValuesToMtls, tlsConfigToValues } from "./TlsSection";
-import { sectionAccordionProps } from "./sectionAccordion";
-import { AccordionRow } from "./AccordionRow";
+import { ProxyTabs } from "./ProxyTabs";
+import { firstTabWithError, type ProxyTabKey } from "./proxyDialogParts";
+import { proxyTabStateFlags, proxyTabStateFromEntry, proxyTabStateToEntry, useProxyTabState } from "./proxyTabState";
 
 interface Props {
   proxy: ProxyEntry;
@@ -55,29 +47,11 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
   const [tlsOnDemand, setTlsOnDemand] = useState(!!proxy.tlsOnDemand);
   const [compress, setCompress] = useState(proxy.compress ?? false);
   const [label, setLabel] = useState(proxy.label ?? "");
-  const [basicAuth, setBasicAuth] = useState<AuthEntry[]>(
-    (proxy.basicAuth ?? []).map(a => ({ username: a.username, password: "", existingHash: a.passwordHash })),
-  );
-  const [responseHeaders, setResponseHeaders] = useState(proxy.responseHeaders ?? []);
-  const [requestHeaders, setRequestHeaders] = useState(proxy.requestHeaders);
-  const [accessLog, setAccessLog] = useState<AccessLogValues>(accessLogConfigToValues(proxy.accessLog));
-  const [serverTimeouts, setServerTimeouts] = useState<ServerTimeoutValues>({
-    readTimeout: proxy.serverReadTimeout ?? "",
-    readHeaderTimeout: proxy.serverReadHeaderTimeout ?? "",
-    writeTimeout: proxy.serverWriteTimeout ?? "",
-    idleTimeout: proxy.serverIdleTimeout ?? "",
-    maxHeaderBytes: proxy.maxHeaderBytes != null ? String(proxy.maxHeaderBytes) : "",
-    disableHttp3: proxy.disableHttp3 ?? false,
-  });
-  const [requestBodyMaxSize, setRequestBodyMaxSize] = useState(proxy.requestBodyMaxSize != null ? String(proxy.requestBodyMaxSize) : "");
-  const [errorHandlers, setErrorHandlers] = useState<ErrorHandlerConfig[]>(proxy.errorHandlers ?? []);
-  const [tlsValues, setTlsValues] = useState<TlsValues>(tlsConfigToValues(proxy.tlsAdvanced, proxy.mtls));
-  const [matchers, setMatchers] = useState<RouteMatch | undefined>(proxy.matchers);
+  const [tabState, updateTabState] = useProxyTabState(proxyTabStateFromEntry(proxy));
+  const [activeTab, setActiveTab] = useState<ProxyTabKey>("general");
   const [imports, setImports] = useState<string[] | undefined>(proxy.imports);
-  const [handlePath, setHandlePath] = useState(proxy.handlePath ?? false);
   const [portErr, setPortErr] = useState<string | null>(null);
   const [rootErr, setRootErr] = useState<string | null>(null);
-  const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
   function validate(): boolean {
     let ok = true;
@@ -95,7 +69,12 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
   }
 
   function handleSave() {
-    if (validate()) confirmAction.confirm();
+    const errorTab = firstTabWithError(proxyTabStateFlags(tabState, !validate(), "site").hasError);
+    if (errorTab) {
+      setActiveTab(errorTab);
+      return;
+    }
+    confirmAction.confirm();
   }
 
   const isLocked = confirmAction.step !== "idle";
@@ -114,133 +93,87 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
           />
         )}
 
-        <Form isHorizontal>
-          <FormGroup label={t("add_proxy.field_label")} fieldId="static-edit-label">
-            <TextInput
-              id="static-edit-label"
-              value={label}
-              onChange={(_e, v) => setLabel(v)}
-              placeholder={t("common.example_value", { value: t("add_proxy.field_label_placeholder") })}
-              isDisabled={isLocked}
-            />
-          </FormGroup>
+        <ProxyTabs
+          state={tabState}
+          onChange={updateTabState}
+          active={activeTab}
+          onSelect={setActiveTab}
+          isDisabled={isLocked}
+          idPrefix="edit-static"
+          layout="site"
+          showTls={!proxy.namedServerKey}
+          generalHasError={!!(portErr || rootErr)}
+          general={
+            <Form isHorizontal>
+              <FormGroup label={t("add_proxy.field_label")} fieldId="static-edit-label">
+                <TextInput
+                  id="static-edit-label"
+                  value={label}
+                  onChange={(_e, v) => setLabel(v)}
+                  placeholder={t("common.example_value", { value: t("add_proxy.field_label_placeholder") })}
+                  isDisabled={isLocked}
+                />
+              </FormGroup>
 
-          <FormGroup label={t("add_redirect.field_from_port")} fieldId="static-edit-port" isRequired>
-            <TextInput
-              id="static-edit-port"
-              type="number"
-              value={port}
-              onChange={(_e, v) => { setPort(v); setPortErr(null); }}
-              isDisabled={isLocked}
-              validated={portErr ? "error" : "default"}
-            />
-            {portErr && (
-              <FormHelperText>
-                <HelperText><HelperTextItem variant="error">{portErr}</HelperTextItem></HelperText>
-              </FormHelperText>
-            )}
-          </FormGroup>
+              <FormGroup label={t("add_redirect.field_from_port")} fieldId="static-edit-port" isRequired>
+                <TextInput
+                  id="static-edit-port"
+                  type="number"
+                  value={port}
+                  onChange={(_e, v) => { setPort(v); setPortErr(null); }}
+                  isDisabled={isLocked}
+                  validated={portErr ? "error" : "default"}
+                />
+                {portErr && (
+                  <FormHelperText>
+                    <HelperText><HelperTextItem variant="error">{portErr}</HelperTextItem></HelperText>
+                  </FormHelperText>
+                )}
+              </FormGroup>
 
-          <FormGroup label={t("add_static.field_root")} fieldId="static-edit-root" isRequired>
-            <TextInput
-              id="static-edit-root"
-              value={root}
-              onChange={(_e, v) => { setRoot(v); setRootErr(null); }}
-              placeholder={t("common.example_value", { value: t("add_static.field_root_placeholder") })}
-              isDisabled={isLocked}
-              validated={rootErr ? "error" : "default"}
-            />
-            {rootErr && (
-              <FormHelperText>
-                <HelperText><HelperTextItem variant="error">{rootErr}</HelperTextItem></HelperText>
-              </FormHelperText>
-            )}
-          </FormGroup>
+              <FormGroup label={t("add_static.field_root")} fieldId="static-edit-root" isRequired>
+                <TextInput
+                  id="static-edit-root"
+                  value={root}
+                  onChange={(_e, v) => { setRoot(v); setRootErr(null); }}
+                  placeholder={t("common.example_value", { value: t("add_static.field_root_placeholder") })}
+                  isDisabled={isLocked}
+                  validated={rootErr ? "error" : "default"}
+                />
+                {rootErr && (
+                  <FormHelperText>
+                    <HelperText><HelperTextItem variant="error">{rootErr}</HelperTextItem></HelperText>
+                  </FormHelperText>
+                )}
+              </FormGroup>
 
-          <FormGroup fieldId="static-edit-browse">
-            <Checkbox
-              id="static-edit-browse"
-              label={t("add_static.field_browse")}
-              isChecked={browse}
-              onChange={(_e, v) => setBrowse(v)}
-              isDisabled={isLocked}
-            />
-          </FormGroup>
+              <FormGroup fieldId="static-edit-browse">
+                <Checkbox
+                  id="static-edit-browse"
+                  label={t("add_static.field_browse")}
+                  isChecked={browse}
+                  onChange={(_e, v) => setBrowse(v)}
+                  isDisabled={isLocked}
+                />
+              </FormGroup>
 
-          {!proxy.namedServerKey && (
-            <TlsModeField id="static-edit-tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isLocked} onDemand={tlsOnDemand} onOnDemandChange={setTlsOnDemand} />
-          )}
+              {!proxy.namedServerKey && (
+                <TlsModeField id="static-edit-tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isLocked} onDemand={tlsOnDemand} onOnDemandChange={setTlsOnDemand} />
+              )}
 
-          <FormGroup fieldId="static-edit-compress">
-            <Checkbox
-              id="static-edit-compress"
-              label={t("add_proxy.field_compress_short")}
-              isChecked={compress}
-              onChange={(_e, v) => setCompress(v)}
-              isDisabled={isLocked}
-            />
-          </FormGroup>
-          <RequestBodyLimitField value={requestBodyMaxSize} onChange={setRequestBodyMaxSize} isDisabled={isLocked} idPrefix="edit-static" />
-        </Form>
-
-        <div
-          style={{
-            border: "1px solid var(--pf-t--global--border--color--default)",
-            borderRadius: "var(--pf-t--global--border--radius--small)",
-            padding: "0 0.75rem",
-            marginTop: "var(--pf-v6-global--spacer--md)",
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          {!proxy.namedServerKey && (
-            <AccordionRow>
-              <TlsSection value={tlsValues} onChange={setTlsValues} isDisabled={isLocked} {...sectionAccordionProps("tls", expandedSection, setExpandedSection)} />
-            </AccordionRow>
-          )}
-          <AccordionRow>
-            <AccessLogSection value={accessLog} onChange={setAccessLog} isDisabled={isLocked} {...sectionAccordionProps("accessLog", expandedSection, setExpandedSection)} />
-          </AccordionRow>
-          <AccordionRow>
-            <ErrorHandlersSection value={errorHandlers} onChange={setErrorHandlers} isDisabled={isLocked} {...sectionAccordionProps("errorHandlers", expandedSection, setExpandedSection)} />
-          </AccordionRow>
-          <AccordionRow>
-            <ServerTimeoutsSection value={serverTimeouts} onChange={setServerTimeouts} isDisabled={isLocked} {...sectionAccordionProps("serverTimeouts", expandedSection, setExpandedSection)} />
-          </AccordionRow>
-          <AccordionRow>
-            <BasicAuthSection
-              value={basicAuth}
-              onChange={setBasicAuth}
-              isDisabled={isLocked}
-              {...sectionAccordionProps("basicAuth", expandedSection, setExpandedSection)}
-            />
-          </AccordionRow>
-          <AccordionRow>
-            <RequestHeadersSection value={requestHeaders} onChange={setRequestHeaders} isDisabled={isLocked} {...sectionAccordionProps("requestHeaders", expandedSection, setExpandedSection)} />
-          </AccordionRow>
-          <AccordionRow>
-            <ResponseHeadersSection
-              value={responseHeaders}
-              onChange={v => setResponseHeaders(v ?? [])}
-              isDisabled={isLocked}
-              {...sectionAccordionProps("responseHeaders", expandedSection, setExpandedSection)}
-            />
-          </AccordionRow>
-          <AccordionRow last>
-            <SnippetImportsField value={imports} onChange={setImports} snippetSettings={proxy.snippetSettings} isDisabled={isLocked} />
-            <RouteMatchersSection value={matchers} onChange={v => { setMatchers(v); if (!isPathOnlyMatcher(v)) setHandlePath(false); }} isDisabled={isLocked} {...sectionAccordionProps("routeMatchers", expandedSection, setExpandedSection)} />
-          </AccordionRow>
-        </div>
-        {isPathOnlyMatcher(matchers) && (
-          <Checkbox
-            id="edit-static-handle-path"
-            label={t("handle_path.label")}
-            isChecked={handlePath}
-            onChange={(_e, v) => setHandlePath(v)}
-            isDisabled={isLocked}
-            style={{ marginLeft: "1rem", marginBottom: "0.5rem" }}
-          />
-        )}
+              <FormGroup fieldId="static-edit-compress">
+                <Checkbox
+                  id="static-edit-compress"
+                  label={t("add_proxy.field_compress_short")}
+                  isChecked={compress}
+                  onChange={(_e, v) => setCompress(v)}
+                  isDisabled={isLocked}
+                />
+              </FormGroup>
+              <SnippetImportsField value={imports} onChange={setImports} snippetSettings={proxy.snippetSettings} isDisabled={isLocked} />
+            </Form>
+          }
+        />
 
         {confirmAction.error && (
           <Alert variant="danger" isInline title={confirmAction.error} style={{ marginTop: "var(--pf-v6-global--spacer--md)" }} />
@@ -254,7 +187,7 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
               isLoading={isSaving}
               isDisabled={isSaving}
               onClick={() => void confirmAction.submit(async () => {
-                const resolvedAuth = await resolveBasicAuth(basicAuth);
+                const tabEntry = await proxyTabStateToEntry(tabState);
                 try {
                   await onSave({
                     ...proxy,
@@ -264,23 +197,8 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
                     compress: compress || undefined,
                     label: label.trim() || undefined,
                     fileServer: { root: root.trim(), browse: browse || undefined },
-                    basicAuth: resolvedAuth.length ? resolvedAuth : undefined,
-                    requestHeaders: requestHeaders ?? undefined,
-                    responseHeaders: responseHeaders.length ? responseHeaders : undefined,
-                    accessLog: accessLogValuesToConfig(accessLog),
-                    errorHandlers: errorHandlers.length ? errorHandlers : undefined,
-                    serverReadTimeout: serverTimeouts.readTimeout.trim() || undefined,
-                    serverReadHeaderTimeout: serverTimeouts.readHeaderTimeout.trim() || undefined,
-                    serverWriteTimeout: serverTimeouts.writeTimeout.trim() || undefined,
-                    serverIdleTimeout: serverTimeouts.idleTimeout.trim() || undefined,
-                    maxHeaderBytes: serverTimeouts.maxHeaderBytes.trim() ? parseInt(serverTimeouts.maxHeaderBytes, 10) : undefined,
-                    disableHttp3: serverTimeouts.disableHttp3 || undefined,
-                    requestBodyMaxSize: requestBodyMaxSize.trim() ? parseInt(requestBodyMaxSize, 10) : undefined,
-                    tlsAdvanced: tlsValuesToAdvanced(tlsValues),
-                    mtls: tlsValuesToMtls(tlsValues),
-                    matchers: matchers ?? undefined,
+                    ...tabEntry,
                     imports,
-                    handlePath: handlePath || undefined,
                   });
                 } catch (e) {
                   if (e instanceof CaddyApiError) {
