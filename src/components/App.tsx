@@ -43,6 +43,7 @@ import { SnippetsSection } from "./SnippetsSection";
 import { useCaddyStatus } from "../hooks/useCaddyStatus";
 import { applyStoredAdminAddress } from "../hooks/useAdminAddress";
 import { useCaddyVersion } from "../hooks/useCaddyVersion";
+import { useIsNarrow } from "./useIsNarrow";
 
 function AppInner() {
   const { t } = useTranslation();
@@ -54,6 +55,7 @@ function AppInner() {
 
   const [activeTab, setActiveTab] = useState(0);
   const [toolsOpen, setToolsOpen] = useState(false);
+  const narrow = useIsNarrow();
   const [adminBypass, setAdminBypass] = useState(false);
   const [logsSearch, setLogsSearch] = useState("");
 
@@ -117,8 +119,9 @@ function AppInner() {
                       onSelect={() => setToolsOpen(false)}
                       popperProps={{ position: "right" }}
                       toggle={ref => (
-                        <MenuToggle ref={ref} size="sm" variant="secondary" icon={<WrenchIcon />} isExpanded={toolsOpen} onClick={() => setToolsOpen(o => !o)}>
-                          {t("app.tools")}
+                        // Icon only at phone width (#258), so the service row stays on one line.
+                        <MenuToggle ref={ref} size="sm" variant="secondary" icon={<WrenchIcon />} isExpanded={toolsOpen} onClick={() => setToolsOpen(o => !o)} aria-label={narrow ? t("app.tools") : undefined}>
+                          {narrow ? null : t("app.tools")}
                         </MenuToggle>
                       )}
                     >
