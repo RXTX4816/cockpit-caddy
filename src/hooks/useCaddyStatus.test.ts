@@ -10,6 +10,13 @@ import { mockProcess } from "../test/helpers";
 // Admin API (reached via curl over TCP or a Unix socket) is still perfectly
 // reachable. adminApiOk must reflect that regardless of `status`, so the rest
 // of the UI (proxy list, Caddyfile editor, etc.) stays usable.
+// getServiceStatus() looks the binary up with `command -v`; the unit name is either part of the
+// shell string (older base) or a separate argument (newer base). Match both.
+const isBinaryLookup = (argv: string[]) => {
+  const cmd = argv.join(" ");
+  return cmd.includes("command -v") && argv.includes("caddy") || cmd.includes("command -v caddy");
+};
+
 describe("useCaddyStatus", () => {
   afterEach(() => {
     cleanup();
@@ -18,7 +25,7 @@ describe("useCaddyStatus", () => {
 
   it("reports adminApiOk even when the caddy binary is not installed", async () => {
     mockSpawn.mockImplementation((argv: string[]) => {
-      if (argv.includes("command -v caddy")) return Promise.reject(new Error("not found"));
+      if (isBinaryLookup(argv)) return Promise.reject(new Error("not found"));
       if (argv[0] === "curl") return Promise.resolve("{}");
       return Promise.reject(new Error(`unexpected spawn: ${argv.join(" ")}`));
     });
@@ -34,7 +41,7 @@ describe("useCaddyStatus", () => {
 
   it("marks Caddy managed again once the binary is found", async () => {
     mockSpawn.mockImplementation((argv: string[]) => {
-      if (argv.includes("command -v caddy")) return Promise.resolve("/usr/bin/caddy");
+      if (isBinaryLookup(argv)) return Promise.resolve("/usr/bin/caddy");
       if (argv.includes("systemctl")) return Promise.resolve("active");
       if (argv[0] === "curl") return Promise.resolve("{}");
       return Promise.reject(new Error(`unexpected spawn: ${argv.join(" ")}`));
@@ -53,7 +60,7 @@ describe("useCaddyStatus", () => {
   // clue why, so a failed unit's status/log detail must be surfaced too.
   it("fetches systemctl status detail when the unit has failed", async () => {
     mockSpawn.mockImplementation((argv: string[]) => {
-      if (argv.includes("command -v caddy")) return Promise.resolve("/usr/bin/caddy");
+      if (isBinaryLookup(argv)) return Promise.resolve("/usr/bin/caddy");
       if (argv.includes("is-active")) return Promise.resolve("failed");
       if (argv.includes("status")) {
         return mockProcess("Active: failed (Result: exit-code)\nbind: address already in use", "exit code 3");
