@@ -20,6 +20,7 @@ import { TlsSection } from "./TlsSection";
 import { TransportSection } from "./TransportSection";
 import { UpstreamsSection } from "./UpstreamsSection";
 import { SiteTreeTab } from "./SiteTreeView";
+import { Notice } from "./Notice";
 import { hasNestedBlocks } from "../api/siteTree";
 import { NamedRouteField, ProxyDialogTabs, type ProxyTab, type ProxyTabKey } from "./proxyDialogParts";
 import { proxyTabStateFlags, type ProxyTabState, type ProxyTabStateUpdate, type ProxyTabsLayout } from "./proxyTabState";
@@ -43,7 +44,7 @@ interface Props {
   /** The site's block as written in conf.d. With route or nested handle blocks in it, a Tree tab shows them (#349). */
   siteText?: string;
   /** Saves the text the Tree tab made (#350); without it the tab is read-only. */
-  onSaveSiteText?: (text: string) => Promise<void>;
+  onSaveSiteText?: (text: string, expected: string) => Promise<void>;
 }
 
 /** The site dialogs' tabs (#260), shared by Add, Edit and Duplicate (#290) of every site type (#293). */
@@ -52,13 +53,18 @@ export function ProxyTabs({ state: s, onChange, general, generalHasError, active
   const flags = proxyTabStateFlags(s, generalHasError, layout);
   const forwardAuthErr = validateForwardAuth(s.forwardAuth);
   const isProxy = layout === "proxy";
+  // A site with route or nested handle blocks (#348): the form saves only its address, bind,
+  // imports and TLS, so every other field is locked instead of dropping what is typed in it.
+  const nested = !!siteText && hasNestedBlocks(siteText);
+  const locked = isDisabled || nested;
+  const lockedNote = nested ? <Notice variant="info" isPlain title={t("tree.form_locked")} /> : null;
 
   const routeMatchers = (
     <>
       <RouteMatchersSection
         value={s.matchers}
         onChange={v => onChange(isPathOnlyMatcher(v) ? { matchers: v } : { matchers: v, handlePath: false })}
-        isDisabled={isDisabled}
+        isDisabled={locked}
       />
       {isPathOnlyMatcher(s.matchers) && (
         <Checkbox
@@ -66,7 +72,7 @@ export function ProxyTabs({ state: s, onChange, general, generalHasError, active
           label={t("handle_path.label")}
           isChecked={s.handlePath}
           onChange={(_e, v) => onChange({ handlePath: v })}
-          isDisabled={isDisabled}
+          isDisabled={locked}
         />
       )}
     </>
@@ -83,9 +89,10 @@ export function ProxyTabs({ state: s, onChange, general, generalHasError, active
         hasError: flags.hasError.security,
         content: (
           <>
-            <BasicAuthSection value={s.basicAuth} onChange={v => onChange({ basicAuth: v })} options={s.basicAuthOptions} onOptionsChange={v => onChange({ basicAuthOptions: v })} isDisabled={isDisabled} />
+            {lockedNote}
+            <BasicAuthSection value={s.basicAuth} onChange={v => onChange({ basicAuth: v })} options={s.basicAuthOptions} onOptionsChange={v => onChange({ basicAuthOptions: v })} isDisabled={locked} />
             {isProxy && (
-              <ForwardAuthSection value={s.forwardAuth} onChange={v => onChange({ forwardAuth: v })} isDisabled={isDisabled} uriError={forwardAuthErr ?? undefined} />
+              <ForwardAuthSection value={s.forwardAuth} onChange={v => onChange({ forwardAuth: v })} isDisabled={locked} uriError={forwardAuthErr ?? undefined} />
             )}
             {showTls && (
               <TlsSection value={s.tlsValues} onChange={v => onChange({ tlsValues: v })} isDisabled={isDisabled} hostless={hostless} />
@@ -99,12 +106,13 @@ export function ProxyTabs({ state: s, onChange, general, generalHasError, active
         hasError: flags.hasError.routing,
         content: (
           <>
+            {lockedNote}
             {routeMatchers}
-            {isProxy && <RewriteSection value={s.rewrite} onChange={v => onChange({ rewrite: v })} isDisabled={isDisabled} />}
-            <RequestHeadersSection value={s.requestHeaders} onChange={v => onChange({ requestHeaders: v })} isDisabled={isDisabled} />
-            {isProxy && <RequestHeadersSection variant="down" value={s.upstreamResponseHeaders} onChange={v => onChange({ upstreamResponseHeaders: v })} isDisabled={isDisabled} />}
-            <ResponseHeadersSection value={s.responseHeaders} onChange={v => onChange({ responseHeaders: v })} isDisabled={isDisabled} />
-            <EncodeSection value={s.encode} onChange={v => onChange({ encode: v })} isDisabled={isDisabled} />
+            {isProxy && <RewriteSection value={s.rewrite} onChange={v => onChange({ rewrite: v })} isDisabled={locked} />}
+            <RequestHeadersSection value={s.requestHeaders} onChange={v => onChange({ requestHeaders: v })} isDisabled={locked} />
+            {isProxy && <RequestHeadersSection variant="down" value={s.upstreamResponseHeaders} onChange={v => onChange({ upstreamResponseHeaders: v })} isDisabled={locked} />}
+            <ResponseHeadersSection value={s.responseHeaders} onChange={v => onChange({ responseHeaders: v })} isDisabled={locked} />
+            <EncodeSection value={s.encode} onChange={v => onChange({ encode: v })} isDisabled={locked} />
             {isProxy && (
               <NamedRouteField
                 idPrefix={`${idPrefix}-`}
@@ -112,7 +120,7 @@ export function ProxyTabs({ state: s, onChange, general, generalHasError, active
                 onEnabledChange={v => onChange({ isNamedRoute: v })}
                 name={s.namedRouteName}
                 onNameChange={v => onChange({ namedRouteName: v })}
-                isDisabled={isDisabled}
+                isDisabled={locked}
               />
             )}
           </>
@@ -126,10 +134,11 @@ export function ProxyTabs({ state: s, onChange, general, generalHasError, active
         hasError: flags.hasError.upstreams,
         content: (
           <>
-            <UpstreamsSection value={s.extraUpstreams} lbPolicy={s.lbPolicy} onChange={(u, p) => onChange({ extraUpstreams: u, lbPolicy: p })} lbArgs={s.lbArgs} onLbArgsChange={a => onChange({ lbArgs: a })} isDisabled={isDisabled} />
-            <DynamicUpstreamsSection value={s.dynamicUpstreams} onChange={v => onChange({ dynamicUpstreams: v })} isDisabled={isDisabled} />
-            <LbRetrySection value={s.lbRetry} onChange={v => onChange({ lbRetry: v })} isDisabled={isDisabled} />
-            <TransportSection value={s.transport} onChange={v => onChange({ transport: v })} isDisabled={isDisabled} />
+            {lockedNote}
+            <UpstreamsSection value={s.extraUpstreams} lbPolicy={s.lbPolicy} onChange={(u, p) => onChange({ extraUpstreams: u, lbPolicy: p })} lbArgs={s.lbArgs} onLbArgsChange={a => onChange({ lbArgs: a })} isDisabled={locked} />
+            <DynamicUpstreamsSection value={s.dynamicUpstreams} onChange={v => onChange({ dynamicUpstreams: v })} isDisabled={locked} />
+            <LbRetrySection value={s.lbRetry} onChange={v => onChange({ lbRetry: v })} isDisabled={locked} />
+            <TransportSection value={s.transport} onChange={v => onChange({ transport: v })} isDisabled={locked} />
           </>
         ),
       });
@@ -140,11 +149,12 @@ export function ProxyTabs({ state: s, onChange, general, generalHasError, active
         configured: flags.configured.logging,
         content: (
           <>
-            <AccessLogSection value={s.accessLog} onChange={v => onChange({ accessLog: v })} isDisabled={isDisabled} showSkipPaths={showTls} />
+            {lockedNote}
+            <AccessLogSection value={s.accessLog} onChange={v => onChange({ accessLog: v })} isDisabled={locked} showSkipPaths={showTls} />
             <ErrorHandlersSection
               value={s.errorHandlers}
               onChange={v => onChange({ errorHandlers: v })}
-              isDisabled={isDisabled}
+              isDisabled={locked}
               {...(isProxy ? { replaceUpstream: s.replaceUpstreamErrors, onReplaceUpstreamChange: (v: boolean) => onChange({ replaceUpstreamErrors: v }) } : {})}
             />
           </>
@@ -158,7 +168,7 @@ export function ProxyTabs({ state: s, onChange, general, generalHasError, active
           <>
             <ServerTimeoutsSection value={s.serverTimeouts} onChange={v => onChange({ serverTimeouts: v })} isDisabled={isDisabled} />
             <BindSection value={s.bind} onChange={v => onChange({ bind: v })} isDisabled={isDisabled} idPrefix={`${idPrefix}-`} />
-            <RequestBodyLimitField value={s.requestBodyMaxSize} onChange={v => onChange({ requestBodyMaxSize: v })} isDisabled={isDisabled} idPrefix={idPrefix} />
+            <RequestBodyLimitField value={s.requestBodyMaxSize} onChange={v => onChange({ requestBodyMaxSize: v })} isDisabled={locked} idPrefix={idPrefix} />
           </>
         ),
       },

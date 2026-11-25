@@ -276,8 +276,8 @@ export function useProxies() {
 
   /** Saves the text the Tree tab made for a site's block (#350). */
   const saveSiteText = useCallback(
-    async (proxy: ProxyEntry, text: string) => {
-      await finish(await replaceSiteText(proxy, text));
+    async (proxy: ProxyEntry, text: string, expected: string) => {
+      await finish(await replaceSiteText(proxy, text, expected));
     },
     [finish],
   );

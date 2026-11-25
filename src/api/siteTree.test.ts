@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { surgicallyEditProxy, surgicallyWriteProxy } from "./caddy";
-import { addNode, braceDelta, childNodes, countDescendants, editNode, hasNestedBlocks, moveNode, nodeAt, nodeHandlers, parseSiteTree, rawOnlyBlocks, removeNode, rewriteHeader, serializeSiteTree, validateNodeEdit } from "./siteTree";
+import { addNode, braceDelta, childNodes, countDescendants, editNode, hasNestedBlocks, moveNode, nodeAt, nodeHandlers, orderMatters, parseSiteTree, rawOnlyBlocks, removeNode, rewriteHeader, serializeSiteTree, validateNodeEdit } from "./siteTree";
 import type { ProxyEntry } from "./types";
 
 const FLAT = `example.com {
@@ -309,8 +309,31 @@ describe("adding, removing and moving nodes (#351)", () => {
   });
 
   it("names the blocks the tree only shows as written", () => {
-    expect(rawOnlyBlocks(SITE)).toEqual(["reverse_proxy localhost:9000 {"]);
-    expect(rawOnlyBlocks("example.com {\n\troute {\n\t\trespond ok\n\t}\n\tlog {\n\t\toutput stderr\n\t}\n}")).toEqual([]);
+    expect(rawOnlyBlocks(SITE)).toEqual(["reverse_proxy localhost:9000 {", "handle_errors {"]);
+    // A top-level block of another directive is raw-only too (#362); a tls block is the form's.
+    expect(rawOnlyBlocks("example.com {\n\troute {\n\t\trespond ok\n\t}\n\tlog {\n\t\toutput stderr\n\t}\n}")).toEqual(["log {"]);
+    expect(rawOnlyBlocks("example.com {\n\ttls {\n\t\tissuer internal\n\t}\n\troute {\n\t\trespond ok\n\t}\n}")).toEqual([]);
+    expect(rawOnlyBlocks("example.com {\n\troute {\n\t\trespond ok\n\t}\n\treverse_proxy localhost:1 {\n\t\tflush_interval -1\n\t}\n}")).toEqual(["reverse_proxy localhost:1 {"]);
     expect(rawOnlyBlocks("example.com {\n\troute {\n}")).toEqual(["example.com {"]);
+  });
+});
+
+describe("tree edits Caddy would reject or ignore (#362)", () => {
+  const text = "example.com {\n\troute {\n\t\thandle_path /a/* {\n\t\t\trespond a\n\t\t}\n\t\thandle /b/* {\n\t\t\trespond b\n\t\t}\n\t}\n\thandle /c/* {\n\t\trespond c\n\t}\n\thandle {\n\t\trespond d\n\t}\n}";
+
+  it("wants one path starting with / for a handle_path", () => {
+    for (const bad of ["", "@api", "api/*", "/a /b"]) expect(validateNodeEdit({ matcher: bad }, "handle_path")).toBe("handle_path");
+    expect(validateNodeEdit({ matcher: "/api/*" }, "handle_path")).toBeUndefined();
+    expect(validateNodeEdit({ matcher: "@api" }, "handle")).toBeUndefined();
+    const tree = parseSiteTree(text)!;
+    expect(serializeSiteTree(editNode(tree, [0, 0], { matcher: "@api" }))).toBe(text);
+    expect(addNode(tree, [], { kind: "handle_path", matcher: "" })).toBeUndefined();
+  });
+
+  it("says the order only counts inside a route", () => {
+    const tree = parseSiteTree(text)!;
+    expect(orderMatters(tree, [0, 0])).toBe(true);
+    expect(orderMatters(tree, [1])).toBe(false);
+    expect(orderMatters(tree, [2])).toBe(false);
   });
 });

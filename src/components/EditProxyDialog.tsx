@@ -37,7 +37,7 @@ interface Props {
   existingRoutes: Pick<ProxyEntry, "externalPort" | "externalHost" | "matchers">[];
   onSave: (entry: ProxyEntry) => Promise<void>;
   /** Saves the text of the site's block as the Tree tab edited it (#350). */
-  onSaveSiteText?: (text: string) => Promise<void>;
+  onSaveSiteText?: (text: string, expected: string) => Promise<void>;
   onClose: () => void;
   onApiError?: (message: string) => void;
   servers?: ServerDef[];
@@ -103,8 +103,12 @@ export function EditProxyDialog({ proxy, onSaveSiteText, existingRoutes, onSave,
     return null;
   }
 
-  const targetHostErr = targetHost.trim() ? null : t("add_proxy.validation_target_host_required");
+  // With route or nested handle blocks (#348) the form only saves the address, bind, imports and
+  // TLS; the target and the other fields are the blocks' and stay locked.
+  const nested = !!proxy.siteText && hasNestedBlocks(proxy.siteText);
+  const targetHostErr = nested || targetHost.trim() ? null : t("add_proxy.validation_target_host_required");
   const targetPortErr = (() => {
+    if (nested) return null;
     const n = parseInt(targetPort, 10);
     if (!targetPort) return t("add_proxy.validation_target_port_required");
     return isNaN(n) || !isValidPort(n) ? t("add_proxy.validation_target_port_range") : null;
@@ -164,7 +168,7 @@ export function EditProxyDialog({ proxy, onSaveSiteText, existingRoutes, onSave,
           <Label isCompact color="grey">{targetUrl}</Label>
         </div>
 
-        {!!proxy.siteText && hasNestedBlocks(proxy.siteText) && (
+        {nested && (
           <Notice variant="info" title={t("proxies.raw_blocks_notice")} />
         )}
 
@@ -176,7 +180,7 @@ export function EditProxyDialog({ proxy, onSaveSiteText, existingRoutes, onSave,
           isDisabled={isConfirming}
           idPrefix="edit-proxy"
           siteText={proxy.siteText}
-          onSaveSiteText={onSaveSiteText && (async text => { await onSaveSiteText(text); toast.success(t("tree.saved")); onClose(); })}
+          onSaveSiteText={onSaveSiteText && (async (text, expected) => { await onSaveSiteText(text, expected); toast.success(t("tree.saved")); onClose(); })}
           showTls={!proxy.namedServerKey}
           hostless={!externalHost.trim()}
           generalHasError={generalHasError}
@@ -231,7 +235,7 @@ export function EditProxyDialog({ proxy, onSaveSiteText, existingRoutes, onSave,
               onSkipVerifyChange={setTlsSkipVerify}
               hostError={targetHostErr ?? undefined}
               portError={targetPortErr ?? undefined}
-              isDisabled={isConfirming}
+              isDisabled={isConfirming || nested}
             />
 
             {!proxy.namedServerKey && (
@@ -244,7 +248,7 @@ export function EditProxyDialog({ proxy, onSaveSiteText, existingRoutes, onSave,
                 label={t("add_proxy.field_compress_short")}
                 isChecked={compress}
                 onChange={(_e, checked) => setCompress(checked)}
-                isDisabled={isConfirming}
+                isDisabled={isConfirming || nested}
               />
             </FormGroup>
             <SnippetImportsField value={imports} onChange={setImports} snippetSettings={proxy.snippetSettings} isDisabled={isConfirming} />

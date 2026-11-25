@@ -159,3 +159,50 @@ describe("adding, moving and removing blocks in the Tree tab (#351)", () => {
     expect((screen.getByRole("button", { name: "Add at the top level" }) as HTMLButtonElement).disabled).toBe(true);
   });
 });
+
+describe("Tree tab review fixes (#362)", () => {
+  it("keeps an invalid edit and lets nothing else happen until it is fixed", () => {
+    render(<SiteTreeTab siteText={SITE} onSave={vi.fn()} />);
+    fireEvent.click(screen.getByRole("button", { name: /Edit: handle_path \/static\/\*/ }));
+    fireEvent.change(screen.getByLabelText("Matcher"), { target: { value: "@api" } });
+    expect(screen.getByText(/needs one path that starts with \//)).toBeTruthy();
+    const other = screen.getByRole("button", { name: /Edit: handle @api/ }) as HTMLButtonElement;
+    expect(other.disabled).toBe(true);
+    fireEvent.click(other);
+    expect((screen.getByLabelText("Matcher") as HTMLInputElement).value).toBe("@api");
+    expect((screen.getByRole("button", { name: "Save blocks" }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it("sends the text the edit started from, then the saved one", async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    render(<SiteTreeTab siteText={SITE} onSave={onSave} />);
+    fireEvent.click(screen.getByRole("button", { name: /Edit: handle_path \/static\/\*/ }));
+    fireEvent.change(screen.getByLabelText("Matcher"), { target: { value: "/files/*" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save blocks" }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
+    expect(onSave.mock.calls[0][1]).toBe(SITE);
+    fireEvent.click(screen.getByRole("button", { name: /Edit: handle_path \/files\/\*/ }));
+    fireEvent.change(screen.getByLabelText("Matcher"), { target: { value: "/f/*" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save blocks" }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(2));
+    expect(onSave.mock.calls[1][1]).toBe(onSave.mock.calls[0][0]);
+  });
+
+  it("moves blocks only inside a route, and says why", () => {
+    const text = "example.com {\n\thandle /a/* {\n\t\troute {\n\t\t\trespond a\n\t\t}\n\t}\n\thandle {\n\t\trespond b\n\t}\n}";
+    render(<SiteTreeTab siteText={text} onSave={vi.fn()} />);
+    expect((screen.getByRole("button", { name: /Move down: handle \/a\/\*/ }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText(/sorts the other blocks itself/)).toBeTruthy();
+  });
+
+  it("locks the form fields the save would drop for a site with nested blocks", () => {
+    const common = { state: emptyProxyTabState(), onChange: () => {}, general: <div>g</div>, generalHasError: false, onSelect: () => {}, isDisabled: false, idPrefix: "t", showTls: true };
+    const { unmount } = render(<ProxyTabs {...common} active="limits" siteText={SITE} />);
+    expect((document.getElementById("t-bind") as HTMLInputElement).disabled).toBe(false);
+    expect((document.getElementById("t-request-body-max-size") as HTMLInputElement).disabled).toBe(true);
+    unmount();
+    render(<ProxyTabs {...common} active="security" siteText={SITE} />);
+    expect(screen.getAllByText(/only saves the address, bind, imports and TLS/).length).toBeGreaterThan(0);
+    expect(document.querySelectorAll("input:disabled, button:disabled").length).toBeGreaterThan(0);
+  });
+});

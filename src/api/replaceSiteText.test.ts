@@ -24,7 +24,7 @@ describe("replaceSiteText (#350)", () => {
   it("replaces the site's block, validates once, and leaves the label and other sites alone", async () => {
     host.onRun(["caddy", "validate"], "");
     const edited = SITE.replace("/a/*", "/b/*");
-    const result = await replaceSiteText(proxy, edited);
+    const result = await replaceSiteText(proxy, edited, SITE);
     expect(result.live).toEqual({ kind: "reload" });
     expect(host.files.get(CONF)).toBe(CONF_BEFORE.replace(SITE, edited));
     expect(host.commands.filter(c => c.startsWith("caddy validate"))).toHaveLength(1);
@@ -32,12 +32,27 @@ describe("replaceSiteText (#350)", () => {
 
   it("keeps the file as it was when Caddy rejects the config", async () => {
     host.onRun(["caddy", "validate"], () => { throw new Error("Error: unrecognized directive"); });
-    await expect(replaceSiteText(proxy, SITE.replace("respond ok", "nonsense"))).rejects.toBeInstanceOf(CaddyfileError);
+    await expect(replaceSiteText(proxy, SITE.replace("respond ok", "nonsense"), SITE)).rejects.toBeInstanceOf(CaddyfileError);
     expect(host.files.get(CONF)).toBe(CONF_BEFORE);
   });
 
   it("says so when the site is not in the file", async () => {
-    await expect(replaceSiteText({ ...proxy, externalPort: 1234 }, SITE)).rejects.toThrow(/not found/);
+    await expect(replaceSiteText({ ...proxy, externalPort: 1234 }, SITE, SITE)).rejects.toThrow(/not found/);
     expect(host.files.get(CONF)).toBe(CONF_BEFORE);
+  });
+
+  it("finds the block by the host matcher, as the form's edit does (#362)", async () => {
+    host.onRun(["caddy", "validate"], "");
+    // A site whose host is in its matchers, not in its address.
+    const matched = { ...proxy, externalHost: undefined, matchers: { host: ["example.com"] } } as ProxyEntry;
+    await replaceSiteText(matched, SITE.replace("/a/*", "/b/*"), SITE);
+    expect(host.files.get(CONF)).toContain("handle /b/*");
+  });
+
+  it("writes nothing when the block changed since the tab read it (#362)", async () => {
+    const newer = SITE.replace("respond ok", "respond newer");
+    host.files.set(CONF, CONF_BEFORE.replace(SITE, newer));
+    await expect(replaceSiteText(proxy, SITE.replace("/a/*", "/b/*"), SITE)).rejects.toThrow(/changed/);
+    expect(host.files.get(CONF)).toContain("respond newer");
   });
 });

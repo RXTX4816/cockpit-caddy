@@ -270,16 +270,19 @@ export async function editSite(ctx: SiteEditContext, entry: ProxyEntry): Promise
 
 /**
  * Writes a new text for a site's block (#350), the one the Tree tab edited. The block is found by
- * the site's address and replaced as it is, so what the form owns (label, header comments around
- * it) and every other site stay as they were. The config is checked before it is kept: throws
- * CaddyfileError, leaving the file as it was, when Caddy would not take it.
+ * the hosts the site answers on, as surgicallyEditProxy finds it, and replaced as it is, so what the
+ * form owns (label, header comments around it) and every other site stay as they were. `expected`
+ * is the text the edit started from: when the block on disk is no longer that, someone changed it
+ * meanwhile and nothing is written. The config is checked before it is kept: throws CaddyfileError,
+ * leaving the file as it was, when Caddy would not take it.
  */
-export async function replaceSiteText(proxy: ProxyEntry, newText: string): Promise<SiteEditResult> {
+export async function replaceSiteText(proxy: ProxyEntry, newText: string, expected: string): Promise<SiteEditResult> {
   await ensureConfDImported();
   const current = await readProxyConf();
   const lines = current.split("\n");
-  const pos = findMatchingBlock(findBlockPositions(lines), proxy.externalPort, proxy.externalHost);
+  const pos = findMatchingBlock(findBlockPositions(lines), proxy.externalPort, routeHosts(proxy)?.join(", "));
   if (!pos) throw new CaddyfileError(i18n.t("tree.block_not_found"));
+  if (lines.slice(pos.headerLine, pos.closingLine + 1).join("\n") !== expected) throw new CaddyfileError(i18n.t("tree.changed_meanwhile"));
   const written = [...lines.slice(0, pos.headerLine), newText, ...lines.slice(pos.closingLine + 1)].join("\n");
   await writeRawProxyConfValidated(written);
   return { live: { kind: "reload" }, written };
