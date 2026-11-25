@@ -255,7 +255,8 @@ export function buildForwardAuthCaddyLines(fa: import("./types").ForwardAuthConf
  * `header Name value` takes one value, so a header with several values is written as several lines.
  */
 export function buildEncodeLines(indent: string, options?: import("./types").EncodeOptions): string[] {
-  const head = `${indent}encode ${(options?.algorithms?.length ? options.algorithms : ["gzip", "zstd"]).join(" ")}`;
+  // A plain `encode` is Caddy's default: zstd and gzip, zstd preferred.
+  const head = `${indent}encode${options?.algorithms?.length ? ` ${options.algorithms.join(" ")}` : ""}`;
   const inner: string[] = [];
   if (options?.minimumLength != null) inner.push(`${indent}\tminimum_length ${options.minimumLength}`);
   const match: string[] = [];

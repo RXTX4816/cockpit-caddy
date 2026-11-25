@@ -985,7 +985,7 @@ describe.runIf(available || required)("caddy adapt accepts redir html (#338)", (
 });
 
 describe.runIf(available || required)("caddy adapt accepts the encode options (#335)", () => {
-  const options = { algorithms: ["zstd" as const, "gzip" as const], minimumLength: 1024, matchStatus: ["2xx", "404"], matchHeaders: [{ name: "Content-Type", value: "text/*" }] };
+  const options = { algorithms: ["gzip" as const, "zstd" as const], minimumLength: 1024, matchStatus: ["2xx", "404"], matchHeaders: [{ name: "Content-Type", value: "text/*" }] };
 
   it("reads them back from a real adapt", () => {
     const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, compress: true, encodeOptions: options })]));
@@ -998,6 +998,13 @@ describe.runIf(available || required)("caddy adapt accepts the encode options (#
     const server = Object.values(adapt(conf).apps?.http?.servers ?? {})[0] as CaddyServer;
     const real = server.routes?.[0]?.handle?.find(h => h.handler === "encode") as unknown as Record<string, unknown>;
     expect(buildEncodeHandler(options)).toMatchObject({ prefer: real.prefer, minimum_length: real.minimum_length, match: real.match });
+  });
+
+  it("builds what Caddy builds for a plain encode", () => {
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, compress: true })]);
+    const server = Object.values(adapt(conf).apps?.http?.servers ?? {})[0] as CaddyServer;
+    const real = server.routes?.[0]?.handle?.find(h => h.handler === "encode");
+    expect(buildEncodeHandler()).toEqual(real);
   });
 
   it("reads plain compression back as no options", () => {

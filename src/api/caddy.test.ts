@@ -52,7 +52,7 @@ import {
   CONF_D_IMPORT_LINE,
   parseConfTlsIssuerMap,
 } from "./caddy";
-import { parseSiteAcmeSettings, applyServerExtras, parseServerExtras, parseMatcherJson, isHostOnlyMatcher, buildRewriteHandler, parseRewriteFromHandle, patchServer, buildFilterEncoder, parseLogEncoder, PRIVATE_RANGES, buildForwardAuthHandler, extractForwardAuthFromProxy, forwardAuthResponseRoutes, buildBasicAuthHandler, buildEncodeHandler, buildFileServerHandlers, buildFileServerJson, parseFileServerOptions, parseTemplatesJson, buildRedirectHandler, parseEncodeOptionsJson, parseBasicAuthOptionsJson, parseHtmlRedirect } from "./caddyJsonModel";
+import { parseSiteAcmeSettings, applyServerExtras, applyAccessLog, parseServerExtras, parseMatcherJson, isHostOnlyMatcher, buildRewriteHandler, parseRewriteFromHandle, patchServer, buildFilterEncoder, parseLogEncoder, PRIVATE_RANGES, buildForwardAuthHandler, extractForwardAuthFromProxy, forwardAuthResponseRoutes, buildBasicAuthHandler, buildEncodeHandler, buildFileServerHandlers, buildFileServerJson, parseFileServerOptions, parseTemplatesJson, buildRedirectHandler, parseEncodeOptionsJson, parseBasicAuthOptionsJson, parseHtmlRedirect } from "./caddyJsonModel";
 import { proxiesToCaddyfile } from "./caddy";
 import { buildForwardAuthCaddyLines, buildMatcherCaddyLines, buildPhpFastcgiLines, buildRewriteCaddyLines, buildMatcherJson, hasAnyMatcher, patchRawBlock, siteBindAddresses } from "./siteBlocks";
 import { buildLogCaddyLines } from "./globalOptions";
@@ -2014,15 +2014,15 @@ describe("parseProxies — rewrite round-trip", () => {
 // ---------------------------------------------------------------------------
 
 describe("proxyToBlock — compress", () => {
-  it("emits encode gzip zstd when compress is true", () => {
+  it("emits a plain encode when compress is true", () => {
     const result = proxyToBlock(proxy({ compress: true }));
-    expect(result).toContain("\tencode gzip zstd");
+    expect(result).toMatch(/\tencode\n/);
   });
 
   it("encode line appears before reverse_proxy", () => {
     const result = proxyToBlock(proxy({ compress: true }));
     const lines = result.split("\n");
-    const encIdx = lines.findIndex(l => l.includes("encode gzip"));
+    const encIdx = lines.findIndex(l => l.trim() === "encode");
     const rpIdx = lines.findIndex(l => l.includes("reverse_proxy"));
     expect(encIdx).toBeGreaterThan(-1);
     expect(encIdx).toBeLessThan(rpIdx);
@@ -2290,8 +2290,8 @@ describe("parseProxies — fileServer round-trip", () => {
 describe("proxyToBlock — fileServer with compress/auth/headers", () => {
   it("adds encode directive when compress is true", () => {
     const result = proxyToBlock(proxy({ fileServer: { root: "/var/www" }, compress: true, tls: false, targetHost: "localhost", targetPort: 0 }));
-    expect(result).toContain("encode gzip zstd");
-    expect(result.indexOf("encode gzip zstd")).toBeLessThan(result.indexOf("root *"));
+    expect(result).toContain("\tencode\n");
+    expect(result.indexOf("\tencode\n")).toBeLessThan(result.indexOf("root *"));
   });
 
   it("adds basic_auth block when basicAuth is set", () => {
@@ -4711,7 +4711,7 @@ describe("editing hand-written multi-line directive blocks (#253)", () => {
   it("replaces a whole header { } block instead of leaving its body behind", () => {
     const conf = `${CONF_HEADER}\n\napp.example.com {\n\theader {\n\t\tX-A 1\n\t}\n\tencode {\n\t\tgzip\n\t}\n\treverse_proxy localhost:8000\n}\n`;
     const out = surgicallyWriteProxy(conf, proxy({ externalHost: "app.example.com", externalPort: 443, tls: true, tlsIssuer: "acme", targetPort: 8001, compress: true }));
-    expect(out).toContain("app.example.com {\n\tencode gzip zstd\n\treverse_proxy http://localhost:8001\n}");
+    expect(out).toContain("app.example.com {\n\tencode\n\treverse_proxy http://localhost:8001\n}");
   });
 });
 
@@ -4989,9 +4989,9 @@ describe("redirect html mode (#338)", () => {
 describe("encode options (#335)", () => {
   const site = (encodeOptions?: import("./types").EncodeOptions) => proxy({ tls: false, compress: true, encodeOptions });
 
-  it("keeps writing plain gzip and zstd without options", () => {
-    expect(proxyToBlock(site())).toContain("\tencode gzip zstd\n");
-    expect(buildEncodeHandler()).toEqual({ handler: "encode", encodings: { gzip: {}, zstd: {} } });
+  it("writes a plain encode without options, which prefers zstd as Caddy does", () => {
+    expect(proxyToBlock(site())).toContain("\tencode\n");
+    expect(buildEncodeHandler()).toEqual({ handler: "encode", encodings: { gzip: {}, zstd: {} }, prefer: ["zstd", "gzip"] });
   });
 
   it("writes the algorithms in order, the minimum length and the match", () => {
@@ -5014,10 +5014,10 @@ describe("encode options (#335)", () => {
     expect(parseEncodeOptionsJson(h as never)).toEqual(options);
   });
 
-  it("reads gzip then zstd, in either spelling, as no options", () => {
+  it("reads zstd then gzip, or both without an order, as no options, and gzip first as a choice", () => {
     expect(parseEncodeOptionsJson({ handler: "encode", encodings: { gzip: {}, zstd: {} } } as never)).toBeUndefined();
-    expect(parseEncodeOptionsJson({ handler: "encode", encodings: { gzip: {}, zstd: {} }, prefer: ["gzip", "zstd"] } as never)).toBeUndefined();
-    expect(parseEncodeOptionsJson({ handler: "encode", encodings: { gzip: {}, zstd: {} }, prefer: ["zstd", "gzip"] } as never)).toEqual({ algorithms: ["zstd", "gzip"] });
+    expect(parseEncodeOptionsJson({ handler: "encode", encodings: { gzip: {}, zstd: {} }, prefer: ["zstd", "gzip"] } as never)).toBeUndefined();
+    expect(parseEncodeOptionsJson({ handler: "encode", encodings: { gzip: {}, zstd: {} }, prefer: ["gzip", "zstd"] } as never)).toEqual({ algorithms: ["gzip", "zstd"] });
   });
 });
 
@@ -5209,6 +5209,26 @@ describe("access log log_skip (#334)", () => {
     expect(buildServerEntry(withSkip(["/x"], { matchers: { path: ["/api/*"] } })).routes).toHaveLength(1);
   });
 
+  it("covers the hosts of every route on a multi-route server", () => {
+    const server = { listen: [":7700"], routes: [
+      { match: [{ host: ["a.example.com"] }], handle: [{ handler: "static_response" }] },
+      { match: [{ host: ["b.example.com"] }], handle: [{ handler: "static_response" }] },
+      { match: [{ host: ["a.example.com"] }], handle: [{ handler: "static_response" }] },
+    ] } as unknown as CaddyServer;
+    applyAccessLog(server, { externalPort: 7700, accessLog: { output: "stderr", skipPaths: ["/x"] } });
+    expect(server.routes?.[0].match).toEqual([{ host: ["a.example.com"], path: ["/x"] }, { host: ["b.example.com"], path: ["/x"] }]);
+    expect(server.routes).toHaveLength(4);
+  });
+
+  it("skips on every host when one route of the server has no matcher", () => {
+    const server = { listen: [":7700"], routes: [
+      { match: [{ host: ["a.example.com"] }], handle: [{ handler: "static_response" }] },
+      { handle: [{ handler: "static_response" }] },
+    ] } as unknown as CaddyServer;
+    applyAccessLog(server, { externalPort: 7700, accessLog: { output: "stderr", skipPaths: ["/x"] } });
+    expect(server.routes?.[0].match).toEqual([{ path: ["/x"] }]);
+  });
+
   it("does not patch the skip route as if it were the site", () => {
     const original = buildServerEntry(withSkip(["/x"]));
     const patched = patchServer(original, withSkip(["/x"], { targetPort: 9999 }));
@@ -5333,6 +5353,55 @@ describe("a site's own ACME email, CA and key type (#341)", () => {
     // The host is the Caddyfile's, so the policy is read by it, as useProxies does with the host it has.
     expect(parseSiteAcmeSettings(config.apps?.tls?.automation?.policies, "example.com")).toEqual({ acmeEmail: "me@example.com", acmeCa: staging, keyType: "p256" });
     expect(parseSiteAcmeSettings(config.apps?.tls?.automation?.policies, "other.example.com")).toBeUndefined();
+  });
+
+  // The policies below are what `caddy adapt` builds for the same sites under a global
+  // `email g@example.com` and `acme_eab` (Caddy 2.11).
+  describe("with a global email and EAB", () => {
+    const eab = { key_id: "K", mac_key: "M" };
+    const account = { email: "g@example.com", external_account: eab };
+    const zerossl = "https://acme.zerossl.com/v2/DV90";
+    const withGlobal = () => ({ apps: { http: { servers: {} }, tls: { automation: { policies: [
+      { issuers: [{ module: "acme", ...account }, { module: "acme", ca: zerossl, ...account }] },
+    ] } } } }) as unknown as CaddyConfig;
+    const policyOf = (adv: import("./types").TlsAdvancedConfig) => {
+      const config = mergeProxy(withGlobal(), site(adv, { serverKey: "srv0" }));
+      return { config, policy: (config.apps?.tls?.automation?.policies ?? []).find(p => p.subjects?.some(s => s === "example.com")) };
+    };
+
+    it("keeps the global email and EAB on a site with its own CA", () => {
+      expect(policyOf({ acmeCa: staging }).policy).toEqual({
+        subjects: ["example.com"], issuers: [{ module: "acme", ca: staging, ...account }],
+      });
+    });
+
+    it("keeps the ZeroSSL fallback for a site with only its own email", () => {
+      const own = { email: "me@example.com", external_account: eab };
+      expect(policyOf({ acmeEmail: "me@example.com" }).policy).toEqual({
+        subjects: ["example.com"], issuers: [{ module: "acme", ...own }, { module: "acme", ca: zerossl, ...own }],
+      });
+    });
+
+    it("keeps the global account on a site with only a key type", () => {
+      expect(policyOf({ keyType: "ed25519" }).policy).toEqual({
+        subjects: ["example.com"], issuers: [{ module: "acme", ...account }, { module: "acme", ca: zerossl, ...account }], key_type: "ed25519",
+      });
+    });
+
+    it("reads back only what the site set itself", () => {
+      for (const adv of [{ acmeCa: staging }, { acmeEmail: "me@example.com" }, { keyType: "ed25519" }]) {
+        const { config } = policyOf(adv);
+        expect(parseSiteAcmeSettings(config.apps?.tls?.automation?.policies, "example.com")).toEqual(adv);
+      }
+    });
+
+    it("takes the email every site shares as the global one when there is no catch-all policy", () => {
+      const policies = [
+        { subjects: ["example.com"], issuers: [{ module: "acme", ca: staging, email: "g@example.com" }] },
+        { subjects: ["other.example.com"], issuers: [{ module: "acme", email: "g@example.com" }, { module: "acme", ca: zerossl, email: "g@example.com" }] },
+      ];
+      expect(parseSiteAcmeSettings(policies, "example.com")).toEqual({ acmeCa: staging });
+    });
   });
 
   it("keeps the internal CA in a policy that only sets a key type", () => {

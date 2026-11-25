@@ -22,7 +22,7 @@ describe("EncodeSection values (#335)", () => {
   it("changes the order from the select", () => {
     const onChange = vi.fn();
     render(<EncodeSection value={ENCODE_EMPTY} onChange={onChange} isExpanded />);
-    fireEvent.change(screen.getByLabelText("Algorithms and order"), { target: { value: "zstd gzip" } });
-    expect(onChange).toHaveBeenCalledWith({ ...ENCODE_EMPTY, algorithms: "zstd gzip" });
+    fireEvent.change(screen.getByLabelText("Algorithms and order"), { target: { value: "gzip zstd" } });
+    expect(onChange).toHaveBeenCalledWith({ ...ENCODE_EMPTY, algorithms: "gzip zstd" });
   });
 });
