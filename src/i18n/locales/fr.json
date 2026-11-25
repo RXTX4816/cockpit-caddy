@@ -413,7 +413,12 @@
     "field_name": "Nom de l'en-tête",
     "field_value": "Valeur",
     "add_button": "Ajouter",
-    "presets_label": "Préréglages"
+    "presets_label": "Préréglages",
+    "down_heading": "En-têtes de réponse de l'amont",
+    "down_section_title": "En-têtes de réponse de l'amont (facultatif)",
+    "op_replace": "Remplacer",
+    "field_search": "Valeur d'en-tête à chercher (expression régulière)",
+    "field_replacement": "Remplacement"
   },
   "edit_redirect": {
     "title": "Modifier la redirection — :{{port}}",

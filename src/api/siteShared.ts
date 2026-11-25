@@ -13,6 +13,7 @@ import { externalHostList } from "./externalHosts";
  */
 export function headerOpLine(prefix: string, h: import("./types").HeaderOperation, opts: { quoteSet?: boolean; defer?: boolean } = {}): string {
   if (h.op === "delete") return `${prefix} -${h.name}`;
+  if (h.op === "replace") return `${prefix} ${h.name} ${caddyQuote(h.value ?? "")} ${caddyQuote(h.replacement ?? "")}`;
   if (h.op === "add") return `${prefix} +${h.name} ${caddyQuote(h.value ?? "")}`;
   return `${prefix} ${opts.defer ? ">" : ""}${h.name} ${caddyQuote(h.value ?? "", { always: opts.quoteSet })}`;
 }

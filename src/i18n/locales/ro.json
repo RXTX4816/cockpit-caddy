@@ -413,7 +413,12 @@
     "field_name": "Numele antetului",
     "field_value": "Valoare",
     "add_button": "Adaugă",
-    "presets_label": "Presetări"
+    "presets_label": "Presetări",
+    "down_heading": "Anteturi de răspuns de la upstream",
+    "down_section_title": "Anteturi de răspuns de la upstream (opțional)",
+    "op_replace": "Înlocuiește",
+    "field_search": "Valoarea antetului de căutat (expresie regulată)",
+    "field_replacement": "Înlocuire"
   },
   "edit_redirect": {
     "title": "Editează redirecționarea — :{{port}}",

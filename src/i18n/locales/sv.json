@@ -413,7 +413,12 @@
     "field_name": "Huvudets namn",
     "field_value": "Värde",
     "add_button": "Lägg till",
-    "presets_label": "Förval"
+    "presets_label": "Förval",
+    "down_heading": "Svarshuvuden från upstream",
+    "down_section_title": "Svarshuvuden från upstream (valfritt)",
+    "op_replace": "Ersätt",
+    "field_search": "Huvudvärde att söka efter (reguljärt uttryck)",
+    "field_replacement": "Ersättning"
   },
   "edit_redirect": {
     "title": "Redigera omdirigering — :{{port}}",

@@ -413,7 +413,12 @@
     "field_name": "ヘッダー名",
     "field_value": "値",
     "add_button": "追加",
-    "presets_label": "プリセット"
+    "presets_label": "プリセット",
+    "down_heading": "アップストリームからの応答ヘッダー",
+    "down_section_title": "アップストリームからの応答ヘッダー(任意)",
+    "op_replace": "置換",
+    "field_search": "検索するヘッダー値(正規表現)",
+    "field_replacement": "置換後の値"
   },
   "edit_redirect": {
     "title": "リダイレクトを編集 — :{{port}}",

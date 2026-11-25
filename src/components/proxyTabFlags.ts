@@ -20,6 +20,7 @@ export interface ProxyTabValues {
   rewrite: RewriteConfig | undefined;
   requestHeaders: HeaderOperation[] | undefined;
   responseHeaders: HeaderOperation[] | undefined;
+  upstreamResponseHeaders: HeaderOperation[] | undefined;
   isNamedRoute: boolean;
   extraUpstreams: ExtraUpstream[];
   lbPolicy: string;
@@ -45,7 +46,7 @@ export function proxyTabFlags(v: ProxyTabValues, generalHasError: boolean): TabF
     configured: {
       general: false,
       security: v.basicAuth.length > 0 || !!v.forwardAuth || tls,
-      routing: hasAnyMatcher(v.matchers) || !!v.rewrite || !!v.requestHeaders?.length || !!v.responseHeaders?.length || v.isNamedRoute,
+      routing: hasAnyMatcher(v.matchers) || !!v.rewrite || !!v.requestHeaders?.length || !!v.responseHeaders?.length || !!v.upstreamResponseHeaders?.length || v.isNamedRoute,
       upstreams: v.extraUpstreams.length > 0 || !!v.lbPolicy || !!lbRetryValuesToConfig(v.lbRetry) || !!(v.transport.dialTimeout || v.transport.responseHeaderTimeout),
       logging: !!accessLogValuesToConfig(v.accessLog) || v.errorHandlers.length > 0,
       limits: !!v.requestBodyMaxSize

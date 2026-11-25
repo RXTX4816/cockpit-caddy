@@ -413,7 +413,12 @@
     "field_name": "Nome dell'header",
     "field_value": "Valore",
     "add_button": "Aggiungi",
-    "presets_label": "Preimpostazioni"
+    "presets_label": "Preimpostazioni",
+    "down_heading": "Intestazioni di risposta dell'upstream",
+    "down_section_title": "Intestazioni di risposta dell'upstream (facoltativo)",
+    "op_replace": "Sostituisci",
+    "field_search": "Valore dell'intestazione da cercare (espressione regolare)",
+    "field_replacement": "Sostituzione"
   },
   "edit_redirect": {
     "title": "Modifica reindirizzamento — :{{port}}",

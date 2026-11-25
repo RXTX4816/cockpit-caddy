@@ -413,7 +413,12 @@
     "field_name": "Назва заголовка",
     "field_value": "Значення",
     "add_button": "Додати",
-    "presets_label": "Шаблони"
+    "presets_label": "Шаблони",
+    "down_heading": "Заголовки відповіді від апстриму",
+    "down_section_title": "Заголовки відповіді від апстриму (необов'язково)",
+    "op_replace": "Замінити",
+    "field_search": "Шукане значення заголовка (регулярний вираз)",
+    "field_replacement": "Заміна"
   },
   "edit_redirect": {
     "title": "Змінити переспрямування — :{{port}}",

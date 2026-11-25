@@ -32,14 +32,14 @@ export function buildForwardAuthCaddyLines(fa: import("./types").ForwardAuthConf
 }
 
 export function buildReverseProxyLines(
-  p: Pick<ProxyEntry, "targetScheme" | "targetHost" | "targetPort" | "tlsSkipVerify" | "requestHeaders" | "dialTimeout" | "responseHeaderTimeout" | "extraUpstreams" | "lbPolicy" | "lbPolicyArgs" | "lbRetry" | "replaceUpstreamErrors">,
+  p: Pick<ProxyEntry, "targetScheme" | "targetHost" | "targetPort" | "tlsSkipVerify" | "requestHeaders" | "upstreamResponseHeaders" | "dialTimeout" | "responseHeaderTimeout" | "extraUpstreams" | "lbPolicy" | "lbPolicyArgs" | "lbRetry" | "replaceUpstreamErrors">,
   errorHandlers?: import("./types").ErrorHandlerConfig[],
 ): string[] {
   const upstreams = buildUpstreamList(p);
 
   const headerLines = (p.requestHeaders ?? []).map(h => {
     return headerOpLine("\t\theader_up", h);
-  });
+  }).concat((p.upstreamResponseHeaders ?? []).map(h => headerOpLine("\t\theader_down", h)));
 
   const transportLines = buildTransportLines(p);
   const lbLines = (p.lbPolicy && upstreams.length > 1 && LB_POLICIES.has(p.lbPolicy))

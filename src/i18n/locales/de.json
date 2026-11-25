@@ -413,7 +413,12 @@
     "field_name": "Header-Name",
     "field_value": "Wert",
     "add_button": "Hinzufügen",
-    "presets_label": "Vorlagen"
+    "presets_label": "Vorlagen",
+    "down_heading": "Antwort-Header vom Upstream",
+    "down_section_title": "Antwort-Header vom Upstream (optional)",
+    "op_replace": "Ersetzen",
+    "field_search": "Zu suchender Header-Wert (regulärer Ausdruck)",
+    "field_replacement": "Ersetzung"
   },
   "edit_redirect": {
     "title": "Weiterleitung bearbeiten – :{{port}}",

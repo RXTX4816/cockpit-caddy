@@ -413,7 +413,12 @@
     "field_name": "Başlık adı",
     "field_value": "Değer",
     "add_button": "Ekle",
-    "presets_label": "Hazır ayarlar"
+    "presets_label": "Hazır ayarlar",
+    "down_heading": "Upstream'den gelen yanıt başlıkları",
+    "down_section_title": "Upstream'den gelen yanıt başlıkları (isteğe bağlı)",
+    "op_replace": "Değiştir",
+    "field_search": "Aranacak başlık değeri (düzenli ifade)",
+    "field_replacement": "Yerine konacak değer"
   },
   "edit_redirect": {
     "title": "Yönlendirmeyi düzenle — :{{port}}",

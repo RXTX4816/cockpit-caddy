@@ -1636,6 +1636,53 @@ describe("proxyToBlock — requestHeaders", () => {
 // Request headers — JSON API (buildServerEntry + parseProxies round-trip)
 // ---------------------------------------------------------------------------
 
+describe("proxyToBlock — upstreamResponseHeaders (header_down, #324)", () => {
+  it("emits header_down set, add and delete inside the reverse_proxy block", () => {
+    const result = proxyToBlock(proxy({ upstreamResponseHeaders: [
+      { op: "set", name: "X-A", value: "1" },
+      { op: "add", name: "X-B", value: "2" },
+      { op: "delete", name: "Server" },
+    ] }));
+    expect(result).toContain("\t\theader_down X-A 1");
+    expect(result).toContain("\t\theader_down +X-B 2");
+    expect(result).toContain("\t\theader_down -Server");
+  });
+
+  it("emits the replace form with the search first and the replacement second", () => {
+    const result = proxyToBlock(proxy({ upstreamResponseHeaders: [{ op: "replace", name: "Location", value: "http://backend", replacement: "https://front" }] }));
+    expect(result).toContain("\t\theader_down Location http://backend https://front");
+  });
+});
+
+describe("buildServerEntry — upstreamResponseHeaders (#324)", () => {
+  it("emits headers.response with set, add, delete and replace", () => {
+    const server = buildServerEntry(proxy({ upstreamResponseHeaders: [
+      { op: "set", name: "X-A", value: "1" },
+      { op: "add", name: "X-B", value: "2" },
+      { op: "delete", name: "Server" },
+      { op: "replace", name: "Location", value: "http://backend", replacement: "https://front" },
+    ] }));
+    const rp = server.routes[0].handle[0] as { headers?: { response?: Record<string, unknown> } };
+    expect(rp.headers?.response).toEqual({
+      set: { "X-A": ["1"] },
+      add: { "X-B": ["2"] },
+      delete: ["Server"],
+      replace: { Location: [{ search_regexp: "http://backend", replace: "https://front" }] },
+    });
+  });
+
+  it("round-trips through parseProxies", () => {
+    const ops = [
+      { op: "set" as const, name: "X-A", value: "1" },
+      { op: "delete" as const, name: "Server" },
+      { op: "replace" as const, name: "Location", value: "http://backend", replacement: "https://front" },
+    ];
+    const [p] = parseProxies({ apps: { http: { servers: { srv0: buildServerEntry(proxy({ upstreamResponseHeaders: ops })) } } } });
+    expect(p.upstreamResponseHeaders).toEqual(expect.arrayContaining(ops));
+    expect(p.upstreamResponseHeaders).toHaveLength(3);
+  });
+});
+
 describe("buildServerEntry — requestHeaders", () => {
   it("emits headers.request.set in reverse_proxy handler", () => {
     const server = buildServerEntry(proxy({ requestHeaders: [{ op: "set", name: "X-Real-IP", value: "{remote_host}" }] }));

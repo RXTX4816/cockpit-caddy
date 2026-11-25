@@ -413,7 +413,12 @@
     "field_name": "Nombre de la cabecera",
     "field_value": "Valor",
     "add_button": "Añadir",
-    "presets_label": "Ajustes predefinidos"
+    "presets_label": "Ajustes predefinidos",
+    "down_heading": "Cabeceras de respuesta del upstream",
+    "down_section_title": "Cabeceras de respuesta del upstream (opcional)",
+    "op_replace": "Reemplazar",
+    "field_search": "Valor de cabecera a buscar (expresión regular)",
+    "field_replacement": "Reemplazo"
   },
   "edit_redirect": {
     "title": "Editar redirección — :{{port}}",

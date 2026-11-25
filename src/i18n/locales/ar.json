@@ -413,7 +413,12 @@
     "field_name": "اسم الترويسة",
     "field_value": "القيمة",
     "add_button": "إضافة",
-    "presets_label": "إعدادات مسبقة"
+    "presets_label": "إعدادات مسبقة",
+    "down_heading": "ترويسات الاستجابة من الخادم الخلفي",
+    "down_section_title": "ترويسات الاستجابة من الخادم الخلفي (اختياري)",
+    "op_replace": "استبدال",
+    "field_search": "قيمة الترويسة المراد البحث عنها (تعبير نمطي)",
+    "field_replacement": "البديل"
   },
   "edit_redirect": {
     "title": "تعديل إعادة التوجيه — :{{port}}",

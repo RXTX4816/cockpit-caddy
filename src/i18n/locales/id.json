@@ -413,7 +413,12 @@
     "field_name": "Nama header",
     "field_value": "Nilai",
     "add_button": "Tambah",
-    "presets_label": "Prasetel"
+    "presets_label": "Prasetel",
+    "down_heading": "Header respons dari upstream",
+    "down_section_title": "Header respons dari upstream (opsional)",
+    "op_replace": "Ganti",
+    "field_search": "Nilai header yang dicari (ekspresi reguler)",
+    "field_replacement": "Pengganti"
   },
   "edit_redirect": {
     "title": "Edit pengalihan — :{{port}}",

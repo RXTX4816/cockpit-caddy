@@ -413,7 +413,12 @@
     "field_name": "Nazwa nagłówka",
     "field_value": "Wartość",
     "add_button": "Dodaj",
-    "presets_label": "Gotowe ustawienia"
+    "presets_label": "Gotowe ustawienia",
+    "down_heading": "Nagłówki odpowiedzi z upstreamu",
+    "down_section_title": "Nagłówki odpowiedzi z upstreamu (opcjonalne)",
+    "op_replace": "Zamień",
+    "field_search": "Szukana wartość nagłówka (wyrażenie regularne)",
+    "field_replacement": "Zamiennik"
   },
   "edit_redirect": {
     "title": "Edytuj przekierowanie — :{{port}}",

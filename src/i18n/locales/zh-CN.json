@@ -413,7 +413,12 @@
     "field_name": "标头名称",
     "field_value": "值",
     "add_button": "添加",
-    "presets_label": "预设"
+    "presets_label": "预设",
+    "down_heading": "上游响应头",
+    "down_section_title": "上游响应头(可选)",
+    "op_replace": "替换",
+    "field_search": "要查找的头值(正则表达式)",
+    "field_replacement": "替换为"
   },
   "edit_redirect": {
     "title": "编辑重定向 — :{{port}}",

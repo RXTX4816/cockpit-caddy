@@ -7,7 +7,7 @@ import { emptyLbArgs } from "./UpstreamsSection";
 
 const base: ProxyTabValues = {
   basicAuth: [], forwardAuth: undefined, forwardAuthError: null, tlsValues: tlsConfigToValues(undefined, undefined),
-  matchers: undefined, rewrite: undefined, requestHeaders: undefined, responseHeaders: undefined, isNamedRoute: false,
+  matchers: undefined, rewrite: undefined, requestHeaders: undefined, responseHeaders: undefined, upstreamResponseHeaders: undefined, isNamedRoute: false,
   extraUpstreams: [], lbPolicy: "", lbArgs: emptyLbArgs(), lbRetry: lbRetryConfigToValues(undefined), transport: { dialTimeout: "", responseHeaderTimeout: "" },
   accessLog: accessLogConfigToValues(undefined), errorHandlers: [],
   serverTimeouts: { readTimeout: "", readHeaderTimeout: "", writeTimeout: "", idleTimeout: "", maxHeaderBytes: "", disableHttp3: false },
@@ -25,6 +25,7 @@ describe("proxyTabFlags", () => {
   it("each setting marks only its own tab", () => {
     expect(dots({ basicAuth: [{ username: "a", password: "b" }] })).toEqual(["security"]);
     expect(dots({ matchers: { not: { path: ["/x"] } } })).toEqual(["routing"]);
+    expect(dots({ upstreamResponseHeaders: [{ op: "delete", name: "Server" }] })).toEqual(["routing"]);
     expect(dots({ transport: { dialTimeout: "5s", responseHeaderTimeout: "" } })).toEqual(["upstreams"]);
     expect(dots({ errorHandlers: [{ matchType: "all", type: "respond", body: "x" }] })).toEqual(["logging"]);
   });

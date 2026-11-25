@@ -20,6 +20,8 @@ interface Props {
    *  across sections. Falls back to internal state when omitted. */
   isExpanded?: boolean;
   onToggleExpanded?: (v: boolean) => void;
+  /** `down` edits header_down, the upstream's response headers (#324): no presets, and a replace operation. */
+  variant?: "up" | "down";
 }
 
 const PRESETS: HeaderOperation[] = [
@@ -28,12 +30,14 @@ const PRESETS: HeaderOperation[] = [
   { op: "set", name: "X-Forwarded-Proto", value: "{scheme}" },
 ];
 
-export function RequestHeadersSection({ value, onChange, isDisabled, isExpanded: isExpandedProp, onToggleExpanded }: Props) {
+export function RequestHeadersSection({ value, onChange, isDisabled, isExpanded: isExpandedProp, onToggleExpanded, variant = "up" }: Props) {
+  const down = variant === "down";
   const { t } = useTranslation();
   const ops = value ?? [];
   const [op, setOp] = useState<HeaderOperation["op"]>("set");
   const [name, setName] = useState("");
   const [val, setVal] = useState("");
+  const [replacement, setReplacement] = useState("");
   const [internalExpanded, setInternalExpanded] = useState(ops.length > 0);
   const expanded = isExpandedProp ?? internalExpanded;
   const setExpanded = onToggleExpanded ?? setInternalExpanded;
@@ -60,10 +64,13 @@ export function RequestHeadersSection({ value, onChange, isDisabled, isExpanded:
     if (!name.trim()) return;
     const entry: HeaderOperation = op === "delete"
       ? { op, name: name.trim() }
-      : { op, name: name.trim(), value: val };
+      : op === "replace"
+        ? { op, name: name.trim(), value: val, replacement }
+        : { op, name: name.trim(), value: val };
     onChange([...ops, entry]);
     setName("");
     setVal("");
+    setReplacement("");
   }
 
   function addPreset(preset: HeaderOperation) {
@@ -78,8 +85,8 @@ export function RequestHeadersSection({ value, onChange, isDisabled, isExpanded:
 
   return (
     <SectionShell
-      heading={t("request_headers.heading")}
-      toggleContent={<>{t("request_headers.section_title")}{ops.length > 0 && <SectionConfiguredDot />}</>}
+      heading={t(down ? "request_headers.down_heading" : "request_headers.heading")}
+      toggleContent={<>{t(down ? "request_headers.down_section_title" : "request_headers.section_title")}{ops.length > 0 && <SectionConfiguredDot />}</>}
       isIndented
       isExpanded={expanded}
       onToggle={(_e, v) => handleToggleExpand(v)}
@@ -97,12 +104,12 @@ export function RequestHeadersSection({ value, onChange, isDisabled, isExpanded:
               <div key={i} style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
                 <Label
                   isCompact
-                  color={h.op === "delete" ? "red" : h.op === "add" ? "green" : "blue"}
+                  color={h.op === "delete" ? "red" : h.op === "add" ? "green" : h.op === "replace" ? "orange" : "blue"}
                 >
                   {h.op.toUpperCase()}
                 </Label>
                 <code style={{ fontSize: "0.85rem" }}>
-                  {h.name}{h.value !== undefined ? `: ${h.value}` : ""}
+                  {h.name}{h.value !== undefined ? `: ${h.value}` : ""}{h.op === "replace" ? ` → ${h.replacement ?? ""}` : ""}
                 </code>
                 <Button
                   variant="plain"
@@ -120,7 +127,7 @@ export function RequestHeadersSection({ value, onChange, isDisabled, isExpanded:
         )}
 
         {/* Presets */}
-        <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", flexWrap: "wrap" }}>
+        {!down && <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", flexWrap: "wrap" }}>
           <span style={{ fontSize: "0.8rem", color: "var(--pf-t--global--text--color--subtle)" }}>
             {t("request_headers.presets_label")}:
           </span>
@@ -135,12 +142,12 @@ export function RequestHeadersSection({ value, onChange, isDisabled, isExpanded:
               {p.name}
             </Button>
           ))}
-        </div>
+        </div>}
 
         {/* Add row */}
         <div style={{ display: "flex", gap: "0.4rem", alignItems: "flex-end", flexWrap: "wrap" }}>
           <ToggleGroup aria-label={t("common.header_op_aria")} isCompact>
-            {(["set", "add", "delete"] as HeaderOperation["op"][]).map(o => (
+            {((down ? ["set", "add", "delete", "replace"] : ["set", "add", "delete"]) as HeaderOperation["op"][]).map(o => (
               <ToggleGroupItem
                 key={o}
                 text={t(`request_headers.op_${o}`)}
@@ -160,10 +167,20 @@ export function RequestHeadersSection({ value, onChange, isDisabled, isExpanded:
           />
           {op !== "delete" && (
             <TextInput
-              aria-label={t("request_headers.field_value")}
+              aria-label={t(op === "replace" ? "request_headers.field_search" : "request_headers.field_value")}
               value={val}
               onChange={(_e, v) => setVal(v)}
-              placeholder={t("request_headers.field_value")}
+              placeholder={t(op === "replace" ? "request_headers.field_search" : "request_headers.field_value")}
+              isDisabled={isDisabled}
+              style={{ flex: "2 1 12rem", minWidth: "8rem" }}
+            />
+          )}
+          {op === "replace" && (
+            <TextInput
+              aria-label={t("request_headers.field_replacement")}
+              value={replacement}
+              onChange={(_e, v) => setReplacement(v)}
+              placeholder={t("request_headers.field_replacement")}
               isDisabled={isDisabled}
               style={{ flex: "2 1 12rem", minWidth: "8rem" }}
             />

@@ -413,7 +413,12 @@
     "field_name": "Nome do cabeçalho",
     "field_value": "Valor",
     "add_button": "Adicionar",
-    "presets_label": "Predefinições"
+    "presets_label": "Predefinições",
+    "down_heading": "Cabeçalhos de resposta do upstream",
+    "down_section_title": "Cabeçalhos de resposta do upstream (opcional)",
+    "op_replace": "Substituir",
+    "field_search": "Valor do cabeçalho a procurar (expressão regular)",
+    "field_replacement": "Substituição"
   },
   "edit_redirect": {
     "title": "Editar redirecionamento — :{{port}}",
