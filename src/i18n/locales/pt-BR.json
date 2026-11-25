@@ -1066,6 +1066,15 @@
     "no_matcher": "todas as requisições",
     "handlers": "Diretivas",
     "unreadable": "Não foi possível ler os blocos deste site como árvore. Edite-os no editor bruto.",
-    "read_only_help": "Os blocos route e handle deste site, como escritos. Somente leitura por enquanto: edite-os no editor bruto."
+    "read_only_help": "Os blocos route e handle deste site, como escritos. Somente leitura por enquanto: edite-os no editor bruto.",
+    "select": "Editar",
+    "matcher_label": "Matcher",
+    "matcher_help": "Um caminho como /app/*, um @nome, ou vazio para todas as requisições. Um handle_path precisa de um caminho.",
+    "handler_label": "Diretiva",
+    "save": "Salvar blocos",
+    "discard": "Descartar alterações",
+    "saved": "Os blocos do site foram salvos.",
+    "block_not_found": "O bloco do site não foi encontrado no Caddyfile. Recarregue a página e tente de novo.",
+    "edit_help": "Selecione um bloco para mudar seu matcher ou suas diretivas. Só as linhas que você edita são reescritas; blocos que o formulário não conhece são mostrados como escritos e ficam somente leitura."
   }
 }

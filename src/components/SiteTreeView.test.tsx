@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import { render, screen, within, fireEvent, waitFor } from "@testing-library/react";
 import { SiteTreeTab, describeMatcher, matcherDefinitions } from "./SiteTreeView";
 import { parseSiteTree } from "../api/siteTree";
 import { ProxyTabs } from "./ProxyTabs";
@@ -53,5 +53,47 @@ describe("the Tree tab (#349)", () => {
     expect(screen.queryByRole("tab", { name: "Tree" })).toBeNull();
     rerender(<ProxyTabs {...common} />);
     expect(screen.queryByRole("tab", { name: "Tree" })).toBeNull();
+  });
+});
+
+describe("editing in the Tree tab (#350)", () => {
+  it("shows the fields of the selected node and saves the edited text", async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    render(<SiteTreeTab siteText={SITE} onSave={onSave} />);
+    fireEvent.click(screen.getByRole("button", { name: /Edit: handle_path \/static\/\*/ }));
+    fireEvent.change(screen.getByLabelText("Matcher"), { target: { value: "/files/*" } });
+    fireEvent.change(screen.getByLabelText("Directive 1"), { target: { value: "file_server browse" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save blocks" }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
+    const text = onSave.mock.calls[0][0] as string;
+    expect(text).toBe(SITE.replace("handle_path /static/* {", "handle_path /files/* {").replace("file_server", "file_server browse"));
+  });
+
+  it("keeps what was typed when another node is selected, and can discard it", async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    render(<SiteTreeTab siteText={SITE} onSave={onSave} />);
+    expect((screen.getByRole("button", { name: "Save blocks" }) as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: /Edit: route all requests/ }));
+    fireEvent.change(screen.getByLabelText("Matcher"), { target: { value: "/r/*" } });
+    fireEvent.click(screen.getByRole("button", { name: /Edit: handle_path/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Save blocks" }));
+    await waitFor(() => expect(onSave).toHaveBeenCalled());
+    expect(onSave.mock.calls[0][0]).toContain("route /r/* {");
+  });
+
+  it("shows why a save failed and keeps the edit", async () => {
+    const onSave = vi.fn().mockRejectedValue(new Error("unrecognized directive"));
+    render(<SiteTreeTab siteText={SITE} onSave={onSave} />);
+    fireEvent.click(screen.getByRole("button", { name: /Edit: route all requests/ }));
+    fireEvent.change(screen.getByLabelText("Matcher"), { target: { value: "/r/*" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save blocks" }));
+    await waitFor(() => expect(screen.getByText("unrecognized directive")).toBeTruthy());
+    expect((screen.getByLabelText("Matcher") as HTMLInputElement).value).toBe("/r/*");
+  });
+
+  it("offers no editing without onSave, and leaves an opaque node unselectable", () => {
+    render(<SiteTreeTab siteText={SITE} />);
+    expect(screen.queryByRole("button", { name: /Edit:/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Save blocks" })).toBeNull();
   });
 });

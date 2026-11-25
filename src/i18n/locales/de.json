@@ -1066,6 +1066,15 @@
     "no_matcher": "alle Anfragen",
     "handlers": "Direktiven",
     "unreadable": "Die Blöcke dieser Site ließen sich nicht als Baum lesen. Bearbeiten Sie sie im Rohtext-Editor.",
-    "read_only_help": "Die route- und handle-Blöcke dieser Site, wie geschrieben. Vorerst nur lesbar: Bearbeiten Sie sie im Rohtext-Editor."
+    "read_only_help": "Die route- und handle-Blöcke dieser Site, wie geschrieben. Vorerst nur lesbar: Bearbeiten Sie sie im Rohtext-Editor.",
+    "select": "Bearbeiten",
+    "matcher_label": "Matcher",
+    "matcher_help": "Ein Pfad wie /app/*, ein @Name, oder leer für jede Anfrage. Ein handle_path braucht einen Pfad.",
+    "handler_label": "Direktive",
+    "save": "Blöcke speichern",
+    "discard": "Änderungen verwerfen",
+    "saved": "Die Blöcke der Site wurden gespeichert.",
+    "block_not_found": "Der Block der Site wurde im Caddyfile nicht gefunden. Laden Sie die Seite neu und versuchen Sie es erneut.",
+    "edit_help": "Wählen Sie einen Block, um seinen Matcher oder seine Direktiven zu ändern. Nur die Zeilen, die Sie bearbeiten, werden neu geschrieben; Blöcke, die das Formular nicht kennt, werden wie geschrieben angezeigt und bleiben schreibgeschützt."
   }
 }

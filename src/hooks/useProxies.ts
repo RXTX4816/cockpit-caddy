@@ -15,7 +15,7 @@ import {
 } from "../api";
 import type { CaddyConfig, DnsChallengeConfig, ProxyEntry, ServerDef, SnippetDef } from "../api";
 import {
-  addSite, editSite, removeSite, liveChangeFor, checkServerPortConflicts, withIssuer, withOnDemand, withDns,
+  addSite, editSite, replaceSiteText, removeSite, liveChangeFor, checkServerPortConflicts, withIssuer, withOnDemand, withDns,
   type SiteEditResult,
 } from "../api/siteEditing";
 import { useCaddyConfig } from "./useCaddyConfig";
@@ -264,6 +264,14 @@ export function useProxies() {
     [config, proxies, servers, finish],
   );
 
+  /** Saves the text the Tree tab made for a site's block (#350). */
+  const saveSiteText = useCallback(
+    async (proxy: ProxyEntry, text: string) => {
+      await finish(await replaceSiteText(proxy, text));
+    },
+    [finish],
+  );
+
   const deleteProxy = useCallback(
     async (proxyId: string) => {
       const result = await removeSite({ config, proxies, servers }, proxyId);
@@ -368,7 +376,7 @@ export function useProxies() {
   return {
     snippets,
     proxies, servers, loading, error, refresh,
-    addProxy, editProxy, deleteProxy,
+    addProxy, editProxy, saveSiteText, deleteProxy,
     addServer, editServer, deleteServer,
     needsMigration, migrate,
   };

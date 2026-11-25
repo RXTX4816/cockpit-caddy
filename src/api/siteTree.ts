@@ -173,3 +173,88 @@ export function nodeHandlers(node: Pick<TreeNode, "items">): string[] {
 export function childNodes(items: TreeItem[]): TreeNode[] {
   return items.flatMap(it => "node" in it ? [it.node] : []);
 }
+
+
+// ---------------------------------------------------------------------------
+// Editing the nodes that are there (#350)
+// ---------------------------------------------------------------------------
+
+/** Where a node is: the index among the child nodes at each level, from the site down. */
+export type NodePath = number[];
+
+export function nodeAt(tree: SiteTree, path: NodePath): TreeNode | undefined {
+  let items = tree.items;
+  let node: TreeNode | undefined;
+  for (const idx of path) {
+    node = childNodes(items)[idx];
+    if (!node) return undefined;
+    items = node.items;
+  }
+  return node;
+}
+
+/** The header line with another matcher, keeping its indent, the keyword and anything after the `{`. */
+export function rewriteHeader(header: string, matcher: string): string {
+  const m = header.match(/^(\s*)(route|handle_path|handle)\b(.*?)(\s*\{.*)$/);
+  if (!m) return header;
+  const [, indent, keyword, , rest] = m;
+  return `${indent}${keyword}${matcher.trim() ? ` ${matcher.trim()}` : ""} ${rest.trimStart()}`;
+}
+
+/** The item indexes of the lines `nodeHandlers` lists, in order. */
+function handlerItemIndexes(items: TreeItem[]): number[] {
+  const out: number[] = [];
+  items.forEach((it, i) => {
+    if ("line" in it && it.line.trim() && !it.line.trim().startsWith("#")) out.push(i);
+  });
+  return out;
+}
+
+export interface NodeEdit {
+  /** The new matcher of a route, handle or handle_path; "" for none. */
+  matcher?: string;
+  /** New text for directives of the node's own, by their index in `nodeHandlers`. */
+  handlers?: Record<number, string>;
+}
+
+/** What is wrong with an edit, or undefined: a matcher or directive must stay on one line without braces. */
+export function validateNodeEdit(edit: NodeEdit): string | undefined {
+  if (edit.matcher !== undefined && /[\n{}]/.test(edit.matcher)) return "matcher";
+  for (const text of Object.values(edit.handlers ?? {})) {
+    if (!text.trim() || /\n/.test(text) || braceDelta(text) !== 0) return "handler";
+  }
+  return undefined;
+}
+
+function replaceNode(items: TreeItem[], path: NodePath, change: (n: TreeNode) => TreeNode): TreeItem[] {
+  const [first, ...rest] = path;
+  let seen = -1;
+  return items.map(it => {
+    if (!("node" in it)) return it;
+    seen++;
+    if (seen !== first) return it;
+    return { node: rest.length ? { ...it.node, items: replaceNode(it.node.items, rest, change) } : change(it.node) };
+  });
+}
+
+/**
+ * The tree with one node edited. Only that node's header and the text of the directives that are
+ * changed differ; every other line, comment and block, opaque ones included, stays as it was.
+ */
+export function editNode(tree: SiteTree, path: NodePath, edit: NodeEdit): SiteTree {
+  if (validateNodeEdit(edit) || !nodeAt(tree, path)) return tree;
+  return {
+    ...tree,
+    items: replaceNode(tree.items, path, node => {
+      if (node.kind === "opaque") return node;
+      const indexes = handlerItemIndexes(node.items);
+      const items = node.items.map((it, i) => {
+        const which = indexes.indexOf(i);
+        const text = which >= 0 ? edit.handlers?.[which] : undefined;
+        if (text === undefined || !("line" in it)) return it;
+        return { line: `${it.line.match(/^\s*/)![0]}${text.trim()}` };
+      });
+      return { ...node, header: edit.matcher !== undefined ? rewriteHeader(node.header, edit.matcher) : node.header, matcher: edit.matcher !== undefined ? edit.matcher.trim() : node.matcher, items };
+    }),
+  };
+}

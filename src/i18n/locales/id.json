@@ -1066,6 +1066,15 @@
     "no_matcher": "semua permintaan",
     "handlers": "Direktif",
     "unreadable": "Blok situs ini tidak dapat dibaca sebagai pohon. Edit di editor mentah.",
-    "read_only_help": "Blok route dan handle situs ini, seperti tertulis. Hanya baca untuk saat ini: edit di editor mentah."
+    "read_only_help": "Blok route dan handle situs ini, seperti tertulis. Hanya baca untuk saat ini: edit di editor mentah.",
+    "select": "Edit",
+    "matcher_label": "Matcher",
+    "matcher_help": "Jalur seperti /app/*, sebuah @nama, atau kosong untuk semua permintaan. handle_path memerlukan jalur.",
+    "handler_label": "Direktif",
+    "save": "Simpan blok",
+    "discard": "Buang perubahan",
+    "saved": "Blok situs telah disimpan.",
+    "block_not_found": "Blok situs tidak ditemukan di Caddyfile. Muat ulang halaman dan coba lagi.",
+    "edit_help": "Pilih blok untuk mengubah matcher atau direktifnya. Hanya baris yang Anda edit yang ditulis ulang; blok yang tidak dikenal formulir ditampilkan apa adanya dan tetap hanya baca."
   }
 }

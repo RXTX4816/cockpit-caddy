@@ -1066,6 +1066,15 @@
     "no_matcher": "all requests",
     "handlers": "Directives",
     "unreadable": "The blocks of this site could not be read as a tree. Edit them in the raw editor.",
-    "read_only_help": "The route and handle blocks of this site, as written. Read-only for now: edit them in the raw editor."
+    "read_only_help": "The route and handle blocks of this site, as written. Read-only for now: edit them in the raw editor.",
+    "select": "Edit",
+    "matcher_label": "Matcher",
+    "matcher_help": "A path such as /app/*, an @name, or empty for every request. A handle_path needs a path.",
+    "handler_label": "Directive",
+    "save": "Save blocks",
+    "discard": "Discard changes",
+    "saved": "The blocks of the site were saved.",
+    "block_not_found": "The site's block was not found in the Caddyfile. Reload the page and try again.",
+    "edit_help": "Select a block to change its matcher or its directives. Only the lines you edit are rewritten; blocks the form does not know are shown as written and stay read-only."
   }
 }

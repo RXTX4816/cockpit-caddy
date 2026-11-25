@@ -12,6 +12,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { CONF_HEADER, buildServerEntry, proxiesToCaddyfile, parseProxies, parseConfExternalAddresses, proxyAddressKeys, resolveInternalIssuerSettings, surgicallyWriteProxy, buildMigratedConfContent, migrateCaddyfile, parseConfTlsIssuerMap, parseConfTlsOnDemandMap, parseConfTlsMap, expandPlaceholderShorthands } from "./caddy";
 import { snippetsToConf, parseSnippets, parseConfSiteImports, parseConfSiteBlocks, separateSnippetSettings } from "./snippets";
+import { editNode, parseSiteTree, serializeSiteTree } from "./siteTree";
 import type { CaddyConfig, CaddyServer, ProxyEntry } from "./types";
 
 function hasCaddy(): boolean {
@@ -816,5 +817,18 @@ describe.runIf(available || required)("client_ip matcher (#286)", () => {
   it("works in an exclude group too", () => {
     const matchers = { path: ["/x/*"], not: { client_ip: { ranges: ["10.0.0.0/8"] } } };
     expect(readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, matchers })]))[0].matchers).toEqual(matchers);
+  });
+});
+
+describe.runIf(available || required)("an edited tree is a config Caddy takes (#350)", () => {
+  it("adapts after a matcher and a directive are changed, and keeps the route structure", () => {
+    const site = "example.com:8443 {\n\troute {\n\t\theader X-A 1\n\t\thandle /a/* {\n\t\t\trespond ok\n\t\t}\n\t\thandle_path /static/* {\n\t\t\trespond static\n\t\t}\n\t}\n}\n";
+    const tree = parseSiteTree(site.trimEnd())!;
+    const edited = serializeSiteTree(editNode(editNode(tree, [0, 0], { matcher: "/b/*", handlers: { 0: "respond changed" } }), [0], { handlers: { 0: "header X-A 2" } }));
+    const json = JSON.stringify(adapt(edited + "\n"));
+    expect(json).toContain("/b/*");
+    expect(json).toContain("changed");
+    expect(json).toContain("/static/*");
+    expect(json).not.toContain('"/a/*"');
   });
 });

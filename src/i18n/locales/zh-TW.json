@@ -1066,6 +1066,15 @@
     "no_matcher": "所有請求",
     "handlers": "指令",
     "unreadable": "無法把此網站的區塊讀成樹狀。請在原始編輯器中編輯。",
-    "read_only_help": "此網站的 route 和 handle 區塊,依原樣顯示。目前唯讀:請在原始編輯器中編輯。"
+    "read_only_help": "此網站的 route 和 handle 區塊,依原樣顯示。目前唯讀:請在原始編輯器中編輯。",
+    "select": "編輯",
+    "matcher_label": "比對器",
+    "matcher_help": "路徑如 /app/*、@名稱,或留空表示所有請求。handle_path 需要路徑。",
+    "handler_label": "指令",
+    "save": "儲存區塊",
+    "discard": "捨棄變更",
+    "saved": "網站的區塊已儲存。",
+    "block_not_found": "在 Caddyfile 中找不到該網站的區塊。請重新整理頁面後再試。",
+    "edit_help": "選擇一個區塊來變更其比對器或指令。只會重寫你編輯的行;表單不認識的區塊會依原樣顯示,並維持唯讀。"
   }
 }

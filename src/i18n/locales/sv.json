@@ -1066,6 +1066,15 @@
     "no_matcher": "alla förfrågningar",
     "handlers": "Direktiv",
     "unreadable": "Den här webbplatsens block kunde inte läsas som ett träd. Redigera dem i den råa redigeraren.",
-    "read_only_help": "Den här webbplatsens route- och handle-block, som de är skrivna. Skrivskyddat för tillfället: redigera dem i den råa redigeraren."
+    "read_only_help": "Den här webbplatsens route- och handle-block, som de är skrivna. Skrivskyddat för tillfället: redigera dem i den råa redigeraren.",
+    "select": "Redigera",
+    "matcher_label": "Matchare",
+    "matcher_help": "En sökväg som /app/*, ett @namn, eller tomt för alla förfrågningar. En handle_path behöver en sökväg.",
+    "handler_label": "Direktiv",
+    "save": "Spara block",
+    "discard": "Förkasta ändringar",
+    "saved": "Webbplatsens block sparades.",
+    "block_not_found": "Webbplatsens block hittades inte i Caddyfile. Ladda om sidan och försök igen.",
+    "edit_help": "Välj ett block för att ändra dess matchare eller direktiv. Bara de rader du redigerar skrivs om; block som formuläret inte känner till visas som de är skrivna och förblir skrivskyddade."
   }
 }

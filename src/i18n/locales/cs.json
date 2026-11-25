@@ -1066,6 +1066,15 @@
     "no_matcher": "všechny požadavky",
     "handlers": "Direktivy",
     "unreadable": "Bloky tohoto webu nešlo přečíst jako strom. Upravte je v surovém editoru.",
-    "read_only_help": "Bloky route a handle tohoto webu tak, jak jsou napsané. Zatím jen pro čtení: upravujte je v surovém editoru."
+    "read_only_help": "Bloky route a handle tohoto webu tak, jak jsou napsané. Zatím jen pro čtení: upravujte je v surovém editoru.",
+    "select": "Upravit",
+    "matcher_label": "Matcher",
+    "matcher_help": "Cesta jako /app/*, @název, nebo prázdné pro všechny požadavky. handle_path potřebuje cestu.",
+    "handler_label": "Direktiva",
+    "save": "Uložit bloky",
+    "discard": "Zahodit změny",
+    "saved": "Bloky webu byly uloženy.",
+    "block_not_found": "Blok webu nebyl v Caddyfile nalezen. Znovu načtěte stránku a zkuste to znovu.",
+    "edit_help": "Vyberte blok a změňte jeho matcher nebo direktivy. Přepíší se jen řádky, které upravíte; bloky, které formulář nezná, se zobrazí tak, jak jsou, a zůstanou jen pro čtení."
   }
 }

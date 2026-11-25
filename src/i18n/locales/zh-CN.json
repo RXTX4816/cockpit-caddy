@@ -1066,6 +1066,15 @@
     "no_matcher": "所有请求",
     "handlers": "指令",
     "unreadable": "无法把此站点的块读成树。请在原始编辑器中编辑。",
-    "read_only_help": "此站点的 route 和 handle 块,按原样显示。目前只读:请在原始编辑器中编辑。"
+    "read_only_help": "此站点的 route 和 handle 块,按原样显示。目前只读:请在原始编辑器中编辑。",
+    "select": "编辑",
+    "matcher_label": "匹配器",
+    "matcher_help": "路径如 /app/*、@名称,或留空表示所有请求。handle_path 需要路径。",
+    "handler_label": "指令",
+    "save": "保存块",
+    "discard": "放弃更改",
+    "saved": "站点的块已保存。",
+    "block_not_found": "在 Caddyfile 中找不到该站点的块。请刷新页面后重试。",
+    "edit_help": "选择一个块来更改其匹配器或指令。只会重写你编辑的行;表单不认识的块按原样显示,并保持只读。"
   }
 }

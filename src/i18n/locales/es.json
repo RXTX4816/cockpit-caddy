@@ -1066,6 +1066,15 @@
     "no_matcher": "todas las peticiones",
     "handlers": "Directivas",
     "unreadable": "No se pudieron leer los bloques de este sitio como un árbol. Edítelos en el editor en bruto.",
-    "read_only_help": "Los bloques route y handle de este sitio, tal como están escritos. Solo lectura por ahora: edítelos en el editor en bruto."
+    "read_only_help": "Los bloques route y handle de este sitio, tal como están escritos. Solo lectura por ahora: edítelos en el editor en bruto.",
+    "select": "Editar",
+    "matcher_label": "Matcher",
+    "matcher_help": "Una ruta como /app/*, un @nombre, o vacío para todas las peticiones. Un handle_path necesita una ruta.",
+    "handler_label": "Directiva",
+    "save": "Guardar bloques",
+    "discard": "Descartar cambios",
+    "saved": "Se guardaron los bloques del sitio.",
+    "block_not_found": "No se encontró el bloque del sitio en el Caddyfile. Recargue la página e inténtelo de nuevo.",
+    "edit_help": "Seleccione un bloque para cambiar su matcher o sus directivas. Solo se reescriben las líneas que edita; los bloques que el formulario no conoce se muestran tal como están y siguen siendo de solo lectura."
   }
 }

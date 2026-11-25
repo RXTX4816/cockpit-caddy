@@ -1066,6 +1066,15 @@
     "no_matcher": "alle verzoeken",
     "handlers": "Directieven",
     "unreadable": "De blokken van deze site konden niet als boom worden gelezen. Bewerk ze in de ruwe editor.",
-    "read_only_help": "De route- en handle-blokken van deze site, zoals geschreven. Voorlopig alleen-lezen: bewerk ze in de ruwe editor."
+    "read_only_help": "De route- en handle-blokken van deze site, zoals geschreven. Voorlopig alleen-lezen: bewerk ze in de ruwe editor.",
+    "select": "Bewerken",
+    "matcher_label": "Matcher",
+    "matcher_help": "Een pad zoals /app/*, een @naam, of leeg voor elk verzoek. Een handle_path heeft een pad nodig.",
+    "handler_label": "Directief",
+    "save": "Blokken opslaan",
+    "discard": "Wijzigingen negeren",
+    "saved": "De blokken van de site zijn opgeslagen.",
+    "block_not_found": "Het blok van de site is niet gevonden in de Caddyfile. Laad de pagina opnieuw en probeer het nog eens.",
+    "edit_help": "Selecteer een blok om zijn matcher of directieven te wijzigen. Alleen de regels die u bewerkt worden herschreven; blokken die het formulier niet kent, worden getoond zoals geschreven en blijven alleen-lezen."
   }
 }

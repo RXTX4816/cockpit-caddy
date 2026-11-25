@@ -1066,6 +1066,15 @@
     "no_matcher": "toate cererile",
     "handlers": "Directive",
     "unreadable": "Blocurile acestui site nu au putut fi citite ca arbore. Editează-le în editorul brut.",
-    "read_only_help": "Blocurile route și handle ale acestui site, așa cum sunt scrise. Doar citire deocamdată: editează-le în editorul brut."
+    "read_only_help": "Blocurile route și handle ale acestui site, așa cum sunt scrise. Doar citire deocamdată: editează-le în editorul brut.",
+    "select": "Editează",
+    "matcher_label": "Matcher",
+    "matcher_help": "O cale precum /app/*, un @nume, sau gol pentru toate cererile. Un handle_path are nevoie de o cale.",
+    "handler_label": "Directivă",
+    "save": "Salvează blocurile",
+    "discard": "Renunță la modificări",
+    "saved": "Blocurile site-ului au fost salvate.",
+    "block_not_found": "Blocul site-ului nu a fost găsit în Caddyfile. Reîncarcă pagina și încearcă din nou.",
+    "edit_help": "Selectează un bloc pentru a-i schimba matcherul sau directivele. Doar liniile pe care le editezi sunt rescrise; blocurile pe care formularul nu le cunoaște sunt afișate așa cum sunt scrise și rămân doar în citire."
   }
 }

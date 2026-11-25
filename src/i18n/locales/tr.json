@@ -1066,6 +1066,15 @@
     "no_matcher": "tüm istekler",
     "handlers": "Yönergeler",
     "unreadable": "Bu sitenin blokları ağaç olarak okunamadı. Ham düzenleyicide düzenleyin.",
-    "read_only_help": "Bu sitenin route ve handle blokları, yazıldığı gibi. Şimdilik salt okunur: ham düzenleyicide düzenleyin."
+    "read_only_help": "Bu sitenin route ve handle blokları, yazıldığı gibi. Şimdilik salt okunur: ham düzenleyicide düzenleyin.",
+    "select": "Düzenle",
+    "matcher_label": "Eşleştirici",
+    "matcher_help": "/app/* gibi bir yol, bir @ad, ya da tüm istekler için boş. handle_path bir yol gerektirir.",
+    "handler_label": "Yönerge",
+    "save": "Blokları kaydet",
+    "discard": "Değişiklikleri at",
+    "saved": "Sitenin blokları kaydedildi.",
+    "block_not_found": "Sitenin bloğu Caddyfile'da bulunamadı. Sayfayı yenileyip tekrar deneyin.",
+    "edit_help": "Eşleştiricisini veya yönergelerini değiştirmek için bir blok seçin. Yalnızca düzenlediğiniz satırlar yeniden yazılır; formun tanımadığı bloklar yazıldığı gibi gösterilir ve salt okunur kalır."
   }
 }

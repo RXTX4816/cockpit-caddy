@@ -1066,6 +1066,15 @@
     "no_matcher": "kaikki pyynnöt",
     "handlers": "Direktiivit",
     "unreadable": "Tämän sivuston lohkoja ei voitu lukea puuna. Muokkaa niitä raakaeditorissa.",
-    "read_only_help": "Tämän sivuston route- ja handle-lohkot sellaisina kuin ne on kirjoitettu. Toistaiseksi vain luku: muokkaa niitä raakaeditorissa."
+    "read_only_help": "Tämän sivuston route- ja handle-lohkot sellaisina kuin ne on kirjoitettu. Toistaiseksi vain luku: muokkaa niitä raakaeditorissa.",
+    "select": "Muokkaa",
+    "matcher_label": "Täsmääjä",
+    "matcher_help": "Polku kuten /app/*, @nimi, tai tyhjä kaikille pyynnöille. handle_path tarvitsee polun.",
+    "handler_label": "Direktiivi",
+    "save": "Tallenna lohkot",
+    "discard": "Hylkää muutokset",
+    "saved": "Sivuston lohkot tallennettiin.",
+    "block_not_found": "Sivuston lohkoa ei löytynyt Caddyfilesta. Lataa sivu uudelleen ja yritä uudestaan.",
+    "edit_help": "Valitse lohko muuttaaksesi sen täsmääjää tai direktiivejä. Vain muokkaamasi rivit kirjoitetaan uudelleen; lohkot, joita lomake ei tunne, näytetään sellaisinaan ja pysyvät vain luettavina."
   }
 }

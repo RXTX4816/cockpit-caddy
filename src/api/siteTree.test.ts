@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { surgicallyEditProxy, surgicallyWriteProxy } from "./caddy";
-import { braceDelta, childNodes, hasNestedBlocks, nodeHandlers, parseSiteTree, serializeSiteTree } from "./siteTree";
+import { braceDelta, childNodes, editNode, hasNestedBlocks, nodeAt, nodeHandlers, parseSiteTree, rewriteHeader, serializeSiteTree, validateNodeEdit } from "./siteTree";
 import type { ProxyEntry } from "./types";
 
 const FLAT = `example.com {
@@ -143,5 +143,90 @@ describe("the tree of a site (#349)", () => {
   it("returns nothing for text whose braces do not balance", () => {
     expect(parseSiteTree("example.com {\n\troute {\n\t\trespond ok\n}")).toBeUndefined();
     expect(parseSiteTree("not a block")).toBeUndefined();
+  });
+});
+
+
+describe("editing the nodes of a tree (#350)", () => {
+  const SITE = `example.com {
+\t# the app
+\t@api path /api/*
+\ttls internal
+\troute {
+\t\t# keep me
+\t\theader X-A 1
+\t\thandle @api { # api
+\t\t\treverse_proxy localhost:9000 {
+\t\t\t\theader_up X-B 2
+\t\t\t}
+\t\t\trespond /ok "fine"
+\t\t}
+\t\thandle_path /static/* {
+\t\t\tfile_server
+\t\t}
+\t}
+\thandle_errors {
+\t\trespond "{err.status_code}"
+\t}
+}`;
+
+  it("changes a matcher and keeps the rest of the header as written", () => {
+    expect(rewriteHeader("\t\thandle @api { # api", "/app/*")).toBe("\t\thandle /app/* { # api");
+    expect(rewriteHeader("\troute {", "/x")).toBe("\troute /x {");
+    expect(rewriteHeader("\t\thandle /a {", "")).toBe("\t\thandle {");
+    expect(rewriteHeader("\t\thandle_path /a/* {", "  /b/*  ")).toBe("\t\thandle_path /b/* {");
+  });
+
+  it("rewrites only the edited lines, nothing else, and reads back what was written", () => {
+    const tree = parseSiteTree(SITE)!;
+    const edited = editNode(tree, [0, 0], { matcher: "/app/*", handlers: { 0: "respond /ok \"fine\" 200" } });
+    const text = serializeSiteTree(edited);
+    const before = SITE.split("\n");
+    const after = text.split("\n");
+    expect(after).toHaveLength(before.length);
+    const changed = before.map((l, i) => [l, after[i]]).filter(([a, b]) => a !== b);
+    expect(changed).toEqual([
+      ["\t\thandle @api { # api", "\t\thandle /app/* { # api"],
+      ['\t\t\trespond /ok "fine"', '\t\t\trespond /ok "fine" 200'],
+    ]);
+    const back = nodeAt(parseSiteTree(text)!, [0, 0])!;
+    expect(back.matcher).toBe("/app/*");
+    expect(nodeHandlers(back)).toEqual(['respond /ok "fine" 200']);
+  });
+
+  it("edits a node's own directives by their index and leaves comments and blocks in place", () => {
+    const tree = parseSiteTree(SITE)!;
+    const route = nodeAt(tree, [0])!;
+    expect(nodeHandlers(route)).toEqual(["header X-A 1"]);
+    const text = serializeSiteTree(editNode(tree, [0], { handlers: { 0: "header X-A 2" } }));
+    expect(text).toContain("\t\t# keep me\n\t\theader X-A 2\n");
+    expect(text).toContain("\t\t\t\theader_up X-B 2");
+    expect(text).toContain("\thandle_errors {");
+  });
+
+  it("never touches an opaque node and ignores a path that is not there", () => {
+    const tree = parseSiteTree(SITE)!;
+    expect(serializeSiteTree(editNode(tree, [1], { matcher: "x", handlers: { 0: "x" } }))).toBe(SITE);
+    expect(serializeSiteTree(editNode(tree, [5], { matcher: "x" }))).toBe(SITE);
+    expect(serializeSiteTree(editNode(tree, [0, 0, 0], { matcher: "x" }))).toBe(SITE);
+  });
+
+  it("refuses an edit that would break the lines around it", () => {
+    expect(validateNodeEdit({ matcher: "@a {" })).toBe("matcher");
+    expect(validateNodeEdit({ matcher: "/a\n/b" })).toBe("matcher");
+    expect(validateNodeEdit({ handlers: { 0: "" } })).toBe("handler");
+    expect(validateNodeEdit({ handlers: { 0: "respond ok\nrespond no" } })).toBe("handler");
+    expect(validateNodeEdit({ handlers: { 0: "respond {http.request.uri}" } })).toBeUndefined();
+    const tree = parseSiteTree(SITE)!;
+    expect(serializeSiteTree(editNode(tree, [0], { matcher: "@a {" }))).toBe(SITE);
+  });
+
+  it("round-trips an edited tree of every kind", () => {
+    const tree = parseSiteTree(SITE)!;
+    for (const [path, edit] of [[[0], { matcher: "/r/*" }], [[0, 0], { matcher: "@other" }], [[0, 1], { matcher: "/files/*" }]] as const) {
+      const text = serializeSiteTree(editNode(tree, [...path], edit));
+      expect(serializeSiteTree(parseSiteTree(text)!)).toBe(text);
+      expect(nodeAt(parseSiteTree(text)!, [...path])!.matcher).toBe(edit.matcher);
+    }
   });
 });

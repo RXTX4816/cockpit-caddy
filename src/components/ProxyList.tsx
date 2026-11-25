@@ -91,7 +91,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
   const toast = useToast();
   const {
     proxies, servers, loading, error, refresh,
-    addProxy, editProxy, deleteProxy,
+    addProxy, editProxy, saveSiteText, deleteProxy,
     addServer, editServer, deleteServer,
     needsMigration, migrate, snippets,
   } = useProxies();
@@ -790,6 +790,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
           proxy={editing}
           existingRoutes={proxies.filter(p => p.id !== editing.id && !p.namedServerKey)}
           onSave={editProxy}
+          onSaveSiteText={text => saveSiteText(editing, text)}
           onClose={() => setEditing(null)}
           onApiError={msg => setApiError({ message: msg, search: extractLogsSearch(msg), action: "edit" })}
           servers={servers}

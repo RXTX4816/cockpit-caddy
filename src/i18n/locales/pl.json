@@ -1066,6 +1066,15 @@
     "no_matcher": "wszystkie żądania",
     "handlers": "Dyrektywy",
     "unreadable": "Bloków tej witryny nie udało się odczytać jako drzewa. Edytuj je w surowym edytorze.",
-    "read_only_help": "Bloki route i handle tej witryny, tak jak je napisano. Na razie tylko do odczytu: edytuj je w surowym edytorze."
+    "read_only_help": "Bloki route i handle tej witryny, tak jak je napisano. Na razie tylko do odczytu: edytuj je w surowym edytorze.",
+    "select": "Edytuj",
+    "matcher_label": "Matcher",
+    "matcher_help": "Ścieżka jak /app/*, @nazwa, lub puste dla wszystkich żądań. handle_path wymaga ścieżki.",
+    "handler_label": "Dyrektywa",
+    "save": "Zapisz bloki",
+    "discard": "Odrzuć zmiany",
+    "saved": "Bloki witryny zostały zapisane.",
+    "block_not_found": "Nie znaleziono bloku witryny w Caddyfile. Odśwież stronę i spróbuj ponownie.",
+    "edit_help": "Wybierz blok, aby zmienić jego matcher lub dyrektywy. Przepisywane są tylko linie, które edytujesz; bloki nieznane formularzowi są pokazywane tak, jak napisano, i pozostają tylko do odczytu."
   }
 }
