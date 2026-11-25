@@ -8,7 +8,7 @@ import { SectionConfiguredDot } from "./SectionConfiguredDot";
 
 /** The form's view of the `encode` options (#335); empty is what Caddy gets without them. */
 export interface EncodeValues {
-  /** "" (gzip, zstd), "zstd gzip", "gzip" or "zstd". */
+  /** "" (Caddy's default: zstd, then gzip), "gzip zstd", "gzip" or "zstd". */
   algorithms: string;
   minimumLength: string;
   /** Space-separated status codes or classes such as `2xx 404`. */
@@ -19,7 +19,7 @@ export interface EncodeValues {
 
 export const ENCODE_EMPTY: EncodeValues = { algorithms: "", minimumLength: "", matchStatus: "", matchHeaders: "" };
 
-const ALGORITHM_CHOICES = ["", "zstd gzip", "gzip", "zstd"];
+const ALGORITHM_CHOICES = ["", "gzip zstd", "gzip", "zstd"];
 
 export function encodeToValues(o: EncodeOptions | undefined): EncodeValues {
   return {

@@ -102,7 +102,7 @@ export interface BasicAuthOptions {
   algorithm?: "bcrypt" | "argon2id";
 }
 
-/** What `encode` is told besides turning compression on (#335). Unset is `encode gzip zstd`. */
+/** What `encode` is told besides turning compression on (#335). Unset is a plain `encode`, which prefers zstd over gzip. */
 export interface EncodeOptions {
   /** The algorithms in order of preference. */
   algorithms?: Array<"gzip" | "zstd">;

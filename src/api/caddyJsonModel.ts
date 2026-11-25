@@ -313,8 +313,9 @@ export function buildEncodeHandler(options?: import("./types").EncodeOptions): C
   const handler: Record<string, unknown> = {
     handler: "encode",
     encodings: Object.fromEntries((algorithms ?? ["gzip", "zstd"]).map(a => [a, {}])),
+    // What `caddy adapt` gives a plain `encode`.
+    prefer: algorithms ?? ["zstd", "gzip"],
   };
-  if (algorithms) handler.prefer = algorithms;
   if (options?.minimumLength != null) handler.minimum_length = options.minimumLength;
   const match: Record<string, unknown> = {};
   // A status class (2xx) is stored as its first digit, as Caddy's adapter does.
@@ -337,13 +338,14 @@ export function buildRequestBodyHandler(maxSize: number): CaddyHandler {
 }
 
 
-/** The `encode` options that differ from plain `encode gzip zstd` (#335). */
+/** The `encode` options that differ from a plain `encode` (#335). */
 export function parseEncodeOptionsJson(h: AnyHandler): import("./types").EncodeOptions | undefined {
   if (h.handler !== "encode") return undefined;
   const e = h as { prefer?: string[]; encodings?: Record<string, unknown>; minimum_length?: number; match?: { status_code?: number[]; headers?: Record<string, string[]> } };
   const order = (e.prefer?.length ? e.prefer : Object.keys(e.encodings ?? {})).filter((a): a is "gzip" | "zstd" => a === "gzip" || a === "zstd");
-  // Without a `prefer` Caddy lists no order; that and gzip + zstd both is what a plain `encode gzip zstd` is.
-  const isDefault = order.length === 2 && order[0] === "gzip" && order[1] === "zstd";
+  // A plain `encode` adapts to zstd before gzip; without a `prefer` (older pushes) both are
+  // listed in no order, which is read as the default too.
+  const isDefault = order.length === 2 && (e.prefer?.length ? order[0] === "zstd" && order[1] === "gzip" : true);
   const o: import("./types").EncodeOptions = {
     algorithms: order.length && !isDefault ? [...new Set(order)] : undefined,
     minimumLength: typeof e.minimum_length === "number" && e.minimum_length > 0 ? e.minimum_length : undefined,
@@ -1631,10 +1633,15 @@ export function applyAccessLog(server: CaddyServer, proxy: { externalPort: numbe
   const routes = (server.routes ?? []).filter(r => !isLogSkipRoute(r));
   const paths = proxy.accessLog?.skipPaths;
   if (paths?.length && routes.length) {
-    const base = routes[0].match as Array<Record<string, unknown>> | undefined;
-    // A site that matches a path of its own can't be narrowed the same way: write none.
-    if (!base?.some(m => m.path)) {
-      const match = base?.length ? base.map(m => ({ ...m, path: paths })) : [{ path: paths }];
+    // Every route of the server is the site's: the skip route covers the hosts of all of them.
+    // A route that matches a path of its own can't be narrowed the same way and is left out.
+    const bases = routes
+      .map(r => r.match as Array<Record<string, unknown>> | undefined)
+      .filter(base => !base?.some(m => m.path));
+    if (bases.length) {
+      const match = bases.some(base => !base?.length)
+        ? [{ path: paths }]
+        : [...new Map(bases.flatMap(base => base!).map(m => [JSON.stringify(m), { ...m, path: paths }])).values()];
       server.routes = [{ match, handle: [{ handler: "vars", log_skip: true } as CaddyHandler] } as CaddyRoute, ...routes];
       return;
     }
@@ -1701,20 +1708,51 @@ export function parseTlsAdvanced(
 }
 
 
+/** The ZeroSSL directory Caddy adds as the fallback issuer when a policy names no CA. */
+export const ZEROSSL_DIRECTORY = "https://acme.zerossl.com/v2/DV90";
+
+type AcmeIssuer = { module?: string; email?: string; ca?: string; external_account?: Record<string, unknown> };
+
 /**
- * A site's own ACME account and key type (#341), from the policy that names its host; the shared
- * catch-all policy is the global one. A site on automatic HTTPS has no connection policy, so this
- * is read on its own too.
+ * The global ACME account (`email`, `acme_eab`) as Caddy copies it into the issuers: from the
+ * catch-all policy, or, when every site has a policy of its own, from the email all of them
+ * share. `exceptHosts` leaves out the policy of the site being read or written.
+ */
+export function globalAcmeAccount(
+  policies: import("./types").CaddyAutomationPolicy[] | undefined,
+  exceptHosts: string[] = [],
+): { email?: string; external_account?: Record<string, unknown> } {
+  const acmeOf = (p: import("./types").CaddyAutomationPolicy) =>
+    (p.issuers ?? []).filter(i => i.module === "acme") as AcmeIssuer[];
+  const pick = (i: AcmeIssuer | undefined) => ({
+    ...(i?.email ? { email: i.email } : {}),
+    ...(i?.external_account ? { external_account: i.external_account } : {}),
+  });
+  const catchAll = policies?.find(p => !p.subjects?.length);
+  if (catchAll) return pick(acmeOf(catchAll)[0]);
+  const others = (policies ?? []).filter(p => !exceptHosts.some(h => subjectsInclude(p.subjects, h)));
+  const issuers = others.flatMap(acmeOf);
+  const emails = new Set(issuers.map(i => i.email));
+  if (!issuers.length || emails.size !== 1) return {};
+  return pick(issuers[0]);
+}
+
+/**
+ * A site's own ACME account and key type (#341), from the policy that names its host. Caddy copies
+ * the global email into every site's issuers, so an email equal to the global one is not the
+ * site's own, and the ZeroSSL fallback issuer is not a CA the site chose. A site on automatic
+ * HTTPS has no connection policy, so this is read on its own too.
  */
 export function parseSiteAcmeSettings(
   automationPolicies: import("./types").CaddyAutomationPolicy[] | undefined,
   host: string | undefined,
 ): Pick<import("./types").TlsAdvancedConfig, "acmeEmail" | "acmeCa" | "keyType"> | undefined {
   const scoped = host ? automationPolicies?.find(p => subjectsInclude(p.subjects, host)) : undefined;
-  const acme = scoped?.issuers?.find(i => i.module === "acme") as { email?: string; ca?: string } | undefined;
+  const acme = scoped?.issuers?.find(i => i.module === "acme") as AcmeIssuer | undefined;
+  const globalEmail = host ? globalAcmeAccount(automationPolicies, [host]).email : undefined;
   const out: Pick<import("./types").TlsAdvancedConfig, "acmeEmail" | "acmeCa" | "keyType"> = {
-    ...(acme?.email ? { acmeEmail: acme.email } : {}),
-    ...(acme?.ca ? { acmeCa: acme.ca } : {}),
+    ...(acme?.email && acme.email !== globalEmail ? { acmeEmail: acme.email } : {}),
+    ...(acme?.ca && acme.ca !== ZEROSSL_DIRECTORY ? { acmeCa: acme.ca } : {}),
     ...(scoped?.key_type ? { keyType: scoped.key_type } : {}),
   };
   return Object.keys(out).length ? out : undefined;
@@ -1842,13 +1880,19 @@ export function rebuildTlsAutomationPolicies(
 
   const policies: import("./types").CaddyAutomationPolicy[] = [defaultPolicy, ...otherSubjectPolicies];
 
-  // #341: a site on its own ACME account, CA or key type gets a policy of its own; the default
-  // issuers stay for whatever it leaves unset.
+  // #341: a site on its own ACME account, CA or key type gets a policy of its own, built the
+  // way `caddy adapt` builds it: the global email and EAB fill in what the site leaves unset, and
+  // without its own CA the site keeps Let's Encrypt with the ZeroSSL fallback.
   if (changedHosts.length && isChangedServerLive && changedIssuer === "acme" && (changedAdv?.acmeEmail || changedAdv?.acmeCa || changedAdv?.keyType)) {
-    const issuer = { module: "acme", ...(changedAdv.acmeCa ? { ca: changedAdv.acmeCa } : {}), ...(changedAdv.acmeEmail ? { email: changedAdv.acmeEmail } : {}) };
+    const global = globalAcmeAccount(existing, changedHosts);
+    const email = changedAdv.acmeEmail || global.email;
+    const account = { ...(email ? { email } : {}), ...(global.external_account ? { external_account: global.external_account } : {}) };
+    const issuers = changedAdv.acmeCa
+      ? [{ module: "acme", ca: changedAdv.acmeCa, ...account }]
+      : [{ module: "acme", ...account }, { module: "acme", ca: ZEROSSL_DIRECTORY, ...account }];
     policies.push({
       subjects: changedHosts,
-      ...(changedAdv.acmeCa || changedAdv.acmeEmail ? { issuers: [issuer] } : {}),
+      issuers,
       ...(changedAdv.keyType ? { key_type: changedAdv.keyType } : {}),
     });
   } else if (changedHosts.length && isChangedServerLive && changedAdv?.keyType && !hasCustomInternalIssuer(changedAdv)) {
