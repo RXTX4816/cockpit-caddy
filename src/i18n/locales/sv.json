@@ -177,7 +177,13 @@
     "field_hide": "Dolda filer",
     "field_hide_help": "Namn eller mönster som aldrig serveras, åtskilda med mellanslag.",
     "field_precompressed": "Förkomprimerade filer",
-    "field_precompressed_help": "Servera file.zst, file.br eller file.gz bredvid originalet när webbläsaren accepterar den kodningen."
+    "field_precompressed_help": "Servera file.zst, file.br eller file.gz bredvid originalet när webbläsaren accepterar den kodningen.",
+    "field_browse_template": "Mall för listan",
+    "field_browse_template_help": "En mallfil för kataloglistan. Används bara när kataloglistning är på.",
+    "field_status": "Statuskod",
+    "field_status_help": "Svara på varje fil med den här statuskoden i stället för 200, till exempel 404 för en egen felsida.",
+    "field_disable_canonical_uris": "Låt avslutande snedstreck vara",
+    "field_disable_canonical_uris_help": "Omdirigera inte för att lägga till eller ta bort ett avslutande snedstreck på kataloger och filer."
   },
   "edit_static": {
     "title": "Redigera statisk server — :{{port}}",
@@ -206,7 +212,15 @@
     "env_field_value": "Värde",
     "env_add_button": "Lägg till variabel",
     "field_try_files": "Prova filer (try_files)",
-    "field_try_files_help": "Valfritt. Kandidater som provas i tur och ordning före PHP; en app med front controller behöver oftast {path} {path}/ /index.php?{query}."
+    "field_try_files_help": "Valfritt. Kandidater som provas i tur och ordning före PHP; en app med front controller behöver oftast {path} {path}/ /index.php?{query}.",
+    "field_dial_timeout": "Anslutningstimeout",
+    "field_read_timeout": "Lästimeout",
+    "field_write_timeout": "Skrivtimeout",
+    "no_timeout": "ingen",
+    "field_capture_stderr": "Logga stderr från PHP-processen",
+    "field_capture_stderr_help": "Skriver det PHP-FPM skriver på stderr till Caddys logg.",
+    "field_resolve_root_symlink": "Lös symlänkar i roten",
+    "field_resolve_root_symlink_help": "Följer symlänkar i rotkatalogen innan SCRIPT_FILENAME byggs, vilket opcache-upplägg med release-symlänkar behöver."
   },
   "add_respond": {
     "title": "Lägg till statiskt svar",

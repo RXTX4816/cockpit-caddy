@@ -177,7 +177,13 @@
     "field_hide": "Archivos ocultos",
     "field_hide_help": "Nombres o patrones que nunca se sirven, separados por espacios.",
     "field_precompressed": "Archivos precomprimidos",
-    "field_precompressed_help": "Servir file.zst, file.br o file.gz junto al original cuando el navegador acepta esa codificación."
+    "field_precompressed_help": "Servir file.zst, file.br o file.gz junto al original cuando el navegador acepta esa codificación.",
+    "field_browse_template": "Plantilla del listado",
+    "field_browse_template_help": "Un archivo de plantilla para el listado de directorios. Solo se usa con el listado de directorios activado.",
+    "field_status": "Código de estado",
+    "field_status_help": "Responder a cada archivo con este código en lugar de 200, por ejemplo 404 para una página de error propia.",
+    "field_disable_canonical_uris": "Dejar las barras finales como están",
+    "field_disable_canonical_uris_help": "No redirigir para añadir o quitar una barra final en directorios y archivos."
   },
   "edit_static": {
     "title": "Editar servidor estático — :{{port}}",
@@ -206,7 +212,15 @@
     "env_field_value": "Valor",
     "env_add_button": "Añadir variable",
     "field_try_files": "Probar archivos (try_files)",
-    "field_try_files_help": "Opcional. Candidatos que se prueban en orden antes de PHP; una aplicación con front controller suele necesitar {path} {path}/ /index.php?{query}."
+    "field_try_files_help": "Opcional. Candidatos que se prueban en orden antes de PHP; una aplicación con front controller suele necesitar {path} {path}/ /index.php?{query}.",
+    "field_dial_timeout": "Tiempo de espera de conexión",
+    "field_read_timeout": "Tiempo de espera de lectura",
+    "field_write_timeout": "Tiempo de espera de escritura",
+    "no_timeout": "ninguno",
+    "field_capture_stderr": "Registrar el stderr del proceso PHP",
+    "field_capture_stderr_help": "Escribe en el registro de Caddy lo que PHP-FPM imprime en su stderr.",
+    "field_resolve_root_symlink": "Resolver enlaces simbólicos en la raíz",
+    "field_resolve_root_symlink_help": "Sigue los enlaces simbólicos del directorio raíz antes de construir SCRIPT_FILENAME, algo que necesitan las configuraciones con opcache y enlaces de versiones."
   },
   "add_respond": {
     "title": "Añadir respuesta estática",

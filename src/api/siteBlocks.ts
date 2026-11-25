@@ -598,7 +598,7 @@ export function buildTlsPolicyBlockLines(
 
 /** True when a static site has any `file_server` sub-directive set (#262). */
 export function hasFileServerOptions(fs: import("./types").FileServerConfig): boolean {
-  return !!(fs.index?.length || fs.hide?.length || fs.precompressed?.length);
+  return !!(fs.index?.length || fs.hide?.length || fs.precompressed?.length || fs.disableCanonicalUris || fs.status || (fs.browse && fs.browseTemplate));
 }
 
 
@@ -609,12 +609,17 @@ export function hasFileServerOptions(fs: import("./types").FileServerConfig): bo
 export function buildFileServerLines(fs: import("./types").FileServerConfig, indent: string): string[] {
   const lines = [`${indent}root * ${caddyQuote(fs.root)}`];
   if (fs.spa) lines.push(`${indent}try_files {path} /index.html`);
-  const head = fs.browse ? `${indent}file_server browse` : `${indent}file_server`;
+  // A listing template is an argument of the block's own `browse`, so then the head has none.
+  const template = fs.browse ? fs.browseTemplate : undefined;
+  const head = fs.browse && !template ? `${indent}file_server browse` : `${indent}file_server`;
   if (!hasFileServerOptions(fs)) {
     lines.push(head);
     return lines;
   }
   lines.push(`${head} {`);
+  if (template) lines.push(`${indent}\tbrowse ${caddyQuote(template)}`);
+  if (fs.disableCanonicalUris) lines.push(`${indent}\tdisable_canonical_uris`);
+  if (fs.status) lines.push(`${indent}\tstatus ${fs.status}`);
   if (fs.index?.length) lines.push(`${indent}\tindex ${fs.index.map(v => caddyQuote(v)).join(" ")}`);
   if (fs.hide?.length) lines.push(`${indent}\thide ${fs.hide.map(v => caddyQuote(v)).join(" ")}`);
   if (fs.precompressed?.length) lines.push(`${indent}\tprecompressed ${fs.precompressed.join(" ")}`);
@@ -633,11 +638,17 @@ export function buildPhpFastcgiLines(php: import("./types").PhpFastcgiConfig, in
   if (php.tryFiles?.trim()) lines.push(`${indent}try_files ${php.tryFiles.trim()}`);
   const { upstream, index, splitPath, env } = php;
   const envEntries = env ? Object.entries(env) : [];
-  if (index || splitPath?.length || envEntries.length) {
+  const hasOptions = !!(php.captureStderr || php.resolveRootSymlink || php.dialTimeout || php.readTimeout || php.writeTimeout);
+  if (index || splitPath?.length || envEntries.length || hasOptions) {
     lines.push(`${indent}php_fastcgi ${upstream} {`);
     if (index) lines.push(`${indent}\tindex ${index}`);
     if (splitPath?.length) lines.push(`${indent}\tsplit ${splitPath.join(" ")}`);
     for (const [k, v] of envEntries) lines.push(`${indent}\tenv ${k} ${caddyQuote(v)}`);
+    if (php.captureStderr) lines.push(`${indent}\tcapture_stderr`);
+    if (php.resolveRootSymlink) lines.push(`${indent}\tresolve_root_symlink`);
+    if (php.dialTimeout) lines.push(`${indent}\tdial_timeout ${php.dialTimeout}`);
+    if (php.readTimeout) lines.push(`${indent}\tread_timeout ${php.readTimeout}`);
+    if (php.writeTimeout) lines.push(`${indent}\twrite_timeout ${php.writeTimeout}`);
     lines.push(`${indent}}`);
   } else {
     lines.push(`${indent}php_fastcgi ${upstream}`);

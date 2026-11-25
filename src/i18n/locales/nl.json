@@ -177,7 +177,13 @@
     "field_hide": "Verborgen bestanden",
     "field_hide_help": "Namen of patronen die nooit worden geserveerd, gescheiden door spaties.",
     "field_precompressed": "Vooraf gecomprimeerde bestanden",
-    "field_precompressed_help": "file.zst, file.br of file.gz naast het origineel serveren als de browser die codering accepteert."
+    "field_precompressed_help": "file.zst, file.br of file.gz naast het origineel serveren als de browser die codering accepteert.",
+    "field_browse_template": "Sjabloon voor de lijst",
+    "field_browse_template_help": "Een sjabloonbestand voor de maplijst. Wordt alleen gebruikt als de maplijst aan staat.",
+    "field_status": "Statuscode",
+    "field_status_help": "Elk bestand beantwoorden met deze statuscode in plaats van 200, bijvoorbeeld 404 voor een eigen foutpagina.",
+    "field_disable_canonical_uris": "Slashes aan het eind laten staan",
+    "field_disable_canonical_uris_help": "Niet doorverwijzen om een slash aan het eind van mappen en bestanden toe te voegen of te verwijderen."
   },
   "edit_static": {
     "title": "Statische server bewerken — :{{port}}",
@@ -206,7 +212,15 @@
     "env_field_value": "Waarde",
     "env_add_button": "Variabele toevoegen",
     "field_try_files": "Bestanden proberen (try_files)",
-    "field_try_files_help": "Optioneel. Kandidaten die vóór PHP op volgorde worden geprobeerd; een front-controller-app heeft meestal {path} {path}/ /index.php?{query} nodig."
+    "field_try_files_help": "Optioneel. Kandidaten die vóór PHP op volgorde worden geprobeerd; een front-controller-app heeft meestal {path} {path}/ /index.php?{query} nodig.",
+    "field_dial_timeout": "Verbindings-timeout",
+    "field_read_timeout": "Lees-timeout",
+    "field_write_timeout": "Schrijf-timeout",
+    "no_timeout": "geen",
+    "field_capture_stderr": "stderr van het PHP-proces loggen",
+    "field_capture_stderr_help": "Schrijft wat PHP-FPM naar stderr afdrukt in het logboek van Caddy.",
+    "field_resolve_root_symlink": "Symlinks in de root oplossen",
+    "field_resolve_root_symlink_help": "Volgt symlinks in de rootmap voordat SCRIPT_FILENAME wordt opgebouwd, wat opcache-opstellingen met release-symlinks nodig hebben."
   },
   "add_respond": {
     "title": "Statisch antwoord toevoegen",

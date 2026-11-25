@@ -177,7 +177,13 @@
     "field_hide": "隱藏的檔案",
     "field_hide_help": "永不回傳的名稱或模式，以空格分隔。",
     "field_precompressed": "預先壓縮的檔案",
-    "field_precompressed_help": "瀏覽器接受相應編碼時，回傳原檔旁的 file.zst、file.br 或 file.gz。"
+    "field_precompressed_help": "瀏覽器接受相應編碼時，回傳原檔旁的 file.zst、file.br 或 file.gz。",
+    "field_browse_template": "清單範本",
+    "field_browse_template_help": "目錄清單使用的範本檔案。僅在開啟目錄清單時使用。",
+    "field_status": "狀態碼",
+    "field_status_help": "以此狀態碼取代 200 回應每個檔案,例如搭配自訂錯誤頁使用 404。",
+    "field_disable_canonical_uris": "保持結尾斜線不變",
+    "field_disable_canonical_uris_help": "不為目錄和檔案新增或移除結尾斜線而重新導向。"
   },
   "edit_static": {
     "title": "編輯靜態伺服器 — :{{port}}",
@@ -206,7 +212,15 @@
     "env_field_value": "值",
     "env_add_button": "新增變數",
     "field_try_files": "嘗試檔案（try_files）",
-    "field_try_files_help": "選填。在 PHP 之前依序嘗試的候選項；前端控制器應用通常需要 {path} {path}/ /index.php?{query}。"
+    "field_try_files_help": "選填。在 PHP 之前依序嘗試的候選項；前端控制器應用通常需要 {path} {path}/ /index.php?{query}。",
+    "field_dial_timeout": "連線逾時",
+    "field_read_timeout": "讀取逾時",
+    "field_write_timeout": "寫入逾時",
+    "no_timeout": "無",
+    "field_capture_stderr": "記錄 PHP 程序的 stderr",
+    "field_capture_stderr_help": "把 PHP-FPM 輸出到 stderr 的內容寫入 Caddy 記錄。",
+    "field_resolve_root_symlink": "解析根目錄中的符號連結",
+    "field_resolve_root_symlink_help": "在建立 SCRIPT_FILENAME 之前跟隨根目錄中的符號連結,使用發行符號連結的 opcache 部署需要這樣做。"
   },
   "add_respond": {
     "title": "新增靜態回應",

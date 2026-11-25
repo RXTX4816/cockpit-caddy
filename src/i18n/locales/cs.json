@@ -177,7 +177,13 @@
     "field_hide": "Skryté soubory",
     "field_hide_help": "Názvy nebo vzory, které se nikdy nevydají, oddělené mezerami.",
     "field_precompressed": "Předkomprimované soubory",
-    "field_precompressed_help": "Vydat file.zst, file.br nebo file.gz vedle originálu, pokud prohlížeč toto kódování přijímá."
+    "field_precompressed_help": "Vydat file.zst, file.br nebo file.gz vedle originálu, pokud prohlížeč toto kódování přijímá.",
+    "field_browse_template": "Šablona výpisu",
+    "field_browse_template_help": "Soubor šablony pro výpis adresáře. Použije se jen při zapnutém výpisu adresářů.",
+    "field_status": "Stavový kód",
+    "field_status_help": "Odpovědět na každý soubor tímto stavovým kódem místo 200, například 404 pro vlastní chybovou stránku.",
+    "field_disable_canonical_uris": "Ponechat koncová lomítka",
+    "field_disable_canonical_uris_help": "Nepřesměrovávat kvůli přidání nebo odebrání koncového lomítka u adresářů a souborů."
   },
   "edit_static": {
     "title": "Upravit statický server — :{{port}}",
@@ -206,7 +212,15 @@
     "env_field_value": "Hodnota",
     "env_add_button": "Přidat proměnnou",
     "field_try_files": "Zkoušené soubory (try_files)",
-    "field_try_files_help": "Volitelné. Kandidáti zkoušení v pořadí před PHP; aplikace s front controllerem obvykle potřebuje {path} {path}/ /index.php?{query}."
+    "field_try_files_help": "Volitelné. Kandidáti zkoušení v pořadí před PHP; aplikace s front controllerem obvykle potřebuje {path} {path}/ /index.php?{query}.",
+    "field_dial_timeout": "Časový limit připojení",
+    "field_read_timeout": "Časový limit čtení",
+    "field_write_timeout": "Časový limit zápisu",
+    "no_timeout": "žádný",
+    "field_capture_stderr": "Zapisovat stderr procesu PHP",
+    "field_capture_stderr_help": "Zapisuje do logu Caddy to, co PHP-FPM vypíše na stderr.",
+    "field_resolve_root_symlink": "Rozbalit symbolické odkazy v kořeni",
+    "field_resolve_root_symlink_help": "Před sestavením SCRIPT_FILENAME sleduje symbolické odkazy v kořenovém adresáři, což potřebují sestavy s opcache a symbolickými odkazy na vydání."
   },
   "add_respond": {
     "title": "Přidat statickou odpověď",

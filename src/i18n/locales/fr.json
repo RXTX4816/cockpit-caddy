@@ -177,7 +177,13 @@
     "field_hide": "Fichiers masqués",
     "field_hide_help": "Noms ou motifs jamais servis, séparés par des espaces.",
     "field_precompressed": "Fichiers précompressés",
-    "field_precompressed_help": "Servir file.zst, file.br ou file.gz à côté de l’original quand le navigateur accepte cet encodage."
+    "field_precompressed_help": "Servir file.zst, file.br ou file.gz à côté de l’original quand le navigateur accepte cet encodage.",
+    "field_browse_template": "Modèle de liste",
+    "field_browse_template_help": "Un fichier modèle pour la liste du répertoire. Utilisé seulement quand la liste des répertoires est activée.",
+    "field_status": "Code d'état",
+    "field_status_help": "Répondre à chaque fichier avec ce code d'état au lieu de 200, par exemple 404 pour une page d'erreur personnalisée.",
+    "field_disable_canonical_uris": "Laisser les barres obliques finales telles quelles",
+    "field_disable_canonical_uris_help": "Ne pas rediriger pour ajouter ou retirer une barre oblique finale sur les répertoires et fichiers."
   },
   "edit_static": {
     "title": "Modifier le serveur statique — :{{port}}",
@@ -206,7 +212,15 @@
     "env_field_value": "Valeur",
     "env_add_button": "Ajouter une variable",
     "field_try_files": "Fichiers à essayer (try_files)",
-    "field_try_files_help": "Facultatif. Candidats essayés dans l’ordre avant PHP ; une application à contrôleur frontal a en général besoin de {path} {path}/ /index.php?{query}."
+    "field_try_files_help": "Facultatif. Candidats essayés dans l’ordre avant PHP ; une application à contrôleur frontal a en général besoin de {path} {path}/ /index.php?{query}.",
+    "field_dial_timeout": "Délai de connexion",
+    "field_read_timeout": "Délai de lecture",
+    "field_write_timeout": "Délai d'écriture",
+    "no_timeout": "aucun",
+    "field_capture_stderr": "Journaliser le stderr du processus PHP",
+    "field_capture_stderr_help": "Écrit dans le journal de Caddy ce que PHP-FPM affiche sur son stderr.",
+    "field_resolve_root_symlink": "Résoudre les liens symboliques de la racine",
+    "field_resolve_root_symlink_help": "Suit les liens symboliques du répertoire racine avant de construire SCRIPT_FILENAME, ce dont ont besoin les installations opcache avec des liens de version."
   },
   "add_respond": {
     "title": "Ajouter une réponse statique",

@@ -177,7 +177,13 @@
     "field_hide": "Fișiere ascunse",
     "field_hide_help": "Nume sau tipare care nu sunt servite niciodată, separate prin spații.",
     "field_precompressed": "Fișiere precomprimate",
-    "field_precompressed_help": "Servește file.zst, file.br sau file.gz de lângă original când browserul acceptă acea codificare."
+    "field_precompressed_help": "Servește file.zst, file.br sau file.gz de lângă original când browserul acceptă acea codificare.",
+    "field_browse_template": "Șablon pentru listă",
+    "field_browse_template_help": "Un fișier șablon pentru lista directorului. Folosit doar când lista directoarelor este activată.",
+    "field_status": "Cod de stare",
+    "field_status_help": "Răspunde la fiecare fișier cu acest cod în loc de 200, de exemplu 404 pentru o pagină de eroare proprie.",
+    "field_disable_canonical_uris": "Lasă barele oblice finale neschimbate",
+    "field_disable_canonical_uris_help": "Nu redirecționa pentru a adăuga sau a elimina o bară oblică finală la directoare și fișiere."
   },
   "edit_static": {
     "title": "Editează serverul static — :{{port}}",
@@ -206,7 +212,15 @@
     "env_field_value": "Valoare",
     "env_add_button": "Adaugă variabilă",
     "field_try_files": "Fișiere încercate (try_files)",
-    "field_try_files_help": "Opțional. Candidați încercați în ordine înainte de PHP; o aplicație cu front controller are de obicei nevoie de {path} {path}/ /index.php?{query}."
+    "field_try_files_help": "Opțional. Candidați încercați în ordine înainte de PHP; o aplicație cu front controller are de obicei nevoie de {path} {path}/ /index.php?{query}.",
+    "field_dial_timeout": "Timp limită de conectare",
+    "field_read_timeout": "Timp limită de citire",
+    "field_write_timeout": "Timp limită de scriere",
+    "no_timeout": "niciunul",
+    "field_capture_stderr": "Înregistrează stderr al procesului PHP",
+    "field_capture_stderr_help": "Scrie în jurnalul Caddy ce afișează PHP-FPM pe stderr.",
+    "field_resolve_root_symlink": "Rezolvă legăturile simbolice din rădăcină",
+    "field_resolve_root_symlink_help": "Urmează legăturile simbolice din directorul rădăcină înainte de a construi SCRIPT_FILENAME, de care au nevoie configurațiile opcache cu legături de release."
   },
   "add_respond": {
     "title": "Adaugă răspuns static",

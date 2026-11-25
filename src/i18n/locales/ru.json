@@ -177,7 +177,13 @@
     "field_hide": "Скрытые файлы",
     "field_hide_help": "Имена или шаблоны, которые никогда не отдаются, через пробел.",
     "field_precompressed": "Предварительно сжатые файлы",
-    "field_precompressed_help": "Отдавать file.zst, file.br или file.gz рядом с оригиналом, если браузер принимает это кодирование."
+    "field_precompressed_help": "Отдавать file.zst, file.br или file.gz рядом с оригиналом, если браузер принимает это кодирование.",
+    "field_browse_template": "Шаблон списка",
+    "field_browse_template_help": "Файл шаблона для списка каталога. Используется только при включённом списке каталогов.",
+    "field_status": "Код состояния",
+    "field_status_help": "Отвечать на любой файл этим кодом вместо 200, например 404 для собственной страницы ошибки.",
+    "field_disable_canonical_uris": "Не трогать завершающие слэши",
+    "field_disable_canonical_uris_help": "Не перенаправлять, чтобы добавить или убрать завершающий слэш у каталогов и файлов."
   },
   "edit_static": {
     "title": "Изменить статический сервер — :{{port}}",
@@ -206,7 +212,15 @@
     "env_field_value": "Значение",
     "env_add_button": "Добавить переменную",
     "field_try_files": "Пробовать файлы (try_files)",
-    "field_try_files_help": "Необязательно. Варианты, проверяемые по порядку перед PHP; приложению с фронт-контроллером обычно нужно {path} {path}/ /index.php?{query}."
+    "field_try_files_help": "Необязательно. Варианты, проверяемые по порядку перед PHP; приложению с фронт-контроллером обычно нужно {path} {path}/ /index.php?{query}.",
+    "field_dial_timeout": "Тайм-аут подключения",
+    "field_read_timeout": "Тайм-аут чтения",
+    "field_write_timeout": "Тайм-аут записи",
+    "no_timeout": "нет",
+    "field_capture_stderr": "Писать stderr процесса PHP в журнал",
+    "field_capture_stderr_help": "Записывает в журнал Caddy то, что PHP-FPM выводит в stderr.",
+    "field_resolve_root_symlink": "Разрешать символические ссылки в корне",
+    "field_resolve_root_symlink_help": "Переходит по символическим ссылкам в корневом каталоге перед построением SCRIPT_FILENAME — это нужно конфигурациям opcache со ссылками на релизы."
   },
   "add_respond": {
     "title": "Добавить статический ответ",

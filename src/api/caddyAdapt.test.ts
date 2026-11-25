@@ -880,3 +880,19 @@ describe.runIf(available || required)("caddy adapt accepts the encode options (#
   });
 });
 
+describe.runIf(available || required)("caddy adapt accepts the file_server and php_fastcgi options (#340)", () => {
+  it("reads the file_server options back from a real adapt", () => {
+    const fileServer = { root: "/srv/www", browse: true, browseTemplate: "/etc/caddy/listing.html", disableCanonicalUris: true, status: 404 };
+    const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, targetPort: 0, fileServer })]));
+    expect(p.fileServer).toMatchObject(fileServer);
+  });
+
+  it("reads the php_fastcgi options back from a real adapt", () => {
+    const phpFastcgi = {
+      upstream: "localhost:9000", root: "/srv/php", captureStderr: true, resolveRootSymlink: true, dialTimeout: "3s", readTimeout: "10s", writeTimeout: "20s",
+    };
+    const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, targetPort: 0, phpFastcgi })]));
+    expect(p.phpFastcgi).toMatchObject(phpFastcgi);
+  });
+});
+

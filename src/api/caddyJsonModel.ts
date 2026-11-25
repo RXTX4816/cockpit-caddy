@@ -497,8 +497,13 @@ export function isConfigSourcePath(p: string): boolean {
 /** The `file_server` options (#262) of a static site, from its JSON handler and routes. */
 export function parseFileServerOptions(
   fsHandle: Record<string, unknown>, routes: JsonRoute[],
-): Pick<import("./types").FileServerConfig, "spa" | "index" | "hide" | "precompressed"> {
-  const out: Pick<import("./types").FileServerConfig, "spa" | "index" | "hide" | "precompressed"> = {};
+): Pick<import("./types").FileServerConfig, "spa" | "index" | "hide" | "precompressed" | "disableCanonicalUris" | "status" | "browseTemplate"> {
+  const out: Pick<import("./types").FileServerConfig, "spa" | "index" | "hide" | "precompressed" | "disableCanonicalUris" | "status" | "browseTemplate"> = {};
+  if (fsHandle.canonical_uris === false) out.disableCanonicalUris = true;
+  const status = typeof fsHandle.status_code === "string" ? parseInt(fsHandle.status_code, 10) : fsHandle.status_code;
+  if (typeof status === "number" && status > 0) out.status = status;
+  const template = (fsHandle.browse as { template_file?: string } | undefined)?.template_file;
+  if (template) out.browseTemplate = template;
   if (findTryFiles(routes) === "{path} /index.html") out.spa = true;
   const index = fsHandle.index_names;
   if (Array.isArray(index) && index.length) out.index = index as string[];
@@ -540,7 +545,10 @@ export function detectPhpFastcgiFromRoutes(
   const tryFiles = (rewriteRoute?.match?.[0]?.file as { try_files?: string[] } | undefined)?.try_files;
   const index = tryFiles?.length ? tryFiles[tryFiles.length - 1] : undefined;
 
-  const transport = rp.transport as { split_path?: string[]; env?: Record<string, string> } | undefined;
+  const transport = rp.transport as {
+    split_path?: string[]; env?: Record<string, string>; capture_stderr?: boolean; resolve_root_symlink?: boolean;
+    dial_timeout?: number | string; read_timeout?: number | string; write_timeout?: number | string;
+  } | undefined;
   const splitPath = transport?.split_path;
   const isDefaultSplit = Array.isArray(splitPath) && splitPath.length === 1 && splitPath[0] === ".php";
   const env = transport?.env;
@@ -552,6 +560,11 @@ export function detectPhpFastcgiFromRoutes(
     splitPath: Array.isArray(splitPath) && !isDefaultSplit ? splitPath : undefined,
     env: env && Object.keys(env).length ? env : undefined,
     ...(userTryFiles ? { tryFiles: userTryFiles } : {}),
+    ...(transport?.capture_stderr ? { captureStderr: true } : {}),
+    ...(transport?.resolve_root_symlink ? { resolveRootSymlink: true } : {}),
+    ...(parseDuration(transport?.dial_timeout) ? { dialTimeout: parseDuration(transport?.dial_timeout) } : {}),
+    ...(parseDuration(transport?.read_timeout) ? { readTimeout: parseDuration(transport?.read_timeout) } : {}),
+    ...(parseDuration(transport?.write_timeout) ? { writeTimeout: parseDuration(transport?.write_timeout) } : {}),
   };
 }
 
@@ -1701,7 +1714,9 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
 /** The `file_server` handler with its options (#262). */
 export function buildFileServerJson(fs: import("./types").FileServerConfig): CaddyHandler {
   const h: Record<string, unknown> = { handler: "file_server", root: fs.root };
-  if (fs.browse) h.browse = {};
+  if (fs.browse) h.browse = fs.browseTemplate ? { template_file: fs.browseTemplate } : {};
+  if (fs.disableCanonicalUris) h.canonical_uris = false;
+  if (fs.status) h.status_code = fs.status;
   if (fs.index?.length) h.index_names = fs.index;
   if (fs.hide?.length) h.hide = fs.hide;
   if (fs.precompressed?.length) {

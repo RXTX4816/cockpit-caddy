@@ -15,7 +15,7 @@ import {
   TextInput,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
-import { PhpTryFilesField } from "./FileServerOptionsFields";
+import { PhpOptionsFields, PhpTryFilesField, phpOptionsDraft, phpOptionsFromDraft, phpOptionsHaveErrors } from "./FileServerOptionsFields";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { CaddyApiError, saveWithDnsSecrets } from "../api";
@@ -46,6 +46,7 @@ export function EditPhpFastcgiDialog({ proxy, existingPorts, onSave, onClose }: 
   const [index, setIndex] = useState(proxy.phpFastcgi?.index ?? "");
   const [splitPath, setSplitPath] = useState(proxy.phpFastcgi?.splitPath?.join(" ") ?? "");
   const [tryFiles, setTryFiles] = useState(proxy.phpFastcgi?.tryFiles ?? "");
+  const [phpOptions, setPhpOptions] = useState(() => phpOptionsDraft(proxy.phpFastcgi));
   const [env, setEnv] = useState<EnvEntry[]>(envRecordToEntries(proxy.phpFastcgi?.env));
   // #246: where the certificate comes from; ACME needs a public name in the site address.
   const [tlsModeChoice, setTlsModeChoice] = useState<TlsMode>(tlsModeOf(proxy));
@@ -76,6 +77,8 @@ export function EditPhpFastcgiDialog({ proxy, existingPorts, onSave, onClose }: 
 
     if (!root.trim()) { setRootErr(t("add_static.validation_root_required")); ok = false; }
     else setRootErr(null);
+
+    if (phpOptionsHaveErrors(phpOptions)) ok = false;
 
     return ok;
   }
@@ -204,6 +207,7 @@ export function EditPhpFastcgiDialog({ proxy, existingPorts, onSave, onClose }: 
               </FormGroup>
 
               <PhpTryFilesField id="php-edit-try-files" value={tryFiles} onChange={setTryFiles} isDisabled={isLocked} />
+              <PhpOptionsFields idPrefix="php-edit" value={phpOptions} onChange={setPhpOptions} isDisabled={isLocked} />
 
               <TlsModeField id="php-edit-tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isLocked} onDemand={tlsOnDemand} onOnDemandChange={setTlsOnDemand} dns={siteDns} host={proxy.externalHost} />
 
@@ -251,6 +255,7 @@ export function EditPhpFastcgiDialog({ proxy, existingPorts, onSave, onClose }: 
                       index: index.trim() || undefined,
                       splitPath: splitPath.trim() ? splitPath.trim().split(/\s+/) : undefined,
                       tryFiles: tryFiles.trim() || undefined,
+                      ...phpOptionsFromDraft(phpOptions),
                       env: envEntriesToRecord(env),
                     },
                     ...tabEntry,

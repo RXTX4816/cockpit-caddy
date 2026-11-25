@@ -177,7 +177,13 @@
     "field_hide": "Arquivos ocultos",
     "field_hide_help": "Nomes ou padrões que nunca são servidos, separados por espaços.",
     "field_precompressed": "Arquivos pré-comprimidos",
-    "field_precompressed_help": "Servir file.zst, file.br ou file.gz ao lado do original quando o navegador aceita essa codificação."
+    "field_precompressed_help": "Servir file.zst, file.br ou file.gz ao lado do original quando o navegador aceita essa codificação.",
+    "field_browse_template": "Modelo da listagem",
+    "field_browse_template_help": "Um arquivo de modelo para a listagem de diretório. Usado só com a listagem de diretórios ligada.",
+    "field_status": "Código de status",
+    "field_status_help": "Responder a cada arquivo com este código em vez de 200, por exemplo 404 para uma página de erro própria.",
+    "field_disable_canonical_uris": "Manter as barras finais como estão",
+    "field_disable_canonical_uris_help": "Não redirecionar para adicionar ou remover a barra final em diretórios e arquivos."
   },
   "edit_static": {
     "title": "Editar servidor estático — :{{port}}",
@@ -206,7 +212,15 @@
     "env_field_value": "Valor",
     "env_add_button": "Adicionar variável",
     "field_try_files": "Arquivos a tentar (try_files)",
-    "field_try_files_help": "Opcional. Candidatos tentados em ordem antes do PHP; uma aplicação com front controller geralmente precisa de {path} {path}/ /index.php?{query}."
+    "field_try_files_help": "Opcional. Candidatos tentados em ordem antes do PHP; uma aplicação com front controller geralmente precisa de {path} {path}/ /index.php?{query}.",
+    "field_dial_timeout": "Tempo limite de conexão",
+    "field_read_timeout": "Tempo limite de leitura",
+    "field_write_timeout": "Tempo limite de escrita",
+    "no_timeout": "nenhum",
+    "field_capture_stderr": "Registrar o stderr do processo PHP",
+    "field_capture_stderr_help": "Grava no log do Caddy o que o PHP-FPM imprime no stderr.",
+    "field_resolve_root_symlink": "Resolver links simbólicos na raiz",
+    "field_resolve_root_symlink_help": "Segue links simbólicos no diretório raiz antes de montar SCRIPT_FILENAME, o que configurações de opcache com links de release exigem."
   },
   "add_respond": {
     "title": "Adicionar resposta estática",

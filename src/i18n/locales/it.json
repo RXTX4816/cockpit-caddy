@@ -177,7 +177,13 @@
     "field_hide": "File nascosti",
     "field_hide_help": "Nomi o pattern che non vengono mai serviti, separati da spazi.",
     "field_precompressed": "File precompressi",
-    "field_precompressed_help": "Servi file.zst, file.br o file.gz accanto all’originale quando il browser accetta quella codifica."
+    "field_precompressed_help": "Servi file.zst, file.br o file.gz accanto all’originale quando il browser accetta quella codifica.",
+    "field_browse_template": "Modello dell'elenco",
+    "field_browse_template_help": "Un file modello per l'elenco della directory. Usato solo quando l'elenco delle directory è attivo.",
+    "field_status": "Codice di stato",
+    "field_status_help": "Rispondi a ogni file con questo codice invece di 200, ad esempio 404 per una pagina di errore personalizzata.",
+    "field_disable_canonical_uris": "Lascia invariate le barre finali",
+    "field_disable_canonical_uris_help": "Non reindirizzare per aggiungere o togliere una barra finale su directory e file."
   },
   "edit_static": {
     "title": "Modifica server statico — :{{port}}",
@@ -206,7 +212,15 @@
     "env_field_value": "Valore",
     "env_add_button": "Aggiungi variabile",
     "field_try_files": "File da provare (try_files)",
-    "field_try_files_help": "Facoltativo. Candidati provati in ordine prima di PHP; un’app con front controller di solito richiede {path} {path}/ /index.php?{query}."
+    "field_try_files_help": "Facoltativo. Candidati provati in ordine prima di PHP; un’app con front controller di solito richiede {path} {path}/ /index.php?{query}.",
+    "field_dial_timeout": "Timeout di connessione",
+    "field_read_timeout": "Timeout di lettura",
+    "field_write_timeout": "Timeout di scrittura",
+    "no_timeout": "nessuno",
+    "field_capture_stderr": "Registra lo stderr del processo PHP",
+    "field_capture_stderr_help": "Scrive nel registro di Caddy ciò che PHP-FPM stampa su stderr.",
+    "field_resolve_root_symlink": "Risolvi i link simbolici nella radice",
+    "field_resolve_root_symlink_help": "Segue i link simbolici nella directory radice prima di costruire SCRIPT_FILENAME, come servono alle configurazioni opcache con link di release."
   },
   "add_respond": {
     "title": "Aggiungi risposta statica",

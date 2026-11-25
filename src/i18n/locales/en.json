@@ -177,7 +177,13 @@
     "field_hide": "Hidden files",
     "field_hide_help": "Names or patterns that are never served, separated by spaces.",
     "field_precompressed": "Precompressed files",
-    "field_precompressed_help": "Serve file.zst, file.br or file.gz next to the original when the browser accepts that encoding."
+    "field_precompressed_help": "Serve file.zst, file.br or file.gz next to the original when the browser accepts that encoding.",
+    "field_browse_template": "Listing template",
+    "field_browse_template_help": "A template file for the directory listing. Only used when directory listing is on.",
+    "field_status": "Status code",
+    "field_status_help": "Answer every file with this status code instead of 200, for example 404 for a custom error page.",
+    "field_disable_canonical_uris": "Keep trailing slashes as they are",
+    "field_disable_canonical_uris_help": "Do not redirect to add or remove a trailing slash on directories and files."
   },
   "edit_static": {
     "title": "Edit Static Server — :{{port}}",
@@ -206,7 +212,15 @@
     "env_field_value": "Value",
     "env_add_button": "Add variable",
     "field_try_files": "Try files",
-    "field_try_files_help": "Optional. Candidates tried in order before PHP; a front-controller app usually needs {path} {path}/ /index.php?{query}."
+    "field_try_files_help": "Optional. Candidates tried in order before PHP; a front-controller app usually needs {path} {path}/ /index.php?{query}.",
+    "field_dial_timeout": "Connect timeout",
+    "field_read_timeout": "Read timeout",
+    "field_write_timeout": "Write timeout",
+    "no_timeout": "none",
+    "field_capture_stderr": "Log the PHP process's stderr",
+    "field_capture_stderr_help": "Write what PHP-FPM prints to its stderr into Caddy's log.",
+    "field_resolve_root_symlink": "Resolve symlinks in the root",
+    "field_resolve_root_symlink_help": "Follow symlinks in the root directory before SCRIPT_FILENAME is built, which opcache setups with release symlinks need."
   },
   "add_respond": {
     "title": "Add Static Response",

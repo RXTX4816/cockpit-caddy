@@ -177,7 +177,13 @@
     "field_hide": "Приховані файли",
     "field_hide_help": "Імена або шаблони, які ніколи не віддаються, через пробіл.",
     "field_precompressed": "Попередньо стиснуті файли",
-    "field_precompressed_help": "Віддавати file.zst, file.br або file.gz поруч з оригіналом, якщо браузер приймає це кодування."
+    "field_precompressed_help": "Віддавати file.zst, file.br або file.gz поруч з оригіналом, якщо браузер приймає це кодування.",
+    "field_browse_template": "Шаблон списку",
+    "field_browse_template_help": "Файл шаблону для списку каталогу. Використовується лише за ввімкненого списку каталогів.",
+    "field_status": "Код стану",
+    "field_status_help": "Відповідати на кожен файл цим кодом замість 200, наприклад 404 для власної сторінки помилки.",
+    "field_disable_canonical_uris": "Не чіпати кінцеві слеші",
+    "field_disable_canonical_uris_help": "Не перенаправляти, щоб додати чи прибрати кінцевий слеш у каталогів і файлів."
   },
   "edit_static": {
     "title": "Змінити статичний сервер — :{{port}}",
@@ -206,7 +212,15 @@
     "env_field_value": "Значення",
     "env_add_button": "Додати змінну",
     "field_try_files": "Пробувати файли (try_files)",
-    "field_try_files_help": "Необов’язково. Варіанти, які по черзі перевіряються перед PHP; застосунку з фронт-контролером зазвичай потрібно {path} {path}/ /index.php?{query}."
+    "field_try_files_help": "Необов’язково. Варіанти, які по черзі перевіряються перед PHP; застосунку з фронт-контролером зазвичай потрібно {path} {path}/ /index.php?{query}.",
+    "field_dial_timeout": "Тайм-аут з'єднання",
+    "field_read_timeout": "Тайм-аут читання",
+    "field_write_timeout": "Тайм-аут запису",
+    "no_timeout": "немає",
+    "field_capture_stderr": "Записувати stderr процесу PHP",
+    "field_capture_stderr_help": "Записує до журналу Caddy те, що PHP-FPM виводить у stderr.",
+    "field_resolve_root_symlink": "Розв'язувати символічні посилання в корені",
+    "field_resolve_root_symlink_help": "Переходить за символічними посиланнями в кореневому каталозі перед побудовою SCRIPT_FILENAME — це потрібно конфігураціям opcache з посиланнями на релізи."
   },
   "add_respond": {
     "title": "Додати статичну відповідь",

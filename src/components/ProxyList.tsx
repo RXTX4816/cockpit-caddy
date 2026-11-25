@@ -684,6 +684,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
             index: duplicating.phpFastcgi.index ?? "",
             splitPath: duplicating.phpFastcgi.splitPath?.join(" ") ?? "",
             tryFiles: duplicating.phpFastcgi.tryFiles ?? "",
+            phpOptions: duplicating.phpFastcgi,
             tls: duplicating.tls,
             compress: duplicating.compress ?? false,
             label: duplicating.label ? t("proxies.copy_label", { label: duplicating.label }) : "",

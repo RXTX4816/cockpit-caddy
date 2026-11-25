@@ -52,8 +52,9 @@ import {
   CONF_D_IMPORT_LINE,
   parseConfTlsIssuerMap,
 } from "./caddy";
-import { buildBasicAuthHandler, buildEncodeHandler, buildRedirectHandler, parseEncodeOptionsJson, parseBasicAuthOptionsJson, parseHtmlRedirect } from "./caddyJsonModel";
+import { buildBasicAuthHandler, buildEncodeHandler, buildFileServerJson, parseFileServerOptions, buildRedirectHandler, parseEncodeOptionsJson, parseBasicAuthOptionsJson, parseHtmlRedirect } from "./caddyJsonModel";
 import { proxiesToCaddyfile } from "./caddy";
+import { buildPhpFastcgiLines } from "./siteBlocks";
 import type { CaddyConfig, CaddyServer, ProxyEntry, RouteMatch, ServerDef } from "./types";
 
 // ---------------------------------------------------------------------------
@@ -4732,6 +4733,38 @@ describe("encode options (#335)", () => {
     expect(parseEncodeOptionsJson({ handler: "encode", encodings: { gzip: {}, zstd: {} } } as never)).toBeUndefined();
     expect(parseEncodeOptionsJson({ handler: "encode", encodings: { gzip: {}, zstd: {} }, prefer: ["gzip", "zstd"] } as never)).toBeUndefined();
     expect(parseEncodeOptionsJson({ handler: "encode", encodings: { gzip: {}, zstd: {} }, prefer: ["zstd", "gzip"] } as never)).toEqual({ algorithms: ["zstd", "gzip"] });
+  });
+});
+
+describe("file_server and php_fastcgi options (#340)", () => {
+  const site = (fileServer: import("./types").FileServerConfig) => proxyToBlock(proxy({ tls: false, targetPort: 0, fileServer }));
+
+  it("writes disable_canonical_uris, status and a listing template inside the block", () => {
+    const block = site({ root: "/srv", browse: true, browseTemplate: "/etc/caddy/listing.html", disableCanonicalUris: true, status: 404 });
+    expect(block).toContain("file_server {");
+    expect(block).toContain("browse /etc/caddy/listing.html");
+    expect(block).toContain("disable_canonical_uris");
+    expect(block).toContain("status 404");
+    expect(block).not.toContain("file_server browse");
+  });
+
+  it("ignores a listing template while the listing is off, and keeps a plain file_server", () => {
+    expect(site({ root: "/srv", browseTemplate: "/x.html" })).toMatch(/file_server\n/);
+    expect(site({ root: "/srv", browse: true })).toContain("file_server browse");
+  });
+
+  it("builds and reads the JSON of the file_server options", () => {
+    const fs = { root: "/srv", browse: true, browseTemplate: "/etc/caddy/listing.html", disableCanonicalUris: true, status: 404 };
+    const h = buildFileServerJson(fs) as unknown as Record<string, unknown>;
+    expect(h).toMatchObject({ browse: { template_file: "/etc/caddy/listing.html" }, canonical_uris: false, status_code: 404 });
+    expect(parseFileServerOptions(h, [])).toEqual({ browseTemplate: "/etc/caddy/listing.html", disableCanonicalUris: true, status: 404 });
+  });
+
+  it("writes the php_fastcgi options", () => {
+    const lines = buildPhpFastcgiLines({
+      upstream: "localhost:9000", root: "/srv", captureStderr: true, resolveRootSymlink: true, dialTimeout: "3s", readTimeout: "10s", writeTimeout: "20s",
+    }, "\t").join("\n");
+    for (const line of ["capture_stderr", "resolve_root_symlink", "dial_timeout 3s", "read_timeout 10s", "write_timeout 20s"]) expect(lines).toContain(line);
   });
 });
 

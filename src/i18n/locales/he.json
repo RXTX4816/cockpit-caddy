@@ -177,7 +177,13 @@
     "field_hide": "קבצים מוסתרים",
     "field_hide_help": "שמות או תבניות שלעולם לא מוגשים, מופרדים ברווחים.",
     "field_precompressed": "קבצים דחוסים מראש",
-    "field_precompressed_help": "הגשת file.zst,‏ file.br או file.gz שליד המקור כשהדפדפן מקבל את הקידוד הזה."
+    "field_precompressed_help": "הגשת file.zst,‏ file.br או file.gz שליד המקור כשהדפדפן מקבל את הקידוד הזה.",
+    "field_browse_template": "תבנית רשימה",
+    "field_browse_template_help": "קובץ תבנית לרשימת התיקייה. בשימוש רק כשרשימת התיקיות פעילה.",
+    "field_status": "קוד סטטוס",
+    "field_status_help": "להשיב לכל קובץ בקוד סטטוס זה במקום 200, למשל 404 לדף שגיאה מותאם.",
+    "field_disable_canonical_uris": "השאר לוכסנים סופיים כמות שהם",
+    "field_disable_canonical_uris_help": "אל תפנה כדי להוסיף או להסיר לוכסן סופי בתיקיות ובקבצים."
   },
   "edit_static": {
     "title": "עריכת שרת סטטי — :{{port}}",
@@ -206,7 +212,15 @@
     "env_field_value": "ערך",
     "env_add_button": "הוספת משתנה",
     "field_try_files": "קבצים לניסיון (try_files)",
-    "field_try_files_help": "אופציונלי. מועמדים שנבדקים לפי הסדר לפני PHP; יישום עם front controller צריך בדרך כלל ‎{path} {path}/ /index.php?{query}‎."
+    "field_try_files_help": "אופציונלי. מועמדים שנבדקים לפי הסדר לפני PHP; יישום עם front controller צריך בדרך כלל ‎{path} {path}/ /index.php?{query}‎.",
+    "field_dial_timeout": "זמן קצוב לחיבור",
+    "field_read_timeout": "זמן קצוב לקריאה",
+    "field_write_timeout": "זמן קצוב לכתיבה",
+    "no_timeout": "ללא",
+    "field_capture_stderr": "תיעוד ה-stderr של תהליך PHP",
+    "field_capture_stderr_help": "כותב ליומן של Caddy את מה ש-PHP-FPM מדפיס ל-stderr.",
+    "field_resolve_root_symlink": "פתרון קישורים סמליים בשורש",
+    "field_resolve_root_symlink_help": "עוקב אחר קישורים סמליים בתיקיית השורש לפני בניית SCRIPT_FILENAME, כפי שדרושות הגדרות opcache עם קישורי גרסאות."
   },
   "add_respond": {
     "title": "הוספת תגובה סטטית",

@@ -177,7 +177,13 @@
     "field_hide": "الملفات المخفية",
     "field_hide_help": "أسماء أو أنماط لا تُقدَّم أبدًا، مفصولة بمسافات.",
     "field_precompressed": "الملفات المضغوطة مسبقًا",
-    "field_precompressed_help": "تقديم file.zst أو file.br أو file.gz الموجود بجانب الأصلي عندما يقبل المتصفح هذا الترميز."
+    "field_precompressed_help": "تقديم file.zst أو file.br أو file.gz الموجود بجانب الأصلي عندما يقبل المتصفح هذا الترميز.",
+    "field_browse_template": "قالب القائمة",
+    "field_browse_template_help": "ملف قالب لعرض محتويات المجلد. يُستخدم فقط عندما يكون عرض المجلد مفعّلًا.",
+    "field_status": "رمز الحالة",
+    "field_status_help": "الرد على كل ملف بهذا الرمز بدل 200، مثلًا 404 لصفحة خطأ مخصصة.",
+    "field_disable_canonical_uris": "ترك الشرطة المائلة اللاحقة كما هي",
+    "field_disable_canonical_uris_help": "عدم إعادة التوجيه لإضافة الشرطة المائلة اللاحقة أو إزالتها في المجلدات والملفات."
   },
   "edit_static": {
     "title": "تعديل الخادم الثابت — :{{port}}",
@@ -206,7 +212,15 @@
     "env_field_value": "القيمة",
     "env_add_button": "إضافة متغير",
     "field_try_files": "تجربة الملفات (try_files)",
-    "field_try_files_help": "اختياري. مرشحات تُجرَّب بالترتيب قبل PHP؛ تطبيقات وحدة التحكم الأمامية تحتاج عادةً إلى {path} {path}/ /index.php?{query}."
+    "field_try_files_help": "اختياري. مرشحات تُجرَّب بالترتيب قبل PHP؛ تطبيقات وحدة التحكم الأمامية تحتاج عادةً إلى {path} {path}/ /index.php?{query}.",
+    "field_dial_timeout": "مهلة الاتصال",
+    "field_read_timeout": "مهلة القراءة",
+    "field_write_timeout": "مهلة الكتابة",
+    "no_timeout": "بلا",
+    "field_capture_stderr": "تسجيل stderr لعملية PHP",
+    "field_capture_stderr_help": "كتابة ما يطبعه PHP-FPM على stderr في سجل Caddy.",
+    "field_resolve_root_symlink": "حلّ الروابط الرمزية في الجذر",
+    "field_resolve_root_symlink_help": "اتباع الروابط الرمزية في المجلد الجذر قبل بناء SCRIPT_FILENAME، وهو ما تحتاجه إعدادات opcache ذات روابط الإصدارات."
   },
   "add_respond": {
     "title": "إضافة استجابة ثابتة",

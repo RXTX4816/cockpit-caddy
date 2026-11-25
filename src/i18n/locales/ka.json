@@ -177,7 +177,13 @@
     "field_hide": "დამალული ფაილები",
     "field_hide_help": "სახელები ან შაბლონები, რომლებიც არასოდეს მიეწოდება, ჰარით გამოყოფილი.",
     "field_precompressed": "წინასწარ შეკუმშული ფაილები",
-    "field_precompressed_help": "ორიგინალის გვერდით მყოფი file.zst, file.br ან file.gz-ის მიწოდება, თუ ბრაუზერი იღებს ამ კოდირებას."
+    "field_precompressed_help": "ორიგინალის გვერდით მყოფი file.zst, file.br ან file.gz-ის მიწოდება, თუ ბრაუზერი იღებს ამ კოდირებას.",
+    "field_browse_template": "სიის შაბლონი",
+    "field_browse_template_help": "შაბლონის ფაილი საქაღალდის სიისთვის. გამოიყენება მხოლოდ საქაღალდის სიის ჩართვისას.",
+    "field_status": "სტატუსის კოდი",
+    "field_status_help": "ყველა ფაილს უპასუხებს ამ სტატუსის კოდით 200-ის ნაცვლად, მაგალითად 404 საკუთარი შეცდომის გვერდისთვის.",
+    "field_disable_canonical_uris": "ბოლო დახრილი ხაზების უცვლელად დატოვება",
+    "field_disable_canonical_uris_help": "არ გადამისამართებს საქაღალდეებსა და ფაილებზე ბოლო დახრილი ხაზის დასამატებლად ან მოსაშორებლად."
   },
   "edit_static": {
     "title": "სტატიკური სერვერის რედაქტირება — :{{port}}",
@@ -206,7 +212,15 @@
     "env_field_value": "მნიშვნელობა",
     "env_add_button": "ცვლადის დამატება",
     "field_try_files": "საცდელი ფაილები (try_files)",
-    "field_try_files_help": "არასავალდებულო. კანდიდატები, რომლებიც PHP-მდე თანმიმდევრობით მოწმდება; front controller აპს ჩვეულებრივ სჭირდება {path} {path}/ /index.php?{query}."
+    "field_try_files_help": "არასავალდებულო. კანდიდატები, რომლებიც PHP-მდე თანმიმდევრობით მოწმდება; front controller აპს ჩვეულებრივ სჭირდება {path} {path}/ /index.php?{query}.",
+    "field_dial_timeout": "დაკავშირების დროის ლიმიტი",
+    "field_read_timeout": "კითხვის დროის ლიმიტი",
+    "field_write_timeout": "ჩაწერის დროის ლიმიტი",
+    "no_timeout": "არცერთი",
+    "field_capture_stderr": "PHP პროცესის stderr-ის ჩაწერა",
+    "field_capture_stderr_help": "PHP-FPM-ის stderr-ზე დაბეჭდილს წერს Caddy-ის ჟურნალში.",
+    "field_resolve_root_symlink": "ძირში სიმბოლური ბმულების გახსნა",
+    "field_resolve_root_symlink_help": "SCRIPT_FILENAME-ის აგებამდე მიჰყვება სიმბოლურ ბმულებს ძირეულ საქაღალდეში, რაც სჭირდება opcache-ის კონფიგურაციებს რელიზის ბმულებით."
   },
   "add_respond": {
     "title": "სტატიკური პასუხის დამატება",

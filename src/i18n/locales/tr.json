@@ -177,7 +177,13 @@
     "field_hide": "Gizli dosyalar",
     "field_hide_help": "Hiçbir zaman sunulmayan adlar veya kalıplar, boşlukla ayrılmış.",
     "field_precompressed": "Önceden sıkıştırılmış dosyalar",
-    "field_precompressed_help": "Tarayıcı bu kodlamayı kabul ediyorsa özgün dosyanın yanındaki file.zst, file.br veya file.gz sunulur."
+    "field_precompressed_help": "Tarayıcı bu kodlamayı kabul ediyorsa özgün dosyanın yanındaki file.zst, file.br veya file.gz sunulur.",
+    "field_browse_template": "Liste şablonu",
+    "field_browse_template_help": "Dizin listesi için bir şablon dosyası. Yalnızca dizin listesi açıkken kullanılır.",
+    "field_status": "Durum kodu",
+    "field_status_help": "Her dosyaya 200 yerine bu durum koduyla yanıt verir, örneğin özel bir hata sayfası için 404.",
+    "field_disable_canonical_uris": "Sondaki eğik çizgileri olduğu gibi bırak",
+    "field_disable_canonical_uris_help": "Dizinlere ve dosyalara sondaki eğik çizgiyi eklemek veya kaldırmak için yönlendirme yapma."
   },
   "edit_static": {
     "title": "Statik sunucuyu düzenle — :{{port}}",
@@ -206,7 +212,15 @@
     "env_field_value": "Değer",
     "env_add_button": "Değişken ekle",
     "field_try_files": "Denenecek dosyalar (try_files)",
-    "field_try_files_help": "İsteğe bağlı. PHP'den önce sırayla denenen adaylar; ön denetleyicili bir uygulama genellikle {path} {path}/ /index.php?{query} gerektirir."
+    "field_try_files_help": "İsteğe bağlı. PHP'den önce sırayla denenen adaylar; ön denetleyicili bir uygulama genellikle {path} {path}/ /index.php?{query} gerektirir.",
+    "field_dial_timeout": "Bağlantı zaman aşımı",
+    "field_read_timeout": "Okuma zaman aşımı",
+    "field_write_timeout": "Yazma zaman aşımı",
+    "no_timeout": "yok",
+    "field_capture_stderr": "PHP işleminin stderr çıktısını kaydet",
+    "field_capture_stderr_help": "PHP-FPM'nin stderr'e yazdıklarını Caddy günlüğüne yazar.",
+    "field_resolve_root_symlink": "Kökteki sembolik bağlantıları çöz",
+    "field_resolve_root_symlink_help": "SCRIPT_FILENAME oluşturulmadan önce kök dizindeki sembolik bağlantıları izler; sürüm bağlantılı opcache kurulumları buna ihtiyaç duyar."
   },
   "add_respond": {
     "title": "Statik yanıt ekle",

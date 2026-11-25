@@ -311,6 +311,12 @@ export interface FileServerConfig {
   hide?: string[];
   /** `file_server { precompressed … }`: encodings of precompressed sidecar files, in order. */
   precompressed?: string[];
+  /** `file_server { disable_canonical_uris }`: no redirects to add or drop a trailing slash (#340). */
+  disableCanonicalUris?: boolean;
+  /** `file_server { status <code> }`: answer every file with this status code (#340). */
+  status?: number;
+  /** `file_server { browse <template_file> }`: a template for the directory listing; needs `browse` (#340). */
+  browseTemplate?: string;
 }
 
 export interface PhpFastcgiConfig {
@@ -327,6 +333,14 @@ export interface PhpFastcgiConfig {
   env?: Record<string, string>;
   /** `try_files` before php_fastcgi (#262), e.g. `{path} {path}/ /index.php?{query}`. */
   tryFiles?: string;
+  /** Write the FastCGI process's stderr to Caddy's log (#340). */
+  captureStderr?: boolean;
+  /** Resolve symlinks in `root` before building SCRIPT_FILENAME (#340). */
+  resolveRootSymlink?: boolean;
+  /** Timeouts of the FastCGI connection, Go durations (#340). */
+  dialTimeout?: string;
+  readTimeout?: string;
+  writeTimeout?: string;
 }
 
 export interface StaticResponseConfig {

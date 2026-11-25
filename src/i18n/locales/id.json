@@ -177,7 +177,13 @@
     "field_hide": "Berkas tersembunyi",
     "field_hide_help": "Nama atau pola yang tidak pernah disajikan, dipisahkan spasi.",
     "field_precompressed": "Berkas yang sudah dikompresi",
-    "field_precompressed_help": "Sajikan file.zst, file.br, atau file.gz di samping aslinya jika peramban menerima pengodean itu."
+    "field_precompressed_help": "Sajikan file.zst, file.br, atau file.gz di samping aslinya jika peramban menerima pengodean itu.",
+    "field_browse_template": "Templat daftar",
+    "field_browse_template_help": "Berkas templat untuk daftar direktori. Hanya dipakai saat daftar direktori aktif.",
+    "field_status": "Kode status",
+    "field_status_help": "Jawab setiap berkas dengan kode status ini, bukan 200, misalnya 404 untuk halaman galat kustom.",
+    "field_disable_canonical_uris": "Biarkan garis miring di akhir apa adanya",
+    "field_disable_canonical_uris_help": "Jangan mengalihkan untuk menambah atau menghapus garis miring di akhir pada direktori dan berkas."
   },
   "edit_static": {
     "title": "Edit server statis — :{{port}}",
@@ -206,7 +212,15 @@
     "env_field_value": "Nilai",
     "env_add_button": "Tambah variabel",
     "field_try_files": "Berkas yang dicoba (try_files)",
-    "field_try_files_help": "Opsional. Kandidat yang dicoba berurutan sebelum PHP; aplikasi front controller biasanya butuh {path} {path}/ /index.php?{query}."
+    "field_try_files_help": "Opsional. Kandidat yang dicoba berurutan sebelum PHP; aplikasi front controller biasanya butuh {path} {path}/ /index.php?{query}.",
+    "field_dial_timeout": "Batas waktu koneksi",
+    "field_read_timeout": "Batas waktu baca",
+    "field_write_timeout": "Batas waktu tulis",
+    "no_timeout": "tidak ada",
+    "field_capture_stderr": "Catat stderr proses PHP",
+    "field_capture_stderr_help": "Menulis apa yang dicetak PHP-FPM ke stderr ke log Caddy.",
+    "field_resolve_root_symlink": "Selesaikan symlink di root",
+    "field_resolve_root_symlink_help": "Mengikuti symlink di direktori root sebelum SCRIPT_FILENAME dibuat, yang dibutuhkan penyiapan opcache dengan symlink rilis."
   },
   "add_respond": {
     "title": "Tambah respons statis",

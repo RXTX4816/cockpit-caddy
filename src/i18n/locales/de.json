@@ -177,7 +177,13 @@
     "field_hide": "Versteckte Dateien",
     "field_hide_help": "Namen oder Muster, die nie ausgeliefert werden, durch Leerzeichen getrennt.",
     "field_precompressed": "Vorkomprimierte Dateien",
-    "field_precompressed_help": "file.zst, file.br oder file.gz neben dem Original ausliefern, wenn der Browser diese Kodierung akzeptiert."
+    "field_precompressed_help": "file.zst, file.br oder file.gz neben dem Original ausliefern, wenn der Browser diese Kodierung akzeptiert.",
+    "field_browse_template": "Vorlage für die Auflistung",
+    "field_browse_template_help": "Eine Vorlagendatei für die Verzeichnisauflistung. Wird nur bei aktivierter Verzeichnisauflistung verwendet.",
+    "field_status": "Statuscode",
+    "field_status_help": "Jede Datei mit diesem Statuscode statt 200 beantworten, zum Beispiel 404 für eine eigene Fehlerseite.",
+    "field_disable_canonical_uris": "Abschließende Schrägstriche beibehalten",
+    "field_disable_canonical_uris_help": "Nicht weiterleiten, um bei Verzeichnissen und Dateien einen abschließenden Schrägstrich hinzuzufügen oder zu entfernen."
   },
   "edit_static": {
     "title": "Statischen Server bearbeiten – :{{port}}",
@@ -206,7 +212,15 @@
     "env_field_value": "Wert",
     "env_add_button": "Variable hinzufügen",
     "field_try_files": "Dateien probieren (try_files)",
-    "field_try_files_help": "Optional. Kandidaten, die vor PHP der Reihe nach probiert werden; eine Front-Controller-App braucht meist {path} {path}/ /index.php?{query}."
+    "field_try_files_help": "Optional. Kandidaten, die vor PHP der Reihe nach probiert werden; eine Front-Controller-App braucht meist {path} {path}/ /index.php?{query}.",
+    "field_dial_timeout": "Verbindungs-Timeout",
+    "field_read_timeout": "Lese-Timeout",
+    "field_write_timeout": "Schreib-Timeout",
+    "no_timeout": "keins",
+    "field_capture_stderr": "stderr des PHP-Prozesses protokollieren",
+    "field_capture_stderr_help": "Schreibt, was PHP-FPM auf stderr ausgibt, in Caddys Protokoll.",
+    "field_resolve_root_symlink": "Symlinks im Root auflösen",
+    "field_resolve_root_symlink_help": "Folgt Symlinks im Root-Verzeichnis, bevor SCRIPT_FILENAME gebildet wird. Das brauchen opcache-Setups mit Release-Symlinks."
   },
   "add_respond": {
     "title": "Statische Antwort hinzufügen",

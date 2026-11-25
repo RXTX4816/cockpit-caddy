@@ -177,7 +177,13 @@
     "field_hide": "Ukryte pliki",
     "field_hide_help": "Nazwy lub wzorce, które nigdy nie są udostępniane, rozdzielone spacjami.",
     "field_precompressed": "Pliki wstępnie skompresowane",
-    "field_precompressed_help": "Zwracaj file.zst, file.br lub file.gz obok oryginału, gdy przeglądarka akceptuje to kodowanie."
+    "field_precompressed_help": "Zwracaj file.zst, file.br lub file.gz obok oryginału, gdy przeglądarka akceptuje to kodowanie.",
+    "field_browse_template": "Szablon listingu",
+    "field_browse_template_help": "Plik szablonu dla listingu katalogu. Używany tylko przy włączonym listingu katalogów.",
+    "field_status": "Kod stanu",
+    "field_status_help": "Odpowiadaj na każdy plik tym kodem zamiast 200, np. 404 dla własnej strony błędu.",
+    "field_disable_canonical_uris": "Zostaw końcowe ukośniki bez zmian",
+    "field_disable_canonical_uris_help": "Nie przekierowuj, aby dodać lub usunąć końcowy ukośnik w katalogach i plikach."
   },
   "edit_static": {
     "title": "Edytuj serwer statyczny — :{{port}}",
@@ -206,7 +212,15 @@
     "env_field_value": "Wartość",
     "env_add_button": "Dodaj zmienną",
     "field_try_files": "Próbowane pliki (try_files)",
-    "field_try_files_help": "Opcjonalne. Kandydaci sprawdzani kolejno przed PHP; aplikacja z front controllerem zwykle potrzebuje {path} {path}/ /index.php?{query}."
+    "field_try_files_help": "Opcjonalne. Kandydaci sprawdzani kolejno przed PHP; aplikacja z front controllerem zwykle potrzebuje {path} {path}/ /index.php?{query}.",
+    "field_dial_timeout": "Limit czasu połączenia",
+    "field_read_timeout": "Limit czasu odczytu",
+    "field_write_timeout": "Limit czasu zapisu",
+    "no_timeout": "brak",
+    "field_capture_stderr": "Zapisuj stderr procesu PHP",
+    "field_capture_stderr_help": "Zapisuje w dzienniku Caddy to, co PHP-FPM wypisuje na stderr.",
+    "field_resolve_root_symlink": "Rozwiązuj dowiązania symboliczne w katalogu głównym",
+    "field_resolve_root_symlink_help": "Podąża za dowiązaniami symbolicznymi w katalogu głównym przed zbudowaniem SCRIPT_FILENAME, czego wymagają konfiguracje opcache z dowiązaniami wydań."
   },
   "add_respond": {
     "title": "Dodaj odpowiedź statyczną",

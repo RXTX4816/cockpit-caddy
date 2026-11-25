@@ -177,7 +177,13 @@
     "field_hide": "隐藏的文件",
     "field_hide_help": "永不返回的名称或模式，用空格分隔。",
     "field_precompressed": "预压缩文件",
-    "field_precompressed_help": "浏览器接受相应编码时，返回原文件旁的 file.zst、file.br 或 file.gz。"
+    "field_precompressed_help": "浏览器接受相应编码时，返回原文件旁的 file.zst、file.br 或 file.gz。",
+    "field_browse_template": "列表模板",
+    "field_browse_template_help": "目录列表使用的模板文件。仅在开启目录列表时使用。",
+    "field_status": "状态码",
+    "field_status_help": "以此状态码代替 200 响应每个文件,例如用 404 配合自定义错误页。",
+    "field_disable_canonical_uris": "保持末尾斜杠不变",
+    "field_disable_canonical_uris_help": "不为目录和文件添加或去掉末尾斜杠而进行重定向。"
   },
   "edit_static": {
     "title": "编辑静态服务器 — :{{port}}",
@@ -206,7 +212,15 @@
     "env_field_value": "值",
     "env_add_button": "添加变量",
     "field_try_files": "尝试文件（try_files）",
-    "field_try_files_help": "可选。在 PHP 之前依次尝试的候选项；前端控制器应用通常需要 {path} {path}/ /index.php?{query}。"
+    "field_try_files_help": "可选。在 PHP 之前依次尝试的候选项；前端控制器应用通常需要 {path} {path}/ /index.php?{query}。",
+    "field_dial_timeout": "连接超时",
+    "field_read_timeout": "读取超时",
+    "field_write_timeout": "写入超时",
+    "no_timeout": "无",
+    "field_capture_stderr": "记录 PHP 进程的 stderr",
+    "field_capture_stderr_help": "把 PHP-FPM 输出到 stderr 的内容写入 Caddy 日志。",
+    "field_resolve_root_symlink": "解析根目录中的符号链接",
+    "field_resolve_root_symlink_help": "在构建 SCRIPT_FILENAME 之前跟随根目录中的符号链接,使用发布符号链接的 opcache 部署需要这样做。"
   },
   "add_respond": {
     "title": "添加静态响应",
