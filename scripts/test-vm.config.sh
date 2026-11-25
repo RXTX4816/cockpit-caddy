@@ -2,9 +2,7 @@
 # Plugin-specific VM config for cockpit-caddy.
 # Sourced by node_modules/@rxtx4816/cockpit-plugin-base/scripts/test-vm.sh
 
-PLUGIN_NAME="cockpit-caddy"
-MOUNT_TAG="cockpit_caddy"
-INSTALL_PATH="/usr/share/cockpit/cockpit-caddy"
+# PLUGIN_NAME, MOUNT_TAG and INSTALL_PATH default from package.json.
 
 # Simple distro VMs — no runtime variants needed for Caddy
 ALL_VMS=(arch debian fedora)
