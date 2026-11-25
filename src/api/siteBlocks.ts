@@ -280,6 +280,22 @@ export function buildBasicAuthCaddyLines(accounts: { username: string; passwordH
 export function buildRewriteCaddyLines(rewrite: import("./types").RewriteConfig, indent = "\t"): string[] {
   if (rewrite.type === "strip_prefix") return [`${indent}uri strip_prefix ${rewrite.value}`];
   if (rewrite.type === "add_prefix") return [`${indent}rewrite ${rewrite.value}{uri}`];
+  if (rewrite.type === "strip_suffix") return [`${indent}uri strip_suffix ${rewrite.value}`];
+  if (rewrite.type === "method") return [`${indent}method ${rewrite.method}`];
+  if (rewrite.type === "uri_replace") {
+    return [`${indent}uri replace ${caddyQuote(rewrite.find)} ${caddyQuote(rewrite.replace, { always: true })}${rewrite.limit ? ` ${rewrite.limit}` : ""}`];
+  }
+  if (rewrite.type === "query") {
+    const line = (o: import("./types").QueryOp) =>
+      o.op === "delete" ? `-${o.key}`
+        : o.op === "add" ? `+${o.key} ${caddyQuote(o.value ?? "", { always: true })}`
+        : o.op === "rename" ? `${o.key}>${o.value ?? ""}`
+        : o.op === "replace" ? `${o.key} ${caddyQuote(o.search ?? "", { always: true })} ${caddyQuote(o.replace ?? "", { always: true })}`
+        : `${o.key} ${caddyQuote(o.value ?? "", { always: true })}`;
+    return rewrite.ops.length === 1
+      ? [`${indent}uri query ${line(rewrite.ops[0])}`]
+      : [`${indent}uri query {`, ...rewrite.ops.map(o => `${indent}\t${line(o)}`), `${indent}}`];
+  }
   // `uri path_regexp` replaces the matching part of the path, like the JSON rewrite handler's
   // path_regexp; a `path_regexp` matcher + `rewrite` replaced the whole URI instead (#254).
   // Both use Go's $1 backreferences.

@@ -410,6 +410,21 @@ export function buildRewriteHandler(rewrite: import("./types").RewriteConfig): C
   if (rewrite.type === "add_prefix") {
     return { handler: "rewrite", uri: `${rewrite.value}{http.request.uri}` };
   }
+  if (rewrite.type === "strip_suffix") return { handler: "rewrite", strip_path_suffix: rewrite.value };
+  if (rewrite.type === "method") return { handler: "rewrite", method: rewrite.method };
+  if (rewrite.type === "uri_replace") {
+    return { handler: "rewrite", uri_substring: [{ find: rewrite.find, ...(rewrite.replace ? { replace: rewrite.replace } : {}), ...(rewrite.limit ? { limit: rewrite.limit } : {}) }] } as CaddyHandler;
+  }
+  if (rewrite.type === "query") {
+    const query: Record<string, unknown[]> = {};
+    const push = (name: string, item: unknown) => { (query[name] ??= []).push(item); };
+    for (const o of rewrite.ops) {
+      if (o.op === "delete") push("delete", o.key);
+      else if (o.op === "replace") push("replace", { key: o.key, search_regexp: o.search ?? "", replace: o.replace ?? "" });
+      else push(o.op, { key: o.key, val: o.value ?? "" });
+    }
+    return { handler: "rewrite", query } as CaddyHandler;
+  }
   // Caddy's adapter leaves an empty replacement out; match it so both apply paths agree (#254).
   return { handler: "rewrite", path_regexp: [{ find: rewrite.find, ...(rewrite.replace ? { replace: rewrite.replace } : {}) }] };
 }
@@ -417,8 +432,27 @@ export function buildRewriteHandler(rewrite: import("./types").RewriteConfig): C
 
 export function parseRewriteFromHandle(h: AnyHandler): import("./types").RewriteConfig | undefined {
   if (h.handler !== "rewrite") return undefined;
-  const rw = h as { handler: string; strip_path_prefix?: string; uri?: string; path_regexp?: Array<{ find: string; replace: string }> };
+  const rw = h as {
+    handler: string; strip_path_prefix?: string; strip_path_suffix?: string; uri?: string; method?: string;
+    path_regexp?: Array<{ find: string; replace: string }>;
+    uri_substring?: Array<{ find: string; replace?: string; limit?: number }>;
+    query?: Record<string, unknown[]>;
+  };
   if (rw.strip_path_prefix) return { type: "strip_prefix", value: rw.strip_path_prefix };
+  if (rw.strip_path_suffix) return { type: "strip_suffix", value: rw.strip_path_suffix };
+  if (rw.method) return { type: "method", method: rw.method };
+  if (rw.uri_substring?.[0]) {
+    const { find, replace, limit } = rw.uri_substring[0];
+    return { type: "uri_replace", find, replace: replace ?? "", ...(limit ? { limit } : {}) };
+  }
+  if (rw.query) {
+    const ops: import("./types").QueryOp[] = [];
+    const items = (name: string) => (rw.query?.[name] ?? []) as Array<Record<string, string>>;
+    for (const name of ["rename", "set", "add"] as const) for (const i of items(name)) ops.push({ op: name, key: i.key, value: i.val ?? "" });
+    for (const i of items("replace")) ops.push({ op: "replace", key: i.key, search: i.search_regexp ?? "", replace: i.replace ?? "" });
+    for (const key of (rw.query.delete ?? []) as string[]) ops.push({ op: "delete", key });
+    if (ops.length) return { type: "query", ops };
+  }
   if (rw.uri) {
     const m = rw.uri.match(/^(.+)\{http\.request\.uri\}$/);
     if (m) return { type: "add_prefix", value: m[1] };

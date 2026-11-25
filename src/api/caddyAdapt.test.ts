@@ -12,7 +12,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { CONF_HEADER, parseConfAccessLogMap, buildServerEntry, proxiesToCaddyfile, parseProxies, parseConfExternalAddresses, proxyAddressKeys, resolveInternalIssuerSettings, surgicallyWriteProxy, buildMigratedConfContent, migrateCaddyfile, parseConfTlsIssuerMap, parseConfTlsOnDemandMap, parseConfTlsMap, expandPlaceholderShorthands } from "./caddy";
 import { snippetsToConf, parseSnippets, parseConfSiteImports, parseConfSiteBlocks, separateSnippetSettings } from "./snippets";
-import { buildEncodeHandler, buildFilterEncoder, buildRedirectHandler } from "./caddyJsonModel";
+import { buildEncodeHandler, buildFilterEncoder, buildRedirectHandler, buildRewriteHandler } from "./caddyJsonModel";
 import { buildGlobalOptionsPatch } from "./globalOptions";
 import type { CaddyConfig, CaddyServer, ProxyEntry } from "./types";
 
@@ -984,6 +984,32 @@ describe.runIf(available || required)("caddy adapt accepts log_skip (#334)", () 
     const real = Object.values(adapt(conf).apps?.http?.servers ?? {})[0] as CaddyServer;
     const pushed = buildServerEntry(entry({ tls: false, externalPort: 8080, accessLog: { output: "stderr", skipPaths: ["/health*", "/ping"] } }));
     expect(pushed.routes?.[0]).toEqual(real.routes?.[0]);
+  });
+});
+
+describe.runIf(available || required)("caddy adapt accepts the new rewrites (#332)", () => {
+  const rewrites: import("./types").RewriteConfig[] = [
+    { type: "strip_suffix", value: ".html" },
+    { type: "uri_replace", find: "/old", replace: "/new" },
+    { type: "uri_replace", find: "a b", replace: "", limit: 2 },
+    { type: "method", method: "GET" },
+    { type: "query", ops: [{ op: "set", key: "page", value: "1" }] },
+    { type: "query", ops: [
+      { op: "rename", key: "q", value: "query" }, { op: "set", key: "a", value: "b c" }, { op: "add", key: "x", value: "y" },
+      { op: "replace", key: "id", search: "^(\\d+)$", replace: "n$1" }, { op: "delete", key: "debug" },
+    ] },
+  ];
+
+  it.each(rewrites)("reads %j back from a real adapt", rewrite => {
+    const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, rewrite })]));
+    expect(p.rewrite).toEqual(rewrite);
+  });
+
+  it.each(rewrites)("builds the handler Caddy builds for %j", rewrite => {
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, rewrite })]);
+    const server = Object.values(adapt(conf).apps?.http?.servers ?? {})[0] as CaddyServer;
+    const real = server.routes?.[0]?.handle?.find(h => h.handler === "rewrite");
+    expect(buildRewriteHandler(rewrite)).toEqual(real);
   });
 });
 

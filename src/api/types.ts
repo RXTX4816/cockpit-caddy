@@ -314,7 +314,28 @@ export interface HeaderOperation {
 export type RewriteConfig =
   | { type: "strip_prefix"; value: string }
   | { type: "add_prefix"; value: string }
-  | { type: "regex"; find: string; replace: string };
+  | { type: "regex"; find: string; replace: string }
+  /** `uri strip_suffix <suffix>` (#332). */
+  | { type: "strip_suffix"; value: string }
+  /** `uri replace <find> <replace> [<limit>]`: replace plain text anywhere in the URI, not a regex (#332). */
+  | { type: "uri_replace"; find: string; replace: string; limit?: number }
+  /** `uri query …`: change the query string (#332). */
+  | { type: "query"; ops: QueryOp[] }
+  /** `method <method>`: change the request method (#332). */
+  | { type: "method"; method: string };
+
+/**
+ * One change to the query string. `set` and `add` write `key=value` (add keeps an existing value),
+ * `delete` removes the key, `rename` renames it to `value`, `replace` runs the regular expression
+ * `search` over its value and writes `replace` in its place.
+ */
+export interface QueryOp {
+  op: "set" | "add" | "delete" | "rename" | "replace";
+  key: string;
+  value?: string;
+  search?: string;
+  replace?: string;
+}
 
 export interface RedirectConfig {
   to: string;

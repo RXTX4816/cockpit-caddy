@@ -52,9 +52,9 @@ import {
   CONF_D_IMPORT_LINE,
   parseConfTlsIssuerMap,
 } from "./caddy";
-import { patchServer, buildFilterEncoder, parseLogEncoder, PRIVATE_RANGES, buildForwardAuthHandler, extractForwardAuthFromProxy, forwardAuthResponseRoutes, buildBasicAuthHandler, buildEncodeHandler, buildFileServerHandlers, buildFileServerJson, parseFileServerOptions, parseTemplatesJson, buildRedirectHandler, parseEncodeOptionsJson, parseBasicAuthOptionsJson, parseHtmlRedirect } from "./caddyJsonModel";
+import { buildRewriteHandler, parseRewriteFromHandle, patchServer, buildFilterEncoder, parseLogEncoder, PRIVATE_RANGES, buildForwardAuthHandler, extractForwardAuthFromProxy, forwardAuthResponseRoutes, buildBasicAuthHandler, buildEncodeHandler, buildFileServerHandlers, buildFileServerJson, parseFileServerOptions, parseTemplatesJson, buildRedirectHandler, parseEncodeOptionsJson, parseBasicAuthOptionsJson, parseHtmlRedirect } from "./caddyJsonModel";
 import { proxiesToCaddyfile } from "./caddy";
-import { buildForwardAuthCaddyLines, buildPhpFastcgiLines } from "./siteBlocks";
+import { buildForwardAuthCaddyLines, buildPhpFastcgiLines, buildRewriteCaddyLines } from "./siteBlocks";
 import { buildLogCaddyLines } from "./globalOptions";
 import type { CaddyConfig, CaddyReverseProxyHandler, CaddyServer, ProxyEntry, RouteMatch, ServerDef } from "./types";
 
@@ -4930,6 +4930,38 @@ describe("access log log_skip (#334)", () => {
     const patched = patchServer(original, withSkip(["/x"], { targetPort: 9999 }));
     expect(patched.routes).toHaveLength(2);
     expect(patched.routes?.[0]).toEqual(original.routes?.[0]);
+  });
+});
+
+describe("rewrite: uri replace, strip_suffix, query operations and method (#332)", () => {
+  const rewrites: import("./types").RewriteConfig[] = [
+    { type: "strip_suffix", value: ".html" },
+    { type: "uri_replace", find: "/old", replace: "/new" },
+    { type: "uri_replace", find: "a b", replace: "", limit: 2 },
+    { type: "method", method: "GET" },
+    { type: "query", ops: [{ op: "set", key: "page", value: "1" }] },
+    { type: "query", ops: [
+      { op: "rename", key: "q", value: "query" }, { op: "set", key: "a", value: "b c" }, { op: "add", key: "x", value: "y" },
+      { op: "replace", key: "id", search: "^(\\d+)$", replace: "n$1" }, { op: "delete", key: "debug" },
+    ] },
+  ];
+
+  it.each(rewrites)("round-trips %j through the JSON handler", rewrite => {
+    expect(parseRewriteFromHandle(buildRewriteHandler(rewrite))).toEqual(rewrite);
+  });
+
+  it("writes the Caddyfile lines", () => {
+    expect(buildRewriteCaddyLines({ type: "strip_suffix", value: ".html" })).toEqual(["\turi strip_suffix .html"]);
+    expect(buildRewriteCaddyLines({ type: "method", method: "GET" })).toEqual(["\tmethod GET"]);
+    expect(buildRewriteCaddyLines({ type: "uri_replace", find: "/old", replace: "/new", limit: 1 })).toEqual(['\turi replace /old "/new" 1']);
+    expect(buildRewriteCaddyLines({ type: "query", ops: [{ op: "delete", key: "debug" }] })).toEqual(["\turi query -debug"]);
+    const block = buildRewriteCaddyLines(rewrites[5]).join("\n");
+    expect(block).toContain("uri query {");
+    expect(block).toContain("q>query");
+    expect(block).toContain('a "b c"');
+    expect(block).toContain('+x "y"');
+    expect(block).toContain('id "^(\\d+)$" "n$1"');
+    expect(block).toContain("-debug");
   });
 });
 
