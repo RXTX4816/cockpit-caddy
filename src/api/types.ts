@@ -10,6 +10,10 @@ export interface CaddyHttpTransport {
   };
   dial_timeout?: string;
   response_header_timeout?: string;
+  read_timeout?: string;
+  write_timeout?: string;
+  versions?: string[];
+  keep_alive?: { enabled?: boolean; idle_timeout?: string; max_idle_conns?: number; max_idle_conns_per_host?: number };
   [key: string]: unknown;
 }
 
@@ -73,6 +77,16 @@ export interface RouteMatch {
   not?: RouteMatchFields;
   /** CEL expression (#287), as written in a Caddyfile (placeholder shorthands like `{path}`). */
   expression?: string;
+  /** `path_regexp [name] pattern`; a named match gives `{re.name.1}` for its groups (#331). */
+  path_regexp?: { pattern: string; name?: string };
+  /** `header_regexp [name] header pattern` (#331). */
+  header_regexp?: { header: string; pattern: string; name?: string };
+  /** `protocol http|https|grpc` (#331). */
+  protocol?: string;
+  /** `file { try_files … try_policy … }`: matches when one of the files exists (#331). */
+  file?: { try_files: string[]; try_policy?: string };
+  /** `vars <placeholder> <values…>`: a placeholder is one of the values (#331). */
+  vars?: Record<string, string[]>;
 }
 
 /** The plain matcher fields, without the `not` group and the expression. */
@@ -81,6 +95,40 @@ export type RouteMatchFields = Omit<RouteMatch, "not" | "expression">;
 // ---------------------------------------------------------------------------
 // Named Server — #49
 // ---------------------------------------------------------------------------
+
+/** `basic_auth [<algorithm> [<realm>]]`: unset means Caddy's bcrypt and its default realm. */
+export interface BasicAuthOptions {
+  realm?: string;
+  algorithm?: "bcrypt" | "argon2id";
+}
+
+/** What `encode` is told besides turning compression on (#335). Unset is `encode gzip zstd`. */
+export interface EncodeOptions {
+  /** The algorithms in order of preference. */
+  algorithms?: Array<"gzip" | "zstd">;
+  /** `minimum_length`: responses with fewer bytes are sent as they are. */
+  minimumLength?: number;
+  /** `match { status }`: status codes or classes such as `2xx`. */
+  matchStatus?: string[];
+  /** `match { header }`: a response header and a value that may use wildcards. */
+  matchHeaders?: Array<{ name: string; value: string }>;
+}
+
+/** Per-listener `servers` options beyond the timeouts and HTTP/3 switch (#328). */
+export interface ServerExtras {
+  /** `keepalive_interval`: how often TCP keep-alive probes are sent (Go duration). */
+  keepaliveInterval?: string;
+  /** `keepalive_idle`: how long a connection is idle before the first probe (Go duration). */
+  keepaliveIdle?: string;
+  /** `timeouts { read_body_idle }`: how long a request body may sit without new bytes (Go duration). */
+  readBodyIdle?: string;
+  /** `strict_sni_host`: reject requests whose Host header differs from the TLS SNI name. */
+  strictSniHost?: boolean;
+  /** `log_credentials`: write the Authorization and Cookie headers to the access log. */
+  logCredentials?: boolean;
+  /** `enable_full_duplex`: let HTTP/1 handlers read the body while they write the response. */
+  enableFullDuplex?: boolean;
+}
 
 /** A user-defined Caddy server with explicit listen addresses and multiple routes. */
 export interface ServerDef {
@@ -102,6 +150,7 @@ export interface ServerDef {
   /** When true, explicitly restricts this server to HTTP/1.1 and HTTP/2 (writes
    *  `protocols h1 h2`), opting out of Caddy's default HTTP/3 (QUIC) support (#51). */
   disableHttp3?: boolean;
+  serverExtras?: ServerExtras;
 }
 
 export interface TlsAdvancedConfig {
@@ -113,6 +162,12 @@ export interface TlsAdvancedConfig {
   certLifetime?: string;
   /** Fraction (0-1) of certificate lifetime remaining before Caddy attempts renewal */
   renewalWindowRatio?: number;
+  /** The site's own ACME account email, instead of the global one (#341). */
+  acmeEmail?: string;
+  /** The site's own ACME CA directory URL, instead of the global one (#341). */
+  acmeCa?: string;
+  /** `key_type` of the site's certificates: ed25519, p256, p384, rsa2048 or rsa4096 (#341). */
+  keyType?: string;
 }
 
 export interface MtlsConfig {
@@ -164,6 +219,10 @@ export interface CaddyLogWriter {
 
 export interface CaddyLogEncoder {
   format: string;
+  /** `format: "filter"` only (#334): what to do with fields, keyed by their path (`request>headers>Cookie`). */
+  fields?: Record<string, { filter: string; value?: string; ipv4_cidr?: number; ipv6_cidr?: number }>;
+  /** `format: "filter"` only: the encoder that writes the filtered entry. */
+  wrap?: { format: string };
 }
 
 export interface CaddyLoggerConfig {
@@ -180,6 +239,7 @@ export interface CaddyAutomationPolicy {
   /** `lifetime` may come back as a number (nanoseconds) after a Caddyfile reload rather than the original duration string. */
   issuers?: Array<{ module: string; lifetime?: string | number; [key: string]: unknown }>;
   renewal_window_ratio?: number;
+  key_type?: string;
 }
 
 export interface CaddyCertLoadFile {
@@ -233,6 +293,25 @@ export interface AccessLogConfig {
   /** Compress rolled files with gzip. Caddy's own default is true when rotation is
    *  configured at all; only written as `roll_uncompressed` when explicitly false. */
   rollCompress?: boolean;
+  /** Fields to drop, hash, replace or mask before an entry is written (`format filter`, #334). */
+  fieldFilters?: LogFieldFilter[];
+  /** `log_skip`: requests to these paths are not logged (#334). Only for a site's own log. */
+  skipPaths?: string[];
+  /** Caddy's own log only: logger namespaces this log takes in or leaves out (#334). */
+  include?: string[];
+  exclude?: string[];
+}
+
+/** One line of `format filter { <field> <filter> … }`. */
+export interface LogFieldFilter {
+  /** The field's path, e.g. `request>headers>Authorization`. */
+  field: string;
+  filter: "delete" | "hash" | "replace" | "ip_mask";
+  /** `replace`: what to write instead. */
+  value?: string;
+  /** `ip_mask`: how many leading bits of an IPv4 / IPv6 address to keep. */
+  ipv4?: number;
+  ipv6?: number;
 }
 
 /** Trusted proxy CIDR ranges + client-IP header config (#153) — global (applies to every
@@ -264,20 +343,61 @@ export interface ProxyProtocolConfig {
   allow?: string[];
 }
 
+/** One `dynamic srv|a` source of a reverse_proxy (#326). Several sources are written as `dynamic multi`. */
+export interface DynamicUpstreamSource {
+  type: "srv" | "a";
+  /** The DNS name to look up: the SRV name, or the host of an A/AAAA lookup. */
+  name: string;
+  /** The port of an `a` lookup. */
+  port?: string;
+  refresh?: string;
+  resolvers?: string[];
+  dialTimeout?: string;
+  dialFallbackDelay?: string;
+  gracePeriod?: string;
+  /** Which address families an `a` lookup returns. */
+  versions?: "ipv4" | "ipv6";
+}
+
 export interface HeaderOperation {
-  op: "set" | "add" | "delete";
+  /** `replace` only exists for header_down: `value` is the regexp to find, `replacement` what it becomes. */
+  op: "set" | "add" | "delete" | "replace";
   name: string;
   value?: string;
+  replacement?: string;
 }
 
 export type RewriteConfig =
   | { type: "strip_prefix"; value: string }
   | { type: "add_prefix"; value: string }
-  | { type: "regex"; find: string; replace: string };
+  | { type: "regex"; find: string; replace: string }
+  /** `uri strip_suffix <suffix>` (#332). */
+  | { type: "strip_suffix"; value: string }
+  /** `uri replace <find> <replace> [<limit>]`: replace plain text anywhere in the URI, not a regex (#332). */
+  | { type: "uri_replace"; find: string; replace: string; limit?: number }
+  /** `uri query …`: change the query string (#332). */
+  | { type: "query"; ops: QueryOp[] }
+  /** `method <method>`: change the request method (#332). */
+  | { type: "method"; method: string };
+
+/**
+ * One change to the query string. `set` and `add` write `key=value` (add keeps an existing value),
+ * `delete` removes the key, `rename` renames it to `value`, `replace` runs the regular expression
+ * `search` over its value and writes `replace` in its place.
+ */
+export interface QueryOp {
+  op: "set" | "add" | "delete" | "rename" | "replace";
+  key: string;
+  value?: string;
+  search?: string;
+  replace?: string;
+}
 
 export interface RedirectConfig {
   to: string;
   code: 301 | 302 | 307 | 308;
+  /** `redir <to> html`: answer with a page that redirects in the browser instead of a status code (#338). */
+  html?: boolean;
 }
 
 export interface FileServerConfig {
@@ -291,6 +411,22 @@ export interface FileServerConfig {
   hide?: string[];
   /** `file_server { precompressed … }`: encodings of precompressed sidecar files, in order. */
   precompressed?: string[];
+  /** `file_server { disable_canonical_uris }`: no redirects to add or drop a trailing slash (#340). */
+  disableCanonicalUris?: boolean;
+  /** `file_server { status <code> }`: answer every file with this status code (#340). */
+  status?: number;
+  /** `file_server { browse <template_file> }`: a template for the directory listing; needs `browse` (#340). */
+  browseTemplate?: string;
+  /** The `templates` directive in front of file_server: Caddy's template engine on the served files (#339). */
+  templates?: TemplatesConfig;
+}
+
+/** `templates { mime … root … }`: an empty object is a plain `templates`. */
+export interface TemplatesConfig {
+  /** MIME types to run templates on; Caddy's default is text/html and text/plain. */
+  mime?: string[];
+  /** The directory `include` and the other file functions read from; Caddy's default is the site root. */
+  root?: string;
 }
 
 export interface PhpFastcgiConfig {
@@ -307,6 +443,14 @@ export interface PhpFastcgiConfig {
   env?: Record<string, string>;
   /** `try_files` before php_fastcgi (#262), e.g. `{path} {path}/ /index.php?{query}`. */
   tryFiles?: string;
+  /** Write the FastCGI process's stderr to Caddy's log (#340). */
+  captureStderr?: boolean;
+  /** Resolve symlinks in `root` before building SCRIPT_FILENAME (#340). */
+  resolveRootSymlink?: boolean;
+  /** Timeouts of the FastCGI connection, Go durations (#340). */
+  dialTimeout?: string;
+  readTimeout?: string;
+  writeTimeout?: string;
 }
 
 export interface StaticResponseConfig {
@@ -338,6 +482,8 @@ export interface LbPolicyArgs {
  *  health checks (#252) that take failing upstreams out of rotation. Retries apply even with
  *  a single upstream (they just re-dial it) — not gated on multiple upstreams like lb_policy. */
 export interface LbRetryConfig {
+  /** `lb_retry_match { method ... }`: retry only requests with these methods (#327). */
+  retryMethods?: string[];
   /** Max number of retries across all upstreams. */
   retries?: number;
   /** Total time budget across all retries (Go duration, e.g. "5s"). */
@@ -386,8 +532,12 @@ export interface ForwardAuthConfig {
   upstreamUrl: string;
   /** Path to request on the auth service, e.g. "/api/authz/forward-auth" */
   uri?: string;
-  /** Response header names to copy from auth service to the upstream request */
+  /** Response header names to copy from auth service to the upstream request; `Name>Other` renames it (#336). */
   copyHeaders: string[];
+  /** `header_up`: changes to the request sent to the auth service (#336). */
+  headerUp?: HeaderOperation[];
+  /** `trusted_proxies`: ranges whose X-Forwarded-* headers the auth request keeps; `private_ranges` is a keyword (#336). */
+  trustedProxies?: string[];
 }
 
 export interface ProxyEntry {
@@ -429,10 +579,34 @@ export interface ProxyEntry {
   rewrite?: RewriteConfig;
   requestHeaders?: HeaderOperation[];
   responseHeaders?: HeaderOperation[];
+  /** `header_down` of the reverse_proxy: changes the upstream's response headers before Caddy sends them on (#324). */
+  upstreamResponseHeaders?: HeaderOperation[];
   compress?: boolean;
+  /** How `compress` encodes (#335); only used while `compress` is on. */
+  encodeOptions?: EncodeOptions;
   dialTimeout?: string;
   responseHeaderTimeout?: string;
+  /** transport http `tls_server_name`: the name to check the upstream's certificate for (#327). Only for https upstreams. */
+  tlsServerName?: string;
+  /** transport http `keepalive`: how long idle upstream connections are kept, or `off` (#327). */
+  keepalive?: string;
+  keepaliveIdleConns?: number;
+  keepaliveIdleConnsPerHost?: number;
+  /** transport http `versions`, e.g. `["h2c", "2"]` (#327). */
+  httpVersions?: string[];
+  readTimeout?: string;
+  writeTimeout?: string;
+  /** Upstreams found by DNS lookups, next to the static target, which Caddy falls back to when a lookup finds nothing (#326). */
+  dynamicUpstreams?: DynamicUpstreamSource[];
+  /** reverse_proxy `flush_interval`: a duration, or `-1` to flush after every write (#325). */
+  flushInterval?: string;
+  /** reverse_proxy `stream_timeout`: how long a websocket or other upgraded stream may live (#325). */
+  streamTimeout?: string;
+  /** reverse_proxy `stream_close_delay`: how long streams stay open after a config reload (#325). */
+  streamCloseDelay?: string;
   basicAuth?: { username: string; passwordHash: string }[];
+  /** The realm and hash algorithm of `basic_auth` (#337). */
+  basicAuthOptions?: BasicAuthOptions;
   /** Additional upstreams beyond the primary targetHost:targetPort */
   extraUpstreams?: Array<{ host: string; port: number }>;
   /** Load-balancing policy when multiple upstreams are configured */
@@ -451,6 +625,8 @@ export interface ProxyEntry {
   /** When true, explicitly restricts this server to HTTP/1.1 and HTTP/2 (writes
    *  `protocols h1 h2`), opting out of Caddy's default HTTP/3 (QUIC) support (#51). */
   disableHttp3?: boolean;
+  /** Keep-alive, SNI, credential logging and full duplex for this listener (#328). */
+  serverExtras?: ServerExtras;
   /** Maximum allowed request body size for this route in bytes (#154) — same
    *  bytes-not-human-string convention as maxHeaderBytes. Requests over this size are
    *  rejected before reaching the upstream/handler. Not applicable to redirect/

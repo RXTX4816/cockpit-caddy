@@ -18,4 +18,14 @@ describe("hashPassword", () => {
     expect(argv.join(" ")).not.toContain("s3cret");
     expect(proc.input).toHaveBeenCalledWith("s3cret pw\n");
   });
+
+  // #337: argon2id is picked with a flag; bcrypt stays the plain call older Caddy also takes.
+  it("asks for argon2id with the flag, and for bcrypt without one", async () => {
+    mockSpawn.mockReturnValue(mockProcess("$argon2id$v=19$hash\n"));
+    expect(await hashPassword("pw", "argon2id")).toBe("$argon2id$v=19$hash");
+    expect(mockSpawn.mock.calls[0][0]).toEqual(["caddy", "hash-password", "--algorithm", "argon2id"]);
+    mockSpawn.mockReturnValue(mockProcess("$2a$14$hash\n"));
+    await hashPassword("pw", "bcrypt");
+    expect(mockSpawn.mock.calls[1][0]).toEqual(["caddy", "hash-password"]);
+  });
 });

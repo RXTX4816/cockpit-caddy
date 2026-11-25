@@ -26,13 +26,12 @@ import { ProxyTabs } from "./ProxyTabs";
 import { firstTabWithError, type ProxyTabKey } from "./proxyDialogParts";
 import { proxyTabStateFlags, useProxyTabState, type ProxyTabState } from "./proxyTabState";
 import { parseListenPort } from "./AddServerDialog";
-
-const REDIRECT_CODES = [301, 302, 307, 308] as const;
+import { RedirectModeField, joinRedirectTarget, splitRedirectTarget, type RedirectMode } from "./RedirectModeField";
 
 interface InitialValues {
   port?: string;
   to?: string;
-  code?: 301 | 302 | 307 | 308;
+  code?: RedirectMode;
   label?: string;
 }
 
@@ -60,8 +59,9 @@ export function AddRedirectDialog({ existingPorts, onAdd, onClose, initialValues
   const confirmAction = useConfirmAction();
 
   const [port, setPort] = useState(initialValues?.port ?? "");
-  const [to, setTo] = useState(initialValues?.to ?? "");
-  const [code, setCode] = useState<301 | 302 | 307 | 308>(initialValues?.code ?? 308);
+  const [to, setTo] = useState(splitRedirectTarget(initialValues?.to ?? "").to);
+  const [keepPath, setKeepPath] = useState(splitRedirectTarget(initialValues?.to ?? "").keepPath);
+  const [code, setCode] = useState<RedirectMode>(initialValues?.code ?? 308);
   const [label, setLabel] = useState(initialValues?.label ?? "");
   const [tabState, updateTabState] = useProxyTabState(initialTabState);
   const [activeTab, setActiveTab] = useState<ProxyTabKey>("general");
@@ -79,7 +79,8 @@ export function AddRedirectDialog({ existingPorts, onAdd, onClose, initialValues
 
   function applyHttpsShortcut() {
     setPort("80");
-    setTo("https://{host}{uri}");
+    setTo("https://{host}");
+    setKeepPath(true);
     setCode(308);
     setSelectedServerKey("");
     setPortErr(null);
@@ -123,7 +124,7 @@ export function AddRedirectDialog({ existingPorts, onAdd, onClose, initialValues
           <Alert
             variant="warning"
             isInline
-            title={t("add_redirect.confirm_body", { port: serverCtx ? serverCtx.port : port, to, code })}
+            title={t("add_redirect.confirm_body", { port: serverCtx ? serverCtx.port : port, to: joinRedirectTarget(to, keepPath), code })}
             style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}
           />
         )}
@@ -218,21 +219,7 @@ export function AddRedirectDialog({ existingPorts, onAdd, onClose, initialValues
                   )}
                 </FormGroup>
 
-                <FormGroup label={t("add_redirect.field_code")} fieldId="redirect-code" isRequired>
-                  <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap" }}>
-                    {REDIRECT_CODES.map(c => (
-                      <Button
-                        key={c}
-                        variant={code === c ? "primary" : "secondary"}
-                        size="sm"
-                        onClick={() => setCode(c)}
-                        isDisabled={isLocked}
-                      >
-                        {t(`add_redirect.code_${c}`)}
-                      </Button>
-                    ))}
-                  </div>
-                </FormGroup>
+                <RedirectModeField idPrefix="redirect" mode={code} onModeChange={setCode} keepPath={keepPath} onKeepPathChange={setKeepPath} isDisabled={isLocked} />
                 <SnippetImportsField value={imports} onChange={setImports} isDisabled={isLocked} />
               </Form>
             </>
@@ -262,7 +249,7 @@ export function AddRedirectDialog({ existingPorts, onAdd, onClose, initialValues
                     tls: false,
                     tlsSkipVerify: false,
                     label: label.trim() || undefined,
-                    redirect: { to: to.trim(), code },
+                    redirect: { to: joinRedirectTarget(to, keepPath), code: code === "html" ? 302 : code, html: code === "html" || undefined },
                     matchers: tabState.matchers ?? undefined,
                     imports,
                     handlePath: tabState.handlePath || undefined,

@@ -181,7 +181,18 @@
     "field_hide": "非表示のファイル",
     "field_hide_help": "決して返さない名前やパターン（スペース区切り）。",
     "field_precompressed": "事前圧縮済みファイル",
-    "field_precompressed_help": "ブラウザーがそのエンコーディングを受け付ける場合、元ファイルの隣にある file.zst、file.br、file.gz を返します。"
+    "field_precompressed_help": "ブラウザーがそのエンコーディングを受け付ける場合、元ファイルの隣にある file.zst、file.br、file.gz を返します。",
+    "field_browse_template": "一覧テンプレート",
+    "field_browse_template_help": "ディレクトリ一覧のテンプレートファイル。ディレクトリ一覧がオンのときだけ使われます。",
+    "field_status": "ステータスコード",
+    "field_status_help": "すべてのファイルに 200 ではなくこのステータスコードで応答します。たとえば独自のエラーページ用に 404。",
+    "field_disable_canonical_uris": "末尾のスラッシュをそのままにする",
+    "field_disable_canonical_uris_help": "ディレクトリやファイルの末尾スラッシュを付け外しするためのリダイレクトを行いません。",
+    "field_templates": "ファイルをテンプレートで処理",
+    "field_templates_help": "配信するファイルに Caddy のテンプレートエンジンを適用し、include や .Req などのテンプレートアクションを使えるようにします。",
+    "field_templates_mime": "MIME タイプ",
+    "field_templates_root": "include のディレクトリ",
+    "field_templates_root_help": "include などのファイル操作がファイルを探す場所。空欄はサイトルートです。"
   },
   "edit_static": {
     "title": "静的サーバーを編集 — :{{port}}",
@@ -210,7 +221,15 @@
     "env_field_value": "値",
     "env_add_button": "変数を追加",
     "field_try_files": "試行するファイル（try_files）",
-    "field_try_files_help": "任意。PHP の前に順に試す候補です。フロントコントローラー型のアプリでは通常 {path} {path}/ /index.php?{query} が必要です。"
+    "field_try_files_help": "任意。PHP の前に順に試す候補です。フロントコントローラー型のアプリでは通常 {path} {path}/ /index.php?{query} が必要です。",
+    "field_dial_timeout": "接続タイムアウト",
+    "field_read_timeout": "読み取りタイムアウト",
+    "field_write_timeout": "書き込みタイムアウト",
+    "no_timeout": "なし",
+    "field_capture_stderr": "PHP プロセスの stderr を記録",
+    "field_capture_stderr_help": "PHP-FPM が stderr に出力した内容を Caddy のログに書き込みます。",
+    "field_resolve_root_symlink": "ルートのシンボリックリンクを解決",
+    "field_resolve_root_symlink_help": "SCRIPT_FILENAME を組み立てる前にルートディレクトリのシンボリックリンクをたどります。リリース用シンボリックリンクを使う opcache 構成で必要です。"
   },
   "add_respond": {
     "title": "静的レスポンスを追加",
@@ -255,7 +274,11 @@
     "validation_port_range": "ポートは 1〜65535 の範囲で指定してください",
     "validation_port_duplicate": "ポート {{port}} はすでに使用されています",
     "validation_to_required": "リダイレクト先は必須です",
-    "confirm_body": "リダイレクト :{{port}} → {{to}}（{{code}}）を作成し、Caddy の設定を再読み込みします。"
+    "confirm_body": "リダイレクト :{{port}} → {{to}}（{{code}}）を作成し、Caddy の設定を再読み込みします。",
+    "code_html": "HTML ページ",
+    "code_html_help": "ステータスコードの代わりに、ブラウザー内でリダイレクトするページを返します。ステータスコードによるリダイレクトと違い、URL の #フラグメントが保持されます。",
+    "keep_path": "パスとクエリを維持",
+    "keep_path_help": "転送先に {uri} を付けます。このサイトの /a?b=1 は転送先の /a?b=1 に移動します。"
   },
   "basic_auth": {
     "heading": "HTTP Basic 認証",
@@ -264,14 +287,32 @@
     "field_password": "パスワード",
     "field_password_keep": "既存のものを残す場合は空欄",
     "add_button": "アカウントを追加",
-    "remove_button": "アカウントを削除"
+    "remove_button": "アカウントを削除",
+    "realm": "レルム",
+    "algorithm": "ハッシュアルゴリズム",
+    "algorithm_default": "bcrypt(既定)",
+    "algorithm_argon2id": "argon2id(より強力)",
+    "algorithm_mismatch": "パスワードを維持するアカウントには、もう一方のアルゴリズムのハッシュが残っています。パスワードを再入力してください。"
   },
   "transport": {
     "heading": "アップストリームのタイムアウト",
     "section_title": "アップストリームのタイムアウト（任意）",
     "dial_timeout": "接続タイムアウト",
     "response_header_timeout": "レスポンスヘッダーのタイムアウト",
-    "defaults_help": "空欄にすると Caddy の既定値（灰色で表示）が使われます。レスポンスヘッダーのタイムアウトは、ロングポーリングや遅い応答を切断します。"
+    "defaults_help": "空欄にすると Caddy の既定値（灰色で表示）が使われます。レスポンスヘッダーのタイムアウトは、ロングポーリングや遅い応答を切断します。",
+    "streaming_help": "ストリーミング(WebSocket、イベントストリーム):空欄なら Caddy の既定値を使います。",
+    "flush_interval": "フラッシュ間隔",
+    "flush_interval_placeholder": "-1 は書き込みごとに即時送信",
+    "stream_timeout": "ストリームのタイムアウト",
+    "stream_close_delay": "ストリーム終了の遅延",
+    "connection_title": "アップストリームへの接続",
+    "tls_server_name": "TLS サーバー名",
+    "versions": "HTTP バージョン",
+    "read_timeout": "読み取りタイムアウト",
+    "write_timeout": "書き込みタイムアウト",
+    "keepalive": "キープアライブ",
+    "keepalive_idle_conns": "保持するアイドル接続数",
+    "keepalive_idle_conns_per_host": "ホストごとに保持するアイドル接続数"
   },
   "server_timeouts": {
     "heading": "サーバーのタイムアウトと制限",
@@ -286,7 +327,17 @@
     "max_header_bytes_help": "リクエストヘッダーの最大サイズ（Caddy の既定値: 16 KB）",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "HTTP/3 を無効にする",
-    "http3_help": "Caddy は TLS が設定されていると、既定で HTTP/1.1、HTTP/2、HTTP/3 を有効にします。HTTP/3 は HTTPS と同じポートの UDP 上で動作します。ファイアウォールが UDP をブロックしている場合は、ここで無効にすると HTTP/1.1 と HTTP/2 のみになります。"
+    "http3_help": "Caddy は TLS が設定されていると、既定で HTTP/1.1、HTTP/2、HTTP/3 を有効にします。HTTP/3 は HTTPS と同じポートの UDP 上で動作します。ファイアウォールが UDP をブロックしている場合は、ここで無効にすると HTTP/1.1 と HTTP/2 のみになります。",
+    "keepalive_interval": "TCP keep-alive の間隔",
+    "keepalive_idle": "TCP keep-alive 開始までのアイドル時間",
+    "options_label": "接続オプション",
+    "strict_sni_host": "SNI ホストを厳密に検証",
+    "strict_sni_host_help": "Host ヘッダーが TLS のサーバー名と異なるリクエストを拒否します。",
+    "log_credentials": "認証情報をログに記録",
+    "log_credentials_help": "Authorization ヘッダーと Cookie ヘッダーをアクセスログに書き込みます。",
+    "enable_full_duplex": "HTTP/1 の全二重通信",
+    "enable_full_duplex_help": "ハンドラーがレスポンスを書き込みながらリクエストボディを読めるようにします。",
+    "read_body_idle": "リクエストボディのアイドルタイムアウト"
   },
   "request_body": {
     "field_label": "リクエスト本文の最大サイズ",
@@ -307,7 +358,30 @@
     "field_find_placeholder": "^/api/(.*)",
     "field_replace_placeholder": "/$1",
     "field_replace_help": "キャプチャグループには $1、$2 を使います",
-    "type_aria": "書き換えの種類"
+    "type_aria": "書き換えの種類",
+    "type_strip_suffix": "接尾辞を削除",
+    "type_uri_replace": "テキストを置換",
+    "type_query": "クエリ文字列",
+    "type_method": "メソッド",
+    "field_suffix": "接尾辞",
+    "field_suffix_placeholder": ".html",
+    "field_text_find": "検索(プレーンテキスト)",
+    "field_limit": "最大",
+    "field_limit_placeholder": "すべて",
+    "field_method": "メソッド",
+    "query_op": "変更",
+    "query_op_set": "設定",
+    "query_op_add": "追加",
+    "query_op_delete": "削除",
+    "query_op_rename": "名前変更",
+    "query_op_replace": "置換",
+    "query_key": "名前",
+    "query_value": "値",
+    "query_new_key": "新しい名前",
+    "query_search": "検索(正規表現)",
+    "query_remove": "変更を削除",
+    "query_add": "変更を追加",
+    "invalid": "書き換えのすべての項目を入力してください。"
   },
   "probe": {
     "status_pending": "確認中…",
@@ -390,7 +464,9 @@
     "validation_max_fails": "最大失敗回数は 1 以上にしてください",
     "validation_needs_health_uri": "間隔・タイムアウト・期待するステータスにはヘルスチェックのパスが必要です",
     "validation_health_uri": "ヘルスチェックのパスは / で始めてください",
-    "validation_health_status": "200 のようなコードか 2xx のようなクラスを指定してください"
+    "validation_health_status": "200 のようなコードか 2xx のようなクラスを指定してください",
+    "retry_methods": "このメソッドのみ再試行",
+    "validation_methods": "メソッドは GET や HEAD のような単語で、スペースで区切ります。"
   },
   "response_headers": {
     "heading": "レスポンスヘッダー",
@@ -417,7 +493,12 @@
     "field_name": "ヘッダー名",
     "field_value": "値",
     "add_button": "追加",
-    "presets_label": "プリセット"
+    "presets_label": "プリセット",
+    "down_heading": "アップストリームからの応答ヘッダー",
+    "down_section_title": "アップストリームからの応答ヘッダー(任意)",
+    "op_replace": "置換",
+    "field_search": "検索するヘッダー値(正規表現)",
+    "field_replacement": "置換後の値"
   },
   "edit_redirect": {
     "title": "リダイレクトを編集 — :{{port}}",
@@ -572,7 +653,16 @@
     "roll_keep_count": "保持するローテーション済みファイル数",
     "roll_keep_days": "ローテーション済みファイルの最大保持日数",
     "roll_compress": "ローテーション済みファイルを圧縮（gzip）",
-    "roll_help": "Caddy は既定でログファイルをローテーションします。Caddy の既定値（灰色で表示）を使うには、欄を空のままにしてください。"
+    "roll_help": "Caddy は既定でログファイルをローテーションします。Caddy の既定値（灰色で表示）を使うには、欄を空のままにしてください。",
+    "field_filters": "フィールドフィルター",
+    "field_filters_help": "1 行に 1 つ:フィールドのパス、続けて delete、hash、replace <テキスト>、または ip_mask <IPv4 のビット数> [<IPv6 のビット数>]。例: request>headers>Authorization delete",
+    "field_filters_invalid": "各行にフィールドのパスと、delete、hash、replace <テキスト>、ip_mask <ビット数> のいずれかが必要です。",
+    "include": "取り込むロガー",
+    "include_help": "このログが書き込むロガー名(スペース区切り)。例: http.log.access。空欄はすべてです。",
+    "exclude": "除外するロガー",
+    "exclude_help": "このログが除外するロガー名(スペース区切り)。例: http.log.access.log0",
+    "skip_paths": "ログに記録しないパス",
+    "skip_paths_help": "スペース区切りのパス。ワイルドカードも使えます。例: /health* /ping。これらへのリクエストは記録されません。"
   },
   "config_check": {
     "button": "設定をチェック",
@@ -695,7 +785,39 @@
     "proxy_protocol_allow_help": "PROXY プロトコルのヘッダーを送信できる CIDR 範囲をスペース区切りで指定します。クライアント IP の偽装を防ぐため、ロードバランサー自身の IP に限定してください。どの送信元も受け付ける場合は空欄にします。",
     "proxy_protocol_timeout": "ヘッダー読み取りタイムアウト（任意）",
     "proxy_protocol_timeout_help": "PROXY プロトコルのヘッダーを待つ最大時間（Go の時間形式、例: 2s）。Caddy の既定を使う場合は空欄にします。",
-    "on_demand_rate_deprecated": "Caddy は interval と burst を推奨しなくなりました。両方を空にして ask エンドポイントに任せてください。"
+    "on_demand_rate_deprecated": "Caddy は interval と burst を推奨しなくなりました。両方を空にして ask エンドポイントに任せてください。",
+    "tls_advanced_title": "TLS の詳細設定",
+    "auto_https": "自動 HTTPS",
+    "auto_https_off": "オフ",
+    "auto_https_disable_redirects": "HTTP から HTTPS へのリダイレクトなし",
+    "auto_https_ignore_loaded_certs": "読み込み済みの証明書を無視",
+    "issuer": "証明書の発行元",
+    "issuer_local_certs": "すべてのサイトに Caddy 独自の CA",
+    "issuer_internal": "内部 CA",
+    "issuer_acme": "ACME",
+    "key_type": "鍵の種類",
+    "preferred_chains": "優先する証明書チェーン",
+    "preferred_chains_smallest": "最短のチェーン",
+    "preferred_chains_root": "ルートのコモンネームで指定",
+    "preferred_chains_any": "任意のコモンネームで指定",
+    "preferred_chains_names": "コモンネーム",
+    "preferred_chains_names_help": "カンマで区切ります。",
+    "default_sni": "既定の SNI",
+    "default_sni_help": "クライアントが送らないときに Caddy が想定するサーバー名。",
+    "default_bind": "既定のバインドアドレス",
+    "default_bind_help": "bind オプションのないサイトが待ち受けるアドレス(スペース区切り)。",
+    "ocsp_stapling_off": "OCSP stapling をオフにする",
+    "admin_title": "管理エンドポイント",
+    "admin_off": "管理エンドポイントをオフにする",
+    "admin_off_help": "プラグインは、実行中の設定の読み取りと変更に管理 API を必要とします。",
+    "admin_address": "管理アドレス",
+    "admin_address_help": "Caddy の管理 API が待ち受ける場所を Caddyfile と同じ書式で指定します。プラグインは自身の設定のアドレスに接続するため、両方を同時に変更してください。",
+    "admin_origins": "許可するオリジン",
+    "admin_origins_help": "ブラウザーから管理 API を呼び出せるホスト(スペース区切り)。",
+    "admin_enforce_origin": "オリジンを強制",
+    "metrics_per_host": "メトリクスにホストのラベルを付ける",
+    "metrics_per_host_help": "リクエストごとのメトリクスに要求されたホストを追加し、サイトを区別できるようにします。ホストごとに別の系列になります。",
+    "auto_https_disable_certs": "証明書を管理しない"
   },
   "ca": {
     "title": "内部認証局",
@@ -798,7 +920,12 @@
     "field_copy_headers": "コピーするヘッダー",
     "field_copy_headers_help": "認証サービスからアップストリームへのリクエストにコピーするレスポンスヘッダー（スペースまたはカンマ区切り。例: Remote-User, Remote-Groups）",
     "indicator": "Forward Auth",
-    "validation_uri_required": "認証サービスの URL を設定した場合、認証 URI は必須です"
+    "validation_uri_required": "認証サービスの URL を設定した場合、認証 URI は必須です",
+    "field_copy_headers_rename_help": "Name>Other と書くと、ヘッダーを別名でコピーします。",
+    "field_header_up": "認証サービスへのリクエストヘッダー",
+    "field_header_up_help": "1 行に 1 つ:Name value でヘッダーを設定、+Name value で追加、-Name で削除します。",
+    "field_trusted_proxies": "信頼するプロキシ",
+    "field_trusted_proxies_help": "認証サービスへのリクエストで X-Forwarded-* ヘッダーを保持する範囲(スペース区切り)。private_ranges はプライベートネットワークを表します。"
   },
   "tls_policy": {
     "heading": "TLS ポリシー",
@@ -846,7 +973,15 @@
     "custom_file_unreadable": "ファイルが見つからないか、Caddy のユーザーが読み取れません",
     "custom_file_readable": "ファイルは読み取り可能です",
     "custom_file_valid_expiry": "有効 — {{date}} に期限切れ",
-    "custom_cert_lifetime_note": "上でカスタム証明書が読み込まれています。Caddy 自身は何も発行しないため、証明書の有効期間と更新ウィンドウは適用されません。"
+    "custom_cert_lifetime_note": "上でカスタム証明書が読み込まれています。Caddy 自身は何も発行しないため、証明書の有効期間と更新ウィンドウは適用されません。",
+    "acme_email": "ACME のメールアドレス",
+    "acme_email_help": "このサイトの証明書に使うアカウントのメールアドレス。自動 HTTPS にのみ適用されます。空欄はグローバルの設定を使います。",
+    "acme_global_placeholder": "グローバルのメールアドレス",
+    "acme_ca": "ACME CA のディレクトリ URL",
+    "acme_ca_help": "このサイトが証明書を取得する場所。テスト中は Let's Encrypt のステージング URL など。空欄はグローバルの CA を使います。",
+    "key_type": "鍵の種類",
+    "acme_invalid_email": "admin@example.com のようなメールアドレスを入力してください。",
+    "acme_invalid_ca": "http:// または https:// で始まる URL を入力してください。"
   },
   "error_handler": {
     "heading": "カスタムエラーハンドラー",
@@ -912,7 +1047,22 @@
     "ip_kind_remote": "接続 IP",
     "ip_kind_client_help": "訪問者の IP です。信頼済みプロキシ（設定）経由のリクエストでは転送ヘッダーから取得します。信頼済みプロキシがなければ接続 IP と同じです。",
     "ip_kind_remote_help": "TCP 接続の IP です。プロキシや CDN の背後では訪問者ではなくプロキシのアドレスになります。",
-    "ip_range": "IP アドレスまたは範囲"
+    "ip_range": "IP アドレスまたは範囲",
+    "type_path_regexp": "パスの正規表現",
+    "type_header_regexp": "ヘッダーの正規表現",
+    "field_regexp_name": "名前(任意)",
+    "field_header_name_regexp": "正規表現を適用するヘッダー名",
+    "field_regexp_name_header": "ヘッダー正規表現の名前(任意)",
+    "regexp_help": "名前を付けると、グループを {re.name.1} として書き換えなどで使えます。Caddy ではマッチャーごとに正規表現は 1 つです。",
+    "type_protocol": "プロトコル",
+    "protocol_any": "指定なし",
+    "type_file": "ファイル",
+    "field_try_files": "探すファイル",
+    "field_try_policy": "選び方",
+    "try_policy_default": "最初に存在するもの",
+    "file_help": "いずれかのファイルが存在するときに一致します。{path} などのプレースホルダーが使えます。",
+    "type_vars": "変数",
+    "vars_help": "1 行に 1 つ:プレースホルダーと、その取りうる値。例: {host} example.com www.example.com"
   },
   "handle_path": {
     "label": "一致したパスのプレフィックスを除去（handle_path）"
@@ -1087,5 +1237,44 @@
     "add_inside": "選択したブロックの中に追加",
     "add_top": "最上位に追加",
     "add_matcher": "新しいブロックのマッチャー"
+  },
+  "encode": {
+    "heading": "圧縮",
+    "section_title": "圧縮の設定(任意)",
+    "help": "「一般」で圧縮がオンのときに使われます。選択しない場合、Caddy は gzip と zstd で圧縮します。",
+    "algorithms": "アルゴリズムと順序",
+    "algorithms_default": "gzip、zstd(既定)",
+    "algorithms_zstd_gzip": "zstd、次に gzip",
+    "algorithms_gzip": "gzip のみ",
+    "algorithms_zstd": "zstd のみ",
+    "minimum_length": "最小サイズ",
+    "minimum_length_help": "このバイト数より小さいレスポンスはそのまま送られます。Caddy の既定値は 512 です。",
+    "invalid_number": "バイト数を整数で入力してください。",
+    "match_status": "次のステータスコードのみ",
+    "match_status_help": "スペース区切りのコードまたは 2xx 404 のようなクラス。空欄はすべてのステータスを意味します。",
+    "invalid_status": "200 のようなコード、または 2xx のようなクラスを入力してください。",
+    "match_headers": "次のレスポンスヘッダーのみ",
+    "match_headers_help": "1 行に 1 つ:ヘッダー名、続けて値。text/* のようなワイルドカードが使えます。",
+    "invalid_header": "各行にヘッダー名と値が必要です。"
+  },
+  "dynamic_upstreams": {
+    "heading": "動的アップストリーム",
+    "section_title": "動的アップストリーム(上級、任意)",
+    "help": "アップストリームを DNS で検索します。検索で何も見つからない場合は、上のターゲットが使われます。複数のソースは結合されます。",
+    "add_button": "DNS ソースを追加",
+    "type": "検索の種類",
+    "name_srv": "SRV 名",
+    "name_a": "ホスト名",
+    "refresh": "更新間隔",
+    "resolvers": "DNS リゾルバー",
+    "dial_fallback_delay": "フォールバック接続の遅延",
+    "grace_period": "猶予期間",
+    "versions": "アドレスファミリー",
+    "versions_both": "IPv4 と IPv6",
+    "validation_name": "設定のあるソースには名前が必要です。",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

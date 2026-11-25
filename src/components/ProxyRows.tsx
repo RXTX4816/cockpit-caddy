@@ -34,7 +34,7 @@ export function SiteBadges({ proxy }: { proxy: ProxyEntry }) {
   const { t } = useTranslation();
   const chips: { label: string; color: EntryTypeColor }[] = [];
   if (proxy.redirect) {
-    chips.push({ label: String(proxy.redirect.code), color: "purple" });
+    chips.push({ label: proxy.redirect.html ? "html" : String(proxy.redirect.code), color: "purple" });
   }
   if (proxy.staticResponse?.close) {
     chips.push({ label: t("proxies.indicator_close"), color: "grey" });

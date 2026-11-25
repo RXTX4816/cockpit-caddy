@@ -181,7 +181,18 @@
     "field_hide": "Berkas tersembunyi",
     "field_hide_help": "Nama atau pola yang tidak pernah disajikan, dipisahkan spasi.",
     "field_precompressed": "Berkas yang sudah dikompresi",
-    "field_precompressed_help": "Sajikan file.zst, file.br, atau file.gz di samping aslinya jika peramban menerima pengodean itu."
+    "field_precompressed_help": "Sajikan file.zst, file.br, atau file.gz di samping aslinya jika peramban menerima pengodean itu.",
+    "field_browse_template": "Templat daftar",
+    "field_browse_template_help": "Berkas templat untuk daftar direktori. Hanya dipakai saat daftar direktori aktif.",
+    "field_status": "Kode status",
+    "field_status_help": "Jawab setiap berkas dengan kode status ini, bukan 200, misalnya 404 untuk halaman galat kustom.",
+    "field_disable_canonical_uris": "Biarkan garis miring di akhir apa adanya",
+    "field_disable_canonical_uris_help": "Jangan mengalihkan untuk menambah atau menghapus garis miring di akhir pada direktori dan berkas.",
+    "field_templates": "Proses berkas dengan templat",
+    "field_templates_help": "Mengaktifkan mesin templat Caddy untuk berkas yang disajikan, sehingga dapat memakai include, .Req dan aksi templat lainnya.",
+    "field_templates_mime": "Tipe MIME",
+    "field_templates_root": "Direktori untuk include",
+    "field_templates_root_help": "Tempat include dan aksi berkas lain mencari berkas. Kosong berarti root situs."
   },
   "edit_static": {
     "title": "Edit server statis — :{{port}}",
@@ -210,7 +221,15 @@
     "env_field_value": "Nilai",
     "env_add_button": "Tambah variabel",
     "field_try_files": "Berkas yang dicoba (try_files)",
-    "field_try_files_help": "Opsional. Kandidat yang dicoba berurutan sebelum PHP; aplikasi front controller biasanya butuh {path} {path}/ /index.php?{query}."
+    "field_try_files_help": "Opsional. Kandidat yang dicoba berurutan sebelum PHP; aplikasi front controller biasanya butuh {path} {path}/ /index.php?{query}.",
+    "field_dial_timeout": "Batas waktu koneksi",
+    "field_read_timeout": "Batas waktu baca",
+    "field_write_timeout": "Batas waktu tulis",
+    "no_timeout": "tidak ada",
+    "field_capture_stderr": "Catat stderr proses PHP",
+    "field_capture_stderr_help": "Menulis apa yang dicetak PHP-FPM ke stderr ke log Caddy.",
+    "field_resolve_root_symlink": "Selesaikan symlink di root",
+    "field_resolve_root_symlink_help": "Mengikuti symlink di direktori root sebelum SCRIPT_FILENAME dibuat, yang dibutuhkan penyiapan opcache dengan symlink rilis."
   },
   "add_respond": {
     "title": "Tambah respons statis",
@@ -255,7 +274,11 @@
     "validation_port_range": "Port harus antara 1 dan 65535",
     "validation_port_duplicate": "Port {{port}} sudah digunakan",
     "validation_to_required": "Tujuan pengalihan wajib diisi",
-    "confirm_body": "Pengalihan :{{port}} → {{to}} ({{code}}) akan dibuat dan konfigurasi Caddy dimuat ulang."
+    "confirm_body": "Pengalihan :{{port}} → {{to}} ({{code}}) akan dibuat dan konfigurasi Caddy dimuat ulang.",
+    "code_html": "Halaman HTML",
+    "code_html_help": "Menjawab dengan halaman yang mengalihkan di browser, bukan kode status. Berbeda dengan pengalihan kode status, #fragment URL tetap dipertahankan.",
+    "keep_path": "Pertahankan path dan query",
+    "keep_path_help": "Menambahkan {uri} ke tujuan, sehingga /a?b=1 di situs ini menuju /a?b=1 di tujuan."
   },
   "basic_auth": {
     "heading": "HTTP Basic Auth",
@@ -264,14 +287,32 @@
     "field_password": "Kata sandi",
     "field_password_keep": "Kosongkan untuk mempertahankan yang ada",
     "add_button": "Tambah akun",
-    "remove_button": "Hapus akun"
+    "remove_button": "Hapus akun",
+    "realm": "Realm",
+    "algorithm": "Algoritma hash",
+    "algorithm_default": "bcrypt (bawaan)",
+    "algorithm_argon2id": "argon2id (lebih kuat)",
+    "algorithm_mismatch": "Akun yang mempertahankan kata sandinya masih memiliki hash dari algoritma lain. Masukkan ulang kata sandi mereka."
   },
   "transport": {
     "heading": "Batas waktu upstream",
     "section_title": "Batas waktu upstream (opsional)",
     "dial_timeout": "Batas waktu koneksi",
     "response_header_timeout": "Batas waktu header respons",
-    "defaults_help": "Biarkan kolom kosong untuk memakai nilai bawaan Caddy, yang ditampilkan abu-abu. Batas waktu header respons memutus long polling dan respons yang lambat."
+    "defaults_help": "Biarkan kolom kosong untuk memakai nilai bawaan Caddy, yang ditampilkan abu-abu. Batas waktu header respons memutus long polling dan respons yang lambat.",
+    "streaming_help": "Streaming (websocket, aliran peristiwa): kosongkan untuk memakai bawaan Caddy.",
+    "flush_interval": "Interval flush",
+    "flush_interval_placeholder": "-1 mengirim setiap penulisan segera",
+    "stream_timeout": "Batas waktu stream",
+    "stream_close_delay": "Jeda penutupan stream",
+    "connection_title": "Koneksi ke upstream",
+    "tls_server_name": "Nama server TLS",
+    "versions": "Versi HTTP",
+    "read_timeout": "Batas waktu baca",
+    "write_timeout": "Batas waktu tulis",
+    "keepalive": "Keep-alive",
+    "keepalive_idle_conns": "Koneksi idle yang dipertahankan",
+    "keepalive_idle_conns_per_host": "Koneksi idle yang dipertahankan per host"
   },
   "server_timeouts": {
     "heading": "Batas waktu & batasan server",
@@ -286,7 +327,17 @@
     "max_header_bytes_help": "Ukuran maksimum header permintaan (bawaan Caddy: 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "Nonaktifkan HTTP/3",
-    "http3_help": "Caddy mengaktifkan HTTP/1.1, HTTP/2, dan HTTP/3 secara bawaan setiap kali TLS dikonfigurasi. HTTP/3 berjalan di atas UDP pada port yang sama dengan HTTPS — jika firewall memblokir UDP, menonaktifkannya di sini akan kembali ke HTTP/1.1 dan HTTP/2 saja."
+    "http3_help": "Caddy mengaktifkan HTTP/1.1, HTTP/2, dan HTTP/3 secara bawaan setiap kali TLS dikonfigurasi. HTTP/3 berjalan di atas UDP pada port yang sama dengan HTTPS — jika firewall memblokir UDP, menonaktifkannya di sini akan kembali ke HTTP/1.1 dan HTTP/2 saja.",
+    "keepalive_interval": "Interval keep-alive TCP",
+    "keepalive_idle": "Waktu diam sebelum keep-alive TCP",
+    "options_label": "Opsi koneksi",
+    "strict_sni_host": "Host SNI ketat",
+    "strict_sni_host_help": "Tolak permintaan yang header Host-nya berbeda dari nama server TLS.",
+    "log_credentials": "Catat kredensial",
+    "log_credentials_help": "Tulis header Authorization dan Cookie ke log akses.",
+    "enable_full_duplex": "Full duplex untuk HTTP/1",
+    "enable_full_duplex_help": "Izinkan handler membaca isi permintaan sambil menulis respons.",
+    "read_body_idle": "Batas waktu diam isi permintaan"
   },
   "request_body": {
     "field_label": "Ukuran maksimum body permintaan",
@@ -307,7 +358,30 @@
     "field_find_placeholder": "^/api/(.*)",
     "field_replace_placeholder": "/$1",
     "field_replace_help": "Gunakan $1, $2 untuk grup tangkapan",
-    "type_aria": "Jenis penulisan ulang"
+    "type_aria": "Jenis penulisan ulang",
+    "type_strip_suffix": "Hapus akhiran",
+    "type_uri_replace": "Ganti teks",
+    "type_query": "String kueri",
+    "type_method": "Metode",
+    "field_suffix": "Akhiran",
+    "field_suffix_placeholder": ".html",
+    "field_text_find": "Cari (teks biasa)",
+    "field_limit": "Paling banyak",
+    "field_limit_placeholder": "semua",
+    "field_method": "Metode",
+    "query_op": "Perubahan",
+    "query_op_set": "Atur",
+    "query_op_add": "Tambah",
+    "query_op_delete": "Hapus",
+    "query_op_rename": "Ganti nama",
+    "query_op_replace": "Ganti",
+    "query_key": "Nama",
+    "query_value": "Nilai",
+    "query_new_key": "Nama baru",
+    "query_search": "Cari (regex)",
+    "query_remove": "Hapus perubahan",
+    "query_add": "Tambah perubahan",
+    "invalid": "Isi semua bidang penulisan ulang."
   },
   "probe": {
     "status_pending": "Memeriksa…",
@@ -390,7 +464,9 @@
     "validation_max_fails": "Maks. kegagalan minimal 1",
     "validation_needs_health_uri": "Interval, batas waktu, dan status yang diharapkan memerlukan jalur pemeriksaan",
     "validation_health_uri": "Jalur pemeriksaan harus diawali /",
-    "validation_health_status": "Gunakan kode seperti 200 atau kelas seperti 2xx"
+    "validation_health_status": "Gunakan kode seperti 200 atau kelas seperti 2xx",
+    "retry_methods": "Ulangi hanya metode ini",
+    "validation_methods": "Metode adalah kata seperti GET atau HEAD, dipisahkan spasi."
   },
   "response_headers": {
     "heading": "Header respons",
@@ -417,7 +493,12 @@
     "field_name": "Nama header",
     "field_value": "Nilai",
     "add_button": "Tambah",
-    "presets_label": "Prasetel"
+    "presets_label": "Prasetel",
+    "down_heading": "Header respons dari upstream",
+    "down_section_title": "Header respons dari upstream (opsional)",
+    "op_replace": "Ganti",
+    "field_search": "Nilai header yang dicari (ekspresi reguler)",
+    "field_replacement": "Pengganti"
   },
   "edit_redirect": {
     "title": "Edit pengalihan — :{{port}}",
@@ -572,7 +653,16 @@
     "roll_keep_count": "Jumlah berkas rotasi yang disimpan",
     "roll_keep_days": "Usia maks. berkas rotasi (hari)",
     "roll_compress": "Kompres berkas rotasi (gzip)",
-    "roll_help": "Caddy merotasi file log secara bawaan. Biarkan kolom kosong untuk memakai nilai bawaan Caddy, yang ditampilkan abu-abu."
+    "roll_help": "Caddy merotasi file log secara bawaan. Biarkan kolom kosong untuk memakai nilai bawaan Caddy, yang ditampilkan abu-abu.",
+    "field_filters": "Filter bidang",
+    "field_filters_help": "Satu per baris: jalur bidang, lalu delete, hash, replace <teks> atau ip_mask <bit IPv4> [<bit IPv6>], misalnya request>headers>Authorization delete.",
+    "field_filters_invalid": "Setiap baris memerlukan jalur bidang dan salah satu dari delete, hash, replace <teks> atau ip_mask <bit>.",
+    "include": "Sertakan logger",
+    "include_help": "Nama logger yang ditulis log ini, dipisahkan spasi, misalnya http.log.access. Kosong berarti semua.",
+    "exclude": "Kecualikan logger",
+    "exclude_help": "Nama logger yang dilewati log ini, dipisahkan spasi, misalnya http.log.access.log0.",
+    "skip_paths": "Jalur yang tidak dicatat di log",
+    "skip_paths_help": "Jalur dipisahkan spasi, wildcard diizinkan, misalnya /health* /ping. Permintaan ke jalur ini tidak dicatat."
   },
   "config_check": {
     "button": "Periksa konfigurasi",
@@ -695,7 +785,39 @@
     "proxy_protocol_allow_help": "Rentang CIDR yang dipisahkan spasi yang boleh mengirim header protokol PROXY — batasi ke IP penyeimbang beban Anda sendiri untuk mencegah pemalsuan IP klien. Kosongkan untuk menerima dari sumber mana pun.",
     "proxy_protocol_timeout": "Batas waktu baca header (opsional)",
     "proxy_protocol_timeout_help": "Waktu tunggu maksimum untuk header protokol PROXY sebelum menyerah (durasi Go, mis. 2s). Kosongkan untuk bawaan Caddy.",
-    "on_demand_rate_deprecated": "Caddy tidak lagi menyarankan interval dan burst. Kosongkan keduanya dan andalkan endpoint ask."
+    "on_demand_rate_deprecated": "Caddy tidak lagi menyarankan interval dan burst. Kosongkan keduanya dan andalkan endpoint ask.",
+    "tls_advanced_title": "TLS lanjutan",
+    "auto_https": "HTTPS otomatis",
+    "auto_https_off": "Mati",
+    "auto_https_disable_redirects": "Tanpa pengalihan HTTP ke HTTPS",
+    "auto_https_ignore_loaded_certs": "Abaikan sertifikat yang dimuat",
+    "issuer": "Penerbit sertifikat",
+    "issuer_local_certs": "CA Caddy sendiri untuk setiap situs",
+    "issuer_internal": "CA internal",
+    "issuer_acme": "ACME",
+    "key_type": "Jenis kunci",
+    "preferred_chains": "Rantai sertifikat pilihan",
+    "preferred_chains_smallest": "Rantai terkecil",
+    "preferred_chains_root": "Menurut nama umum root",
+    "preferred_chains_any": "Menurut nama umum mana pun",
+    "preferred_chains_names": "Nama umum",
+    "preferred_chains_names_help": "Dipisahkan koma.",
+    "default_sni": "SNI bawaan",
+    "default_sni_help": "Nama server yang diasumsikan Caddy saat klien tidak mengirimkannya.",
+    "default_bind": "Alamat bind bawaan",
+    "default_bind_help": "Alamat dipisahkan spasi tempat situs tanpa opsi bind mendengarkan.",
+    "ocsp_stapling_off": "Matikan OCSP stapling",
+    "admin_title": "Endpoint admin",
+    "admin_off": "Matikan endpoint admin",
+    "admin_off_help": "Plugin membutuhkan API admin untuk membaca dan mengubah konfigurasi yang berjalan.",
+    "admin_address": "Alamat admin",
+    "admin_address_help": "Tempat API admin Caddy mendengarkan, ditulis seperti di Caddyfile. Plugin tersambung ke alamat pada pengaturannya sendiri, jadi ubah keduanya bersamaan.",
+    "admin_origins": "Origin yang diizinkan",
+    "admin_origins_help": "Host dipisahkan spasi yang boleh memanggil API admin dari browser.",
+    "admin_enforce_origin": "Paksakan origin",
+    "metrics_per_host": "Beri label metrik per host",
+    "metrics_per_host_help": "Menambahkan host yang diminta ke setiap metrik permintaan agar situs dapat dibedakan. Setiap host berbeda menjadi seri tersendiri.",
+    "auto_https_disable_certs": "Tanpa pengelolaan sertifikat"
   },
   "ca": {
     "title": "Otoritas sertifikat internal",
@@ -798,7 +920,12 @@
     "field_copy_headers": "Salin header",
     "field_copy_headers_help": "Header respons yang dipisahkan spasi atau koma untuk disalin dari layanan autentikasi ke permintaan upstream (mis. Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "URI autentikasi wajib diisi jika URL layanan autentikasi diatur"
+    "validation_uri_required": "URI autentikasi wajib diisi jika URL layanan autentikasi diatur",
+    "field_copy_headers_rename_help": "Tulis Name>Other untuk menyalin header dengan nama lain.",
+    "field_header_up": "Header permintaan ke layanan autentikasi",
+    "field_header_up_help": "Satu per baris: Name value menetapkan header, +Name value menambahkan satu, -Name menghapus satu.",
+    "field_trusted_proxies": "Proksi tepercaya",
+    "field_trusted_proxies_help": "Rentang yang header X-Forwarded-*-nya dipertahankan pada permintaan ke layanan autentikasi, dipisahkan spasi. private_ranges berarti jaringan privat."
   },
   "tls_policy": {
     "heading": "Kebijakan TLS",
@@ -846,7 +973,15 @@
     "custom_file_unreadable": "Berkas tidak ditemukan atau tidak dapat dibaca pengguna Caddy",
     "custom_file_readable": "Berkas dapat dibaca",
     "custom_file_valid_expiry": "Berlaku — kedaluwarsa {{date}}",
-    "custom_cert_lifetime_note": "Sertifikat kustom dimuat di atas — masa berlaku sertifikat dan jendela pembaruan tidak berlaku, karena Caddy tidak menerbitkan apa pun sendiri."
+    "custom_cert_lifetime_note": "Sertifikat kustom dimuat di atas — masa berlaku sertifikat dan jendela pembaruan tidak berlaku, karena Caddy tidak menerbitkan apa pun sendiri.",
+    "acme_email": "Email ACME",
+    "acme_email_help": "Email akun untuk sertifikat situs ini. Hanya berlaku untuk HTTPS otomatis; kosong memakai yang global.",
+    "acme_global_placeholder": "Email global",
+    "acme_ca": "URL direktori CA ACME",
+    "acme_ca_help": "Dari mana situs ini mendapat sertifikatnya, misalnya URL staging Let's Encrypt saat menguji. Kosong memakai CA global.",
+    "key_type": "Jenis kunci",
+    "acme_invalid_email": "Masukkan alamat email seperti admin@example.com.",
+    "acme_invalid_ca": "Masukkan URL http:// atau https://."
   },
   "error_handler": {
     "heading": "Penangan galat kustom",
@@ -912,7 +1047,22 @@
     "ip_kind_remote": "IP koneksi",
     "ip_kind_client_help": "IP pengunjung, diambil dari header penerusan jika permintaan datang melalui salah satu proxy tepercaya (Pengaturan). Tanpa proxy tepercaya, nilainya sama dengan IP koneksi.",
     "ip_kind_remote_help": "IP dari koneksi TCP. Di balik proxy atau CDN, itu alamat proxy, bukan pengunjung.",
-    "ip_range": "Alamat IP atau rentang"
+    "ip_range": "Alamat IP atau rentang",
+    "type_path_regexp": "Regex jalur",
+    "type_header_regexp": "Regex header",
+    "field_regexp_name": "Nama (opsional)",
+    "field_header_name_regexp": "Nama header untuk regex",
+    "field_regexp_name_header": "Nama regex header (opsional)",
+    "regexp_help": "Nama membuat grup tersedia sebagai {re.name.1}, misalnya dalam penulisan ulang. Caddy mengizinkan satu regex per matcher.",
+    "type_protocol": "Protokol",
+    "protocol_any": "apa saja",
+    "type_file": "Berkas",
+    "field_try_files": "Berkas yang dicari",
+    "field_try_policy": "Cara memilih",
+    "try_policy_default": "yang pertama ada",
+    "file_help": "Cocok saat salah satu berkas ada. Placeholder seperti {path} berfungsi.",
+    "type_vars": "Variabel",
+    "vars_help": "Satu per baris: placeholder, lalu nilai yang boleh dimilikinya, misalnya {host} example.com www.example.com."
   },
   "handle_path": {
     "label": "Hapus prefiks jalur yang cocok (handle_path)"
@@ -1087,5 +1237,44 @@
     "add_inside": "Tambah di dalam blok yang dipilih",
     "add_top": "Tambah di tingkat atas",
     "add_matcher": "Matcher blok baru"
+  },
+  "encode": {
+    "heading": "Kompresi",
+    "section_title": "Pengaturan kompresi (opsional)",
+    "help": "Dipakai saat kompresi aktif di Umum. Tanpa pilihan, Caddy mengompres dengan gzip dan zstd.",
+    "algorithms": "Algoritma dan urutan",
+    "algorithms_default": "gzip, zstd (bawaan)",
+    "algorithms_zstd_gzip": "zstd, lalu gzip",
+    "algorithms_gzip": "hanya gzip",
+    "algorithms_zstd": "hanya zstd",
+    "minimum_length": "Ukuran minimum",
+    "minimum_length_help": "Respons dengan byte lebih sedikit dari ini dikirim apa adanya. Bawaan Caddy adalah 512.",
+    "invalid_number": "Masukkan bilangan bulat byte.",
+    "match_status": "Hanya kode status ini",
+    "match_status_help": "Kode atau kelas dipisahkan spasi, misalnya 2xx 404. Kosong berarti semua status.",
+    "invalid_status": "Masukkan kode status seperti 200 atau kelas seperti 2xx.",
+    "match_headers": "Hanya header respons ini",
+    "match_headers_help": "Satu per baris: nama header, lalu nilainya. Wildcard seperti text/* berfungsi.",
+    "invalid_header": "Setiap baris memerlukan nama header dan nilai."
+  },
+  "dynamic_upstreams": {
+    "heading": "Upstream dinamis",
+    "section_title": "Upstream dinamis (lanjutan, opsional)",
+    "help": "Cari upstream lewat DNS. Target di atas menjadi cadangan saat pencarian tidak menemukan apa pun. Beberapa sumber digabungkan.",
+    "add_button": "Tambah sumber DNS",
+    "type": "Jenis pencarian",
+    "name_srv": "Nama SRV",
+    "name_a": "Nama host",
+    "refresh": "Interval penyegaran",
+    "resolvers": "Resolver DNS",
+    "dial_fallback_delay": "Jeda koneksi cadangan",
+    "grace_period": "Masa tenggang",
+    "versions": "Keluarga alamat",
+    "versions_both": "IPv4 dan IPv6",
+    "validation_name": "Sumber dengan pengaturan memerlukan nama.",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }
