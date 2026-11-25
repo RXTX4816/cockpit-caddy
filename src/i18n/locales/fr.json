@@ -332,7 +332,8 @@
     "log_credentials": "Journaliser les identifiants",
     "log_credentials_help": "Écrit les en-têtes Authorization et Cookie dans le journal d'accès.",
     "enable_full_duplex": "Full duplex pour HTTP/1",
-    "enable_full_duplex_help": "Permet à un gestionnaire de lire le corps de la requête pendant qu'il écrit la réponse."
+    "enable_full_duplex_help": "Permet à un gestionnaire de lire le corps de la requête pendant qu'il écrit la réponse.",
+    "read_body_idle": "Délai d'inactivité du corps de la requête"
   },
   "request_body": {
     "field_label": "Taille maximale du corps de requête",

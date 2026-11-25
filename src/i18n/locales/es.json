@@ -332,7 +332,8 @@
     "log_credentials": "Registrar credenciales",
     "log_credentials_help": "Escribe los encabezados Authorization y Cookie en el registro de acceso.",
     "enable_full_duplex": "Dúplex completo para HTTP/1",
-    "enable_full_duplex_help": "Permite que un manejador lea el cuerpo de la petición mientras escribe la respuesta."
+    "enable_full_duplex_help": "Permite que un manejador lea el cuerpo de la petición mientras escribe la respuesta.",
+    "read_body_idle": "Tiempo de inactividad del cuerpo de la solicitud"
   },
   "request_body": {
     "field_label": "Tamaño máximo del cuerpo de la solicitud",

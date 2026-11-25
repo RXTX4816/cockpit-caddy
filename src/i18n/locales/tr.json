@@ -332,7 +332,8 @@
     "log_credentials": "Kimlik bilgilerini günlüğe yaz",
     "log_credentials_help": "Authorization ve Cookie başlıklarını erişim günlüğüne yazar.",
     "enable_full_duplex": "HTTP/1 için tam çift yönlü",
-    "enable_full_duplex_help": "Bir işleyicinin yanıtı yazarken istek gövdesini okumasına izin verir."
+    "enable_full_duplex_help": "Bir işleyicinin yanıtı yazarken istek gövdesini okumasına izin verir.",
+    "read_body_idle": "İstek gövdesi boşta kalma zaman aşımı"
   },
   "request_body": {
     "field_label": "İstek gövdesinin en büyük boyutu",

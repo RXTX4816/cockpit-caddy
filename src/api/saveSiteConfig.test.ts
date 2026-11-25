@@ -50,7 +50,7 @@ describe("saveSiteConfig server options (#328)", () => {
   it("writes keepalive, SNI, credential logging and full duplex into the port's servers block", async () => {
     host.onRun(["caddy", "validate"], "");
     const p: ProxyEntry = { ...withTimeout, serverReadTimeout: undefined, serverExtras: {
-      keepaliveInterval: "30s", keepaliveIdle: "1m", strictSniHost: true, logCredentials: true, enableFullDuplex: true,
+      keepaliveInterval: "30s", keepaliveIdle: "1m", readBodyIdle: "5s", strictSniHost: true, logCredentials: true, enableFullDuplex: true,
     } };
     await saveSiteConfig([p], ":7700 {\n\treverse_proxy localhost:7701\n}\n");
     const main = host.files.get(MAIN) ?? "";
@@ -58,6 +58,7 @@ describe("saveSiteConfig server options (#328)", () => {
     for (const line of ["keepalive_interval 30s", "keepalive_idle 1m", "strict_sni_host", "log_credentials", "enable_full_duplex"]) {
       expect(main).toContain(line);
     }
+    expect(main).toMatch(/timeouts \{\n\t+read_body_idle 5s\n/);
   });
 
   it("writes no servers block when none is set", async () => {

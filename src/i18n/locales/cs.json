@@ -332,7 +332,8 @@
     "log_credentials": "Zapisovat přihlašovací údaje",
     "log_credentials_help": "Zapíše hlavičky Authorization a Cookie do přístupového logu.",
     "enable_full_duplex": "Plný duplex pro HTTP/1",
-    "enable_full_duplex_help": "Handler může číst tělo požadavku, zatímco zapisuje odpověď."
+    "enable_full_duplex_help": "Handler může číst tělo požadavku, zatímco zapisuje odpověď.",
+    "read_body_idle": "Časový limit nečinnosti těla požadavku"
   },
   "request_body": {
     "field_label": "Maximální velikost těla požadavku",

@@ -332,7 +332,8 @@
     "log_credentials": "Registrar credenciais",
     "log_credentials_help": "Grava os cabeçalhos Authorization e Cookie no log de acesso.",
     "enable_full_duplex": "Full duplex para HTTP/1",
-    "enable_full_duplex_help": "Permite que um handler leia o corpo da requisição enquanto grava a resposta."
+    "enable_full_duplex_help": "Permite que um handler leia o corpo da requisição enquanto grava a resposta.",
+    "read_body_idle": "Tempo limite de inatividade do corpo da requisição"
   },
   "request_body": {
     "field_label": "Tamanho máximo do corpo da requisição",

@@ -62,7 +62,7 @@ export function proxyTabFlags(v: ProxyTabValues, generalHasError: boolean): TabF
       upstreams: v.extraUpstreams.length > 0 || v.dynamicUpstreams.length > 0 || !!v.lbPolicy || !!lbRetryValuesToConfig(v.lbRetry) || Object.values(v.transport).some(Boolean),
       logging: !!accessLogValuesToConfig(v.accessLog) || v.errorHandlers.length > 0,
       limits: !!v.requestBodyMaxSize
-        || !!(st.readTimeout || st.readHeaderTimeout || st.writeTimeout || st.idleTimeout || st.maxHeaderBytes || st.disableHttp3 || st.keepaliveInterval || st.keepaliveIdle || st.strictSniHost || st.logCredentials || st.enableFullDuplex),
+        || !!(st.readTimeout || st.readHeaderTimeout || st.writeTimeout || st.idleTimeout || st.maxHeaderBytes || st.disableHttp3 || st.keepaliveInterval || st.keepaliveIdle || st.readBodyIdle || st.strictSniHost || st.logCredentials || st.enableFullDuplex),
     },
     hasError: {
       general: generalHasError,

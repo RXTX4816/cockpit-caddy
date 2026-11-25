@@ -332,7 +332,8 @@
     "log_credentials": "記錄憑證",
     "log_credentials_help": "將 Authorization 和 Cookie 標頭寫入存取記錄。",
     "enable_full_duplex": "HTTP/1 全雙工",
-    "enable_full_duplex_help": "允許處理程式在寫入回應的同時讀取請求本文。"
+    "enable_full_duplex_help": "允許處理程式在寫入回應的同時讀取請求本文。",
+    "read_body_idle": "請求本文閒置逾時"
   },
   "request_body": {
     "field_label": "請求本文大小上限",

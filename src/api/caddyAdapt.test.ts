@@ -1084,6 +1084,12 @@ describe.runIf(available || required)("caddy adapt accepts the server options (#
       keepaliveInterval: "30s", keepaliveIdle: "1m", strictSniHost: true, logCredentials: true, enableFullDuplex: true,
     });
   });
+
+  it("reads read_body_idle from the timeouts block", () => {
+    const conf = "{\n\tservers :8443 {\n\t\ttimeouts {\n\t\t\tread_body_idle 5s\n\t\t}\n\t}\n}\n\n:8443 {\n\trespond ok\n}\n";
+    const server = Object.values(adapt(conf).apps?.http?.servers ?? {})[0] as CaddyServer;
+    expect(parseServerExtras(server)).toEqual({ readBodyIdle: "5s" });
+  });
 });
 
 describe.runIf(available || required)("caddy adapt accepts the TLS and admin global options (#329, #330)", () => {

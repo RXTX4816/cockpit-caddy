@@ -806,6 +806,7 @@ function buildManagedServersBlocks(
       const extras: import("./types").ServerExtras = {
         keepaliveInterval: group.find(p => p.serverExtras?.keepaliveInterval)?.serverExtras?.keepaliveInterval,
         keepaliveIdle: group.find(p => p.serverExtras?.keepaliveIdle)?.serverExtras?.keepaliveIdle,
+        readBodyIdle: group.find(p => p.serverExtras?.readBodyIdle)?.serverExtras?.readBodyIdle,
         strictSniHost: group.some(p => p.serverExtras?.strictSniHost),
         logCredentials: group.some(p => p.serverExtras?.logCredentials),
         enableFullDuplex: group.some(p => p.serverExtras?.enableFullDuplex),
@@ -814,6 +815,7 @@ function buildManagedServersBlocks(
       const lines = [`\tservers :${port} {`];
       const tLines: string[] = [];
       if (readTimeout) tLines.push(`\t\t\tread_body ${readTimeout}`);
+      if (extras.readBodyIdle) tLines.push(`\t\t\tread_body_idle ${extras.readBodyIdle}`);
       if (readHeaderTimeout) tLines.push(`\t\t\tread_header ${readHeaderTimeout}`);
       if (writeTimeout) tLines.push(`\t\t\twrite ${writeTimeout}`);
       if (idleTimeout) tLines.push(`\t\t\tidle ${idleTimeout}`);

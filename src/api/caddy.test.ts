@@ -5251,13 +5251,13 @@ describe("a site's own ACME email, CA and key type (#341)", () => {
 });
 
 describe("server options on the JSON side (#328)", () => {
-  const extras = { keepaliveInterval: "30s", keepaliveIdle: "1m", strictSniHost: true, logCredentials: true, enableFullDuplex: true };
+  const extras = { keepaliveInterval: "30s", keepaliveIdle: "1m", readBodyIdle: "5s", strictSniHost: true, logCredentials: true, enableFullDuplex: true };
 
   it("applyServerExtras writes the Caddy JSON fields and parseServerExtras reads them back", () => {
     const server = { listen: [":8443"], routes: [] } as CaddyServer;
     applyServerExtras(server, extras);
     expect(server).toMatchObject({
-      keepalive_interval: "30s", keepalive_idle: "1m", strict_sni_host: true, enable_full_duplex: true,
+      keepalive_interval: "30s", keepalive_idle: "1m", read_idle_timeout: "5s", strict_sni_host: true, enable_full_duplex: true,
       logs: { should_log_credentials: true },
     });
     expect(parseServerExtras(server)).toEqual(extras);

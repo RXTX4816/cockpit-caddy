@@ -332,7 +332,8 @@
     "log_credentials": "Записывать учётные данные",
     "log_credentials_help": "Записывает заголовки Authorization и Cookie в журнал доступа.",
     "enable_full_duplex": "Полный дуплекс для HTTP/1",
-    "enable_full_duplex_help": "Позволяет обработчику читать тело запроса во время записи ответа."
+    "enable_full_duplex_help": "Позволяет обработчику читать тело запроса во время записи ответа.",
+    "read_body_idle": "Тайм-аут простоя тела запроса"
   },
   "request_body": {
     "field_label": "Максимальный размер тела запроса",

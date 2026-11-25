@@ -332,7 +332,8 @@
     "log_credentials": "تسجيل بيانات الاعتماد",
     "log_credentials_help": "كتابة ترويستي Authorization وCookie في سجل الوصول.",
     "enable_full_duplex": "الإرسال المزدوج الكامل لـ HTTP/1",
-    "enable_full_duplex_help": "السماح للمعالج بقراءة جسم الطلب أثناء كتابة الاستجابة."
+    "enable_full_duplex_help": "السماح للمعالج بقراءة جسم الطلب أثناء كتابة الاستجابة.",
+    "read_body_idle": "مهلة خمول جسم الطلب"
   },
   "request_body": {
     "field_label": "الحد الأقصى لحجم جسم الطلب",

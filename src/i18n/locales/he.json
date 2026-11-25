@@ -332,7 +332,8 @@
     "log_credentials": "תיעוד פרטי כניסה",
     "log_credentials_help": "כותב את הכותרות Authorization ו-Cookie ליומן הגישה.",
     "enable_full_duplex": "דופלקס מלא עבור HTTP/1",
-    "enable_full_duplex_help": "מאפשר למטפל לקרוא את גוף הבקשה בזמן כתיבת התשובה."
+    "enable_full_duplex_help": "מאפשר למטפל לקרוא את גוף הבקשה בזמן כתיבת התשובה.",
+    "read_body_idle": "זמן קצוב לחוסר פעילות בגוף הבקשה"
   },
   "request_body": {
     "field_label": "גודל מרבי של גוף הבקשה",

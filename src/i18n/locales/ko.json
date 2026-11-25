@@ -332,7 +332,8 @@
     "log_credentials": "자격 증명 기록",
     "log_credentials_help": "Authorization 및 Cookie 헤더를 액세스 로그에 기록합니다.",
     "enable_full_duplex": "HTTP/1 전이중 통신",
-    "enable_full_duplex_help": "핸들러가 응답을 쓰는 동안 요청 본문을 읽을 수 있게 합니다."
+    "enable_full_duplex_help": "핸들러가 응답을 쓰는 동안 요청 본문을 읽을 수 있게 합니다.",
+    "read_body_idle": "요청 본문 유휴 시간 제한"
   },
   "request_body": {
     "field_label": "요청 본문 최대 크기",

@@ -332,7 +332,8 @@
     "log_credentials": "Loguj dane uwierzytelniające",
     "log_credentials_help": "Zapisuje nagłówki Authorization i Cookie w dzienniku dostępu.",
     "enable_full_duplex": "Pełny dupleks dla HTTP/1",
-    "enable_full_duplex_help": "Pozwala obsłudze czytać treść żądania podczas zapisywania odpowiedzi."
+    "enable_full_duplex_help": "Pozwala obsłudze czytać treść żądania podczas zapisywania odpowiedzi.",
+    "read_body_idle": "Limit bezczynności treści żądania"
   },
   "request_body": {
     "field_label": "Maksymalny rozmiar treści żądania",

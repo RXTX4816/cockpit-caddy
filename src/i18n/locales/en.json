@@ -332,7 +332,8 @@
     "log_credentials": "Log credentials",
     "log_credentials_help": "Write the Authorization and Cookie headers to the access log.",
     "enable_full_duplex": "Full duplex for HTTP/1",
-    "enable_full_duplex_help": "Let a handler read the request body while it writes the response."
+    "enable_full_duplex_help": "Let a handler read the request body while it writes the response.",
+    "read_body_idle": "Request body idle timeout"
   },
   "request_body": {
     "field_label": "Max request body size",
