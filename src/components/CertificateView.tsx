@@ -1,7 +1,7 @@
 import { useCallback, useState, type ReactNode } from "react";
 import { Alert, Button } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
-import { readFile as fsReadFile, writeFile as fsWriteFile } from "@rxtx4816/cockpit-plugin-base-react/lib/cockpit-fs";
+import { getHost, mkdirp } from "@rxtx4816/cockpit-plugin-base-react/host";
 
 type ShowSaveFilePicker = (opts: object) => Promise<{
   createWritable(): Promise<{ write(s: string): Promise<void>; close(): Promise<void> }>;
@@ -44,9 +44,10 @@ export function useCertDownload() {
     try {
       const user = await cockpit.user();
       const savePath = `${user.home}/Downloads/${filename}`;
-      await cockpit.spawn(["mkdir", "-p", "--", `${user.home}/Downloads`], { err: "message" });
-      const existing = await fsReadFile(savePath);
-      await fsWriteFile(savePath, pem);
+      const host = getHost();
+      await mkdirp(host, `${user.home}/Downloads`);
+      const existing = await host.readFile(savePath);
+      await host.writeFile(savePath, pem);
       setSavedPath({ path: savePath, overwritten: existing !== null });
     } catch (err) {
       setDownloadError((err as { message?: string })?.message ?? String(err));

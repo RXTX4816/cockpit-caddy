@@ -5,6 +5,8 @@
  * caddy.service. Values are written through stdin and never come back to the UI.
  */
 
+import { exists as hostExists, getHost } from "@rxtx4816/cockpit-plugin-base-react/host";
+
 export const DNS_ENV_PATH = "/etc/caddy/dns.env";
 export const DNS_DROPIN_DIR = "/etc/systemd/system/caddy.service.d";
 export const DNS_DROPIN_PATH = `${DNS_DROPIN_DIR}/cockpit-caddy-dns.conf`;
@@ -29,7 +31,7 @@ export function parseDnsProviders(listModulesOutput: string): string[] {
 /** The DNS provider modules the installed Caddy has; empty when it has none or can't be asked. */
 export async function listDnsProviders(): Promise<string[]> {
   try {
-    return parseDnsProviders(await cockpit.spawn(["caddy", "list-modules"], { superuser: "try", err: "ignore" }));
+    return parseDnsProviders(await getHost().run(["caddy", "list-modules"], { superuser: "try", stderr: "ignore" }));
   } catch {
     return [];
   }
@@ -76,13 +78,11 @@ export function parseEnvFile(text: string): Record<string, string> {
   return out;
 }
 
-const root = (args: string[]) => cockpit.spawn(args, { superuser: "require", err: "message" });
+const root = (args: string[], stdin?: string) => getHost().run(args, { superuser: "require", stdin });
 
 /** Runs a root command with `data` on stdin (closed after), so it never shows in a command line. */
 async function rootWithInput(args: string[], data: string): Promise<void> {
-  const proc = root(args);
-  proc.input(data);
-  await proc;
+  await root(args, data);
 }
 
 async function readEnvText(): Promise<string | null> {
@@ -98,14 +98,7 @@ async function readEnvFile(): Promise<Record<string, string> | null> {
   return text === null ? null : parseEnvFile(text);
 }
 
-async function exists(path: string): Promise<boolean> {
-  try {
-    await root(["test", "-e", path]);
-    return true;
-  } catch {
-    return false;
-  }
-}
+const exists = (path: string) => hostExists(getHost(), path, { superuser: "require" });
 
 /** Writes the env file root:root mode 600: umask 077 from the start, then an atomic rename. */
 function writeEnvText(text: string): Promise<void> {

@@ -1,8 +1,9 @@
 import type { CaddyConfig, CaddyHandler, CaddyReverseProxyHandler, CaddyRoute, CaddyServer, CaddyTLSClientAuthentication, CaddyTLSConnectionPolicy, ProxyEntry } from "./types";
-import { readFile as fsReadFile, writeFile as fsWriteFile } from "@rxtx4816/cockpit-plugin-base-react/lib/cockpit-fs";
 import { reloadService as reloadSystemdService, restartService } from "@rxtx4816/cockpit-plugin-base-react/systemd";
 import { applyDnsSecrets, dnsEnviron } from "./dnsChallenge";
 import { i18n } from "@rxtx4816/cockpit-plugin-base-react/i18n";
+import { getHost, mkdirp, HostError } from "@rxtx4816/cockpit-plugin-base-react/host";
+import { applyConfigChange, type FileChange } from "./configChange";
 import { listConfDFiles, readCaddyfile, writeCaddyfile } from "./systemd";
 import { externalHostList } from "./externalHosts";
 
@@ -269,8 +270,8 @@ export async function ensureConfDImported(): Promise<void> {
   if (isStockCaddyfile(content)) {
     // The distro's welcome site moves into conf.d on the first save (#256), no gate needed.
     const { caddyfile, confD } = migrateStockCaddyfile(content, await readProxyConf(), STOCK_WELCOME_LABEL);
-    await cockpit.spawn(["mkdir", "-p", "/etc/caddy/conf.d"], { superuser: "try" });
-    await fsWriteFile(PROXY_CONF_PATH, confD, "try");
+    await ensureConfDDir();
+    await getHost().writeFile(PROXY_CONF_PATH, confD, { superuser: "try" });
     await writeCaddyfile(caddyfile);
     return;
   }
@@ -305,10 +306,10 @@ export function inlineConfDImport(main: string, files: { path: string; content: 
  * So conf.d files must be read and inlined here ourselves before posting.
  */
 async function buildFlattenedMainCaddyfile(): Promise<string> {
-  const main = (await fsReadFile(MAIN_CADDYFILE, "try")) ?? "";
+  const main = (await getHost().readFile(MAIN_CADDYFILE, { superuser: "try" })) ?? "";
   if (!CONF_D_GLOB_IMPORT.test(main)) return main;
   const paths = await listConfDFiles();
-  const contents = await Promise.all(paths.map(p => fsReadFile(p, "try")));
+  const contents = await Promise.all(paths.map(p => getHost().readFile(p, { superuser: "try" })));
   const files = paths.flatMap((path, i) => (contents[i] ? [{ path, content: contents[i] }] : []));
   return inlineConfDImport(main, files);
 }
@@ -605,8 +606,13 @@ export function normalizeManagedHeader(content: string): { content: string; chan
   return { content: result.join("\n"), changed };
 }
 
+/** Makes sure /etc/caddy/conf.d exists, where the plugin keeps its files. */
+export function ensureConfDDir(): Promise<void> {
+  return mkdirp(getHost(), "/etc/caddy/conf.d", { superuser: "try" });
+}
+
 export async function writeRawProxyConf(content: string): Promise<void> {
-  await fsWriteFile(PROXY_CONF_PATH, content, "try");
+  await getHost().writeFile(PROXY_CONF_PATH, content, { superuser: "try" });
 }
 
 /**
@@ -620,27 +626,33 @@ export async function writeRawProxyConfValidated(content: string): Promise<void>
 }
 
 async function writeConfDFileValidated(path: string, content: string): Promise<void> {
-  const original = (await fsReadFile(path, "try").catch(() => null)) ?? "";
-  // Catches an unwritable log file path *before* ever saving it — see
-  // checkLogFileWritable for why `caddy validate` succeeding isn't enough on its own.
-  for (const logPath of new Set(extractLogFilePaths(content))) {
-    const err = await checkLogFileWritable(logPath);
-    if (err) throw new CaddyfileError(i18n.t("errors.log_file_not_writable", { path: logPath, error: err }));
-  }
-  await fsWriteFile(path, content, "try");
-  try {
-    await runCaddyValidate();
-  } catch (e) {
-    await fsWriteFile(path, original, "try");
-    throw e;
-  }
-  await fixAccessLogFileOwnership(content);
+  await applyCaddyConfig([{ path, content }]);
+}
+
+/**
+ * Changes Caddyfile-side files as one: every changed file is written, `caddy validate` runs
+ * once over the whole config, and a failure puts all of them back (see applyConfigChange).
+ * Also refuses an unwritable log file path *before* anything is saved — see checkLogFileWritable
+ * for why `caddy validate` succeeding isn't enough on its own — and gives validate's side
+ * effects on log files back to the service user afterwards.
+ */
+async function applyCaddyConfig(changes: FileChange[]): Promise<void> {
+  await applyConfigChange(changes, {
+    check: async changed => {
+      for (const logPath of new Set(changed.flatMap(c => extractLogFilePaths(c.content)))) {
+        const err = await checkLogFileWritable(logPath);
+        if (err) throw new CaddyfileError(i18n.t("errors.log_file_not_writable", { path: logPath, error: err }));
+      }
+    },
+    validate: runCaddyValidate,
+    afterCommit: async changed => { for (const c of changed) await fixAccessLogFileOwnership(c.content); },
+  });
 }
 
 /** The plugin's snippets file (#288); empty when it doesn't exist yet. */
 export async function readSnippetsConf(): Promise<string> {
   try {
-    return (await fsReadFile(SNIPPETS_CONF_PATH, "try")) ?? "";
+    return (await getHost().readFile(SNIPPETS_CONF_PATH, { superuser: "try" })) ?? "";
   } catch {
     return "";
   }
@@ -648,7 +660,7 @@ export async function readSnippetsConf(): Promise<string> {
 
 /** Writes the snippets file, validates the whole Caddyfile, and restores the old file on an error. */
 export async function writeSnippetsConfValidated(content: string): Promise<void> {
-  await cockpit.spawn(["mkdir", "-p", "/etc/caddy/conf.d"], { superuser: "try" });
+  await ensureConfDDir();
   await writeConfDFileValidated(SNIPPETS_CONF_PATH, content);
 }
 
@@ -925,7 +937,7 @@ export function parseLabelsFromCaddyfile(content: string): Record<string, string
 
 export async function readProxyConf(): Promise<string> {
   try {
-    return (await fsReadFile(PROXY_CONF_PATH, "try")) ?? "";
+    return (await getHost().readFile(PROXY_CONF_PATH, { superuser: "try" })) ?? "";
   } catch {
     return "";
   }
@@ -2432,8 +2444,8 @@ export function surgicallyRemoveBlock(content: string, port: number, host?: stri
 }
 
 export async function writeProxyConf(proxies: ProxyEntry[]): Promise<void> {
-  await cockpit.spawn(["mkdir", "-p", "/etc/caddy/conf.d"], { superuser: "try" });
-  await fsWriteFile(PROXY_CONF_PATH, proxiesToCaddyfile(proxies), "try");
+  await ensureConfDDir();
+  await getHost().writeFile(PROXY_CONF_PATH, proxiesToCaddyfile(proxies), { superuser: "try" });
 }
 
 // ---------------------------------------------------------------------------
@@ -4601,8 +4613,8 @@ const GLOBAL_OPTS_BEGIN = "# cockpit-caddy:opts:begin";
 const GLOBAL_OPTS_END = "# cockpit-caddy:opts:end";
 
 /**
- * Runs `caddy validate` on MAIN_CADDYFILE. Streams output so the error message
- * is available even if cockpit.spawn rejects with an empty message object.
+ * Runs `caddy validate` on MAIN_CADDYFILE. The error message comes from its output, which the
+ * Host keeps even when Cockpit rejects with an empty message object.
  * Throws CaddyfileError with the relevant error line on failure.
  *
  * When Caddy isn't installed as a local systemd service (running in a
@@ -4615,19 +4627,18 @@ async function runCaddyValidate(): Promise<void> {
     await applyCurrentCaddyfileViaApi();
     return;
   }
-  let output = "";
   // DNS provider credentials (#261) live in the service's env file; a provider that checks them
   // while provisioning would fail validation without them. Passed as environment, not argv.
   const environ = await dnsEnviron();
-  const proc = cockpit.spawn(
-    ["caddy", "validate", "--config", MAIN_CADDYFILE, "--adapter", "caddyfile"],
-    { superuser: "try", err: "out", ...(environ.length ? { environ } : {}) },
-  ).stream(chunk => { output += chunk; });
   try {
-    await proc;
-  } catch {
+    await getHost().run(
+      ["caddy", "validate", "--config", MAIN_CADDYFILE, "--adapter", "caddyfile"],
+      { superuser: "try", stderr: "out", environ: environ.length ? environ : undefined },
+    );
+  } catch (e) {
     // Extract the first "Error: ..." line from the combined output, or fall back to the full output.
-    const errorLine = output.split("\n").find(l => /^Error:/i.test(l.trim())) ?? output.trim();
+    const output = (e instanceof HostError ? e.output || e.message : String(e)).trim();
+    const errorLine = output.split("\n").find(l => /^Error:/i.test(l.trim())) ?? output;
     throw new CaddyfileError(errorLine.replace(/^Error:\s*/i, "").trim());
   }
 }
@@ -4789,24 +4800,35 @@ export function patchMainCaddyfile(content: string, blocks: string): string {
  * restores the original file content before throwing.
  */
 export async function syncGlobalTimeouts(proxies: ProxyEntry[]): Promise<void> {
-  const original = (await fsReadFile(MAIN_CADDYFILE, "try")) ?? "";
-  // #153 — re-merge the current global trusted_proxies setting into every per-port block
-  // this rebuilds, since a bare `mkdir -p`-style regeneration would otherwise silently
-  // drop it for any port that also has its own timeout/protocol override (see
-  // buildManagedServersBlocks). Read fresh from disk rather than threading it through every
-  // caller — trusted_proxies itself is saved via the separate syncGlobalOptions path.
-  const globalOpts = parseGlobalOptions(original);
-  const blocks = buildManagedServersBlocks(proxies, globalOpts.trustedProxies, globalOpts.proxyProtocol);
-  const patched = patchMainCaddyfile(original, blocks);
-  if (patched === original) return;
+  const original = (await getHost().readFile(MAIN_CADDYFILE, { superuser: "try" })) ?? "";
+  await applyCaddyConfig([{ path: MAIN_CADDYFILE, content: planGlobalTimeouts(original, proxies) }]);
+}
 
-  await fsWriteFile(MAIN_CADDYFILE, patched, "try");
-  try {
-    await runCaddyValidate();
-  } catch (e) {
-    await fsWriteFile(MAIN_CADDYFILE, original, "try");
-    throw e;
-  }
+/**
+ * The main Caddyfile with the server-level timeouts for `proxies` in its global options.
+ * #153 — re-merges the current global trusted_proxies setting into every per-port block this
+ * rebuilds, since a bare regeneration would otherwise silently drop it for any port that also
+ * has its own timeout/protocol override (see buildManagedServersBlocks). Read from the given
+ * content rather than threaded through every caller — trusted_proxies itself is saved via the
+ * separate syncGlobalOptions path.
+ */
+function planGlobalTimeouts(mainCaddyfile: string, proxies: ProxyEntry[]): string {
+  const globalOpts = parseGlobalOptions(mainCaddyfile);
+  const blocks = buildManagedServersBlocks(proxies, globalOpts.trustedProxies, globalOpts.proxyProtocol);
+  return patchMainCaddyfile(mainCaddyfile, blocks);
+}
+
+/**
+ * Saves a site change as one: the server-level timeouts for `proxies` in the main Caddyfile
+ * and the new conf.d content, validated together. A failure leaves neither file touched, where
+ * saving them one after the other left the new timeouts behind when the conf.d step failed.
+ */
+export async function saveSiteConfig(proxies: ProxyEntry[], proxyConfContent: string): Promise<void> {
+  const main = (await getHost().readFile(MAIN_CADDYFILE, { superuser: "try" })) ?? "";
+  await applyCaddyConfig([
+    { path: MAIN_CADDYFILE, content: planGlobalTimeouts(main, proxies) },
+    { path: PROXY_CONF_PATH, content: proxyConfContent },
+  ]);
 }
 
 // ---------------------------------------------------------------------------
@@ -5659,7 +5681,7 @@ export async function syncGlobalOptions(
 
 /** Writes and validates the main Caddyfile and conf.d for syncGlobalOptions, restoring both on failure. */
 async function writeGlobalOptions(opts: GlobalOptions): Promise<void> {
-  const diskContent = (await fsReadFile(MAIN_CADDYFILE, "try")) ?? "";
+  const diskContent = (await getHost().readFile(MAIN_CADDYFILE, { superuser: "try" })) ?? "";
   let patched = buildGlobalOptionsPatch(diskContent, opts);
 
   // #153 — trusted_proxies must also be re-merged into every per-port managed servers
@@ -5668,7 +5690,7 @@ async function writeGlobalOptions(opts: GlobalOptions): Promise<void> {
   // fully replaces (doesn't merge with) the global block's settings for that port.
   try {
     const config = await fetchCaddyConfig();
-    const serverDefs = parseServerDefsFromConf((await fsReadFile(PROXY_CONF_PATH, "try")) ?? "");
+    const serverDefs = parseServerDefsFromConf((await getHost().readFile(PROXY_CONF_PATH, { superuser: "try" })) ?? "");
     const proxies = parseProxies(config, serverDefs);
     patched = patchMainCaddyfile(patched, buildManagedServersBlocks(proxies, opts.trustedProxies, opts.proxyProtocol));
   } catch {
@@ -5676,34 +5698,18 @@ async function writeGlobalOptions(opts: GlobalOptions): Promise<void> {
     // trusted_proxies they last had; they'll refresh next time a proxy is added/edited.
   }
 
-  const proxyConfDisk = (await fsReadFile(PROXY_CONF_PATH, "try")) ?? "";
+  const proxyConfDisk = (await getHost().readFile(PROXY_CONF_PATH, { superuser: "try" })) ?? "";
   let proxyConfPatched = await applyInternalLifetimeToProxyConf(proxyConfDisk, opts.internalCertLifetime);
   proxyConfPatched = patchTopLevelMarkedSection(proxyConfPatched, METRICS_SITE_BEGIN, METRICS_SITE_END, buildMetricsSiteBlock(opts));
 
   if (patched === diskContent && proxyConfPatched === proxyConfDisk) return;
 
-  // #158's runtime logger lives in the main Caddyfile's global options, not conf.d — check
-  // both files for log paths that would otherwise get poisoned by validate (see
-  // checkLogFileWritable).
-  const logPaths = new Set([
-    ...(patched !== diskContent ? extractLogFilePaths(patched) : []),
-    ...(proxyConfPatched !== proxyConfDisk ? extractLogFilePaths(proxyConfPatched) : []),
+  // #158's runtime logger lives in the main Caddyfile's global options, not conf.d: applyCaddyConfig
+  // checks the log paths of both files.
+  await applyCaddyConfig([
+    { path: MAIN_CADDYFILE, content: patched },
+    { path: PROXY_CONF_PATH, content: proxyConfPatched },
   ]);
-  for (const logPath of logPaths) {
-    const err = await checkLogFileWritable(logPath);
-    if (err) throw new CaddyfileError(i18n.t("errors.log_file_not_writable", { path: logPath, error: err }));
-  }
-  await fsWriteFile(MAIN_CADDYFILE, patched, "try");
-  if (proxyConfPatched !== proxyConfDisk) await fsWriteFile(PROXY_CONF_PATH, proxyConfPatched, "try");
-  try {
-    await runCaddyValidate();
-  } catch (e) {
-    await fsWriteFile(MAIN_CADDYFILE, diskContent, "try");
-    if (proxyConfPatched !== proxyConfDisk) await fsWriteFile(PROXY_CONF_PATH, proxyConfDisk, "try");
-    throw e;
-  }
-  await fixAccessLogFileOwnership(patched);
-  if (proxyConfPatched !== proxyConfDisk) await fixAccessLogFileOwnership(proxyConfPatched);
 }
 
 /**
@@ -5733,9 +5739,9 @@ export async function saveWithDnsSecrets<T>(
 /** Read current global options from the main Caddyfile, merged with the metrics site
  *  block's own listen address/path/format read back out of conf.d. */
 export async function readGlobalOptions(): Promise<GlobalOptions> {
-  const content = (await fsReadFile(MAIN_CADDYFILE, "try")) ?? "";
+  const content = (await getHost().readFile(MAIN_CADDYFILE, { superuser: "try" })) ?? "";
   const opts = parseGlobalOptions(content);
-  const proxyConf = (await fsReadFile(PROXY_CONF_PATH, "try")) ?? "";
+  const proxyConf = (await getHost().readFile(PROXY_CONF_PATH, { superuser: "try" })) ?? "";
   return { ...opts, ...parseMetricsSiteBlock(proxyConf) };
 }
 
@@ -5900,8 +5906,8 @@ export function applyConfigFindings(
  * validates, and writes both files atomically — reverting both on validation failure.
  */
 export async function runConfigFixes(selectedIds: Set<string>): Promise<ConfigFinding[]> {
-  const mainDisk = (await fsReadFile(MAIN_CADDYFILE, "try")) ?? "";
-  const proxyConfDisk = (await fsReadFile(PROXY_CONF_PATH, "try")) ?? "";
+  const mainDisk = (await getHost().readFile(MAIN_CADDYFILE, { superuser: "try" })) ?? "";
+  const proxyConfDisk = (await getHost().readFile(PROXY_CONF_PATH, { superuser: "try" })) ?? "";
   const findings = scanConfigIssues(mainDisk, proxyConfDisk);
   const { main, proxyConf } = applyConfigFindings(findings, selectedIds, mainDisk, proxyConfDisk);
 
@@ -5915,13 +5921,13 @@ export async function runConfigFixes(selectedIds: Set<string>): Promise<ConfigFi
     const err = await checkLogFileWritable(logPath);
     if (err) throw new CaddyfileError(i18n.t("errors.log_file_not_writable", { path: logPath, error: err }));
   }
-  await fsWriteFile(MAIN_CADDYFILE, main, "try");
-  await fsWriteFile(PROXY_CONF_PATH, proxyConf, "try");
+  await getHost().writeFile(MAIN_CADDYFILE, main, { superuser: "try" });
+  await getHost().writeFile(PROXY_CONF_PATH, proxyConf, { superuser: "try" });
   try {
     await runCaddyValidate();
   } catch (e) {
-    await fsWriteFile(MAIN_CADDYFILE, mainDisk, "try");
-    await fsWriteFile(PROXY_CONF_PATH, proxyConfDisk, "try");
+    await getHost().writeFile(MAIN_CADDYFILE, mainDisk, { superuser: "try" });
+    await getHost().writeFile(PROXY_CONF_PATH, proxyConfDisk, { superuser: "try" });
     throw e;
   }
   await fixAccessLogFileOwnership(main);
