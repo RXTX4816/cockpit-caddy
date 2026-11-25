@@ -827,3 +827,27 @@ export function parseDnsProviderDirective(val: string, lines: string[], i: numbe
   if (Object.keys(literal).length) config.literal = literal;
   return { config, next: j };
 }
+
+
+/**
+ * Turns a user-entered value into exactly one Caddyfile token that Caddy reads back verbatim.
+ * Plain values stay as they are (unless `always`); otherwise double quotes with `\"` escapes.
+ * Caddy's lexer has no escape for a backslash, so a value with `\` right before a quote or at
+ * the end uses backticks (no escapes at all), and a value with newlines, or one that fits
+ * neither form, uses a heredoc whose marker occurs nowhere in the value. The body and marker sit at column 0, so Caddy strips
+ * no indentation from it.
+ */
+export function caddyQuote(value: string, opts: { always?: boolean } = {}): string {
+  const needsQuotes = opts.always || value === "" || /[\s"`\\]/.test(value) || value.startsWith("#") || value === "{" || value === "}";
+  if (!value.includes("\n") && !value.includes("\r")) {
+    if (!needsQuotes) return value;
+    // No backslash sits before a quote or at the end, so `\"` is the only escape Caddy needs.
+    if (!/\\("|$)/.test(value)) return `"${value.split('"').join('\\"')}"`;
+    if (!value.includes("`")) return `\`${value}\``;
+  }
+  // Caddy's lexer ends a heredoc as soon as the text read so far ends with the marker, even
+  // mid-line, so the marker must not occur anywhere in the value.
+  let marker = "END";
+  for (let i = 1; value.includes(marker); i++) marker = `END${i}`;
+  return `<<${marker}\n${value}\n${marker}`;
+}

@@ -22,7 +22,7 @@ import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
 import type { ServerDef, ErrorHandlerConfig } from "../api";
 import { namedServerIsHostless } from "../api";
 import { TlsSection, type TlsValues, tlsValuesToAdvanced, tlsValuesToMtls, tlsConfigToValues, tlsValuesHaveErrors } from "./TlsSection";
-import { ServerTimeoutsSection, type ServerTimeoutValues } from "./ServerTimeoutsSection";
+import { ServerTimeoutsSection, serverExtrasFromValues, serverExtrasToValues, type ServerTimeoutValues } from "./ServerTimeoutsSection";
 import { AccessLogSection, type AccessLogValues, accessLogValuesToConfig, accessLogConfigToValues } from "./AccessLogSection";
 import { ErrorHandlersSection } from "./ErrorHandlersSection";
 import { sectionAccordionProps } from "./sectionAccordion";
@@ -51,6 +51,7 @@ export function EditServerDialog({ def, onSave, onClose }: Props) {
     idleTimeout: def.serverIdleTimeout ?? "",
     maxHeaderBytes: def.maxHeaderBytes != null ? String(def.maxHeaderBytes) : "",
     disableHttp3: def.disableHttp3 ?? false,
+    ...serverExtrasToValues(def.serverExtras),
   });
   const [accessLog, setAccessLog] = useState<AccessLogValues>(accessLogConfigToValues(def.accessLog));
   const [errorHandlers, setErrorHandlers] = useState<ErrorHandlerConfig[]>(def.errorHandlers ?? []);
@@ -250,6 +251,7 @@ export function EditServerDialog({ def, onSave, onClose }: Props) {
                     ? parseInt(serverTimeouts.maxHeaderBytes, 10)
                     : undefined,
                   disableHttp3: serverTimeouts.disableHttp3 || undefined,
+                  serverExtras: serverExtrasFromValues(serverTimeouts),
                   accessLog: accessLogValuesToConfig(accessLog),
                   errorHandlers: errorHandlers.length ? errorHandlers : undefined,
                   routeLabels: def.routeLabels,

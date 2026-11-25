@@ -12,6 +12,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { CONF_HEADER, buildServerEntry, proxiesToCaddyfile, parseProxies, parseConfExternalAddresses, proxyAddressKeys, resolveInternalIssuerSettings, surgicallyWriteProxy, buildMigratedConfContent, migrateCaddyfile, parseConfTlsIssuerMap, parseConfTlsOnDemandMap, parseConfTlsMap, expandPlaceholderShorthands } from "./caddy";
 import { snippetsToConf, parseSnippets, parseConfSiteImports, parseConfSiteBlocks, separateSnippetSettings } from "./snippets";
+import { buildGlobalOptionsPatch, buildServerExtrasLines } from "./globalOptions";
+import { parseServerExtras } from "./caddyJsonModel";
 import type { CaddyConfig, CaddyServer, ProxyEntry } from "./types";
 
 function hasCaddy(): boolean {
@@ -816,6 +818,53 @@ describe.runIf(available || required)("client_ip matcher (#286)", () => {
   it("works in an exclude group too", () => {
     const matchers = { path: ["/x/*"], not: { client_ip: { ranges: ["10.0.0.0/8"] } } };
     expect(readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, matchers })]))[0].matchers).toEqual(matchers);
+  });
+});
+
+describe.runIf(available || required)("caddy adapt accepts the server options (#328)", () => {
+  it("reads them back from a real adapt", () => {
+    const lines = buildServerExtrasLines({
+      keepaliveInterval: "30s", keepaliveIdle: "1m", strictSniHost: true, logCredentials: true, enableFullDuplex: true,
+    }, "\t\t");
+    const conf = `{\n\tservers :8443 {\n${lines.join("\n")}\n\t}\n}\n\n:8443 {\n\trespond ok\n}\n`;
+    const server = Object.values(adapt(conf).apps?.http?.servers ?? {})[0] as CaddyServer;
+    expect(parseServerExtras(server)).toEqual({
+      keepaliveInterval: "30s", keepaliveIdle: "1m", strictSniHost: true, logCredentials: true, enableFullDuplex: true,
+    });
+  });
+});
+
+describe.runIf(available || required)("caddy adapt accepts the TLS and admin global options (#329, #330)", () => {
+  const site = ":8080 {\n\trespond ok\n}\n";
+
+  it("accepts every option in one global block and sees the ones it keeps in the JSON", () => {
+    const patched = buildGlobalOptionsPatch("", {
+      autoHttps: "disable_redirects", defaultSni: "example.com", keyType: "p256", ocspStaplingOff: true,
+      preferredChains: { mode: "root_common_name", names: ["ISRG Root X1"] }, certIssuer: "acme", defaultBind: ["127.0.0.1"],
+      adminAddress: "127.0.0.1:2019", adminOrigins: ["localhost:2019"], adminEnforceOrigin: true,
+    });
+    const config = adapt(`${patched}\n${site}`);
+    expect(config.admin).toEqual({ listen: "127.0.0.1:2019", enforce_origin: true, origins: ["localhost:2019"] });
+    const policy = config.apps?.tls?.automation?.policies?.[0] as Record<string, unknown>;
+    expect(policy.key_type).toBe("p256");
+    expect(policy.disable_ocsp_stapling).toBe(true);
+    expect((policy.issuers as Array<Record<string, unknown>>)[0]).toMatchObject({ module: "acme", preferred_chains: { root_common_name: ["ISRG Root X1"] } });
+    const server = Object.values(config.apps?.http?.servers ?? {})[0] as CaddyServer;
+    expect(server.listen).toEqual(["127.0.0.1:8080"]);
+    expect(server.automatic_https).toEqual({ disable_redirects: true });
+  });
+
+  it("accepts local_certs and admin off", () => {
+    const config = adapt(`${buildGlobalOptionsPatch("", { localCerts: true, adminOff: true })}\n${site}`);
+    expect(config.admin).toEqual({ disabled: true });
+    expect(config.apps?.tls?.automation?.policies?.[0]?.issuers?.[0]).toMatchObject({ module: "internal" });
+  });
+});
+
+describe.runIf(available || required)("caddy adapt accepts metrics per_host (#342)", () => {
+  it("turns it on in the HTTP app's metrics", () => {
+    const conf = `${buildGlobalOptionsPatch("", { metricsEnabled: true, metricsPerHost: true })}\n:8080 {\n\trespond ok\n}\n`;
+    expect((adapt(conf).apps?.http as { metrics?: unknown } | undefined)?.metrics).toEqual({ per_host: true });
   });
 });
 

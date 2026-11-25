@@ -2,7 +2,7 @@
 // parsing it into GlobalOptions, patching changed options back in, the metrics site block and the
 // DNS-challenge provider lines. Pure: no Host, no I/O. Builds on caddyfileDocument.
 
-import { findGlobalBlock, parseDnsProviderDirective } from "./caddyfileDocument";
+import { caddyQuote, findGlobalBlock, parseDnsProviderDirective } from "./caddyfileDocument";
 
 /** Generates the Caddyfile block for a single proxy (label comment + block body). */
 /**
@@ -16,6 +16,21 @@ export function buildLogRollLines(log: import("./types").AccessLogConfig, indent
   if (log.rollKeepCount) lines.push(`${indent}roll_keep ${log.rollKeepCount}`);
   if (log.rollKeepDays) lines.push(`${indent}roll_keep_for ${log.rollKeepDays * 24}h`);
   if (log.rollCompress === false) lines.push(`${indent}roll_uncompressed`);
+  return lines;
+}
+
+
+/**
+ * `servers` lines for the per-listener options of #328. Written in every `servers` block
+ * that covers the listener, like the other options there.
+ */
+export function buildServerExtrasLines(extras: import("./types").ServerExtras | undefined, indent: string): string[] {
+  const lines: string[] = [];
+  if (extras?.keepaliveInterval) lines.push(`${indent}keepalive_interval ${extras.keepaliveInterval}`);
+  if (extras?.keepaliveIdle) lines.push(`${indent}keepalive_idle ${extras.keepaliveIdle}`);
+  if (extras?.strictSniHost) lines.push(`${indent}strict_sni_host`);
+  if (extras?.logCredentials) lines.push(`${indent}log_credentials`);
+  if (extras?.enableFullDuplex) lines.push(`${indent}enable_full_duplex`);
   return lines;
 }
 
@@ -194,6 +209,8 @@ export interface GlobalOptions {
    * those), just a slightly less verbose wire format.
    */
   metricsPlainFormat?: boolean;
+  /** The global `metrics { per_host }` option: label the request metrics with the host (#342). */
+  metricsPerHost?: boolean;
   /**
    * Caddy's own runtime/error log (#158) — startup messages, reload results, TLS/ACME
    * errors, config errors — as opposed to per-site access logs (AccessLogConfig on each
@@ -205,7 +222,33 @@ export interface GlobalOptions {
   trustedProxies?: import("./types").TrustedProxiesConfig;
   /** Accept the PROXY protocol on incoming connections (#157) — see ProxyProtocolConfig. */
   proxyProtocol?: import("./types").ProxyProtocolConfig;
+  /** `auto_https`: `off`, `disable_redirects`, `disable_certs` or `ignore_loaded_certs` (#329). */
+  autoHttps?: string;
+  /** `local_certs`: issue every certificate from Caddy's own CA (#329). */
+  localCerts?: boolean;
+  /** `default_sni`: the server name used when a client sends none (#329). */
+  defaultSni?: string;
+  /** `key_type`: `ed25519`, `p256`, `p384`, `rsa2048` or `rsa4096` (#329). */
+  keyType?: string;
+  /** `ocsp_stapling off` (#329). */
+  ocspStaplingOff?: boolean;
+  /** `preferred_chains` for ACME issuers: `smallest`, or chains by root or any common name (#329). */
+  preferredChains?: PreferredChains;
+  /** `cert_issuer <name and arguments>`; a body, when it has one, is kept as written (#329). */
+  certIssuer?: string;
+  certIssuerBody?: string[];
+  /** `default_bind`: the addresses sites bind to when they name none (#329). */
+  defaultBind?: string[];
+  /** The `admin` option (#330): `admin off`, or the address as written (`localhost:2019`, `"unix//run/caddy/admin.socket"`). */
+  adminOff?: boolean;
+  adminAddress?: string;
+  adminOrigins?: string[];
+  adminEnforceOrigin?: boolean;
 }
+
+export type PreferredChains =
+  | { mode: "smallest" }
+  | { mode: "root_common_name" | "any_common_name"; names: string[] };
 
 
 /**
@@ -217,6 +260,7 @@ export const KNOWN_GLOBAL_OPTION_KEYS = new Set([
   "http_port", "https_port", "debug", "grace_period", "shutdown_delay",
   "email", "acme_ca", "acme_ca_root", "acme_eab", "acme_dns", "on_demand_tls",
   "renewal_window_ratio", "storage", "metrics", "log",
+  "auto_https", "local_certs", "default_sni", "key_type", "ocsp_stapling", "preferred_chains", "cert_issuer", "default_bind", "admin",
 ]);
 
 
@@ -249,6 +293,12 @@ export function dnsProviderLines(directive: string, cfg: import("./types").DnsCh
     ...Object.entries(cfg.literal ?? {}).filter(([k]) => k).map(([k, v]) => `${indent}\t${k} ${v}`),
   ];
   return entries.length ? [`${head} {`, ...entries, `${indent}}`] : [head];
+}
+
+
+/** Splits `a "b c" d` into `a`, `b c`, `d`. */
+function splitTokens(text: string): string[] {
+  return [...text.matchAll(/"([^"]*)"|(\S+)/g)].map(m => m[1] ?? m[2]);
 }
 
 
@@ -300,6 +350,56 @@ export function parseOptionLines(lines: string[]): GlobalOptions {
         }
         i++;
       }
+    } else if (key === "auto_https" && val) {
+      opts.autoHttps = val.trim();
+    } else if (key === "local_certs") {
+      opts.localCerts = true;
+    } else if (key === "default_sni" && val) {
+      opts.defaultSni = val.trim();
+    } else if (key === "key_type" && val) {
+      opts.keyType = val.trim();
+    } else if (key === "ocsp_stapling" && val?.trim() === "off") {
+      opts.ocspStaplingOff = true;
+    } else if (key === "default_bind" && val) {
+      opts.defaultBind = val.trim().split(/\s+/);
+    } else if (key === "preferred_chains" && val) {
+      if (val.trim() === "smallest") opts.preferredChains = { mode: "smallest" };
+      else if (line.endsWith("{")) {
+        i++;
+        while (i < lines.length && lines[i].trim() !== "}") {
+          const im = lines[i].trim().match(/^(root_common_name|any_common_name)\s+(.+)$/);
+          if (im) opts.preferredChains = { mode: im[1] as "root_common_name" | "any_common_name", names: splitTokens(im[2]) };
+          i++;
+        }
+      }
+    } else if (key === "cert_issuer" && val) {
+      opts.certIssuer = val.replace(/\s*\{$/, "").trim();
+      if (line.endsWith("{")) {
+        const body: string[] = [];
+        let depth = 1;
+        i++;
+        while (i < lines.length) {
+          const inner = lines[i].trim();
+          depth += (inner.match(/\{/g) ?? []).length - (inner.match(/\}/g) ?? []).length;
+          if (depth <= 0) break;
+          body.push(inner);
+          i++;
+        }
+        opts.certIssuerBody = body;
+      }
+    } else if (key === "admin") {
+      const head = (val ?? "").replace(/\s*\{$/, "").trim();
+      if (head === "off") opts.adminOff = true;
+      else if (head) opts.adminAddress = head;
+      if (line.endsWith("{")) {
+        i++;
+        while (i < lines.length && lines[i].trim() !== "}") {
+          const im = lines[i].trim().match(/^(\S+)(?:\s+(.*))?$/);
+          if (im?.[1] === "origins" && im[2]) opts.adminOrigins = im[2].trim().split(/\s+/);
+          else if (im?.[1] === "enforce_origin") opts.adminEnforceOrigin = true;
+          i++;
+        }
+      }
     } else if (line.startsWith(INTERNAL_LIFETIME_MARKER)) {
       const marked = line.slice(INTERNAL_LIFETIME_MARKER.length).trim();
       if (marked) opts.internalCertLifetime = marked;
@@ -318,7 +418,10 @@ export function parseOptionLines(lines: string[]): GlobalOptions {
       opts.metricsEnabled = true;
       if (line.endsWith("{")) {
         i++;
-        while (i < lines.length && lines[i].trim() !== "}") i++;
+        while (i < lines.length && lines[i].trim() !== "}") {
+          if (lines[i].trim() === "per_host") opts.metricsPerHost = true;
+          i++;
+        }
       }
     } else if (key === "log" && line.endsWith("{")) {
       // #158 — Caddy's own runtime/error logger (the *unnamed* `log` global option),
@@ -419,6 +522,16 @@ export function parseOptionLines(lines: string[]): GlobalOptions {
 }
 
 
+const ABSORBED_FIELDS: ReadonlySet<string> = new Set([
+  "autoHttps", "localCerts", "defaultSni", "keyType", "ocspStaplingOff", "preferredChains", "certIssuer", "certIssuerBody",
+  "defaultBind", "adminOff", "adminAddress", "adminOrigins", "adminEnforceOrigin",
+]);
+
+function isAbsorbedField(k: string): boolean {
+  return ABSORBED_FIELDS.has(k);
+}
+
+
 /**
  * Parse global options from a Caddyfile string. Prefers the cockpit-caddy:opts
  * managed section; if absent, falls back to scanning the real top-level global
@@ -431,11 +544,68 @@ export function parseGlobalOptions(content: string): GlobalOptions {
   const ei = content.indexOf(GLOBAL_OPTS_END);
   if (bi !== -1 && ei !== -1) {
     const section = content.slice(bi + GLOBAL_OPTS_BEGIN.length, ei);
-    return parseOptionLines(section.split("\n"));
+    const opts = parseOptionLines(section.split("\n"));
+    const outsideText = globalLinesOutsideSection(content);
+    const keep = absorbableKeys(outsideText);
+    const outside = parseOptionLines(stripKnownGlobalOptionLines(outsideText, new Set([...ABSORBED_GLOBAL_OPTION_KEYS].filter(k => !keep.has(k)))).split("\n"));
+    for (const k of Object.keys(outside) as Array<keyof GlobalOptions>) {
+      if (opts[k] === undefined && isAbsorbedField(k)) (opts as Record<string, unknown>)[k] = outside[k];
+    }
+    return opts;
   }
   const gb = findGlobalBlock(content);
   if (!gb) return {};
   return parseOptionLines(content.slice(gb.open + 1, gb.close).split("\n"));
+}
+
+
+/**
+ * Options added after the managed section existed (#329, #330). A Caddyfile that has the
+ * section may still carry them as hand-written lines outside it (the stock one has `admin`),
+ * so reading looks there too and a save moves them into the section instead of duplicating them.
+ */
+export const ABSORBED_GLOBAL_OPTION_KEYS = new Set([
+  "auto_https", "local_certs", "default_sni", "key_type", "ocsp_stapling", "preferred_chains", "cert_issuer", "default_bind", "admin",
+]);
+
+
+/**
+ * The absorbed keys a hand-written block outside the section can be moved into it without
+ * losing anything: an `admin` block with only `origins` / `enforce_origin`, one `cert_issuer`
+ * line, a `preferred_chains` with one line. Others stay where they are, untouched.
+ */
+function absorbableKeys(outside: string): ReadonlySet<string> {
+  const keys = new Set(ABSORBED_GLOBAL_OPTION_KEYS);
+  const lines = outside.split("\n").map(l => l.trim());
+  const seen = new Map<string, number>();
+  for (let i = 0; i < lines.length; i++) {
+    const key = lines[i].split(/\s+/)[0];
+    if (!keys.has(key)) continue;
+    seen.set(key, (seen.get(key) ?? 0) + 1);
+    if (!lines[i].endsWith("{")) continue;
+    const body: string[] = [];
+    let depth = 1;
+    for (i++; i < lines.length; i++) {
+      depth += (lines[i].match(/\{/g) ?? []).length - (lines[i].match(/\}/g) ?? []).length;
+      if (depth <= 0) break;
+      body.push(lines[i]);
+    }
+    if (key === "admin" && body.some(b => !/^(origins\s|enforce_origin$)/.test(b))) keys.delete(key);
+    if (key === "preferred_chains" && body.length > 1) keys.delete(key);
+  }
+  for (const [k, n] of seen) if (n > 1) keys.delete(k);
+  return keys;
+}
+
+
+/** The global block's lines outside the managed opts section, or "" without one. */
+function globalLinesOutsideSection(content: string): string {
+  const gb = findGlobalBlock(content);
+  if (!gb) return "";
+  const inner = content.slice(gb.open + 1, gb.close);
+  const bi = inner.indexOf(GLOBAL_OPTS_BEGIN);
+  const ei = inner.indexOf(GLOBAL_OPTS_END);
+  return bi !== -1 && ei !== -1 ? inner.slice(0, bi) + inner.slice(ei + GLOBAL_OPTS_END.length) : inner;
 }
 
 
@@ -446,14 +616,14 @@ export function parseGlobalOptions(content: string): GlobalOptions {
  * already exist outside the markers aren't duplicated (which `caddy validate`
  * would reject).
  */
-export function stripKnownGlobalOptionLines(blockInner: string): string {
+export function stripKnownGlobalOptionLines(blockInner: string, keys: ReadonlySet<string> = KNOWN_GLOBAL_OPTION_KEYS): string {
   const lines = blockInner.split("\n");
   const out: string[] = [];
   let i = 0;
   while (i < lines.length) {
     const trimmed = lines[i].trim();
     const key = trimmed.split(/\s+/)[0];
-    if (KNOWN_GLOBAL_OPTION_KEYS.has(key)) {
+    if (keys.has(key)) {
       if (trimmed.endsWith("{")) {
         let depth = 1;
         i++;
@@ -507,11 +677,36 @@ export function buildGlobalOptionsLines(opts: GlobalOptions): string {
     lines.push(`\t\troot ${opts.storagePath}`);
     lines.push("\t}");
   }
+  // #329 — TLS and listener defaults. `local_certs` is itself a kind of issuer, which Caddy
+  // rejects next to `cert_issuer` ("global options are ambiguous"), so the explicit issuer wins.
+  if (opts.autoHttps) lines.push(`\tauto_https ${opts.autoHttps}`);
+  if (opts.localCerts && !opts.certIssuer) lines.push("\tlocal_certs");
+  if (opts.defaultSni) lines.push(`\tdefault_sni ${opts.defaultSni}`);
+  if (opts.keyType) lines.push(`\tkey_type ${opts.keyType}`);
+  if (opts.ocspStaplingOff) lines.push("\tocsp_stapling off");
+  if (opts.preferredChains?.mode === "smallest") lines.push("\tpreferred_chains smallest");
+  else if (opts.preferredChains?.names.length) {
+    lines.push("\tpreferred_chains {", `\t\t${opts.preferredChains.mode} ${opts.preferredChains.names.map(v => caddyQuote(v)).join(" ")}`, "\t}");
+  }
+  if (opts.certIssuer) {
+    if (opts.certIssuerBody?.length) lines.push(`\tcert_issuer ${opts.certIssuer} {`, ...opts.certIssuerBody.map(l => `\t\t${l}`), "\t}");
+    else lines.push(`\tcert_issuer ${opts.certIssuer}`);
+  }
+  if (opts.defaultBind?.length) lines.push(`\tdefault_bind ${opts.defaultBind.join(" ")}`);
+  // #330 — Caddy's own admin endpoint.
+  if (opts.adminOff) lines.push("\tadmin off");
+  else if (opts.adminAddress || opts.adminOrigins?.length || opts.adminEnforceOrigin) {
+    const head = `\tadmin${opts.adminAddress ? ` ${opts.adminAddress}` : ""}`;
+    const inner: string[] = [];
+    if (opts.adminOrigins?.length) inner.push(`\t\torigins ${opts.adminOrigins.join(" ")}`);
+    if (opts.adminEnforceOrigin) inner.push("\t\tenforce_origin");
+    lines.push(...(inner.length ? [`${head} {`, ...inner, "\t}"] : [head]));
+  }
   // Turns on request-level `caddy_http_*` instrumentation across every server — the
   // dedicated site block that actually exposes /metrics is written separately into
   // conf.d (see buildMetricsSiteBlock), since a bare global option can't also declare
-  // a listener. per_host/observe_catchall_hosts/otlp sub-options aren't exposed here.
-  if (opts.metricsEnabled) lines.push("\tmetrics");
+  // a listener. observe_catchall_hosts and otlp are not exposed here.
+  if (opts.metricsEnabled) lines.push(...(opts.metricsPerHost ? ["\tmetrics {", "\t\tper_host", "\t}"] : ["\tmetrics"]));
   // #158 — Caddy's own runtime/error logger. buildLogCaddyLines already emits exactly the
   // one-tab-indented `log { ... }` shape this global-options block needs.
   if (opts.runtimeLog) lines.push(buildLogCaddyLines(opts.runtimeLog).join("\n"));
@@ -543,7 +738,21 @@ export function buildGlobalOptionsPatch(diskContent: string, opts: GlobalOptions
   const body = buildGlobalOptionsLines(opts);
   let base = diskContent;
   const hasMarkers = diskContent.includes(GLOBAL_OPTS_BEGIN) && diskContent.includes(GLOBAL_OPTS_END);
-  if (!hasMarkers) {
+  if (hasMarkers) {
+    const gb = findGlobalBlock(diskContent);
+    const inner = gb ? diskContent.slice(gb.open + 1, gb.close) : "";
+    const bi = inner.indexOf(GLOBAL_OPTS_BEGIN);
+    const end = inner.indexOf(GLOBAL_OPTS_END);
+    if (gb && bi !== -1 && end !== -1) {
+      // The section is rewritten from what parseGlobalOptions read, which included these.
+      const ei = end + GLOBAL_OPTS_END.length;
+      const keys = absorbableKeys(inner.slice(0, bi) + inner.slice(ei));
+      const stripped = stripKnownGlobalOptionLines(inner.slice(0, bi), keys)
+        + inner.slice(bi, ei)
+        + stripKnownGlobalOptionLines(inner.slice(ei), keys);
+      base = diskContent.slice(0, gb.open + 1) + stripped + diskContent.slice(gb.close);
+    }
+  } else {
     const gb = findGlobalBlock(diskContent);
     if (gb) {
       const inner = stripKnownGlobalOptionLines(diskContent.slice(gb.open + 1, gb.close));

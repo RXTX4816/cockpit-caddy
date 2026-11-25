@@ -5,33 +5,13 @@
 import { type ProxyEntry } from "./types";
 import { externalHostList } from "./externalHosts";
 import { dnsProviderLines, buildLogCaddyLines } from "./globalOptions";
-import { parseSiteAddresses, isIpAddress, findMatchingBlock, findBlockPositions, CONF_HEADER, sameHostSet, hostsConflict, surgicallyRemoveBlock, isCaddyInternalSubject, findServerBlock, surgicallyRemoveServerBlock } from "./caddyfileDocument";
+import { caddyQuote, parseSiteAddresses, isIpAddress, findMatchingBlock, findBlockPositions, CONF_HEADER, sameHostSet, hostsConflict, surgicallyRemoveBlock, isCaddyInternalSubject, findServerBlock, surgicallyRemoveServerBlock } from "./caddyfileDocument";
+export { caddyQuote };
 
 // ---------------------------------------------------------------------------
 // Caddyfile quoting — #251
 // ---------------------------------------------------------------------------
 
-/**
- * Turns a user-entered value into exactly one Caddyfile token that Caddy reads back verbatim.
- * Plain values stay as they are (unless `always`); otherwise double quotes with `\"` escapes.
- * Caddy's lexer has no escape for a backslash, so a value with `\` right before a quote or at
- * the end uses backticks (no escapes at all), and a value with newlines, or one that fits
- * neither form, uses a heredoc whose marker occurs nowhere in the value. The body and marker sit at column 0, so Caddy strips
- * no indentation from it.
- */
-export function caddyQuote(value: string, opts: { always?: boolean } = {}): string {
-  const needsQuotes = opts.always || value === "" || /[\s"`\\]/.test(value) || value.startsWith("#") || value === "{" || value === "}";
-  if (!value.includes("\n") && !value.includes("\r")) {
-    if (!needsQuotes) return value;
-    if (!/\\("|$)/.test(value)) return `"${value.replace(/"/g, '\\"')}"`;
-    if (!value.includes("`")) return `\`${value}\``;
-  }
-  // Caddy's lexer ends a heredoc as soon as the text read so far ends with the marker, even
-  // mid-line, so the marker must not occur anywhere in the value.
-  let marker = "END";
-  for (let i = 1; value.includes(marker); i++) marker = `END${i}`;
-  return `<<${marker}\n${value}\n${marker}`;
-}
 
 
 /**
@@ -1069,6 +1049,7 @@ export function parseServerDefsFromConf(content: string): import("./types").Serv
           serverIdleTimeout: p.serverIdleTimeout,
           maxHeaderBytes: p.maxHeaderBytes,
           disableHttp3: p.disableHttp3,
+          serverExtras: p.serverExtras,
           accessLog: p.accessLog,
           errorHandlers: p.errorHandlers,
           routeLabels: p.routeLabels,
@@ -1132,6 +1113,7 @@ export function serverDefToBlock(def: import("./types").ServerDef, routes: Proxy
     serverIdleTimeout: def.serverIdleTimeout,
     maxHeaderBytes: def.maxHeaderBytes,
     disableHttp3: def.disableHttp3 || undefined,
+    serverExtras: def.serverExtras,
     accessLog: def.accessLog,
     errorHandlers: def.errorHandlers?.length ? def.errorHandlers : undefined,
     routeLabels: def.routeLabels && Object.keys(def.routeLabels).length ? def.routeLabels : undefined,

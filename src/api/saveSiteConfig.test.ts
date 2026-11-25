@@ -44,3 +44,25 @@ describe("saveSiteConfig", () => {
     expect(host.commands.filter(c => c.startsWith("caddy validate"))).toHaveLength(0);
   });
 });
+
+// #328: the per-listener options go into the same `servers :PORT` block as the timeouts.
+describe("saveSiteConfig server options (#328)", () => {
+  it("writes keepalive, SNI, credential logging and full duplex into the port's servers block", async () => {
+    host.onRun(["caddy", "validate"], "");
+    const p: ProxyEntry = { ...withTimeout, serverReadTimeout: undefined, serverExtras: {
+      keepaliveInterval: "30s", keepaliveIdle: "1m", strictSniHost: true, logCredentials: true, enableFullDuplex: true,
+    } };
+    await saveSiteConfig([p], ":7700 {\n\treverse_proxy localhost:7701\n}\n");
+    const main = host.files.get(MAIN) ?? "";
+    expect(main).toContain("servers :7700 {");
+    for (const line of ["keepalive_interval 30s", "keepalive_idle 1m", "strict_sni_host", "log_credentials", "enable_full_duplex"]) {
+      expect(main).toContain(line);
+    }
+  });
+
+  it("writes no servers block when none is set", async () => {
+    host.onRun(["caddy", "validate"], "");
+    await saveSiteConfig([{ ...withTimeout, serverReadTimeout: undefined }], ":7700 {\n\treverse_proxy localhost:7701\n}\n");
+    expect(host.files.get(MAIN)).not.toContain("servers :7700");
+  });
+});
