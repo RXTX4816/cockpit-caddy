@@ -882,10 +882,29 @@ describe.runIf(available || required)("caddy adapt accepts bind, several hosts a
     expect(proxies[0].bind).toEqual(fields.bind);
   });
 
-  it("builds the listen addresses Caddy builds", () => {
-    const e = entry({ tls: false, externalPort: 8080, externalHost: "example.com", bind: ["10.0.0.5", "10.0.0.6"] });
+  it.each([
+    ["two IPv4 binds", { externalHost: "example.com", bind: ["10.0.0.5", "10.0.0.6"] }],
+    ["an IPv6 bind without brackets (#360)", { externalHost: "example.com", bind: ["::1"] }],
+    ["binds out of Caddy's order (#360)", { externalHost: "example.com", bind: ["localhost", "::1", "127.0.0.1", "127.0.0.10"] }],
+    ["an IP host with more binds (#360)", { externalHost: "10.0.0.5", bind: ["10.0.0.6"] }],
+  ])("builds the listen addresses Caddy builds for %s", (_name, fields) => {
+    const e = entry({ tls: false, externalPort: 8080, ...fields });
     const real = Object.values(adapt(proxiesToCaddyfile([e])).apps?.http?.servers ?? {})[0] as CaddyServer;
     expect(buildServerEntry(e).listen).toEqual(real.listen);
+  });
+
+  it.each([
+    ["a host name bind (#360)", { externalHost: "example.com", bind: ["localhost"] }],
+    ["an IP host with more binds (#360)", { externalHost: "10.0.0.5", bind: ["10.0.0.6"] }],
+    ["an IPv6 bind (#360)", { externalHost: "example.com", bind: ["[::1]"] }],
+  ])("reads %s back from a real adapt and from the push", (_name, fields) => {
+    const e = entry({ tls: false, externalPort: 8080, ...fields });
+    const fromAdapt = readBack(proxiesToCaddyfile([e]))[0];
+    expect(fromAdapt.externalHost).toBe(fields.externalHost);
+    expect(fromAdapt.bind).toEqual(fields.bind);
+    const fromPush = parseProxies({ apps: { http: { servers: { srv0: buildServerEntry(e) } } } } as CaddyConfig)[0];
+    expect(fromPush.externalHost).toBe(fields.externalHost);
+    expect(fromPush.bind).toEqual(fields.bind);
   });
 
   it("keeps a wildcard host and several hosts as they are", () => {

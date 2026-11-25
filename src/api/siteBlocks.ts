@@ -1071,8 +1071,26 @@ export function bindsToIp(proxy: { externalHost?: string }): boolean {
  * listen address does (#254).
  */
 export function buildBindLines(proxy: { externalHost?: string; bind?: string[] }): string[] {
-  const addresses = [...new Set([...(bindsToIp(proxy) ? [proxy.externalHost!] : []), ...(proxy.bind ?? [])])];
+  const addresses = siteBindAddresses(proxy);
   return addresses.length ? [`\tbind ${addresses.join(" ")}`] : [];
+}
+
+
+/** A bind or listen host as Caddy writes it in a listen address: an IPv6 address in brackets. */
+export function canonicalBindHost(host: string): string {
+  const h = host.trim();
+  return !h.startsWith("[") && h.includes(":") && /^[0-9A-Fa-f:.]+(%[\w.-]+)?$/.test(h) ? `[${h}]` : h;
+}
+
+
+/**
+ * Every address a site binds to, once each: the IP its host field names (#254), then its bind
+ * addresses (#323). The Caddyfile's `bind` line and the JSON push's listen addresses are both
+ * built from it.
+ */
+export function siteBindAddresses(proxy: { externalHost?: string; bind?: string[] }): string[] {
+  const all = [...(bindsToIp(proxy) ? [proxy.externalHost!] : []), ...(proxy.bind ?? [])];
+  return [...new Set(all.map(canonicalBindHost).filter(Boolean))];
 }
 
 

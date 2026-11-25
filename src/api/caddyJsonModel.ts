@@ -4,7 +4,7 @@
 import { type CaddyHandler, type CaddyReverseProxyHandler, type CaddyRoute, type CaddyServer, type ProxyEntry, type CaddyConfig, type CaddyTLSConnectionPolicy, type CaddyTLSClientAuthentication } from "./types";
 import { externalHostList } from "./externalHosts";
 import { isIpAddress } from "./caddyfileDocument";
-import { mapPlaceholders, PLACEHOLDER_SHORTHANDS, PLACEHOLDER_PREFIXES, isPathOnlyMatcher, handlePathPrefix, multiPathStripRegex, type TransportProps, type LbFields, LB_POLICIES, tlsSubjectHosts, errorHandlerResponseCodes, UPSTREAM_ERROR_MESSAGE, bindsToIp, routeHosts, buildMatcherJson, hasAnyMatcher, namedServerSubjectHost } from "./siteBlocks";
+import { mapPlaceholders, PLACEHOLDER_SHORTHANDS, PLACEHOLDER_PREFIXES, isPathOnlyMatcher, handlePathPrefix, multiPathStripRegex, type TransportProps, type LbFields, LB_POLICIES, tlsSubjectHosts, errorHandlerResponseCodes, UPSTREAM_ERROR_MESSAGE, siteBindAddresses, canonicalBindHost, routeHosts, buildMatcherJson, hasAnyMatcher, namedServerSubjectHost } from "./siteBlocks";
 
 /**
  * Converts a Caddy duration value to a string.
@@ -792,14 +792,19 @@ export function parseRouteToEntry(
   }
 
   // `bind` next to a host name (#323): the listen addresses are the bind, and the names are in the
-  // host matcher. One IP address with no names is an IP host, as before.
-  const listenHosts = (server.listen ?? []).map(a => a.slice(0, Math.max(a.lastIndexOf(":"), 0)));
+  // host matcher. A listen host is an IP or a name (`bind localhost`). An IP host is in the matcher
+  // and the listen addresses both, and the form adds its bind itself, so it is not one of the binds.
+  // One IP address with no names is an IP host, as before.
+  const listenHosts = [...new Set((server.listen ?? []).map(listenHostOf).filter(Boolean))];
   let bind: string[] | undefined;
-  if (externalHost && isIpAddress(externalHost) && isHostOnlyMatcher(matchers) && matchers.host.every(h => !looksLikeIp(h))) {
-    bind = listenHosts.filter(Boolean);
-    externalHost = matchers.host.join(", ");
+  if (!namedServerKey && listenHosts.length && isHostOnlyMatcher(matchers)) {
+    const names = matchers.host.map(h => looksLikeIp(h) ? canonicalBindHost(h) : h);
+    const ownIp = names.length === 1 && isIpAddress(names[0]) ? names[0] : undefined;
+    const extra = listenHosts.filter(h => h !== ownIp);
+    bind = extra.length ? extra : undefined;
+    externalHost = names.join(", ");
     matchers = undefined;
-  } else if (externalHost && isIpAddress(externalHost) && listenHosts.length > 1 && listenHosts.every(h => looksLikeIp(h))) {
+  } else if (!namedServerKey && !matchers && (listenHosts.length > 1 || (listenHosts.length === 1 && !isIpAddress(listenHosts[0])))) {
     bind = listenHosts;
     externalHost = undefined;
   }
@@ -1541,9 +1546,12 @@ export function applyServerTimeouts(server: CaddyServer, proxy: TimeoutProxy): C
  * Caddy's Caddyfile adapter gives `a.com, b.com { }`. A single-host or hostless proxy
  * gets none, as before, and an explicit Route Matcher (#48) always wins.
  */
-export function siteHostMatch(proxy: Pick<ProxyEntry, "externalHost" | "matchers">): Array<Record<string, unknown>> | undefined {
+export function siteHostMatch(proxy: Pick<ProxyEntry, "externalHost" | "matchers" | "bind">): Array<Record<string, unknown>> | undefined {
   if (proxy.matchers) return undefined;
   const hosts = externalHostList(proxy.externalHost);
+  // With a bind (#323) the listen addresses no longer name the site, so its host goes into a
+  // matcher, as Caddy's adapter writes it (an IPv6 address without its brackets).
+  if (hosts.length === 1 && proxy.bind?.length) return [{ host: hosts.map(h => h.replace(/^\[(.*)\]$/, "$1")) }];
   return hosts.length > 1 ? [{ host: hosts }] : undefined;
 }
 
@@ -1569,8 +1577,15 @@ export function buildListenAddr(proxy: { externalHost?: string; externalPort: nu
 /** Every address the site listens on: its `bind` addresses (#323), the IP it is named by, or the port alone. */
 export function buildListenAddrs(proxy: { externalHost?: string; externalPort: number; bind?: string[] }): string[] {
   // Several names (#208) can't share one bind address, so they listen on every interface.
-  const hosts = [...new Set([...(bindsToIp(proxy) ? [proxy.externalHost!] : []), ...(proxy.bind ?? [])])];
-  return hosts.length ? hosts.map(h => `${h}:${proxy.externalPort}`) : [`:${proxy.externalPort}`];
+  const hosts = siteBindAddresses(proxy);
+  // Caddy's adapter sorts a server's listen addresses; the push sorts them the same way.
+  return hosts.length ? hosts.map(h => `${h}:${proxy.externalPort}`).sort() : [`:${proxy.externalPort}`];
+}
+
+
+/** The host of a listen address (`[::1]:80` -> `[::1]`, `:80` -> ``). */
+function listenHostOf(address: string): string {
+  return address.slice(0, Math.max(address.lastIndexOf(":"), 0));
 }
 
 
