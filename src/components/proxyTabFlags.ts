@@ -1,5 +1,6 @@
 import { hasAnyMatcher } from "../api";
 import type { ErrorHandlerConfig, ForwardAuthConfig, LbPolicy, HeaderOperation, RewriteConfig, RouteMatch } from "../api";
+import { bindHasErrors } from "./BindSection";
 import type { AccessLogValues } from "./AccessLogSection";
 import { accessLogValuesToConfig } from "./AccessLogSection";
 import type { AuthEntry } from "./BasicAuthSection";
@@ -30,6 +31,8 @@ export interface ProxyTabValues {
   errorHandlers: ErrorHandlerConfig[];
   serverTimeouts: ServerTimeoutValues;
   requestBodyMaxSize: string;
+  /** The addresses the site binds to, as typed (#323). */
+  bind?: string;
 }
 
 export interface TabFlags {
@@ -48,7 +51,7 @@ export function proxyTabFlags(v: ProxyTabValues, generalHasError: boolean): TabF
       routing: hasAnyMatcher(v.matchers) || !!v.rewrite || !!v.requestHeaders?.length || !!v.responseHeaders?.length || v.isNamedRoute,
       upstreams: v.extraUpstreams.length > 0 || !!v.lbPolicy || !!lbRetryValuesToConfig(v.lbRetry) || !!(v.transport.dialTimeout || v.transport.responseHeaderTimeout),
       logging: !!accessLogValuesToConfig(v.accessLog) || v.errorHandlers.length > 0,
-      limits: !!v.requestBodyMaxSize
+      limits: !!v.requestBodyMaxSize || !!v.bind?.trim()
         || !!(st.readTimeout || st.readHeaderTimeout || st.writeTimeout || st.idleTimeout || st.maxHeaderBytes || st.disableHttp3),
     },
     hasError: {
@@ -58,7 +61,7 @@ export function proxyTabFlags(v: ProxyTabValues, generalHasError: boolean): TabF
       upstreams: !!validateUpstreams(v.extraUpstreams) || !!validateLbRetry(v.lbRetry)
         || (v.extraUpstreams.length > 0 && !!validateLbArgs(v.lbPolicy as LbPolicy | "", v.lbArgs, v.extraUpstreams.length + 1)),
       logging: false,
-      limits: false,
+      limits: bindHasErrors(v.bind ?? ""),
     },
   };
 }

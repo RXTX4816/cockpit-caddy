@@ -1054,5 +1054,10 @@
     "site_inherit_help": "Usa o provedor DNS definido em Configurações → Desafio DNS, ou o desafio HTTP se nenhum estiver definido.",
     "site_override_help": "Este site usa seu próprio provedor DNS e credenciais. Salvar novas credenciais reinicia o Caddy, que só as lê ao iniciar.",
     "site_wildcard_warning": "Certificados curinga precisam do desafio DNS. Defina um provedor DNS para este site ou em Configurações → Desafio DNS."
+  },
+  "bind": {
+    "label": "Endereços de bind",
+    "help": "Os endereços em que este site escuta, separados por espaços, por exemplo 127.0.0.1 ::1. Vazio escuta em todos. Um host que é um único endereço IP já se liga a ele.",
+    "invalid": "Informe endereços IP ou nomes de host, sem porta."
   }
 }

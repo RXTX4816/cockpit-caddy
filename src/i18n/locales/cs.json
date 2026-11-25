@@ -1054,5 +1054,10 @@
     "site_inherit_help": "Použije poskytovatele DNS nastaveného v Nastavení → Výzva DNS, nebo výzvu HTTP, pokud žádný není nastaven.",
     "site_override_help": "Tento web používá vlastního poskytovatele DNS a přihlašovací údaje. Uložení nových údajů restartuje Caddy, protože je načítá jen při startu.",
     "site_wildcard_warning": "Certifikáty se zástupným znakem vyžadují výzvu DNS. Nastavte poskytovatele DNS pro tento web, nebo v Nastavení → Výzva DNS."
+  },
+  "bind": {
+    "label": "Adresy pro bind",
+    "help": "Adresy, na kterých tento web poslouchá, oddělené mezerami, například 127.0.0.1 ::1. Prázdné znamená všechny adresy. Hostitel, který je jedinou IP adresou, se na ni už váže.",
+    "invalid": "Zadejte IP adresy nebo názvy hostitelů bez portu."
   }
 }

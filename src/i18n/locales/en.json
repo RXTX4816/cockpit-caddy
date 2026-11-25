@@ -1054,5 +1054,10 @@
     "site_inherit_help": "Uses the DNS provider set under Settings → DNS challenge, or the HTTP challenge when none is set.",
     "site_override_help": "This site uses its own DNS provider and credentials. Saving new credentials restarts Caddy, because it reads them only when it starts.",
     "site_wildcard_warning": "Wildcard certificates need the DNS challenge. Set a DNS provider for this site, or one under Settings → DNS challenge."
+  },
+  "bind": {
+    "label": "Bind addresses",
+    "help": "The addresses this site listens on, separated by spaces, for example 127.0.0.1 ::1. Empty listens on every address. A host that is one IP address already binds to it.",
+    "invalid": "Enter IP addresses or host names, without a port."
   }
 }

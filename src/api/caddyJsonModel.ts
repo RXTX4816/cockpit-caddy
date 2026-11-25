@@ -3,6 +3,7 @@
 
 import { type CaddyHandler, type CaddyReverseProxyHandler, type CaddyRoute, type CaddyServer, type ProxyEntry, type CaddyConfig, type CaddyTLSConnectionPolicy, type CaddyTLSClientAuthentication } from "./types";
 import { externalHostList } from "./externalHosts";
+import { isIpAddress } from "./caddyfileDocument";
 import { mapPlaceholders, PLACEHOLDER_SHORTHANDS, PLACEHOLDER_PREFIXES, isPathOnlyMatcher, handlePathPrefix, multiPathStripRegex, type TransportProps, type LbFields, LB_POLICIES, tlsSubjectHosts, errorHandlerResponseCodes, UPSTREAM_ERROR_MESSAGE, bindsToIp, routeHosts, buildMatcherJson, hasAnyMatcher, namedServerSubjectHost } from "./siteBlocks";
 
 /**
@@ -589,6 +590,19 @@ export function parseRouteToEntry(
     matchers = undefined;
   }
 
+  // `bind` next to a host name (#323): the listen addresses are the bind, and the names are in the
+  // host matcher. One IP address with no names is an IP host, as before.
+  const listenHosts = (server.listen ?? []).map(a => a.slice(0, Math.max(a.lastIndexOf(":"), 0)));
+  let bind: string[] | undefined;
+  if (externalHost && isIpAddress(externalHost) && isHostOnlyMatcher(matchers) && matchers.host.every(h => !looksLikeIp(h))) {
+    bind = listenHosts.filter(Boolean);
+    externalHost = matchers.host.join(", ");
+    matchers = undefined;
+  } else if (externalHost && isIpAddress(externalHost) && listenHosts.length > 1 && listenHosts.every(h => looksLikeIp(h))) {
+    bind = listenHosts;
+    externalHost = undefined;
+  }
+
   // #51 — Caddy enables h1/h2/h3 by default; an explicit protocols list omitting h3 is
   // how a user opted out of HTTP/3.
   const disableHttp3 = Array.isArray(server.protocols) && !server.protocols.includes("h3") || undefined;
@@ -625,7 +639,7 @@ export function parseRouteToEntry(
       phpFastcgi,
       requestBodyMaxSize: parseRequestBodyMaxSize(effectiveHandles),
       matchers,
-      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, accessLog,
+      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, bind, accessLog,
       errorHandlers: parseErrorHandlers(server),
       tlsAdvanced: phpTlsPolicy ? parseTlsAdvanced(phpTlsPolicy, automationPolicies, tlsSubjectHosts(externalHost)[0]) : undefined,
       mtls: phpTlsPolicy ? parseMtls(phpTlsPolicy) : undefined,
@@ -651,7 +665,7 @@ export function parseRouteToEntry(
       namedServerKey,
       redirect: { to: jsonPlaceholderToCaddy(locationHeader), code },
       matchers,
-      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, accessLog,
+      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, bind, accessLog,
       errorHandlers: parseErrorHandlers(server),
     };
   }
@@ -675,7 +689,7 @@ export function parseRouteToEntry(
         close: staticResp.close || undefined,
       },
       matchers,
-      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, accessLog,
+      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, bind, accessLog,
       errorHandlers: parseErrorHandlers(server),
     };
   }
@@ -717,7 +731,7 @@ export function parseRouteToEntry(
       basicAuth: fsBasicAuth?.length ? fsBasicAuth : undefined,
       responseHeaders: fsResponseHeaders.length ? fsResponseHeaders : undefined,
       matchers,
-      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, accessLog,
+      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, bind, accessLog,
       errorHandlers: parseErrorHandlers(server),
       tlsAdvanced: fsTlsPolicy ? parseTlsAdvanced(fsTlsPolicy, automationPolicies, tlsSubjectHosts(externalHost)[0]) : undefined,
       mtls: fsTlsPolicy ? parseMtls(fsTlsPolicy) : undefined,
@@ -742,7 +756,7 @@ export function parseRouteToEntry(
       isNamedRoute: true,
       namedRouteName: invokeHandle.name,
       matchers,
-      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, accessLog,
+      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, bind, accessLog,
     };
   }
 
@@ -822,7 +836,7 @@ export function parseRouteToEntry(
     lbRetry,
     matchers,
     handlePath,
-    serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, accessLog,
+    serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, bind, accessLog,
     errorHandlers: parseErrorHandlers(server),
     replaceUpstreamErrors: reraisesUpstreamErrors(rp) || undefined,
     forwardAuth,
@@ -1156,11 +1170,22 @@ export function isMultiHostOnlyMatch(match: Array<Record<string, unknown>> | und
 }
 
 
-export function buildListenAddr(proxy: { externalHost?: string; externalPort: number }): string {
+/** An IPv4 or IPv6 address, bracketed or not, as it appears in a listen address or a host matcher. */
+function looksLikeIp(host: string): boolean {
+  return isIpAddress(host) || /^[0-9A-Fa-f:]*:[0-9A-Fa-f:.]*$/.test(host);
+}
+
+
+export function buildListenAddr(proxy: { externalHost?: string; externalPort: number; bind?: string[] }): string {
+  return buildListenAddrs(proxy)[0];
+}
+
+
+/** Every address the site listens on: its `bind` addresses (#323), the IP it is named by, or the port alone. */
+export function buildListenAddrs(proxy: { externalHost?: string; externalPort: number; bind?: string[] }): string[] {
   // Several names (#208) can't share one bind address, so they listen on every interface.
-  return bindsToIp(proxy)
-    ? `${proxy.externalHost}:${proxy.externalPort}`
-    : `:${proxy.externalPort}`;
+  const hosts = [...new Set([...(bindsToIp(proxy) ? [proxy.externalHost!] : []), ...(proxy.bind ?? [])])];
+  return hosts.length ? hosts.map(h => `${h}:${proxy.externalPort}`) : [`:${proxy.externalPort}`];
 }
 
 
@@ -1524,7 +1549,7 @@ export function applyErrorHandlers(server: CaddyServer, proxy: { errorHandlers?:
 
 
 export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): CaddyServer {
-  const listenAddr = buildListenAddr(proxy);
+  const listenAddrs = buildListenAddrs(proxy);
   // A route with matchers is NOT terminal — allow fallthrough to subsequent routes.
   const isTerminal = !proxy.matchers;
   const matchArr = proxy.matchers ? [buildMatcherJson(proxy.matchers)] : siteHostMatch(proxy);
@@ -1538,7 +1563,7 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
     if (proxy.staticResponse.close) h.close = true;
     const route: CaddyRoute = { handle: [h as CaddyHandler], terminal: isTerminal };
     if (matchArr) route.match = matchArr;
-    const server: CaddyServer = { listen: [listenAddr], routes: [route] };
+    const server: CaddyServer = { listen: listenAddrs, routes: [route] };
     applyAccessLog(server, proxy);
     applyErrorHandlers(server, proxy);
     return applyServerTimeouts(server, proxy);
@@ -1553,7 +1578,7 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
       terminal: isTerminal,
     };
     if (matchArr) route.match = matchArr;
-    const server: CaddyServer = { listen: [listenAddr], routes: [route] };
+    const server: CaddyServer = { listen: listenAddrs, routes: [route] };
     applyAccessLog(server, proxy);
     applyErrorHandlers(server, proxy);
     return applyServerTimeouts(server, proxy);
@@ -1567,7 +1592,7 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
     fsHandles.push(buildFileServerJson(proxy.fileServer));
     const route: CaddyRoute = { handle: withSpaFallback(proxy.fileServer, fsHandles), terminal: isTerminal };
     if (matchArr) route.match = matchArr;
-    const server: CaddyServer = { listen: [listenAddr], routes: [route] };
+    const server: CaddyServer = { listen: listenAddrs, routes: [route] };
     if (proxy.tls) server.tls_connection_policies = [buildTlsPolicy(proxy)];
     applyAccessLog(server, proxy);
     applyErrorHandlers(server, proxy);
@@ -1588,7 +1613,7 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
   handles.push(buildReverseProxyHandler(proxy, proxy.errorHandlers));
   const route: CaddyRoute = { handle: handles, terminal: isTerminal };
   if (matchArr) route.match = matchArr;
-  const server: CaddyServer = { listen: [listenAddr], routes: [route] };
+  const server: CaddyServer = { listen: listenAddrs, routes: [route] };
   if (proxy.tls) server.tls_connection_policies = [buildTlsPolicy(proxy)];
   applyAccessLog(server, proxy);
   applyErrorHandlers(server, proxy);
@@ -1694,7 +1719,7 @@ export function patchHandles(handles: CaddyHandler[], proxy: ProxyEntry): CaddyH
 export function patchServer(original: CaddyServer, proxy: ProxyEntry): CaddyServer {
   const server = { ...original };
 
-  server.listen = [buildListenAddr(proxy)];
+  server.listen = buildListenAddrs(proxy);
 
   if (proxy.tls) {
     server.tls_connection_policies = [buildTlsPolicy(proxy)];

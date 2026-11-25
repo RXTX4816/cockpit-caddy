@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import type { ErrorHandlerConfig, ForwardAuthConfig, HeaderOperation, LbPolicy, ProxyEntry, RewriteConfig, RouteMatch } from "../api";
 import { accessLogConfigToValues, accessLogValuesToConfig, type AccessLogValues } from "./AccessLogSection";
 import { resolveBasicAuth, type AuthEntry } from "./BasicAuthSection";
+import { bindFromValue, bindHasErrors, bindToValue } from "./BindSection";
 import { lbRetryConfigToValues, lbRetryValuesToConfig, type LbRetryValues } from "./LbRetrySection";
 import type { ServerTimeoutValues } from "./ServerTimeoutsSection";
 import { tlsConfigToValues, tlsValuesToAdvanced, tlsValuesToCustomTls, tlsValuesToMtls, type TlsValues } from "./TlsSection";
@@ -37,6 +38,8 @@ export interface ProxyTabState {
   replaceUpstreamErrors: boolean;
   serverTimeouts: ServerTimeoutValues;
   requestBodyMaxSize: string;
+  /** The addresses the site binds to, as typed (#323). */
+  bind: string;
 }
 
 export function emptyProxyTabState(): ProxyTabState {
@@ -61,6 +64,7 @@ export function emptyProxyTabState(): ProxyTabState {
     replaceUpstreamErrors: false,
     serverTimeouts: { readTimeout: "", readHeaderTimeout: "", writeTimeout: "", idleTimeout: "", maxHeaderBytes: "", disableHttp3: false },
     requestBodyMaxSize: "",
+    bind: "",
   };
 }
 
@@ -94,6 +98,7 @@ export function proxyTabStateFromEntry(p: ProxyEntry): ProxyTabState {
       disableHttp3: p.disableHttp3 ?? false,
     },
     requestBodyMaxSize: p.requestBodyMaxSize != null ? String(p.requestBodyMaxSize) : "",
+    bind: bindToValue(p.bind),
   };
 }
 
@@ -103,7 +108,7 @@ export type ProxyTabEntryFields = Pick<ProxyEntry,
   | "extraUpstreams" | "lbPolicy" | "lbPolicyArgs" | "lbRetry" | "dialTimeout" | "responseHeaderTimeout"
   | "accessLog" | "errorHandlers" | "replaceUpstreamErrors"
   | "serverReadTimeout" | "serverReadHeaderTimeout" | "serverWriteTimeout" | "serverIdleTimeout" | "maxHeaderBytes" | "disableHttp3"
-  | "requestBodyMaxSize">;
+  | "requestBodyMaxSize" | "bind">;
 
 /** The ProxyEntry fields the tabs set; unset ones are undefined. Hashes new Basic Auth passwords. */
 export async function proxyTabStateToEntry(s: ProxyTabState): Promise<ProxyTabEntryFields> {
@@ -139,6 +144,7 @@ export async function proxyTabStateToEntry(s: ProxyTabState): Promise<ProxyTabEn
     maxHeaderBytes: st.maxHeaderBytes.trim() ? parseInt(st.maxHeaderBytes, 10) : undefined,
     disableHttp3: st.disableHttp3 || undefined,
     requestBodyMaxSize: s.requestBodyMaxSize.trim() ? parseInt(s.requestBodyMaxSize, 10) : undefined,
+    bind: bindFromValue(s.bind),
   };
 }
 

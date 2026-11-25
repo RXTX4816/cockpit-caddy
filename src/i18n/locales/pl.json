@@ -1054,5 +1054,10 @@
     "site_inherit_help": "Używa dostawcy DNS ustawionego w Ustawienia → Wyzwanie DNS albo wyzwania HTTP, jeśli żaden nie jest ustawiony.",
     "site_override_help": "Ta witryna używa własnego dostawcy DNS i danych logowania. Zapisanie nowych danych uruchamia ponownie Caddy, bo odczytuje je tylko przy starcie.",
     "site_wildcard_warning": "Certyfikaty wieloznaczne wymagają wyzwania DNS. Ustaw dostawcę DNS dla tej witryny albo w Ustawienia → Wyzwanie DNS."
+  },
+  "bind": {
+    "label": "Adresy bind",
+    "help": "Adresy, na których ta witryna nasłuchuje, oddzielone spacjami, np. 127.0.0.1 ::1. Puste oznacza nasłuch na wszystkich adresach. Host będący jednym adresem IP jest już z nim powiązany.",
+    "invalid": "Podaj adresy IP lub nazwy hostów, bez portu."
   }
 }

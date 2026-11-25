@@ -433,6 +433,8 @@ export interface ProxyEntry {
   dialTimeout?: string;
   responseHeaderTimeout?: string;
   basicAuth?: { username: string; passwordHash: string }[];
+  /** `bind`: the addresses this site listens on, next to its host name (#323). A host that is one IP address is its own bind. */
+  bind?: string[];
   /** Additional upstreams beyond the primary targetHost:targetPort */
   extraUpstreams?: Array<{ host: string; port: number }>;
   /** Load-balancing policy when multiple upstreams are configured */

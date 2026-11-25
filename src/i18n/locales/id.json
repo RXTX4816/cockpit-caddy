@@ -1054,5 +1054,10 @@
     "site_inherit_help": "Memakai penyedia DNS yang diatur di Pengaturan → Tantangan DNS, atau tantangan HTTP bila belum diatur.",
     "site_override_help": "Situs ini memakai penyedia DNS dan kredensialnya sendiri. Menyimpan kredensial baru akan memulai ulang Caddy, karena Caddy hanya membacanya saat mulai.",
     "site_wildcard_warning": "Sertifikat wildcard memerlukan tantangan DNS. Atur penyedia DNS untuk situs ini, atau di Pengaturan → Tantangan DNS."
+  },
+  "bind": {
+    "label": "Alamat bind",
+    "help": "Alamat yang didengarkan situs ini, dipisahkan spasi, misalnya 127.0.0.1 ::1. Kosong mendengarkan di semua alamat. Host yang berupa satu alamat IP sudah terikat padanya.",
+    "invalid": "Masukkan alamat IP atau nama host, tanpa port."
   }
 }

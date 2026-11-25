@@ -1054,5 +1054,10 @@
     "site_inherit_help": "Usa il provider DNS impostato in Impostazioni → Sfida DNS, oppure la sfida HTTP se non ce n'è uno.",
     "site_override_help": "Questo sito usa un proprio provider DNS e credenziali proprie. Salvare nuove credenziali riavvia Caddy, che le legge solo all'avvio.",
     "site_wildcard_warning": "I certificati wildcard richiedono la sfida DNS. Imposta un provider DNS per questo sito o in Impostazioni → Sfida DNS."
+  },
+  "bind": {
+    "label": "Indirizzi di bind",
+    "help": "Gli indirizzi su cui questo sito ascolta, separati da spazi, ad esempio 127.0.0.1 ::1. Vuoto ascolta su ogni indirizzo. Un host che è un solo indirizzo IP vi è già legato.",
+    "invalid": "Inserisci indirizzi IP o nomi host, senza porta."
   }
 }
