@@ -817,7 +817,12 @@
     "admin_enforce_origin": "Originleri zorunlu kıl",
     "metrics_per_host": "Metrikleri ana makineye göre etiketle",
     "metrics_per_host_help": "İstenen ana makineyi her istek metriğine ekler, böylece siteler ayırt edilebilir. Her farklı ana makine kendi serisi olur.",
-    "auto_https_disable_certs": "Sertifika yönetimi yok"
+    "auto_https_disable_certs": "Sertifika yönetimi yok",
+    "tab_core": "Temel",
+    "tab_tls": "TLS ve ACME",
+    "tab_logging": "Günlük ve metrikler",
+    "tab_proxy": "Proxy üstbilgileri ve protokoller",
+    "tabs_aria": "Ayar bölümleri"
   },
   "ca": {
     "title": "İç sertifika yetkilisi",
@@ -1276,5 +1281,10 @@
     "type_a": "A / AAAA",
     "ipv4": "IPv4",
     "ipv6": "IPv6"
+  },
+  "bind": {
+    "label": "Bind adresleri",
+    "help": "Bu sitenin dinlediği adresler, boşlukla ayrılmış, örneğin 127.0.0.1 ::1. Boş, tüm adreslerde dinler. Tek bir IP adresi olan ana makine zaten ona bağlanır.",
+    "invalid": "Port olmadan IP adresleri veya ana makine adları girin."
   }
 }

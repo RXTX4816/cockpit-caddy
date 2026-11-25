@@ -817,7 +817,12 @@
     "admin_enforce_origin": "Wymuszaj originy",
     "metrics_per_host": "Oznaczaj metryki hostem",
     "metrics_per_host_help": "Dodaje żądany host do każdej metryki żądania, aby rozróżnić witryny. Każdy inny host tworzy osobną serię.",
-    "auto_https_disable_certs": "Bez zarządzania certyfikatami"
+    "auto_https_disable_certs": "Bez zarządzania certyfikatami",
+    "tab_core": "Podstawowe",
+    "tab_tls": "TLS i ACME",
+    "tab_logging": "Logi i metryki",
+    "tab_proxy": "Nagłówki proxy i protokoły",
+    "tabs_aria": "Sekcje ustawień"
   },
   "ca": {
     "title": "Wewnętrzny urząd certyfikacji",
@@ -1276,5 +1281,10 @@
     "type_a": "A / AAAA",
     "ipv4": "IPv4",
     "ipv6": "IPv6"
+  },
+  "bind": {
+    "label": "Adresy bind",
+    "help": "Adresy, na których ta witryna nasłuchuje, oddzielone spacjami, np. 127.0.0.1 ::1. Puste oznacza nasłuch na wszystkich adresach. Host będący jednym adresem IP jest już z nim powiązany.",
+    "invalid": "Podaj adresy IP lub nazwy hostów, bez portu."
   }
 }

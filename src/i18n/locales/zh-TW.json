@@ -817,7 +817,12 @@
     "admin_enforce_origin": "強制檢查來源",
     "metrics_per_host": "依主機為指標加上標籤",
     "metrics_per_host_help": "在每個請求指標上加入所請求的主機,以便區分網站。每個不同的主機都會成為獨立的時間序列。",
-    "auto_https_disable_certs": "不管理憑證"
+    "auto_https_disable_certs": "不管理憑證",
+    "tab_core": "核心",
+    "tab_tls": "TLS 與 ACME",
+    "tab_logging": "日誌與指標",
+    "tab_proxy": "代理標頭與協定",
+    "tabs_aria": "設定分區"
   },
   "ca": {
     "title": "內部憑證授權單位",
@@ -1276,5 +1281,10 @@
     "type_a": "A / AAAA",
     "ipv4": "IPv4",
     "ipv6": "IPv6"
+  },
+  "bind": {
+    "label": "綁定位址",
+    "help": "此網站監聽的位址,以空格分隔,例如 127.0.0.1 ::1。留空表示監聽所有位址。主機若是單一 IP 位址,則已經綁定到該位址。",
+    "invalid": "請輸入 IP 位址或主機名稱,不含連接埠。"
   }
 }

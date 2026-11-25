@@ -870,6 +870,32 @@ describe.runIf(available || required)("added, moved and removed nodes are a conf
   });
 });
 
+describe.runIf(available || required)("caddy adapt accepts bind, several hosts and wildcard hosts (#323)", () => {
+  it.each([
+    ["a host and one bind address", { externalHost: "example.com", bind: ["10.0.0.5"] }],
+    ["several hosts and two bind addresses", { externalHost: "example.com, www.example.com", bind: ["127.0.0.1", "[::1]"] }],
+    ["only bind addresses", { bind: ["10.0.0.5", "10.0.0.6"] }],
+  ])("reads %s back from a real adapt", (_name, fields) => {
+    const proxies = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, ...fields })]));
+    expect(proxies).toHaveLength(1);
+    expect(proxies[0].externalHost).toBe("externalHost" in fields ? fields.externalHost : undefined);
+    expect(proxies[0].bind).toEqual(fields.bind);
+  });
+
+  it("builds the listen addresses Caddy builds", () => {
+    const e = entry({ tls: false, externalPort: 8080, externalHost: "example.com", bind: ["10.0.0.5", "10.0.0.6"] });
+    const real = Object.values(adapt(proxiesToCaddyfile([e])).apps?.http?.servers ?? {})[0] as CaddyServer;
+    expect(buildServerEntry(e).listen).toEqual(real.listen);
+  });
+
+  it("keeps a wildcard host and several hosts as they are", () => {
+    for (const externalHost of ["*.example.com", "*.example.com, example.com"]) {
+      const [p] = readBack(proxiesToCaddyfile([entry({ tls: true, tlsIssuer: "internal", externalPort: 8443, externalHost, externalScheme: "https" })]));
+      expect(p.externalHost).toBe(externalHost);
+    }
+  });
+});
+
 describe.runIf(available || required)("caddy adapt accepts the basic_auth realm and algorithm (#337)", () => {
   const accounts = [{ username: "alice", passwordHash: "$argon2id$v=19$m=47104,t=1,p=1$c2FsdHNhbHRzYWx0$aGFzaGhhc2hoYXNoaGFzaGhhc2hoYXNoaGFzaGhhc2g" }];
 

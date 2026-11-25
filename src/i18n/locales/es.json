@@ -817,7 +817,12 @@
     "admin_enforce_origin": "Exigir orígenes",
     "metrics_per_host": "Etiquetar las métricas por host",
     "metrics_per_host_help": "Añade el host solicitado a cada métrica de petición para distinguir los sitios. Cada host distinto genera su propia serie.",
-    "auto_https_disable_certs": "Sin gestión de certificados"
+    "auto_https_disable_certs": "Sin gestión de certificados",
+    "tab_core": "Básico",
+    "tab_tls": "TLS y ACME",
+    "tab_logging": "Registros y métricas",
+    "tab_proxy": "Cabeceras de proxy y protocolos",
+    "tabs_aria": "Secciones de ajustes"
   },
   "ca": {
     "title": "Autoridad de certificación interna",
@@ -1276,5 +1281,10 @@
     "type_a": "A / AAAA",
     "ipv4": "IPv4",
     "ipv6": "IPv6"
+  },
+  "bind": {
+    "label": "Direcciones de enlace",
+    "help": "Las direcciones en las que escucha este sitio, separadas por espacios, por ejemplo 127.0.0.1 ::1. Vacío escucha en todas. Un host que es una sola dirección IP ya se enlaza a ella.",
+    "invalid": "Introduzca direcciones IP o nombres de host, sin puerto."
   }
 }

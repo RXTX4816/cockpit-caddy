@@ -1,7 +1,8 @@
 import { useCallback, useState, type ReactNode } from "react";
-import { Alert, Button } from "@patternfly/react-core";
+import { Button } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import { getHost, mkdirp } from "@rxtx4816/cockpit-plugin-base-react/host";
+import { Notice } from "./Notice";
 
 type ShowSaveFilePicker = (opts: object) => Promise<{
   createWritable(): Promise<{ write(s: string): Promise<void>; close(): Promise<void> }>;
@@ -57,17 +58,15 @@ export function useCertDownload() {
   const result: ReactNode = (
     <>
       {savedPath && (
-        <Alert
+        <Notice
           variant={savedPath.overwritten ? "warning" : "success"}
-          isInline
           title={savedPath.overwritten
             ? t("ca.download_overwritten", { path: savedPath.path })
             : t("ca.download_saved", { path: savedPath.path })}
-          style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}
         />
       )}
       {downloadError && (
-        <Alert variant="danger" isInline title={t("ca.download_error")} style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>{downloadError}</Alert>
+        <Notice variant="danger" title={t("ca.download_error")}>{downloadError}</Notice>
       )}
     </>
   );

@@ -817,7 +817,12 @@
     "admin_enforce_origin": "Origins erzwingen",
     "metrics_per_host": "Metriken nach Host kennzeichnen",
     "metrics_per_host_help": "Fügt jeder Anfragemetrik den angefragten Host hinzu, damit sich Sites unterscheiden lassen. Jeder verschiedene Host ergibt eine eigene Zeitreihe.",
-    "auto_https_disable_certs": "Keine Zertifikatsverwaltung"
+    "auto_https_disable_certs": "Keine Zertifikatsverwaltung",
+    "tab_core": "Allgemein",
+    "tab_tls": "TLS & ACME",
+    "tab_logging": "Protokolle & Metriken",
+    "tab_proxy": "Proxy-Header & Protokolle",
+    "tabs_aria": "Bereiche der Einstellungen"
   },
   "ca": {
     "title": "Interne Zertifizierungsstelle",
@@ -1276,5 +1281,10 @@
     "type_a": "A / AAAA",
     "ipv4": "IPv4",
     "ipv6": "IPv6"
+  },
+  "bind": {
+    "label": "Bind-Adressen",
+    "help": "Die Adressen, auf denen diese Site lauscht, durch Leerzeichen getrennt, zum Beispiel 127.0.0.1 ::1. Leer lauscht auf jeder Adresse. Ein Host, der eine einzelne IP-Adresse ist, bindet bereits daran.",
+    "invalid": "Geben Sie IP-Adressen oder Hostnamen ohne Port ein."
   }
 }

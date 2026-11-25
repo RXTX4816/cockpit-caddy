@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Alert, FormGroup, FormHelperText, FormSelect, FormSelectOption, HelperText, HelperTextItem } from "@patternfly/react-core";
+import { FormGroup, FormHelperText, FormSelect, FormSelectOption, HelperText, HelperTextItem } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import { externalHostList, listDnsProviders, readDnsEnvNames, readGlobalOptions } from "../api";
 import type { DnsChallengeConfig } from "../api";
 import { DnsChallengeFields, dnsDraftFromConfig, dnsDraftToConfig, validateDnsDraft, type DnsDraft } from "./DnsChallengeFields";
+import { Notice } from "./Notice";
 
 /** A site's DNS challenge (#289): the global acme_dns provider, or one of its own. */
 export type SiteDnsMode = "inherit" | "override";
@@ -93,7 +94,7 @@ export function SiteDnsChallengeField({ id, dns, host, isDisabled }: Props) {
         </HelperText>
       </FormHelperText>
       {wildcard && dns.mode === "inherit" && !dns.globalProvider && (
-        <Alert variant="warning" isInline isPlain title={t("dns.site_wildcard_warning")} data-testid={`${id}-wildcard-warning`} style={{ marginTop: "0.4rem" }} />
+        <Notice variant="warning" isPlain title={t("dns.site_wildcard_warning")} data-testid={`${id}-wildcard-warning`} />
       )}
       {dns.mode === "override" && (
         <div style={{ marginTop: "0.6rem" }}>

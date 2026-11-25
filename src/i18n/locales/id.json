@@ -817,7 +817,12 @@
     "admin_enforce_origin": "Paksakan origin",
     "metrics_per_host": "Beri label metrik per host",
     "metrics_per_host_help": "Menambahkan host yang diminta ke setiap metrik permintaan agar situs dapat dibedakan. Setiap host berbeda menjadi seri tersendiri.",
-    "auto_https_disable_certs": "Tanpa pengelolaan sertifikat"
+    "auto_https_disable_certs": "Tanpa pengelolaan sertifikat",
+    "tab_core": "Inti",
+    "tab_tls": "TLS & ACME",
+    "tab_logging": "Log & metrik",
+    "tab_proxy": "Header proxy & protokol",
+    "tabs_aria": "Bagian pengaturan"
   },
   "ca": {
     "title": "Otoritas sertifikat internal",
@@ -1276,5 +1281,10 @@
     "type_a": "A / AAAA",
     "ipv4": "IPv4",
     "ipv6": "IPv6"
+  },
+  "bind": {
+    "label": "Alamat bind",
+    "help": "Alamat yang didengarkan situs ini, dipisahkan spasi, misalnya 127.0.0.1 ::1. Kosong mendengarkan di semua alamat. Host yang berupa satu alamat IP sudah terikat padanya.",
+    "invalid": "Masukkan alamat IP atau nama host, tanpa port."
   }
 }
