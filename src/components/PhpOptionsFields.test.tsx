@@ -20,4 +20,11 @@ describe("file_server and php_fastcgi option drafts (#340)", () => {
     expect(phpOptionsHaveErrors({ ...phpOptionsDraft(undefined), readTimeout: "ten" })).toBe(true);
     expect(phpOptionsHaveErrors({ ...phpOptionsDraft(undefined), readTimeout: "10s" })).toBe(false);
   });
+
+  it("maps the templates options to the form and back", () => {
+    const fs = { root: "/srv", templates: { mime: ["text/html", "text/css"], root: "/srv/inc" } };
+    expect(fileServerOptionsFromDraft(fileServerOptionsDraft(fs)).templates).toEqual(fs.templates);
+    expect(fileServerOptionsFromDraft(fileServerOptionsDraft({ root: "/srv", templates: {} })).templates).toEqual({});
+    expect(fileServerOptionsFromDraft(fileServerOptionsDraft({ root: "/srv" })).templates).toBeUndefined();
+  });
 });

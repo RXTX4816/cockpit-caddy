@@ -183,7 +183,12 @@
     "field_status": "Durum kodu",
     "field_status_help": "Her dosyaya 200 yerine bu durum koduyla yanıt verir, örneğin özel bir hata sayfası için 404.",
     "field_disable_canonical_uris": "Sondaki eğik çizgileri olduğu gibi bırak",
-    "field_disable_canonical_uris_help": "Dizinlere ve dosyalara sondaki eğik çizgiyi eklemek veya kaldırmak için yönlendirme yapma."
+    "field_disable_canonical_uris_help": "Dizinlere ve dosyalara sondaki eğik çizgiyi eklemek veya kaldırmak için yönlendirme yapma.",
+    "field_templates": "Dosyaları şablonlardan geçir",
+    "field_templates_help": "Sunulan dosyalar için Caddy'nin şablon motorunu açar; böylece include, .Req ve diğer şablon eylemlerini kullanabilirler.",
+    "field_templates_mime": "MIME türleri",
+    "field_templates_root": "Include dizini",
+    "field_templates_root_help": "include ve diğer dosya eylemlerinin dosya aradığı yer. Boş, site kökü demektir."
   },
   "edit_static": {
     "title": "Statik sunucuyu düzenle — :{{port}}",

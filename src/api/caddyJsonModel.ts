@@ -823,6 +823,7 @@ export function parseRouteToEntry(
           ?? (effectiveHandles.find(h => h.handler === "vars" && typeof (h as { root?: unknown }).root === "string") as { root?: string } | undefined)?.root
           ?? "",
         browse: fsHandle.browse !== undefined,
+        ...(parseTemplatesJson(effectiveHandles) ? { templates: parseTemplatesJson(effectiveHandles) } : {}),
         ...parseFileServerOptions(fsHandle, subrouteH?.routes?.length ? subrouteH.routes : [route]),
       },
       requestBodyMaxSize: parseRequestBodyMaxSize(effectiveHandles),
@@ -1679,7 +1680,7 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
     if (proxy.compress) fsHandles.push(buildEncodeHandler(proxy.encodeOptions));
     if (proxy.basicAuth?.length) fsHandles.push(buildBasicAuthHandler(proxy.basicAuth, proxy.basicAuthOptions));
     if (proxy.responseHeaders?.length) fsHandles.push(buildResponseHeadersHandler(proxy.responseHeaders));
-    fsHandles.push(buildFileServerJson(proxy.fileServer));
+    fsHandles.push(...buildFileServerHandlers(proxy.fileServer));
     const route: CaddyRoute = { handle: withSpaFallback(proxy.fileServer, fsHandles), terminal: isTerminal };
     if (matchArr) route.match = matchArr;
     const server: CaddyServer = { listen: [listenAddr], routes: [route] };
@@ -1712,6 +1713,32 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
 
 
 /** The `file_server` handler with its options (#262). */
+/** The `templates` handler of a static site and then its file_server (#339). */
+export function buildFileServerHandlers(fs: import("./types").FileServerConfig): CaddyHandler[] {
+  const out: CaddyHandler[] = [];
+  if (fs.templates) {
+    out.push({
+      handler: "templates",
+      ...(fs.templates.root ? { file_root: fs.templates.root } : {}),
+      ...(fs.templates.mime?.length ? { mime_types: fs.templates.mime } : {}),
+    } as CaddyHandler);
+  }
+  out.push(buildFileServerJson(fs));
+  return out;
+}
+
+
+/** The `templates` options of a route's handlers, or undefined without the directive (#339). */
+export function parseTemplatesJson(handles: AnyHandler[]): import("./types").TemplatesConfig | undefined {
+  const h = handles.find(x => x.handler === "templates") as { file_root?: string; mime_types?: string[] } | undefined;
+  if (!h) return undefined;
+  return {
+    ...(h.mime_types?.length ? { mime: h.mime_types } : {}),
+    ...(h.file_root ? { root: h.file_root } : {}),
+  };
+}
+
+
 export function buildFileServerJson(fs: import("./types").FileServerConfig): CaddyHandler {
   const h: Record<string, unknown> = { handler: "file_server", root: fs.root };
   if (fs.browse) h.browse = fs.browseTemplate ? { template_file: fs.browseTemplate } : {};
@@ -1754,14 +1781,14 @@ export function patchHandles(handles: CaddyHandler[], proxy: ProxyEntry): CaddyH
     if (proxy.compress) fsHandles.push(buildEncodeHandler(proxy.encodeOptions));
     if (proxy.basicAuth?.length) fsHandles.push(buildBasicAuthHandler(proxy.basicAuth, proxy.basicAuthOptions));
     if (proxy.responseHeaders?.length) fsHandles.push(buildResponseHeadersHandler(proxy.responseHeaders));
-    fsHandles.push(buildFileServerJson(proxy.fileServer));
+    fsHandles.push(...buildFileServerHandlers(proxy.fileServer));
     return withSpaFallback(proxy.fileServer, fsHandles);
   }
   let found = false;
   // Strip any existing encode/authentication/rewrite/headers/file_server/forward_auth/
   // request_body handlers; we'll re-add the correct ones below
   const withoutRewrite = handles.filter(h => {
-    if (h.handler === "rewrite" || h.handler === "headers" || h.handler === "encode" || h.handler === "authentication" || h.handler === "file_server" || h.handler === "request_body") return false;
+    if (h.handler === "rewrite" || h.handler === "headers" || h.handler === "encode" || h.handler === "authentication" || h.handler === "file_server" || h.handler === "templates" || h.handler === "request_body") return false;
     if (h.handler === "subroute") {
       const isAuthSubroute = (h.routes as Array<{ handle?: AnyHandler[] }> | undefined)?.some(r =>
         (r.handle ?? []).some(sh => sh.handler === "reverse_proxy" && isForwardAuthProxy(sh as CaddyReverseProxyHandler)),
@@ -2169,7 +2196,7 @@ export function buildRouteHandlesForEntry(proxy: ProxyEntry): CaddyHandler[] {
     if (proxy.compress) handles.push(buildEncodeHandler(proxy.encodeOptions));
     if (proxy.basicAuth?.length) handles.push(buildBasicAuthHandler(proxy.basicAuth, proxy.basicAuthOptions));
     if (proxy.responseHeaders?.length) handles.push(buildResponseHeadersHandler(proxy.responseHeaders));
-    handles.push(buildFileServerJson(proxy.fileServer));
+    handles.push(...buildFileServerHandlers(proxy.fileServer));
     return withSpaFallback(proxy.fileServer, handles);
   }
   const handles: CaddyHandler[] = [];

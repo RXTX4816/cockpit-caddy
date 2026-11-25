@@ -183,7 +183,12 @@
     "field_status": "Code d'état",
     "field_status_help": "Répondre à chaque fichier avec ce code d'état au lieu de 200, par exemple 404 pour une page d'erreur personnalisée.",
     "field_disable_canonical_uris": "Laisser les barres obliques finales telles quelles",
-    "field_disable_canonical_uris_help": "Ne pas rediriger pour ajouter ou retirer une barre oblique finale sur les répertoires et fichiers."
+    "field_disable_canonical_uris_help": "Ne pas rediriger pour ajouter ou retirer une barre oblique finale sur les répertoires et fichiers.",
+    "field_templates": "Passer les fichiers dans les modèles",
+    "field_templates_help": "Active le moteur de modèles de Caddy pour les fichiers servis, qui peuvent alors utiliser include, .Req et les autres actions de modèle.",
+    "field_templates_mime": "Types MIME",
+    "field_templates_root": "Répertoire des inclusions",
+    "field_templates_root_help": "Où include et les autres actions de fichier cherchent les fichiers. Vide signifie la racine du site."
   },
   "edit_static": {
     "title": "Modifier le serveur statique — :{{port}}",

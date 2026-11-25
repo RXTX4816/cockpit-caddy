@@ -183,7 +183,12 @@
     "field_status": "狀態碼",
     "field_status_help": "以此狀態碼取代 200 回應每個檔案,例如搭配自訂錯誤頁使用 404。",
     "field_disable_canonical_uris": "保持結尾斜線不變",
-    "field_disable_canonical_uris_help": "不為目錄和檔案新增或移除結尾斜線而重新導向。"
+    "field_disable_canonical_uris_help": "不為目錄和檔案新增或移除結尾斜線而重新導向。",
+    "field_templates": "以範本處理檔案",
+    "field_templates_help": "為所提供的檔案啟用 Caddy 的範本引擎,檔案即可使用 include、.Req 等範本操作。",
+    "field_templates_mime": "MIME 類型",
+    "field_templates_root": "include 目錄",
+    "field_templates_root_help": "include 等檔案操作尋找檔案的位置。留空表示網站根目錄。"
   },
   "edit_static": {
     "title": "編輯靜態伺服器 — :{{port}}",

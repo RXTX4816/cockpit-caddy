@@ -183,7 +183,12 @@
     "field_status": "Stavový kód",
     "field_status_help": "Odpovědět na každý soubor tímto stavovým kódem místo 200, například 404 pro vlastní chybovou stránku.",
     "field_disable_canonical_uris": "Ponechat koncová lomítka",
-    "field_disable_canonical_uris_help": "Nepřesměrovávat kvůli přidání nebo odebrání koncového lomítka u adresářů a souborů."
+    "field_disable_canonical_uris_help": "Nepřesměrovávat kvůli přidání nebo odebrání koncového lomítka u adresářů a souborů.",
+    "field_templates": "Zpracovat soubory šablonami",
+    "field_templates_help": "Zapne šablonovací systém Caddy pro obsluhované soubory, takže mohou používat include, .Req a další akce šablon.",
+    "field_templates_mime": "Typy MIME",
+    "field_templates_root": "Adresář pro include",
+    "field_templates_root_help": "Kde include a další souborové akce hledají soubory. Prázdné znamená kořen webu."
   },
   "edit_static": {
     "title": "Upravit statický server — :{{port}}",

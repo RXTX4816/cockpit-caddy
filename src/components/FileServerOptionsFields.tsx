@@ -14,6 +14,9 @@ export interface FileServerOptionsDraft {
   disableCanonicalUris: boolean;
   status: string;
   browseTemplate: string;
+  templates: boolean;
+  templatesMime: string;
+  templatesRoot: string;
 }
 
 export const PRECOMPRESSED_FORMATS = ["zstd", "br", "gzip"] as const;
@@ -27,18 +30,27 @@ export function fileServerOptionsDraft(fs: FileServerConfig | undefined): FileSe
     disableCanonicalUris: !!fs?.disableCanonicalUris,
     status: fs?.status != null ? String(fs.status) : "",
     browseTemplate: fs?.browseTemplate ?? "",
+    templates: !!fs?.templates,
+    templatesMime: fs?.templates?.mime?.join(" ") ?? "",
+    templatesRoot: fs?.templates?.root ?? "",
   };
 }
 
 const words = (s: string) => s.trim().split(/\s+/).filter(Boolean);
 
 /** The options part of a FileServerConfig; unset options stay absent so old sites save unchanged. */
-export function fileServerOptionsFromDraft(d: FileServerOptionsDraft): Pick<FileServerConfig, "spa" | "index" | "hide" | "precompressed" | "disableCanonicalUris" | "status" | "browseTemplate"> {
-  const out: Pick<FileServerConfig, "spa" | "index" | "hide" | "precompressed" | "disableCanonicalUris" | "status" | "browseTemplate"> = {};
+export function fileServerOptionsFromDraft(d: FileServerOptionsDraft): Pick<FileServerConfig, "spa" | "index" | "hide" | "precompressed" | "disableCanonicalUris" | "status" | "browseTemplate" | "templates"> {
+  const out: Pick<FileServerConfig, "spa" | "index" | "hide" | "precompressed" | "disableCanonicalUris" | "status" | "browseTemplate" | "templates"> = {};
   if (d.disableCanonicalUris) out.disableCanonicalUris = true;
   const status = parseInt(d.status, 10);
   if (d.status.trim() && !isNaN(status)) out.status = status;
   if (d.browseTemplate.trim()) out.browseTemplate = d.browseTemplate.trim();
+  if (d.templates) {
+    out.templates = {
+      ...(words(d.templatesMime).length ? { mime: words(d.templatesMime) } : {}),
+      ...(d.templatesRoot.trim() ? { root: d.templatesRoot.trim() } : {}),
+    };
+  }
   if (d.spa) out.spa = true;
   if (words(d.index).length) out.index = words(d.index);
   if (words(d.hide).length) out.hide = words(d.hide);
@@ -61,7 +73,7 @@ export function FileServerOptionsFields({ idPrefix, value, onChange, isDisabled 
   const { t } = useTranslation();
   const set = (patch: Partial<FileServerOptionsDraft>) => onChange({ ...value, ...patch });
   // Open from the start when a site already uses one of these options.
-  const [expanded, setExpanded] = useState(() => !!(value.index.trim() || value.hide.trim() || value.precompressed.length || value.disableCanonicalUris || value.status.trim() || value.browseTemplate.trim()));
+  const [expanded, setExpanded] = useState(() => !!(value.index.trim() || value.hide.trim() || value.precompressed.length || value.disableCanonicalUris || value.status.trim() || value.browseTemplate.trim() || value.templates));
 
   return (
     <>
@@ -130,6 +142,39 @@ export function FileServerOptionsFields({ idPrefix, value, onChange, isDisabled 
           />
           <FormHelperText><HelperText><HelperTextItem>{t("add_static.field_status_help")}</HelperTextItem></HelperText></FormHelperText>
         </FormGroup>
+        <FormGroup fieldId={`${idPrefix}-templates`}>
+          <Checkbox
+            id={`${idPrefix}-templates`}
+            label={t("add_static.field_templates")}
+            description={t("add_static.field_templates_help")}
+            isChecked={value.templates}
+            onChange={(_e, v) => set({ templates: v })}
+            isDisabled={isDisabled}
+          />
+        </FormGroup>
+        {value.templates && (
+          <>
+            <FormGroup label={t("add_static.field_templates_mime")} fieldId={`${idPrefix}-templates-mime`}>
+              <TextInput
+                id={`${idPrefix}-templates-mime`}
+                value={value.templatesMime}
+                onChange={(_e, v) => set({ templatesMime: v })}
+                placeholder={t("common.default_value", { value: "text/html text/plain" })}
+                isDisabled={isDisabled}
+              />
+            </FormGroup>
+            <FormGroup label={t("add_static.field_templates_root")} fieldId={`${idPrefix}-templates-root`}>
+              <TextInput
+                id={`${idPrefix}-templates-root`}
+                value={value.templatesRoot}
+                onChange={(_e, v) => set({ templatesRoot: v })}
+                placeholder="/srv/includes"
+                isDisabled={isDisabled}
+              />
+              <FormHelperText><HelperText><HelperTextItem>{t("add_static.field_templates_root_help")}</HelperTextItem></HelperText></FormHelperText>
+            </FormGroup>
+          </>
+        )}
         <FormGroup fieldId={`${idPrefix}-canonical-uris`}>
           <Checkbox
             id={`${idPrefix}-canonical-uris`}

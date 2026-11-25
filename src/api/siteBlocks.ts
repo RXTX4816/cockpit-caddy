@@ -611,6 +611,17 @@ export function buildFileServerLines(fs: import("./types").FileServerConfig, ind
   if (fs.spa) lines.push(`${indent}try_files {path} /index.html`);
   // A listing template is an argument of the block's own `browse`, so then the head has none.
   const template = fs.browse ? fs.browseTemplate : undefined;
+  if (fs.templates) {
+    const t = fs.templates;
+    if (t.mime?.length || t.root) {
+      lines.push(`${indent}templates {`);
+      if (t.mime?.length) lines.push(`${indent}\tmime ${t.mime.join(" ")}`);
+      if (t.root) lines.push(`${indent}\troot ${caddyQuote(t.root)}`);
+      lines.push(`${indent}}`);
+    } else {
+      lines.push(`${indent}templates`);
+    }
+  }
   const head = fs.browse && !template ? `${indent}file_server browse` : `${indent}file_server`;
   if (!hasFileServerOptions(fs)) {
     lines.push(head);
@@ -818,7 +829,7 @@ export function patchRawBlock(raw: string, proxy: ProxyEntry): string {
     trimmed === name || trimmed.startsWith(`${name} `) || trimmed.startsWith(`${name}\t`) || trimmed === `${name}{`;
 
   // The directives the plugin writes again below are dropped here, each with its whole block.
-  const rewritten = ["tls", "encode", "root", "file_server", "header", "basic_auth", "forward_auth", "reverse_proxy", "php_fastcgi"];
+  const rewritten = ["tls", "encode", "root", "templates", "file_server", "header", "basic_auth", "forward_auth", "reverse_proxy", "php_fastcgi"];
   // try_files belongs to the static and PHP forms (#262); on any other site it's the user's.
   if (proxy.fileServer || proxy.phpFastcgi) rewritten.push("try_files");
 

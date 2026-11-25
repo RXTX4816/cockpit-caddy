@@ -183,7 +183,12 @@
     "field_status": "Tilakoodi",
     "field_status_help": "Vastaa jokaiseen tiedostoon tällä tilakoodilla 200:n sijaan, esimerkiksi 404 omaa virhesivua varten.",
     "field_disable_canonical_uris": "Jätä loppukauttaviivat ennalleen",
-    "field_disable_canonical_uris_help": "Älä ohjaa lisäämään tai poistamaan loppukauttaviivaa hakemistoista ja tiedostoista."
+    "field_disable_canonical_uris_help": "Älä ohjaa lisäämään tai poistamaan loppukauttaviivaa hakemistoista ja tiedostoista.",
+    "field_templates": "Käsittele tiedostot malleilla",
+    "field_templates_help": "Ottaa Caddyn mallimoottorin käyttöön tarjoiltaville tiedostoille, jotta ne voivat käyttää include, .Req ja muita mallitoimintoja.",
+    "field_templates_mime": "MIME-tyypit",
+    "field_templates_root": "Include-hakemisto",
+    "field_templates_root_help": "Mistä include ja muut tiedostotoiminnot etsivät tiedostoja. Tyhjä tarkoittaa sivuston juurta."
   },
   "edit_static": {
     "title": "Muokkaa staattista palvelinta — :{{port}}",

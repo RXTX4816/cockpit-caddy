@@ -183,7 +183,12 @@
     "field_status": "状态码",
     "field_status_help": "以此状态码代替 200 响应每个文件,例如用 404 配合自定义错误页。",
     "field_disable_canonical_uris": "保持末尾斜杠不变",
-    "field_disable_canonical_uris_help": "不为目录和文件添加或去掉末尾斜杠而进行重定向。"
+    "field_disable_canonical_uris_help": "不为目录和文件添加或去掉末尾斜杠而进行重定向。",
+    "field_templates": "用模板处理文件",
+    "field_templates_help": "为所提供的文件启用 Caddy 的模板引擎,文件即可使用 include、.Req 等模板操作。",
+    "field_templates_mime": "MIME 类型",
+    "field_templates_root": "include 目录",
+    "field_templates_root_help": "include 等文件操作查找文件的位置。留空表示站点根目录。"
   },
   "edit_static": {
     "title": "编辑静态服务器 — :{{port}}",

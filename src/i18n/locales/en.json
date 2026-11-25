@@ -183,7 +183,12 @@
     "field_status": "Status code",
     "field_status_help": "Answer every file with this status code instead of 200, for example 404 for a custom error page.",
     "field_disable_canonical_uris": "Keep trailing slashes as they are",
-    "field_disable_canonical_uris_help": "Do not redirect to add or remove a trailing slash on directories and files."
+    "field_disable_canonical_uris_help": "Do not redirect to add or remove a trailing slash on directories and files.",
+    "field_templates": "Run files through templates",
+    "field_templates_help": "Turns on Caddy's template engine for the served files, so they can use include, .Req and the other template actions.",
+    "field_templates_mime": "MIME types",
+    "field_templates_root": "Directory for includes",
+    "field_templates_root_help": "Where include and the other file actions look for files. Empty means the site root."
   },
   "edit_static": {
     "title": "Edit Static Server — :{{port}}",

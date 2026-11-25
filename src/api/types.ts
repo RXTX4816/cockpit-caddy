@@ -317,6 +317,16 @@ export interface FileServerConfig {
   status?: number;
   /** `file_server { browse <template_file> }`: a template for the directory listing; needs `browse` (#340). */
   browseTemplate?: string;
+  /** The `templates` directive in front of file_server: Caddy's template engine on the served files (#339). */
+  templates?: TemplatesConfig;
+}
+
+/** `templates { mime … root … }`: an empty object is a plain `templates`. */
+export interface TemplatesConfig {
+  /** MIME types to run templates on; Caddy's default is text/html and text/plain. */
+  mime?: string[];
+  /** The directory `include` and the other file functions read from; Caddy's default is the site root. */
+  root?: string;
 }
 
 export interface PhpFastcgiConfig {

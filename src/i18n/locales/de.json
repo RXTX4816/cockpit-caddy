@@ -183,7 +183,12 @@
     "field_status": "Statuscode",
     "field_status_help": "Jede Datei mit diesem Statuscode statt 200 beantworten, zum Beispiel 404 für eine eigene Fehlerseite.",
     "field_disable_canonical_uris": "Abschließende Schrägstriche beibehalten",
-    "field_disable_canonical_uris_help": "Nicht weiterleiten, um bei Verzeichnissen und Dateien einen abschließenden Schrägstrich hinzuzufügen oder zu entfernen."
+    "field_disable_canonical_uris_help": "Nicht weiterleiten, um bei Verzeichnissen und Dateien einen abschließenden Schrägstrich hinzuzufügen oder zu entfernen.",
+    "field_templates": "Dateien durch Templates verarbeiten",
+    "field_templates_help": "Schaltet Caddys Template-Engine für die ausgelieferten Dateien ein, sodass sie include, .Req und die übrigen Template-Aktionen nutzen können.",
+    "field_templates_mime": "MIME-Typen",
+    "field_templates_root": "Verzeichnis für Includes",
+    "field_templates_root_help": "Wo include und die anderen Dateiaktionen nach Dateien suchen. Leer bedeutet das Site-Root."
   },
   "edit_static": {
     "title": "Statischen Server bearbeiten – :{{port}}",

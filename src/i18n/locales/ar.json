@@ -183,7 +183,12 @@
     "field_status": "رمز الحالة",
     "field_status_help": "الرد على كل ملف بهذا الرمز بدل 200، مثلًا 404 لصفحة خطأ مخصصة.",
     "field_disable_canonical_uris": "ترك الشرطة المائلة اللاحقة كما هي",
-    "field_disable_canonical_uris_help": "عدم إعادة التوجيه لإضافة الشرطة المائلة اللاحقة أو إزالتها في المجلدات والملفات."
+    "field_disable_canonical_uris_help": "عدم إعادة التوجيه لإضافة الشرطة المائلة اللاحقة أو إزالتها في المجلدات والملفات.",
+    "field_templates": "تشغيل الملفات عبر القوالب",
+    "field_templates_help": "يفعّل محرك قوالب Caddy للملفات المقدَّمة، فيمكنها استخدام include و.Req وبقية إجراءات القوالب.",
+    "field_templates_mime": "أنواع MIME",
+    "field_templates_root": "مجلد الملفات المضمَّنة",
+    "field_templates_root_help": "المكان الذي تبحث فيه include وبقية إجراءات الملفات عن الملفات. الفراغ يعني جذر الموقع."
   },
   "edit_static": {
     "title": "تعديل الخادم الثابت — :{{port}}",

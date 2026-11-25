@@ -183,7 +183,12 @@
     "field_status": "Stavový kód",
     "field_status_help": "Odpovedať na každý súbor týmto stavovým kódom namiesto 200, napríklad 404 pre vlastnú chybovú stránku.",
     "field_disable_canonical_uris": "Ponechať koncové lomky",
-    "field_disable_canonical_uris_help": "Nepresmerovávať kvôli pridaniu alebo odobratiu koncovej lomky pri adresároch a súboroch."
+    "field_disable_canonical_uris_help": "Nepresmerovávať kvôli pridaniu alebo odobratiu koncovej lomky pri adresároch a súboroch.",
+    "field_templates": "Spracovať súbory šablónami",
+    "field_templates_help": "Zapne šablónovací systém Caddy pre obsluhované súbory, takže môžu používať include, .Req a ďalšie akcie šablón.",
+    "field_templates_mime": "Typy MIME",
+    "field_templates_root": "Adresár pre include",
+    "field_templates_root_help": "Kde include a ďalšie súborové akcie hľadajú súbory. Prázdne znamená koreň webu."
   },
   "edit_static": {
     "title": "Upraviť statický server — :{{port}}",

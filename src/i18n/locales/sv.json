@@ -183,7 +183,12 @@
     "field_status": "Statuskod",
     "field_status_help": "Svara på varje fil med den här statuskoden i stället för 200, till exempel 404 för en egen felsida.",
     "field_disable_canonical_uris": "Låt avslutande snedstreck vara",
-    "field_disable_canonical_uris_help": "Omdirigera inte för att lägga till eller ta bort ett avslutande snedstreck på kataloger och filer."
+    "field_disable_canonical_uris_help": "Omdirigera inte för att lägga till eller ta bort ett avslutande snedstreck på kataloger och filer.",
+    "field_templates": "Kör filerna genom mallar",
+    "field_templates_help": "Slår på Caddys mallmotor för de filer som serveras, så att de kan använda include, .Req och de andra mallåtgärderna.",
+    "field_templates_mime": "MIME-typer",
+    "field_templates_root": "Katalog för include",
+    "field_templates_root_help": "Var include och de andra filåtgärderna letar efter filer. Tomt betyder webbplatsens rot."
   },
   "edit_static": {
     "title": "Redigera statisk server — :{{port}}",

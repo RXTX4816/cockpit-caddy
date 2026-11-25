@@ -183,7 +183,12 @@
     "field_status": "Kode status",
     "field_status_help": "Jawab setiap berkas dengan kode status ini, bukan 200, misalnya 404 untuk halaman galat kustom.",
     "field_disable_canonical_uris": "Biarkan garis miring di akhir apa adanya",
-    "field_disable_canonical_uris_help": "Jangan mengalihkan untuk menambah atau menghapus garis miring di akhir pada direktori dan berkas."
+    "field_disable_canonical_uris_help": "Jangan mengalihkan untuk menambah atau menghapus garis miring di akhir pada direktori dan berkas.",
+    "field_templates": "Proses berkas dengan templat",
+    "field_templates_help": "Mengaktifkan mesin templat Caddy untuk berkas yang disajikan, sehingga dapat memakai include, .Req dan aksi templat lainnya.",
+    "field_templates_mime": "Tipe MIME",
+    "field_templates_root": "Direktori untuk include",
+    "field_templates_root_help": "Tempat include dan aksi berkas lain mencari berkas. Kosong berarti root situs."
   },
   "edit_static": {
     "title": "Edit server statis — :{{port}}",

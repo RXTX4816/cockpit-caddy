@@ -896,3 +896,21 @@ describe.runIf(available || required)("caddy adapt accepts the file_server and p
   });
 });
 
+describe.runIf(available || required)("caddy adapt accepts the templates directive (#339)", () => {
+  it("reads plain templates back", () => {
+    const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, targetPort: 0, fileServer: { root: "/srv/www", templates: {} } })]));
+    expect(p.fileServer?.templates).toEqual({});
+  });
+
+  it("reads the mime types and root back", () => {
+    const templates = { mime: ["text/html", "text/css"], root: "/srv/inc" };
+    const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, targetPort: 0, fileServer: { root: "/srv/www", templates } })]));
+    expect(p.fileServer?.templates).toEqual(templates);
+  });
+
+  it("reads no templates from a plain static site", () => {
+    const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, targetPort: 0, fileServer: { root: "/srv/www" } })]));
+    expect(p.fileServer?.templates).toBeUndefined();
+  });
+});
+

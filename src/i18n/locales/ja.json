@@ -183,7 +183,12 @@
     "field_status": "ステータスコード",
     "field_status_help": "すべてのファイルに 200 ではなくこのステータスコードで応答します。たとえば独自のエラーページ用に 404。",
     "field_disable_canonical_uris": "末尾のスラッシュをそのままにする",
-    "field_disable_canonical_uris_help": "ディレクトリやファイルの末尾スラッシュを付け外しするためのリダイレクトを行いません。"
+    "field_disable_canonical_uris_help": "ディレクトリやファイルの末尾スラッシュを付け外しするためのリダイレクトを行いません。",
+    "field_templates": "ファイルをテンプレートで処理",
+    "field_templates_help": "配信するファイルに Caddy のテンプレートエンジンを適用し、include や .Req などのテンプレートアクションを使えるようにします。",
+    "field_templates_mime": "MIME タイプ",
+    "field_templates_root": "include のディレクトリ",
+    "field_templates_root_help": "include などのファイル操作がファイルを探す場所。空欄はサイトルートです。"
   },
   "edit_static": {
     "title": "静的サーバーを編集 — :{{port}}",

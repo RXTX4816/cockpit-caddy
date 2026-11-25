@@ -183,7 +183,12 @@
     "field_status": "Código de status",
     "field_status_help": "Responder a cada arquivo com este código em vez de 200, por exemplo 404 para uma página de erro própria.",
     "field_disable_canonical_uris": "Manter as barras finais como estão",
-    "field_disable_canonical_uris_help": "Não redirecionar para adicionar ou remover a barra final em diretórios e arquivos."
+    "field_disable_canonical_uris_help": "Não redirecionar para adicionar ou remover a barra final em diretórios e arquivos.",
+    "field_templates": "Processar os arquivos com modelos",
+    "field_templates_help": "Liga o mecanismo de modelos do Caddy para os arquivos servidos, que então podem usar include, .Req e as outras ações de modelo.",
+    "field_templates_mime": "Tipos MIME",
+    "field_templates_root": "Diretório dos includes",
+    "field_templates_root_help": "Onde include e as outras ações de arquivo procuram arquivos. Vazio significa a raiz do site."
   },
   "edit_static": {
     "title": "Editar servidor estático — :{{port}}",

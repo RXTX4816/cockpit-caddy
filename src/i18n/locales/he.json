@@ -183,7 +183,12 @@
     "field_status": "קוד סטטוס",
     "field_status_help": "להשיב לכל קובץ בקוד סטטוס זה במקום 200, למשל 404 לדף שגיאה מותאם.",
     "field_disable_canonical_uris": "השאר לוכסנים סופיים כמות שהם",
-    "field_disable_canonical_uris_help": "אל תפנה כדי להוסיף או להסיר לוכסן סופי בתיקיות ובקבצים."
+    "field_disable_canonical_uris_help": "אל תפנה כדי להוסיף או להסיר לוכסן סופי בתיקיות ובקבצים.",
+    "field_templates": "הרצת הקבצים דרך תבניות",
+    "field_templates_help": "מפעיל את מנוע התבניות של Caddy לקבצים המוגשים, כך שיוכלו להשתמש ב-include, ב-.Req ובשאר פעולות התבניות.",
+    "field_templates_mime": "סוגי MIME",
+    "field_templates_root": "תיקייה להכללות",
+    "field_templates_root_help": "היכן include ושאר פעולות הקבצים מחפשות קבצים. ריק פירושו שורש האתר."
   },
   "edit_static": {
     "title": "עריכת שרת סטטי — :{{port}}",

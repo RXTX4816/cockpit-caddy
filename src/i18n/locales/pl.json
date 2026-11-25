@@ -183,7 +183,12 @@
     "field_status": "Kod stanu",
     "field_status_help": "Odpowiadaj na każdy plik tym kodem zamiast 200, np. 404 dla własnej strony błędu.",
     "field_disable_canonical_uris": "Zostaw końcowe ukośniki bez zmian",
-    "field_disable_canonical_uris_help": "Nie przekierowuj, aby dodać lub usunąć końcowy ukośnik w katalogach i plikach."
+    "field_disable_canonical_uris_help": "Nie przekierowuj, aby dodać lub usunąć końcowy ukośnik w katalogach i plikach.",
+    "field_templates": "Przetwarzaj pliki szablonami",
+    "field_templates_help": "Włącza silnik szablonów Caddy dla serwowanych plików, aby mogły używać include, .Req i innych akcji szablonów.",
+    "field_templates_mime": "Typy MIME",
+    "field_templates_root": "Katalog dla include",
+    "field_templates_root_help": "Gdzie include i inne akcje na plikach szukają plików. Puste oznacza katalog główny witryny."
   },
   "edit_static": {
     "title": "Edytuj serwer statyczny — :{{port}}",

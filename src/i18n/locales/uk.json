@@ -183,7 +183,12 @@
     "field_status": "Код стану",
     "field_status_help": "Відповідати на кожен файл цим кодом замість 200, наприклад 404 для власної сторінки помилки.",
     "field_disable_canonical_uris": "Не чіпати кінцеві слеші",
-    "field_disable_canonical_uris_help": "Не перенаправляти, щоб додати чи прибрати кінцевий слеш у каталогів і файлів."
+    "field_disable_canonical_uris_help": "Не перенаправляти, щоб додати чи прибрати кінцевий слеш у каталогів і файлів.",
+    "field_templates": "Обробляти файли шаблонами",
+    "field_templates_help": "Вмикає шаблонізатор Caddy для файлів, що віддаються, щоб вони могли використовувати include, .Req та інші дії шаблонів.",
+    "field_templates_mime": "Типи MIME",
+    "field_templates_root": "Каталог для include",
+    "field_templates_root_help": "Де include та інші файлові дії шукають файли. Порожньо — корінь сайту."
   },
   "edit_static": {
     "title": "Змінити статичний сервер — :{{port}}",

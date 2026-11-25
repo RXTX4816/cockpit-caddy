@@ -183,7 +183,12 @@
     "field_status": "상태 코드",
     "field_status_help": "모든 파일에 200 대신 이 상태 코드로 응답합니다. 예를 들어 사용자 지정 오류 페이지용 404.",
     "field_disable_canonical_uris": "끝 슬래시를 그대로 두기",
-    "field_disable_canonical_uris_help": "디렉터리와 파일에 끝 슬래시를 붙이거나 떼는 리디렉션을 하지 않습니다."
+    "field_disable_canonical_uris_help": "디렉터리와 파일에 끝 슬래시를 붙이거나 떼는 리디렉션을 하지 않습니다.",
+    "field_templates": "파일을 템플릿으로 처리",
+    "field_templates_help": "제공하는 파일에 Caddy의 템플릿 엔진을 적용하여 include, .Req 등 템플릿 동작을 쓸 수 있게 합니다.",
+    "field_templates_mime": "MIME 형식",
+    "field_templates_root": "include 디렉터리",
+    "field_templates_root_help": "include 등 파일 동작이 파일을 찾는 위치입니다. 비워 두면 사이트 루트입니다."
   },
   "edit_static": {
     "title": "정적 서버 편집 — :{{port}}",

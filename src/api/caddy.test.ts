@@ -52,7 +52,7 @@ import {
   CONF_D_IMPORT_LINE,
   parseConfTlsIssuerMap,
 } from "./caddy";
-import { buildBasicAuthHandler, buildEncodeHandler, buildFileServerJson, parseFileServerOptions, buildRedirectHandler, parseEncodeOptionsJson, parseBasicAuthOptionsJson, parseHtmlRedirect } from "./caddyJsonModel";
+import { buildBasicAuthHandler, buildEncodeHandler, buildFileServerHandlers, buildFileServerJson, parseFileServerOptions, parseTemplatesJson, buildRedirectHandler, parseEncodeOptionsJson, parseBasicAuthOptionsJson, parseHtmlRedirect } from "./caddyJsonModel";
 import { proxiesToCaddyfile } from "./caddy";
 import { buildPhpFastcgiLines } from "./siteBlocks";
 import type { CaddyConfig, CaddyServer, ProxyEntry, RouteMatch, ServerDef } from "./types";
@@ -4765,6 +4765,29 @@ describe("file_server and php_fastcgi options (#340)", () => {
       upstream: "localhost:9000", root: "/srv", captureStderr: true, resolveRootSymlink: true, dialTimeout: "3s", readTimeout: "10s", writeTimeout: "20s",
     }, "\t").join("\n");
     for (const line of ["capture_stderr", "resolve_root_symlink", "dial_timeout 3s", "read_timeout 10s", "write_timeout 20s"]) expect(lines).toContain(line);
+  });
+});
+
+describe("templates directive (#339)", () => {
+  const site = (fileServer: import("./types").FileServerConfig) => proxyToBlock(proxy({ tls: false, targetPort: 0, fileServer }));
+
+  it("writes templates before file_server, plain or with mime and root", () => {
+    expect(site({ root: "/srv", templates: {} })).toMatch(/\ttemplates\n\tfile_server\n/);
+    const block = site({ root: "/srv", templates: { mime: ["text/html", "text/css"], root: "/srv/inc" } });
+    expect(block).toContain("templates {");
+    expect(block).toContain("mime text/html text/css");
+    expect(block).toContain("root /srv/inc");
+    expect(block.indexOf("templates")).toBeLessThan(block.indexOf("file_server"));
+    expect(site({ root: "/srv" })).not.toContain("templates");
+  });
+
+  it("builds the templates handler in front of file_server and reads it back", () => {
+    const handlers = buildFileServerHandlers({ root: "/srv", templates: { mime: ["text/html"], root: "/srv/inc" } }) as unknown as Array<Record<string, unknown>>;
+    expect(handlers.map(h => h.handler)).toEqual(["templates", "file_server"]);
+    expect(handlers[0]).toEqual({ handler: "templates", file_root: "/srv/inc", mime_types: ["text/html"] });
+    expect(parseTemplatesJson(handlers as never)).toEqual({ mime: ["text/html"], root: "/srv/inc" });
+    expect(parseTemplatesJson([{ handler: "file_server" }] as never)).toBeUndefined();
+    expect(buildFileServerHandlers({ root: "/srv" })).toHaveLength(1);
   });
 });
 

@@ -183,7 +183,12 @@
     "field_status": "Cod de stare",
     "field_status_help": "Răspunde la fiecare fișier cu acest cod în loc de 200, de exemplu 404 pentru o pagină de eroare proprie.",
     "field_disable_canonical_uris": "Lasă barele oblice finale neschimbate",
-    "field_disable_canonical_uris_help": "Nu redirecționa pentru a adăuga sau a elimina o bară oblică finală la directoare și fișiere."
+    "field_disable_canonical_uris_help": "Nu redirecționa pentru a adăuga sau a elimina o bară oblică finală la directoare și fișiere.",
+    "field_templates": "Procesează fișierele prin șabloane",
+    "field_templates_help": "Activează motorul de șabloane Caddy pentru fișierele servite, care pot astfel folosi include, .Req și celelalte acțiuni de șablon.",
+    "field_templates_mime": "Tipuri MIME",
+    "field_templates_root": "Director pentru include",
+    "field_templates_root_help": "Unde caută fișiere include și celelalte acțiuni pe fișiere. Gol înseamnă rădăcina site-ului."
   },
   "edit_static": {
     "title": "Editează serverul static — :{{port}}",
