@@ -873,7 +873,7 @@ export function parseRouteToEntry(
       namedServerKey,
       redirect: { to: jsonPlaceholderToCaddy(htmlRedirect), code: 302, html: true },
       matchers,
-      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, bind, accessLog,
+      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, serverExtras, bind, accessLog,
       errorHandlers: parseErrorHandlers(server),
     };
   }

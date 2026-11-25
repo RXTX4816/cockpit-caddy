@@ -4978,6 +4978,12 @@ describe("redirect html mode (#338)", () => {
     const [back] = parseProxies(config);
     expect(back.redirect).toEqual({ to: "https://example.com{uri}", code: 302, html: true });
   });
+
+  it("keeps the server options of a redirect page", () => {
+    const server = buildServerEntry({ ...htmlRedirect, serverExtras: { strictSniHost: true } });
+    const [back] = parseProxies({ apps: { http: { servers: { srv0: server } } } } as unknown as CaddyConfig);
+    expect(back.serverExtras).toEqual({ strictSniHost: true });
+  });
 });
 
 describe("encode options (#335)", () => {
