@@ -691,7 +691,12 @@
     "proxy_protocol_allow_help": "Rentang CIDR yang dipisahkan spasi yang boleh mengirim header protokol PROXY — batasi ke IP penyeimbang beban Anda sendiri untuk mencegah pemalsuan IP klien. Kosongkan untuk menerima dari sumber mana pun.",
     "proxy_protocol_timeout": "Batas waktu baca header (opsional)",
     "proxy_protocol_timeout_help": "Waktu tunggu maksimum untuk header protokol PROXY sebelum menyerah (durasi Go, mis. 2s). Kosongkan untuk bawaan Caddy.",
-    "on_demand_rate_deprecated": "Caddy tidak lagi menyarankan interval dan burst. Kosongkan keduanya dan andalkan endpoint ask."
+    "on_demand_rate_deprecated": "Caddy tidak lagi menyarankan interval dan burst. Kosongkan keduanya dan andalkan endpoint ask.",
+    "tab_core": "Inti",
+    "tab_tls": "TLS & ACME",
+    "tab_logging": "Log & metrik",
+    "tab_proxy": "Header proxy & protokol",
+    "tabs_aria": "Bagian pengaturan"
   },
   "ca": {
     "title": "Otoritas sertifikat internal",

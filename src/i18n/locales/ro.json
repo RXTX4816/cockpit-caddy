@@ -691,7 +691,12 @@
     "proxy_protocol_allow_help": "Intervale CIDR separate prin spații care au voie să trimită antete ale protocolului PROXY — limitează-le la IP-urile echilibratorului tău pentru a preveni falsificarea IP-ului clientului. Lasă gol pentru a accepta orice sursă.",
     "proxy_protocol_timeout": "Timeout pentru citirea antetului (opțional)",
     "proxy_protocol_timeout_help": "Timpul maxim de așteptare a antetului protocolului PROXY înainte de renunțare (durată Go, de ex. 2s). Lasă gol pentru valoarea implicită Caddy.",
-    "on_demand_rate_deprecated": "Caddy nu mai recomandă interval și burst. Goliți ambele și bazați-vă pe endpoint-ul ask."
+    "on_demand_rate_deprecated": "Caddy nu mai recomandă interval și burst. Goliți ambele și bazați-vă pe endpoint-ul ask.",
+    "tab_core": "De bază",
+    "tab_tls": "TLS și ACME",
+    "tab_logging": "Jurnale și metrici",
+    "tab_proxy": "Antete proxy și protocoale",
+    "tabs_aria": "Secțiunile setărilor"
   },
   "ca": {
     "title": "Autoritate de certificare internă",

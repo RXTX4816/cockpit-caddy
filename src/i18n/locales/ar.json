@@ -691,7 +691,12 @@
     "proxy_protocol_allow_help": "نطاقات CIDR مفصولة بمسافات مسموح لها بإرسال ترويسات بروتوكول PROXY — اقصرها على عناوين موازن الحمل لديك لمنع انتحال عنوان IP العميل. اتركه فارغًا لقبول أي مصدر.",
     "proxy_protocol_timeout": "مهلة قراءة الترويسة (اختياري)",
     "proxy_protocol_timeout_help": "أقصى وقت لانتظار ترويسة بروتوكول PROXY قبل الاستسلام (مدة بصيغة Go، مثل 2s). اتركه فارغًا لاستخدام الافتراضي في Caddy.",
-    "on_demand_rate_deprecated": "لم يعد Caddy يوصي بـ interval وburst. امسح الحقلين واعتمد على نقطة ask بدلًا منهما."
+    "on_demand_rate_deprecated": "لم يعد Caddy يوصي بـ interval وburst. امسح الحقلين واعتمد على نقطة ask بدلًا منهما.",
+    "tab_core": "الأساسية",
+    "tab_tls": "TLS وACME",
+    "tab_logging": "السجلات والمقاييس",
+    "tab_proxy": "ترويسات الوكيل والبروتوكولات",
+    "tabs_aria": "أقسام الإعدادات"
   },
   "ca": {
     "title": "سلطة الشهادات الداخلية",

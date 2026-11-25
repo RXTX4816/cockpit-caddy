@@ -691,7 +691,12 @@
     "proxy_protocol_allow_help": "PROXY プロトコルのヘッダーを送信できる CIDR 範囲をスペース区切りで指定します。クライアント IP の偽装を防ぐため、ロードバランサー自身の IP に限定してください。どの送信元も受け付ける場合は空欄にします。",
     "proxy_protocol_timeout": "ヘッダー読み取りタイムアウト（任意）",
     "proxy_protocol_timeout_help": "PROXY プロトコルのヘッダーを待つ最大時間（Go の時間形式、例: 2s）。Caddy の既定を使う場合は空欄にします。",
-    "on_demand_rate_deprecated": "Caddy は interval と burst を推奨しなくなりました。両方を空にして ask エンドポイントに任せてください。"
+    "on_demand_rate_deprecated": "Caddy は interval と burst を推奨しなくなりました。両方を空にして ask エンドポイントに任せてください。",
+    "tab_core": "基本",
+    "tab_tls": "TLS と ACME",
+    "tab_logging": "ログとメトリクス",
+    "tab_proxy": "プロキシヘッダーとプロトコル",
+    "tabs_aria": "設定のセクション"
   },
   "ca": {
     "title": "内部認証局",

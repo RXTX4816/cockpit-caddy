@@ -691,7 +691,12 @@
     "proxy_protocol_allow_help": "PROXY protokolü başlıkları göndermesine izin verilen, boşlukla ayrılmış CIDR aralıkları — istemci IP sahteciliğini önlemek için bunu yük dengeleyicinizin kendi IP'leriyle sınırlayın. Her kaynağı kabul etmek için boş bırakın.",
     "proxy_protocol_timeout": "Başlık okuma zaman aşımı (isteğe bağlı)",
     "proxy_protocol_timeout_help": "Vazgeçmeden önce PROXY protokolü başlığı için beklenecek en uzun süre (Go süresi, ör. 2s). Caddy varsayılanı için boş bırakın.",
-    "on_demand_rate_deprecated": "Caddy artık interval ve burst önermiyor. İkisini de temizleyin ve ask uç noktasına güvenin."
+    "on_demand_rate_deprecated": "Caddy artık interval ve burst önermiyor. İkisini de temizleyin ve ask uç noktasına güvenin.",
+    "tab_core": "Temel",
+    "tab_tls": "TLS ve ACME",
+    "tab_logging": "Günlük ve metrikler",
+    "tab_proxy": "Proxy üstbilgileri ve protokoller",
+    "tabs_aria": "Ayar bölümleri"
   },
   "ca": {
     "title": "İç sertifika yetkilisi",

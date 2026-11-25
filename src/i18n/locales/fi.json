@@ -691,7 +691,12 @@
     "proxy_protocol_allow_help": "Välilyönneillä erotetut CIDR-alueet, jotka saavat lähettää PROXY-protokollan otsakkeita — rajaa kuormantasaajasi omiin IP-osoitteisiin estääksesi asiakas-IP:n väärentämisen. Jätä tyhjäksi hyväksyäksesi kaikki lähteet.",
     "proxy_protocol_timeout": "Otsakkeen lukemisen aikakatkaisu (valinnainen)",
     "proxy_protocol_timeout_help": "Enimmäisaika, jonka PROXY-protokollan otsaketta odotetaan ennen luovuttamista (Go-kesto, esim. 2s). Jätä tyhjäksi käyttääksesi Caddyn oletusta.",
-    "on_demand_rate_deprecated": "Caddy ei enää suosittele intervalia ja burstia. Tyhjennä molemmat ja luota ask-päätepisteeseen."
+    "on_demand_rate_deprecated": "Caddy ei enää suosittele intervalia ja burstia. Tyhjennä molemmat ja luota ask-päätepisteeseen.",
+    "tab_core": "Perusasetukset",
+    "tab_tls": "TLS ja ACME",
+    "tab_logging": "Lokit ja mittarit",
+    "tab_proxy": "Välityspalvelimen otsakkeet ja protokollat",
+    "tabs_aria": "Asetusten osiot"
   },
   "ca": {
     "title": "Sisäinen varmentaja",

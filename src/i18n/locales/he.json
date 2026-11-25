@@ -691,7 +691,12 @@
     "proxy_protocol_allow_help": "טווחי CIDR מופרדים ברווחים שמורשים לשלוח כותרות פרוטוקול PROXY — כדאי להגביל לכתובות ה-IP של מאזן העומסים עצמו כדי למנוע זיוף IP של לקוח. יש להשאיר ריק כדי לקבל מכל מקור.",
     "proxy_protocol_timeout": "מגבלת זמן לקריאת הכותרת (אופציונלי)",
     "proxy_protocol_timeout_help": "הזמן המרבי להמתנה לכותרת פרוטוקול PROXY לפני ויתור (משך בפורמט Go, למשל 2s). יש להשאיר ריק לברירת המחדל של Caddy.",
-    "on_demand_rate_deprecated": "Caddy כבר לא ממליץ על interval ו-burst. רוקנו את שניהם והסתמכו על נקודת ה-ask."
+    "on_demand_rate_deprecated": "Caddy כבר לא ממליץ על interval ו-burst. רוקנו את שניהם והסתמכו על נקודת ה-ask.",
+    "tab_core": "ליבה",
+    "tab_tls": "TLS ו-ACME",
+    "tab_logging": "יומנים ומדדים",
+    "tab_proxy": "כותרות פרוקסי ופרוטוקולים",
+    "tabs_aria": "חלקי ההגדרות"
   },
   "ca": {
     "title": "רשות אישורים פנימית",

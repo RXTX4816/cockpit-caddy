@@ -691,7 +691,12 @@
     "proxy_protocol_allow_help": "Door spaties gescheiden CIDR-bereiken die PROXY-protocolheaders mogen sturen — beperk dit tot de IP's van je load balancer om vervalsing van client-IP's te voorkomen. Laat leeg om elke bron te accepteren.",
     "proxy_protocol_timeout": "Time-out voor lezen van de header (optioneel)",
     "proxy_protocol_timeout_help": "Maximale wachttijd op de PROXY-protocolheader voordat wordt opgegeven (Go-duur, bijv. 2s). Laat leeg voor de standaard van Caddy.",
-    "on_demand_rate_deprecated": "Caddy raadt interval en burst niet meer aan. Maak beide leeg en vertrouw op het ask-endpoint."
+    "on_demand_rate_deprecated": "Caddy raadt interval en burst niet meer aan. Maak beide leeg en vertrouw op het ask-endpoint.",
+    "tab_core": "Algemeen",
+    "tab_tls": "TLS & ACME",
+    "tab_logging": "Logging & metrics",
+    "tab_proxy": "Proxy-headers & protocollen",
+    "tabs_aria": "Onderdelen van de instellingen"
   },
   "ca": {
     "title": "Interne certificeringsinstantie",

@@ -25,8 +25,10 @@ import { FlatSectionsContext } from "./sectionLayout";
 export type ProxyTabKey = "general" | "security" | "routing" | "upstreams" | "logging" | "limits";
 export const PROXY_TAB_ORDER: ProxyTabKey[] = ["general", "security", "routing", "upstreams", "logging", "limits"];
 
-export interface ProxyTab {
-  key: ProxyTabKey;
+export interface ProxyTab<K extends string = ProxyTabKey> {
+  key: K;
+  /** The tab's title when it has no `proxy_tabs.<key>` entry (Settings, #346). */
+  label?: string;
   /** Something in the tab differs from the defaults (not shown for General). */
   configured?: boolean;
   hasError?: boolean;
@@ -43,18 +45,18 @@ export function firstTabWithError(hasError: Record<ProxyTabKey, boolean>): Proxy
  * shows a dot when something in it is configured and an error icon when it holds an error. The
  * sections inside render as plain field groups (FlatSectionsContext).
  */
-export function ProxyDialogTabs({ tabs, active, onSelect }: { tabs: ProxyTab[]; active: ProxyTabKey; onSelect: (k: ProxyTabKey) => void }) {
+export function ProxyDialogTabs<K extends string = ProxyTabKey>({ tabs, active, onSelect, ariaLabel }: { tabs: ProxyTab<K>[]; active: K; onSelect: (k: K) => void; ariaLabel?: string }) {
   const { t } = useTranslation();
   return (
     <FlatSectionsContext.Provider value>
-      <Tabs activeKey={active} onSelect={(_e, k) => onSelect(k as ProxyTabKey)} aria-label={t("proxy_tabs.aria_label")} mountOnEnter={false}>
+      <Tabs activeKey={active} onSelect={(_e, k) => onSelect(k as K)} aria-label={ariaLabel ?? t("proxy_tabs.aria_label")} mountOnEnter={false}>
         {tabs.map(tab => (
           <Tab
             key={tab.key}
             eventKey={tab.key}
             title={
               <TabTitleText>
-                {t(`proxy_tabs.${tab.key}`)}
+                {tab.label ?? t(`proxy_tabs.${tab.key as ProxyTabKey}`)}
                 {tab.hasError ? (
                   <ExclamationCircleIcon
                     title={t("proxy_tabs.has_error")}

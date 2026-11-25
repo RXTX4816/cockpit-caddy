@@ -691,7 +691,12 @@
     "proxy_protocol_allow_help": "Plages CIDR séparées par des espaces autorisées à envoyer des en-têtes du protocole PROXY — limitez-les aux IP de votre répartiteur de charge pour empêcher l'usurpation d'IP client. Laisser vide pour accepter toute source.",
     "proxy_protocol_timeout": "Délai de lecture de l'en-tête (facultatif)",
     "proxy_protocol_timeout_help": "Temps d'attente maximal de l'en-tête du protocole PROXY avant abandon (durée Go, par ex. 2s). Laisser vide pour la valeur par défaut de Caddy.",
-    "on_demand_rate_deprecated": "Caddy ne recommande plus interval et burst. Videz les deux champs et appuyez-vous sur le point de terminaison ask."
+    "on_demand_rate_deprecated": "Caddy ne recommande plus interval et burst. Videz les deux champs et appuyez-vous sur le point de terminaison ask.",
+    "tab_core": "Général",
+    "tab_tls": "TLS et ACME",
+    "tab_logging": "Journaux et métriques",
+    "tab_proxy": "En-têtes de proxy et protocoles",
+    "tabs_aria": "Sections des paramètres"
   },
   "ca": {
     "title": "Autorité de certification interne",

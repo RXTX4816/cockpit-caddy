@@ -691,7 +691,12 @@
     "proxy_protocol_allow_help": "PROXY 프로토콜 헤더를 보낼 수 있는 CIDR 범위(공백 구분). 클라이언트 IP 위조를 막으려면 로드 밸런서 자체 IP로 제한하세요. 모든 출발지를 허용하려면 비워 두세요.",
     "proxy_protocol_timeout": "헤더 읽기 시간 제한(선택)",
     "proxy_protocol_timeout_help": "PROXY 프로토콜 헤더를 기다리는 최대 시간(Go 기간, 예: 2s). Caddy 기본값을 쓰려면 비워 두세요.",
-    "on_demand_rate_deprecated": "Caddy는 더 이상 interval과 burst를 권장하지 않습니다. 둘 다 비우고 ask 엔드포인트를 사용하세요."
+    "on_demand_rate_deprecated": "Caddy는 더 이상 interval과 burst를 권장하지 않습니다. 둘 다 비우고 ask 엔드포인트를 사용하세요.",
+    "tab_core": "기본",
+    "tab_tls": "TLS 및 ACME",
+    "tab_logging": "로그 및 메트릭",
+    "tab_proxy": "프록시 헤더 및 프로토콜",
+    "tabs_aria": "설정 섹션"
   },
   "ca": {
     "title": "내부 인증 기관",

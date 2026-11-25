@@ -691,7 +691,12 @@
     "proxy_protocol_allow_help": "Zakresy CIDR oddzielone spacjami, które mogą wysyłać nagłówki protokołu PROXY — ogranicz je do adresów IP load balancera, aby zapobiec podszywaniu się pod IP klienta. Pozostaw puste, aby akceptować dowolne źródło.",
     "proxy_protocol_timeout": "Limit czasu odczytu nagłówka (opcjonalnie)",
     "proxy_protocol_timeout_help": "Maksymalny czas oczekiwania na nagłówek protokołu PROXY przed rezygnacją (czas w formacie Go, np. 2s). Pozostaw puste, aby użyć domyślnego w Caddy.",
-    "on_demand_rate_deprecated": "Caddy nie zaleca już interval i burst. Wyczyść oba pola i polegaj na endpoincie ask."
+    "on_demand_rate_deprecated": "Caddy nie zaleca już interval i burst. Wyczyść oba pola i polegaj na endpoincie ask.",
+    "tab_core": "Podstawowe",
+    "tab_tls": "TLS i ACME",
+    "tab_logging": "Logi i metryki",
+    "tab_proxy": "Nagłówki proxy i protokoły",
+    "tabs_aria": "Sekcje ustawień"
   },
   "ca": {
     "title": "Wewnętrzny urząd certyfikacji",

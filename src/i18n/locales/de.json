@@ -691,7 +691,12 @@
     "proxy_protocol_allow_help": "Durch Leerzeichen getrennte CIDR-Bereiche, die PROXY-Protokoll-Header senden dürfen – beschränken Sie dies auf die IPs Ihres Load Balancers, um gefälschte Client-IPs zu verhindern. Leer lassen, um jede Quelle zu akzeptieren.",
     "proxy_protocol_timeout": "Timeout für das Lesen des Headers (optional)",
     "proxy_protocol_timeout_help": "Maximale Wartezeit auf den PROXY-Protokoll-Header, bevor abgebrochen wird (Go-Dauer, z. B. 2s). Leer lassen für den Caddy-Standard.",
-    "on_demand_rate_deprecated": "Caddy empfiehlt Intervall und Burst nicht mehr. Leere beide Felder und verlass dich stattdessen auf den Ask-Endpunkt."
+    "on_demand_rate_deprecated": "Caddy empfiehlt Intervall und Burst nicht mehr. Leere beide Felder und verlass dich stattdessen auf den Ask-Endpunkt.",
+    "tab_core": "Allgemein",
+    "tab_tls": "TLS & ACME",
+    "tab_logging": "Protokolle & Metriken",
+    "tab_proxy": "Proxy-Header & Protokolle",
+    "tabs_aria": "Bereiche der Einstellungen"
   },
   "ca": {
     "title": "Interne Zertifizierungsstelle",

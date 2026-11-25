@@ -691,7 +691,12 @@
     "proxy_protocol_allow_help": "Faixas CIDR separadas por espaço autorizadas a enviar cabeçalhos do protocolo PROXY — restrinja aos IPs do seu balanceador para evitar falsificação do IP do cliente. Deixe em branco para aceitar qualquer origem.",
     "proxy_protocol_timeout": "Timeout de leitura do cabeçalho (opcional)",
     "proxy_protocol_timeout_help": "Tempo máximo de espera pelo cabeçalho do protocolo PROXY antes de desistir (duração Go, ex.: 2s). Deixe em branco para usar o padrão do Caddy.",
-    "on_demand_rate_deprecated": "O Caddy não recomenda mais interval e burst. Limpe os dois e use o endpoint ask."
+    "on_demand_rate_deprecated": "O Caddy não recomenda mais interval e burst. Limpe os dois e use o endpoint ask.",
+    "tab_core": "Básico",
+    "tab_tls": "TLS e ACME",
+    "tab_logging": "Logs e métricas",
+    "tab_proxy": "Cabeçalhos de proxy e protocolos",
+    "tabs_aria": "Seções das configurações"
   },
   "ca": {
     "title": "Autoridade certificadora interna",
