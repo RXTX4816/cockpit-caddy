@@ -813,7 +813,12 @@
     "admin_enforce_origin": "Tvinga origins",
     "metrics_per_host": "Märk mätvärden per värd",
     "metrics_per_host_help": "Lägger till den begärda värden på varje förfrågningsmått så att webbplatser kan särskiljas. Varje olik värd blir en egen serie.",
-    "auto_https_disable_certs": "Ingen certifikathantering"
+    "auto_https_disable_certs": "Ingen certifikathantering",
+    "tab_core": "Grundläggande",
+    "tab_tls": "TLS och ACME",
+    "tab_logging": "Loggning och mätvärden",
+    "tab_proxy": "Proxyrubriker och protokoll",
+    "tabs_aria": "Inställningsavsnitt"
   },
   "ca": {
     "title": "Intern certifikatutfärdare",
@@ -1261,5 +1266,10 @@
     "type_a": "A / AAAA",
     "ipv4": "IPv4",
     "ipv6": "IPv6"
+  },
+  "bind": {
+    "label": "Bind-adresser",
+    "help": "Adresserna som den här webbplatsen lyssnar på, avgränsade med mellanslag, till exempel 127.0.0.1 ::1. Tomt lyssnar på alla adresser. En värd som är en enda IP-adress binder redan till den.",
+    "invalid": "Ange IP-adresser eller värdnamn, utan port."
   }
 }

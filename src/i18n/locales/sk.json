@@ -813,7 +813,12 @@
     "admin_enforce_origin": "Vynútiť originy",
     "metrics_per_host": "Označiť metriky hostiteľom",
     "metrics_per_host_help": "Pridá požadovaného hostiteľa ku každej metrike požiadavky, aby sa weby dali rozlíšiť. Každý iný hostiteľ tvorí vlastný rad.",
-    "auto_https_disable_certs": "Bez správy certifikátov"
+    "auto_https_disable_certs": "Bez správy certifikátov",
+    "tab_core": "Základ",
+    "tab_tls": "TLS a ACME",
+    "tab_logging": "Logovanie a metriky",
+    "tab_proxy": "Hlavičky proxy a protokoly",
+    "tabs_aria": "Sekcie nastavení"
   },
   "ca": {
     "title": "Interná certifikačná autorita",
@@ -1261,5 +1266,10 @@
     "type_a": "A / AAAA",
     "ipv4": "IPv4",
     "ipv6": "IPv6"
+  },
+  "bind": {
+    "label": "Adresy pre bind",
+    "help": "Adresy, na ktorých tento web počúva, oddelené medzerami, napríklad 127.0.0.1 ::1. Prázdne znamená všetky adresy. Hostiteľ, ktorý je jedinou IP adresou, sa na ňu už viaže.",
+    "invalid": "Zadajte IP adresy alebo názvy hostiteľov bez portu."
   }
 }

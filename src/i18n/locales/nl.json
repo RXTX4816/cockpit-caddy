@@ -813,7 +813,12 @@
     "admin_enforce_origin": "Origins afdwingen",
     "metrics_per_host": "Metrics labelen per host",
     "metrics_per_host_help": "Voegt de gevraagde host toe aan elke aanvraagmetric, zodat sites te onderscheiden zijn. Elke andere host wordt een eigen reeks.",
-    "auto_https_disable_certs": "Geen certificaatbeheer"
+    "auto_https_disable_certs": "Geen certificaatbeheer",
+    "tab_core": "Algemeen",
+    "tab_tls": "TLS & ACME",
+    "tab_logging": "Logging & metrics",
+    "tab_proxy": "Proxy-headers & protocollen",
+    "tabs_aria": "Onderdelen van de instellingen"
   },
   "ca": {
     "title": "Interne certificeringsinstantie",
@@ -1261,5 +1266,10 @@
     "type_a": "A / AAAA",
     "ipv4": "IPv4",
     "ipv6": "IPv6"
+  },
+  "bind": {
+    "label": "Bind-adressen",
+    "help": "De adressen waarop deze site luistert, gescheiden door spaties, bijvoorbeeld 127.0.0.1 ::1. Leeg luistert op elk adres. Een host die één IP-adres is, bindt er al aan.",
+    "invalid": "Voer IP-adressen of hostnamen in, zonder poort."
   }
 }

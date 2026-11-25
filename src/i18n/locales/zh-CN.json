@@ -813,7 +813,12 @@
     "admin_enforce_origin": "强制检查来源",
     "metrics_per_host": "按主机为指标添加标签",
     "metrics_per_host_help": "在每个请求指标上加入所请求的主机,以便区分站点。每个不同的主机都会成为单独的时间序列。",
-    "auto_https_disable_certs": "不管理证书"
+    "auto_https_disable_certs": "不管理证书",
+    "tab_core": "核心",
+    "tab_tls": "TLS 与 ACME",
+    "tab_logging": "日志与指标",
+    "tab_proxy": "代理标头与协议",
+    "tabs_aria": "设置分区"
   },
   "ca": {
     "title": "内部证书颁发机构",
@@ -1261,5 +1266,10 @@
     "type_a": "A / AAAA",
     "ipv4": "IPv4",
     "ipv6": "IPv6"
+  },
+  "bind": {
+    "label": "绑定地址",
+    "help": "此站点监听的地址,以空格分隔,例如 127.0.0.1 ::1。留空表示监听所有地址。主机若是单个 IP 地址,则已经绑定到该地址。",
+    "invalid": "请输入 IP 地址或主机名,不带端口。"
   }
 }

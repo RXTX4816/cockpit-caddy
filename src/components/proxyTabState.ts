@@ -4,6 +4,7 @@ import { accessLogConfigToValues, accessLogValuesToConfig, type AccessLogValues 
 import { BASIC_AUTH_OPTIONS_EMPTY, basicAuthHashMismatch, basicAuthOptionsFromValues, basicAuthOptionsToValues, resolveBasicAuth, type AuthEntry, type BasicAuthOptionValues } from "./BasicAuthSection";
 import { ENCODE_EMPTY, encodeFromValues, encodeToValues, validateEncode, type EncodeValues } from "./EncodeSection";
 import { dynamicUpstreamsToConfig, dynamicUpstreamsToValues, type DynamicSourceValues } from "./DynamicUpstreamsSection";
+import { bindFromValue, bindToValue } from "./BindSection";
 import { lbRetryConfigToValues, lbRetryValuesToConfig, type LbRetryValues } from "./LbRetrySection";
 import { serverExtrasFromValues, serverExtrasToValues, type ServerTimeoutValues } from "./ServerTimeoutsSection";
 import { tlsConfigToValues, tlsValuesToAdvanced, tlsValuesToCustomTls, tlsValuesToMtls, type TlsValues } from "./TlsSection";
@@ -43,6 +44,8 @@ export interface ProxyTabState {
   replaceUpstreamErrors: boolean;
   serverTimeouts: ServerTimeoutValues;
   requestBodyMaxSize: string;
+  /** The addresses the site binds to, as typed (#323). */
+  bind: string;
 }
 
 export function emptyProxyTabState(): ProxyTabState {
@@ -71,6 +74,7 @@ export function emptyProxyTabState(): ProxyTabState {
     replaceUpstreamErrors: false,
     serverTimeouts: { readTimeout: "", readHeaderTimeout: "", writeTimeout: "", idleTimeout: "", maxHeaderBytes: "", disableHttp3: false, ...serverExtrasToValues(undefined) },
     requestBodyMaxSize: "",
+    bind: "",
   };
 }
 
@@ -116,6 +120,7 @@ export function proxyTabStateFromEntry(p: ProxyEntry): ProxyTabState {
       ...serverExtrasToValues(p.serverExtras),
     },
     requestBodyMaxSize: p.requestBodyMaxSize != null ? String(p.requestBodyMaxSize) : "",
+    bind: bindToValue(p.bind),
   };
 }
 
@@ -126,7 +131,7 @@ export type ProxyTabEntryFields = Pick<ProxyEntry,
   | "tlsServerName" | "keepalive" | "keepaliveIdleConns" | "keepaliveIdleConnsPerHost" | "httpVersions" | "readTimeout" | "writeTimeout"
   | "accessLog" | "errorHandlers" | "replaceUpstreamErrors"
   | "serverReadTimeout" | "serverReadHeaderTimeout" | "serverWriteTimeout" | "serverIdleTimeout" | "maxHeaderBytes" | "disableHttp3" | "serverExtras"
-  | "requestBodyMaxSize">;
+  | "requestBodyMaxSize" | "bind">;
 
 function intOrUndefined(v: string): number | undefined {
   const n = v.trim() ? parseInt(v, 10) : NaN;
@@ -182,6 +187,7 @@ export async function proxyTabStateToEntry(s: ProxyTabState): Promise<ProxyTabEn
     disableHttp3: st.disableHttp3 || undefined,
     serverExtras: serverExtrasFromValues(st),
     requestBodyMaxSize: s.requestBodyMaxSize.trim() ? parseInt(s.requestBodyMaxSize, 10) : undefined,
+    bind: bindFromValue(s.bind),
   };
 }
 

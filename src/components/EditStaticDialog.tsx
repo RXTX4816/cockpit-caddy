@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  Alert,
   Button,
   Checkbox,
   Form,
@@ -26,6 +25,7 @@ import { SnippetImportsField } from "./SnippetImportsField";
 import { ProxyTabs } from "./ProxyTabs";
 import { firstTabWithError, type ProxyTabKey } from "./proxyDialogParts";
 import { proxyTabStateFlags, proxyTabStateFromEntry, proxyTabStateToEntry, useProxyTabState } from "./proxyTabState";
+import { Notice } from "./Notice";
 
 interface Props {
   proxy: ProxyEntry;
@@ -90,11 +90,9 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
       <ModalHeader title={t("edit_static.title", { port: proxy.externalPort })} />
       <ModalBody>
         {isLocked && (
-          <Alert
+          <Notice
             variant="warning"
-            isInline
             title={t("edit_static.confirm_body", { port })}
-            style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}
           />
         )}
 
@@ -183,7 +181,7 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
         />
 
         {confirmAction.error && (
-          <Alert variant="danger" isInline title={confirmAction.error} style={{ marginTop: "var(--pf-v6-global--spacer--md)" }} />
+          <Notice variant="danger" title={confirmAction.error} />
         )}
       </ModalBody>
       <ModalFooter>

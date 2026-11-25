@@ -813,7 +813,12 @@
     "admin_enforce_origin": "Pakota originit",
     "metrics_per_host": "Merkitse mittarit isännällä",
     "metrics_per_host_help": "Lisää pyydetyn isännän jokaiseen pyyntömittariin, jotta sivustot erotetaan toisistaan. Jokainen eri isäntä muodostaa oman sarjansa.",
-    "auto_https_disable_certs": "Ei varmenteiden hallintaa"
+    "auto_https_disable_certs": "Ei varmenteiden hallintaa",
+    "tab_core": "Perusasetukset",
+    "tab_tls": "TLS ja ACME",
+    "tab_logging": "Lokit ja mittarit",
+    "tab_proxy": "Välityspalvelimen otsakkeet ja protokollat",
+    "tabs_aria": "Asetusten osiot"
   },
   "ca": {
     "title": "Sisäinen varmentaja",
@@ -1261,5 +1266,10 @@
     "type_a": "A / AAAA",
     "ipv4": "IPv4",
     "ipv6": "IPv6"
+  },
+  "bind": {
+    "label": "Bind-osoitteet",
+    "help": "Osoitteet, joissa tämä sivusto kuuntelee, välilyönnein erotettuina, esimerkiksi 127.0.0.1 ::1. Tyhjä kuuntelee kaikissa osoitteissa. Isäntä, joka on yksi IP-osoite, sitoutuu jo siihen.",
+    "invalid": "Anna IP-osoitteita tai isäntänimiä ilman porttia."
   }
 }

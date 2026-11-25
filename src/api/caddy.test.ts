@@ -4838,6 +4838,42 @@ describe("proxy error handlers and upstream error pages (#255)", () => {
   });
 });
 
+describe("bind next to a host name (#323)", () => {
+  const site = (extra: Partial<ProxyEntry>) => proxy({ tls: false, externalHost: "example.com", ...extra });
+
+  it("writes one bind line with the addresses, and the host's own IP once", () => {
+    expect(proxyToBlock(site({ bind: ["10.0.0.5", "::1"] }))).toContain("\tbind 10.0.0.5 ::1");
+    expect(proxyToBlock(proxy({ tls: false, externalHost: "10.0.0.5", bind: ["10.0.0.5", "10.0.0.6"] }))).toContain("\tbind 10.0.0.5 10.0.0.6");
+    expect(proxyToBlock(site({}))).not.toContain("bind");
+  });
+
+  it("listens on every bind address in the JSON push", () => {
+    expect(buildServerEntry(site({ bind: ["10.0.0.5", "10.0.0.6"] })).listen).toEqual(["10.0.0.5:7700", "10.0.0.6:7700"]);
+    expect(buildServerEntry(site({})).listen).toEqual([":7700"]);
+    expect(buildServerEntry(proxy({ tls: false, externalHost: "10.0.0.5" })).listen).toEqual(["10.0.0.5:7700"]);
+  });
+
+  it("reads the names from the host matcher and the bind from the listen addresses", () => {
+    const config = { apps: { http: { servers: { srv0: {
+      listen: ["10.0.0.5:7700", "10.0.0.6:7700"],
+      routes: [{ match: [{ host: ["example.com", "www.example.com"] }], handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:9000" }] }] }],
+    } } } } } as unknown as CaddyConfig;
+    const [p] = parseProxies(config);
+    expect(p.externalHost).toBe("example.com, www.example.com");
+    expect(p.bind).toEqual(["10.0.0.5", "10.0.0.6"]);
+    expect(p.matchers).toBeUndefined();
+  });
+
+  it("keeps an IP host as a host, and several binds without a name as binds", () => {
+    const one = { apps: { http: { servers: { srv0: { listen: ["10.0.0.5:7700"], routes: [{ handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:9000" }] }] }] } } } } } as unknown as CaddyConfig;
+    expect(parseProxies(one)[0]).toMatchObject({ externalHost: "10.0.0.5" });
+    expect(parseProxies(one)[0].bind).toBeUndefined();
+    const two = { apps: { http: { servers: { srv0: { listen: ["10.0.0.5:7700", "10.0.0.6:7700"], routes: [{ handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:9000" }] }] }] } } } } } as unknown as CaddyConfig;
+    expect(parseProxies(two)[0].externalHost).toBeUndefined();
+    expect(parseProxies(two)[0].bind).toEqual(["10.0.0.5", "10.0.0.6"]);
+  });
+});
+
 describe("basic_auth options in the generated config (#337)", () => {
   const accounts = [{ username: "alice", passwordHash: "hash1" }];
   const base: ProxyEntry = {

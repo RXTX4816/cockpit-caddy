@@ -813,7 +813,12 @@
     "admin_enforce_origin": "Enforce origins",
     "metrics_per_host": "Label metrics by host",
     "metrics_per_host_help": "Adds the requested host to each request metric, so sites can be told apart. Every distinct host becomes its own series.",
-    "auto_https_disable_certs": "No certificate management"
+    "auto_https_disable_certs": "No certificate management",
+    "tab_core": "Core",
+    "tab_tls": "TLS & ACME",
+    "tab_logging": "Logging & metrics",
+    "tab_proxy": "Proxy headers & protocols",
+    "tabs_aria": "Settings sections"
   },
   "ca": {
     "title": "Internal Certificate Authority",
@@ -1261,5 +1266,10 @@
     "type_a": "A / AAAA",
     "ipv4": "IPv4",
     "ipv6": "IPv6"
+  },
+  "bind": {
+    "label": "Bind addresses",
+    "help": "The addresses this site listens on, separated by spaces, for example 127.0.0.1 ::1. Empty listens on every address. A host that is one IP address already binds to it.",
+    "invalid": "Enter IP addresses or host names, without a port."
   }
 }

@@ -3,6 +3,7 @@ import { Checkbox } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import { isPathOnlyMatcher } from "../api";
 import { AccessLogSection } from "./AccessLogSection";
+import { BindSection } from "./BindSection";
 import { EncodeSection } from "./EncodeSection";
 import { BasicAuthSection } from "./BasicAuthSection";
 import { DynamicUpstreamsSection } from "./DynamicUpstreamsSection";
@@ -146,9 +147,11 @@ export function ProxyTabs({ state: s, onChange, general, generalHasError, active
       {
         key: "limits",
         configured: flags.configured.limits,
+        hasError: flags.hasError.limits,
         content: (
           <>
             <ServerTimeoutsSection value={s.serverTimeouts} onChange={v => onChange({ serverTimeouts: v })} isDisabled={isDisabled} />
+            <BindSection value={s.bind} onChange={v => onChange({ bind: v })} isDisabled={isDisabled} idPrefix={`${idPrefix}-`} />
             <RequestBodyLimitField value={s.requestBodyMaxSize} onChange={v => onChange({ requestBodyMaxSize: v })} isDisabled={isDisabled} idPrefix={idPrefix} />
           </>
         ),

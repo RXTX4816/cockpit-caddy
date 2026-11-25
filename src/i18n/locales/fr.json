@@ -813,7 +813,12 @@
     "admin_enforce_origin": "Imposer les origines",
     "metrics_per_host": "Étiqueter les métriques par hôte",
     "metrics_per_host_help": "Ajoute l'hôte demandé à chaque métrique de requête pour distinguer les sites. Chaque hôte distinct forme sa propre série.",
-    "auto_https_disable_certs": "Sans gestion des certificats"
+    "auto_https_disable_certs": "Sans gestion des certificats",
+    "tab_core": "Général",
+    "tab_tls": "TLS et ACME",
+    "tab_logging": "Journaux et métriques",
+    "tab_proxy": "En-têtes de proxy et protocoles",
+    "tabs_aria": "Sections des paramètres"
   },
   "ca": {
     "title": "Autorité de certification interne",
@@ -1261,5 +1266,10 @@
     "type_a": "A / AAAA",
     "ipv4": "IPv4",
     "ipv6": "IPv6"
+  },
+  "bind": {
+    "label": "Adresses de liaison",
+    "help": "Les adresses sur lesquelles ce site écoute, séparées par des espaces, par exemple 127.0.0.1 ::1. Vide écoute sur toutes les adresses. Un hôte qui est une seule adresse IP s'y lie déjà.",
+    "invalid": "Saisissez des adresses IP ou des noms d'hôte, sans port."
   }
 }

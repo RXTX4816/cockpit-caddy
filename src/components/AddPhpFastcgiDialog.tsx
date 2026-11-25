@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  Alert,
   Button,
   Checkbox,
   Form,
@@ -26,6 +25,7 @@ import { ProxyTabs } from "./ProxyTabs";
 import { firstTabWithError, type ProxyTabKey } from "./proxyDialogParts";
 import { proxyTabStateFlags, proxyTabStateToEntry, useProxyTabState, type ProxyTabState } from "./proxyTabState";
 import { PhpFastcgiEnvSection, envEntriesToRecord, type EnvEntry } from "./PhpFastcgiEnvSection";
+import { Notice } from "./Notice";
 
 interface Props {
   existingPorts: number[];
@@ -102,11 +102,9 @@ export function AddPhpFastcgiDialog({ existingPorts, onAdd, onClose, initialValu
       <ModalHeader title={t("php_fastcgi.add_title")} />
       <ModalBody>
         {isLocked && (
-          <Alert
+          <Notice
             variant="warning"
-            isInline
             title={t("php_fastcgi.add_confirm_body", { port })}
-            style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}
           />
         )}
 
@@ -229,7 +227,7 @@ export function AddPhpFastcgiDialog({ existingPorts, onAdd, onClose, initialValu
         />
 
         {confirmAction.error && (
-          <Alert variant="danger" isInline title={confirmAction.error} style={{ marginTop: "var(--pf-v6-global--spacer--md)" }} />
+          <Notice variant="danger" title={confirmAction.error} />
         )}
       </ModalBody>
       <ModalFooter>

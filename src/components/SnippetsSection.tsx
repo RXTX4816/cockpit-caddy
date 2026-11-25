@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  Alert,
   Button,
   DataList,
   DataListCell,
@@ -27,6 +26,7 @@ import { useTranslation } from "react-i18next";
 import { isValidSnippetName, snippetPreview } from "../api";
 import type { SnippetDef } from "../api";
 import { useSnippets } from "../hooks/useSnippets";
+import { Notice } from "./Notice";
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
@@ -64,7 +64,7 @@ export function SnippetsSection() {
       <HelperText style={{ marginBottom: "var(--pf-t--global--spacer--sm)" }}>
         <HelperTextItem>{t("snippets.intro")}</HelperTextItem>
       </HelperText>
-      {error && <Alert variant="danger" isInline title={error} style={{ marginBottom: "var(--pf-t--global--spacer--sm)" }} />}
+      {error && <Notice variant="danger" title={error} />}
       {snippets.length === 0 ? (
         <p style={{ color: "var(--pf-t--global--text--color--subtle)" }}>{t("snippets.empty")}</p>
       ) : (
@@ -171,7 +171,7 @@ export function SnippetDialog({ snippet, takenNames, onSave, onClose }: DialogPr
     <Modal isOpen onClose={onClose} variant="medium" aria-labelledby="snippet-dialog-title">
       <ModalHeader title={snippet ? t("snippets.edit_title") : t("snippets.add_title")} labelId="snippet-dialog-title" />
       <ModalBody>
-        {error && <Alert variant="danger" isInline title={t("snippets.save_failed")} style={{ marginBottom: "1rem" }}>{error}</Alert>}
+        {error && <Notice variant="danger" title={t("snippets.save_failed")}>{error}</Notice>}
         <Form onSubmit={e => { e.preventDefault(); if (canSave) void handleSave(); }}>
           <FormGroup label={t("snippets.name_label")} fieldId="snippet-name" isRequired>
             <TextInput

@@ -813,7 +813,12 @@
     "admin_enforce_origin": "Impune originile",
     "metrics_per_host": "Etichetează metricile după gazdă",
     "metrics_per_host_help": "Adaugă gazda cerută la fiecare metrică de cerere, ca site-urile să poată fi deosebite. Fiecare gazdă diferită devine o serie proprie.",
-    "auto_https_disable_certs": "Fără gestionarea certificatelor"
+    "auto_https_disable_certs": "Fără gestionarea certificatelor",
+    "tab_core": "De bază",
+    "tab_tls": "TLS și ACME",
+    "tab_logging": "Jurnale și metrici",
+    "tab_proxy": "Antete proxy și protocoale",
+    "tabs_aria": "Secțiunile setărilor"
   },
   "ca": {
     "title": "Autoritate de certificare internă",
@@ -1261,5 +1266,10 @@
     "type_a": "A / AAAA",
     "ipv4": "IPv4",
     "ipv6": "IPv6"
+  },
+  "bind": {
+    "label": "Adrese de bind",
+    "help": "Adresele pe care ascultă acest site, separate prin spații, de exemplu 127.0.0.1 ::1. Gol ascultă pe toate adresele. O gazdă care este o singură adresă IP se leagă deja la ea.",
+    "invalid": "Introdu adrese IP sau nume de gazdă, fără port."
   }
 }

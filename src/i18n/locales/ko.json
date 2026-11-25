@@ -813,7 +813,12 @@
     "admin_enforce_origin": "오리진 강제",
     "metrics_per_host": "호스트별로 지표에 레이블 지정",
     "metrics_per_host_help": "요청 지표마다 요청된 호스트를 추가해 사이트를 구분할 수 있게 합니다. 서로 다른 호스트마다 별도의 시계열이 생깁니다.",
-    "auto_https_disable_certs": "인증서 관리 안 함"
+    "auto_https_disable_certs": "인증서 관리 안 함",
+    "tab_core": "기본",
+    "tab_tls": "TLS 및 ACME",
+    "tab_logging": "로그 및 메트릭",
+    "tab_proxy": "프록시 헤더 및 프로토콜",
+    "tabs_aria": "설정 섹션"
   },
   "ca": {
     "title": "내부 인증 기관",
@@ -1261,5 +1266,10 @@
     "type_a": "A / AAAA",
     "ipv4": "IPv4",
     "ipv6": "IPv6"
+  },
+  "bind": {
+    "label": "바인드 주소",
+    "help": "이 사이트가 수신하는 주소(공백으로 구분)입니다. 예: 127.0.0.1 ::1. 비워 두면 모든 주소에서 수신합니다. 호스트가 IP 주소 하나이면 이미 그 주소에 바인드됩니다.",
+    "invalid": "포트 없이 IP 주소나 호스트 이름을 입력하세요."
   }
 }

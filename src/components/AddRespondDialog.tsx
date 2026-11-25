@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  Alert,
   Button,
   Checkbox,
   Form,
@@ -29,6 +28,7 @@ import { firstTabWithError, type ProxyTabKey } from "./proxyDialogParts";
 import { proxyTabStateFlags, useProxyTabState, type ProxyTabState } from "./proxyTabState";
 import { parseListenPort } from "./AddServerDialog";
 import type { ServerContext } from "./AddRedirectDialog";
+import { Notice } from "./Notice";
 
 interface Props {
   existingPorts: number[];
@@ -102,11 +102,9 @@ export function AddRespondDialog({ existingPorts, onAdd, onClose, initialValues,
       <ModalHeader title={t("add_respond.title")} />
       <ModalBody>
         {isLocked && (
-          <Alert
+          <Notice
             variant="warning"
-            isInline
             title={t("add_respond.confirm_body", { port: serverCtx ? serverCtx.port : port, status: statusCode })}
-            style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}
           />
         )}
         <ProxyTabs
@@ -220,7 +218,7 @@ export function AddRespondDialog({ existingPorts, onAdd, onClose, initialValues,
         />
 
         {confirmAction.error && (
-          <Alert variant="danger" isInline title={confirmAction.error} style={{ marginTop: "var(--pf-v6-global--spacer--md)" }} />
+          <Notice variant="danger" title={confirmAction.error} />
         )}
       </ModalBody>
       <ModalFooter>
