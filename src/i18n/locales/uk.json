@@ -192,7 +192,21 @@
     "field_templates_help": "Вмикає шаблонізатор Caddy для файлів, що віддаються, щоб вони могли використовувати include, .Req та інші дії шаблонів.",
     "field_templates_mime": "Типи MIME",
     "field_templates_root": "Каталог для include",
-    "field_templates_root_help": "Де include та інші файлові дії шукають файли. Порожньо — корінь сайту."
+    "field_templates_root_help": "Де include та інші файлові дії шукають файли. Порожньо — корінь сайту.",
+    "field_browse_sort": "Порядок списку",
+    "field_browse_order": "Напрямок",
+    "browse_sort_default": "Типово в Caddy (ім'я)",
+    "browse_sort_name": "Ім'я",
+    "browse_sort_namedirfirst": "Ім'я, спершу теки",
+    "browse_sort_size": "Розмір",
+    "browse_sort_time": "Остання зміна",
+    "browse_order_asc": "За зростанням",
+    "browse_order_desc": "За спаданням",
+    "field_browse_file_limit": "Найбільше записів у списку",
+    "browse_file_limit_none": "Без обмеження",
+    "browse_file_limit_invalid": "Введіть ціле число від 1.",
+    "field_browse_reveal_symlinks": "Показувати цілі символьних посилань",
+    "field_browse_reveal_symlinks_help": "Список показує, куди веде кожне символьне посилання. Це може розкрити шляхи поза коренем сайту."
   },
   "edit_static": {
     "title": "Змінити статичний сервер — :{{port}}",

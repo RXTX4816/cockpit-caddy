@@ -192,7 +192,21 @@
     "field_templates_help": "Mengaktifkan mesin templat Caddy untuk berkas yang disajikan, sehingga dapat memakai include, .Req dan aksi templat lainnya.",
     "field_templates_mime": "Tipe MIME",
     "field_templates_root": "Direktori untuk include",
-    "field_templates_root_help": "Tempat include dan aksi berkas lain mencari berkas. Kosong berarti root situs."
+    "field_templates_root_help": "Tempat include dan aksi berkas lain mencari berkas. Kosong berarti root situs.",
+    "field_browse_sort": "Urutan daftar",
+    "field_browse_order": "Arah",
+    "browse_sort_default": "Bawaan Caddy (nama)",
+    "browse_sort_name": "Nama",
+    "browse_sort_namedirfirst": "Nama, folder dahulu",
+    "browse_sort_size": "Ukuran",
+    "browse_sort_time": "Terakhir diubah",
+    "browse_order_asc": "Naik",
+    "browse_order_desc": "Turun",
+    "field_browse_file_limit": "Entri maksimum per daftar",
+    "browse_file_limit_none": "Tanpa batas",
+    "browse_file_limit_invalid": "Masukkan bilangan bulat 1 atau lebih.",
+    "field_browse_reveal_symlinks": "Tampilkan tujuan symlink",
+    "field_browse_reveal_symlinks_help": "Daftar menampilkan tujuan setiap symlink. Ini dapat mengungkap jalur di luar root situs."
   },
   "edit_static": {
     "title": "Edit server statis — :{{port}}",

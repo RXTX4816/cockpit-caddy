@@ -1021,6 +1021,33 @@ describe.runIf(available || required)("caddy adapt accepts the file_server and p
     expect(p.fileServer).toMatchObject(fileServer);
   });
 
+  it("reads the listing options back from a real adapt", () => {
+    const fileServer = {
+      root: "/srv/www", browse: true, browseTemplate: "/etc/caddy/listing.html",
+      browseRevealSymlinks: true, browseSort: { by: "size" as const, order: "desc" as const }, browseFileLimit: 100,
+    };
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, targetPort: 0, fileServer })]);
+    expect(conf).toContain("\tfile_server {\n\t\tbrowse /etc/caddy/listing.html {\n\t\t\treveal_symlinks\n\t\t\tsort size desc\n\t\t\tfile_limit 100\n\t\t}\n\t}");
+    const [p] = readBack(conf);
+    expect(p.fileServer).toMatchObject(fileServer);
+  });
+
+  it("writes listing options without a template as a bare browse block", () => {
+    const fileServer = { root: "/srv/www", browse: true, browseSort: { by: "namedirfirst" as const } };
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, targetPort: 0, fileServer })]);
+    expect(conf).toContain("\tfile_server {\n\t\tbrowse {\n\t\t\tsort namedirfirst\n\t\t}\n\t}");
+    const [p] = readBack(conf);
+    expect(p.fileServer?.browseSort).toEqual({ by: "namedirfirst" });
+    expect(p.fileServer?.browseTemplate).toBeUndefined();
+  });
+
+  it("writes no listing options when browse is off", () => {
+    const fileServer = { root: "/srv/www", browse: false, browseRevealSymlinks: true, browseFileLimit: 5 };
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, targetPort: 0, fileServer })]);
+    expect(conf).toContain("\tfile_server\n}");
+    expect(readBack(conf)[0].fileServer?.browseFileLimit).toBeUndefined();
+  });
+
   it("reads the php_fastcgi options back from a real adapt", () => {
     const phpFastcgi = {
       upstream: "localhost:9000", root: "/srv/php", captureStderr: true, resolveRootSymlink: true, dialTimeout: "3s", readTimeout: "10s", writeTimeout: "20s",

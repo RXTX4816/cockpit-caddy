@@ -192,7 +192,21 @@
     "field_templates_help": "Ottaa Caddyn mallimoottorin käyttöön tarjoiltaville tiedostoille, jotta ne voivat käyttää include, .Req ja muita mallitoimintoja.",
     "field_templates_mime": "MIME-tyypit",
     "field_templates_root": "Include-hakemisto",
-    "field_templates_root_help": "Mistä include ja muut tiedostotoiminnot etsivät tiedostoja. Tyhjä tarkoittaa sivuston juurta."
+    "field_templates_root_help": "Mistä include ja muut tiedostotoiminnot etsivät tiedostoja. Tyhjä tarkoittaa sivuston juurta.",
+    "field_browse_sort": "Listauksen järjestys",
+    "field_browse_order": "Suunta",
+    "browse_sort_default": "Caddyn oletus (nimi)",
+    "browse_sort_name": "Nimi",
+    "browse_sort_namedirfirst": "Nimi, kansiot ensin",
+    "browse_sort_size": "Koko",
+    "browse_sort_time": "Viimeksi muokattu",
+    "browse_order_asc": "Nouseva",
+    "browse_order_desc": "Laskeva",
+    "field_browse_file_limit": "Enintään merkintöjä listauksessa",
+    "browse_file_limit_none": "Ei rajaa",
+    "browse_file_limit_invalid": "Anna kokonaisluku, joka on vähintään 1.",
+    "field_browse_reveal_symlinks": "Näytä symbolisten linkkien kohteet",
+    "field_browse_reveal_symlinks_help": "Listaus näyttää, mihin kukin symbolinen linkki osoittaa. Se voi paljastaa polkuja sivuston juuren ulkopuolelta."
   },
   "edit_static": {
     "title": "Muokkaa staattista palvelinta — :{{port}}",

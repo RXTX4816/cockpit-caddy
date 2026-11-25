@@ -192,7 +192,21 @@
     "field_templates_help": "Liga o mecanismo de modelos do Caddy para os arquivos servidos, que então podem usar include, .Req e as outras ações de modelo.",
     "field_templates_mime": "Tipos MIME",
     "field_templates_root": "Diretório dos includes",
-    "field_templates_root_help": "Onde include e as outras ações de arquivo procuram arquivos. Vazio significa a raiz do site."
+    "field_templates_root_help": "Onde include e as outras ações de arquivo procuram arquivos. Vazio significa a raiz do site.",
+    "field_browse_sort": "Ordem da listagem",
+    "field_browse_order": "Direção",
+    "browse_sort_default": "Padrão do Caddy (nome)",
+    "browse_sort_name": "Nome",
+    "browse_sort_namedirfirst": "Nome, pastas primeiro",
+    "browse_sort_size": "Tamanho",
+    "browse_sort_time": "Última modificação",
+    "browse_order_asc": "Crescente",
+    "browse_order_desc": "Decrescente",
+    "field_browse_file_limit": "Máximo de entradas por listagem",
+    "browse_file_limit_none": "Sem limite",
+    "browse_file_limit_invalid": "Insira um número inteiro igual ou maior que 1.",
+    "field_browse_reveal_symlinks": "Mostrar destinos de links simbólicos",
+    "field_browse_reveal_symlinks_help": "A listagem mostra para onde cada link simbólico aponta. Isso pode revelar caminhos fora da raiz do site."
   },
   "edit_static": {
     "title": "Editar servidor estático — :{{port}}",

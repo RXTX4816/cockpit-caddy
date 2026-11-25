@@ -5045,6 +5045,14 @@ describe("file_server and php_fastcgi options (#340)", () => {
     expect(parseFileServerOptions(h, [])).toEqual({ browseTemplate: "/etc/caddy/listing.html", disableCanonicalUris: true, status: 404 });
   });
 
+  it("builds and reads the JSON of the listing options", () => {
+    const fs = { root: "/srv", browse: true, browseRevealSymlinks: true, browseSort: { by: "size" as const, order: "desc" as const }, browseFileLimit: 7 };
+    const h = buildFileServerJson(fs) as unknown as Record<string, unknown>;
+    expect(h.browse).toEqual({ reveal_symlinks: true, sort: ["size", "desc"], file_limit: 7 });
+    expect(parseFileServerOptions(h, [])).toEqual({ browseRevealSymlinks: true, browseSort: { by: "size", order: "desc" }, browseFileLimit: 7 });
+    expect((buildFileServerJson({ root: "/srv", browseFileLimit: 7 }) as unknown as Record<string, unknown>).browse).toBeUndefined();
+  });
+
   it("writes the php_fastcgi options", () => {
     const lines = buildPhpFastcgiLines({
       upstream: "localhost:9000", root: "/srv", captureStderr: true, resolveRootSymlink: true, dialTimeout: "3s", readTimeout: "10s", writeTimeout: "20s",

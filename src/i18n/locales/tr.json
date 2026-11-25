@@ -192,7 +192,21 @@
     "field_templates_help": "Sunulan dosyalar için Caddy'nin şablon motorunu açar; böylece include, .Req ve diğer şablon eylemlerini kullanabilirler.",
     "field_templates_mime": "MIME türleri",
     "field_templates_root": "Include dizini",
-    "field_templates_root_help": "include ve diğer dosya eylemlerinin dosya aradığı yer. Boş, site kökü demektir."
+    "field_templates_root_help": "include ve diğer dosya eylemlerinin dosya aradığı yer. Boş, site kökü demektir.",
+    "field_browse_sort": "Liste sıralaması",
+    "field_browse_order": "Yön",
+    "browse_sort_default": "Caddy varsayılanı (ad)",
+    "browse_sort_name": "Ad",
+    "browse_sort_namedirfirst": "Ad, önce klasörler",
+    "browse_sort_size": "Boyut",
+    "browse_sort_time": "Son değişiklik",
+    "browse_order_asc": "Artan",
+    "browse_order_desc": "Azalan",
+    "field_browse_file_limit": "Listede en fazla girdi",
+    "browse_file_limit_none": "Sınır yok",
+    "browse_file_limit_invalid": "1 veya daha büyük bir tam sayı girin.",
+    "field_browse_reveal_symlinks": "Sembolik bağlantı hedeflerini göster",
+    "field_browse_reveal_symlinks_help": "Liste, her sembolik bağlantının nereyi gösterdiğini gösterir. Bu, site kökü dışındaki yolları açığa çıkarabilir."
   },
   "edit_static": {
     "title": "Statik sunucuyu düzenle — :{{port}}",

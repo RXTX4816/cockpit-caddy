@@ -192,7 +192,21 @@
     "field_templates_help": "Schaltet Caddys Template-Engine für die ausgelieferten Dateien ein, sodass sie include, .Req und die übrigen Template-Aktionen nutzen können.",
     "field_templates_mime": "MIME-Typen",
     "field_templates_root": "Verzeichnis für Includes",
-    "field_templates_root_help": "Wo include und die anderen Dateiaktionen nach Dateien suchen. Leer bedeutet das Site-Root."
+    "field_templates_root_help": "Wo include und die anderen Dateiaktionen nach Dateien suchen. Leer bedeutet das Site-Root.",
+    "field_browse_sort": "Sortierung der Liste",
+    "field_browse_order": "Richtung",
+    "browse_sort_default": "Caddys Standard (Name)",
+    "browse_sort_name": "Name",
+    "browse_sort_namedirfirst": "Name, Ordner zuerst",
+    "browse_sort_size": "Größe",
+    "browse_sort_time": "Zuletzt geändert",
+    "browse_order_asc": "Aufsteigend",
+    "browse_order_desc": "Absteigend",
+    "field_browse_file_limit": "Höchstens Einträge pro Liste",
+    "browse_file_limit_none": "Keine Grenze",
+    "browse_file_limit_invalid": "Gib eine ganze Zahl ab 1 ein.",
+    "field_browse_reveal_symlinks": "Ziele von Symlinks zeigen",
+    "field_browse_reveal_symlinks_help": "Die Liste zeigt, wohin jeder Symlink zeigt. Das kann Pfade außerhalb des Stammverzeichnisses offenlegen."
   },
   "edit_static": {
     "title": "Statischen Server bearbeiten – :{{port}}",

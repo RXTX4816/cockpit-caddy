@@ -192,7 +192,21 @@
     "field_templates_help": "Attiva il motore di modelli di Caddy per i file serviti, che così possono usare include, .Req e le altre azioni di modello.",
     "field_templates_mime": "Tipi MIME",
     "field_templates_root": "Directory per gli include",
-    "field_templates_root_help": "Dove include e le altre azioni sui file cercano i file. Vuoto significa la radice del sito."
+    "field_templates_root_help": "Dove include e le altre azioni sui file cercano i file. Vuoto significa la radice del sito.",
+    "field_browse_sort": "Ordine dell'elenco",
+    "field_browse_order": "Direzione",
+    "browse_sort_default": "Predefinito di Caddy (nome)",
+    "browse_sort_name": "Nome",
+    "browse_sort_namedirfirst": "Nome, cartelle prima",
+    "browse_sort_size": "Dimensione",
+    "browse_sort_time": "Ultima modifica",
+    "browse_order_asc": "Crescente",
+    "browse_order_desc": "Decrescente",
+    "field_browse_file_limit": "Voci massime per elenco",
+    "browse_file_limit_none": "Nessun limite",
+    "browse_file_limit_invalid": "Inserisci un numero intero pari o superiore a 1.",
+    "field_browse_reveal_symlinks": "Mostra le destinazioni dei link simbolici",
+    "field_browse_reveal_symlinks_help": "L'elenco mostra dove punta ogni link simbolico. Può rivelare percorsi fuori dalla radice del sito."
   },
   "edit_static": {
     "title": "Modifica server statico — :{{port}}",

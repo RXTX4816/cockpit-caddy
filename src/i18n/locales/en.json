@@ -192,7 +192,21 @@
     "field_templates_help": "Turns on Caddy's template engine for the served files, so they can use include, .Req and the other template actions.",
     "field_templates_mime": "MIME types",
     "field_templates_root": "Directory for includes",
-    "field_templates_root_help": "Where include and the other file actions look for files. Empty means the site root."
+    "field_templates_root_help": "Where include and the other file actions look for files. Empty means the site root.",
+    "field_browse_sort": "Listing order",
+    "field_browse_order": "Direction",
+    "browse_sort_default": "Caddy's default (name)",
+    "browse_sort_name": "Name",
+    "browse_sort_namedirfirst": "Name, folders first",
+    "browse_sort_size": "Size",
+    "browse_sort_time": "Last modified",
+    "browse_order_asc": "Ascending",
+    "browse_order_desc": "Descending",
+    "field_browse_file_limit": "Most entries per listing",
+    "browse_file_limit_none": "No limit",
+    "browse_file_limit_invalid": "Enter a whole number of 1 or more.",
+    "field_browse_reveal_symlinks": "Show symlink targets",
+    "field_browse_reveal_symlinks_help": "The listing shows where each symlink points. This can reveal paths outside the site root."
   },
   "edit_static": {
     "title": "Edit Static Server — :{{port}}",

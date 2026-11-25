@@ -192,7 +192,21 @@
     "field_templates_help": "為所提供的檔案啟用 Caddy 的範本引擎,檔案即可使用 include、.Req 等範本操作。",
     "field_templates_mime": "MIME 類型",
     "field_templates_root": "include 目錄",
-    "field_templates_root_help": "include 等檔案操作尋找檔案的位置。留空表示網站根目錄。"
+    "field_templates_root_help": "include 等檔案操作尋找檔案的位置。留空表示網站根目錄。",
+    "field_browse_sort": "列表排序",
+    "field_browse_order": "方向",
+    "browse_sort_default": "Caddy 預設(名稱)",
+    "browse_sort_name": "名稱",
+    "browse_sort_namedirfirst": "名稱,資料夾優先",
+    "browse_sort_size": "大小",
+    "browse_sort_time": "最後修改",
+    "browse_order_asc": "遞增",
+    "browse_order_desc": "遞減",
+    "field_browse_file_limit": "每個列表最多項目數",
+    "browse_file_limit_none": "無限制",
+    "browse_file_limit_invalid": "請輸入大於或等於 1 的整數。",
+    "field_browse_reveal_symlinks": "顯示符號連結目標",
+    "field_browse_reveal_symlinks_help": "列表會顯示每個符號連結指向的位置,可能暴露網站根目錄之外的路徑。"
   },
   "edit_static": {
     "title": "編輯靜態伺服器 — :{{port}}",

@@ -192,7 +192,21 @@
     "field_templates_help": "Zapne šablonovací systém Caddy pro obsluhované soubory, takže mohou používat include, .Req a další akce šablon.",
     "field_templates_mime": "Typy MIME",
     "field_templates_root": "Adresář pro include",
-    "field_templates_root_help": "Kde include a další souborové akce hledají soubory. Prázdné znamená kořen webu."
+    "field_templates_root_help": "Kde include a další souborové akce hledají soubory. Prázdné znamená kořen webu.",
+    "field_browse_sort": "Řazení výpisu",
+    "field_browse_order": "Směr",
+    "browse_sort_default": "Výchozí v Caddy (název)",
+    "browse_sort_name": "Název",
+    "browse_sort_namedirfirst": "Název, složky napřed",
+    "browse_sort_size": "Velikost",
+    "browse_sort_time": "Poslední změna",
+    "browse_order_asc": "Vzestupně",
+    "browse_order_desc": "Sestupně",
+    "field_browse_file_limit": "Nejvýše položek ve výpisu",
+    "browse_file_limit_none": "Bez omezení",
+    "browse_file_limit_invalid": "Zadejte celé číslo 1 nebo větší.",
+    "field_browse_reveal_symlinks": "Zobrazit cíle symbolických odkazů",
+    "field_browse_reveal_symlinks_help": "Výpis ukazuje, kam vede každý symbolický odkaz. To může prozradit cesty mimo kořen webu."
   },
   "edit_static": {
     "title": "Upravit statický server — :{{port}}",

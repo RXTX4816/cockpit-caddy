@@ -1,9 +1,9 @@
 import { useState } from "react";
 import {
-  Checkbox, ExpandableSection, FormGroup, FormHelperText, HelperText, HelperTextItem, TextInput,
+  Checkbox, ExpandableSection, FormGroup, FormHelperText, FormSelect, FormSelectOption, HelperText, HelperTextItem, TextInput,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
-import type { FileServerConfig, PhpFastcgiConfig } from "../api";
+import { BROWSE_SORT_KEYS, type BrowseSort, type FileServerConfig, type PhpFastcgiConfig } from "../api";
 
 /** The static dialog's SPA and `file_server` options (#262), as edited: lists as typed text. */
 export interface FileServerOptionsDraft {
@@ -14,6 +14,11 @@ export interface FileServerOptionsDraft {
   disableCanonicalUris: boolean;
   status: string;
   browseTemplate: string;
+  browseRevealSymlinks: boolean;
+  /** "" for Caddy's default order. */
+  browseSortBy: "" | BrowseSort["by"];
+  browseSortOrder: "" | "asc" | "desc";
+  browseFileLimit: string;
   templates: boolean;
   templatesMime: string;
   templatesRoot: string;
@@ -30,6 +35,10 @@ export function fileServerOptionsDraft(fs: FileServerConfig | undefined): FileSe
     disableCanonicalUris: !!fs?.disableCanonicalUris,
     status: fs?.status != null ? String(fs.status) : "",
     browseTemplate: fs?.browseTemplate ?? "",
+    browseRevealSymlinks: !!fs?.browseRevealSymlinks,
+    browseSortBy: fs?.browseSort?.by ?? "",
+    browseSortOrder: fs?.browseSort?.order === "desc" ? "desc" : "",
+    browseFileLimit: fs?.browseFileLimit != null ? String(fs.browseFileLimit) : "",
     templates: !!fs?.templates,
     templatesMime: fs?.templates?.mime?.join(" ") ?? "",
     templatesRoot: fs?.templates?.root ?? "",
@@ -39,12 +48,16 @@ export function fileServerOptionsDraft(fs: FileServerConfig | undefined): FileSe
 const words = (s: string) => s.trim().split(/\s+/).filter(Boolean);
 
 /** The options part of a FileServerConfig; unset options stay absent so old sites save unchanged. */
-export function fileServerOptionsFromDraft(d: FileServerOptionsDraft): Pick<FileServerConfig, "spa" | "index" | "hide" | "precompressed" | "disableCanonicalUris" | "status" | "browseTemplate" | "templates"> {
-  const out: Pick<FileServerConfig, "spa" | "index" | "hide" | "precompressed" | "disableCanonicalUris" | "status" | "browseTemplate" | "templates"> = {};
+export function fileServerOptionsFromDraft(d: FileServerOptionsDraft): Pick<FileServerConfig, "spa" | "index" | "hide" | "precompressed" | "disableCanonicalUris" | "status" | "browseTemplate" | "browseRevealSymlinks" | "browseSort" | "browseFileLimit" | "templates"> {
+  const out: Pick<FileServerConfig, "spa" | "index" | "hide" | "precompressed" | "disableCanonicalUris" | "status" | "browseTemplate" | "browseRevealSymlinks" | "browseSort" | "browseFileLimit" | "templates"> = {};
   if (d.disableCanonicalUris) out.disableCanonicalUris = true;
   const status = parseInt(d.status, 10);
   if (d.status.trim() && !isNaN(status)) out.status = status;
   if (d.browseTemplate.trim()) out.browseTemplate = d.browseTemplate.trim();
+  if (d.browseRevealSymlinks) out.browseRevealSymlinks = true;
+  if (d.browseSortBy) out.browseSort = { by: d.browseSortBy, ...(d.browseSortOrder ? { order: d.browseSortOrder } : {}) };
+  const limit = parseInt(d.browseFileLimit, 10);
+  if (limit > 0) out.browseFileLimit = limit;
   if (d.templates) {
     out.templates = {
       ...(words(d.templatesMime).length ? { mime: words(d.templatesMime) } : {}),
@@ -66,14 +79,22 @@ interface Props {
   value: FileServerOptionsDraft;
   onChange: (v: FileServerOptionsDraft) => void;
   isDisabled?: boolean;
+  /** Directory listing is on: only then the listing's own options show. */
+  browse?: boolean;
+}
+
+/** A file limit Caddy would reject: not a positive whole number. */
+export function browseFileLimitInvalid(d: FileServerOptionsDraft): boolean {
+  return !!d.browseFileLimit.trim() && !/^[1-9]\d*$/.test(d.browseFileLimit.trim());
 }
 
 /** SPA mode plus an expandable group with index files, hidden files and precompressed formats. */
-export function FileServerOptionsFields({ idPrefix, value, onChange, isDisabled }: Props) {
+export function FileServerOptionsFields({ idPrefix, value, onChange, isDisabled, browse }: Props) {
   const { t } = useTranslation();
   const set = (patch: Partial<FileServerOptionsDraft>) => onChange({ ...value, ...patch });
   // Open from the start when a site already uses one of these options.
-  const [expanded, setExpanded] = useState(() => !!(value.index.trim() || value.hide.trim() || value.precompressed.length || value.disableCanonicalUris || value.status.trim() || value.browseTemplate.trim() || value.templates));
+  const [expanded, setExpanded] = useState(() => !!(value.index.trim() || value.hide.trim() || value.precompressed.length || value.disableCanonicalUris || value.status.trim() || value.browseTemplate.trim() || value.browseRevealSymlinks || value.browseSortBy || value.browseFileLimit.trim() || value.templates));
+  const limitBad = browseFileLimitInvalid(value);
 
   return (
     <>
@@ -121,16 +142,65 @@ export function FileServerOptionsFields({ idPrefix, value, onChange, isDisabled 
           ))}
           <FormHelperText><HelperText><HelperTextItem>{t("add_static.field_precompressed_help")}</HelperTextItem></HelperText></FormHelperText>
         </FormGroup>
-        <FormGroup label={t("add_static.field_browse_template")} fieldId={`${idPrefix}-browse-template`}>
-          <TextInput
-            id={`${idPrefix}-browse-template`}
-            value={value.browseTemplate}
-            onChange={(_e, v) => set({ browseTemplate: v })}
-            placeholder="/etc/caddy/listing.html"
-            isDisabled={isDisabled}
-          />
-          <FormHelperText><HelperText><HelperTextItem>{t("add_static.field_browse_template_help")}</HelperTextItem></HelperText></FormHelperText>
-        </FormGroup>
+        {browse && (
+          <>
+          <FormGroup label={t("add_static.field_browse_template")} fieldId={`${idPrefix}-browse-template`}>
+            <TextInput
+              id={`${idPrefix}-browse-template`}
+              value={value.browseTemplate}
+              onChange={(_e, v) => set({ browseTemplate: v })}
+              placeholder="/etc/caddy/listing.html"
+              isDisabled={isDisabled}
+            />
+            <FormHelperText><HelperText><HelperTextItem>{t("add_static.field_browse_template_help")}</HelperTextItem></HelperText></FormHelperText>
+          </FormGroup>
+            <FormGroup label={t("add_static.field_browse_sort")} fieldId={`${idPrefix}-browse-sort`} isInline>
+              <FormSelect
+                id={`${idPrefix}-browse-sort`}
+                value={value.browseSortBy}
+                onChange={(_e, v) => set({ browseSortBy: v as FileServerOptionsDraft["browseSortBy"], ...(v ? {} : { browseSortOrder: "" }) })}
+                aria-label={t("add_static.field_browse_sort")}
+                isDisabled={isDisabled}
+              >
+                <FormSelectOption value="" label={t("add_static.browse_sort_default")} />
+                {BROWSE_SORT_KEYS.map(k => <FormSelectOption key={k} value={k} label={t(`add_static.browse_sort_${k}`)} />)}
+              </FormSelect>
+              <FormSelect
+                id={`${idPrefix}-browse-order`}
+                value={value.browseSortOrder}
+                onChange={(_e, v) => set({ browseSortOrder: v as FileServerOptionsDraft["browseSortOrder"] })}
+                aria-label={t("add_static.field_browse_order")}
+                isDisabled={isDisabled || !value.browseSortBy}
+              >
+                <FormSelectOption value="" label={t("add_static.browse_order_asc")} />
+                <FormSelectOption value="desc" label={t("add_static.browse_order_desc")} />
+              </FormSelect>
+            </FormGroup>
+            <FormGroup label={t("add_static.field_browse_file_limit")} fieldId={`${idPrefix}-browse-file-limit`}>
+              <TextInput
+                id={`${idPrefix}-browse-file-limit`}
+                type="number"
+                min={1}
+                value={value.browseFileLimit}
+                onChange={(_e, v) => set({ browseFileLimit: v })}
+                validated={limitBad ? "error" : "default"}
+                placeholder={t("add_static.browse_file_limit_none")}
+                isDisabled={isDisabled}
+              />
+              {limitBad && <FormHelperText><HelperText><HelperTextItem variant="error">{t("add_static.browse_file_limit_invalid")}</HelperTextItem></HelperText></FormHelperText>}
+            </FormGroup>
+            <FormGroup fieldId={`${idPrefix}-browse-reveal-symlinks`}>
+              <Checkbox
+                id={`${idPrefix}-browse-reveal-symlinks`}
+                label={t("add_static.field_browse_reveal_symlinks")}
+                description={t("add_static.field_browse_reveal_symlinks_help")}
+                isChecked={value.browseRevealSymlinks}
+                onChange={(_e, v) => set({ browseRevealSymlinks: v })}
+                isDisabled={isDisabled}
+              />
+            </FormGroup>
+          </>
+        )}
         <FormGroup label={t("add_static.field_status")} fieldId={`${idPrefix}-status`}>
           <TextInput
             id={`${idPrefix}-status`}

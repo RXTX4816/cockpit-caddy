@@ -192,7 +192,21 @@
     "field_templates_help": "ჩართავს Caddy-ის შაბლონების ძრავას მიწოდებული ფაილებისთვის, რათა გამოიყენონ include, .Req და სხვა შაბლონის მოქმედებები.",
     "field_templates_mime": "MIME ტიპები",
     "field_templates_root": "include-ების საქაღალდე",
-    "field_templates_root_help": "სად ეძებს include და სხვა ფაილური მოქმედებები ფაილებს. ცარიელი ნიშნავს საიტის ძირს."
+    "field_templates_root_help": "სად ეძებს include და სხვა ფაილური მოქმედებები ფაილებს. ცარიელი ნიშნავს საიტის ძირს.",
+    "field_browse_sort": "სიის დალაგება",
+    "field_browse_order": "მიმართულება",
+    "browse_sort_default": "Caddy-ის ნაგულისხმევი (სახელი)",
+    "browse_sort_name": "სახელი",
+    "browse_sort_namedirfirst": "სახელი, ჯერ საქაღალდეები",
+    "browse_sort_size": "ზომა",
+    "browse_sort_time": "ბოლო ცვლილება",
+    "browse_order_asc": "ზრდადი",
+    "browse_order_desc": "კლებადი",
+    "field_browse_file_limit": "ჩანაწერების მაქსიმუმი სიაში",
+    "browse_file_limit_none": "შეზღუდვის გარეშე",
+    "browse_file_limit_invalid": "შეიყვანეთ მთელი რიცხვი, 1 ან მეტი.",
+    "field_browse_reveal_symlinks": "სიმბოლური ბმულების სამიზნეების ჩვენება",
+    "field_browse_reveal_symlinks_help": "სია აჩვენებს, სად მიუთითებს თითოეული სიმბოლური ბმული. ამან შეიძლება გამოაჩინოს ბილიკები საიტის ძირის გარეთ."
   },
   "edit_static": {
     "title": "სტატიკური სერვერის რედაქტირება — :{{port}}",

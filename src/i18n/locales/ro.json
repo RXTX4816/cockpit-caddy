@@ -192,7 +192,21 @@
     "field_templates_help": "Activează motorul de șabloane Caddy pentru fișierele servite, care pot astfel folosi include, .Req și celelalte acțiuni de șablon.",
     "field_templates_mime": "Tipuri MIME",
     "field_templates_root": "Director pentru include",
-    "field_templates_root_help": "Unde caută fișiere include și celelalte acțiuni pe fișiere. Gol înseamnă rădăcina site-ului."
+    "field_templates_root_help": "Unde caută fișiere include și celelalte acțiuni pe fișiere. Gol înseamnă rădăcina site-ului.",
+    "field_browse_sort": "Ordinea listei",
+    "field_browse_order": "Direcție",
+    "browse_sort_default": "Implicit Caddy (nume)",
+    "browse_sort_name": "Nume",
+    "browse_sort_namedirfirst": "Nume, întâi dosarele",
+    "browse_sort_size": "Dimensiune",
+    "browse_sort_time": "Ultima modificare",
+    "browse_order_asc": "Crescător",
+    "browse_order_desc": "Descrescător",
+    "field_browse_file_limit": "Număr maxim de intrări pe listă",
+    "browse_file_limit_none": "Fără limită",
+    "browse_file_limit_invalid": "Introduceți un număr întreg de cel puțin 1.",
+    "field_browse_reveal_symlinks": "Afișează țintele legăturilor simbolice",
+    "field_browse_reveal_symlinks_help": "Lista arată unde duce fiecare legătură simbolică. Poate dezvălui căi din afara rădăcinii site-ului."
   },
   "edit_static": {
     "title": "Editează serverul static — :{{port}}",

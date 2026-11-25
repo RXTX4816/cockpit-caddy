@@ -18,7 +18,7 @@ import {
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import type { FileServerConfig } from "../api";
-import { FileServerOptionsFields, fileServerOptionsDraft, fileServerOptionsFromDraft } from "./FileServerOptionsFields";
+import { FileServerOptionsFields, browseFileLimitInvalid, fileServerOptionsDraft, fileServerOptionsFromDraft } from "./FileServerOptionsFields";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { CaddyApiError } from "../api";
@@ -88,6 +88,8 @@ export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues, 
 
     if (!root.trim()) { setRootErr(t("add_static.validation_root_required")); ok = false; }
     else setRootErr(null);
+
+    if (browse && browseFileLimitInvalid(fsOptions)) ok = false;
 
     return ok;
   }
@@ -206,7 +208,7 @@ export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues, 
                 />
               </FormGroup>
 
-              <FileServerOptionsFields idPrefix="static" value={fsOptions} onChange={setFsOptions} isDisabled={isLocked} />
+              <FileServerOptionsFields idPrefix="static" value={fsOptions} onChange={setFsOptions} isDisabled={isLocked} browse={browse} />
 
               {!serverCtx && (
                 <TlsModeField id="static-tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isLocked} onDemand={tlsOnDemand} onOnDemandChange={setTlsOnDemand} />

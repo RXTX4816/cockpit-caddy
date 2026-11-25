@@ -192,7 +192,21 @@
     "field_templates_help": "يفعّل محرك قوالب Caddy للملفات المقدَّمة، فيمكنها استخدام include و.Req وبقية إجراءات القوالب.",
     "field_templates_mime": "أنواع MIME",
     "field_templates_root": "مجلد الملفات المضمَّنة",
-    "field_templates_root_help": "المكان الذي تبحث فيه include وبقية إجراءات الملفات عن الملفات. الفراغ يعني جذر الموقع."
+    "field_templates_root_help": "المكان الذي تبحث فيه include وبقية إجراءات الملفات عن الملفات. الفراغ يعني جذر الموقع.",
+    "field_browse_sort": "ترتيب القائمة",
+    "field_browse_order": "الاتجاه",
+    "browse_sort_default": "افتراضي Caddy (الاسم)",
+    "browse_sort_name": "الاسم",
+    "browse_sort_namedirfirst": "الاسم، المجلدات أولاً",
+    "browse_sort_size": "الحجم",
+    "browse_sort_time": "آخر تعديل",
+    "browse_order_asc": "تصاعدي",
+    "browse_order_desc": "تنازلي",
+    "field_browse_file_limit": "أقصى عدد من العناصر في القائمة",
+    "browse_file_limit_none": "بلا حد",
+    "browse_file_limit_invalid": "أدخل عددًا صحيحًا يساوي 1 أو أكثر.",
+    "field_browse_reveal_symlinks": "إظهار أهداف الروابط الرمزية",
+    "field_browse_reveal_symlinks_help": "تعرض القائمة وجهة كل رابط رمزي. قد يكشف ذلك مسارات خارج جذر الموقع."
   },
   "edit_static": {
     "title": "تعديل الخادم الثابت — :{{port}}",

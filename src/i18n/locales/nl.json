@@ -192,7 +192,21 @@
     "field_templates_help": "Zet Caddy's sjabloonengine aan voor de geserveerde bestanden, zodat ze include, .Req en de andere sjabloonacties kunnen gebruiken.",
     "field_templates_mime": "MIME-typen",
     "field_templates_root": "Map voor includes",
-    "field_templates_root_help": "Waar include en de andere bestandsacties bestanden zoeken. Leeg betekent de siteroot."
+    "field_templates_root_help": "Waar include en de andere bestandsacties bestanden zoeken. Leeg betekent de siteroot.",
+    "field_browse_sort": "Volgorde van de lijst",
+    "field_browse_order": "Richting",
+    "browse_sort_default": "Standaard van Caddy (naam)",
+    "browse_sort_name": "Naam",
+    "browse_sort_namedirfirst": "Naam, mappen eerst",
+    "browse_sort_size": "Grootte",
+    "browse_sort_time": "Laatst gewijzigd",
+    "browse_order_asc": "Oplopend",
+    "browse_order_desc": "Aflopend",
+    "field_browse_file_limit": "Maximaal aantal items per lijst",
+    "browse_file_limit_none": "Geen limiet",
+    "browse_file_limit_invalid": "Voer een geheel getal van 1 of meer in.",
+    "field_browse_reveal_symlinks": "Doelen van symlinks tonen",
+    "field_browse_reveal_symlinks_help": "De lijst toont waar elke symlink naar wijst. Dat kan paden buiten de hoofdmap van de site prijsgeven."
   },
   "edit_static": {
     "title": "Statische server bewerken — :{{port}}",

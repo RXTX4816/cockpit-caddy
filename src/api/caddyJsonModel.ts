@@ -1,7 +1,7 @@
 // A site as Caddy's JSON config: reading ProxyEntry values out of a CaddyConfig and merging or
 // removing a proxy or named server in one. Pure: no Host, no I/O. Builds on siteBlocks.
 
-import { type CaddyHandler, type CaddyReverseProxyHandler, type CaddyRoute, type CaddyServer, type ProxyEntry, type CaddyConfig, type CaddyTLSConnectionPolicy, type CaddyTLSClientAuthentication } from "./types";
+import { type CaddyHandler, type CaddyReverseProxyHandler, type CaddyRoute, type CaddyServer, type ProxyEntry, type CaddyConfig, type CaddyTLSConnectionPolicy, type CaddyTLSClientAuthentication, type BrowseSort, BROWSE_SORT_KEYS } from "./types";
 import { externalHostList } from "./externalHosts";
 import { isIpAddress } from "./caddyfileDocument";
 import { mapPlaceholders, PLACEHOLDER_SHORTHANDS, PLACEHOLDER_PREFIXES, isPathOnlyMatcher, handlePathPrefix, multiPathStripRegex, type TransportProps, type LbFields, LB_POLICIES, tlsSubjectHosts, errorHandlerResponseCodes, UPSTREAM_ERROR_MESSAGE, siteBindAddresses, canonicalBindHost, routeHosts, buildMatcherJson, hasAnyMatcher, namedServerSubjectHost } from "./siteBlocks";
@@ -609,13 +609,19 @@ export function isConfigSourcePath(p: string): boolean {
 /** The `file_server` options (#262) of a static site, from its JSON handler and routes. */
 export function parseFileServerOptions(
   fsHandle: Record<string, unknown>, routes: JsonRoute[],
-): Pick<import("./types").FileServerConfig, "spa" | "index" | "hide" | "precompressed" | "disableCanonicalUris" | "status" | "browseTemplate"> {
-  const out: Pick<import("./types").FileServerConfig, "spa" | "index" | "hide" | "precompressed" | "disableCanonicalUris" | "status" | "browseTemplate"> = {};
+): Pick<import("./types").FileServerConfig, "spa" | "index" | "hide" | "precompressed" | "disableCanonicalUris" | "status" | "browseTemplate" | "browseRevealSymlinks" | "browseSort" | "browseFileLimit"> {
+  const out: Pick<import("./types").FileServerConfig, "spa" | "index" | "hide" | "precompressed" | "disableCanonicalUris" | "status" | "browseTemplate" | "browseRevealSymlinks" | "browseSort" | "browseFileLimit"> = {};
   if (fsHandle.canonical_uris === false) out.disableCanonicalUris = true;
   const status = typeof fsHandle.status_code === "string" ? parseInt(fsHandle.status_code, 10) : fsHandle.status_code;
   if (typeof status === "number" && status > 0) out.status = status;
-  const template = (fsHandle.browse as { template_file?: string } | undefined)?.template_file;
-  if (template) out.browseTemplate = template;
+  const browse = fsHandle.browse as { template_file?: string; reveal_symlinks?: boolean; sort?: string[]; file_limit?: number } | undefined;
+  if (browse?.template_file) out.browseTemplate = browse.template_file;
+  if (browse?.reveal_symlinks) out.browseRevealSymlinks = true;
+  const [sortBy, sortOrder] = browse?.sort ?? [];
+  if ((BROWSE_SORT_KEYS as readonly string[]).includes(sortBy)) {
+    out.browseSort = { by: sortBy as BrowseSort["by"], ...(sortOrder === "asc" || sortOrder === "desc" ? { order: sortOrder } : {}) };
+  }
+  if (typeof browse?.file_limit === "number" && browse.file_limit > 0) out.browseFileLimit = browse.file_limit;
   if (findTryFiles(routes) === "{path} /index.html") out.spa = true;
   const index = fsHandle.index_names;
   if (Array.isArray(index) && index.length) out.index = index as string[];
@@ -2174,7 +2180,14 @@ export function parseTemplatesJson(handles: AnyHandler[]): import("./types").Tem
 
 export function buildFileServerJson(fs: import("./types").FileServerConfig): CaddyHandler {
   const h: Record<string, unknown> = { handler: "file_server", root: fs.root };
-  if (fs.browse) h.browse = fs.browseTemplate ? { template_file: fs.browseTemplate } : {};
+  if (fs.browse) {
+    h.browse = {
+      ...(fs.browseTemplate ? { template_file: fs.browseTemplate } : {}),
+      ...(fs.browseRevealSymlinks ? { reveal_symlinks: true } : {}),
+      ...(fs.browseSort ? { sort: fs.browseSort.order ? [fs.browseSort.by, fs.browseSort.order] : [fs.browseSort.by] } : {}),
+      ...(fs.browseFileLimit ? { file_limit: fs.browseFileLimit } : {}),
+    };
+  }
   if (fs.disableCanonicalUris) h.canonical_uris = false;
   if (fs.status) h.status_code = fs.status;
   if (fs.index?.length) h.index_names = fs.index;

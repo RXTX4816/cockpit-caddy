@@ -192,7 +192,21 @@
     "field_templates_help": "Włącza silnik szablonów Caddy dla serwowanych plików, aby mogły używać include, .Req i innych akcji szablonów.",
     "field_templates_mime": "Typy MIME",
     "field_templates_root": "Katalog dla include",
-    "field_templates_root_help": "Gdzie include i inne akcje na plikach szukają plików. Puste oznacza katalog główny witryny."
+    "field_templates_root_help": "Gdzie include i inne akcje na plikach szukają plików. Puste oznacza katalog główny witryny.",
+    "field_browse_sort": "Kolejność listy",
+    "field_browse_order": "Kierunek",
+    "browse_sort_default": "Domyślne Caddy (nazwa)",
+    "browse_sort_name": "Nazwa",
+    "browse_sort_namedirfirst": "Nazwa, najpierw foldery",
+    "browse_sort_size": "Rozmiar",
+    "browse_sort_time": "Ostatnia zmiana",
+    "browse_order_asc": "Rosnąco",
+    "browse_order_desc": "Malejąco",
+    "field_browse_file_limit": "Najwięcej pozycji na liście",
+    "browse_file_limit_none": "Bez limitu",
+    "browse_file_limit_invalid": "Wpisz liczbę całkowitą równą 1 lub większą.",
+    "field_browse_reveal_symlinks": "Pokaż cele dowiązań symbolicznych",
+    "field_browse_reveal_symlinks_help": "Lista pokazuje, dokąd prowadzi każde dowiązanie. Może to ujawnić ścieżki poza katalogiem głównym witryny."
   },
   "edit_static": {
     "title": "Edytuj serwer statyczny — :{{port}}",

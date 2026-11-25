@@ -192,7 +192,21 @@
     "field_templates_help": "제공하는 파일에 Caddy의 템플릿 엔진을 적용하여 include, .Req 등 템플릿 동작을 쓸 수 있게 합니다.",
     "field_templates_mime": "MIME 형식",
     "field_templates_root": "include 디렉터리",
-    "field_templates_root_help": "include 등 파일 동작이 파일을 찾는 위치입니다. 비워 두면 사이트 루트입니다."
+    "field_templates_root_help": "include 등 파일 동작이 파일을 찾는 위치입니다. 비워 두면 사이트 루트입니다.",
+    "field_browse_sort": "목록 정렬",
+    "field_browse_order": "방향",
+    "browse_sort_default": "Caddy 기본값(이름)",
+    "browse_sort_name": "이름",
+    "browse_sort_namedirfirst": "이름, 폴더 먼저",
+    "browse_sort_size": "크기",
+    "browse_sort_time": "마지막 수정",
+    "browse_order_asc": "오름차순",
+    "browse_order_desc": "내림차순",
+    "field_browse_file_limit": "목록당 최대 항목 수",
+    "browse_file_limit_none": "제한 없음",
+    "browse_file_limit_invalid": "1 이상의 정수를 입력하세요.",
+    "field_browse_reveal_symlinks": "심볼릭 링크 대상 표시",
+    "field_browse_reveal_symlinks_help": "목록에 각 심볼릭 링크가 가리키는 곳이 표시됩니다. 사이트 루트 밖의 경로가 드러날 수 있습니다."
   },
   "edit_static": {
     "title": "정적 서버 편집 — :{{port}}",

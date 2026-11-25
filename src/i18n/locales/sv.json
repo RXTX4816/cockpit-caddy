@@ -192,7 +192,21 @@
     "field_templates_help": "Slår på Caddys mallmotor för de filer som serveras, så att de kan använda include, .Req och de andra mallåtgärderna.",
     "field_templates_mime": "MIME-typer",
     "field_templates_root": "Katalog för include",
-    "field_templates_root_help": "Var include och de andra filåtgärderna letar efter filer. Tomt betyder webbplatsens rot."
+    "field_templates_root_help": "Var include och de andra filåtgärderna letar efter filer. Tomt betyder webbplatsens rot.",
+    "field_browse_sort": "Listans ordning",
+    "field_browse_order": "Riktning",
+    "browse_sort_default": "Caddys standard (namn)",
+    "browse_sort_name": "Namn",
+    "browse_sort_namedirfirst": "Namn, mappar först",
+    "browse_sort_size": "Storlek",
+    "browse_sort_time": "Senast ändrad",
+    "browse_order_asc": "Stigande",
+    "browse_order_desc": "Fallande",
+    "field_browse_file_limit": "Högst antal poster per lista",
+    "browse_file_limit_none": "Ingen gräns",
+    "browse_file_limit_invalid": "Ange ett heltal som är 1 eller större.",
+    "field_browse_reveal_symlinks": "Visa mål för symboliska länkar",
+    "field_browse_reveal_symlinks_help": "Listan visar vart varje symbolisk länk pekar. Det kan avslöja sökvägar utanför webbplatsens rot."
   },
   "edit_static": {
     "title": "Redigera statisk server — :{{port}}",

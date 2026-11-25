@@ -192,7 +192,21 @@
     "field_templates_help": "Active le moteur de modèles de Caddy pour les fichiers servis, qui peuvent alors utiliser include, .Req et les autres actions de modèle.",
     "field_templates_mime": "Types MIME",
     "field_templates_root": "Répertoire des inclusions",
-    "field_templates_root_help": "Où include et les autres actions de fichier cherchent les fichiers. Vide signifie la racine du site."
+    "field_templates_root_help": "Où include et les autres actions de fichier cherchent les fichiers. Vide signifie la racine du site.",
+    "field_browse_sort": "Ordre de la liste",
+    "field_browse_order": "Sens",
+    "browse_sort_default": "Par défaut de Caddy (nom)",
+    "browse_sort_name": "Nom",
+    "browse_sort_namedirfirst": "Nom, dossiers d'abord",
+    "browse_sort_size": "Taille",
+    "browse_sort_time": "Dernière modification",
+    "browse_order_asc": "Croissant",
+    "browse_order_desc": "Décroissant",
+    "field_browse_file_limit": "Entrées maximales par liste",
+    "browse_file_limit_none": "Aucune limite",
+    "browse_file_limit_invalid": "Saisissez un nombre entier supérieur ou égal à 1.",
+    "field_browse_reveal_symlinks": "Afficher la cible des liens symboliques",
+    "field_browse_reveal_symlinks_help": "La liste indique la cible de chaque lien symbolique, ce qui peut révéler des chemins hors de la racine du site."
   },
   "edit_static": {
     "title": "Modifier le serveur statique — :{{port}}",
