@@ -272,7 +272,15 @@
     "flush_interval": "Interval vyprázdnenia",
     "flush_interval_placeholder": "-1 odošle každý zápis hneď",
     "stream_timeout": "Časový limit streamu",
-    "stream_close_delay": "Oneskorenie zatvorenia streamu"
+    "stream_close_delay": "Oneskorenie zatvorenia streamu",
+    "connection_title": "Spojenie s upstreamom",
+    "tls_server_name": "Názov servera TLS",
+    "versions": "Verzie HTTP",
+    "read_timeout": "Časový limit čítania",
+    "write_timeout": "Časový limit zápisu",
+    "keepalive": "Keep-alive",
+    "keepalive_idle_conns": "Uchovávané nečinné spojenia",
+    "keepalive_idle_conns_per_host": "Uchovávané nečinné spojenia na hostiteľa"
   },
   "server_timeouts": {
     "heading": "Časové limity a obmedzenia servera",
@@ -391,7 +399,9 @@
     "validation_max_fails": "Max. zlyhaní musí byť 1 alebo viac",
     "validation_needs_health_uri": "Interval, časový limit a očakávaný stav vyžadujú cestu kontroly stavu",
     "validation_health_uri": "Cesta kontroly stavu musí začínať znakom /",
-    "validation_health_status": "Zadajte kód ako 200 alebo triedu ako 2xx"
+    "validation_health_status": "Zadajte kód ako 200 alebo triedu ako 2xx",
+    "retry_methods": "Opakovať len tieto metódy",
+    "validation_methods": "Metódy sú slová ako GET alebo HEAD oddelené medzerami."
   },
   "response_headers": {
     "heading": "Hlavičky odpovede",

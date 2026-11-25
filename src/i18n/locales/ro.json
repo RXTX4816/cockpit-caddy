@@ -272,7 +272,15 @@
     "flush_interval": "Interval de golire",
     "flush_interval_placeholder": "-1 trimite fiecare scriere imediat",
     "stream_timeout": "Timp limită al fluxului",
-    "stream_close_delay": "Întârziere la închiderea fluxului"
+    "stream_close_delay": "Întârziere la închiderea fluxului",
+    "connection_title": "Conexiunea la upstream",
+    "tls_server_name": "Numele serverului TLS",
+    "versions": "Versiuni HTTP",
+    "read_timeout": "Timp limită de citire",
+    "write_timeout": "Timp limită de scriere",
+    "keepalive": "Keep-alive",
+    "keepalive_idle_conns": "Conexiuni inactive păstrate",
+    "keepalive_idle_conns_per_host": "Conexiuni inactive păstrate per gazdă"
   },
   "server_timeouts": {
     "heading": "Timeout-uri și limite ale serverului",
@@ -391,7 +399,9 @@
     "validation_max_fails": "Eșecurile max. trebuie să fie cel puțin 1",
     "validation_needs_health_uri": "Intervalul, limita de timp și starea așteptată necesită o cale de verificare",
     "validation_health_uri": "Calea verificării trebuie să înceapă cu /",
-    "validation_health_status": "Folosiți un cod ca 200 sau o clasă ca 2xx"
+    "validation_health_status": "Folosiți un cod ca 200 sau o clasă ca 2xx",
+    "retry_methods": "Reîncearcă doar aceste metode",
+    "validation_methods": "Metodele sunt cuvinte precum GET sau HEAD, separate prin spații."
   },
   "response_headers": {
     "heading": "Antete de răspuns",

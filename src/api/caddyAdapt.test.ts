@@ -842,3 +842,23 @@ describe.runIf(available || required)("caddy adapt accepts the streaming options
     expect(p.streamCloseDelay).toBe("5m");
   });
 });
+
+describe.runIf(available || required)("caddy adapt accepts the remaining transport options (#327)", () => {
+  it("reads them back from a real adapt", () => {
+    const conf = proxiesToCaddyfile([entry({
+      tls: false, externalPort: 8080, targetScheme: "https", tlsServerName: "backend.internal", keepalive: "2m",
+      keepaliveIdleConns: 20, keepaliveIdleConnsPerHost: 4, httpVersions: ["h2c", "2"], readTimeout: "30s", writeTimeout: "10s",
+      extraUpstreams: [{ host: "b", port: 1 }], lbRetry: { retries: 2, retryMethods: ["GET", "HEAD"] },
+    })]);
+    const [p] = readBack(conf);
+    expect(p).toMatchObject({
+      tlsServerName: "backend.internal", keepalive: "2m", keepaliveIdleConns: 20, keepaliveIdleConnsPerHost: 4,
+      httpVersions: ["h2c", "2"], readTimeout: "30s", writeTimeout: "10s",
+    });
+    expect(p.lbRetry?.retryMethods).toEqual(["GET", "HEAD"]);
+  });
+
+  it("keepalive off", () => {
+    expect(readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, keepalive: "off" })]))[0].keepalive).toBe("off");
+  });
+});

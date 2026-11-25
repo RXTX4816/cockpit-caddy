@@ -272,7 +272,15 @@
     "flush_interval": "Интервал сброса",
     "flush_interval_placeholder": "-1 отправляет каждую запись сразу",
     "stream_timeout": "Тайм-аут потока",
-    "stream_close_delay": "Задержка закрытия потока"
+    "stream_close_delay": "Задержка закрытия потока",
+    "connection_title": "Соединение с апстримом",
+    "tls_server_name": "Имя TLS-сервера",
+    "versions": "Версии HTTP",
+    "read_timeout": "Тайм-аут чтения",
+    "write_timeout": "Тайм-аут записи",
+    "keepalive": "Keep-alive",
+    "keepalive_idle_conns": "Сохраняемые неактивные соединения",
+    "keepalive_idle_conns_per_host": "Сохраняемые неактивные соединения на хост"
   },
   "server_timeouts": {
     "heading": "Тайм-ауты и лимиты сервера",
@@ -391,7 +399,9 @@
     "validation_max_fails": "Макс. сбоев должно быть не меньше 1",
     "validation_needs_health_uri": "Интервалу, тайм-ауту и ожидаемому статусу нужен путь проверки",
     "validation_health_uri": "Путь проверки должен начинаться с /",
-    "validation_health_status": "Укажите код, например 200, или класс, например 2xx"
+    "validation_health_status": "Укажите код, например 200, или класс, например 2xx",
+    "retry_methods": "Повторять только эти методы",
+    "validation_methods": "Методы — слова вроде GET или HEAD, разделённые пробелами."
   },
   "response_headers": {
     "heading": "Заголовки ответа",

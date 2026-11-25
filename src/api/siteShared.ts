@@ -52,7 +52,7 @@ export function multiPathStripRegex(matchers: import("./types").RouteMatch | und
   return `^(?:${escaped.join("|")})/?`;
 }
 
-export type TransportProps = Pick<ProxyEntry, "targetScheme" | "tlsSkipVerify" | "dialTimeout" | "responseHeaderTimeout">;
+export type TransportProps = Pick<ProxyEntry, "targetScheme" | "tlsSkipVerify" | "dialTimeout" | "responseHeaderTimeout" | "tlsServerName" | "keepalive" | "keepaliveIdleConns" | "keepaliveIdleConnsPerHost" | "httpVersions" | "readTimeout" | "writeTimeout">;
 
 export const LB_POLICIES: ReadonlySet<string> = new Set<import("./types").LbPolicy>([
   "round_robin", "random", "least_conn", "first", "ip_hash", "client_ip_hash", "uri_hash",
@@ -68,6 +68,7 @@ export function buildLbRetryLines(lbRetry: import("./types").LbRetryConfig | und
   if (lbRetry.retries != null) lines.push(`\t\tlb_retries ${lbRetry.retries}`);
   if (lbRetry.tryDuration) lines.push(`\t\tlb_try_duration ${lbRetry.tryDuration}`);
   if (lbRetry.tryInterval) lines.push(`\t\tlb_try_interval ${lbRetry.tryInterval}`);
+  if (lbRetry.retryMethods?.length) lines.push("\t\tlb_retry_match {", `\t\t\tmethod ${lbRetry.retryMethods.join(" ")}`, "\t\t}");
   // Passive checks are off in Caddy without fail_duration (#252), so the options that only
   // feed them are written only alongside it.
   if (lbRetry.failDuration) {

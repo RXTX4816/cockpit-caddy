@@ -272,7 +272,15 @@
     "flush_interval": "Interwał opróżniania",
     "flush_interval_placeholder": "-1 wysyła każdy zapis od razu",
     "stream_timeout": "Limit czasu strumienia",
-    "stream_close_delay": "Opóźnienie zamknięcia strumienia"
+    "stream_close_delay": "Opóźnienie zamknięcia strumienia",
+    "connection_title": "Połączenie z upstreamem",
+    "tls_server_name": "Nazwa serwera TLS",
+    "versions": "Wersje HTTP",
+    "read_timeout": "Limit czasu odczytu",
+    "write_timeout": "Limit czasu zapisu",
+    "keepalive": "Keep-alive",
+    "keepalive_idle_conns": "Zachowywane nieaktywne połączenia",
+    "keepalive_idle_conns_per_host": "Zachowywane nieaktywne połączenia na hosta"
   },
   "server_timeouts": {
     "heading": "Limity czasu i ograniczenia serwera",
@@ -391,7 +399,9 @@
     "validation_max_fails": "Maks. błędów musi wynosić co najmniej 1",
     "validation_needs_health_uri": "Interwał, limit czasu i oczekiwany status wymagają ścieżki kontroli",
     "validation_health_uri": "Ścieżka kontroli stanu musi zaczynać się od /",
-    "validation_health_status": "Podaj kod jak 200 lub klasę jak 2xx"
+    "validation_health_status": "Podaj kod jak 200 lub klasę jak 2xx",
+    "retry_methods": "Ponawiaj tylko te metody",
+    "validation_methods": "Metody to słowa takie jak GET lub HEAD, oddzielone spacjami."
   },
   "response_headers": {
     "heading": "Nagłówki odpowiedzi",

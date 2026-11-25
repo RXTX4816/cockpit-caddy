@@ -272,7 +272,15 @@
     "flush_interval": "Tyhjennysväli",
     "flush_interval_placeholder": "-1 lähettää jokaisen kirjoituksen heti",
     "stream_timeout": "Streamin aikakatkaisu",
-    "stream_close_delay": "Streamin sulkemisviive"
+    "stream_close_delay": "Streamin sulkemisviive",
+    "connection_title": "Yhteys upstreamiin",
+    "tls_server_name": "TLS-palvelimen nimi",
+    "versions": "HTTP-versiot",
+    "read_timeout": "Lukemisen aikakatkaisu",
+    "write_timeout": "Kirjoittamisen aikakatkaisu",
+    "keepalive": "Keep-alive",
+    "keepalive_idle_conns": "Säilytettävät joutoyhteydet",
+    "keepalive_idle_conns_per_host": "Säilytettävät joutoyhteydet isäntää kohti"
   },
   "server_timeouts": {
     "heading": "Palvelimen aikakatkaisut ja rajat",
@@ -391,7 +399,9 @@
     "validation_max_fails": "Virheitä enintään -arvon on oltava vähintään 1",
     "validation_needs_health_uri": "Väli, aikakatkaisu ja odotettu tila tarvitsevat terveystarkistuksen polun",
     "validation_health_uri": "Terveystarkistuksen polun on alettava merkillä /",
-    "validation_health_status": "Käytä tilakoodia kuten 200 tai luokkaa kuten 2xx"
+    "validation_health_status": "Käytä tilakoodia kuten 200 tai luokkaa kuten 2xx",
+    "retry_methods": "Yritä uudelleen vain näille metodeille",
+    "validation_methods": "Metodit ovat sanoja kuten GET tai HEAD, erotettuna välilyönnillä."
   },
   "response_headers": {
     "heading": "Vastausotsakkeet",

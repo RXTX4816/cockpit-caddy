@@ -272,7 +272,15 @@
     "flush_interval": "Flush-Intervall",
     "flush_interval_placeholder": "-1 sendet jeden Schreibvorgang sofort",
     "stream_timeout": "Stream-Timeout",
-    "stream_close_delay": "Verzögerung beim Schließen von Streams"
+    "stream_close_delay": "Verzögerung beim Schließen von Streams",
+    "connection_title": "Verbindung zum Upstream",
+    "tls_server_name": "TLS-Servername",
+    "versions": "HTTP-Versionen",
+    "read_timeout": "Lese-Timeout",
+    "write_timeout": "Schreib-Timeout",
+    "keepalive": "Keep-Alive",
+    "keepalive_idle_conns": "Gehaltene Leerlaufverbindungen",
+    "keepalive_idle_conns_per_host": "Gehaltene Leerlaufverbindungen pro Host"
   },
   "server_timeouts": {
     "heading": "Server-Timeouts & -Limits",
@@ -391,7 +399,9 @@
     "validation_max_fails": "Max. Fehler muss 1 oder größer sein",
     "validation_needs_health_uri": "Intervall, Timeout und erwarteter Status brauchen einen Health-Check-Pfad",
     "validation_health_uri": "Der Health-Check-Pfad muss mit / beginnen",
-    "validation_health_status": "Einen Statuscode wie 200 oder eine Klasse wie 2xx angeben"
+    "validation_health_status": "Einen Statuscode wie 200 oder eine Klasse wie 2xx angeben",
+    "retry_methods": "Nur diese Methoden wiederholen",
+    "validation_methods": "Methoden sind Wörter wie GET oder HEAD, durch Leerzeichen getrennt."
   },
   "response_headers": {
     "heading": "Antwort-Header",

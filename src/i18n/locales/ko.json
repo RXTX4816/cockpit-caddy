@@ -272,7 +272,15 @@
     "flush_interval": "플러시 간격",
     "flush_interval_placeholder": "-1은 쓰기마다 즉시 전송",
     "stream_timeout": "스트림 타임아웃",
-    "stream_close_delay": "스트림 종료 지연"
+    "stream_close_delay": "스트림 종료 지연",
+    "connection_title": "업스트림 연결",
+    "tls_server_name": "TLS 서버 이름",
+    "versions": "HTTP 버전",
+    "read_timeout": "읽기 타임아웃",
+    "write_timeout": "쓰기 타임아웃",
+    "keepalive": "Keep-alive",
+    "keepalive_idle_conns": "유지할 유휴 연결 수",
+    "keepalive_idle_conns_per_host": "호스트당 유지할 유휴 연결 수"
   },
   "server_timeouts": {
     "heading": "서버 시간 제한 및 한도",
@@ -391,7 +399,9 @@
     "validation_max_fails": "최대 실패 횟수는 1 이상이어야 합니다",
     "validation_needs_health_uri": "간격, 타임아웃, 예상 상태에는 상태 확인 경로가 필요합니다",
     "validation_health_uri": "상태 확인 경로는 /로 시작해야 합니다",
-    "validation_health_status": "200 같은 코드나 2xx 같은 클래스를 입력하세요"
+    "validation_health_status": "200 같은 코드나 2xx 같은 클래스를 입력하세요",
+    "retry_methods": "이 메서드만 재시도",
+    "validation_methods": "메서드는 GET, HEAD 같은 단어이며 공백으로 구분합니다."
   },
   "response_headers": {
     "heading": "응답 헤더",

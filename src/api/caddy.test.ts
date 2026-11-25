@@ -1716,6 +1716,70 @@ describe("streaming options (#325)", () => {
   });
 });
 
+describe("remaining transport options (#327)", () => {
+  const t = {
+    targetScheme: "https" as const, tlsServerName: "backend.internal", keepalive: "2m", keepaliveIdleConns: 20, keepaliveIdleConnsPerHost: 4,
+    httpVersions: ["h2c", "2"], readTimeout: "30s", writeTimeout: "10s",
+  };
+
+  it("proxyToBlock writes them into the transport block", () => {
+    const result = proxyToBlock(proxy(t));
+    for (const line of [
+      "tls_server_name backend.internal", "keepalive 2m", "keepalive_idle_conns 20", "keepalive_idle_conns_per_host 4",
+      "versions h2c 2", "read_timeout 30s", "write_timeout 10s",
+    ]) expect(result).toContain(`\t\t\t${line}`);
+  });
+
+  it("keepalive off turns keep-alive off", () => {
+    expect(proxyToBlock(proxy({ keepalive: "off" }))).toContain("\t\t\tkeepalive off");
+  });
+
+  it("lb_retry_match writes the methods to retry", () => {
+    const result = proxyToBlock(proxy({ extraUpstreams: [{ host: "b", port: 1 }], lbRetry: { retries: 2, retryMethods: ["GET", "HEAD"] } }));
+    expect(result).toContain("\t\tlb_retry_match {\n\t\t\tmethod GET HEAD\n\t\t}");
+  });
+
+  it("buildServerEntry puts them into the transport and load_balancing", () => {
+    const rp = buildServerEntry(proxy({ ...t, extraUpstreams: [{ host: "b", port: 1 }], lbRetry: { retryMethods: ["GET"] } })).routes[0].handle[0] as unknown as {
+      transport: Record<string, unknown>; load_balancing: Record<string, unknown>;
+    };
+    expect(rp.transport).toMatchObject({
+      tls: { server_name: "backend.internal" },
+      keep_alive: { idle_timeout: "2m", max_idle_conns: 20, max_idle_conns_per_host: 4 },
+      versions: ["h2c", "2"], read_timeout: "30s", write_timeout: "10s",
+    });
+    expect(rp.load_balancing.retry_match).toEqual([{ method: ["GET"] }]);
+  });
+
+  it("keepalive off is keep_alive.enabled false", () => {
+    const rp = buildServerEntry(proxy({ keepalive: "off" })).routes[0].handle[0] as { transport: Record<string, unknown> };
+    expect(rp.transport.keep_alive).toEqual({ enabled: false });
+  });
+
+  it("parseProxies reads them back from Caddy's nanosecond numbers", () => {
+    const server = buildServerEntry(proxy({ targetScheme: "https", extraUpstreams: [{ host: "b", port: 1 }] }));
+    const rp = server.routes[0].handle[0] as Record<string, unknown>;
+    rp.transport = {
+      protocol: "http", tls: { server_name: "backend.internal" },
+      keep_alive: { idle_timeout: 120_000_000_000, max_idle_conns: 20, max_idle_conns_per_host: 4 },
+      versions: ["h2c", "2"], read_timeout: 30_000_000_000, write_timeout: 10_000_000_000,
+    };
+    rp.load_balancing = { retry_match: [{ method: ["GET", "HEAD"] }] };
+    const [p] = parseProxies({ apps: { http: { servers: { srv0: server } } } });
+    expect(p).toMatchObject({
+      tlsServerName: "backend.internal", keepalive: "2m", keepaliveIdleConns: 20, keepaliveIdleConnsPerHost: 4,
+      httpVersions: ["h2c", "2"], readTimeout: "30s", writeTimeout: "10s",
+    });
+    expect(p.lbRetry?.retryMethods).toEqual(["GET", "HEAD"]);
+  });
+
+  it("parseProxies reads keep_alive.enabled false as off", () => {
+    const server = buildServerEntry(proxy());
+    (server.routes[0].handle[0] as Record<string, unknown>).transport = { protocol: "http", keep_alive: { enabled: false } };
+    expect(parseProxies({ apps: { http: { servers: { srv0: server } } } })[0].keepalive).toBe("off");
+  });
+});
+
 describe("buildServerEntry — requestHeaders", () => {
   it("emits headers.request.set in reverse_proxy handler", () => {
     const server = buildServerEntry(proxy({ requestHeaders: [{ op: "set", name: "X-Real-IP", value: "{remote_host}" }] }));

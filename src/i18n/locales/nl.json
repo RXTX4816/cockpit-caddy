@@ -272,7 +272,15 @@
     "flush_interval": "Flush-interval",
     "flush_interval_placeholder": "-1 verstuurt elke schrijfactie direct",
     "stream_timeout": "Stream-timeout",
-    "stream_close_delay": "Vertraging bij sluiten van stream"
+    "stream_close_delay": "Vertraging bij sluiten van stream",
+    "connection_title": "Verbinding met de upstream",
+    "tls_server_name": "TLS-servernaam",
+    "versions": "HTTP-versies",
+    "read_timeout": "Lees-timeout",
+    "write_timeout": "Schrijf-timeout",
+    "keepalive": "Keep-alive",
+    "keepalive_idle_conns": "Bewaarde inactieve verbindingen",
+    "keepalive_idle_conns_per_host": "Bewaarde inactieve verbindingen per host"
   },
   "server_timeouts": {
     "heading": "Servertime-outs & -limieten",
@@ -391,7 +399,9 @@
     "validation_max_fails": "Max. fouten moet 1 of meer zijn",
     "validation_needs_health_uri": "Interval, time-out en verwachte status hebben een health-check-pad nodig",
     "validation_health_uri": "Het health-check-pad moet met / beginnen",
-    "validation_health_status": "Gebruik een statuscode zoals 200 of een klasse zoals 2xx"
+    "validation_health_status": "Gebruik een statuscode zoals 200 of een klasse zoals 2xx",
+    "retry_methods": "Alleen deze methoden opnieuw proberen",
+    "validation_methods": "Methoden zijn woorden zoals GET of HEAD, gescheiden door spaties."
   },
   "response_headers": {
     "heading": "Antwoordheaders",

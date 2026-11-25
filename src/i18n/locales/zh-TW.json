@@ -272,7 +272,15 @@
     "flush_interval": "清空間隔",
     "flush_interval_placeholder": "-1 表示每次寫入立即傳送",
     "stream_timeout": "串流逾時",
-    "stream_close_delay": "串流關閉延遲"
+    "stream_close_delay": "串流關閉延遲",
+    "connection_title": "上游連線",
+    "tls_server_name": "TLS 伺服器名稱",
+    "versions": "HTTP 版本",
+    "read_timeout": "讀取逾時",
+    "write_timeout": "寫入逾時",
+    "keepalive": "Keep-alive",
+    "keepalive_idle_conns": "保留的閒置連線數",
+    "keepalive_idle_conns_per_host": "每個主機保留的閒置連線數"
   },
   "server_timeouts": {
     "heading": "伺服器逾時與限制",
@@ -391,7 +399,9 @@
     "validation_max_fails": "最大失敗次數必須至少為 1",
     "validation_needs_health_uri": "間隔、逾時與預期狀態需要健康檢查路徑",
     "validation_health_uri": "健康檢查路徑必須以 / 開頭",
-    "validation_health_status": "請填寫 200 這樣的狀態碼或 2xx 這樣的類別"
+    "validation_health_status": "請填寫 200 這樣的狀態碼或 2xx 這樣的類別",
+    "retry_methods": "僅重試這些方法",
+    "validation_methods": "方法是 GET、HEAD 之類的單字,以空格分隔。"
   },
   "response_headers": {
     "heading": "回應標頭",
