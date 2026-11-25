@@ -782,11 +782,6 @@
     "proxy_protocol_timeout": "Limit czasu odczytu nagłówka (opcjonalnie)",
     "proxy_protocol_timeout_help": "Maksymalny czas oczekiwania na nagłówek protokołu PROXY przed rezygnacją (czas w formacie Go, np. 2s). Pozostaw puste, aby użyć domyślnego w Caddy.",
     "on_demand_rate_deprecated": "Caddy nie zaleca już interval i burst. Wyczyść oba pola i polegaj na endpoincie ask.",
-    "tab_core": "Podstawowe",
-    "tab_tls": "TLS i ACME",
-    "tab_logging": "Logi i metryki",
-    "tab_proxy": "Nagłówki proxy i protokoły",
-    "tabs_aria": "Sekcje ustawień",
     "tls_advanced_title": "Zaawansowane TLS",
     "auto_https": "Automatyczne HTTPS",
     "auto_https_off": "Wyłączone",
@@ -818,7 +813,12 @@
     "admin_enforce_origin": "Wymuszaj originy",
     "metrics_per_host": "Oznaczaj metryki hostem",
     "metrics_per_host_help": "Dodaje żądany host do każdej metryki żądania, aby rozróżnić witryny. Każdy inny host tworzy osobną serię.",
-    "auto_https_disable_certs": "Bez zarządzania certyfikatami"
+    "auto_https_disable_certs": "Bez zarządzania certyfikatami",
+    "tab_core": "Podstawowe",
+    "tab_tls": "TLS i ACME",
+    "tab_logging": "Logi i metryki",
+    "tab_proxy": "Nagłówki proxy i protokoły",
+    "tabs_aria": "Sekcje ustawień"
   },
   "ca": {
     "title": "Wewnętrzny urząd certyfikacji",
@@ -1210,10 +1210,23 @@
     "site_override_help": "Ta witryna używa własnego dostawcy DNS i danych logowania. Zapisanie nowych danych uruchamia ponownie Caddy, bo odczytuje je tylko przy starcie.",
     "site_wildcard_warning": "Certyfikaty wieloznaczne wymagają wyzwania DNS. Ustaw dostawcę DNS dla tej witryny albo w Ustawienia → Wyzwanie DNS."
   },
-  "bind": {
-    "label": "Adresy bind",
-    "help": "Adresy, na których ta witryna nasłuchuje, oddzielone spacjami, np. 127.0.0.1 ::1. Puste oznacza nasłuch na wszystkich adresach. Host będący jednym adresem IP jest już z nim powiązany.",
-    "invalid": "Podaj adresy IP lub nazwy hostów, bez portu."
+  "modules": {
+    "title": "Moduły Caddy",
+    "loading": "Odczytywanie modułów…",
+    "unknown": "Nie udało się odczytać modułów tego Caddy (czy polecenie caddy jest dostępne?).",
+    "help": "Co zainstalowany Caddy potrafi ponad standardową kompilację. Funkcja wymagająca brakującego modułu zawodzi przy ładowaniu konfiguracji, więc sprawdź to najpierw tutaj.",
+    "cap_dns": "Dostawcy wyzwania DNS",
+    "cap_layer4": "Warstwa 4 (proxy TCP i UDP)",
+    "cap_rate_limit": "Ograniczanie szybkości",
+    "cap_security": "caddy-security (portal uwierzytelniania)",
+    "installed": "Zainstalowany",
+    "missing": "Niezainstalowany",
+    "how_to_get": "Jak go zdobyć",
+    "dns_providers": "Dostawcy: {{count}}",
+    "all": "Wszystkie moduły ({{count}})",
+    "filter": "Filtruj moduły",
+    "no_match": "Żaden moduł nie pasuje.",
+    "non_standard": "Moduły, które nie są częścią samego Caddy: {{count}}"
   },
   "encode": {
     "heading": "Kompresja",
@@ -1253,5 +1266,10 @@
     "type_a": "A / AAAA",
     "ipv4": "IPv4",
     "ipv6": "IPv6"
+  },
+  "bind": {
+    "label": "Adresy bind",
+    "help": "Adresy, na których ta witryna nasłuchuje, oddzielone spacjami, np. 127.0.0.1 ::1. Puste oznacza nasłuch na wszystkich adresach. Host będący jednym adresem IP jest już z nim powiązany.",
+    "invalid": "Podaj adresy IP lub nazwy hostów, bez portu."
   }
 }

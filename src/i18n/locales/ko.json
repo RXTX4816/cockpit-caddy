@@ -782,11 +782,6 @@
     "proxy_protocol_timeout": "헤더 읽기 시간 제한(선택)",
     "proxy_protocol_timeout_help": "PROXY 프로토콜 헤더를 기다리는 최대 시간(Go 기간, 예: 2s). Caddy 기본값을 쓰려면 비워 두세요.",
     "on_demand_rate_deprecated": "Caddy는 더 이상 interval과 burst를 권장하지 않습니다. 둘 다 비우고 ask 엔드포인트를 사용하세요.",
-    "tab_core": "기본",
-    "tab_tls": "TLS 및 ACME",
-    "tab_logging": "로그 및 메트릭",
-    "tab_proxy": "프록시 헤더 및 프로토콜",
-    "tabs_aria": "설정 섹션",
     "tls_advanced_title": "고급 TLS",
     "auto_https": "자동 HTTPS",
     "auto_https_off": "끔",
@@ -818,7 +813,12 @@
     "admin_enforce_origin": "오리진 강제",
     "metrics_per_host": "호스트별로 지표에 레이블 지정",
     "metrics_per_host_help": "요청 지표마다 요청된 호스트를 추가해 사이트를 구분할 수 있게 합니다. 서로 다른 호스트마다 별도의 시계열이 생깁니다.",
-    "auto_https_disable_certs": "인증서 관리 안 함"
+    "auto_https_disable_certs": "인증서 관리 안 함",
+    "tab_core": "기본",
+    "tab_tls": "TLS 및 ACME",
+    "tab_logging": "로그 및 메트릭",
+    "tab_proxy": "프록시 헤더 및 프로토콜",
+    "tabs_aria": "설정 섹션"
   },
   "ca": {
     "title": "내부 인증 기관",
@@ -1210,10 +1210,23 @@
     "site_override_help": "이 사이트는 자체 DNS 공급자와 자격 증명을 사용합니다. 새 자격 증명을 저장하면 Caddy가 다시 시작됩니다. Caddy는 시작할 때만 이를 읽기 때문입니다.",
     "site_wildcard_warning": "와일드카드 인증서에는 DNS 챌린지가 필요합니다. 이 사이트용 DNS 공급자를 지정하거나 설정 → DNS 챌린지에서 지정하세요."
   },
-  "bind": {
-    "label": "바인드 주소",
-    "help": "이 사이트가 수신하는 주소(공백으로 구분)입니다. 예: 127.0.0.1 ::1. 비워 두면 모든 주소에서 수신합니다. 호스트가 IP 주소 하나이면 이미 그 주소에 바인드됩니다.",
-    "invalid": "포트 없이 IP 주소나 호스트 이름을 입력하세요."
+  "modules": {
+    "title": "Caddy 모듈",
+    "loading": "모듈을 읽는 중…",
+    "unknown": "이 Caddy의 모듈을 읽을 수 없습니다(caddy 명령을 쓸 수 있나요?).",
+    "help": "설치된 Caddy가 표준 빌드 이상으로 할 수 있는 것입니다. 없는 모듈이 필요한 기능은 Caddy가 구성을 불러올 때 실패하므로 먼저 여기서 확인하세요.",
+    "cap_dns": "DNS 챌린지 제공자",
+    "cap_layer4": "레이어 4(TCP 및 UDP 프록시)",
+    "cap_rate_limit": "요청 속도 제한",
+    "cap_security": "caddy-security(인증 포털)",
+    "installed": "설치됨",
+    "missing": "설치되지 않음",
+    "how_to_get": "얻는 방법",
+    "dns_providers": "제공자: {{count}}",
+    "all": "모든 모듈({{count}})",
+    "filter": "모듈 필터",
+    "no_match": "일치하는 모듈이 없습니다.",
+    "non_standard": "Caddy 자체에 포함되지 않은 모듈: {{count}}"
   },
   "encode": {
     "heading": "압축",
@@ -1253,5 +1266,10 @@
     "type_a": "A / AAAA",
     "ipv4": "IPv4",
     "ipv6": "IPv6"
+  },
+  "bind": {
+    "label": "바인드 주소",
+    "help": "이 사이트가 수신하는 주소(공백으로 구분)입니다. 예: 127.0.0.1 ::1. 비워 두면 모든 주소에서 수신합니다. 호스트가 IP 주소 하나이면 이미 그 주소에 바인드됩니다.",
+    "invalid": "포트 없이 IP 주소나 호스트 이름을 입력하세요."
   }
 }

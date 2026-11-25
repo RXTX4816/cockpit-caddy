@@ -782,11 +782,6 @@
     "proxy_protocol_timeout": "Timeout pentru citirea antetului (opțional)",
     "proxy_protocol_timeout_help": "Timpul maxim de așteptare a antetului protocolului PROXY înainte de renunțare (durată Go, de ex. 2s). Lasă gol pentru valoarea implicită Caddy.",
     "on_demand_rate_deprecated": "Caddy nu mai recomandă interval și burst. Goliți ambele și bazați-vă pe endpoint-ul ask.",
-    "tab_core": "De bază",
-    "tab_tls": "TLS și ACME",
-    "tab_logging": "Jurnale și metrici",
-    "tab_proxy": "Antete proxy și protocoale",
-    "tabs_aria": "Secțiunile setărilor",
     "tls_advanced_title": "TLS avansat",
     "auto_https": "HTTPS automat",
     "auto_https_off": "Dezactivat",
@@ -818,7 +813,12 @@
     "admin_enforce_origin": "Impune originile",
     "metrics_per_host": "Etichetează metricile după gazdă",
     "metrics_per_host_help": "Adaugă gazda cerută la fiecare metrică de cerere, ca site-urile să poată fi deosebite. Fiecare gazdă diferită devine o serie proprie.",
-    "auto_https_disable_certs": "Fără gestionarea certificatelor"
+    "auto_https_disable_certs": "Fără gestionarea certificatelor",
+    "tab_core": "De bază",
+    "tab_tls": "TLS și ACME",
+    "tab_logging": "Jurnale și metrici",
+    "tab_proxy": "Antete proxy și protocoale",
+    "tabs_aria": "Secțiunile setărilor"
   },
   "ca": {
     "title": "Autoritate de certificare internă",
@@ -1210,10 +1210,23 @@
     "site_override_help": "Acest site folosește propriul furnizor DNS și propriile date de acces. Salvarea unor date noi repornește Caddy, care le citește doar la pornire.",
     "site_wildcard_warning": "Certificatele wildcard au nevoie de provocarea DNS. Setează un furnizor DNS pentru acest site sau în Setări → Provocare DNS."
   },
-  "bind": {
-    "label": "Adrese de bind",
-    "help": "Adresele pe care ascultă acest site, separate prin spații, de exemplu 127.0.0.1 ::1. Gol ascultă pe toate adresele. O gazdă care este o singură adresă IP se leagă deja la ea.",
-    "invalid": "Introdu adrese IP sau nume de gazdă, fără port."
+  "modules": {
+    "title": "Modulele Caddy",
+    "loading": "Se citesc modulele…",
+    "unknown": "Modulele acestui Caddy nu au putut fi citite (este disponibilă comanda caddy?).",
+    "help": "Ce poate face Caddy instalat peste o versiune standard. O funcție care are nevoie de un modul lipsă eșuează când Caddy încarcă configurația, așa că verifică mai întâi aici.",
+    "cap_dns": "Furnizori pentru provocarea DNS",
+    "cap_layer4": "Nivelul 4 (proxy TCP și UDP)",
+    "cap_rate_limit": "Limitarea ratei",
+    "cap_security": "caddy-security (portal de autentificare)",
+    "installed": "Instalat",
+    "missing": "Neinstalat",
+    "how_to_get": "Cum îl obții",
+    "dns_providers": "Furnizori: {{count}}",
+    "all": "Toate modulele ({{count}})",
+    "filter": "Filtrează modulele",
+    "no_match": "Niciun modul nu se potrivește.",
+    "non_standard": "Module care nu fac parte din Caddy însuși: {{count}}"
   },
   "encode": {
     "heading": "Compresie",
@@ -1253,5 +1266,10 @@
     "type_a": "A / AAAA",
     "ipv4": "IPv4",
     "ipv6": "IPv6"
+  },
+  "bind": {
+    "label": "Adrese de bind",
+    "help": "Adresele pe care ascultă acest site, separate prin spații, de exemplu 127.0.0.1 ::1. Gol ascultă pe toate adresele. O gazdă care este o singură adresă IP se leagă deja la ea.",
+    "invalid": "Introdu adrese IP sau nume de gazdă, fără port."
   }
 }

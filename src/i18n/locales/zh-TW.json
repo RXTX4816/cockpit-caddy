@@ -782,11 +782,6 @@
     "proxy_protocol_timeout": "標頭讀取逾時（選填）",
     "proxy_protocol_timeout_help": "放棄前等待 PROXY 通訊協定標頭的最長時間（Go 時間長度，例如 2s）。留空則使用 Caddy 預設。",
     "on_demand_rate_deprecated": "Caddy 已不再建議 interval 與 burst。請清空兩者，改用 ask 端點。",
-    "tab_core": "核心",
-    "tab_tls": "TLS 與 ACME",
-    "tab_logging": "日誌與指標",
-    "tab_proxy": "代理標頭與協定",
-    "tabs_aria": "設定分區",
     "tls_advanced_title": "進階 TLS",
     "auto_https": "自動 HTTPS",
     "auto_https_off": "關閉",
@@ -818,7 +813,12 @@
     "admin_enforce_origin": "強制檢查來源",
     "metrics_per_host": "依主機為指標加上標籤",
     "metrics_per_host_help": "在每個請求指標上加入所請求的主機,以便區分網站。每個不同的主機都會成為獨立的時間序列。",
-    "auto_https_disable_certs": "不管理憑證"
+    "auto_https_disable_certs": "不管理憑證",
+    "tab_core": "核心",
+    "tab_tls": "TLS 與 ACME",
+    "tab_logging": "日誌與指標",
+    "tab_proxy": "代理標頭與協定",
+    "tabs_aria": "設定分區"
   },
   "ca": {
     "title": "內部憑證授權單位",
@@ -1210,10 +1210,23 @@
     "site_override_help": "此網站使用自己的 DNS 供應商和憑證。儲存新憑證會重新啟動 Caddy，因為它只在啟動時讀取憑證。",
     "site_wildcard_warning": "萬用字元憑證需要 DNS 驗證。請為此網站設定 DNS 供應商，或在「設定 → DNS 驗證」中設定。"
   },
-  "bind": {
-    "label": "綁定位址",
-    "help": "此網站監聽的位址,以空格分隔,例如 127.0.0.1 ::1。留空表示監聽所有位址。主機若是單一 IP 位址,則已經綁定到該位址。",
-    "invalid": "請輸入 IP 位址或主機名稱,不含連接埠。"
+  "modules": {
+    "title": "Caddy 模組",
+    "loading": "正在讀取模組…",
+    "unknown": "無法讀取此 Caddy 的模組(caddy 指令可用嗎?)。",
+    "help": "已安裝的 Caddy 在標準建置之外還能做什麼。需要缺少模組的功能會在 Caddy 載入設定時失敗,所以請先在這裡確認。",
+    "cap_dns": "DNS 驗證提供者",
+    "cap_layer4": "第 4 層(TCP 和 UDP 代理)",
+    "cap_rate_limit": "速率限制",
+    "cap_security": "caddy-security(驗證入口)",
+    "installed": "已安裝",
+    "missing": "未安裝",
+    "how_to_get": "如何取得",
+    "dns_providers": "提供者:{{count}}",
+    "all": "所有模組({{count}})",
+    "filter": "篩選模組",
+    "no_match": "沒有符合的模組。",
+    "non_standard": "不屬於 Caddy 本身的模組:{{count}}"
   },
   "encode": {
     "heading": "壓縮",
@@ -1253,5 +1266,10 @@
     "type_a": "A / AAAA",
     "ipv4": "IPv4",
     "ipv6": "IPv6"
+  },
+  "bind": {
+    "label": "綁定位址",
+    "help": "此網站監聽的位址,以空格分隔,例如 127.0.0.1 ::1。留空表示監聽所有位址。主機若是單一 IP 位址,則已經綁定到該位址。",
+    "invalid": "請輸入 IP 位址或主機名稱,不含連接埠。"
   }
 }

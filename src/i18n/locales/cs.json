@@ -782,11 +782,6 @@
     "proxy_protocol_timeout": "Časový limit čtení hlavičky (volitelné)",
     "proxy_protocol_timeout_help": "Maximální doba čekání na hlavičku protokolu PROXY, než se to vzdá (doba ve formátu Go, např. 2s). Ponechte prázdné pro výchozí hodnotu Caddy.",
     "on_demand_rate_deprecated": "Caddy už nedoporučuje interval a burst. Vymažte obě pole a spolehněte se na endpoint ask.",
-    "tab_core": "Základ",
-    "tab_tls": "TLS a ACME",
-    "tab_logging": "Logování a metriky",
-    "tab_proxy": "Hlavičky proxy a protokoly",
-    "tabs_aria": "Sekce nastavení",
     "tls_advanced_title": "Pokročilé TLS",
     "auto_https": "Automatické HTTPS",
     "auto_https_off": "Vypnuto",
@@ -818,7 +813,12 @@
     "admin_enforce_origin": "Vynutit originy",
     "metrics_per_host": "Označit metriky hostitelem",
     "metrics_per_host_help": "Přidá požadovaného hostitele ke každé metrice požadavku, aby šly weby rozlišit. Každý jiný hostitel tvoří vlastní řadu.",
-    "auto_https_disable_certs": "Bez správy certifikátů"
+    "auto_https_disable_certs": "Bez správy certifikátů",
+    "tab_core": "Základ",
+    "tab_tls": "TLS a ACME",
+    "tab_logging": "Logování a metriky",
+    "tab_proxy": "Hlavičky proxy a protokoly",
+    "tabs_aria": "Sekce nastavení"
   },
   "ca": {
     "title": "Interní certifikační autorita",
@@ -1210,10 +1210,23 @@
     "site_override_help": "Tento web používá vlastního poskytovatele DNS a přihlašovací údaje. Uložení nových údajů restartuje Caddy, protože je načítá jen při startu.",
     "site_wildcard_warning": "Certifikáty se zástupným znakem vyžadují výzvu DNS. Nastavte poskytovatele DNS pro tento web, nebo v Nastavení → Výzva DNS."
   },
-  "bind": {
-    "label": "Adresy pro bind",
-    "help": "Adresy, na kterých tento web poslouchá, oddělené mezerami, například 127.0.0.1 ::1. Prázdné znamená všechny adresy. Hostitel, který je jedinou IP adresou, se na ni už váže.",
-    "invalid": "Zadejte IP adresy nebo názvy hostitelů bez portu."
+  "modules": {
+    "title": "Moduly Caddy",
+    "loading": "Načítání modulů…",
+    "unknown": "Moduly tohoto Caddy se nepodařilo přečíst (je dostupný příkaz caddy?).",
+    "help": "Co nainstalovaný Caddy umí nad rámec standardního sestavení. Funkce, která potřebuje chybějící modul, selže při načtení konfigurace, proto zkontrolujte nejdřív zde.",
+    "cap_dns": "Poskytovatelé DNS challenge",
+    "cap_layer4": "Vrstva 4 (proxy TCP a UDP)",
+    "cap_rate_limit": "Omezení rychlosti",
+    "cap_security": "caddy-security (autentizační portál)",
+    "installed": "Nainstalováno",
+    "missing": "Nenainstalováno",
+    "how_to_get": "Jak ho získat",
+    "dns_providers": "Poskytovatelé: {{count}}",
+    "all": "Všechny moduly ({{count}})",
+    "filter": "Filtrovat moduly",
+    "no_match": "Žádný modul neodpovídá.",
+    "non_standard": "Moduly, které nejsou součástí samotného Caddy: {{count}}"
   },
   "encode": {
     "heading": "Komprese",
@@ -1253,5 +1266,10 @@
     "type_a": "A / AAAA",
     "ipv4": "IPv4",
     "ipv6": "IPv6"
+  },
+  "bind": {
+    "label": "Adresy pro bind",
+    "help": "Adresy, na kterých tento web poslouchá, oddělené mezerami, například 127.0.0.1 ::1. Prázdné znamená všechny adresy. Hostitel, který je jedinou IP adresou, se na ni už váže.",
+    "invalid": "Zadejte IP adresy nebo názvy hostitelů bez portu."
   }
 }

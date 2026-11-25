@@ -782,11 +782,6 @@
     "proxy_protocol_timeout": "Otsakkeen lukemisen aikakatkaisu (valinnainen)",
     "proxy_protocol_timeout_help": "Enimmäisaika, jonka PROXY-protokollan otsaketta odotetaan ennen luovuttamista (Go-kesto, esim. 2s). Jätä tyhjäksi käyttääksesi Caddyn oletusta.",
     "on_demand_rate_deprecated": "Caddy ei enää suosittele intervalia ja burstia. Tyhjennä molemmat ja luota ask-päätepisteeseen.",
-    "tab_core": "Perusasetukset",
-    "tab_tls": "TLS ja ACME",
-    "tab_logging": "Lokit ja mittarit",
-    "tab_proxy": "Välityspalvelimen otsakkeet ja protokollat",
-    "tabs_aria": "Asetusten osiot",
     "tls_advanced_title": "Lisäasetukset: TLS",
     "auto_https": "Automaattinen HTTPS",
     "auto_https_off": "Pois",
@@ -818,7 +813,12 @@
     "admin_enforce_origin": "Pakota originit",
     "metrics_per_host": "Merkitse mittarit isännällä",
     "metrics_per_host_help": "Lisää pyydetyn isännän jokaiseen pyyntömittariin, jotta sivustot erotetaan toisistaan. Jokainen eri isäntä muodostaa oman sarjansa.",
-    "auto_https_disable_certs": "Ei varmenteiden hallintaa"
+    "auto_https_disable_certs": "Ei varmenteiden hallintaa",
+    "tab_core": "Perusasetukset",
+    "tab_tls": "TLS ja ACME",
+    "tab_logging": "Lokit ja mittarit",
+    "tab_proxy": "Välityspalvelimen otsakkeet ja protokollat",
+    "tabs_aria": "Asetusten osiot"
   },
   "ca": {
     "title": "Sisäinen varmentaja",
@@ -1210,10 +1210,23 @@
     "site_override_help": "Tämä sivusto käyttää omaa DNS-palveluntarjoajaa ja tunnuksia. Uusien tunnusten tallentaminen käynnistää Caddyn uudelleen, koska se lukee ne vain käynnistyessään.",
     "site_wildcard_warning": "Jokerimerkkivarmenteet tarvitsevat DNS-haasteen. Aseta DNS-palveluntarjoaja tälle sivustolle tai kohdassa Asetukset → DNS-haaste."
   },
-  "bind": {
-    "label": "Bind-osoitteet",
-    "help": "Osoitteet, joissa tämä sivusto kuuntelee, välilyönnein erotettuina, esimerkiksi 127.0.0.1 ::1. Tyhjä kuuntelee kaikissa osoitteissa. Isäntä, joka on yksi IP-osoite, sitoutuu jo siihen.",
-    "invalid": "Anna IP-osoitteita tai isäntänimiä ilman porttia."
+  "modules": {
+    "title": "Caddyn moduulit",
+    "loading": "Luetaan moduuleja…",
+    "unknown": "Tämän Caddyn moduuleja ei voitu lukea (onko caddy-komento käytettävissä?).",
+    "help": "Mitä asennettu Caddy osaa vakiorakennetta enemmän. Ominaisuus, joka tarvitsee puuttuvan moduulin, epäonnistuu kun Caddy lataa asetukset, joten tarkista ensin täältä.",
+    "cap_dns": "DNS-haasteen tarjoajat",
+    "cap_layer4": "Taso 4 (TCP- ja UDP-välitys)",
+    "cap_rate_limit": "Nopeusrajoitus",
+    "cap_security": "caddy-security (todennusportaali)",
+    "installed": "Asennettu",
+    "missing": "Ei asennettu",
+    "how_to_get": "Miten sen saa",
+    "dns_providers": "Tarjoajia: {{count}}",
+    "all": "Kaikki moduulit ({{count}})",
+    "filter": "Suodata moduuleja",
+    "no_match": "Mikään moduuli ei täsmää.",
+    "non_standard": "Moduulit, jotka eivät kuulu Caddyyn itseensä: {{count}}"
   },
   "encode": {
     "heading": "Pakkaus",
@@ -1253,5 +1266,10 @@
     "type_a": "A / AAAA",
     "ipv4": "IPv4",
     "ipv6": "IPv6"
+  },
+  "bind": {
+    "label": "Bind-osoitteet",
+    "help": "Osoitteet, joissa tämä sivusto kuuntelee, välilyönnein erotettuina, esimerkiksi 127.0.0.1 ::1. Tyhjä kuuntelee kaikissa osoitteissa. Isäntä, joka on yksi IP-osoite, sitoutuu jo siihen.",
+    "invalid": "Anna IP-osoitteita tai isäntänimiä ilman porttia."
   }
 }

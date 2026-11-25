@@ -782,11 +782,6 @@
     "proxy_protocol_timeout": "Tidsgräns för läsning av huvudet (valfritt)",
     "proxy_protocol_timeout_help": "Längsta väntetid på PROXY-protokollhuvudet innan Caddy ger upp (Go-varaktighet, t.ex. 2s). Lämna tomt för Caddys standard.",
     "on_demand_rate_deprecated": "Caddy rekommenderar inte längre interval och burst. Töm båda och lita på ask-slutpunkten i stället.",
-    "tab_core": "Grundläggande",
-    "tab_tls": "TLS och ACME",
-    "tab_logging": "Loggning och mätvärden",
-    "tab_proxy": "Proxyrubriker och protokoll",
-    "tabs_aria": "Inställningsavsnitt",
     "tls_advanced_title": "Avancerad TLS",
     "auto_https": "Automatisk HTTPS",
     "auto_https_off": "Av",
@@ -818,7 +813,12 @@
     "admin_enforce_origin": "Tvinga origins",
     "metrics_per_host": "Märk mätvärden per värd",
     "metrics_per_host_help": "Lägger till den begärda värden på varje förfrågningsmått så att webbplatser kan särskiljas. Varje olik värd blir en egen serie.",
-    "auto_https_disable_certs": "Ingen certifikathantering"
+    "auto_https_disable_certs": "Ingen certifikathantering",
+    "tab_core": "Grundläggande",
+    "tab_tls": "TLS och ACME",
+    "tab_logging": "Loggning och mätvärden",
+    "tab_proxy": "Proxyrubriker och protokoll",
+    "tabs_aria": "Inställningsavsnitt"
   },
   "ca": {
     "title": "Intern certifikatutfärdare",
@@ -1210,10 +1210,23 @@
     "site_override_help": "Den här webbplatsen använder en egen DNS-leverantör och egna inloggningsuppgifter. Att spara nya uppgifter startar om Caddy, eftersom Caddy bara läser dem vid start.",
     "site_wildcard_warning": "Jokerteckencertifikat kräver DNS-utmaningen. Ange en DNS-leverantör för den här webbplatsen, eller under Inställningar → DNS-utmaning."
   },
-  "bind": {
-    "label": "Bind-adresser",
-    "help": "Adresserna som den här webbplatsen lyssnar på, avgränsade med mellanslag, till exempel 127.0.0.1 ::1. Tomt lyssnar på alla adresser. En värd som är en enda IP-adress binder redan till den.",
-    "invalid": "Ange IP-adresser eller värdnamn, utan port."
+  "modules": {
+    "title": "Caddy-moduler",
+    "loading": "Läser modulerna…",
+    "unknown": "Modulerna i den här Caddy kunde inte läsas (finns kommandot caddy?).",
+    "help": "Vad den installerade Caddy kan utöver ett standardbygge. En funktion som kräver en saknad modul misslyckas när Caddy läser in konfigurationen, så kontrollera här först.",
+    "cap_dns": "Leverantörer för DNS-utmaning",
+    "cap_layer4": "Lager 4 (TCP- och UDP-proxy)",
+    "cap_rate_limit": "Hastighetsbegränsning",
+    "cap_security": "caddy-security (inloggningsportal)",
+    "installed": "Installerad",
+    "missing": "Inte installerad",
+    "how_to_get": "Så skaffar du den",
+    "dns_providers": "Leverantörer: {{count}}",
+    "all": "Alla moduler ({{count}})",
+    "filter": "Filtrera moduler",
+    "no_match": "Ingen modul matchar.",
+    "non_standard": "Moduler som inte ingår i själva Caddy: {{count}}"
   },
   "encode": {
     "heading": "Komprimering",
@@ -1253,5 +1266,10 @@
     "type_a": "A / AAAA",
     "ipv4": "IPv4",
     "ipv6": "IPv6"
+  },
+  "bind": {
+    "label": "Bind-adresser",
+    "help": "Adresserna som den här webbplatsen lyssnar på, avgränsade med mellanslag, till exempel 127.0.0.1 ::1. Tomt lyssnar på alla adresser. En värd som är en enda IP-adress binder redan till den.",
+    "invalid": "Ange IP-adresser eller värdnamn, utan port."
   }
 }

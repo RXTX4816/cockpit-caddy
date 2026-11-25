@@ -782,11 +782,6 @@
     "proxy_protocol_timeout": "Timeout für das Lesen des Headers (optional)",
     "proxy_protocol_timeout_help": "Maximale Wartezeit auf den PROXY-Protokoll-Header, bevor abgebrochen wird (Go-Dauer, z. B. 2s). Leer lassen für den Caddy-Standard.",
     "on_demand_rate_deprecated": "Caddy empfiehlt Intervall und Burst nicht mehr. Leere beide Felder und verlass dich stattdessen auf den Ask-Endpunkt.",
-    "tab_core": "Allgemein",
-    "tab_tls": "TLS & ACME",
-    "tab_logging": "Protokolle & Metriken",
-    "tab_proxy": "Proxy-Header & Protokolle",
-    "tabs_aria": "Bereiche der Einstellungen",
     "tls_advanced_title": "Erweitertes TLS",
     "auto_https": "Automatisches HTTPS",
     "auto_https_off": "Aus",
@@ -818,7 +813,12 @@
     "admin_enforce_origin": "Origins erzwingen",
     "metrics_per_host": "Metriken nach Host kennzeichnen",
     "metrics_per_host_help": "Fügt jeder Anfragemetrik den angefragten Host hinzu, damit sich Sites unterscheiden lassen. Jeder verschiedene Host ergibt eine eigene Zeitreihe.",
-    "auto_https_disable_certs": "Keine Zertifikatsverwaltung"
+    "auto_https_disable_certs": "Keine Zertifikatsverwaltung",
+    "tab_core": "Allgemein",
+    "tab_tls": "TLS & ACME",
+    "tab_logging": "Protokolle & Metriken",
+    "tab_proxy": "Proxy-Header & Protokolle",
+    "tabs_aria": "Bereiche der Einstellungen"
   },
   "ca": {
     "title": "Interne Zertifizierungsstelle",
@@ -1210,10 +1210,23 @@
     "site_override_help": "Diese Site nutzt einen eigenen DNS-Anbieter mit eigenen Zugangsdaten. Neue Zugangsdaten zu speichern startet Caddy neu, weil Caddy sie nur beim Start liest.",
     "site_wildcard_warning": "Wildcard-Zertifikate brauchen die DNS-Challenge. Setze einen DNS-Anbieter für diese Site oder unter Einstellungen → DNS-Challenge."
   },
-  "bind": {
-    "label": "Bind-Adressen",
-    "help": "Die Adressen, auf denen diese Site lauscht, durch Leerzeichen getrennt, zum Beispiel 127.0.0.1 ::1. Leer lauscht auf jeder Adresse. Ein Host, der eine einzelne IP-Adresse ist, bindet bereits daran.",
-    "invalid": "Geben Sie IP-Adressen oder Hostnamen ohne Port ein."
+  "modules": {
+    "title": "Caddy-Module",
+    "loading": "Module werden gelesen…",
+    "unknown": "Die Module dieses Caddy konnten nicht gelesen werden (ist der Befehl caddy verfügbar?).",
+    "help": "Was das installierte Caddy über einen Standard-Build hinaus kann. Ein Feature, das ein fehlendes Modul braucht, schlägt beim Laden der Konfiguration fehl, prüfen Sie es also zuerst hier.",
+    "cap_dns": "DNS-Challenge-Anbieter",
+    "cap_layer4": "Layer 4 (TCP- und UDP-Proxy)",
+    "cap_rate_limit": "Ratenbegrenzung",
+    "cap_security": "caddy-security (Anmeldeportal)",
+    "installed": "Installiert",
+    "missing": "Nicht installiert",
+    "how_to_get": "So bekommen Sie es",
+    "dns_providers": "Anbieter: {{count}}",
+    "all": "Alle Module ({{count}})",
+    "filter": "Module filtern",
+    "no_match": "Kein Modul passt.",
+    "non_standard": "Module, die nicht zu Caddy selbst gehören: {{count}}"
   },
   "encode": {
     "heading": "Komprimierung",
@@ -1253,5 +1266,10 @@
     "type_a": "A / AAAA",
     "ipv4": "IPv4",
     "ipv6": "IPv6"
+  },
+  "bind": {
+    "label": "Bind-Adressen",
+    "help": "Die Adressen, auf denen diese Site lauscht, durch Leerzeichen getrennt, zum Beispiel 127.0.0.1 ::1. Leer lauscht auf jeder Adresse. Ein Host, der eine einzelne IP-Adresse ist, bindet bereits daran.",
+    "invalid": "Geben Sie IP-Adressen oder Hostnamen ohne Port ein."
   }
 }

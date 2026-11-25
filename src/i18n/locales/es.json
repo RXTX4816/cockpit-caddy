@@ -782,11 +782,6 @@
     "proxy_protocol_timeout": "Tiempo de lectura de la cabecera (opcional)",
     "proxy_protocol_timeout_help": "Tiempo máximo de espera de la cabecera del protocolo PROXY antes de desistir (duración de Go, p. ej. 2s). Déjelo vacío para usar el valor predeterminado de Caddy.",
     "on_demand_rate_deprecated": "Caddy ya no recomienda interval ni burst. Vacía ambos y usa el endpoint ask en su lugar.",
-    "tab_core": "Básico",
-    "tab_tls": "TLS y ACME",
-    "tab_logging": "Registros y métricas",
-    "tab_proxy": "Cabeceras de proxy y protocolos",
-    "tabs_aria": "Secciones de ajustes",
     "tls_advanced_title": "TLS avanzado",
     "auto_https": "HTTPS automático",
     "auto_https_off": "Desactivado",
@@ -818,7 +813,12 @@
     "admin_enforce_origin": "Exigir orígenes",
     "metrics_per_host": "Etiquetar las métricas por host",
     "metrics_per_host_help": "Añade el host solicitado a cada métrica de petición para distinguir los sitios. Cada host distinto genera su propia serie.",
-    "auto_https_disable_certs": "Sin gestión de certificados"
+    "auto_https_disable_certs": "Sin gestión de certificados",
+    "tab_core": "Básico",
+    "tab_tls": "TLS y ACME",
+    "tab_logging": "Registros y métricas",
+    "tab_proxy": "Cabeceras de proxy y protocolos",
+    "tabs_aria": "Secciones de ajustes"
   },
   "ca": {
     "title": "Autoridad de certificación interna",
@@ -1210,10 +1210,23 @@
     "site_override_help": "Este sitio usa su propio proveedor DNS y credenciales. Guardar credenciales nuevas reinicia Caddy, porque solo las lee al arrancar.",
     "site_wildcard_warning": "Los certificados comodín necesitan el desafío DNS. Define un proveedor DNS para este sitio o en Ajustes → Desafío DNS."
   },
-  "bind": {
-    "label": "Direcciones de enlace",
-    "help": "Las direcciones en las que escucha este sitio, separadas por espacios, por ejemplo 127.0.0.1 ::1. Vacío escucha en todas. Un host que es una sola dirección IP ya se enlaza a ella.",
-    "invalid": "Introduzca direcciones IP o nombres de host, sin puerto."
+  "modules": {
+    "title": "Módulos de Caddy",
+    "loading": "Leyendo los módulos…",
+    "unknown": "No se pudieron leer los módulos de este Caddy (¿está disponible el comando caddy?).",
+    "help": "Lo que el Caddy instalado puede hacer además de una compilación estándar. Una función que necesita un módulo ausente falla cuando Caddy carga la configuración, así que compruébelo aquí primero.",
+    "cap_dns": "Proveedores del desafío DNS",
+    "cap_layer4": "Capa 4 (proxy TCP y UDP)",
+    "cap_rate_limit": "Limitación de tasa",
+    "cap_security": "caddy-security (portal de autenticación)",
+    "installed": "Instalado",
+    "missing": "No instalado",
+    "how_to_get": "Cómo obtenerlo",
+    "dns_providers": "Proveedores: {{count}}",
+    "all": "Todos los módulos ({{count}})",
+    "filter": "Filtrar módulos",
+    "no_match": "Ningún módulo coincide.",
+    "non_standard": "Módulos que no forman parte del propio Caddy: {{count}}"
   },
   "encode": {
     "heading": "Compresión",
@@ -1253,5 +1266,10 @@
     "type_a": "A / AAAA",
     "ipv4": "IPv4",
     "ipv6": "IPv6"
+  },
+  "bind": {
+    "label": "Direcciones de enlace",
+    "help": "Las direcciones en las que escucha este sitio, separadas por espacios, por ejemplo 127.0.0.1 ::1. Vacío escucha en todas. Un host que es una sola dirección IP ya se enlaza a ella.",
+    "invalid": "Introduzca direcciones IP o nombres de host, sin puerto."
   }
 }

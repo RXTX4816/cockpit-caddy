@@ -782,11 +782,6 @@
     "proxy_protocol_timeout": "标头读取超时（可选）",
     "proxy_protocol_timeout_help": "放弃前等待 PROXY 协议标头的最长时间（Go 时长，例如 2s）。留空则使用 Caddy 默认。",
     "on_demand_rate_deprecated": "Caddy 已不再推荐 interval 和 burst。请清空两者，改用 ask 端点。",
-    "tab_core": "核心",
-    "tab_tls": "TLS 与 ACME",
-    "tab_logging": "日志与指标",
-    "tab_proxy": "代理标头与协议",
-    "tabs_aria": "设置分区",
     "tls_advanced_title": "高级 TLS",
     "auto_https": "自动 HTTPS",
     "auto_https_off": "关闭",
@@ -818,7 +813,12 @@
     "admin_enforce_origin": "强制检查来源",
     "metrics_per_host": "按主机为指标添加标签",
     "metrics_per_host_help": "在每个请求指标上加入所请求的主机,以便区分站点。每个不同的主机都会成为单独的时间序列。",
-    "auto_https_disable_certs": "不管理证书"
+    "auto_https_disable_certs": "不管理证书",
+    "tab_core": "核心",
+    "tab_tls": "TLS 与 ACME",
+    "tab_logging": "日志与指标",
+    "tab_proxy": "代理标头与协议",
+    "tabs_aria": "设置分区"
   },
   "ca": {
     "title": "内部证书颁发机构",
@@ -1210,10 +1210,23 @@
     "site_override_help": "此站点使用自己的 DNS 提供商和凭据。保存新凭据会重启 Caddy，因为它只在启动时读取凭据。",
     "site_wildcard_warning": "通配符证书需要 DNS 质询。请为此站点设置 DNS 提供商，或在“设置 → DNS 质询”中设置。"
   },
-  "bind": {
-    "label": "绑定地址",
-    "help": "此站点监听的地址,以空格分隔,例如 127.0.0.1 ::1。留空表示监听所有地址。主机若是单个 IP 地址,则已经绑定到该地址。",
-    "invalid": "请输入 IP 地址或主机名,不带端口。"
+  "modules": {
+    "title": "Caddy 模块",
+    "loading": "正在读取模块…",
+    "unknown": "无法读取此 Caddy 的模块(caddy 命令可用吗?)。",
+    "help": "已安装的 Caddy 在标准构建之外还能做什么。需要缺失模块的功能会在 Caddy 加载配置时失败,所以请先在这里确认。",
+    "cap_dns": "DNS 验证提供商",
+    "cap_layer4": "第 4 层(TCP 和 UDP 代理)",
+    "cap_rate_limit": "速率限制",
+    "cap_security": "caddy-security(认证门户)",
+    "installed": "已安装",
+    "missing": "未安装",
+    "how_to_get": "如何获取",
+    "dns_providers": "提供商:{{count}}",
+    "all": "所有模块({{count}})",
+    "filter": "筛选模块",
+    "no_match": "没有匹配的模块。",
+    "non_standard": "不属于 Caddy 本身的模块:{{count}}"
   },
   "encode": {
     "heading": "压缩",
@@ -1253,5 +1266,10 @@
     "type_a": "A / AAAA",
     "ipv4": "IPv4",
     "ipv6": "IPv6"
+  },
+  "bind": {
+    "label": "绑定地址",
+    "help": "此站点监听的地址,以空格分隔,例如 127.0.0.1 ::1。留空表示监听所有地址。主机若是单个 IP 地址,则已经绑定到该地址。",
+    "invalid": "请输入 IP 地址或主机名,不带端口。"
   }
 }

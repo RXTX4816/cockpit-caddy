@@ -24,6 +24,7 @@ import { readGlobalOptions, syncGlobalOptions, reloadCaddy, fetchStorageInfo, ch
 import type { DnsChallengeConfig, GlobalOptions, StorageInfo } from "../api";
 import { DnsChallengeFields, dnsDraftFromConfig, dnsDraftToConfig, validateDnsDraft, type DnsDraft } from "./DnsChallengeFields";
 import { CertLifetimeSelect } from "./CertLifetimeSelect";
+import { CaddyModulesPanel } from "./CaddyModulesPanel";
 import { GlobalTlsFields, globalTlsFromValues, globalTlsToValues, type GlobalTlsValues } from "./GlobalTlsFields";
 import { GlobalAdminFields, globalAdminFromValues, globalAdminToValues, type GlobalAdminValues } from "./GlobalAdminFields";
 import { AccessLogSection, type AccessLogValues, accessLogConfigToValues, accessLogHasError, accessLogValuesToConfig } from "./AccessLogSection";
@@ -379,6 +380,13 @@ export function GlobalOptionsTab() {
           {t("global_opts.admin_title")}
         </Title>
         <GlobalAdminFields value={globalAdmin} onChange={setGlobalAdmin} isDisabled={isConfirming} />
+
+        <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
+
+        <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+          {t("modules.title")}
+        </Title>
+        <CaddyModulesPanel />
 
     </>) },
     { key: "tls", label: t("global_opts.tab_tls"), configured: configured.tls, hasError: hasError.tls, content: (<>

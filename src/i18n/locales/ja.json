@@ -782,11 +782,6 @@
     "proxy_protocol_timeout": "ヘッダー読み取りタイムアウト（任意）",
     "proxy_protocol_timeout_help": "PROXY プロトコルのヘッダーを待つ最大時間（Go の時間形式、例: 2s）。Caddy の既定を使う場合は空欄にします。",
     "on_demand_rate_deprecated": "Caddy は interval と burst を推奨しなくなりました。両方を空にして ask エンドポイントに任せてください。",
-    "tab_core": "基本",
-    "tab_tls": "TLS と ACME",
-    "tab_logging": "ログとメトリクス",
-    "tab_proxy": "プロキシヘッダーとプロトコル",
-    "tabs_aria": "設定のセクション",
     "tls_advanced_title": "TLS の詳細設定",
     "auto_https": "自動 HTTPS",
     "auto_https_off": "オフ",
@@ -818,7 +813,12 @@
     "admin_enforce_origin": "オリジンを強制",
     "metrics_per_host": "メトリクスにホストのラベルを付ける",
     "metrics_per_host_help": "リクエストごとのメトリクスに要求されたホストを追加し、サイトを区別できるようにします。ホストごとに別の系列になります。",
-    "auto_https_disable_certs": "証明書を管理しない"
+    "auto_https_disable_certs": "証明書を管理しない",
+    "tab_core": "基本",
+    "tab_tls": "TLS と ACME",
+    "tab_logging": "ログとメトリクス",
+    "tab_proxy": "プロキシヘッダーとプロトコル",
+    "tabs_aria": "設定のセクション"
   },
   "ca": {
     "title": "内部認証局",
@@ -1210,10 +1210,23 @@
     "site_override_help": "このサイトは専用の DNS プロバイダーと認証情報を使います。新しい認証情報を保存すると Caddy が再起動します（起動時にのみ読み込むため）。",
     "site_wildcard_warning": "ワイルドカード証明書には DNS チャレンジが必要です。このサイト用、または 設定 → DNS チャレンジ で DNS プロバイダーを設定してください。"
   },
-  "bind": {
-    "label": "バインドアドレス",
-    "help": "このサイトが待ち受けるアドレス(スペース区切り)。例: 127.0.0.1 ::1。空欄はすべてのアドレスで待ち受けます。1 つの IP アドレスであるホストは、すでにそのアドレスにバインドされます。",
-    "invalid": "ポートを付けずに、IP アドレスまたはホスト名を入力してください。"
+  "modules": {
+    "title": "Caddy のモジュール",
+    "loading": "モジュールを読み取り中…",
+    "unknown": "この Caddy のモジュールを読み取れませんでした(caddy コマンドは使えますか?)。",
+    "help": "インストール済みの Caddy が標準ビルド以外にできること。足りないモジュールが必要な機能は、Caddy が設定を読み込むときに失敗するので、先にここで確認してください。",
+    "cap_dns": "DNS チャレンジのプロバイダー",
+    "cap_layer4": "レイヤー 4(TCP と UDP のプロキシ)",
+    "cap_rate_limit": "レート制限",
+    "cap_security": "caddy-security(認証ポータル)",
+    "installed": "インストール済み",
+    "missing": "未インストール",
+    "how_to_get": "入手方法",
+    "dns_providers": "プロバイダー: {{count}}",
+    "all": "すべてのモジュール({{count}})",
+    "filter": "モジュールを絞り込む",
+    "no_match": "一致するモジュールはありません。",
+    "non_standard": "Caddy 本体に含まれないモジュール: {{count}}"
   },
   "encode": {
     "heading": "圧縮",
@@ -1253,5 +1266,10 @@
     "type_a": "A / AAAA",
     "ipv4": "IPv4",
     "ipv6": "IPv6"
+  },
+  "bind": {
+    "label": "バインドアドレス",
+    "help": "このサイトが待ち受けるアドレス(スペース区切り)。例: 127.0.0.1 ::1。空欄はすべてのアドレスで待ち受けます。1 つの IP アドレスであるホストは、すでにそのアドレスにバインドされます。",
+    "invalid": "ポートを付けずに、IP アドレスまたはホスト名を入力してください。"
   }
 }
