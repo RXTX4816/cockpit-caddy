@@ -32,7 +32,7 @@ export function buildForwardAuthCaddyLines(fa: import("./types").ForwardAuthConf
 }
 
 export function buildReverseProxyLines(
-  p: Pick<ProxyEntry, "targetScheme" | "targetHost" | "targetPort" | "tlsSkipVerify" | "requestHeaders" | "upstreamResponseHeaders" | "dialTimeout" | "responseHeaderTimeout" | "extraUpstreams" | "lbPolicy" | "lbPolicyArgs" | "lbRetry" | "replaceUpstreamErrors">,
+  p: Pick<ProxyEntry, "targetScheme" | "targetHost" | "targetPort" | "tlsSkipVerify" | "requestHeaders" | "upstreamResponseHeaders" | "dialTimeout" | "responseHeaderTimeout" | "flushInterval" | "streamTimeout" | "streamCloseDelay" | "extraUpstreams" | "lbPolicy" | "lbPolicyArgs" | "lbRetry" | "replaceUpstreamErrors">,
   errorHandlers?: import("./types").ErrorHandlerConfig[],
 ): string[] {
   const upstreams = buildUpstreamList(p);
@@ -42,6 +42,11 @@ export function buildReverseProxyLines(
   }).concat((p.upstreamResponseHeaders ?? []).map(h => headerOpLine("\t\theader_down", h)));
 
   const transportLines = buildTransportLines(p);
+  const streamingLines = [
+    p.flushInterval ? `\t\tflush_interval ${p.flushInterval}` : "",
+    p.streamTimeout ? `\t\tstream_timeout ${p.streamTimeout}` : "",
+    p.streamCloseDelay ? `\t\tstream_close_delay ${p.streamCloseDelay}` : "",
+  ].filter(Boolean);
   const lbLines = (p.lbPolicy && upstreams.length > 1 && LB_POLICIES.has(p.lbPolicy))
     ? [[`\t\tlb_policy`, p.lbPolicy, ...lbPolicyTokens(p)].join(" ")]
     : [];
@@ -69,10 +74,10 @@ export function buildReverseProxyLines(
     });
   }
 
-  const needsBlock = transportLines.length > 0 || headerLines.length > 0 || lbLines.length > 0 || lbRetryLines.length > 0 || errorPassthroughLines.length > 0;
+  const needsBlock = transportLines.length > 0 || streamingLines.length > 0 || headerLines.length > 0 || lbLines.length > 0 || lbRetryLines.length > 0 || errorPassthroughLines.length > 0;
   if (!needsBlock) return [`\treverse_proxy ${upstreams.join(" ")}`];
 
-  return [`\treverse_proxy ${upstreams.join(" ")} {`, ...lbLines, ...lbRetryLines, ...transportLines, ...headerLines, ...errorPassthroughLines, "\t}"];
+  return [`\treverse_proxy ${upstreams.join(" ")} {`, ...lbLines, ...lbRetryLines, ...streamingLines, ...transportLines, ...headerLines, ...errorPassthroughLines, "\t}"];
 }
 
 /**

@@ -12,11 +12,15 @@ import { SectionConfiguredDot } from "./SectionConfiguredDot";
 export interface TransportValues {
   dialTimeout: string;
   responseHeaderTimeout: string;
+  /** reverse_proxy streaming options (#325). */
+  flushInterval: string;
+  streamTimeout: string;
+  streamCloseDelay: string;
 }
 
 // Empty means Caddy's own default (#249): dial 3s, no response header timeout. "Defaults"
 // clears the fields; the placeholders show Caddy's values.
-const TRANSPORT_EMPTY: TransportValues = { dialTimeout: "", responseHeaderTimeout: "" };
+export const TRANSPORT_EMPTY: TransportValues = { dialTimeout: "", responseHeaderTimeout: "", flushInterval: "", streamTimeout: "", streamCloseDelay: "" };
 
 interface Props {
   value: TransportValues;
@@ -30,7 +34,7 @@ interface Props {
 
 export function TransportSection({ value, onChange, isDisabled, isExpanded: isExpandedProp, onToggleExpanded }: Props) {
   const { t } = useTranslation();
-  const hasValues = !!(value.dialTimeout || value.responseHeaderTimeout);
+  const hasValues = Object.values(value).some(Boolean);
   const [internalExpanded, setInternalExpanded] = useState(hasValues);
   const expanded = isExpandedProp ?? internalExpanded;
   const setExpanded = onToggleExpanded ?? setInternalExpanded;
@@ -70,6 +74,38 @@ export function TransportSection({ value, onChange, isDisabled, isExpanded: isEx
             id="transport-resp"
             value={value.responseHeaderTimeout}
             onChange={(_e, v) => set("responseHeaderTimeout", v)}
+            placeholder={t("server_timeouts.no_timeout")}
+            isDisabled={isDisabled}
+          />
+        </FormGroup>
+      </div>
+      <HelperText style={{ margin: "0.8rem 0 0.4rem" }}>
+        <HelperTextItem>{t("transport.streaming_help")}</HelperTextItem>
+      </HelperText>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
+        <FormGroup label={t("transport.flush_interval")} fieldId="transport-flush" style={{ flex: "1 1 10rem" }}>
+          <ResettableTextInput
+            id="transport-flush"
+            value={value.flushInterval}
+            onChange={(_e, v) => set("flushInterval", v)}
+            placeholder={t("transport.flush_interval_placeholder")}
+            isDisabled={isDisabled}
+          />
+        </FormGroup>
+        <FormGroup label={t("transport.stream_timeout")} fieldId="transport-stream-timeout" style={{ flex: "1 1 10rem" }}>
+          <ResettableTextInput
+            id="transport-stream-timeout"
+            value={value.streamTimeout}
+            onChange={(_e, v) => set("streamTimeout", v)}
+            placeholder={t("server_timeouts.no_timeout")}
+            isDisabled={isDisabled}
+          />
+        </FormGroup>
+        <FormGroup label={t("transport.stream_close_delay")} fieldId="transport-stream-close" style={{ flex: "1 1 10rem" }}>
+          <ResettableTextInput
+            id="transport-stream-close"
+            value={value.streamCloseDelay}
+            onChange={(_e, v) => set("streamCloseDelay", v)}
             placeholder={t("server_timeouts.no_timeout")}
             isDisabled={isDisabled}
           />

@@ -267,7 +267,12 @@
     "section_title": "Tidsgränser för upstream (valfritt)",
     "dial_timeout": "Tidsgräns för anslutning",
     "response_header_timeout": "Tidsgräns för svarshuvuden",
-    "defaults_help": "Lämna ett fält tomt för att använda Caddys standardvärde, som visas i grått. En tidsgräns för svarets headers avbryter long polling och långsamma svar."
+    "defaults_help": "Lämna ett fält tomt för att använda Caddys standardvärde, som visas i grått. En tidsgräns för svarets headers avbryter long polling och långsamma svar.",
+    "streaming_help": "Strömning (websockets, händelseströmmar): lämna tomt för Caddys standardvärden.",
+    "flush_interval": "Flush-intervall",
+    "flush_interval_placeholder": "-1 skickar varje skrivning direkt",
+    "stream_timeout": "Timeout för ström",
+    "stream_close_delay": "Fördröjning vid stängning av ström"
   },
   "server_timeouts": {
     "heading": "Servertidsgränser och gränser",

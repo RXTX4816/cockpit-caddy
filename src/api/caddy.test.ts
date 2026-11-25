@@ -1683,6 +1683,39 @@ describe("buildServerEntry — upstreamResponseHeaders (#324)", () => {
   });
 });
 
+describe("streaming options (#325)", () => {
+  const streaming = { flushInterval: "-1", streamTimeout: "24h", streamCloseDelay: "5m" };
+
+  it("proxyToBlock emits flush_interval, stream_timeout and stream_close_delay in the reverse_proxy block", () => {
+    const result = proxyToBlock(proxy(streaming));
+    expect(result).toContain("\t\tflush_interval -1");
+    expect(result).toContain("\t\tstream_timeout 24h");
+    expect(result).toContain("\t\tstream_close_delay 5m");
+  });
+
+  it("emits nothing when none is set", () => {
+    expect(proxyToBlock(proxy())).not.toMatch(/flush_interval|stream_timeout|stream_close_delay/);
+  });
+
+  it("buildServerEntry puts them on the reverse_proxy handler, -1 as a number", () => {
+    const rp = buildServerEntry(proxy(streaming)).routes[0].handle[0] as Record<string, unknown>;
+    expect(rp.flush_interval).toBe(-1);
+    expect(rp.stream_timeout).toBe("24h");
+    expect(rp.stream_close_delay).toBe("5m");
+    const rp2 = buildServerEntry(proxy({ flushInterval: "100ms" })).routes[0].handle[0] as Record<string, unknown>;
+    expect(rp2.flush_interval).toBe("100ms");
+  });
+
+  it("parseProxies reads them back from Caddy's nanosecond numbers", () => {
+    const server = buildServerEntry(proxy());
+    Object.assign(server.routes[0].handle[0], { flush_interval: -1, stream_timeout: 86_400_000_000_000, stream_close_delay: 300_000_000_000 });
+    const [p] = parseProxies({ apps: { http: { servers: { srv0: server } } } });
+    expect(p.flushInterval).toBe("-1");
+    expect(p.streamTimeout).toBe("24h");
+    expect(p.streamCloseDelay).toBe("5m");
+  });
+});
+
 describe("buildServerEntry — requestHeaders", () => {
   it("emits headers.request.set in reverse_proxy handler", () => {
     const server = buildServerEntry(proxy({ requestHeaders: [{ op: "set", name: "X-Real-IP", value: "{remote_host}" }] }));

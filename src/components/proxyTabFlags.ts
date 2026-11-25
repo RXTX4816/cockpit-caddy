@@ -47,7 +47,7 @@ export function proxyTabFlags(v: ProxyTabValues, generalHasError: boolean): TabF
       general: false,
       security: v.basicAuth.length > 0 || !!v.forwardAuth || tls,
       routing: hasAnyMatcher(v.matchers) || !!v.rewrite || !!v.requestHeaders?.length || !!v.responseHeaders?.length || !!v.upstreamResponseHeaders?.length || v.isNamedRoute,
-      upstreams: v.extraUpstreams.length > 0 || !!v.lbPolicy || !!lbRetryValuesToConfig(v.lbRetry) || !!(v.transport.dialTimeout || v.transport.responseHeaderTimeout),
+      upstreams: v.extraUpstreams.length > 0 || !!v.lbPolicy || !!lbRetryValuesToConfig(v.lbRetry) || Object.values(v.transport).some(Boolean),
       logging: !!accessLogValuesToConfig(v.accessLog) || v.errorHandlers.length > 0,
       limits: !!v.requestBodyMaxSize
         || !!(st.readTimeout || st.readHeaderTimeout || st.writeTimeout || st.idleTimeout || st.maxHeaderBytes || st.disableHttp3),

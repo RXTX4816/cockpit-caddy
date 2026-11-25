@@ -267,7 +267,12 @@
     "section_title": "上游逾時（選填）",
     "dial_timeout": "連線逾時",
     "response_header_timeout": "回應標頭逾時",
-    "defaults_help": "留空即使用 Caddy 的預設值（以灰色顯示）。回應標頭逾時會中斷長輪詢和較慢的回應。"
+    "defaults_help": "留空即使用 Caddy 的預設值（以灰色顯示）。回應標頭逾時會中斷長輪詢和較慢的回應。",
+    "streaming_help": "串流(WebSocket、事件串流):留空則使用 Caddy 預設值。",
+    "flush_interval": "清空間隔",
+    "flush_interval_placeholder": "-1 表示每次寫入立即傳送",
+    "stream_timeout": "串流逾時",
+    "stream_close_delay": "串流關閉延遲"
   },
   "server_timeouts": {
     "heading": "伺服器逾時與限制",

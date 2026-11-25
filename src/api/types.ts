@@ -436,6 +436,12 @@ export interface ProxyEntry {
   compress?: boolean;
   dialTimeout?: string;
   responseHeaderTimeout?: string;
+  /** reverse_proxy `flush_interval`: a duration, or `-1` to flush after every write (#325). */
+  flushInterval?: string;
+  /** reverse_proxy `stream_timeout`: how long a websocket or other upgraded stream may live (#325). */
+  streamTimeout?: string;
+  /** reverse_proxy `stream_close_delay`: how long streams stay open after a config reload (#325). */
+  streamCloseDelay?: string;
   basicAuth?: { username: string; passwordHash: string }[];
   /** Additional upstreams beyond the primary targetHost:targetPort */
   extraUpstreams?: Array<{ host: string; port: number }>;

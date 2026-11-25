@@ -267,7 +267,12 @@
     "section_title": "Časové limity upstreamu (voliteľné)",
     "dial_timeout": "Časový limit pripojenia",
     "response_header_timeout": "Časový limit hlavičiek odpovede",
-    "defaults_help": "Nechajte pole prázdne a použije sa predvolená hodnota Caddy (zobrazená sivo). Časový limit hlavičiek odpovede preruší long polling a pomalé odpovede."
+    "defaults_help": "Nechajte pole prázdne a použije sa predvolená hodnota Caddy (zobrazená sivo). Časový limit hlavičiek odpovede preruší long polling a pomalé odpovede.",
+    "streaming_help": "Streamovanie (websockety, prúdy udalostí): nechajte prázdne pre predvolené hodnoty Caddy.",
+    "flush_interval": "Interval vyprázdnenia",
+    "flush_interval_placeholder": "-1 odošle každý zápis hneď",
+    "stream_timeout": "Časový limit streamu",
+    "stream_close_delay": "Oneskorenie zatvorenia streamu"
   },
   "server_timeouts": {
     "heading": "Časové limity a obmedzenia servera",

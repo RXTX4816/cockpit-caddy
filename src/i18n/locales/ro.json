@@ -267,7 +267,12 @@
     "section_title": "Timeout-uri upstream (opțional)",
     "dial_timeout": "Timeout de conectare",
     "response_header_timeout": "Timeout pentru antetele răspunsului",
-    "defaults_help": "Lăsați un câmp gol pentru a folosi valoarea implicită Caddy, afișată cu gri. O limită de timp pentru antetele răspunsului întrerupe long polling-ul și răspunsurile lente."
+    "defaults_help": "Lăsați un câmp gol pentru a folosi valoarea implicită Caddy, afișată cu gri. O limită de timp pentru antetele răspunsului întrerupe long polling-ul și răspunsurile lente.",
+    "streaming_help": "Streaming (websocket-uri, fluxuri de evenimente): lăsați gol pentru valorile implicite Caddy.",
+    "flush_interval": "Interval de golire",
+    "flush_interval_placeholder": "-1 trimite fiecare scriere imediat",
+    "stream_timeout": "Timp limită al fluxului",
+    "stream_close_delay": "Întârziere la închiderea fluxului"
   },
   "server_timeouts": {
     "heading": "Timeout-uri și limite ale serverului",

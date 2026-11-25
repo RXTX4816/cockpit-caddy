@@ -267,7 +267,12 @@
     "section_title": "업스트림 시간 제한(선택)",
     "dial_timeout": "연결 시간 제한",
     "response_header_timeout": "응답 헤더 시간 제한",
-    "defaults_help": "필드를 비워 두면 회색으로 표시된 Caddy 기본값이 사용됩니다. 응답 헤더 타임아웃은 롱 폴링과 느린 응답을 끊습니다."
+    "defaults_help": "필드를 비워 두면 회색으로 표시된 Caddy 기본값이 사용됩니다. 응답 헤더 타임아웃은 롱 폴링과 느린 응답을 끊습니다.",
+    "streaming_help": "스트리밍(웹소켓, 이벤트 스트림): 비워 두면 Caddy 기본값을 사용합니다.",
+    "flush_interval": "플러시 간격",
+    "flush_interval_placeholder": "-1은 쓰기마다 즉시 전송",
+    "stream_timeout": "스트림 타임아웃",
+    "stream_close_delay": "스트림 종료 지연"
   },
   "server_timeouts": {
     "heading": "서버 시간 제한 및 한도",

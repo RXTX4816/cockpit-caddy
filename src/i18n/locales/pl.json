@@ -267,7 +267,12 @@
     "section_title": "Limity czasu upstreamu (opcjonalnie)",
     "dial_timeout": "Limit czasu połączenia",
     "response_header_timeout": "Limit czasu nagłówków odpowiedzi",
-    "defaults_help": "Zostaw pole puste, aby użyć domyślnej wartości Caddy (pokazanej na szaro). Limit czasu nagłówków odpowiedzi przerywa long polling i wolne odpowiedzi."
+    "defaults_help": "Zostaw pole puste, aby użyć domyślnej wartości Caddy (pokazanej na szaro). Limit czasu nagłówków odpowiedzi przerywa long polling i wolne odpowiedzi.",
+    "streaming_help": "Streaming (websockety, strumienie zdarzeń): zostaw puste, aby użyć domyślnych ustawień Caddy.",
+    "flush_interval": "Interwał opróżniania",
+    "flush_interval_placeholder": "-1 wysyła każdy zapis od razu",
+    "stream_timeout": "Limit czasu strumienia",
+    "stream_close_delay": "Opóźnienie zamknięcia strumienia"
   },
   "server_timeouts": {
     "heading": "Limity czasu i ograniczenia serwera",

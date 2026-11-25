@@ -267,7 +267,12 @@
     "section_title": "Délais upstream (facultatif)",
     "dial_timeout": "Délai de connexion",
     "response_header_timeout": "Délai des en-têtes de réponse",
-    "defaults_help": "Laissez un champ vide pour utiliser la valeur par défaut de Caddy, affichée en grisé. Un délai d'en-têtes de réponse interrompt le long polling et les réponses lentes."
+    "defaults_help": "Laissez un champ vide pour utiliser la valeur par défaut de Caddy, affichée en grisé. Un délai d'en-têtes de réponse interrompt le long polling et les réponses lentes.",
+    "streaming_help": "Streaming (websockets, flux d'événements) : laissez vide pour garder les valeurs par défaut de Caddy.",
+    "flush_interval": "Intervalle de vidage",
+    "flush_interval_placeholder": "-1 envoie chaque écriture immédiatement",
+    "stream_timeout": "Délai maximal du flux",
+    "stream_close_delay": "Délai de fermeture du flux"
   },
   "server_timeouts": {
     "heading": "Délais et limites du serveur",
