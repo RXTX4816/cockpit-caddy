@@ -272,7 +272,15 @@
     "flush_interval": "Boşaltma aralığı",
     "flush_interval_placeholder": "-1 her yazmayı hemen gönderir",
     "stream_timeout": "Akış zaman aşımı",
-    "stream_close_delay": "Akış kapatma gecikmesi"
+    "stream_close_delay": "Akış kapatma gecikmesi",
+    "connection_title": "Upstream bağlantısı",
+    "tls_server_name": "TLS sunucu adı",
+    "versions": "HTTP sürümleri",
+    "read_timeout": "Okuma zaman aşımı",
+    "write_timeout": "Yazma zaman aşımı",
+    "keepalive": "Keep-alive",
+    "keepalive_idle_conns": "Tutulan boştaki bağlantılar",
+    "keepalive_idle_conns_per_host": "Ana makine başına tutulan boştaki bağlantılar"
   },
   "server_timeouts": {
     "heading": "Sunucu zaman aşımları ve sınırları",
@@ -391,7 +399,9 @@
     "validation_max_fails": "En fazla hata en az 1 olmalı",
     "validation_needs_health_uri": "Aralık, zaman aşımı ve beklenen durum için bir sağlık kontrolü yolu gerekir",
     "validation_health_uri": "Sağlık kontrolü yolu / ile başlamalı",
-    "validation_health_status": "200 gibi bir kod ya da 2xx gibi bir sınıf girin"
+    "validation_health_status": "200 gibi bir kod ya da 2xx gibi bir sınıf girin",
+    "retry_methods": "Yalnızca bu yöntemleri yeniden dene",
+    "validation_methods": "Yöntemler GET veya HEAD gibi sözcüklerdir, boşlukla ayrılır."
   },
   "response_headers": {
     "heading": "Yanıt başlıkları",

@@ -87,6 +87,10 @@ export function proxyTabStateFromEntry(p: ProxyEntry): ProxyTabState {
     transport: {
       dialTimeout: p.dialTimeout ?? "", responseHeaderTimeout: p.responseHeaderTimeout ?? "",
       flushInterval: p.flushInterval ?? "", streamTimeout: p.streamTimeout ?? "", streamCloseDelay: p.streamCloseDelay ?? "",
+      tlsServerName: p.tlsServerName ?? "", keepalive: p.keepalive ?? "",
+      keepaliveIdleConns: p.keepaliveIdleConns != null ? String(p.keepaliveIdleConns) : "",
+      keepaliveIdleConnsPerHost: p.keepaliveIdleConnsPerHost != null ? String(p.keepaliveIdleConnsPerHost) : "",
+      httpVersions: (p.httpVersions ?? []).join(" "), readTimeout: p.readTimeout ?? "", writeTimeout: p.writeTimeout ?? "",
     },
     accessLog: accessLogConfigToValues(p.accessLog),
     errorHandlers: p.errorHandlers ?? [],
@@ -107,9 +111,15 @@ export type ProxyTabEntryFields = Pick<ProxyEntry,
   | "basicAuth" | "forwardAuth" | "tlsAdvanced" | "mtls" | "customTls"
   | "matchers" | "handlePath" | "rewrite" | "requestHeaders" | "responseHeaders" | "upstreamResponseHeaders" | "isNamedRoute" | "namedRouteName"
   | "extraUpstreams" | "lbPolicy" | "lbPolicyArgs" | "lbRetry" | "dialTimeout" | "responseHeaderTimeout" | "flushInterval" | "streamTimeout" | "streamCloseDelay"
+  | "tlsServerName" | "keepalive" | "keepaliveIdleConns" | "keepaliveIdleConnsPerHost" | "httpVersions" | "readTimeout" | "writeTimeout"
   | "accessLog" | "errorHandlers" | "replaceUpstreamErrors"
   | "serverReadTimeout" | "serverReadHeaderTimeout" | "serverWriteTimeout" | "serverIdleTimeout" | "maxHeaderBytes" | "disableHttp3"
   | "requestBodyMaxSize">;
+
+function intOrUndefined(v: string): number | undefined {
+  const n = v.trim() ? parseInt(v, 10) : NaN;
+  return isNaN(n) ? undefined : n;
+}
 
 /** The ProxyEntry fields the tabs set; unset ones are undefined. Hashes new Basic Auth passwords. */
 export async function proxyTabStateToEntry(s: ProxyTabState): Promise<ProxyTabEntryFields> {
@@ -139,6 +149,13 @@ export async function proxyTabStateToEntry(s: ProxyTabState): Promise<ProxyTabEn
     flushInterval: s.transport.flushInterval.trim() || undefined,
     streamTimeout: s.transport.streamTimeout.trim() || undefined,
     streamCloseDelay: s.transport.streamCloseDelay.trim() || undefined,
+    tlsServerName: s.transport.tlsServerName.trim() || undefined,
+    keepalive: s.transport.keepalive.trim() || undefined,
+    keepaliveIdleConns: intOrUndefined(s.transport.keepaliveIdleConns),
+    keepaliveIdleConnsPerHost: intOrUndefined(s.transport.keepaliveIdleConnsPerHost),
+    httpVersions: s.transport.httpVersions.trim() ? s.transport.httpVersions.trim().split(/\s+/) : undefined,
+    readTimeout: s.transport.readTimeout.trim() || undefined,
+    writeTimeout: s.transport.writeTimeout.trim() || undefined,
     accessLog: accessLogValuesToConfig(s.accessLog),
     errorHandlers: s.errorHandlers.length ? s.errorHandlers : undefined,
     replaceUpstreamErrors: (s.replaceUpstreamErrors && s.errorHandlers.length > 0) || undefined,

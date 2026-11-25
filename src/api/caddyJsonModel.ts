@@ -322,13 +322,28 @@ export function parseRewriteFromHandle(h: AnyHandler): import("./types").Rewrite
 
 export function buildTransport(p: TransportProps): import("./types").CaddyHttpTransport | undefined {
   const hasTls = p.targetScheme === "https";
-  const hasTimeouts = !!(p.dialTimeout || p.responseHeaderTimeout);
-  if (!hasTls && !hasTimeouts) return undefined;
+  const hasKeepalive = !!p.keepalive || p.keepaliveIdleConns != null || p.keepaliveIdleConnsPerHost != null;
+  const hasOptions = !!(p.dialTimeout || p.responseHeaderTimeout || p.readTimeout || p.writeTimeout || p.httpVersions?.length || hasKeepalive);
+  if (!hasTls && !hasOptions) return undefined;
 
   const t: import("./types").CaddyHttpTransport = { protocol: "http" };
-  if (hasTls) t.tls = p.tlsSkipVerify ? { insecure_skip_verify: true } : {};
+  if (hasTls) {
+    t.tls = {};
+    if (p.tlsSkipVerify) t.tls.insecure_skip_verify = true;
+    if (p.tlsServerName) t.tls.server_name = p.tlsServerName;
+  }
   if (p.dialTimeout) t.dial_timeout = p.dialTimeout;
   if (p.responseHeaderTimeout) t.response_header_timeout = p.responseHeaderTimeout;
+  if (p.readTimeout) t.read_timeout = p.readTimeout;
+  if (p.writeTimeout) t.write_timeout = p.writeTimeout;
+  if (p.httpVersions?.length) t.versions = p.httpVersions;
+  if (hasKeepalive) {
+    t.keep_alive = p.keepalive === "off" ? { enabled: false } : {
+      ...(p.keepalive ? { idle_timeout: p.keepalive } : {}),
+      ...(p.keepaliveIdleConns != null ? { max_idle_conns: p.keepaliveIdleConns } : {}),
+      ...(p.keepaliveIdleConnsPerHost != null ? { max_idle_conns_per_host: p.keepaliveIdleConnsPerHost } : {}),
+    };
+  }
   return t;
 }
 
@@ -511,7 +526,8 @@ export function buildHealthChecksJson(lbRetry: import("./types").LbRetryConfig |
 
 
 export function parseLbRetry(rp: CaddyReverseProxyHandler): import("./types").LbRetryConfig | undefined {
-  const lb = rp.load_balancing as { retries?: number; try_duration?: number | string; try_interval?: number | string } | undefined;
+  const lb = rp.load_balancing as { retries?: number; try_duration?: number | string; try_interval?: number | string; retry_match?: Array<{ method?: string[] }> } | undefined;
+  const retryMethods = lb?.retry_match?.length === 1 ? lb.retry_match[0].method : undefined;
   type Passive = { fail_duration?: number | string; max_fails?: number; unhealthy_status?: number[] };
   type Active = { uri?: string; interval?: number | string; timeout?: number | string; expect_status?: number };
   const hc = rp.health_checks as { passive?: Passive; active?: Active } | undefined;
@@ -519,6 +535,7 @@ export function parseLbRetry(rp: CaddyReverseProxyHandler): import("./types").Lb
   const expect = hc?.active?.expect_status;
   const cfg: import("./types").LbRetryConfig = {
     retries: lb?.retries,
+    retryMethods: retryMethods?.length ? retryMethods : undefined,
     tryDuration: parseDuration(lb?.try_duration) || undefined,
     tryInterval: parseDuration(lb?.try_interval) || undefined,
     failDuration: parseDuration(hc?.passive?.fail_duration) || undefined,
@@ -769,6 +786,12 @@ export function parseRouteToEntry(
   const tlsSkipVerify = rp.transport?.tls?.insecure_skip_verify ?? false;
   const dialTimeout = parseDuration(rp.transport?.dial_timeout);
   const responseHeaderTimeout = parseDuration(rp.transport?.response_header_timeout);
+  const tr = rp.transport;
+  const keepAlive = tr?.keep_alive;
+  const tlsServerName = typeof tr?.tls?.server_name === "string" ? tr.tls.server_name : undefined;
+  const keepalive = keepAlive?.enabled === false ? "off" : parseDuration(keepAlive?.idle_timeout);
+  const readTimeout = parseDuration(tr?.read_timeout);
+  const writeTimeout = parseDuration(tr?.write_timeout);
   const flushInterval = rp.flush_interval === -1 || rp.flush_interval === "-1" ? "-1" : parseDuration(rp.flush_interval);
   const streamTimeout = parseDuration(rp.stream_timeout);
   const streamCloseDelay = parseDuration(rp.stream_close_delay);
@@ -817,6 +840,13 @@ export function parseRouteToEntry(
     basicAuth: basicAuth?.length ? basicAuth : undefined,
     dialTimeout: dialTimeout || undefined,
     responseHeaderTimeout: responseHeaderTimeout || undefined,
+    tlsServerName: tlsServerName || undefined,
+    keepalive: keepalive || undefined,
+    keepaliveIdleConns: keepAlive?.max_idle_conns,
+    keepaliveIdleConnsPerHost: keepAlive?.max_idle_conns_per_host,
+    httpVersions: tr?.versions?.length ? tr.versions : undefined,
+    readTimeout: readTimeout || undefined,
+    writeTimeout: writeTimeout || undefined,
     flushInterval: flushInterval || undefined,
     streamTimeout: streamTimeout || undefined,
     streamCloseDelay: streamCloseDelay || undefined,
@@ -1101,7 +1131,7 @@ export function parseResponseHeadersJson(h: AnyHandler): import("./types").Heade
 }
 
 export function buildReverseProxyHandler(
-  proxy: Pick<ProxyEntry, "targetHost" | "targetPort" | "targetScheme" | "tlsSkipVerify" | "requestHeaders" | "upstreamResponseHeaders" | "dialTimeout" | "responseHeaderTimeout" | "flushInterval" | "streamTimeout" | "streamCloseDelay" | "extraUpstreams" | "lbPolicy" | "lbPolicyArgs" | "lbRetry" | "replaceUpstreamErrors">,
+  proxy: Pick<ProxyEntry, "targetHost" | "targetPort" | "targetScheme" | "tlsSkipVerify" | "requestHeaders" | "upstreamResponseHeaders" | "dialTimeout" | "responseHeaderTimeout" | "tlsServerName" | "keepalive" | "keepaliveIdleConns" | "keepaliveIdleConnsPerHost" | "httpVersions" | "readTimeout" | "writeTimeout" | "flushInterval" | "streamTimeout" | "streamCloseDelay" | "extraUpstreams" | "lbPolicy" | "lbPolicyArgs" | "lbRetry" | "replaceUpstreamErrors">,
   errorHandlers?: import("./types").ErrorHandlerConfig[],
 ): CaddyReverseProxyHandler {
   const primaryDial = `${proxy.targetHost}:${proxy.targetPort}`;
@@ -1121,9 +1151,10 @@ export function buildReverseProxyHandler(
     rp.load_balancing = { selection_policy: lbSelectionPolicyJson(proxy) };
   }
   const lbRetry = proxy.lbRetry;
-  if (lbRetry?.retries != null || lbRetry?.tryDuration || lbRetry?.tryInterval) {
+  if (lbRetry?.retries != null || lbRetry?.tryDuration || lbRetry?.tryInterval || lbRetry?.retryMethods?.length) {
     rp.load_balancing = {
       ...(rp.load_balancing as Record<string, unknown> | undefined),
+      ...(lbRetry.retryMethods?.length ? { retry_match: [{ method: lbRetry.retryMethods }] } : {}),
       ...(lbRetry.retries != null ? { retries: lbRetry.retries } : {}),
       ...(lbRetry.tryDuration ? { try_duration: lbRetry.tryDuration } : {}),
       ...(lbRetry.tryInterval ? { try_interval: lbRetry.tryInterval } : {}),

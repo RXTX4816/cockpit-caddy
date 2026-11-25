@@ -263,18 +263,25 @@ export function buildRewriteCaddyLines(rewrite: import("./types").RewriteConfig,
 }
 
 
-export type TransportProps = Pick<ProxyEntry, "targetScheme" | "tlsSkipVerify" | "dialTimeout" | "responseHeaderTimeout">;
+export type TransportProps = Pick<ProxyEntry, "targetScheme" | "tlsSkipVerify" | "dialTimeout" | "responseHeaderTimeout" | "tlsServerName" | "keepalive" | "keepaliveIdleConns" | "keepaliveIdleConnsPerHost" | "httpVersions" | "readTimeout" | "writeTimeout">;
 
 
 export function buildTransportLines(p: TransportProps): string[] {
   const needsSkipVerify = p.targetScheme === "https" && p.tlsSkipVerify;
-  const hasTimeouts = !!(p.dialTimeout || p.responseHeaderTimeout);
-  if (!needsSkipVerify && !hasTimeouts) return [];
+  const serverName = p.targetScheme === "https" ? p.tlsServerName : undefined;
 
   const inner: string[] = [];
   if (needsSkipVerify) inner.push("\t\t\ttls_insecure_skip_verify");
+  if (serverName) inner.push(`\t\t\ttls_server_name ${caddyQuote(serverName)}`);
   if (p.dialTimeout) inner.push(`\t\t\tdial_timeout ${p.dialTimeout}`);
   if (p.responseHeaderTimeout) inner.push(`\t\t\tresponse_header_timeout ${p.responseHeaderTimeout}`);
+  if (p.readTimeout) inner.push(`\t\t\tread_timeout ${p.readTimeout}`);
+  if (p.writeTimeout) inner.push(`\t\t\twrite_timeout ${p.writeTimeout}`);
+  if (p.keepalive) inner.push(`\t\t\tkeepalive ${p.keepalive}`);
+  if (p.keepaliveIdleConns != null) inner.push(`\t\t\tkeepalive_idle_conns ${p.keepaliveIdleConns}`);
+  if (p.keepaliveIdleConnsPerHost != null) inner.push(`\t\t\tkeepalive_idle_conns_per_host ${p.keepaliveIdleConnsPerHost}`);
+  if (p.httpVersions?.length) inner.push(`\t\t\tversions ${p.httpVersions.join(" ")}`);
+  if (!inner.length) return [];
   return ["\t\ttransport http {", ...inner, "\t\t}"];
 }
 
@@ -318,6 +325,7 @@ export function buildLbRetryLines(lbRetry: import("./types").LbRetryConfig | und
   if (lbRetry.retries != null) lines.push(`\t\tlb_retries ${lbRetry.retries}`);
   if (lbRetry.tryDuration) lines.push(`\t\tlb_try_duration ${lbRetry.tryDuration}`);
   if (lbRetry.tryInterval) lines.push(`\t\tlb_try_interval ${lbRetry.tryInterval}`);
+  if (lbRetry.retryMethods?.length) lines.push("\t\tlb_retry_match {", `\t\t\tmethod ${lbRetry.retryMethods.join(" ")}`, "\t\t}");
   // Passive checks are off in Caddy without fail_duration (#252), so the options that only
   // feed them are written only alongside it.
   if (lbRetry.failDuration) {
@@ -336,7 +344,7 @@ export function buildLbRetryLines(lbRetry: import("./types").LbRetryConfig | und
 
 
 export function buildReverseProxyLines(
-  p: Pick<ProxyEntry, "targetScheme" | "targetHost" | "targetPort" | "tlsSkipVerify" | "requestHeaders" | "upstreamResponseHeaders" | "dialTimeout" | "responseHeaderTimeout" | "flushInterval" | "streamTimeout" | "streamCloseDelay" | "extraUpstreams" | "lbPolicy" | "lbPolicyArgs" | "lbRetry" | "replaceUpstreamErrors">,
+  p: Pick<ProxyEntry, "targetScheme" | "targetHost" | "targetPort" | "tlsSkipVerify" | "requestHeaders" | "upstreamResponseHeaders" | "dialTimeout" | "responseHeaderTimeout" | "tlsServerName" | "keepalive" | "keepaliveIdleConns" | "keepaliveIdleConnsPerHost" | "httpVersions" | "readTimeout" | "writeTimeout" | "flushInterval" | "streamTimeout" | "streamCloseDelay" | "extraUpstreams" | "lbPolicy" | "lbPolicyArgs" | "lbRetry" | "replaceUpstreamErrors">,
   errorHandlers?: import("./types").ErrorHandlerConfig[],
 ): string[] {
   const upstreams = buildUpstreamList(p);

@@ -16,11 +16,21 @@ export interface TransportValues {
   flushInterval: string;
   streamTimeout: string;
   streamCloseDelay: string;
+  /** Transport options (#327): numbers and the version list are kept as text while typed. */
+  tlsServerName: string;
+  keepalive: string;
+  keepaliveIdleConns: string;
+  keepaliveIdleConnsPerHost: string;
+  httpVersions: string;
+  readTimeout: string;
+  writeTimeout: string;
 }
 
 // Empty means Caddy's own default (#249): dial 3s, no response header timeout. "Defaults"
 // clears the fields; the placeholders show Caddy's values.
-export const TRANSPORT_EMPTY: TransportValues = { dialTimeout: "", responseHeaderTimeout: "", flushInterval: "", streamTimeout: "", streamCloseDelay: "" };
+export const TRANSPORT_EMPTY: TransportValues = { dialTimeout: "", responseHeaderTimeout: "", flushInterval: "", streamTimeout: "", streamCloseDelay: "",
+  tlsServerName: "", keepalive: "", keepaliveIdleConns: "", keepaliveIdleConnsPerHost: "", httpVersions: "", readTimeout: "", writeTimeout: "",
+};
 
 interface Props {
   value: TransportValues;
@@ -41,6 +51,14 @@ export function TransportSection({ value, onChange, isDisabled, isExpanded: isEx
 
   function set(key: keyof TransportValues, v: string) {
     onChange({ ...value, [key]: v });
+  }
+
+  function textField(key: keyof TransportValues, id: string, label: string, placeholder: string, type?: "number") {
+    return (
+      <FormGroup label={label} fieldId={id} style={{ flex: "1 1 10rem" }}>
+        <ResettableTextInput id={id} type={type} value={value[key]} onChange={(_e, v) => set(key, v)} placeholder={placeholder} isDisabled={isDisabled} />
+      </FormGroup>
+    );
   }
 
   return (
@@ -110,6 +128,16 @@ export function TransportSection({ value, onChange, isDisabled, isExpanded: isEx
             isDisabled={isDisabled}
           />
         </FormGroup>
+      </div>
+      <div style={{ margin: "1rem 0 0.4rem", fontWeight: 600 }}>{t("transport.connection_title")}</div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
+        {textField("tlsServerName", "transport-tls-name", t("transport.tls_server_name"), t("common.example_value", { value: "backend.internal" }))}
+        {textField("httpVersions", "transport-versions", t("transport.versions"), t("common.example_value", { value: "h2c 2" }))}
+        {textField("readTimeout", "transport-read", t("transport.read_timeout"), t("server_timeouts.no_timeout"))}
+        {textField("writeTimeout", "transport-write", t("transport.write_timeout"), t("server_timeouts.no_timeout"))}
+        {textField("keepalive", "transport-keepalive", t("transport.keepalive"), t("common.example_value", { value: "off" }))}
+        {textField("keepaliveIdleConns", "transport-idle-conns", t("transport.keepalive_idle_conns"), t("common.default_value", { value: "0" }), "number")}
+        {textField("keepaliveIdleConnsPerHost", "transport-idle-conns-host", t("transport.keepalive_idle_conns_per_host"), t("common.default_value", { value: "32" }), "number")}
       </div>
     </SectionShell>
   );

@@ -10,6 +10,10 @@ export interface CaddyHttpTransport {
   };
   dial_timeout?: string;
   response_header_timeout?: string;
+  read_timeout?: string;
+  write_timeout?: string;
+  versions?: string[];
+  keep_alive?: { enabled?: boolean; idle_timeout?: string; max_idle_conns?: number; max_idle_conns_per_host?: number };
   [key: string]: unknown;
 }
 
@@ -340,6 +344,8 @@ export interface LbPolicyArgs {
  *  health checks (#252) that take failing upstreams out of rotation. Retries apply even with
  *  a single upstream (they just re-dial it) — not gated on multiple upstreams like lb_policy. */
 export interface LbRetryConfig {
+  /** `lb_retry_match { method ... }`: retry only requests with these methods (#327). */
+  retryMethods?: string[];
   /** Max number of retries across all upstreams. */
   retries?: number;
   /** Total time budget across all retries (Go duration, e.g. "5s"). */
@@ -436,6 +442,16 @@ export interface ProxyEntry {
   compress?: boolean;
   dialTimeout?: string;
   responseHeaderTimeout?: string;
+  /** transport http `tls_server_name`: the name to check the upstream's certificate for (#327). Only for https upstreams. */
+  tlsServerName?: string;
+  /** transport http `keepalive`: how long idle upstream connections are kept, or `off` (#327). */
+  keepalive?: string;
+  keepaliveIdleConns?: number;
+  keepaliveIdleConnsPerHost?: number;
+  /** transport http `versions`, e.g. `["h2c", "2"]` (#327). */
+  httpVersions?: string[];
+  readTimeout?: string;
+  writeTimeout?: string;
   /** reverse_proxy `flush_interval`: a duration, or `-1` to flush after every write (#325). */
   flushInterval?: string;
   /** reverse_proxy `stream_timeout`: how long a websocket or other upgraded stream may live (#325). */

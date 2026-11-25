@@ -272,7 +272,15 @@
     "flush_interval": "刷新间隔",
     "flush_interval_placeholder": "-1 表示每次写入立即发送",
     "stream_timeout": "流超时",
-    "stream_close_delay": "流关闭延迟"
+    "stream_close_delay": "流关闭延迟",
+    "connection_title": "上游连接",
+    "tls_server_name": "TLS 服务器名称",
+    "versions": "HTTP 版本",
+    "read_timeout": "读取超时",
+    "write_timeout": "写入超时",
+    "keepalive": "Keep-alive",
+    "keepalive_idle_conns": "保留的空闲连接数",
+    "keepalive_idle_conns_per_host": "每个主机保留的空闲连接数"
   },
   "server_timeouts": {
     "heading": "服务器超时与限制",
@@ -391,7 +399,9 @@
     "validation_max_fails": "最大失败次数必须至少为 1",
     "validation_needs_health_uri": "间隔、超时和期望状态需要健康检查路径",
     "validation_health_uri": "健康检查路径必须以 / 开头",
-    "validation_health_status": "请填写 200 这样的状态码或 2xx 这样的类别"
+    "validation_health_status": "请填写 200 这样的状态码或 2xx 这样的类别",
+    "retry_methods": "仅重试这些方法",
+    "validation_methods": "方法是 GET、HEAD 之类的单词,用空格分隔。"
   },
   "response_headers": {
     "heading": "响应头",

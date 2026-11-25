@@ -272,7 +272,15 @@
     "flush_interval": "فترة التفريغ",
     "flush_interval_placeholder": "-1 يرسل كل كتابة فورًا",
     "stream_timeout": "مهلة التدفق",
-    "stream_close_delay": "تأخير إغلاق التدفق"
+    "stream_close_delay": "تأخير إغلاق التدفق",
+    "connection_title": "الاتصال بالخادم الخلفي",
+    "tls_server_name": "اسم خادم TLS",
+    "versions": "إصدارات HTTP",
+    "read_timeout": "مهلة القراءة",
+    "write_timeout": "مهلة الكتابة",
+    "keepalive": "الإبقاء على الاتصال",
+    "keepalive_idle_conns": "الاتصالات الخاملة المحتفظ بها",
+    "keepalive_idle_conns_per_host": "الاتصالات الخاملة لكل مضيف"
   },
   "server_timeouts": {
     "heading": "مهل الخادم وحدوده",
@@ -391,7 +399,9 @@
     "validation_max_fails": "يجب أن يكون أقصى عدد للإخفاقات 1 أو أكثر",
     "validation_needs_health_uri": "يحتاج الفاصل والمهلة والحالة المتوقعة إلى مسار فحص الصحة",
     "validation_health_uri": "يجب أن يبدأ مسار فحص الصحة بـ /",
-    "validation_health_status": "استخدم رمزًا مثل 200 أو فئة مثل 2xx"
+    "validation_health_status": "استخدم رمزًا مثل 200 أو فئة مثل 2xx",
+    "retry_methods": "إعادة المحاولة لهذه الطرق فقط",
+    "validation_methods": "الطرق كلمات مثل GET أو HEAD، تفصل بينها مسافات."
   },
   "response_headers": {
     "heading": "ترويسات الاستجابة",

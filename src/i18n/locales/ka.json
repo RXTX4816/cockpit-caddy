@@ -272,7 +272,15 @@
     "flush_interval": "გადმოცემის ინტერვალი",
     "flush_interval_placeholder": "-1 ყოველ ჩაწერას დაუყოვნებლივ აგზავნის",
     "stream_timeout": "ნაკადის ვადა",
-    "stream_close_delay": "ნაკადის დახურვის დაყოვნება"
+    "stream_close_delay": "ნაკადის დახურვის დაყოვნება",
+    "connection_title": "კავშირი აპსტრიმთან",
+    "tls_server_name": "TLS სერვერის სახელი",
+    "versions": "HTTP ვერსიები",
+    "read_timeout": "წაკითხვის ვადა",
+    "write_timeout": "ჩაწერის ვადა",
+    "keepalive": "Keep-alive",
+    "keepalive_idle_conns": "შენარჩუნებული უმოქმედო კავშირები",
+    "keepalive_idle_conns_per_host": "შენარჩუნებული უმოქმედო კავშირები ჰოსტზე"
   },
   "server_timeouts": {
     "heading": "სერვერის ტაიმაუტები და ლიმიტები",
@@ -391,7 +399,9 @@
     "validation_max_fails": "მაქს. შეცდომები უნდა იყოს მინიმუმ 1",
     "validation_needs_health_uri": "ინტერვალს, დროის ლიმიტს და მოსალოდნელ სტატუსს სჭირდება შემოწმების გზა",
     "validation_health_uri": "შემოწმების გზა / -ით უნდა იწყებოდეს",
-    "validation_health_status": "მიუთითეთ კოდი, მაგ. 200, ან კლასი, მაგ. 2xx"
+    "validation_health_status": "მიუთითეთ კოდი, მაგ. 200, ან კლასი, მაგ. 2xx",
+    "retry_methods": "მხოლოდ ამ მეთოდების განმეორება",
+    "validation_methods": "მეთოდები არის სიტყვები, როგორიცაა GET ან HEAD, გამოყოფილი ინტერვალით."
   },
   "response_headers": {
     "heading": "პასუხის სათაურები",

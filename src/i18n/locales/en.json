@@ -272,7 +272,15 @@
     "flush_interval": "Flush interval",
     "flush_interval_placeholder": "-1 sends every write at once",
     "stream_timeout": "Stream timeout",
-    "stream_close_delay": "Stream close delay"
+    "stream_close_delay": "Stream close delay",
+    "connection_title": "Upstream connection",
+    "tls_server_name": "TLS server name",
+    "versions": "HTTP versions",
+    "read_timeout": "Read timeout",
+    "write_timeout": "Write timeout",
+    "keepalive": "Keep-alive",
+    "keepalive_idle_conns": "Idle connections kept",
+    "keepalive_idle_conns_per_host": "Idle connections kept per host"
   },
   "server_timeouts": {
     "heading": "Server Timeouts & Limits",
@@ -391,7 +399,9 @@
     "validation_max_fails": "Max fails must be 1 or greater",
     "validation_needs_health_uri": "Interval, timeout and expected status need a health check path",
     "validation_health_uri": "The health check path must start with /",
-    "validation_health_status": "Use a status code like 200 or a class like 2xx"
+    "validation_health_status": "Use a status code like 200 or a class like 2xx",
+    "retry_methods": "Retry only these methods",
+    "validation_methods": "Methods are words like GET or HEAD, separated by spaces."
   },
   "response_headers": {
     "heading": "Response Headers",

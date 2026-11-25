@@ -272,7 +272,15 @@
     "flush_interval": "מרווח שטיפה",
     "flush_interval_placeholder": "‎-1 שולח כל כתיבה מיד",
     "stream_timeout": "פסק זמן של זרם",
-    "stream_close_delay": "השהיית סגירת זרם"
+    "stream_close_delay": "השהיית סגירת זרם",
+    "connection_title": "חיבור לשרת האחורי",
+    "tls_server_name": "שם שרת TLS",
+    "versions": "גרסאות HTTP",
+    "read_timeout": "פסק זמן קריאה",
+    "write_timeout": "פסק זמן כתיבה",
+    "keepalive": "Keep-alive",
+    "keepalive_idle_conns": "חיבורים סרק שנשמרים",
+    "keepalive_idle_conns_per_host": "חיבורים סרק שנשמרים לכל מארח"
   },
   "server_timeouts": {
     "heading": "מגבלות זמן ומגבלות שרת",
@@ -391,7 +399,9 @@
     "validation_max_fails": "מקסימום כשלים חייב להיות 1 או יותר",
     "validation_needs_health_uri": "מרווח, מגבלת זמן וסטטוס צפוי דורשים נתיב בדיקת תקינות",
     "validation_health_uri": "נתיב בדיקת התקינות חייב להתחיל ב-/",
-    "validation_health_status": "השתמשו בקוד כמו 200 או במחלקה כמו 2xx"
+    "validation_health_status": "השתמשו בקוד כמו 200 או במחלקה כמו 2xx",
+    "retry_methods": "נסה שוב רק את השיטות האלה",
+    "validation_methods": "שיטות הן מילים כמו GET או HEAD, מופרדות ברווחים."
   },
   "response_headers": {
     "heading": "כותרות תגובה",
