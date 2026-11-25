@@ -1074,5 +1074,25 @@
     "site_inherit_help": "Gebruikt de DNS-provider uit Instellingen → DNS-challenge, of de HTTP-challenge als er geen is ingesteld.",
     "site_override_help": "Deze site gebruikt een eigen DNS-provider en eigen inloggegevens. Nieuwe gegevens opslaan herstart Caddy, omdat Caddy ze alleen bij het starten leest.",
     "site_wildcard_warning": "Wildcardcertificaten hebben de DNS-challenge nodig. Stel een DNS-provider in voor deze site, of onder Instellingen → DNS-challenge."
+  },
+  "dynamic_upstreams": {
+    "heading": "Dynamische upstreams",
+    "section_title": "Dynamische upstreams (geavanceerd, optioneel)",
+    "help": "Zoek de upstreams op via DNS. Het doel hierboven is de terugval als de opzoeking niets vindt. Meerdere bronnen worden gecombineerd.",
+    "add_button": "DNS-bron toevoegen",
+    "type": "Type opzoeking",
+    "name_srv": "SRV-naam",
+    "name_a": "Hostnaam",
+    "refresh": "Vernieuwingsinterval",
+    "resolvers": "DNS-resolvers",
+    "dial_fallback_delay": "Vertraging van de terugvalverbinding",
+    "grace_period": "Uitstelperiode",
+    "versions": "Adresfamilies",
+    "versions_both": "IPv4 en IPv6",
+    "validation_name": "Een bron met instellingen heeft een naam nodig.",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

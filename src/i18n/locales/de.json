@@ -1074,5 +1074,25 @@
     "site_inherit_help": "Nutzt den DNS-Anbieter aus Einstellungen → DNS-Challenge, oder die HTTP-Challenge, wenn keiner gesetzt ist.",
     "site_override_help": "Diese Site nutzt einen eigenen DNS-Anbieter mit eigenen Zugangsdaten. Neue Zugangsdaten zu speichern startet Caddy neu, weil Caddy sie nur beim Start liest.",
     "site_wildcard_warning": "Wildcard-Zertifikate brauchen die DNS-Challenge. Setze einen DNS-Anbieter für diese Site oder unter Einstellungen → DNS-Challenge."
+  },
+  "dynamic_upstreams": {
+    "heading": "Dynamische Upstreams",
+    "section_title": "Dynamische Upstreams (erweitert, optional)",
+    "help": "Die Upstreams werden per DNS ermittelt. Das Ziel oben ist die Rückfallebene, wenn die Abfrage nichts findet. Mehrere Quellen werden zusammengeführt.",
+    "add_button": "DNS-Quelle hinzufügen",
+    "type": "Abfragetyp",
+    "name_srv": "SRV-Name",
+    "name_a": "Hostname",
+    "refresh": "Aktualisierungsintervall",
+    "resolvers": "DNS-Resolver",
+    "dial_fallback_delay": "Verzögerung des Ausweichverbindungsaufbaus",
+    "grace_period": "Karenzzeit",
+    "versions": "Adressfamilien",
+    "versions_both": "IPv4 und IPv6",
+    "validation_name": "Eine Quelle mit Einstellungen braucht einen Namen.",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

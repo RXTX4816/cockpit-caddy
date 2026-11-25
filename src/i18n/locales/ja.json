@@ -1074,5 +1074,25 @@
     "site_inherit_help": "設定 → DNS チャレンジで設定した DNS プロバイダーを使います。未設定なら HTTP チャレンジを使います。",
     "site_override_help": "このサイトは専用の DNS プロバイダーと認証情報を使います。新しい認証情報を保存すると Caddy が再起動します（起動時にのみ読み込むため）。",
     "site_wildcard_warning": "ワイルドカード証明書には DNS チャレンジが必要です。このサイト用、または 設定 → DNS チャレンジ で DNS プロバイダーを設定してください。"
+  },
+  "dynamic_upstreams": {
+    "heading": "動的アップストリーム",
+    "section_title": "動的アップストリーム(上級、任意)",
+    "help": "アップストリームを DNS で検索します。検索で何も見つからない場合は、上のターゲットが使われます。複数のソースは結合されます。",
+    "add_button": "DNS ソースを追加",
+    "type": "検索の種類",
+    "name_srv": "SRV 名",
+    "name_a": "ホスト名",
+    "refresh": "更新間隔",
+    "resolvers": "DNS リゾルバー",
+    "dial_fallback_delay": "フォールバック接続の遅延",
+    "grace_period": "猶予期間",
+    "versions": "アドレスファミリー",
+    "versions_both": "IPv4 と IPv6",
+    "validation_name": "設定のあるソースには名前が必要です。",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

@@ -1074,5 +1074,25 @@
     "site_inherit_help": "Używa dostawcy DNS ustawionego w Ustawienia → Wyzwanie DNS albo wyzwania HTTP, jeśli żaden nie jest ustawiony.",
     "site_override_help": "Ta witryna używa własnego dostawcy DNS i danych logowania. Zapisanie nowych danych uruchamia ponownie Caddy, bo odczytuje je tylko przy starcie.",
     "site_wildcard_warning": "Certyfikaty wieloznaczne wymagają wyzwania DNS. Ustaw dostawcę DNS dla tej witryny albo w Ustawienia → Wyzwanie DNS."
+  },
+  "dynamic_upstreams": {
+    "heading": "Dynamiczne upstreamy",
+    "section_title": "Dynamiczne upstreamy (zaawansowane, opcjonalne)",
+    "help": "Upstreamy są wyszukiwane w DNS. Cel powyżej to zapasowy wariant, gdy wyszukiwanie nic nie znajdzie. Wiele źródeł jest łączonych.",
+    "add_button": "Dodaj źródło DNS",
+    "type": "Typ wyszukiwania",
+    "name_srv": "Nazwa SRV",
+    "name_a": "Nazwa hosta",
+    "refresh": "Interwał odświeżania",
+    "resolvers": "Resolwery DNS",
+    "dial_fallback_delay": "Opóźnienie połączenia zapasowego",
+    "grace_period": "Okres karencji",
+    "versions": "Rodziny adresów",
+    "versions_both": "IPv4 i IPv6",
+    "validation_name": "Źródło z ustawieniami wymaga nazwy.",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

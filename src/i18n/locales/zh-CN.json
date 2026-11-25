@@ -1074,5 +1074,25 @@
     "site_inherit_help": "使用“设置 → DNS 质询”中设置的 DNS 提供商；未设置时使用 HTTP 质询。",
     "site_override_help": "此站点使用自己的 DNS 提供商和凭据。保存新凭据会重启 Caddy，因为它只在启动时读取凭据。",
     "site_wildcard_warning": "通配符证书需要 DNS 质询。请为此站点设置 DNS 提供商，或在“设置 → DNS 质询”中设置。"
+  },
+  "dynamic_upstreams": {
+    "heading": "动态上游",
+    "section_title": "动态上游(高级,可选)",
+    "help": "通过 DNS 查找上游。查找无结果时使用上面的目标作为后备。多个来源会合并。",
+    "add_button": "添加 DNS 来源",
+    "type": "查询类型",
+    "name_srv": "SRV 名称",
+    "name_a": "主机名",
+    "refresh": "刷新间隔",
+    "resolvers": "DNS 解析器",
+    "dial_fallback_delay": "备用连接延迟",
+    "grace_period": "宽限期",
+    "versions": "地址族",
+    "versions_both": "IPv4 和 IPv6",
+    "validation_name": "带有设置的来源需要名称。",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

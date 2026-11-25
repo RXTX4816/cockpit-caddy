@@ -1074,5 +1074,25 @@
     "site_inherit_help": "Memakai penyedia DNS yang diatur di Pengaturan → Tantangan DNS, atau tantangan HTTP bila belum diatur.",
     "site_override_help": "Situs ini memakai penyedia DNS dan kredensialnya sendiri. Menyimpan kredensial baru akan memulai ulang Caddy, karena Caddy hanya membacanya saat mulai.",
     "site_wildcard_warning": "Sertifikat wildcard memerlukan tantangan DNS. Atur penyedia DNS untuk situs ini, atau di Pengaturan → Tantangan DNS."
+  },
+  "dynamic_upstreams": {
+    "heading": "Upstream dinamis",
+    "section_title": "Upstream dinamis (lanjutan, opsional)",
+    "help": "Cari upstream lewat DNS. Target di atas menjadi cadangan saat pencarian tidak menemukan apa pun. Beberapa sumber digabungkan.",
+    "add_button": "Tambah sumber DNS",
+    "type": "Jenis pencarian",
+    "name_srv": "Nama SRV",
+    "name_a": "Nama host",
+    "refresh": "Interval penyegaran",
+    "resolvers": "Resolver DNS",
+    "dial_fallback_delay": "Jeda koneksi cadangan",
+    "grace_period": "Masa tenggang",
+    "versions": "Keluarga alamat",
+    "versions_both": "IPv4 dan IPv6",
+    "validation_name": "Sumber dengan pengaturan memerlukan nama.",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

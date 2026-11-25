@@ -1074,5 +1074,25 @@
     "site_inherit_help": "Použije poskytovateľa DNS nastaveného v Nastavenia → Výzva DNS, alebo výzvu HTTP, ak nie je nastavený žiadny.",
     "site_override_help": "Táto stránka používa vlastného poskytovateľa DNS a prihlasovacie údaje. Uloženie nových údajov reštartuje Caddy, pretože ich načíta len pri štarte.",
     "site_wildcard_warning": "Certifikáty so zástupným znakom vyžadujú výzvu DNS. Nastavte poskytovateľa DNS pre túto stránku alebo v Nastavenia → Výzva DNS."
+  },
+  "dynamic_upstreams": {
+    "heading": "Dynamické upstreamy",
+    "section_title": "Dynamické upstreamy (pokročilé, voliteľné)",
+    "help": "Upstreamy sa zisťujú cez DNS. Cieľ vyššie je záloha, keď dotaz nič nenájde. Viac zdrojov sa spojí.",
+    "add_button": "Pridať zdroj DNS",
+    "type": "Typ dopytu",
+    "name_srv": "Názov SRV",
+    "name_a": "Názov hostiteľa",
+    "refresh": "Interval obnovenia",
+    "resolvers": "DNS resolvery",
+    "dial_fallback_delay": "Oneskorenie záložného pripojenia",
+    "grace_period": "Odkladová lehota",
+    "versions": "Rodiny adries",
+    "versions_both": "IPv4 a IPv6",
+    "validation_name": "Zdroj s nastaveniami potrebuje názov.",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

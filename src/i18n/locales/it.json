@@ -1074,5 +1074,25 @@
     "site_inherit_help": "Usa il provider DNS impostato in Impostazioni → Sfida DNS, oppure la sfida HTTP se non ce n'è uno.",
     "site_override_help": "Questo sito usa un proprio provider DNS e credenziali proprie. Salvare nuove credenziali riavvia Caddy, che le legge solo all'avvio.",
     "site_wildcard_warning": "I certificati wildcard richiedono la sfida DNS. Imposta un provider DNS per questo sito o in Impostazioni → Sfida DNS."
+  },
+  "dynamic_upstreams": {
+    "heading": "Upstream dinamici",
+    "section_title": "Upstream dinamici (avanzato, facoltativo)",
+    "help": "Cerca gli upstream nel DNS. La destinazione qui sopra è il ripiego quando la ricerca non trova nulla. Più sorgenti vengono combinate.",
+    "add_button": "Aggiungi sorgente DNS",
+    "type": "Tipo di ricerca",
+    "name_srv": "Nome SRV",
+    "name_a": "Nome host",
+    "refresh": "Intervallo di aggiornamento",
+    "resolvers": "Resolver DNS",
+    "dial_fallback_delay": "Ritardo della connessione di ripiego",
+    "grace_period": "Periodo di tolleranza",
+    "versions": "Famiglie di indirizzi",
+    "versions_both": "IPv4 e IPv6",
+    "validation_name": "Una sorgente con impostazioni richiede un nome.",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }
