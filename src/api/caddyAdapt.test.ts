@@ -834,15 +834,17 @@ describe.runIf(available || required)("caddy adapt accepts the server options (#
   });
 });
 
-describe.runIf(available || required)("caddy adapt accepts the TLS global options (#329)", () => {
+describe.runIf(available || required)("caddy adapt accepts the TLS and admin global options (#329, #330)", () => {
   const site = ":8080 {\n\trespond ok\n}\n";
 
   it("accepts every option in one global block and sees the ones it keeps in the JSON", () => {
     const patched = buildGlobalOptionsPatch("", {
       autoHttps: "disable_redirects", defaultSni: "example.com", keyType: "p256", ocspStaplingOff: true,
       preferredChains: { mode: "root_common_name", names: ["ISRG Root X1"] }, certIssuer: "acme", defaultBind: ["127.0.0.1"],
+      adminAddress: "127.0.0.1:2019", adminOrigins: ["localhost:2019"], adminEnforceOrigin: true,
     });
     const config = adapt(`${patched}\n${site}`);
+    expect(config.admin).toEqual({ listen: "127.0.0.1:2019", enforce_origin: true, origins: ["localhost:2019"] });
     const policy = config.apps?.tls?.automation?.policies?.[0] as Record<string, unknown>;
     expect(policy.key_type).toBe("p256");
     expect(policy.disable_ocsp_stapling).toBe(true);
@@ -852,8 +854,9 @@ describe.runIf(available || required)("caddy adapt accepts the TLS global option
     expect(server.automatic_https).toEqual({ disable_redirects: true });
   });
 
-  it("accepts local_certs", () => {
-    const config = adapt(`${buildGlobalOptionsPatch("", { localCerts: true })}\n${site}`);
+  it("accepts local_certs and admin off", () => {
+    const config = adapt(`${buildGlobalOptionsPatch("", { localCerts: true, adminOff: true })}\n${site}`);
+    expect(config.admin).toEqual({ disabled: true });
     expect(config.apps?.tls?.automation?.policies?.[0]?.issuers?.[0]).toMatchObject({ module: "internal" });
   });
 });

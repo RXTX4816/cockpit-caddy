@@ -721,7 +721,15 @@
     "default_sni_help": "クライアントが送らないときに Caddy が想定するサーバー名。",
     "default_bind": "既定のバインドアドレス",
     "default_bind_help": "bind オプションのないサイトが待ち受けるアドレス(スペース区切り)。",
-    "ocsp_stapling_off": "OCSP stapling をオフにする"
+    "ocsp_stapling_off": "OCSP stapling をオフにする",
+    "admin_title": "管理エンドポイント",
+    "admin_off": "管理エンドポイントをオフにする",
+    "admin_off_help": "プラグインは、実行中の設定の読み取りと変更に管理 API を必要とします。",
+    "admin_address": "管理アドレス",
+    "admin_address_help": "Caddy の管理 API が待ち受ける場所を Caddyfile と同じ書式で指定します。プラグインは自身の設定のアドレスに接続するため、両方を同時に変更してください。",
+    "admin_origins": "許可するオリジン",
+    "admin_origins_help": "ブラウザーから管理 API を呼び出せるホスト(スペース区切り)。",
+    "admin_enforce_origin": "オリジンを強制"
   },
   "ca": {
     "title": "内部認証局",

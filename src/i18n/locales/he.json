@@ -721,7 +721,15 @@
     "default_sni_help": "שם השרת ש-Caddy מניח כשהלקוח לא שולח אחד.",
     "default_bind": "כתובות bind ברירת מחדל",
     "default_bind_help": "כתובות מופרדות ברווחים שאתרים ללא אפשרות bind מאזינים להן.",
-    "ocsp_stapling_off": "כבה OCSP stapling"
+    "ocsp_stapling_off": "כבה OCSP stapling",
+    "admin_title": "נקודת קצה לניהול",
+    "admin_off": "כבה את נקודת הקצה לניהול",
+    "admin_off_help": "התוסף זקוק ל-API הניהול כדי לקרוא ולשנות את התצורה הפועלת.",
+    "admin_address": "כתובת ניהול",
+    "admin_address_help": "היכן ה-API לניהול של Caddy מאזין, כפי שנכתב ב-Caddyfile. התוסף מתחבר לכתובת שבהגדרה שלו, לכן שנו את שתיהן יחד.",
+    "admin_origins": "מקורות מותרים",
+    "admin_origins_help": "מארחים מופרדים ברווחים שרשאים לקרוא ל-API הניהול מדפדפן.",
+    "admin_enforce_origin": "אכוף מקורות"
   },
   "ca": {
     "title": "רשות אישורים פנימית",

@@ -721,7 +721,15 @@
     "default_sni_help": "The server name Caddy assumes when a client sends none.",
     "default_bind": "Default bind addresses",
     "default_bind_help": "Space-separated addresses that sites without a bind option listen on.",
-    "ocsp_stapling_off": "Turn OCSP stapling off"
+    "ocsp_stapling_off": "Turn OCSP stapling off",
+    "admin_title": "Admin endpoint",
+    "admin_off": "Turn the admin endpoint off",
+    "admin_off_help": "The plugin needs the admin API to read and change the running configuration.",
+    "admin_address": "Admin address",
+    "admin_address_help": "Where Caddy's admin API listens, written as in the Caddyfile. The plugin connects to the address in its own setting, so change both together.",
+    "admin_origins": "Allowed origins",
+    "admin_origins_help": "Space-separated hosts that may call the admin API from a browser.",
+    "admin_enforce_origin": "Enforce origins"
   },
   "ca": {
     "title": "Internal Certificate Authority",

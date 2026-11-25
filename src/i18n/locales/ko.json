@@ -721,7 +721,15 @@
     "default_sni_help": "클라이언트가 보내지 않을 때 Caddy가 가정하는 서버 이름입니다.",
     "default_bind": "기본 바인드 주소",
     "default_bind_help": "bind 옵션이 없는 사이트가 수신하는 주소(공백으로 구분)입니다.",
-    "ocsp_stapling_off": "OCSP stapling 끄기"
+    "ocsp_stapling_off": "OCSP stapling 끄기",
+    "admin_title": "관리 엔드포인트",
+    "admin_off": "관리 엔드포인트 끄기",
+    "admin_off_help": "플러그인은 실행 중인 구성을 읽고 변경하기 위해 관리 API가 필요합니다.",
+    "admin_address": "관리 주소",
+    "admin_address_help": "Caddy 관리 API가 수신하는 위치를 Caddyfile 형식으로 씁니다. 플러그인은 자체 설정의 주소로 연결하므로 두 곳을 함께 변경하세요.",
+    "admin_origins": "허용된 오리진",
+    "admin_origins_help": "브라우저에서 관리 API를 호출할 수 있는 호스트(공백으로 구분)입니다.",
+    "admin_enforce_origin": "오리진 강제"
   },
   "ca": {
     "title": "내부 인증 기관",

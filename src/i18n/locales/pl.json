@@ -721,7 +721,15 @@
     "default_sni_help": "Nazwa serwera, którą Caddy zakłada, gdy klient jej nie wyśle.",
     "default_bind": "Domyślne adresy bind",
     "default_bind_help": "Adresy oddzielone spacjami, na których nasłuchują witryny bez opcji bind.",
-    "ocsp_stapling_off": "Wyłącz OCSP stapling"
+    "ocsp_stapling_off": "Wyłącz OCSP stapling",
+    "admin_title": "Punkt końcowy administracji",
+    "admin_off": "Wyłącz punkt końcowy administracji",
+    "admin_off_help": "Wtyczka potrzebuje API administracji, aby odczytywać i zmieniać działającą konfigurację.",
+    "admin_address": "Adres administracji",
+    "admin_address_help": "Gdzie nasłuchuje API administracji Caddy, zapisane jak w Caddyfile. Wtyczka łączy się z adresem z własnego ustawienia, więc zmień oba razem.",
+    "admin_origins": "Dozwolone originy",
+    "admin_origins_help": "Hosty oddzielone spacjami, które mogą wywoływać API administracji z przeglądarki.",
+    "admin_enforce_origin": "Wymuszaj originy"
   },
   "ca": {
     "title": "Wewnętrzny urząd certyfikacji",

@@ -721,7 +721,15 @@
     "default_sni_help": "Der Servername, von dem Caddy ausgeht, wenn ein Client keinen sendet.",
     "default_bind": "Standard-Bind-Adressen",
     "default_bind_help": "Durch Leerzeichen getrennte Adressen, auf denen Sites ohne bind-Option lauschen.",
-    "ocsp_stapling_off": "OCSP-Stapling ausschalten"
+    "ocsp_stapling_off": "OCSP-Stapling ausschalten",
+    "admin_title": "Admin-Endpunkt",
+    "admin_off": "Admin-Endpunkt ausschalten",
+    "admin_off_help": "Das Plugin braucht die Admin-API, um die laufende Konfiguration zu lesen und zu ändern.",
+    "admin_address": "Admin-Adresse",
+    "admin_address_help": "Wo die Admin-API von Caddy lauscht, so geschrieben wie im Caddyfile. Das Plugin verbindet sich mit der Adresse in seiner eigenen Einstellung, ändern Sie also beide zusammen.",
+    "admin_origins": "Erlaubte Origins",
+    "admin_origins_help": "Durch Leerzeichen getrennte Hosts, die die Admin-API aus einem Browser aufrufen dürfen.",
+    "admin_enforce_origin": "Origins erzwingen"
   },
   "ca": {
     "title": "Interne Zertifizierungsstelle",

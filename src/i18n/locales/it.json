@@ -721,7 +721,15 @@
     "default_sni_help": "Il nome del server che Caddy presume quando un client non ne invia uno.",
     "default_bind": "Indirizzi bind predefiniti",
     "default_bind_help": "Indirizzi separati da spazi su cui ascoltano i siti senza opzione bind.",
-    "ocsp_stapling_off": "Disattiva OCSP stapling"
+    "ocsp_stapling_off": "Disattiva OCSP stapling",
+    "admin_title": "Endpoint di amministrazione",
+    "admin_off": "Disattiva l'endpoint di amministrazione",
+    "admin_off_help": "Il plugin ha bisogno dell'API di amministrazione per leggere e modificare la configurazione in esecuzione.",
+    "admin_address": "Indirizzo di amministrazione",
+    "admin_address_help": "Dove ascolta l'API di amministrazione di Caddy, scritto come nel Caddyfile. Il plugin si collega all'indirizzo della propria impostazione, quindi modifica entrambi insieme.",
+    "admin_origins": "Origini consentite",
+    "admin_origins_help": "Host separati da spazi che possono chiamare l'API di amministrazione da un browser.",
+    "admin_enforce_origin": "Imponi le origini"
   },
   "ca": {
     "title": "Autorità di certificazione interna",

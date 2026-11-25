@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { GlobalTlsFields, globalTlsFromValues, globalTlsToValues } from "./GlobalTlsFields";
+import { GlobalAdminFields, globalAdminFromValues, globalAdminToValues } from "./GlobalAdminFields";
 
 describe("GlobalTlsFields values (#329)", () => {
   it("maps the options to the form and back", () => {
@@ -33,5 +34,21 @@ describe("GlobalTlsFields values (#329)", () => {
     render(<GlobalTlsFields value={globalTlsToValues({})} onChange={onChange} />);
     fireEvent.change(screen.getByLabelText("Key type"), { target: { value: "p256" } });
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ keyType: "p256" }));
+  });
+});
+
+describe("GlobalAdminFields values (#330)", () => {
+  it("maps the admin option to the form and back", () => {
+    const opts = { adminAddress: "localhost:2019", adminOrigins: ["a.example", "b.example"], adminEnforceOrigin: true };
+    expect(globalAdminFromValues(globalAdminToValues(opts))).toEqual(opts);
+  });
+
+  it("writes only admin off when it is off", () => {
+    expect(globalAdminFromValues({ off: true, address: "localhost:2019", origins: "x", enforceOrigin: true })).toEqual({ adminOff: true });
+  });
+
+  it("disables the other fields while the admin endpoint is off", () => {
+    render(<GlobalAdminFields value={globalAdminToValues({ adminOff: true })} onChange={() => {}} />);
+    expect(screen.getByLabelText("Admin address")).toHaveProperty("disabled", true);
   });
 });

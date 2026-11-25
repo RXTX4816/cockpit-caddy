@@ -721,7 +721,15 @@
     "default_sni_help": "De servernaam die Caddy aanneemt als een client er geen stuurt.",
     "default_bind": "Standaard bind-adressen",
     "default_bind_help": "Adressen gescheiden door spaties waarop sites zonder bind-optie luisteren.",
-    "ocsp_stapling_off": "OCSP-stapling uitschakelen"
+    "ocsp_stapling_off": "OCSP-stapling uitschakelen",
+    "admin_title": "Beheereindpunt",
+    "admin_off": "Beheereindpunt uitschakelen",
+    "admin_off_help": "De plug-in heeft de beheer-API nodig om de lopende configuratie te lezen en te wijzigen.",
+    "admin_address": "Beheeradres",
+    "admin_address_help": "Waar de beheer-API van Caddy luistert, geschreven zoals in de Caddyfile. De plug-in verbindt met het adres in zijn eigen instelling, wijzig dus beide samen.",
+    "admin_origins": "Toegestane origins",
+    "admin_origins_help": "Hosts gescheiden door spaties die de beheer-API vanuit een browser mogen aanroepen.",
+    "admin_enforce_origin": "Origins afdwingen"
   },
   "ca": {
     "title": "Interne certificeringsinstantie",

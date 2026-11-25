@@ -721,7 +721,15 @@
     "default_sni_help": "Palvelimen nimi, jonka Caddy olettaa, kun asiakas ei lähetä sitä.",
     "default_bind": "Oletusarvoiset bind-osoitteet",
     "default_bind_help": "Välilyönnein erotetut osoitteet, joissa ilman bind-asetusta olevat sivustot kuuntelevat.",
-    "ocsp_stapling_off": "Poista OCSP stapling käytöstä"
+    "ocsp_stapling_off": "Poista OCSP stapling käytöstä",
+    "admin_title": "Hallintapääte",
+    "admin_off": "Poista hallintapääte käytöstä",
+    "admin_off_help": "Laajennus tarvitsee hallinta-API:n käynnissä olevan asetuksen lukemiseen ja muuttamiseen.",
+    "admin_address": "Hallintaosoite",
+    "admin_address_help": "Missä Caddyn hallinta-API kuuntelee, kirjoitettuna kuten Caddyfilessä. Laajennus yhdistää omassa asetuksessaan olevaan osoitteeseen, joten muuta molemmat yhdessä.",
+    "admin_origins": "Sallitut originit",
+    "admin_origins_help": "Välilyönnein erotetut isännät, jotka saavat kutsua hallinta-API:a selaimesta.",
+    "admin_enforce_origin": "Pakota originit"
   },
   "ca": {
     "title": "Sisäinen varmentaja",

@@ -3322,10 +3322,10 @@ describe("buildGlobalOptionsPatch — #96 no duplicate directives on first save"
     expect(patched).not.toContain("old@example.com");
   });
 
-  it("leaves other unmanaged directives (e.g. admin off) untouched", () => {
-    const content = "{\n\tadmin off\n\temail old@example.com\n}\n";
+  it("leaves other unmanaged directives (e.g. storage_clean_interval) untouched", () => {
+    const content = "{\n\tstorage_clean_interval 12h\n\temail old@example.com\n}\n";
     const patched = buildGlobalOptionsPatch(content, { email: "new@example.com" });
-    expect(patched).toContain("admin off");
+    expect(patched).toContain("storage_clean_interval 12h");
     expect(patched).toContain("email new@example.com");
   });
 
@@ -4725,5 +4725,31 @@ describe("TLS and listener global options (#329)", () => {
     const patched = buildGlobalOptionsPatch(src, { ...opts, keyType: "p384" });
     expect(patched.match(/auto_https/g)).toHaveLength(1);
     expect(parseGlobalOptions(patched)).toMatchObject({ autoHttps: "off", keyType: "p384", email: "me@example.com" });
+  });
+});
+
+describe("the admin global option (#330)", () => {
+  it("round-trips the stock socket address and leaves it as written", () => {
+    const src = '{\n\tadmin "unix//run/caddy/admin.socket"\n}\n\nimport /etc/caddy/conf.d/*\n';
+    const opts = parseGlobalOptions(src);
+    expect(opts.adminAddress).toBe('"unix//run/caddy/admin.socket"');
+    const patched = buildGlobalOptionsPatch(src, opts);
+    expect(patched.match(/admin /g)).toHaveLength(1);
+    expect(patched).toContain('admin "unix//run/caddy/admin.socket"');
+  });
+
+  it("writes the address, origins and enforce_origin and reads them back", () => {
+    const want = { adminAddress: "127.0.0.1:2019", adminOrigins: ["localhost:2019", "admin.example.com"], adminEnforceOrigin: true };
+    const patched = buildGlobalOptionsPatch("", want);
+    expect(patched).toContain("admin 127.0.0.1:2019 {");
+    expect(patched).toContain("origins localhost:2019 admin.example.com");
+    expect(patched).toContain("enforce_origin");
+    expect(parseGlobalOptions(patched)).toEqual(want);
+  });
+
+  it("writes and reads admin off", () => {
+    const patched = buildGlobalOptionsPatch("", { adminOff: true });
+    expect(patched).toContain("admin off");
+    expect(parseGlobalOptions(patched)).toEqual({ adminOff: true });
   });
 });

@@ -721,7 +721,15 @@
     "default_sni_help": "Název serveru, který Caddy předpokládá, když ho klient neodešle.",
     "default_bind": "Výchozí adresy pro bind",
     "default_bind_help": "Adresy oddělené mezerami, na kterých poslouchají weby bez volby bind.",
-    "ocsp_stapling_off": "Vypnout OCSP stapling"
+    "ocsp_stapling_off": "Vypnout OCSP stapling",
+    "admin_title": "Administrační rozhraní",
+    "admin_off": "Vypnout administrační rozhraní",
+    "admin_off_help": "Plugin potřebuje administrační API ke čtení a změně běžící konfigurace.",
+    "admin_address": "Adresa administrace",
+    "admin_address_help": "Kde naslouchá administrační API Caddy, zapsáno jako v Caddyfile. Plugin se připojuje na adresu ve svém vlastním nastavení, proto měňte obě společně.",
+    "admin_origins": "Povolené originy",
+    "admin_origins_help": "Hostitelé oddělení mezerami, kteří smí volat administrační API z prohlížeče.",
+    "admin_enforce_origin": "Vynutit originy"
   },
   "ca": {
     "title": "Interní certifikační autorita",

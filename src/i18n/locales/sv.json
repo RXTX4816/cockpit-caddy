@@ -721,7 +721,15 @@
     "default_sni_help": "Servernamnet som Caddy antar när en klient inte skickar något.",
     "default_bind": "Standardadresser för bind",
     "default_bind_help": "Mellanslagsavgränsade adresser som webbplatser utan bind-alternativ lyssnar på.",
-    "ocsp_stapling_off": "Stäng av OCSP stapling"
+    "ocsp_stapling_off": "Stäng av OCSP stapling",
+    "admin_title": "Adminändpunkt",
+    "admin_off": "Stäng av adminändpunkten",
+    "admin_off_help": "Tillägget behöver admin-API:et för att läsa och ändra den körande konfigurationen.",
+    "admin_address": "Adminadress",
+    "admin_address_help": "Var Caddys admin-API lyssnar, skrivet som i Caddyfile. Tillägget ansluter till adressen i sin egen inställning, så ändra båda tillsammans.",
+    "admin_origins": "Tillåtna origins",
+    "admin_origins_help": "Mellanslagsavgränsade värdar som får anropa admin-API:et från en webbläsare.",
+    "admin_enforce_origin": "Tvinga origins"
   },
   "ca": {
     "title": "Intern certifikatutfärdare",

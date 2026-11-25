@@ -721,7 +721,15 @@
     "default_sni_help": "用戶端未傳送伺服器名稱時 Caddy 假定的名稱。",
     "default_bind": "預設綁定位址",
     "default_bind_help": "以空格分隔的位址,未設定 bind 選項的網站會在這些位址上監聽。",
-    "ocsp_stapling_off": "關閉 OCSP stapling"
+    "ocsp_stapling_off": "關閉 OCSP stapling",
+    "admin_title": "管理端點",
+    "admin_off": "關閉管理端點",
+    "admin_off_help": "外掛程式需要管理 API 來讀取及修改執行中的設定。",
+    "admin_address": "管理位址",
+    "admin_address_help": "Caddy 管理 API 的監聽位置,寫法與 Caddyfile 相同。外掛程式連線的是自身設定中的位址,因此請同時修改兩處。",
+    "admin_origins": "允許的來源",
+    "admin_origins_help": "可從瀏覽器呼叫管理 API 的主機,以空格分隔。",
+    "admin_enforce_origin": "強制檢查來源"
   },
   "ca": {
     "title": "內部憑證授權單位",

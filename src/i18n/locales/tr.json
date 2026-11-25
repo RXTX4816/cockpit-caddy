@@ -721,7 +721,15 @@
     "default_sni_help": "İstemci göndermediğinde Caddy'nin varsaydığı sunucu adı.",
     "default_bind": "Varsayılan bind adresleri",
     "default_bind_help": "bind seçeneği olmayan sitelerin dinlediği, boşlukla ayrılmış adresler.",
-    "ocsp_stapling_off": "OCSP stapling'i kapat"
+    "ocsp_stapling_off": "OCSP stapling'i kapat",
+    "admin_title": "Yönetim uç noktası",
+    "admin_off": "Yönetim uç noktasını kapat",
+    "admin_off_help": "Eklenti, çalışan yapılandırmayı okumak ve değiştirmek için yönetim API'sine ihtiyaç duyar.",
+    "admin_address": "Yönetim adresi",
+    "admin_address_help": "Caddy'nin yönetim API'sinin dinlediği yer, Caddyfile'daki gibi yazılır. Eklenti kendi ayarındaki adrese bağlanır, bu yüzden ikisini birlikte değiştirin.",
+    "admin_origins": "İzin verilen originler",
+    "admin_origins_help": "Yönetim API'sini bir tarayıcıdan çağırabilen, boşlukla ayrılmış ana makineler.",
+    "admin_enforce_origin": "Originleri zorunlu kıl"
   },
   "ca": {
     "title": "İç sertifika yetkilisi",

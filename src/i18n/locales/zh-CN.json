@@ -721,7 +721,15 @@
     "default_sni_help": "客户端未发送服务器名称时 Caddy 假定的名称。",
     "default_bind": "默认绑定地址",
     "default_bind_help": "以空格分隔的地址,未设置 bind 选项的站点在这些地址上监听。",
-    "ocsp_stapling_off": "关闭 OCSP stapling"
+    "ocsp_stapling_off": "关闭 OCSP stapling",
+    "admin_title": "管理端点",
+    "admin_off": "关闭管理端点",
+    "admin_off_help": "插件需要管理 API 来读取和修改运行中的配置。",
+    "admin_address": "管理地址",
+    "admin_address_help": "Caddy 管理 API 的监听位置,写法与 Caddyfile 相同。插件连接的是自身设置中的地址,因此请同时修改两处。",
+    "admin_origins": "允许的来源",
+    "admin_origins_help": "可以从浏览器调用管理 API 的主机,以空格分隔。",
+    "admin_enforce_origin": "强制检查来源"
   },
   "ca": {
     "title": "内部证书颁发机构",

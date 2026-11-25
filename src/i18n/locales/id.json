@@ -721,7 +721,15 @@
     "default_sni_help": "Nama server yang diasumsikan Caddy saat klien tidak mengirimkannya.",
     "default_bind": "Alamat bind bawaan",
     "default_bind_help": "Alamat dipisahkan spasi tempat situs tanpa opsi bind mendengarkan.",
-    "ocsp_stapling_off": "Matikan OCSP stapling"
+    "ocsp_stapling_off": "Matikan OCSP stapling",
+    "admin_title": "Endpoint admin",
+    "admin_off": "Matikan endpoint admin",
+    "admin_off_help": "Plugin membutuhkan API admin untuk membaca dan mengubah konfigurasi yang berjalan.",
+    "admin_address": "Alamat admin",
+    "admin_address_help": "Tempat API admin Caddy mendengarkan, ditulis seperti di Caddyfile. Plugin tersambung ke alamat pada pengaturannya sendiri, jadi ubah keduanya bersamaan.",
+    "admin_origins": "Origin yang diizinkan",
+    "admin_origins_help": "Host dipisahkan spasi yang boleh memanggil API admin dari browser.",
+    "admin_enforce_origin": "Paksakan origin"
   },
   "ca": {
     "title": "Otoritas sertifikat internal",

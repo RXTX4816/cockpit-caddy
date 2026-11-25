@@ -237,6 +237,11 @@ export interface GlobalOptions {
   certIssuerBody?: string[];
   /** `default_bind`: the addresses sites bind to when they name none (#329). */
   defaultBind?: string[];
+  /** The `admin` option (#330): `admin off`, or the address as written (`localhost:2019`, `"unix//run/caddy/admin.socket"`). */
+  adminOff?: boolean;
+  adminAddress?: string;
+  adminOrigins?: string[];
+  adminEnforceOrigin?: boolean;
 }
 
 export type PreferredChains =
@@ -253,7 +258,7 @@ export const KNOWN_GLOBAL_OPTION_KEYS = new Set([
   "http_port", "https_port", "debug", "grace_period", "shutdown_delay",
   "email", "acme_ca", "acme_ca_root", "acme_eab", "acme_dns", "on_demand_tls",
   "renewal_window_ratio", "storage", "metrics", "log",
-  "auto_https", "local_certs", "default_sni", "key_type", "ocsp_stapling", "preferred_chains", "cert_issuer", "default_bind",
+  "auto_https", "local_certs", "default_sni", "key_type", "ocsp_stapling", "preferred_chains", "cert_issuer", "default_bind", "admin",
 ]);
 
 
@@ -384,6 +389,19 @@ export function parseOptionLines(lines: string[]): GlobalOptions {
         }
         opts.certIssuerBody = body;
       }
+    } else if (key === "admin") {
+      const head = (val ?? "").replace(/\s*\{$/, "").trim();
+      if (head === "off") opts.adminOff = true;
+      else if (head) opts.adminAddress = head;
+      if (line.endsWith("{")) {
+        i++;
+        while (i < lines.length && lines[i].trim() !== "}") {
+          const im = lines[i].trim().match(/^(\S+)(?:\s+(.*))?$/);
+          if (im?.[1] === "origins" && im[2]) opts.adminOrigins = im[2].trim().split(/\s+/);
+          else if (im?.[1] === "enforce_origin") opts.adminEnforceOrigin = true;
+          i++;
+        }
+      }
     } else if (line.startsWith(INTERNAL_LIFETIME_MARKER)) {
       const marked = line.slice(INTERNAL_LIFETIME_MARKER.length).trim();
       if (marked) opts.internalCertLifetime = marked;
@@ -505,7 +523,7 @@ export function parseOptionLines(lines: string[]): GlobalOptions {
 
 const ABSORBED_FIELDS: ReadonlySet<string> = new Set([
   "autoHttps", "localCerts", "defaultSni", "keyType", "ocspStaplingOff", "preferredChains", "certIssuer", "certIssuerBody",
-  "defaultBind",
+  "defaultBind", "adminOff", "adminAddress", "adminOrigins", "adminEnforceOrigin",
 ]);
 
 function isAbsorbedField(k: string): boolean {
@@ -544,7 +562,7 @@ export function parseGlobalOptions(content: string): GlobalOptions {
  * so reading looks there too and a save moves them into the section instead of duplicating them.
  */
 export const ABSORBED_GLOBAL_OPTION_KEYS = new Set([
-  "auto_https", "local_certs", "default_sni", "key_type", "ocsp_stapling", "preferred_chains", "cert_issuer", "default_bind",
+  "auto_https", "local_certs", "default_sni", "key_type", "ocsp_stapling", "preferred_chains", "cert_issuer", "default_bind", "admin",
 ]);
 
 
@@ -643,6 +661,15 @@ export function buildGlobalOptionsLines(opts: GlobalOptions): string {
     else lines.push(`\tcert_issuer ${opts.certIssuer}`);
   }
   if (opts.defaultBind?.length) lines.push(`\tdefault_bind ${opts.defaultBind.join(" ")}`);
+  // #330 — Caddy's own admin endpoint.
+  if (opts.adminOff) lines.push("\tadmin off");
+  else if (opts.adminAddress || opts.adminOrigins?.length || opts.adminEnforceOrigin) {
+    const head = `\tadmin${opts.adminAddress ? ` ${opts.adminAddress}` : ""}`;
+    const inner: string[] = [];
+    if (opts.adminOrigins?.length) inner.push(`\t\torigins ${opts.adminOrigins.join(" ")}`);
+    if (opts.adminEnforceOrigin) inner.push("\t\tenforce_origin");
+    lines.push(...(inner.length ? [`${head} {`, ...inner, "\t}"] : [head]));
+  }
   // Turns on request-level `caddy_http_*` instrumentation across every server — the
   // dedicated site block that actually exposes /metrics is written separately into
   // conf.d (see buildMetricsSiteBlock), since a bare global option can't also declare

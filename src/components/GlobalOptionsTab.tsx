@@ -25,6 +25,7 @@ import type { DnsChallengeConfig, GlobalOptions, StorageInfo } from "../api";
 import { DnsChallengeFields, dnsDraftFromConfig, dnsDraftToConfig, validateDnsDraft, type DnsDraft } from "./DnsChallengeFields";
 import { CertLifetimeSelect } from "./CertLifetimeSelect";
 import { GlobalTlsFields, globalTlsFromValues, globalTlsToValues, type GlobalTlsValues } from "./GlobalTlsFields";
+import { GlobalAdminFields, globalAdminFromValues, globalAdminToValues, type GlobalAdminValues } from "./GlobalAdminFields";
 import { AccessLogSection, type AccessLogValues, accessLogConfigToValues, accessLogValuesToConfig } from "./AccessLogSection";
 
 function isDuration(v: string): boolean {
@@ -85,6 +86,7 @@ export function GlobalOptionsTab() {
   const [internalCertLifetime, setInternalCertLifetime] = useState("");
   const [renewalWindowRatio, setRenewalWindowRatio] = useState("");
   const [globalTls, setGlobalTls] = useState<GlobalTlsValues>(globalTlsToValues({}));
+  const [globalAdmin, setGlobalAdmin] = useState<GlobalAdminValues>(globalAdminToValues({}));
   const [storagePath, setStoragePath] = useState("");
   const [storageInfo, setStorageInfo] = useState<StorageInfo | null>(null);
   const [storageInfoError, setStorageInfoError] = useState<string | null>(null);
@@ -146,6 +148,7 @@ export function GlobalOptionsTab() {
         setInternalCertLifetime(opts.internalCertLifetime ?? "");
         setRenewalWindowRatio(opts.renewalWindowRatio != null ? String(opts.renewalWindowRatio) : "");
         setGlobalTls(globalTlsToValues(opts));
+        setGlobalAdmin(globalAdminToValues(opts));
         setStoragePath(opts.storagePath ?? "");
         loadStorageInfo(opts.storagePath);
         setMetricsEnabled(opts.metricsEnabled ?? false);
@@ -629,6 +632,13 @@ export function GlobalOptionsTab() {
         <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
 
         <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+          {t("global_opts.admin_title")}
+        </Title>
+        <GlobalAdminFields value={globalAdmin} onChange={setGlobalAdmin} isDisabled={isConfirming} />
+
+        <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
+
+        <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
           {t("global_opts.storage_title")}
         </Title>
 
@@ -941,6 +951,7 @@ export function GlobalOptionsTab() {
                     internalCertLifetime: internalCertLifetime.trim() || undefined,
                     renewalWindowRatio: renewalWindowRatio.trim() ? Number(renewalWindowRatio.trim()) : undefined,
                     ...globalTlsFromValues(globalTls),
+                    ...globalAdminFromValues(globalAdmin),
                     storagePath: storagePath.trim() || undefined,
                     metricsEnabled: metricsEnabled || undefined,
                     metricsListenAddress: metricsEnabled ? (metricsListenAddress.trim() || undefined) : undefined,
