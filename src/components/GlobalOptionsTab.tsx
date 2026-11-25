@@ -481,24 +481,18 @@ export function GlobalOptionsTab() {
         <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
           {t("dns.global_title")}
         </Title>
-        {dnsProviders && !dnsProviders.length && !dnsEnabled ? (
+        <FormGroup fieldId="go-dns-enabled">
+          <Checkbox
+            id="go-dns-enabled"
+            label={t("dns.global_enabled")}
+            description={t("dns.global_enabled_help")}
+            isChecked={dnsEnabled}
+            onChange={(_e, v) => setDnsEnabled(v)}
+            isDisabled={isConfirming}
+          />
+        </FormGroup>
+        {dnsEnabled && (
           <DnsChallengeFields idPrefix="go-dns" providers={dnsProviders} envNames={dnsEnvNames} value={dnsDraft} onChange={setDnsDraft} isDisabled={isConfirming} />
-        ) : (
-          <>
-            <FormGroup fieldId="go-dns-enabled">
-              <Checkbox
-                id="go-dns-enabled"
-                label={t("dns.global_enabled")}
-                description={t("dns.global_enabled_help")}
-                isChecked={dnsEnabled}
-                onChange={(_e, v) => setDnsEnabled(v)}
-                isDisabled={isConfirming}
-              />
-            </FormGroup>
-            {dnsEnabled && (
-              <DnsChallengeFields idPrefix="go-dns" providers={dnsProviders} envNames={dnsEnvNames} value={dnsDraft} onChange={setDnsDraft} isDisabled={isConfirming} />
-            )}
-          </>
         )}
 
         <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
