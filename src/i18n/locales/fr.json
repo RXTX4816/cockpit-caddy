@@ -1054,5 +1054,23 @@
     "site_inherit_help": "Utilise le fournisseur DNS défini dans Paramètres → Défi DNS, ou le défi HTTP s'il n'y en a pas.",
     "site_override_help": "Ce site utilise son propre fournisseur DNS et ses propres identifiants. Enregistrer de nouveaux identifiants redémarre Caddy, qui ne les lit qu'au démarrage.",
     "site_wildcard_warning": "Les certificats génériques nécessitent le défi DNS. Définissez un fournisseur DNS pour ce site, ou dans Paramètres → Défi DNS."
+  },
+  "modules": {
+    "title": "Modules de Caddy",
+    "loading": "Lecture des modules…",
+    "unknown": "Les modules de ce Caddy n'ont pas pu être lus (la commande caddy est-elle disponible ?).",
+    "help": "Ce que le Caddy installé sait faire au-delà d'une version standard. Une fonction qui exige un module absent échoue au chargement de la configuration : vérifiez donc ici d'abord.",
+    "cap_dns": "Fournisseurs du défi DNS",
+    "cap_layer4": "Couche 4 (proxy TCP et UDP)",
+    "cap_rate_limit": "Limitation de débit",
+    "cap_security": "caddy-security (portail d'authentification)",
+    "installed": "Installé",
+    "missing": "Non installé",
+    "how_to_get": "Comment l'obtenir",
+    "dns_providers": "Fournisseurs : {{count}}",
+    "all": "Tous les modules ({{count}})",
+    "filter": "Filtrer les modules",
+    "no_match": "Aucun module ne correspond.",
+    "non_standard": "Modules ne faisant pas partie de Caddy lui-même : {{count}}"
   }
 }

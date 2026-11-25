@@ -1054,5 +1054,23 @@
     "site_inherit_help": "使用“设置 → DNS 质询”中设置的 DNS 提供商；未设置时使用 HTTP 质询。",
     "site_override_help": "此站点使用自己的 DNS 提供商和凭据。保存新凭据会重启 Caddy，因为它只在启动时读取凭据。",
     "site_wildcard_warning": "通配符证书需要 DNS 质询。请为此站点设置 DNS 提供商，或在“设置 → DNS 质询”中设置。"
+  },
+  "modules": {
+    "title": "Caddy 模块",
+    "loading": "正在读取模块…",
+    "unknown": "无法读取此 Caddy 的模块(caddy 命令可用吗?)。",
+    "help": "已安装的 Caddy 在标准构建之外还能做什么。需要缺失模块的功能会在 Caddy 加载配置时失败,所以请先在这里确认。",
+    "cap_dns": "DNS 验证提供商",
+    "cap_layer4": "第 4 层(TCP 和 UDP 代理)",
+    "cap_rate_limit": "速率限制",
+    "cap_security": "caddy-security(认证门户)",
+    "installed": "已安装",
+    "missing": "未安装",
+    "how_to_get": "如何获取",
+    "dns_providers": "提供商:{{count}}",
+    "all": "所有模块({{count}})",
+    "filter": "筛选模块",
+    "no_match": "没有匹配的模块。",
+    "non_standard": "不属于 Caddy 本身的模块:{{count}}"
   }
 }

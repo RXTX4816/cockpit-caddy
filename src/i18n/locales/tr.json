@@ -1054,5 +1054,23 @@
     "site_inherit_help": "Ayarlar → DNS doğrulaması altındaki DNS sağlayıcısını, ayarlanmamışsa HTTP doğrulamasını kullanır.",
     "site_override_help": "Bu site kendi DNS sağlayıcısını ve kimlik bilgilerini kullanır. Yeni kimlik bilgilerini kaydetmek Caddy'yi yeniden başlatır, çünkü bunları yalnızca başlarken okur.",
     "site_wildcard_warning": "Joker karakterli sertifikalar DNS doğrulaması gerektirir. Bu site için ya da Ayarlar → DNS doğrulaması altında bir DNS sağlayıcısı ayarlayın."
+  },
+  "modules": {
+    "title": "Caddy modülleri",
+    "loading": "Modüller okunuyor…",
+    "unknown": "Bu Caddy'nin modülleri okunamadı (caddy komutu kullanılabilir mi?).",
+    "help": "Kurulu Caddy'nin standart yapının ötesinde neler yapabildiği. Eksik bir modül gerektiren özellik, Caddy yapılandırmayı yüklerken başarısız olur, bu yüzden önce buraya bakın.",
+    "cap_dns": "DNS doğrulama sağlayıcıları",
+    "cap_layer4": "Katman 4 (TCP ve UDP vekili)",
+    "cap_rate_limit": "Hız sınırlama",
+    "cap_security": "caddy-security (kimlik doğrulama portalı)",
+    "installed": "Kurulu",
+    "missing": "Kurulu değil",
+    "how_to_get": "Nasıl edinilir",
+    "dns_providers": "Sağlayıcılar: {{count}}",
+    "all": "Tüm modüller ({{count}})",
+    "filter": "Modülleri filtrele",
+    "no_match": "Eşleşen modül yok.",
+    "non_standard": "Caddy'nin kendisine ait olmayan modüller: {{count}}"
   }
 }

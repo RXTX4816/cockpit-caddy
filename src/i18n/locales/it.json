@@ -1054,5 +1054,23 @@
     "site_inherit_help": "Usa il provider DNS impostato in Impostazioni → Sfida DNS, oppure la sfida HTTP se non ce n'è uno.",
     "site_override_help": "Questo sito usa un proprio provider DNS e credenziali proprie. Salvare nuove credenziali riavvia Caddy, che le legge solo all'avvio.",
     "site_wildcard_warning": "I certificati wildcard richiedono la sfida DNS. Imposta un provider DNS per questo sito o in Impostazioni → Sfida DNS."
+  },
+  "modules": {
+    "title": "Moduli di Caddy",
+    "loading": "Lettura dei moduli…",
+    "unknown": "Non è stato possibile leggere i moduli di questo Caddy (il comando caddy è disponibile?).",
+    "help": "Cosa sa fare il Caddy installato oltre a una build standard. Una funzione che richiede un modulo mancante fallisce quando Caddy carica la configurazione, quindi controlla prima qui.",
+    "cap_dns": "Provider della sfida DNS",
+    "cap_layer4": "Livello 4 (proxy TCP e UDP)",
+    "cap_rate_limit": "Limitazione della frequenza",
+    "cap_security": "caddy-security (portale di autenticazione)",
+    "installed": "Installato",
+    "missing": "Non installato",
+    "how_to_get": "Come ottenerlo",
+    "dns_providers": "Provider: {{count}}",
+    "all": "Tutti i moduli ({{count}})",
+    "filter": "Filtra i moduli",
+    "no_match": "Nessun modulo corrisponde.",
+    "non_standard": "Moduli che non fanno parte di Caddy stesso: {{count}}"
   }
 }

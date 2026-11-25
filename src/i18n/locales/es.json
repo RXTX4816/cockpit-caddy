@@ -1054,5 +1054,23 @@
     "site_inherit_help": "Usa el proveedor DNS de Ajustes → Desafío DNS, o el desafío HTTP si no hay ninguno.",
     "site_override_help": "Este sitio usa su propio proveedor DNS y credenciales. Guardar credenciales nuevas reinicia Caddy, porque solo las lee al arrancar.",
     "site_wildcard_warning": "Los certificados comodín necesitan el desafío DNS. Define un proveedor DNS para este sitio o en Ajustes → Desafío DNS."
+  },
+  "modules": {
+    "title": "Módulos de Caddy",
+    "loading": "Leyendo los módulos…",
+    "unknown": "No se pudieron leer los módulos de este Caddy (¿está disponible el comando caddy?).",
+    "help": "Lo que el Caddy instalado puede hacer además de una compilación estándar. Una función que necesita un módulo ausente falla cuando Caddy carga la configuración, así que compruébelo aquí primero.",
+    "cap_dns": "Proveedores del desafío DNS",
+    "cap_layer4": "Capa 4 (proxy TCP y UDP)",
+    "cap_rate_limit": "Limitación de tasa",
+    "cap_security": "caddy-security (portal de autenticación)",
+    "installed": "Instalado",
+    "missing": "No instalado",
+    "how_to_get": "Cómo obtenerlo",
+    "dns_providers": "Proveedores: {{count}}",
+    "all": "Todos los módulos ({{count}})",
+    "filter": "Filtrar módulos",
+    "no_match": "Ningún módulo coincide.",
+    "non_standard": "Módulos que no forman parte del propio Caddy: {{count}}"
   }
 }

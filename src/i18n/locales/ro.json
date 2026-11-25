@@ -1054,5 +1054,23 @@
     "site_inherit_help": "Folosește furnizorul DNS setat în Setări → Provocare DNS sau provocarea HTTP dacă nu e setat niciunul.",
     "site_override_help": "Acest site folosește propriul furnizor DNS și propriile date de acces. Salvarea unor date noi repornește Caddy, care le citește doar la pornire.",
     "site_wildcard_warning": "Certificatele wildcard au nevoie de provocarea DNS. Setează un furnizor DNS pentru acest site sau în Setări → Provocare DNS."
+  },
+  "modules": {
+    "title": "Modulele Caddy",
+    "loading": "Se citesc modulele…",
+    "unknown": "Modulele acestui Caddy nu au putut fi citite (este disponibilă comanda caddy?).",
+    "help": "Ce poate face Caddy instalat peste o versiune standard. O funcție care are nevoie de un modul lipsă eșuează când Caddy încarcă configurația, așa că verifică mai întâi aici.",
+    "cap_dns": "Furnizori pentru provocarea DNS",
+    "cap_layer4": "Nivelul 4 (proxy TCP și UDP)",
+    "cap_rate_limit": "Limitarea ratei",
+    "cap_security": "caddy-security (portal de autentificare)",
+    "installed": "Instalat",
+    "missing": "Neinstalat",
+    "how_to_get": "Cum îl obții",
+    "dns_providers": "Furnizori: {{count}}",
+    "all": "Toate modulele ({{count}})",
+    "filter": "Filtrează modulele",
+    "no_match": "Niciun modul nu se potrivește.",
+    "non_standard": "Module care nu fac parte din Caddy însuși: {{count}}"
   }
 }

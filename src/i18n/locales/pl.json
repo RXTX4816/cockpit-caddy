@@ -1054,5 +1054,23 @@
     "site_inherit_help": "Używa dostawcy DNS ustawionego w Ustawienia → Wyzwanie DNS albo wyzwania HTTP, jeśli żaden nie jest ustawiony.",
     "site_override_help": "Ta witryna używa własnego dostawcy DNS i danych logowania. Zapisanie nowych danych uruchamia ponownie Caddy, bo odczytuje je tylko przy starcie.",
     "site_wildcard_warning": "Certyfikaty wieloznaczne wymagają wyzwania DNS. Ustaw dostawcę DNS dla tej witryny albo w Ustawienia → Wyzwanie DNS."
+  },
+  "modules": {
+    "title": "Moduły Caddy",
+    "loading": "Odczytywanie modułów…",
+    "unknown": "Nie udało się odczytać modułów tego Caddy (czy polecenie caddy jest dostępne?).",
+    "help": "Co zainstalowany Caddy potrafi ponad standardową kompilację. Funkcja wymagająca brakującego modułu zawodzi przy ładowaniu konfiguracji, więc sprawdź to najpierw tutaj.",
+    "cap_dns": "Dostawcy wyzwania DNS",
+    "cap_layer4": "Warstwa 4 (proxy TCP i UDP)",
+    "cap_rate_limit": "Ograniczanie szybkości",
+    "cap_security": "caddy-security (portal uwierzytelniania)",
+    "installed": "Zainstalowany",
+    "missing": "Niezainstalowany",
+    "how_to_get": "Jak go zdobyć",
+    "dns_providers": "Dostawcy: {{count}}",
+    "all": "Wszystkie moduły ({{count}})",
+    "filter": "Filtruj moduły",
+    "no_match": "Żaden moduł nie pasuje.",
+    "non_standard": "Moduły, które nie są częścią samego Caddy: {{count}}"
   }
 }

@@ -1054,5 +1054,23 @@
     "site_inherit_help": "Uses the DNS provider set under Settings → DNS challenge, or the HTTP challenge when none is set.",
     "site_override_help": "This site uses its own DNS provider and credentials. Saving new credentials restarts Caddy, because it reads them only when it starts.",
     "site_wildcard_warning": "Wildcard certificates need the DNS challenge. Set a DNS provider for this site, or one under Settings → DNS challenge."
+  },
+  "modules": {
+    "title": "Caddy modules",
+    "loading": "Reading the modules…",
+    "unknown": "The modules of this Caddy could not be read (is the caddy command available?).",
+    "help": "What the installed Caddy can do beyond a stock build. A feature that needs a missing module fails when Caddy loads the config, so check here first.",
+    "cap_dns": "DNS challenge providers",
+    "cap_layer4": "Layer 4 (TCP and UDP proxying)",
+    "cap_rate_limit": "Rate limiting",
+    "cap_security": "caddy-security (authentication portal)",
+    "installed": "Installed",
+    "missing": "Not installed",
+    "how_to_get": "How to get it",
+    "dns_providers": "Providers: {{count}}",
+    "all": "All modules ({{count}})",
+    "filter": "Filter modules",
+    "no_match": "No module matches.",
+    "non_standard": "Modules that are not part of Caddy itself: {{count}}"
   }
 }

@@ -1054,5 +1054,23 @@
     "site_inherit_help": "Använder DNS-leverantören under Inställningar → DNS-utmaning, eller HTTP-utmaningen om ingen är angiven.",
     "site_override_help": "Den här webbplatsen använder en egen DNS-leverantör och egna inloggningsuppgifter. Att spara nya uppgifter startar om Caddy, eftersom Caddy bara läser dem vid start.",
     "site_wildcard_warning": "Jokerteckencertifikat kräver DNS-utmaningen. Ange en DNS-leverantör för den här webbplatsen, eller under Inställningar → DNS-utmaning."
+  },
+  "modules": {
+    "title": "Caddy-moduler",
+    "loading": "Läser modulerna…",
+    "unknown": "Modulerna i den här Caddy kunde inte läsas (finns kommandot caddy?).",
+    "help": "Vad den installerade Caddy kan utöver ett standardbygge. En funktion som kräver en saknad modul misslyckas när Caddy läser in konfigurationen, så kontrollera här först.",
+    "cap_dns": "Leverantörer för DNS-utmaning",
+    "cap_layer4": "Lager 4 (TCP- och UDP-proxy)",
+    "cap_rate_limit": "Hastighetsbegränsning",
+    "cap_security": "caddy-security (inloggningsportal)",
+    "installed": "Installerad",
+    "missing": "Inte installerad",
+    "how_to_get": "Så skaffar du den",
+    "dns_providers": "Leverantörer: {{count}}",
+    "all": "Alla moduler ({{count}})",
+    "filter": "Filtrera moduler",
+    "no_match": "Ingen modul matchar.",
+    "non_standard": "Moduler som inte ingår i själva Caddy: {{count}}"
   }
 }

@@ -1054,5 +1054,23 @@
     "site_inherit_help": "Memakai penyedia DNS yang diatur di Pengaturan → Tantangan DNS, atau tantangan HTTP bila belum diatur.",
     "site_override_help": "Situs ini memakai penyedia DNS dan kredensialnya sendiri. Menyimpan kredensial baru akan memulai ulang Caddy, karena Caddy hanya membacanya saat mulai.",
     "site_wildcard_warning": "Sertifikat wildcard memerlukan tantangan DNS. Atur penyedia DNS untuk situs ini, atau di Pengaturan → Tantangan DNS."
+  },
+  "modules": {
+    "title": "Modul Caddy",
+    "loading": "Membaca modul…",
+    "unknown": "Modul Caddy ini tidak dapat dibaca (apakah perintah caddy tersedia?).",
+    "help": "Apa yang bisa dilakukan Caddy terpasang di luar build standar. Fitur yang membutuhkan modul yang hilang gagal saat Caddy memuat konfigurasi, jadi periksa di sini dulu.",
+    "cap_dns": "Penyedia tantangan DNS",
+    "cap_layer4": "Layer 4 (proksi TCP dan UDP)",
+    "cap_rate_limit": "Pembatasan laju",
+    "cap_security": "caddy-security (portal autentikasi)",
+    "installed": "Terpasang",
+    "missing": "Tidak terpasang",
+    "how_to_get": "Cara mendapatkannya",
+    "dns_providers": "Penyedia: {{count}}",
+    "all": "Semua modul ({{count}})",
+    "filter": "Saring modul",
+    "no_match": "Tidak ada modul yang cocok.",
+    "non_standard": "Modul yang bukan bagian dari Caddy sendiri: {{count}}"
   }
 }

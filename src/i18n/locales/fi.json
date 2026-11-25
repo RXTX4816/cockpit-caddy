@@ -1054,5 +1054,23 @@
     "site_inherit_help": "Käyttää kohdassa Asetukset → DNS-haaste asetettua DNS-palveluntarjoajaa tai HTTP-haastetta, jos sitä ei ole asetettu.",
     "site_override_help": "Tämä sivusto käyttää omaa DNS-palveluntarjoajaa ja tunnuksia. Uusien tunnusten tallentaminen käynnistää Caddyn uudelleen, koska se lukee ne vain käynnistyessään.",
     "site_wildcard_warning": "Jokerimerkkivarmenteet tarvitsevat DNS-haasteen. Aseta DNS-palveluntarjoaja tälle sivustolle tai kohdassa Asetukset → DNS-haaste."
+  },
+  "modules": {
+    "title": "Caddyn moduulit",
+    "loading": "Luetaan moduuleja…",
+    "unknown": "Tämän Caddyn moduuleja ei voitu lukea (onko caddy-komento käytettävissä?).",
+    "help": "Mitä asennettu Caddy osaa vakiorakennetta enemmän. Ominaisuus, joka tarvitsee puuttuvan moduulin, epäonnistuu kun Caddy lataa asetukset, joten tarkista ensin täältä.",
+    "cap_dns": "DNS-haasteen tarjoajat",
+    "cap_layer4": "Taso 4 (TCP- ja UDP-välitys)",
+    "cap_rate_limit": "Nopeusrajoitus",
+    "cap_security": "caddy-security (todennusportaali)",
+    "installed": "Asennettu",
+    "missing": "Ei asennettu",
+    "how_to_get": "Miten sen saa",
+    "dns_providers": "Tarjoajia: {{count}}",
+    "all": "Kaikki moduulit ({{count}})",
+    "filter": "Suodata moduuleja",
+    "no_match": "Mikään moduuli ei täsmää.",
+    "non_standard": "Moduulit, jotka eivät kuulu Caddyyn itseensä: {{count}}"
   }
 }
