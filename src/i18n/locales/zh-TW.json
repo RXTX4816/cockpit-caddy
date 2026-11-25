@@ -177,7 +177,18 @@
     "field_hide": "隱藏的檔案",
     "field_hide_help": "永不回傳的名稱或模式，以空格分隔。",
     "field_precompressed": "預先壓縮的檔案",
-    "field_precompressed_help": "瀏覽器接受相應編碼時，回傳原檔旁的 file.zst、file.br 或 file.gz。"
+    "field_precompressed_help": "瀏覽器接受相應編碼時，回傳原檔旁的 file.zst、file.br 或 file.gz。",
+    "field_browse_template": "清單範本",
+    "field_browse_template_help": "目錄清單使用的範本檔案。僅在開啟目錄清單時使用。",
+    "field_status": "狀態碼",
+    "field_status_help": "以此狀態碼取代 200 回應每個檔案,例如搭配自訂錯誤頁使用 404。",
+    "field_disable_canonical_uris": "保持結尾斜線不變",
+    "field_disable_canonical_uris_help": "不為目錄和檔案新增或移除結尾斜線而重新導向。",
+    "field_templates": "以範本處理檔案",
+    "field_templates_help": "為所提供的檔案啟用 Caddy 的範本引擎,檔案即可使用 include、.Req 等範本操作。",
+    "field_templates_mime": "MIME 類型",
+    "field_templates_root": "include 目錄",
+    "field_templates_root_help": "include 等檔案操作尋找檔案的位置。留空表示網站根目錄。"
   },
   "edit_static": {
     "title": "編輯靜態伺服器 — :{{port}}",
@@ -206,7 +217,15 @@
     "env_field_value": "值",
     "env_add_button": "新增變數",
     "field_try_files": "嘗試檔案（try_files）",
-    "field_try_files_help": "選填。在 PHP 之前依序嘗試的候選項；前端控制器應用通常需要 {path} {path}/ /index.php?{query}。"
+    "field_try_files_help": "選填。在 PHP 之前依序嘗試的候選項；前端控制器應用通常需要 {path} {path}/ /index.php?{query}。",
+    "field_dial_timeout": "連線逾時",
+    "field_read_timeout": "讀取逾時",
+    "field_write_timeout": "寫入逾時",
+    "no_timeout": "無",
+    "field_capture_stderr": "記錄 PHP 程序的 stderr",
+    "field_capture_stderr_help": "把 PHP-FPM 輸出到 stderr 的內容寫入 Caddy 記錄。",
+    "field_resolve_root_symlink": "解析根目錄中的符號連結",
+    "field_resolve_root_symlink_help": "在建立 SCRIPT_FILENAME 之前跟隨根目錄中的符號連結,使用發行符號連結的 opcache 部署需要這樣做。"
   },
   "add_respond": {
     "title": "新增靜態回應",
@@ -251,7 +270,11 @@
     "validation_port_range": "連接埠必須介於 1 到 65535 之間",
     "validation_port_duplicate": "連接埠 {{port}} 已被使用",
     "validation_to_required": "必須填寫重新導向目標",
-    "confirm_body": "將建立重新導向 :{{port}} → {{to}}（{{code}}），並重新載入 Caddy 設定。"
+    "confirm_body": "將建立重新導向 :{{port}} → {{to}}（{{code}}），並重新載入 Caddy 設定。",
+    "code_html": "HTML 頁面",
+    "code_html_help": "回應一個在瀏覽器中跳轉的頁面,而不是狀態碼。與狀態碼重新導向不同,它會保留 URL 的 #片段。",
+    "keep_path": "保留路徑和查詢",
+    "keep_path_help": "在目標後附加 {uri},因此本站的 /a?b=1 會跳轉到目標的 /a?b=1。"
   },
   "basic_auth": {
     "heading": "HTTP Basic 驗證",
@@ -260,14 +283,32 @@
     "field_password": "密碼",
     "field_password_keep": "留空以保留現有密碼",
     "add_button": "新增帳號",
-    "remove_button": "移除帳號"
+    "remove_button": "移除帳號",
+    "realm": "Realm(驗證領域)",
+    "algorithm": "雜湊演算法",
+    "algorithm_default": "bcrypt(預設)",
+    "algorithm_argon2id": "argon2id(更強)",
+    "algorithm_mismatch": "保留原密碼的帳號仍帶有另一種演算法產生的雜湊。請重新輸入這些帳號的密碼。"
   },
   "transport": {
     "heading": "上游逾時",
     "section_title": "上游逾時（選填）",
     "dial_timeout": "連線逾時",
     "response_header_timeout": "回應標頭逾時",
-    "defaults_help": "留空即使用 Caddy 的預設值（以灰色顯示）。回應標頭逾時會中斷長輪詢和較慢的回應。"
+    "defaults_help": "留空即使用 Caddy 的預設值（以灰色顯示）。回應標頭逾時會中斷長輪詢和較慢的回應。",
+    "streaming_help": "串流(WebSocket、事件串流):留空則使用 Caddy 預設值。",
+    "flush_interval": "清空間隔",
+    "flush_interval_placeholder": "-1 表示每次寫入立即傳送",
+    "stream_timeout": "串流逾時",
+    "stream_close_delay": "串流關閉延遲",
+    "connection_title": "上游連線",
+    "tls_server_name": "TLS 伺服器名稱",
+    "versions": "HTTP 版本",
+    "read_timeout": "讀取逾時",
+    "write_timeout": "寫入逾時",
+    "keepalive": "Keep-alive",
+    "keepalive_idle_conns": "保留的閒置連線數",
+    "keepalive_idle_conns_per_host": "每個主機保留的閒置連線數"
   },
   "server_timeouts": {
     "heading": "伺服器逾時與限制",
@@ -282,7 +323,17 @@
     "max_header_bytes_help": "請求標頭的最大大小（Caddy 預設值：16 KB）",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "停用 HTTP/3",
-    "http3_help": "只要設定了 TLS，Caddy 預設會啟用 HTTP/1.1、HTTP/2 和 HTTP/3。HTTP/3 透過 UDP 在與 HTTPS 相同的連接埠上運作——若防火牆封鎖 UDP，在此停用後只會使用 HTTP/1.1 和 HTTP/2。"
+    "http3_help": "只要設定了 TLS，Caddy 預設會啟用 HTTP/1.1、HTTP/2 和 HTTP/3。HTTP/3 透過 UDP 在與 HTTPS 相同的連接埠上運作——若防火牆封鎖 UDP，在此停用後只會使用 HTTP/1.1 和 HTTP/2。",
+    "keepalive_interval": "TCP keep-alive 間隔",
+    "keepalive_idle": "TCP keep-alive 前的閒置時間",
+    "options_label": "連線選項",
+    "strict_sni_host": "嚴格檢查 SNI 主機",
+    "strict_sni_host_help": "拒絕 Host 標頭與 TLS 伺服器名稱不一致的請求。",
+    "log_credentials": "記錄憑證",
+    "log_credentials_help": "將 Authorization 和 Cookie 標頭寫入存取記錄。",
+    "enable_full_duplex": "HTTP/1 全雙工",
+    "enable_full_duplex_help": "允許處理程式在寫入回應的同時讀取請求本文。",
+    "read_body_idle": "請求本文閒置逾時"
   },
   "request_body": {
     "field_label": "請求本文大小上限",
@@ -303,7 +354,30 @@
     "field_find_placeholder": "^/api/(.*)",
     "field_replace_placeholder": "/$1",
     "field_replace_help": "擷取群組請使用 $1、$2",
-    "type_aria": "重寫類型"
+    "type_aria": "重寫類型",
+    "type_strip_suffix": "移除後綴",
+    "type_uri_replace": "取代文字",
+    "type_query": "查詢字串",
+    "type_method": "方法",
+    "field_suffix": "後綴",
+    "field_suffix_placeholder": ".html",
+    "field_text_find": "尋找(純文字)",
+    "field_limit": "最多",
+    "field_limit_placeholder": "全部",
+    "field_method": "方法",
+    "query_op": "變更",
+    "query_op_set": "設定",
+    "query_op_add": "新增",
+    "query_op_delete": "刪除",
+    "query_op_rename": "重新命名",
+    "query_op_replace": "取代",
+    "query_key": "名稱",
+    "query_value": "值",
+    "query_new_key": "新名稱",
+    "query_search": "搜尋(正規表示式)",
+    "query_remove": "移除變更",
+    "query_add": "新增變更",
+    "invalid": "請填寫重寫的所有欄位。"
   },
   "probe": {
     "status_pending": "檢查中…",
@@ -386,7 +460,9 @@
     "validation_max_fails": "最大失敗次數必須至少為 1",
     "validation_needs_health_uri": "間隔、逾時與預期狀態需要健康檢查路徑",
     "validation_health_uri": "健康檢查路徑必須以 / 開頭",
-    "validation_health_status": "請填寫 200 這樣的狀態碼或 2xx 這樣的類別"
+    "validation_health_status": "請填寫 200 這樣的狀態碼或 2xx 這樣的類別",
+    "retry_methods": "僅重試這些方法",
+    "validation_methods": "方法是 GET、HEAD 之類的單字,以空格分隔。"
   },
   "response_headers": {
     "heading": "回應標頭",
@@ -413,7 +489,12 @@
     "field_name": "標頭名稱",
     "field_value": "值",
     "add_button": "新增",
-    "presets_label": "預設"
+    "presets_label": "預設",
+    "down_heading": "上游回應標頭",
+    "down_section_title": "上游回應標頭(選填)",
+    "op_replace": "取代",
+    "field_search": "要尋找的標頭值(正規表示式)",
+    "field_replacement": "取代為"
   },
   "edit_redirect": {
     "title": "編輯重新導向 — :{{port}}",
@@ -568,7 +649,16 @@
     "roll_keep_count": "保留的輪替檔案數",
     "roll_keep_days": "輪替檔案的最長保留天數",
     "roll_compress": "壓縮輪替檔案（gzip）",
-    "roll_help": "Caddy 預設會輪替記錄檔。留空即使用以灰色顯示的 Caddy 預設值。"
+    "roll_help": "Caddy 預設會輪替記錄檔。留空即使用以灰色顯示的 Caddy 預設值。",
+    "field_filters": "欄位過濾器",
+    "field_filters_help": "每行一個:欄位路徑,後接 delete、hash、replace <文字> 或 ip_mask <IPv4 位元數> [<IPv6 位元數>],例如 request>headers>Authorization delete。",
+    "field_filters_invalid": "每一行都需要欄位路徑,以及 delete、hash、replace <文字> 或 ip_mask <位元數> 其中之一。",
+    "include": "納入的記錄器",
+    "include_help": "此記錄檔寫入的記錄器名稱,以空格分隔,例如 http.log.access。留空表示全部。",
+    "exclude": "排除的記錄器",
+    "exclude_help": "此記錄檔略過的記錄器名稱,以空格分隔,例如 http.log.access.log0。",
+    "skip_paths": "不寫入記錄的路徑",
+    "skip_paths_help": "以空格分隔的路徑,可使用萬用字元,例如 /health* /ping。對這些路徑的請求不會被記錄。"
   },
   "config_check": {
     "button": "檢查設定",
@@ -691,7 +781,39 @@
     "proxy_protocol_allow_help": "以空格分隔、允許傳送 PROXY 通訊協定標頭的 CIDR 範圍——請限制為負載平衡器本身的 IP，以防用戶端 IP 遭偽造。留空則接受任何來源。",
     "proxy_protocol_timeout": "標頭讀取逾時（選填）",
     "proxy_protocol_timeout_help": "放棄前等待 PROXY 通訊協定標頭的最長時間（Go 時間長度，例如 2s）。留空則使用 Caddy 預設。",
-    "on_demand_rate_deprecated": "Caddy 已不再建議 interval 與 burst。請清空兩者，改用 ask 端點。"
+    "on_demand_rate_deprecated": "Caddy 已不再建議 interval 與 burst。請清空兩者，改用 ask 端點。",
+    "tls_advanced_title": "進階 TLS",
+    "auto_https": "自動 HTTPS",
+    "auto_https_off": "關閉",
+    "auto_https_disable_redirects": "不將 HTTP 重新導向至 HTTPS",
+    "auto_https_ignore_loaded_certs": "忽略已載入的憑證",
+    "issuer": "憑證簽發者",
+    "issuer_local_certs": "所有網站使用 Caddy 自帶的 CA",
+    "issuer_internal": "內部 CA",
+    "issuer_acme": "ACME",
+    "key_type": "金鑰類型",
+    "preferred_chains": "偏好的憑證鏈",
+    "preferred_chains_smallest": "最短憑證鏈",
+    "preferred_chains_root": "依根憑證的通用名稱",
+    "preferred_chains_any": "依任一通用名稱",
+    "preferred_chains_names": "通用名稱",
+    "preferred_chains_names_help": "以逗號分隔。",
+    "default_sni": "預設 SNI",
+    "default_sni_help": "用戶端未傳送伺服器名稱時 Caddy 假定的名稱。",
+    "default_bind": "預設綁定位址",
+    "default_bind_help": "以空格分隔的位址,未設定 bind 選項的網站會在這些位址上監聽。",
+    "ocsp_stapling_off": "關閉 OCSP stapling",
+    "admin_title": "管理端點",
+    "admin_off": "關閉管理端點",
+    "admin_off_help": "外掛程式需要管理 API 來讀取及修改執行中的設定。",
+    "admin_address": "管理位址",
+    "admin_address_help": "Caddy 管理 API 的監聽位置,寫法與 Caddyfile 相同。外掛程式連線的是自身設定中的位址,因此請同時修改兩處。",
+    "admin_origins": "允許的來源",
+    "admin_origins_help": "可從瀏覽器呼叫管理 API 的主機,以空格分隔。",
+    "admin_enforce_origin": "強制檢查來源",
+    "metrics_per_host": "依主機為指標加上標籤",
+    "metrics_per_host_help": "在每個請求指標上加入所請求的主機,以便區分網站。每個不同的主機都會成為獨立的時間序列。",
+    "auto_https_disable_certs": "不管理憑證"
   },
   "ca": {
     "title": "內部憑證授權單位",
@@ -794,7 +916,12 @@
     "field_copy_headers": "複製標頭",
     "field_copy_headers_help": "以空格或逗號分隔的回應標頭，會從驗證服務複製到送往上游的請求中（例如 Remote-User, Remote-Groups）",
     "indicator": "Forward Auth",
-    "validation_uri_required": "設定驗證服務 URL 時必須填寫驗證 URI"
+    "validation_uri_required": "設定驗證服務 URL 時必須填寫驗證 URI",
+    "field_copy_headers_rename_help": "寫成 Name>Other,即可以另一個名稱複製該標頭。",
+    "field_header_up": "傳送給驗證服務的請求標頭",
+    "field_header_up_help": "每行一個:Name value 設定標頭,+Name value 新增,-Name 移除。",
+    "field_trusted_proxies": "受信任的代理",
+    "field_trusted_proxies_help": "在傳送給驗證服務的請求中保留其 X-Forwarded-* 標頭的位址範圍,以空格分隔。private_ranges 代表私有網路。"
   },
   "tls_policy": {
     "heading": "TLS 原則",
@@ -842,7 +969,15 @@
     "custom_file_unreadable": "找不到檔案，或 Caddy 使用者無法讀取",
     "custom_file_readable": "檔案可讀取",
     "custom_file_valid_expiry": "有效——{{date}} 到期",
-    "custom_cert_lifetime_note": "上方已載入自訂憑證——憑證有效期限與續約時間窗不適用，因為 Caddy 本身不會簽發任何憑證。"
+    "custom_cert_lifetime_note": "上方已載入自訂憑證——憑證有效期限與續約時間窗不適用，因為 Caddy 本身不會簽發任何憑證。",
+    "acme_email": "ACME 電子郵件",
+    "acme_email_help": "此網站憑證使用的帳戶電子郵件。僅適用於自動 HTTPS;留空則使用全域設定。",
+    "acme_global_placeholder": "全域電子郵件",
+    "acme_ca": "ACME CA 目錄 URL",
+    "acme_ca_help": "此網站從哪裡取得憑證,例如測試時使用 Let's Encrypt 的 staging URL。留空則使用全域 CA。",
+    "key_type": "金鑰類型",
+    "acme_invalid_email": "請輸入類似 admin@example.com 的電子郵件地址。",
+    "acme_invalid_ca": "請輸入以 http:// 或 https:// 開頭的 URL。"
   },
   "error_handler": {
     "heading": "自訂錯誤處理",
@@ -908,7 +1043,22 @@
     "ip_kind_remote": "連線 IP",
     "ip_kind_client_help": "訪客的 IP。請求經過受信任代理（設定）時從轉送標頭取得；沒有受信任代理時與連線 IP 相同。",
     "ip_kind_remote_help": "TCP 連線的 IP。在代理或 CDN 之後，這是代理的位址，而不是訪客的。",
-    "ip_range": "IP 位址或範圍"
+    "ip_range": "IP 位址或範圍",
+    "type_path_regexp": "路徑正規表示式",
+    "type_header_regexp": "標頭正規表示式",
+    "field_regexp_name": "名稱(選填)",
+    "field_header_name_regexp": "正規表示式所用的標頭名稱",
+    "field_regexp_name_header": "標頭正規表示式的名稱(選填)",
+    "regexp_help": "設定名稱後,群組可作為 {re.name.1} 使用,例如在重寫中。Caddy 每個比對器只允許一個正規表示式。",
+    "type_protocol": "通訊協定",
+    "protocol_any": "任意",
+    "type_file": "檔案",
+    "field_try_files": "要尋找的檔案",
+    "field_try_policy": "選擇方式",
+    "try_policy_default": "第一個存在的",
+    "file_help": "其中一個檔案存在時比對成功。可使用 {path} 之類的預留位置。",
+    "type_vars": "變數",
+    "vars_help": "每行一個:預留位置及其可取的值,例如 {host} example.com www.example.com。"
   },
   "handle_path": {
     "label": "移除符合的路徑前綴（handle_path）"
@@ -1072,5 +1222,44 @@
     "filter": "篩選模組",
     "no_match": "沒有符合的模組。",
     "non_standard": "不屬於 Caddy 本身的模組:{{count}}"
+  },
+  "encode": {
+    "heading": "壓縮",
+    "section_title": "壓縮設定(選用)",
+    "help": "在「一般」中開啟壓縮時生效。未選擇時,Caddy 會用 gzip 和 zstd 壓縮。",
+    "algorithms": "演算法與順序",
+    "algorithms_default": "gzip、zstd(預設)",
+    "algorithms_zstd_gzip": "先 zstd,後 gzip",
+    "algorithms_gzip": "僅 gzip",
+    "algorithms_zstd": "僅 zstd",
+    "minimum_length": "最小大小",
+    "minimum_length_help": "小於此位元組數的回應會原樣傳送。Caddy 的預設值為 512。",
+    "invalid_number": "請輸入整數位元組數。",
+    "match_status": "僅這些狀態碼",
+    "match_status_help": "以空格分隔的狀態碼或 2xx 404 之類的類別。留空表示所有狀態。",
+    "invalid_status": "請輸入 200 之類的狀態碼或 2xx 之類的類別。",
+    "match_headers": "僅這些回應標頭",
+    "match_headers_help": "每行一個:先寫標頭名稱,再寫值。支援 text/* 之類的萬用字元。",
+    "invalid_header": "每一行都需要標頭名稱和值。"
+  },
+  "dynamic_upstreams": {
+    "heading": "動態上游",
+    "section_title": "動態上游(進階,選填)",
+    "help": "透過 DNS 查詢上游。查詢無結果時使用上方的目標作為備援。多個來源會合併。",
+    "add_button": "新增 DNS 來源",
+    "type": "查詢類型",
+    "name_srv": "SRV 名稱",
+    "name_a": "主機名稱",
+    "refresh": "重新整理間隔",
+    "resolvers": "DNS 解析器",
+    "dial_fallback_delay": "備用連線延遲",
+    "grace_period": "寬限期",
+    "versions": "位址族",
+    "versions_both": "IPv4 與 IPv6",
+    "validation_name": "含設定的來源需要名稱。",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

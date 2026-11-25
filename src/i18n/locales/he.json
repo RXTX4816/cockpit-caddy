@@ -177,7 +177,18 @@
     "field_hide": "קבצים מוסתרים",
     "field_hide_help": "שמות או תבניות שלעולם לא מוגשים, מופרדים ברווחים.",
     "field_precompressed": "קבצים דחוסים מראש",
-    "field_precompressed_help": "הגשת file.zst,‏ file.br או file.gz שליד המקור כשהדפדפן מקבל את הקידוד הזה."
+    "field_precompressed_help": "הגשת file.zst,‏ file.br או file.gz שליד המקור כשהדפדפן מקבל את הקידוד הזה.",
+    "field_browse_template": "תבנית רשימה",
+    "field_browse_template_help": "קובץ תבנית לרשימת התיקייה. בשימוש רק כשרשימת התיקיות פעילה.",
+    "field_status": "קוד סטטוס",
+    "field_status_help": "להשיב לכל קובץ בקוד סטטוס זה במקום 200, למשל 404 לדף שגיאה מותאם.",
+    "field_disable_canonical_uris": "השאר לוכסנים סופיים כמות שהם",
+    "field_disable_canonical_uris_help": "אל תפנה כדי להוסיף או להסיר לוכסן סופי בתיקיות ובקבצים.",
+    "field_templates": "הרצת הקבצים דרך תבניות",
+    "field_templates_help": "מפעיל את מנוע התבניות של Caddy לקבצים המוגשים, כך שיוכלו להשתמש ב-include, ב-.Req ובשאר פעולות התבניות.",
+    "field_templates_mime": "סוגי MIME",
+    "field_templates_root": "תיקייה להכללות",
+    "field_templates_root_help": "היכן include ושאר פעולות הקבצים מחפשות קבצים. ריק פירושו שורש האתר."
   },
   "edit_static": {
     "title": "עריכת שרת סטטי — :{{port}}",
@@ -206,7 +217,15 @@
     "env_field_value": "ערך",
     "env_add_button": "הוספת משתנה",
     "field_try_files": "קבצים לניסיון (try_files)",
-    "field_try_files_help": "אופציונלי. מועמדים שנבדקים לפי הסדר לפני PHP; יישום עם front controller צריך בדרך כלל ‎{path} {path}/ /index.php?{query}‎."
+    "field_try_files_help": "אופציונלי. מועמדים שנבדקים לפי הסדר לפני PHP; יישום עם front controller צריך בדרך כלל ‎{path} {path}/ /index.php?{query}‎.",
+    "field_dial_timeout": "זמן קצוב לחיבור",
+    "field_read_timeout": "זמן קצוב לקריאה",
+    "field_write_timeout": "זמן קצוב לכתיבה",
+    "no_timeout": "ללא",
+    "field_capture_stderr": "תיעוד ה-stderr של תהליך PHP",
+    "field_capture_stderr_help": "כותב ליומן של Caddy את מה ש-PHP-FPM מדפיס ל-stderr.",
+    "field_resolve_root_symlink": "פתרון קישורים סמליים בשורש",
+    "field_resolve_root_symlink_help": "עוקב אחר קישורים סמליים בתיקיית השורש לפני בניית SCRIPT_FILENAME, כפי שדרושות הגדרות opcache עם קישורי גרסאות."
   },
   "add_respond": {
     "title": "הוספת תגובה סטטית",
@@ -251,7 +270,11 @@
     "validation_port_range": "הפורט חייב להיות בין 1 ל-65535",
     "validation_port_duplicate": "פורט {{port}} כבר בשימוש",
     "validation_to_required": "נדרש יעד הפניה",
-    "confirm_body": "תיווצר הפניה :{{port}} → {{to}} ‏({{code}}) ותצורת Caddy תיטען מחדש."
+    "confirm_body": "תיווצר הפניה :{{port}} → {{to}} ‏({{code}}) ותצורת Caddy תיטען מחדש.",
+    "code_html": "דף HTML",
+    "code_html_help": "משיב בדף שמפנה בתוך הדפדפן במקום בקוד סטטוס. בניגוד להפניה בקוד סטטוס, הוא שומר על ה-#fragment של הכתובת.",
+    "keep_path": "שמור את הנתיב והשאילתה",
+    "keep_path_help": "מוסיף את {uri} ליעד, כך ש-/a?b=1 באתר הזה מוביל ל-/a?b=1 ביעד."
   },
   "basic_auth": {
     "heading": "אימות HTTP Basic",
@@ -260,14 +283,32 @@
     "field_password": "סיסמה",
     "field_password_keep": "יש להשאיר ריק כדי לשמור על הקיימת",
     "add_button": "הוספת חשבון",
-    "remove_button": "הסרת חשבון"
+    "remove_button": "הסרת חשבון",
+    "realm": "Realm",
+    "algorithm": "אלגוריתם גיבוב",
+    "algorithm_default": "bcrypt (ברירת מחדל)",
+    "algorithm_argon2id": "argon2id (חזק יותר)",
+    "algorithm_mismatch": "חשבונות ששומרים את הסיסמה שלהם עדיין מכילים גיבוב של האלגוריתם האחר. הזינו את הסיסמאות שלהם מחדש."
   },
   "transport": {
     "heading": "מגבלות זמן ל-upstream",
     "section_title": "מגבלות זמן ל-upstream (אופציונלי)",
     "dial_timeout": "מגבלת זמן להתחברות",
     "response_header_timeout": "מגבלת זמן לכותרות התגובה",
-    "defaults_help": "השאירו שדה ריק כדי להשתמש בברירת המחדל של Caddy, המוצגת באפור. מגבלת זמן לכותרות התגובה קוטעת long polling ותגובות איטיות."
+    "defaults_help": "השאירו שדה ריק כדי להשתמש בברירת המחדל של Caddy, המוצגת באפור. מגבלת זמן לכותרות התגובה קוטעת long polling ותגובות איטיות.",
+    "streaming_help": "סטרימינג (websockets, זרמי אירועים): השאירו ריק לשימוש בברירות המחדל של Caddy.",
+    "flush_interval": "מרווח שטיפה",
+    "flush_interval_placeholder": "‎-1 שולח כל כתיבה מיד",
+    "stream_timeout": "פסק זמן של זרם",
+    "stream_close_delay": "השהיית סגירת זרם",
+    "connection_title": "חיבור לשרת האחורי",
+    "tls_server_name": "שם שרת TLS",
+    "versions": "גרסאות HTTP",
+    "read_timeout": "פסק זמן קריאה",
+    "write_timeout": "פסק זמן כתיבה",
+    "keepalive": "Keep-alive",
+    "keepalive_idle_conns": "חיבורים סרק שנשמרים",
+    "keepalive_idle_conns_per_host": "חיבורים סרק שנשמרים לכל מארח"
   },
   "server_timeouts": {
     "heading": "מגבלות זמן ומגבלות שרת",
@@ -282,7 +323,17 @@
     "max_header_bytes_help": "הגודל המרבי של כותרות הבקשה (ברירת המחדל של Caddy:‏ 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "השבתת HTTP/3",
-    "http3_help": "Caddy מפעיל כברירת מחדל HTTP/1.1, ‏HTTP/2 ו-HTTP/3 כשמוגדר TLS. HTTP/3 רץ על UDP באותו פורט כמו HTTPS — אם חומת האש חוסמת UDP, השבתה כאן תשאיר רק HTTP/1.1 ו-HTTP/2."
+    "http3_help": "Caddy מפעיל כברירת מחדל HTTP/1.1, ‏HTTP/2 ו-HTTP/3 כשמוגדר TLS. HTTP/3 רץ על UDP באותו פורט כמו HTTPS — אם חומת האש חוסמת UDP, השבתה כאן תשאיר רק HTTP/1.1 ו-HTTP/2.",
+    "keepalive_interval": "מרווח TCP keep-alive",
+    "keepalive_idle": "זמן סרק לפני TCP keep-alive",
+    "options_label": "אפשרויות חיבור",
+    "strict_sni_host": "מארח SNI מחמיר",
+    "strict_sni_host_help": "דוחה בקשות שכותרת Host שלהן שונה משם שרת ה-TLS.",
+    "log_credentials": "תיעוד פרטי כניסה",
+    "log_credentials_help": "כותב את הכותרות Authorization ו-Cookie ליומן הגישה.",
+    "enable_full_duplex": "דופלקס מלא עבור HTTP/1",
+    "enable_full_duplex_help": "מאפשר למטפל לקרוא את גוף הבקשה בזמן כתיבת התשובה.",
+    "read_body_idle": "זמן קצוב לחוסר פעילות בגוף הבקשה"
   },
   "request_body": {
     "field_label": "גודל מרבי של גוף הבקשה",
@@ -303,7 +354,30 @@
     "field_find_placeholder": "^/api/(.*)",
     "field_replace_placeholder": "/$1",
     "field_replace_help": "יש להשתמש ב-$1, ‏$2 לקבוצות לכידה",
-    "type_aria": "סוג השכתוב"
+    "type_aria": "סוג השכתוב",
+    "type_strip_suffix": "הסרת סיומת",
+    "type_uri_replace": "החלפת טקסט",
+    "type_query": "מחרוזת שאילתה",
+    "type_method": "שיטה",
+    "field_suffix": "סיומת",
+    "field_suffix_placeholder": ".html",
+    "field_text_find": "חיפוש (טקסט רגיל)",
+    "field_limit": "לכל היותר",
+    "field_limit_placeholder": "הכול",
+    "field_method": "שיטה",
+    "query_op": "שינוי",
+    "query_op_set": "הגדרה",
+    "query_op_add": "הוספה",
+    "query_op_delete": "מחיקה",
+    "query_op_rename": "שינוי שם",
+    "query_op_replace": "החלפה",
+    "query_key": "שם",
+    "query_value": "ערך",
+    "query_new_key": "שם חדש",
+    "query_search": "חיפוש (regex)",
+    "query_remove": "הסרת שינוי",
+    "query_add": "הוספת שינוי",
+    "invalid": "מלאו את כל שדות השכתוב."
   },
   "probe": {
     "status_pending": "בודק…",
@@ -386,7 +460,9 @@
     "validation_max_fails": "מקסימום כשלים חייב להיות 1 או יותר",
     "validation_needs_health_uri": "מרווח, מגבלת זמן וסטטוס צפוי דורשים נתיב בדיקת תקינות",
     "validation_health_uri": "נתיב בדיקת התקינות חייב להתחיל ב-/",
-    "validation_health_status": "השתמשו בקוד כמו 200 או במחלקה כמו 2xx"
+    "validation_health_status": "השתמשו בקוד כמו 200 או במחלקה כמו 2xx",
+    "retry_methods": "נסה שוב רק את השיטות האלה",
+    "validation_methods": "שיטות הן מילים כמו GET או HEAD, מופרדות ברווחים."
   },
   "response_headers": {
     "heading": "כותרות תגובה",
@@ -413,7 +489,12 @@
     "field_name": "שם הכותרת",
     "field_value": "ערך",
     "add_button": "הוספה",
-    "presets_label": "הגדרות מוכנות"
+    "presets_label": "הגדרות מוכנות",
+    "down_heading": "כותרות תגובה מהשרת האחורי",
+    "down_section_title": "כותרות תגובה מהשרת האחורי (אופציונלי)",
+    "op_replace": "החלף",
+    "field_search": "ערך כותרת לחיפוש (ביטוי רגולרי)",
+    "field_replacement": "תחליף"
   },
   "edit_redirect": {
     "title": "עריכת הפניה — :{{port}}",
@@ -568,7 +649,16 @@
     "roll_keep_count": "מספר קבצים מוחלפים לשמירה",
     "roll_keep_days": "גיל מרבי של קבצים מוחלפים (ימים)",
     "roll_compress": "דחיסת קבצים מוחלפים (gzip)",
-    "roll_help": "Caddy מבצע רוטציה לקובץ היומן כברירת מחדל. השאירו שדה ריק כדי להשתמש בברירת המחדל של Caddy, המוצגת באפור."
+    "roll_help": "Caddy מבצע רוטציה לקובץ היומן כברירת מחדל. השאירו שדה ריק כדי להשתמש בברירת המחדל של Caddy, המוצגת באפור.",
+    "field_filters": "מסנני שדות",
+    "field_filters_help": "אחד בכל שורה: נתיב שדה ואז delete, hash, replace <טקסט> או ip_mask <ביטי IPv4> [<ביטי IPv6>], למשל request>headers>Authorization delete.",
+    "field_filters_invalid": "כל שורה צריכה נתיב שדה ואחד מ-delete, hash, replace <טקסט> או ip_mask <ביטים>.",
+    "include": "הכללת לוגרים",
+    "include_help": "שמות לוגרים שהיומן הזה כותב, מופרדים ברווחים, למשל http.log.access. ריק פירושו הכול.",
+    "exclude": "החרגת לוגרים",
+    "exclude_help": "שמות לוגרים שהיומן הזה מדלג עליהם, מופרדים ברווחים, למשל http.log.access.log0.",
+    "skip_paths": "נתיבים שלא נרשמים ביומן",
+    "skip_paths_help": "נתיבים מופרדים ברווחים, תווים כלליים מותרים, למשל /health* /ping. בקשות אליהם אינן נרשמות."
   },
   "config_check": {
     "button": "בדיקת תצורה",
@@ -691,7 +781,39 @@
     "proxy_protocol_allow_help": "טווחי CIDR מופרדים ברווחים שמורשים לשלוח כותרות פרוטוקול PROXY — כדאי להגביל לכתובות ה-IP של מאזן העומסים עצמו כדי למנוע זיוף IP של לקוח. יש להשאיר ריק כדי לקבל מכל מקור.",
     "proxy_protocol_timeout": "מגבלת זמן לקריאת הכותרת (אופציונלי)",
     "proxy_protocol_timeout_help": "הזמן המרבי להמתנה לכותרת פרוטוקול PROXY לפני ויתור (משך בפורמט Go, למשל 2s). יש להשאיר ריק לברירת המחדל של Caddy.",
-    "on_demand_rate_deprecated": "Caddy כבר לא ממליץ על interval ו-burst. רוקנו את שניהם והסתמכו על נקודת ה-ask."
+    "on_demand_rate_deprecated": "Caddy כבר לא ממליץ על interval ו-burst. רוקנו את שניהם והסתמכו על נקודת ה-ask.",
+    "tls_advanced_title": "TLS מתקדם",
+    "auto_https": "HTTPS אוטומטי",
+    "auto_https_off": "כבוי",
+    "auto_https_disable_redirects": "ללא הפניות מ-HTTP ל-HTTPS",
+    "auto_https_ignore_loaded_certs": "התעלם מאישורים שנטענו",
+    "issuer": "מנפיק אישורים",
+    "issuer_local_certs": "רשות האישורים של Caddy לכל אתר",
+    "issuer_internal": "רשות אישורים פנימית",
+    "issuer_acme": "ACME",
+    "key_type": "סוג מפתח",
+    "preferred_chains": "שרשרת אישורים מועדפת",
+    "preferred_chains_smallest": "השרשרת הקצרה ביותר",
+    "preferred_chains_root": "לפי שם נפוץ של השורש",
+    "preferred_chains_any": "לפי כל שם נפוץ",
+    "preferred_chains_names": "שמות נפוצים",
+    "preferred_chains_names_help": "מופרדים בפסיקים.",
+    "default_sni": "SNI ברירת מחדל",
+    "default_sni_help": "שם השרת ש-Caddy מניח כשהלקוח לא שולח אחד.",
+    "default_bind": "כתובות bind ברירת מחדל",
+    "default_bind_help": "כתובות מופרדות ברווחים שאתרים ללא אפשרות bind מאזינים להן.",
+    "ocsp_stapling_off": "כבה OCSP stapling",
+    "admin_title": "נקודת קצה לניהול",
+    "admin_off": "כבה את נקודת הקצה לניהול",
+    "admin_off_help": "התוסף זקוק ל-API הניהול כדי לקרוא ולשנות את התצורה הפועלת.",
+    "admin_address": "כתובת ניהול",
+    "admin_address_help": "היכן ה-API לניהול של Caddy מאזין, כפי שנכתב ב-Caddyfile. התוסף מתחבר לכתובת שבהגדרה שלו, לכן שנו את שתיהן יחד.",
+    "admin_origins": "מקורות מותרים",
+    "admin_origins_help": "מארחים מופרדים ברווחים שרשאים לקרוא ל-API הניהול מדפדפן.",
+    "admin_enforce_origin": "אכוף מקורות",
+    "metrics_per_host": "תיוג מדדים לפי מארח",
+    "metrics_per_host_help": "מוסיף את המארח המבוקש לכל מדד בקשה, כדי להבחין בין אתרים. כל מארח שונה הופך לסדרה נפרדת.",
+    "auto_https_disable_certs": "ללא ניהול תעודות"
   },
   "ca": {
     "title": "רשות אישורים פנימית",
@@ -794,7 +916,12 @@
     "field_copy_headers": "העתקת כותרות",
     "field_copy_headers_help": "כותרות תגובה מופרדות ברווחים או בפסיקים שיועתקו משירות האימות לבקשה אל ה-upstream (למשל Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "כשמוגדרת כתובת שירות אימות, נדרש URI אימות"
+    "validation_uri_required": "כשמוגדרת כתובת שירות אימות, נדרש URI אימות",
+    "field_copy_headers_rename_help": "כתבו Name>Other כדי להעתיק כותרת בשם אחר.",
+    "field_header_up": "כותרות הבקשה לשירות האימות",
+    "field_header_up_help": "אחת בכל שורה: Name value קובע כותרת, +Name value מוסיף אחת, -Name מסיר אחת.",
+    "field_trusted_proxies": "פרוקסי מהימנים",
+    "field_trusted_proxies_help": "טווחים שכותרות X-Forwarded-* שלהם נשמרות בבקשה לשירות האימות, מופרדים ברווחים. private_ranges מייצג את הרשתות הפרטיות."
   },
   "tls_policy": {
     "heading": "מדיניות TLS",
@@ -842,7 +969,15 @@
     "custom_file_unreadable": "הקובץ לא נמצא או שמשתמש Caddy לא יכול לקרוא אותו",
     "custom_file_readable": "הקובץ קריא",
     "custom_file_valid_expiry": "בתוקף — יפוג ב-{{date}}",
-    "custom_cert_lifetime_note": "למעלה נטענה תעודה מותאמת — תוקף התעודה וחלון החידוש לא חלים, כי Caddy לא מנפיק כלום בעצמו."
+    "custom_cert_lifetime_note": "למעלה נטענה תעודה מותאמת — תוקף התעודה וחלון החידוש לא חלים, כי Caddy לא מנפיק כלום בעצמו.",
+    "acme_email": "אימייל ACME",
+    "acme_email_help": "אימייל החשבון לאישורי האתר הזה. חל רק על HTTPS אוטומטי; ריק משתמש בגלובלי.",
+    "acme_global_placeholder": "אימייל גלובלי",
+    "acme_ca": "כתובת ספריית ACME CA",
+    "acme_ca_help": "מאיפה האתר מקבל את האישורים שלו, למשל כתובת ה-staging של Let's Encrypt בזמן בדיקות. ריק משתמש ב-CA הגלובלי.",
+    "key_type": "סוג מפתח",
+    "acme_invalid_email": "הזינו כתובת אימייל כמו admin@example.com.",
+    "acme_invalid_ca": "הזינו כתובת שמתחילה ב-http:// או https://."
   },
   "error_handler": {
     "heading": "מטפלי שגיאות מותאמים",
@@ -908,7 +1043,22 @@
     "ip_kind_remote": "IP של החיבור",
     "ip_kind_client_help": "כתובת ה-IP של המבקר, נלקחת מכותרת ההעברה כשהבקשה מגיעה דרך אחד הפרוקסים המהימנים (הגדרות). ללא פרוקסים מהימנים היא זהה ל-IP של החיבור.",
     "ip_kind_remote_help": "כתובת ה-IP של חיבור ה-TCP. מאחורי פרוקסי או CDN זו כתובת הפרוקסי, לא של המבקר.",
-    "ip_range": "כתובת IP או טווח"
+    "ip_range": "כתובת IP או טווח",
+    "type_path_regexp": "Regex לנתיב",
+    "type_header_regexp": "Regex לכותרת",
+    "field_regexp_name": "שם (אופציונלי)",
+    "field_header_name_regexp": "שם הכותרת ל-regex",
+    "field_regexp_name_header": "שם ה-regex של הכותרת (אופציונלי)",
+    "regexp_help": "שם הופך את הקבוצות לזמינות כ-{re.name.1}, למשל בשכתוב. Caddy מאפשר regex אחד לכל מתאם.",
+    "type_protocol": "פרוטוקול",
+    "protocol_any": "כלשהו",
+    "type_file": "קבצים",
+    "field_try_files": "קבצים לחיפוש",
+    "field_try_policy": "אופן הבחירה",
+    "try_policy_default": "הראשון שקיים",
+    "file_help": "מתאים כשאחד הקבצים קיים. מציינים כמו {path} עובדים.",
+    "type_vars": "משתנים",
+    "vars_help": "אחד בכל שורה: מציין ואז הערכים שיכולים להיות לו, למשל {host} example.com www.example.com."
   },
   "handle_path": {
     "label": "הסרת קידומת הנתיב התואמת (handle_path)"
@@ -1072,5 +1222,44 @@
     "filter": "סינון מודולים",
     "no_match": "אין מודול תואם.",
     "non_standard": "מודולים שאינם חלק מ-Caddy עצמו: {{count}}"
+  },
+  "encode": {
+    "heading": "דחיסה",
+    "section_title": "הגדרות דחיסה (אופציונלי)",
+    "help": "בשימוש כשהדחיסה פעילה בלשונית כללי. ללא בחירה Caddy דוחס ב-gzip וב-zstd.",
+    "algorithms": "אלגוריתמים וסדר",
+    "algorithms_default": "gzip, zstd (ברירת מחדל)",
+    "algorithms_zstd_gzip": "zstd ואז gzip",
+    "algorithms_gzip": "gzip בלבד",
+    "algorithms_zstd": "zstd בלבד",
+    "minimum_length": "גודל מינימלי",
+    "minimum_length_help": "תגובות קטנות ממספר הבתים הזה נשלחות כמות שהן. ברירת המחדל של Caddy היא 512.",
+    "invalid_number": "הזינו מספר שלם של בתים.",
+    "match_status": "רק קודי סטטוס אלה",
+    "match_status_help": "קודים או מחלקות מופרדים ברווחים, כמו 2xx 404. ריק פירושו כל סטטוס.",
+    "invalid_status": "הזינו קודי סטטוס כמו 200 או מחלקות כמו 2xx.",
+    "match_headers": "רק כותרות תגובה אלה",
+    "match_headers_help": "אחת בכל שורה: שם הכותרת ואחריו הערך. תווים כלליים כמו text/* עובדים.",
+    "invalid_header": "כל שורה צריכה שם כותרת וערך."
+  },
+  "dynamic_upstreams": {
+    "heading": "שרתים אחוריים דינמיים",
+    "section_title": "שרתים אחוריים דינמיים (מתקדם, אופציונלי)",
+    "help": "חיפוש השרתים האחוריים ב-DNS. היעד שלמעלה הוא ברירת המחדל כשהחיפוש לא מוצא דבר. כמה מקורות משולבים.",
+    "add_button": "הוספת מקור DNS",
+    "type": "סוג חיפוש",
+    "name_srv": "שם SRV",
+    "name_a": "שם מארח",
+    "refresh": "מרווח רענון",
+    "resolvers": "פותרי DNS",
+    "dial_fallback_delay": "השהיית חיבור חלופי",
+    "grace_period": "תקופת חסד",
+    "versions": "משפחות כתובות",
+    "versions_both": "IPv4 ו-IPv6",
+    "validation_name": "מקור עם הגדרות זקוק לשם.",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

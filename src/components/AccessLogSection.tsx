@@ -6,11 +6,12 @@ import {
   HelperText,
   HelperTextItem,
   Radio,
+  TextArea,
   TextInput,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import { ResettableTextInput, SectionShell } from "./sectionLayout";
-import type { AccessLogConfig, AccessLogFormat, AccessLogLevel, AccessLogOutput } from "../api";
+import type { AccessLogConfig, AccessLogFormat, AccessLogLevel, AccessLogOutput, LogFieldFilter } from "../api";
 import { SectionActions } from "./SectionActions";
 
 export interface AccessLogValues {
@@ -24,6 +25,38 @@ export interface AccessLogValues {
   rollKeepCount: string;
   rollKeepDays: string;
   rollCompress: boolean;
+  /** One `field filter` per line (#334), e.g. `request>headers>Authorization delete`. */
+  fieldFilters: string;
+  /** Caddy's own log only: logger namespaces to take in or leave out, space-separated (#334). */
+  include: string;
+  exclude: string;
+  /** `log_skip` (#334): paths whose requests are not logged, space-separated. */
+  skipPaths: string;
+}
+
+const FILTER_LINE = /^\S+\s+(delete|hash|replace\s+\S.*|ip_mask\s+\d+(\s+\d+)?)$/;
+
+/** A filter line Caddy would not take: an unknown filter, a replace without a value, an ip_mask without a length. */
+export function validateFieldFilters(text: string): boolean {
+  return text.split("\n").map(l => l.trim()).filter(Boolean).some(l => !FILTER_LINE.test(l));
+}
+
+export function fieldFiltersToText(filters: LogFieldFilter[] | undefined): string {
+  return (filters ?? []).map(f => f.filter === "replace" ? `${f.field} replace ${f.value ?? ""}`
+    : f.filter === "ip_mask" ? `${f.field} ip_mask ${f.ipv4 ?? 32}${f.ipv6 != null ? ` ${f.ipv6}` : ""}`
+    : `${f.field} ${f.filter}`).join("\n");
+}
+
+export function fieldFiltersFromText(text: string): LogFieldFilter[] | undefined {
+  const out: LogFieldFilter[] = [];
+  for (const line of text.split("\n").map(l => l.trim()).filter(Boolean)) {
+    if (!FILTER_LINE.test(line)) continue;
+    const [field, filter, ...args] = line.split(/\s+/);
+    if (filter === "replace") out.push({ field, filter, value: args.join(" ") });
+    else if (filter === "ip_mask") out.push({ field, filter, ipv4: parseInt(args[0], 10), ...(args[1] ? { ipv6: parseInt(args[1], 10) } : {}) });
+    else out.push({ field, filter: filter as "delete" | "hash" });
+  }
+  return out.length ? out : undefined;
 }
 
 interface Props {
@@ -40,6 +73,10 @@ interface Props {
   enableLabel?: string;
   /** The heading inside a tab (#291); the global runtime logger isn't shown in one. */
   heading?: string;
+  /** Caddy's own log can also take in or leave out other loggers' entries (#334). */
+  showLoggerFilters?: boolean;
+  /** A site's own log can leave out the requests to noisy paths (#334). */
+  showSkipPaths?: boolean;
   /** Controlled expand state, e.g. from a parent accordion coordinating single-open-at-a-time
    *  across sections. Falls back to internal state when omitted. */
   isExpanded?: boolean;
@@ -50,10 +87,10 @@ const OUTPUTS: AccessLogOutput[] = ["stderr", "stdout", "file", "discard"];
 const FORMATS: Array<AccessLogFormat | ""> = ["", "json", "console"];
 const LEVELS: Array<AccessLogLevel | ""> = ["", "DEBUG", "INFO", "WARN", "ERROR"];
 
-const ACCESS_LOG_DEFAULTS: AccessLogValues = { enabled: true, output: "stderr", filePath: "", format: "", level: "", rollSizeMb: "", rollKeepCount: "", rollKeepDays: "", rollCompress: true };
-const ACCESS_LOG_EMPTY: AccessLogValues = { enabled: false, output: "stderr", filePath: "", format: "", level: "", rollSizeMb: "", rollKeepCount: "", rollKeepDays: "", rollCompress: true };
+const ACCESS_LOG_DEFAULTS: AccessLogValues = { enabled: true, output: "stderr", filePath: "", format: "", level: "", rollSizeMb: "", rollKeepCount: "", rollKeepDays: "", rollCompress: true, fieldFilters: "", include: "", exclude: "", skipPaths: "" };
+const ACCESS_LOG_EMPTY: AccessLogValues = { enabled: false, output: "stderr", filePath: "", format: "", level: "", rollSizeMb: "", rollKeepCount: "", rollKeepDays: "", rollCompress: true, fieldFilters: "", include: "", exclude: "", skipPaths: "" };
 
-export function AccessLogSection({ value, onChange, isDisabled, idPrefix = "al", title, titleOn, enableLabel, heading, isExpanded: isExpandedProp, onToggleExpanded }: Props) {
+export function AccessLogSection({ value, onChange, isDisabled, idPrefix = "al", title, titleOn, enableLabel, heading, showLoggerFilters, showSkipPaths, isExpanded: isExpandedProp, onToggleExpanded }: Props) {
   const { t } = useTranslation();
   const [internalExpanded, setInternalExpanded] = useState(value.enabled);
   const expanded = isExpandedProp ?? internalExpanded;
@@ -198,6 +235,45 @@ export function AccessLogSection({ value, onChange, isDisabled, idPrefix = "al",
             </div>
           </FormGroup>
 
+          <FormGroup label={t("access_log.field_filters")} fieldId={id("field-filters")} style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+            <TextArea
+              id={id("field-filters")}
+              value={value.fieldFilters}
+              onChange={(_e, v) => set({ fieldFilters: v })}
+              rows={3}
+              placeholder={"request>headers>Authorization delete\nrequest>remote_ip ip_mask 24 64"}
+              validated={validateFieldFilters(value.fieldFilters) ? "error" : "default"}
+              isDisabled={isDisabled}
+            />
+            <FormHelperText>
+              <HelperText>
+                <HelperTextItem variant={validateFieldFilters(value.fieldFilters) ? "error" : "default"}>
+                  {validateFieldFilters(value.fieldFilters) ? t("access_log.field_filters_invalid") : t("access_log.field_filters_help")}
+                </HelperTextItem>
+              </HelperText>
+            </FormHelperText>
+          </FormGroup>
+
+          {showSkipPaths && (
+            <FormGroup label={t("access_log.skip_paths")} fieldId={id("skip-paths")} style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+              <TextInput id={id("skip-paths")} value={value.skipPaths} onChange={(_e, v) => set({ skipPaths: v })} placeholder="/health* /ping" isDisabled={isDisabled} />
+              <FormHelperText><HelperText><HelperTextItem>{t("access_log.skip_paths_help")}</HelperTextItem></HelperText></FormHelperText>
+            </FormGroup>
+          )}
+
+          {showLoggerFilters && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+              <FormGroup label={t("access_log.include")} fieldId={id("include")} style={{ flex: "1 1 14rem" }}>
+                <TextInput id={id("include")} value={value.include} onChange={(_e, v) => set({ include: v })} placeholder="http.log.access" isDisabled={isDisabled} />
+                <FormHelperText><HelperText><HelperTextItem>{t("access_log.include_help")}</HelperTextItem></HelperText></FormHelperText>
+              </FormGroup>
+              <FormGroup label={t("access_log.exclude")} fieldId={id("exclude")} style={{ flex: "1 1 14rem" }}>
+                <TextInput id={id("exclude")} value={value.exclude} onChange={(_e, v) => set({ exclude: v })} placeholder="http.log.access.log0" isDisabled={isDisabled} />
+                <FormHelperText><HelperText><HelperTextItem>{t("access_log.exclude_help")}</HelperTextItem></HelperText></FormHelperText>
+              </FormGroup>
+            </div>
+          )}
+
           <FormGroup label={t("access_log.level")} fieldId={id("level")}>
             <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
               {LEVELS.map(l => (
@@ -232,6 +308,10 @@ export function accessLogValuesToConfig(v: AccessLogValues): AccessLogConfig | u
     rollKeepCount: isFile && v.rollKeepCount.trim() ? parseInt(v.rollKeepCount, 10) : undefined,
     rollKeepDays: isFile && v.rollKeepDays.trim() ? parseInt(v.rollKeepDays, 10) : undefined,
     rollCompress: isFile && !v.rollCompress ? false : undefined,
+    fieldFilters: fieldFiltersFromText(v.fieldFilters),
+    include: v.include.trim() ? v.include.trim().split(/\s+/) : undefined,
+    exclude: v.exclude.trim() ? v.exclude.trim().split(/\s+/) : undefined,
+    skipPaths: v.skipPaths.trim() ? v.skipPaths.trim().split(/\s+/) : undefined,
   };
 }
 
@@ -246,5 +326,9 @@ export function accessLogConfigToValues(cfg: AccessLogConfig | undefined): Acces
     rollKeepCount: cfg?.rollKeepCount != null ? String(cfg.rollKeepCount) : "",
     rollKeepDays: cfg?.rollKeepDays != null ? String(cfg.rollKeepDays) : "",
     rollCompress: cfg?.rollCompress !== false,
+    fieldFilters: fieldFiltersToText(cfg?.fieldFilters),
+    include: cfg?.include?.join(" ") ?? "",
+    exclude: cfg?.exclude?.join(" ") ?? "",
+    skipPaths: cfg?.skipPaths?.join(" ") ?? "",
   };
 }

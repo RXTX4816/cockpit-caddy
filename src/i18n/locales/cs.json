@@ -177,7 +177,18 @@
     "field_hide": "Skryté soubory",
     "field_hide_help": "Názvy nebo vzory, které se nikdy nevydají, oddělené mezerami.",
     "field_precompressed": "Předkomprimované soubory",
-    "field_precompressed_help": "Vydat file.zst, file.br nebo file.gz vedle originálu, pokud prohlížeč toto kódování přijímá."
+    "field_precompressed_help": "Vydat file.zst, file.br nebo file.gz vedle originálu, pokud prohlížeč toto kódování přijímá.",
+    "field_browse_template": "Šablona výpisu",
+    "field_browse_template_help": "Soubor šablony pro výpis adresáře. Použije se jen při zapnutém výpisu adresářů.",
+    "field_status": "Stavový kód",
+    "field_status_help": "Odpovědět na každý soubor tímto stavovým kódem místo 200, například 404 pro vlastní chybovou stránku.",
+    "field_disable_canonical_uris": "Ponechat koncová lomítka",
+    "field_disable_canonical_uris_help": "Nepřesměrovávat kvůli přidání nebo odebrání koncového lomítka u adresářů a souborů.",
+    "field_templates": "Zpracovat soubory šablonami",
+    "field_templates_help": "Zapne šablonovací systém Caddy pro obsluhované soubory, takže mohou používat include, .Req a další akce šablon.",
+    "field_templates_mime": "Typy MIME",
+    "field_templates_root": "Adresář pro include",
+    "field_templates_root_help": "Kde include a další souborové akce hledají soubory. Prázdné znamená kořen webu."
   },
   "edit_static": {
     "title": "Upravit statický server — :{{port}}",
@@ -206,7 +217,15 @@
     "env_field_value": "Hodnota",
     "env_add_button": "Přidat proměnnou",
     "field_try_files": "Zkoušené soubory (try_files)",
-    "field_try_files_help": "Volitelné. Kandidáti zkoušení v pořadí před PHP; aplikace s front controllerem obvykle potřebuje {path} {path}/ /index.php?{query}."
+    "field_try_files_help": "Volitelné. Kandidáti zkoušení v pořadí před PHP; aplikace s front controllerem obvykle potřebuje {path} {path}/ /index.php?{query}.",
+    "field_dial_timeout": "Časový limit připojení",
+    "field_read_timeout": "Časový limit čtení",
+    "field_write_timeout": "Časový limit zápisu",
+    "no_timeout": "žádný",
+    "field_capture_stderr": "Zapisovat stderr procesu PHP",
+    "field_capture_stderr_help": "Zapisuje do logu Caddy to, co PHP-FPM vypíše na stderr.",
+    "field_resolve_root_symlink": "Rozbalit symbolické odkazy v kořeni",
+    "field_resolve_root_symlink_help": "Před sestavením SCRIPT_FILENAME sleduje symbolické odkazy v kořenovém adresáři, což potřebují sestavy s opcache a symbolickými odkazy na vydání."
   },
   "add_respond": {
     "title": "Přidat statickou odpověď",
@@ -251,7 +270,11 @@
     "validation_port_range": "Port musí být v rozsahu 1–65535",
     "validation_port_duplicate": "Port {{port}} se už používá",
     "validation_to_required": "Cíl přesměrování je povinný",
-    "confirm_body": "Vytvoří se přesměrování :{{port}} → {{to}} ({{code}}) a konfigurace Caddy se znovu načte."
+    "confirm_body": "Vytvoří se přesměrování :{{port}} → {{to}} ({{code}}) a konfigurace Caddy se znovu načte.",
+    "code_html": "Stránka HTML",
+    "code_html_help": "Odpoví stránkou, která přesměruje v prohlížeči, místo stavového kódu. Na rozdíl od přesměrování stavovým kódem zachová #fragment adresy.",
+    "keep_path": "Zachovat cestu a dotaz",
+    "keep_path_help": "Připojí {uri} k cíli, takže /a?b=1 na tomto webu vede na /a?b=1 na cíli."
   },
   "basic_auth": {
     "heading": "HTTP Basic Auth",
@@ -260,14 +283,32 @@
     "field_password": "Heslo",
     "field_password_keep": "Ponechte prázdné pro zachování stávajícího",
     "add_button": "Přidat účet",
-    "remove_button": "Odebrat účet"
+    "remove_button": "Odebrat účet",
+    "realm": "Realm",
+    "algorithm": "Hashovací algoritmus",
+    "algorithm_default": "bcrypt (výchozí)",
+    "algorithm_argon2id": "argon2id (silnější)",
+    "algorithm_mismatch": "Účty, které si ponechávají heslo, mají hash vytvořený druhým algoritmem. Zadejte jejich hesla znovu."
   },
   "transport": {
     "heading": "Časové limity upstreamu",
     "section_title": "Časové limity upstreamu (volitelné)",
     "dial_timeout": "Časový limit připojení",
     "response_header_timeout": "Časový limit hlaviček odpovědi",
-    "defaults_help": "Ponechte pole prázdné a použije se výchozí hodnota Caddy (zobrazená šedě). Časový limit hlaviček odpovědi přeruší long polling a pomalé odpovědi."
+    "defaults_help": "Ponechte pole prázdné a použije se výchozí hodnota Caddy (zobrazená šedě). Časový limit hlaviček odpovědi přeruší long polling a pomalé odpovědi.",
+    "streaming_help": "Streamování (websockety, proudy událostí): nechte prázdné pro výchozí hodnoty Caddy.",
+    "flush_interval": "Interval vyprázdnění",
+    "flush_interval_placeholder": "-1 odešle každý zápis hned",
+    "stream_timeout": "Časový limit streamu",
+    "stream_close_delay": "Zpoždění uzavření streamu",
+    "connection_title": "Spojení s upstreamem",
+    "tls_server_name": "Název serveru TLS",
+    "versions": "Verze HTTP",
+    "read_timeout": "Časový limit čtení",
+    "write_timeout": "Časový limit zápisu",
+    "keepalive": "Keep-alive",
+    "keepalive_idle_conns": "Uchovávaná nečinná spojení",
+    "keepalive_idle_conns_per_host": "Uchovávaná nečinná spojení na hostitele"
   },
   "server_timeouts": {
     "heading": "Časové limity a omezení serveru",
@@ -282,7 +323,17 @@
     "max_header_bytes_help": "Maximální velikost hlaviček požadavku (výchozí v Caddy: 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "Vypnout HTTP/3",
-    "http3_help": "Caddy ve výchozím stavu zapíná HTTP/1.1, HTTP/2 a HTTP/3, jakmile je nastaveno TLS. HTTP/3 běží přes UDP na stejném portu jako HTTPS — pokud firewall blokuje UDP, jeho vypnutím zde zůstane jen HTTP/1.1 a HTTP/2."
+    "http3_help": "Caddy ve výchozím stavu zapíná HTTP/1.1, HTTP/2 a HTTP/3, jakmile je nastaveno TLS. HTTP/3 běží přes UDP na stejném portu jako HTTPS — pokud firewall blokuje UDP, jeho vypnutím zde zůstane jen HTTP/1.1 a HTTP/2.",
+    "keepalive_interval": "Interval TCP keep-alive",
+    "keepalive_idle": "Nečinnost před TCP keep-alive",
+    "options_label": "Možnosti spojení",
+    "strict_sni_host": "Striktní hostitel SNI",
+    "strict_sni_host_help": "Odmítne požadavky, jejichž hlavička Host se liší od jména serveru TLS.",
+    "log_credentials": "Zapisovat přihlašovací údaje",
+    "log_credentials_help": "Zapíše hlavičky Authorization a Cookie do přístupového logu.",
+    "enable_full_duplex": "Plný duplex pro HTTP/1",
+    "enable_full_duplex_help": "Handler může číst tělo požadavku, zatímco zapisuje odpověď.",
+    "read_body_idle": "Časový limit nečinnosti těla požadavku"
   },
   "request_body": {
     "field_label": "Maximální velikost těla požadavku",
@@ -303,7 +354,30 @@
     "field_find_placeholder": "^/api/(.*)",
     "field_replace_placeholder": "/$1",
     "field_replace_help": "Pro zachycené skupiny použijte $1, $2",
-    "type_aria": "Typ přepisu"
+    "type_aria": "Typ přepisu",
+    "type_strip_suffix": "Odebrat příponu",
+    "type_uri_replace": "Nahradit text",
+    "type_query": "Řetězec dotazu",
+    "type_method": "Metoda",
+    "field_suffix": "Přípona",
+    "field_suffix_placeholder": ".html",
+    "field_text_find": "Hledat (prostý text)",
+    "field_limit": "Nejvýše",
+    "field_limit_placeholder": "vše",
+    "field_method": "Metoda",
+    "query_op": "Změna",
+    "query_op_set": "Nastavit",
+    "query_op_add": "Přidat",
+    "query_op_delete": "Smazat",
+    "query_op_rename": "Přejmenovat",
+    "query_op_replace": "Nahradit",
+    "query_key": "Název",
+    "query_value": "Hodnota",
+    "query_new_key": "Nový název",
+    "query_search": "Hledat (regex)",
+    "query_remove": "Odebrat změnu",
+    "query_add": "Přidat změnu",
+    "invalid": "Vyplňte všechna pole přepisu."
   },
   "probe": {
     "status_pending": "Kontroluje se…",
@@ -386,7 +460,9 @@
     "validation_max_fails": "Max. selhání musí být 1 nebo více",
     "validation_needs_health_uri": "Interval, časový limit a očekávaný stav vyžadují cestu kontroly stavu",
     "validation_health_uri": "Cesta kontroly stavu musí začínat znakem /",
-    "validation_health_status": "Zadejte kód jako 200 nebo třídu jako 2xx"
+    "validation_health_status": "Zadejte kód jako 200 nebo třídu jako 2xx",
+    "retry_methods": "Opakovat jen tyto metody",
+    "validation_methods": "Metody jsou slova jako GET nebo HEAD oddělená mezerami."
   },
   "response_headers": {
     "heading": "Hlavičky odpovědi",
@@ -413,7 +489,12 @@
     "field_name": "Název hlavičky",
     "field_value": "Hodnota",
     "add_button": "Přidat",
-    "presets_label": "Předvolby"
+    "presets_label": "Předvolby",
+    "down_heading": "Hlavičky odpovědi z upstreamu",
+    "down_section_title": "Hlavičky odpovědi z upstreamu (volitelné)",
+    "op_replace": "Nahradit",
+    "field_search": "Hledaná hodnota hlavičky (regulární výraz)",
+    "field_replacement": "Náhrada"
   },
   "edit_redirect": {
     "title": "Upravit přesměrování — :{{port}}",
@@ -568,7 +649,16 @@
     "roll_keep_count": "Počet ponechaných rotovaných souborů",
     "roll_keep_days": "Max. stáří rotovaných souborů (dny)",
     "roll_compress": "Komprimovat rotované soubory (gzip)",
-    "roll_help": "Caddy soubor protokolu ve výchozím stavu rotuje. Ponechte pole prázdné pro výchozí hodnotu Caddy, zobrazenou šedě."
+    "roll_help": "Caddy soubor protokolu ve výchozím stavu rotuje. Ponechte pole prázdné pro výchozí hodnotu Caddy, zobrazenou šedě.",
+    "field_filters": "Filtry polí",
+    "field_filters_help": "Jeden na řádek: cesta pole, pak delete, hash, replace <text> nebo ip_mask <bity IPv4> [<bity IPv6>], například request>headers>Authorization delete.",
+    "field_filters_invalid": "Každý řádek potřebuje cestu pole a jedno z delete, hash, replace <text> nebo ip_mask <bity>.",
+    "include": "Zahrnout loggery",
+    "include_help": "Názvy loggerů, které tento log zapisuje, oddělené mezerami, například http.log.access. Prázdné znamená všechny.",
+    "exclude": "Vynechat loggery",
+    "exclude_help": "Názvy loggerů, které tento log přeskakuje, oddělené mezerami, například http.log.access.log0.",
+    "skip_paths": "Cesty vynechané z logu",
+    "skip_paths_help": "Cesty oddělené mezerami, zástupné znaky jsou povoleny, například /health* /ping. Požadavky na ně se nezapisují."
   },
   "config_check": {
     "button": "Zkontrolovat konfiguraci",
@@ -691,7 +781,39 @@
     "proxy_protocol_allow_help": "Rozsahy CIDR oddělené mezerami, které smí posílat hlavičky protokolu PROXY — omezte je na IP adresy vašeho vyvažovače, abyste zabránili podvržení IP klienta. Ponechte prázdné pro přijetí z libovolného zdroje.",
     "proxy_protocol_timeout": "Časový limit čtení hlavičky (volitelné)",
     "proxy_protocol_timeout_help": "Maximální doba čekání na hlavičku protokolu PROXY, než se to vzdá (doba ve formátu Go, např. 2s). Ponechte prázdné pro výchozí hodnotu Caddy.",
-    "on_demand_rate_deprecated": "Caddy už nedoporučuje interval a burst. Vymažte obě pole a spolehněte se na endpoint ask."
+    "on_demand_rate_deprecated": "Caddy už nedoporučuje interval a burst. Vymažte obě pole a spolehněte se na endpoint ask.",
+    "tls_advanced_title": "Pokročilé TLS",
+    "auto_https": "Automatické HTTPS",
+    "auto_https_off": "Vypnuto",
+    "auto_https_disable_redirects": "Bez přesměrování z HTTP na HTTPS",
+    "auto_https_ignore_loaded_certs": "Ignorovat načtené certifikáty",
+    "issuer": "Vydavatel certifikátů",
+    "issuer_local_certs": "Vlastní CA Caddy pro všechny weby",
+    "issuer_internal": "Interní CA",
+    "issuer_acme": "ACME",
+    "key_type": "Typ klíče",
+    "preferred_chains": "Preferovaný řetězec certifikátů",
+    "preferred_chains_smallest": "Nejmenší řetězec",
+    "preferred_chains_root": "Podle běžného názvu kořene",
+    "preferred_chains_any": "Podle libovolného běžného názvu",
+    "preferred_chains_names": "Běžné názvy",
+    "preferred_chains_names_help": "Oddělené čárkami.",
+    "default_sni": "Výchozí SNI",
+    "default_sni_help": "Název serveru, který Caddy předpokládá, když ho klient neodešle.",
+    "default_bind": "Výchozí adresy pro bind",
+    "default_bind_help": "Adresy oddělené mezerami, na kterých poslouchají weby bez volby bind.",
+    "ocsp_stapling_off": "Vypnout OCSP stapling",
+    "admin_title": "Administrační rozhraní",
+    "admin_off": "Vypnout administrační rozhraní",
+    "admin_off_help": "Plugin potřebuje administrační API ke čtení a změně běžící konfigurace.",
+    "admin_address": "Adresa administrace",
+    "admin_address_help": "Kde naslouchá administrační API Caddy, zapsáno jako v Caddyfile. Plugin se připojuje na adresu ve svém vlastním nastavení, proto měňte obě společně.",
+    "admin_origins": "Povolené originy",
+    "admin_origins_help": "Hostitelé oddělení mezerami, kteří smí volat administrační API z prohlížeče.",
+    "admin_enforce_origin": "Vynutit originy",
+    "metrics_per_host": "Označit metriky hostitelem",
+    "metrics_per_host_help": "Přidá požadovaného hostitele ke každé metrice požadavku, aby šly weby rozlišit. Každý jiný hostitel tvoří vlastní řadu.",
+    "auto_https_disable_certs": "Bez správy certifikátů"
   },
   "ca": {
     "title": "Interní certifikační autorita",
@@ -794,7 +916,12 @@
     "field_copy_headers": "Kopírovat hlavičky",
     "field_copy_headers_help": "Hlavičky odpovědi oddělené mezerami nebo čárkami, které se zkopírují z ověřovací služby do požadavku na upstream (např. Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "Pokud je nastavena URL ověřovací služby, je URI ověření povinné"
+    "validation_uri_required": "Pokud je nastavena URL ověřovací služby, je URI ověření povinné",
+    "field_copy_headers_rename_help": "Napište Name>Other pro zkopírování hlavičky pod jiným názvem.",
+    "field_header_up": "Hlavičky požadavku na autentizační službu",
+    "field_header_up_help": "Jedna na řádek: Name value hlavičku nastaví, +Name value přidá, -Name odebere.",
+    "field_trusted_proxies": "Důvěryhodné proxy",
+    "field_trusted_proxies_help": "Rozsahy, jejichž hlavičky X-Forwarded-* zůstanou v požadavku na autentizační službu, oddělené mezerami. private_ranges znamená soukromé sítě."
   },
   "tls_policy": {
     "heading": "Zásada TLS",
@@ -842,7 +969,15 @@
     "custom_file_unreadable": "Soubor nenalezen nebo ho uživatel Caddy nemůže číst",
     "custom_file_readable": "Soubor je čitelný",
     "custom_file_valid_expiry": "Platný — vyprší {{date}}",
-    "custom_cert_lifetime_note": "Výše je načten vlastní certifikát — doba platnosti a okno obnovení se neuplatní, protože Caddy sám nic nevydává."
+    "custom_cert_lifetime_note": "Výše je načten vlastní certifikát — doba platnosti a okno obnovení se neuplatní, protože Caddy sám nic nevydává.",
+    "acme_email": "E-mail pro ACME",
+    "acme_email_help": "E-mail účtu pro certifikáty tohoto webu. Platí jen pro automatické HTTPS; prázdné použije globální.",
+    "acme_global_placeholder": "Globální e-mail",
+    "acme_ca": "URL adresáře ACME CA",
+    "acme_ca_help": "Odkud tento web získává certifikáty, například testovací URL Let's Encrypt při zkoušení. Prázdné použije globální CA.",
+    "key_type": "Typ klíče",
+    "acme_invalid_email": "Zadejte e-mailovou adresu, například admin@example.com.",
+    "acme_invalid_ca": "Zadejte URL začínající http:// nebo https://."
   },
   "error_handler": {
     "heading": "Vlastní obsluha chyb",
@@ -908,7 +1043,22 @@
     "ip_kind_remote": "IP spojení",
     "ip_kind_client_help": "IP návštěvníka, převzatá z přeposílací hlavičky, když požadavek přijde přes některou z důvěryhodných proxy (Nastavení). Bez důvěryhodných proxy je stejná jako IP spojení.",
     "ip_kind_remote_help": "IP spojení TCP. Za proxy nebo CDN je to adresa proxy, ne návštěvníka.",
-    "ip_range": "IP adresa nebo rozsah"
+    "ip_range": "IP adresa nebo rozsah",
+    "type_path_regexp": "Regex cesty",
+    "type_header_regexp": "Regex hlavičky",
+    "field_regexp_name": "Název (volitelný)",
+    "field_header_name_regexp": "Název hlavičky pro regex",
+    "field_regexp_name_header": "Název regexu hlavičky (volitelný)",
+    "regexp_help": "Název zpřístupní skupiny jako {re.name.1}, například v přepisu. Caddy povoluje jeden regex na matcher.",
+    "type_protocol": "Protokol",
+    "protocol_any": "jakýkoli",
+    "type_file": "Soubory",
+    "field_try_files": "Hledané soubory",
+    "field_try_policy": "Jak vybrat",
+    "try_policy_default": "první existující",
+    "file_help": "Odpovídá, když existuje některý ze souborů. Fungují zástupné symboly jako {path}.",
+    "type_vars": "Proměnné",
+    "vars_help": "Jedna na řádek: zástupný symbol a hodnoty, které může mít, například {host} example.com www.example.com."
   },
   "handle_path": {
     "label": "Odebrat odpovídající prefix cesty (handle_path)"
@@ -1072,5 +1222,44 @@
     "filter": "Filtrovat moduly",
     "no_match": "Žádný modul neodpovídá.",
     "non_standard": "Moduly, které nejsou součástí samotného Caddy: {{count}}"
+  },
+  "encode": {
+    "heading": "Komprese",
+    "section_title": "Nastavení komprese (volitelné)",
+    "help": "Platí, když je v Obecném zapnutá komprese. Bez voleb Caddy komprimuje gzip a zstd.",
+    "algorithms": "Algoritmy a pořadí",
+    "algorithms_default": "gzip, zstd (výchozí)",
+    "algorithms_zstd_gzip": "zstd, poté gzip",
+    "algorithms_gzip": "pouze gzip",
+    "algorithms_zstd": "pouze zstd",
+    "minimum_length": "Minimální velikost",
+    "minimum_length_help": "Odpovědi menší než tento počet bajtů se odešlou beze změny. Výchozí hodnota Caddy je 512.",
+    "invalid_number": "Zadejte celé číslo bajtů.",
+    "match_status": "Jen tyto stavové kódy",
+    "match_status_help": "Kódy nebo třídy oddělené mezerami, např. 2xx 404. Prázdné znamená všechny stavy.",
+    "invalid_status": "Zadejte stavové kódy jako 200 nebo třídy jako 2xx.",
+    "match_headers": "Jen tyto hlavičky odpovědi",
+    "match_headers_help": "Jedna na řádek: název hlavičky a její hodnota. Fungují zástupné znaky jako text/*.",
+    "invalid_header": "Každý řádek potřebuje název hlavičky a hodnotu."
+  },
+  "dynamic_upstreams": {
+    "heading": "Dynamické upstreamy",
+    "section_title": "Dynamické upstreamy (pokročilé, volitelné)",
+    "help": "Upstreamy se zjišťují přes DNS. Cíl výše je záloha, když dotaz nic nenajde. Více zdrojů se spojí.",
+    "add_button": "Přidat zdroj DNS",
+    "type": "Typ dotazu",
+    "name_srv": "Název SRV",
+    "name_a": "Název hostitele",
+    "refresh": "Interval obnovení",
+    "resolvers": "DNS resolvery",
+    "dial_fallback_delay": "Zpoždění záložního připojení",
+    "grace_period": "Odkladová lhůta",
+    "versions": "Rodiny adres",
+    "versions_both": "IPv4 a IPv6",
+    "validation_name": "Zdroj s nastavením potřebuje název.",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

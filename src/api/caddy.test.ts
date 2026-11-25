@@ -52,7 +52,11 @@ import {
   CONF_D_IMPORT_LINE,
   parseConfTlsIssuerMap,
 } from "./caddy";
-import type { CaddyConfig, CaddyServer, ProxyEntry, RouteMatch, ServerDef } from "./types";
+import { parseSiteAcmeSettings, applyServerExtras, parseServerExtras, parseMatcherJson, isHostOnlyMatcher, buildRewriteHandler, parseRewriteFromHandle, patchServer, buildFilterEncoder, parseLogEncoder, PRIVATE_RANGES, buildForwardAuthHandler, extractForwardAuthFromProxy, forwardAuthResponseRoutes, buildBasicAuthHandler, buildEncodeHandler, buildFileServerHandlers, buildFileServerJson, parseFileServerOptions, parseTemplatesJson, buildRedirectHandler, parseEncodeOptionsJson, parseBasicAuthOptionsJson, parseHtmlRedirect } from "./caddyJsonModel";
+import { proxiesToCaddyfile } from "./caddy";
+import { buildForwardAuthCaddyLines, buildMatcherCaddyLines, buildPhpFastcgiLines, buildRewriteCaddyLines, buildMatcherJson, hasAnyMatcher } from "./siteBlocks";
+import { buildLogCaddyLines } from "./globalOptions";
+import type { CaddyConfig, CaddyReverseProxyHandler, CaddyServer, ProxyEntry, RouteMatch, ServerDef } from "./types";
 
 // ---------------------------------------------------------------------------
 // Test fixtures
@@ -1635,6 +1639,197 @@ describe("proxyToBlock — requestHeaders", () => {
 // ---------------------------------------------------------------------------
 // Request headers — JSON API (buildServerEntry + parseProxies round-trip)
 // ---------------------------------------------------------------------------
+
+describe("proxyToBlock — upstreamResponseHeaders (header_down, #324)", () => {
+  it("emits header_down set, add and delete inside the reverse_proxy block", () => {
+    const result = proxyToBlock(proxy({ upstreamResponseHeaders: [
+      { op: "set", name: "X-A", value: "1" },
+      { op: "add", name: "X-B", value: "2" },
+      { op: "delete", name: "Server" },
+    ] }));
+    expect(result).toContain("\t\theader_down X-A 1");
+    expect(result).toContain("\t\theader_down +X-B 2");
+    expect(result).toContain("\t\theader_down -Server");
+  });
+
+  it("emits the replace form with the search first and the replacement second", () => {
+    const result = proxyToBlock(proxy({ upstreamResponseHeaders: [{ op: "replace", name: "Location", value: "http://backend", replacement: "https://front" }] }));
+    expect(result).toContain("\t\theader_down Location http://backend https://front");
+  });
+});
+
+describe("buildServerEntry — upstreamResponseHeaders (#324)", () => {
+  it("emits headers.response with set, add, delete and replace", () => {
+    const server = buildServerEntry(proxy({ upstreamResponseHeaders: [
+      { op: "set", name: "X-A", value: "1" },
+      { op: "add", name: "X-B", value: "2" },
+      { op: "delete", name: "Server" },
+      { op: "replace", name: "Location", value: "http://backend", replacement: "https://front" },
+    ] }));
+    const rp = server.routes[0].handle[0] as { headers?: { response?: Record<string, unknown> } };
+    expect(rp.headers?.response).toEqual({
+      set: { "X-A": ["1"] },
+      add: { "X-B": ["2"] },
+      delete: ["Server"],
+      replace: { Location: [{ search_regexp: "http://backend", replace: "https://front" }] },
+    });
+  });
+
+  it("round-trips through parseProxies", () => {
+    const ops = [
+      { op: "set" as const, name: "X-A", value: "1" },
+      { op: "delete" as const, name: "Server" },
+      { op: "replace" as const, name: "Location", value: "http://backend", replacement: "https://front" },
+    ];
+    const [p] = parseProxies({ apps: { http: { servers: { srv0: buildServerEntry(proxy({ upstreamResponseHeaders: ops })) } } } });
+    expect(p.upstreamResponseHeaders).toEqual(expect.arrayContaining(ops));
+    expect(p.upstreamResponseHeaders).toHaveLength(3);
+  });
+});
+
+describe("streaming options (#325)", () => {
+  const streaming = { flushInterval: "-1", streamTimeout: "24h", streamCloseDelay: "5m" };
+
+  it("proxyToBlock emits flush_interval, stream_timeout and stream_close_delay in the reverse_proxy block", () => {
+    const result = proxyToBlock(proxy(streaming));
+    expect(result).toContain("\t\tflush_interval -1");
+    expect(result).toContain("\t\tstream_timeout 24h");
+    expect(result).toContain("\t\tstream_close_delay 5m");
+  });
+
+  it("emits nothing when none is set", () => {
+    expect(proxyToBlock(proxy())).not.toMatch(/flush_interval|stream_timeout|stream_close_delay/);
+  });
+
+  it("buildServerEntry puts them on the reverse_proxy handler, -1 as a number", () => {
+    const rp = buildServerEntry(proxy(streaming)).routes[0].handle[0] as Record<string, unknown>;
+    expect(rp.flush_interval).toBe(-1);
+    expect(rp.stream_timeout).toBe("24h");
+    expect(rp.stream_close_delay).toBe("5m");
+    const rp2 = buildServerEntry(proxy({ flushInterval: "100ms" })).routes[0].handle[0] as Record<string, unknown>;
+    expect(rp2.flush_interval).toBe("100ms");
+  });
+
+  it("parseProxies reads them back from Caddy's nanosecond numbers", () => {
+    const server = buildServerEntry(proxy());
+    Object.assign(server.routes[0].handle[0], { flush_interval: -1, stream_timeout: 86_400_000_000_000, stream_close_delay: 300_000_000_000 });
+    const [p] = parseProxies({ apps: { http: { servers: { srv0: server } } } });
+    expect(p.flushInterval).toBe("-1");
+    expect(p.streamTimeout).toBe("24h");
+    expect(p.streamCloseDelay).toBe("5m");
+  });
+});
+
+describe("remaining transport options (#327)", () => {
+  const t = {
+    targetScheme: "https" as const, tlsServerName: "backend.internal", keepalive: "2m", keepaliveIdleConns: 20, keepaliveIdleConnsPerHost: 4,
+    httpVersions: ["h2c", "2"], readTimeout: "30s", writeTimeout: "10s",
+  };
+
+  it("proxyToBlock writes them into the transport block", () => {
+    const result = proxyToBlock(proxy(t));
+    for (const line of [
+      "tls_server_name backend.internal", "keepalive 2m", "keepalive_idle_conns 20", "keepalive_idle_conns_per_host 4",
+      "versions h2c 2", "read_timeout 30s", "write_timeout 10s",
+    ]) expect(result).toContain(`\t\t\t${line}`);
+  });
+
+  it("keepalive off turns keep-alive off", () => {
+    expect(proxyToBlock(proxy({ keepalive: "off" }))).toContain("\t\t\tkeepalive off");
+  });
+
+  it("lb_retry_match writes the methods to retry", () => {
+    const result = proxyToBlock(proxy({ extraUpstreams: [{ host: "b", port: 1 }], lbRetry: { retries: 2, retryMethods: ["GET", "HEAD"] } }));
+    expect(result).toContain("\t\tlb_retry_match {\n\t\t\tmethod GET HEAD\n\t\t}");
+  });
+
+  it("buildServerEntry puts them into the transport and load_balancing", () => {
+    const rp = buildServerEntry(proxy({ ...t, extraUpstreams: [{ host: "b", port: 1 }], lbRetry: { retryMethods: ["GET"] } })).routes[0].handle[0] as unknown as {
+      transport: Record<string, unknown>; load_balancing: Record<string, unknown>;
+    };
+    expect(rp.transport).toMatchObject({
+      tls: { server_name: "backend.internal" },
+      keep_alive: { idle_timeout: "2m", max_idle_conns: 20, max_idle_conns_per_host: 4 },
+      versions: ["h2c", "2"], read_timeout: "30s", write_timeout: "10s",
+    });
+    expect(rp.load_balancing.retry_match).toEqual([{ method: ["GET"] }]);
+  });
+
+  it("keepalive off is keep_alive.enabled false", () => {
+    const rp = buildServerEntry(proxy({ keepalive: "off" })).routes[0].handle[0] as { transport: Record<string, unknown> };
+    expect(rp.transport.keep_alive).toEqual({ enabled: false });
+  });
+
+  it("parseProxies reads them back from Caddy's nanosecond numbers", () => {
+    const server = buildServerEntry(proxy({ targetScheme: "https", extraUpstreams: [{ host: "b", port: 1 }] }));
+    const rp = server.routes[0].handle[0] as Record<string, unknown>;
+    rp.transport = {
+      protocol: "http", tls: { server_name: "backend.internal" },
+      keep_alive: { idle_timeout: 120_000_000_000, max_idle_conns: 20, max_idle_conns_per_host: 4 },
+      versions: ["h2c", "2"], read_timeout: 30_000_000_000, write_timeout: 10_000_000_000,
+    };
+    rp.load_balancing = { retry_match: [{ method: ["GET", "HEAD"] }] };
+    const [p] = parseProxies({ apps: { http: { servers: { srv0: server } } } });
+    expect(p).toMatchObject({
+      tlsServerName: "backend.internal", keepalive: "2m", keepaliveIdleConns: 20, keepaliveIdleConnsPerHost: 4,
+      httpVersions: ["h2c", "2"], readTimeout: "30s", writeTimeout: "10s",
+    });
+    expect(p.lbRetry?.retryMethods).toEqual(["GET", "HEAD"]);
+  });
+
+  it("parseProxies reads keep_alive.enabled false as off", () => {
+    const server = buildServerEntry(proxy());
+    (server.routes[0].handle[0] as Record<string, unknown>).transport = { protocol: "http", keep_alive: { enabled: false } };
+    expect(parseProxies({ apps: { http: { servers: { srv0: server } } } })[0].keepalive).toBe("off");
+  });
+});
+
+describe("dynamic upstreams (#326)", () => {
+  const srv = { type: "srv" as const, name: "_http._tcp.example.com", refresh: "1m", resolvers: ["1.1.1.1"], dialTimeout: "2s", dialFallbackDelay: "1s", gracePeriod: "5s" };
+  const a = { type: "a" as const, name: "backend.example.com", port: "8080", refresh: "30s", versions: "ipv4" as const };
+
+  it("a single srv source is written as dynamic srv with its options", () => {
+    const result = proxyToBlock(proxy({ dynamicUpstreams: [srv] }));
+    expect(result).toContain("\t\tdynamic srv _http._tcp.example.com {");
+    for (const line of ["refresh 1m", "resolvers 1.1.1.1", "dial_timeout 2s", "dial_fallback_delay 1s", "grace_period 5s"])
+      expect(result).toContain(`\t\t\t${line}`);
+  });
+
+  it("an a source takes the port and a version", () => {
+    const result = proxyToBlock(proxy({ dynamicUpstreams: [a] }));
+    expect(result).toContain("\t\tdynamic a backend.example.com 8080 {");
+    expect(result).toContain("\t\t\tversions ipv4");
+  });
+
+  it("a source without options has no braces", () => {
+    expect(proxyToBlock(proxy({ dynamicUpstreams: [{ type: "srv", name: "_x._tcp.example.com" }] }))).toContain("\t\tdynamic srv _x._tcp.example.com\n");
+  });
+
+  it("several sources are written as dynamic multi", () => {
+    const result = proxyToBlock(proxy({ dynamicUpstreams: [srv, a] }));
+    expect(result).toContain("\t\tdynamic multi {");
+    expect(result).toContain("\t\t\tsrv _http._tcp.example.com {");
+    expect(result).toContain("\t\t\ta backend.example.com 8080 {");
+  });
+
+  it("buildServerEntry writes dynamic_upstreams for one source and multi for several", () => {
+    const one = buildServerEntry(proxy({ dynamicUpstreams: [srv] })).routes[0].handle[0] as Record<string, unknown>;
+    expect(one.dynamic_upstreams).toEqual({
+      source: "srv", name: "_http._tcp.example.com", refresh: "1m", resolver: { addresses: ["1.1.1.1"] },
+      dial_timeout: "2s", dial_fallback_delay: "1s", grace_period: "5s",
+    });
+    const many = buildServerEntry(proxy({ dynamicUpstreams: [srv, a] })).routes[0].handle[0] as Record<string, unknown>;
+    expect((many.dynamic_upstreams as { source: string; sources: unknown[] }).source).toBe("multi");
+    expect((many.dynamic_upstreams as { sources: unknown[] }).sources).toHaveLength(2);
+  });
+
+  it("parseProxies reads one source and multi back", () => {
+    for (const sources of [[srv], [srv, a]]) {
+      const [p] = parseProxies({ apps: { http: { servers: { srv0: buildServerEntry(proxy({ dynamicUpstreams: sources })) } } } });
+      expect(p.dynamicUpstreams).toEqual(sources);
+    }
+  });
+});
 
 describe("buildServerEntry — requestHeaders", () => {
   it("emits headers.request.set in reverse_proxy handler", () => {
@@ -3321,10 +3516,10 @@ describe("buildGlobalOptionsPatch — #96 no duplicate directives on first save"
     expect(patched).not.toContain("old@example.com");
   });
 
-  it("leaves other unmanaged directives (e.g. admin off) untouched", () => {
-    const content = "{\n\tadmin off\n\temail old@example.com\n}\n";
+  it("leaves other unmanaged directives (e.g. storage_clean_interval) untouched", () => {
+    const content = "{\n\tstorage_clean_interval 12h\n\temail old@example.com\n}\n";
     const patched = buildGlobalOptionsPatch(content, { email: "new@example.com" });
-    expect(patched).toContain("admin off");
+    expect(patched).toContain("storage_clean_interval 12h");
     expect(patched).toContain("email new@example.com");
   });
 
@@ -4642,3 +4837,562 @@ describe("proxy error handlers and upstream error pages (#255)", () => {
     expect(parseProxies({ apps: { http: { servers: { srv0: old } } } })[0].replaceUpstreamErrors).toBe(true);
   });
 });
+
+describe("basic_auth options in the generated config (#337)", () => {
+  const accounts = [{ username: "alice", passwordHash: "hash1" }];
+  const base: ProxyEntry = {
+    id: "1", serverKey: "srv0", externalPort: 8080, targetHost: "localhost", targetPort: 9000,
+    targetScheme: "http", tls: false, tlsSkipVerify: false, basicAuth: accounts,
+  };
+
+  it("puts the algorithm and realm into the authentication handler", () => {
+    const h = buildBasicAuthHandler(accounts, { algorithm: "argon2id", realm: "Private" }) as unknown as { providers: { http_basic: Record<string, unknown> } };
+    expect(h.providers.http_basic).toMatchObject({ hash: { algorithm: "argon2id" }, realm: "Private" });
+    expect(parseBasicAuthOptionsJson(h as never)).toEqual({ algorithm: "argon2id", realm: "Private" });
+  });
+
+  it("leaves both out of the handler by default", () => {
+    const h = buildBasicAuthHandler(accounts) as unknown as { providers: { http_basic: Record<string, unknown> } };
+    expect(Object.keys(h.providers.http_basic)).toEqual(["accounts"]);
+  });
+
+  it("writes the algorithm and realm after basic_auth in the Caddyfile", () => {
+    expect(proxiesToCaddyfile([{ ...base, basicAuthOptions: { algorithm: "argon2id" } }])).toContain("basic_auth argon2id {");
+    expect(proxiesToCaddyfile([{ ...base, basicAuthOptions: { algorithm: "argon2id", realm: "My area" } }])).toContain('basic_auth argon2id "My area" {');
+    expect(proxiesToCaddyfile([{ ...base, basicAuthOptions: { realm: "My area" } }])).toContain('basic_auth bcrypt "My area" {');
+    expect(proxiesToCaddyfile([base])).toMatch(/basic_auth \{/);
+  });
+});
+
+describe("redirect html mode (#338)", () => {
+  const htmlRedirect = proxy({ tls: false, redirect: { to: "https://example.com{uri}", code: 302, html: true } });
+
+  it("writes html instead of a status code", () => {
+    expect(proxyToBlock(htmlRedirect)).toContain("redir https://example.com{uri} html");
+    expect(proxyToBlock(proxy({ tls: false, redirect: { to: "https://example.com", code: 308 } }))).toContain("redir https://example.com 308");
+  });
+
+  it("builds the page Caddy builds and reads the target back", () => {
+    const h = buildRedirectHandler(htmlRedirect.redirect!) as unknown as { body: string; status_code: number; headers: Record<string, string[]> };
+    expect(h.status_code).toBe(200);
+    expect(h.headers["Content-Type"]).toEqual(["text/html; charset=utf-8"]);
+    expect(h.body).toContain('window.location.replace("https://example.com{http.request.uri}")');
+    expect(parseHtmlRedirect(h as never)).toBe("https://example.com{http.request.uri}");
+  });
+
+  it("does not take another static response for a redirect page", () => {
+    expect(parseHtmlRedirect({ handler: "static_response", body: "hello", status_code: 200 } as never)).toBeUndefined();
+    expect(parseHtmlRedirect({ handler: "static_response", headers: { Location: ["/x"] }, status_code: 302 } as never)).toBeUndefined();
+  });
+
+  it("round-trips through the JSON the plugin pushes", () => {
+    const server = buildServerEntry(htmlRedirect);
+    const config = { apps: { http: { servers: { srv0: server } } } } as unknown as CaddyConfig;
+    const [back] = parseProxies(config);
+    expect(back.redirect).toEqual({ to: "https://example.com{uri}", code: 302, html: true });
+  });
+});
+
+describe("encode options (#335)", () => {
+  const site = (encodeOptions?: import("./types").EncodeOptions) => proxy({ tls: false, compress: true, encodeOptions });
+
+  it("keeps writing plain gzip and zstd without options", () => {
+    expect(proxyToBlock(site())).toContain("\tencode gzip zstd\n");
+    expect(buildEncodeHandler()).toEqual({ handler: "encode", encodings: { gzip: {}, zstd: {} } });
+  });
+
+  it("writes the algorithms in order, the minimum length and the match", () => {
+    const block = proxyToBlock(site({
+      algorithms: ["zstd", "gzip"], minimumLength: 1024, matchStatus: ["2xx", "404"], matchHeaders: [{ name: "Content-Type", value: "text/*" }],
+    }));
+    expect(block).toContain("encode zstd gzip {");
+    expect(block).toContain("minimum_length 1024");
+    expect(block).toContain("status 2xx 404");
+    expect(block).toContain("header Content-Type text/*");
+  });
+
+  it("builds the JSON Caddy builds from the same Caddyfile and reads it back", () => {
+    const options = { algorithms: ["gzip" as const], minimumLength: 256, matchStatus: ["2xx", "404"], matchHeaders: [{ name: "Content-Type", value: "text/*" }] };
+    const h = buildEncodeHandler(options) as unknown as Record<string, unknown>;
+    expect(h).toEqual({
+      handler: "encode", encodings: { gzip: {} }, prefer: ["gzip"], minimum_length: 256,
+      match: { status_code: [2, 404], headers: { "Content-Type": ["text/*"] } },
+    });
+    expect(parseEncodeOptionsJson(h as never)).toEqual(options);
+  });
+
+  it("reads gzip then zstd, in either spelling, as no options", () => {
+    expect(parseEncodeOptionsJson({ handler: "encode", encodings: { gzip: {}, zstd: {} } } as never)).toBeUndefined();
+    expect(parseEncodeOptionsJson({ handler: "encode", encodings: { gzip: {}, zstd: {} }, prefer: ["gzip", "zstd"] } as never)).toBeUndefined();
+    expect(parseEncodeOptionsJson({ handler: "encode", encodings: { gzip: {}, zstd: {} }, prefer: ["zstd", "gzip"] } as never)).toEqual({ algorithms: ["zstd", "gzip"] });
+  });
+});
+
+describe("file_server and php_fastcgi options (#340)", () => {
+  const site = (fileServer: import("./types").FileServerConfig) => proxyToBlock(proxy({ tls: false, targetPort: 0, fileServer }));
+
+  it("writes disable_canonical_uris, status and a listing template inside the block", () => {
+    const block = site({ root: "/srv", browse: true, browseTemplate: "/etc/caddy/listing.html", disableCanonicalUris: true, status: 404 });
+    expect(block).toContain("file_server {");
+    expect(block).toContain("browse /etc/caddy/listing.html");
+    expect(block).toContain("disable_canonical_uris");
+    expect(block).toContain("status 404");
+    expect(block).not.toContain("file_server browse");
+  });
+
+  it("ignores a listing template while the listing is off, and keeps a plain file_server", () => {
+    expect(site({ root: "/srv", browseTemplate: "/x.html" })).toMatch(/file_server\n/);
+    expect(site({ root: "/srv", browse: true })).toContain("file_server browse");
+  });
+
+  it("builds and reads the JSON of the file_server options", () => {
+    const fs = { root: "/srv", browse: true, browseTemplate: "/etc/caddy/listing.html", disableCanonicalUris: true, status: 404 };
+    const h = buildFileServerJson(fs) as unknown as Record<string, unknown>;
+    expect(h).toMatchObject({ browse: { template_file: "/etc/caddy/listing.html" }, canonical_uris: false, status_code: 404 });
+    expect(parseFileServerOptions(h, [])).toEqual({ browseTemplate: "/etc/caddy/listing.html", disableCanonicalUris: true, status: 404 });
+  });
+
+  it("writes the php_fastcgi options", () => {
+    const lines = buildPhpFastcgiLines({
+      upstream: "localhost:9000", root: "/srv", captureStderr: true, resolveRootSymlink: true, dialTimeout: "3s", readTimeout: "10s", writeTimeout: "20s",
+    }, "\t").join("\n");
+    for (const line of ["capture_stderr", "resolve_root_symlink", "dial_timeout 3s", "read_timeout 10s", "write_timeout 20s"]) expect(lines).toContain(line);
+  });
+});
+
+describe("templates directive (#339)", () => {
+  const site = (fileServer: import("./types").FileServerConfig) => proxyToBlock(proxy({ tls: false, targetPort: 0, fileServer }));
+
+  it("writes templates before file_server, plain or with mime and root", () => {
+    expect(site({ root: "/srv", templates: {} })).toMatch(/\ttemplates\n\tfile_server\n/);
+    const block = site({ root: "/srv", templates: { mime: ["text/html", "text/css"], root: "/srv/inc" } });
+    expect(block).toContain("templates {");
+    expect(block).toContain("mime text/html text/css");
+    expect(block).toContain("root /srv/inc");
+    expect(block.indexOf("templates")).toBeLessThan(block.indexOf("file_server"));
+    expect(site({ root: "/srv" })).not.toContain("templates");
+  });
+
+  it("builds the templates handler in front of file_server and reads it back", () => {
+    const handlers = buildFileServerHandlers({ root: "/srv", templates: { mime: ["text/html"], root: "/srv/inc" } }) as unknown as Array<Record<string, unknown>>;
+    expect(handlers.map(h => h.handler)).toEqual(["templates", "file_server"]);
+    expect(handlers[0]).toEqual({ handler: "templates", file_root: "/srv/inc", mime_types: ["text/html"] });
+    expect(parseTemplatesJson(handlers as never)).toEqual({ mime: ["text/html"], root: "/srv/inc" });
+    expect(parseTemplatesJson([{ handler: "file_server" }] as never)).toBeUndefined();
+    expect(buildFileServerHandlers({ root: "/srv" })).toHaveLength(1);
+  });
+});
+
+describe("forward_auth header_up, trusted_proxies and renamed copy_headers (#336)", () => {
+  const fa: import("./types").ForwardAuthConfig = {
+    upstreamUrl: "http://localhost:9091", uri: "/auth", copyHeaders: ["Remote-User", "Remote-Groups>X-Groups"],
+    headerUp: [{ op: "set", name: "X-Extra", value: "1" }, { op: "delete", name: "X-Cookie" }],
+    trustedProxies: ["private_ranges", "203.0.113.0/24"],
+  };
+
+  it("writes them into the forward_auth block", () => {
+    const lines = buildForwardAuthCaddyLines(fa).join("\n");
+    expect(lines).toContain("copy_headers Remote-User Remote-Groups>X-Groups");
+    expect(lines).toContain("header_up X-Extra 1");
+    expect(lines).toContain("header_up -X-Cookie");
+    expect(lines).toContain("trusted_proxies private_ranges 203.0.113.0/24");
+    expect(buildForwardAuthCaddyLines({ upstreamUrl: "http://a", uri: "/", copyHeaders: [] }).join("\n")).not.toMatch(/header_up|trusted_proxies/);
+  });
+
+  it("copies a renamed header from the auth response under its new name", () => {
+    const h = buildForwardAuthHandler(fa) as unknown as { routes: Array<{ handle: Array<Record<string, unknown>> }> };
+    const rp = h.routes[0].handle[0] as unknown as CaddyReverseProxyHandler & Record<string, unknown>;
+    const handles = forwardAuthResponseRoutes(rp)!.flatMap(r => r.handle ?? []);
+    expect(handles).toContainEqual({ handler: "headers", request: { delete: ["X-Groups"] } });
+    expect(handles).toContainEqual({ handler: "headers", request: { set: { "X-Groups": ["{http.reverse_proxy.header.Remote-Groups}"] } } });
+  });
+
+  it("builds header_up and trusted_proxies into the JSON and reads all three back", () => {
+    const h = buildForwardAuthHandler(fa) as unknown as { routes: Array<{ handle: Array<Record<string, unknown>> }> };
+    const rp = h.routes[0].handle[0] as unknown as CaddyReverseProxyHandler & Record<string, unknown>;
+    expect(rp.headers).toEqual({ request: { set: {
+      "X-Forwarded-Method": ["{http.request.method}"], "X-Forwarded-Uri": ["{http.request.uri}"], "X-Extra": ["1"],
+    }, delete: ["X-Cookie"] } });
+    expect(rp.trusted_proxies).toEqual([...PRIVATE_RANGES, "203.0.113.0/24"]);
+    expect(extractForwardAuthFromProxy(rp)).toEqual({ ...fa, copyHeaders: ["Remote-Groups>X-Groups", "Remote-User"] });
+  });
+
+  it("reads no extras from a plain forward_auth", () => {
+    const h = buildForwardAuthHandler({ upstreamUrl: "http://a:1", uri: "/x", copyHeaders: ["Remote-User"] }) as unknown as { routes: Array<{ handle: Array<Record<string, unknown>> }> };
+    const read = extractForwardAuthFromProxy(h.routes[0].handle[0] as never);
+    expect(read.headerUp).toBeUndefined();
+    expect(read.trustedProxies).toBeUndefined();
+  });
+});
+
+describe("access log field filters, include and exclude (#334)", () => {
+  const filters: import("./types").LogFieldFilter[] = [
+    { field: "request>headers>Authorization", filter: "delete" },
+    { field: "request>headers>Cookie", filter: "hash" },
+    { field: "request>uri", filter: "replace", value: "a b" },
+    { field: "request>remote_ip", filter: "ip_mask", ipv4: 24, ipv6: 64 },
+  ];
+
+  it("writes a format filter block around the format", () => {
+    const lines = buildLogCaddyLines({ output: "stderr", format: "console", fieldFilters: filters }).join("\n");
+    expect(lines).toContain("format filter {");
+    expect(lines).toContain("wrap console");
+    expect(lines).toContain("request>headers>Authorization delete");
+    expect(lines).toContain("request>headers>Cookie hash");
+    expect(lines).toContain('request>uri replace "a b"');
+    expect(lines).toContain("request>remote_ip ip_mask 24 64");
+    expect(buildLogCaddyLines({ output: "stderr", format: "json" }).join("\n")).toContain("format json");
+  });
+
+  it("wraps json when no format is chosen", () => {
+    expect(buildLogCaddyLines({ output: "stderr", fieldFilters: filters }).join("\n")).toContain("wrap json");
+  });
+
+  it("reads the filters back from the conf.d Caddyfile", () => {
+    const conf = `example.com {\n${buildLogCaddyLines({ output: "stderr", format: "console", fieldFilters: filters }).join("\n")}\n\trespond ok\n}\n`;
+    const [log] = Object.values(parseConfAccessLogMap(conf));
+    expect(log.format).toBe("console");
+    expect(log.fieldFilters).toEqual(filters);
+  });
+
+  it("builds the filter encoder Caddy builds and reads it back", () => {
+    const encoder = buildFilterEncoder("json", filters);
+    expect(encoder).toEqual({
+      format: "filter", wrap: { format: "json" },
+      fields: {
+        "request>headers>Authorization": { filter: "delete" },
+        "request>headers>Cookie": { filter: "hash" },
+        "request>uri": { filter: "replace", value: "a b" },
+        "request>remote_ip": { filter: "ip_mask", ipv4_cidr: 24, ipv6_cidr: 64 },
+      },
+    });
+    expect(parseLogEncoder(encoder)).toEqual({ format: "json", fieldFilters: filters });
+    expect(parseLogEncoder({ format: "console" })).toEqual({ format: "console" });
+  });
+
+  it("writes and reads include and exclude of Caddy's own log", () => {
+    const patched = buildGlobalOptionsPatch("", { runtimeLog: { output: "stderr", include: ["http.log.access", "admin"], exclude: ["http.log.access.log0"], fieldFilters: filters.slice(0, 2) } });
+    expect(patched).toContain("include http.log.access admin");
+    expect(patched).toContain("exclude http.log.access.log0");
+    expect(parseGlobalOptions(patched).runtimeLog).toMatchObject({ include: ["http.log.access", "admin"], exclude: ["http.log.access.log0"], fieldFilters: filters.slice(0, 2) });
+  });
+});
+
+describe("access log log_skip (#334)", () => {
+  const withSkip = (skipPaths: string[], extra: Partial<ProxyEntry> = {}) => proxy({ tls: false, accessLog: { output: "stderr", skipPaths }, ...extra });
+
+  it("writes a lone path as it is and several as a named matcher", () => {
+    expect(proxyToBlock(withSkip(["/health*"]))).toContain("\tlog_skip /health*");
+    const block = proxyToBlock(withSkip(["/health*", "/ping"]));
+    expect(block).toContain("@cockpit-log-skip path /health* /ping");
+    expect(block).toContain("log_skip @cockpit-log-skip");
+  });
+
+  it("reads both forms back from the conf.d Caddyfile", () => {
+    for (const paths of [["/health*"], ["/health*", "/ping"]]) {
+      const [log] = Object.values(parseConfAccessLogMap(proxiesToCaddyfile([withSkip(paths)])));
+      expect(log.skipPaths).toEqual(paths);
+    }
+  });
+
+  it("puts a route ahead of the site's own in the JSON push and reads it back", () => {
+    const server = buildServerEntry(withSkip(["/health*", "/ping"]));
+    expect(server.routes).toHaveLength(2);
+    expect(server.routes?.[0]).toEqual({ match: [{ path: ["/health*", "/ping"] }], handle: [{ handler: "vars", log_skip: true }] });
+    const config = { apps: { http: { servers: { srv0: server } } }, logging: { logs: { "cockpit-access-7700": { writer: { output: "stderr" }, include: ["http.log.access.cockpit-access-7700"] } } } } as unknown as CaddyConfig;
+    const entries = parseProxies(config);
+    expect(entries).toHaveLength(1);
+    expect(entries[0].accessLog?.skipPaths).toEqual(["/health*", "/ping"]);
+  });
+
+  it("keeps the host matcher of the site on the skip route", () => {
+    const server = buildServerEntry(withSkip(["/x"], { externalHost: "a.example.com, b.example.com" }));
+    expect(server.routes?.[0].match).toEqual([{ host: ["a.example.com", "b.example.com"], path: ["/x"] }]);
+  });
+
+  it("drops the route when the paths are cleared and when the site has its own path matcher", () => {
+    const withRoute = buildServerEntry(withSkip(["/x"]));
+    expect(patchServer(withRoute, withSkip([])).routes).toHaveLength(1);
+    expect(buildServerEntry(withSkip(["/x"], { matchers: { path: ["/api/*"] } })).routes).toHaveLength(1);
+  });
+
+  it("does not patch the skip route as if it were the site", () => {
+    const original = buildServerEntry(withSkip(["/x"]));
+    const patched = patchServer(original, withSkip(["/x"], { targetPort: 9999 }));
+    expect(patched.routes).toHaveLength(2);
+    expect(patched.routes?.[0]).toEqual(original.routes?.[0]);
+  });
+});
+
+describe("rewrite: uri replace, strip_suffix, query operations and method (#332)", () => {
+  const rewrites: import("./types").RewriteConfig[] = [
+    { type: "strip_suffix", value: ".html" },
+    { type: "uri_replace", find: "/old", replace: "/new" },
+    { type: "uri_replace", find: "a b", replace: "", limit: 2 },
+    { type: "method", method: "GET" },
+    { type: "query", ops: [{ op: "set", key: "page", value: "1" }] },
+    { type: "query", ops: [
+      { op: "rename", key: "q", value: "query" }, { op: "set", key: "a", value: "b c" }, { op: "add", key: "x", value: "y" },
+      { op: "replace", key: "id", search: "^(\\d+)$", replace: "n$1" }, { op: "delete", key: "debug" },
+    ] },
+  ];
+
+  it.each(rewrites)("round-trips %j through the JSON handler", rewrite => {
+    expect(parseRewriteFromHandle(buildRewriteHandler(rewrite))).toEqual(rewrite);
+  });
+
+  it("writes the Caddyfile lines", () => {
+    expect(buildRewriteCaddyLines({ type: "strip_suffix", value: ".html" })).toEqual(["\turi strip_suffix .html"]);
+    expect(buildRewriteCaddyLines({ type: "method", method: "GET" })).toEqual(["\tmethod GET"]);
+    expect(buildRewriteCaddyLines({ type: "uri_replace", find: "/old", replace: "/new", limit: 1 })).toEqual(['\turi replace /old "/new" 1']);
+    expect(buildRewriteCaddyLines({ type: "query", ops: [{ op: "delete", key: "debug" }] })).toEqual(["\turi query -debug"]);
+    const block = buildRewriteCaddyLines(rewrites[5]).join("\n");
+    expect(block).toContain("uri query {");
+    expect(block).toContain("q>query");
+    expect(block).toContain('a "b c"');
+    expect(block).toContain('+x "y"');
+    expect(block).toContain('id "^(\\d+)$" "n$1"');
+    expect(block).toContain("-debug");
+  });
+});
+
+describe("matchers: path_regexp, header_regexp, protocol, file and vars (#331)", () => {
+  const full: import("./types").RouteMatch = {
+    path_regexp: { pattern: "^/user/(\\d+)$", name: "user" },
+    protocol: "https",
+    file: { try_files: ["{path}", "{path}/index.html"], try_policy: "first_exist" },
+    vars: { "{host}": ["example.com", "www.example.com"] },
+  };
+
+  it("round-trips through the JSON matcher, with placeholders expanded and collapsed", () => {
+    const json = buildMatcherJson(full);
+    expect(json).toMatchObject({
+      path_regexp: { name: "user", pattern: "^/user/(\\d+)$" }, protocol: "https",
+      file: { try_files: ["{http.request.uri.path}", "{http.request.uri.path}/index.html"], try_policy: "first_exist" },
+      vars: { "{http.request.host}": ["example.com", "www.example.com"] },
+    });
+    expect(parseMatcherJson(json)).toEqual(full);
+  });
+
+  it("round-trips a header regexp, and drops the name Caddy gives a matcher itself", () => {
+    const m = { header_regexp: { header: "X-Token", pattern: "^v(\\d+)$", name: "token" } };
+    expect(parseMatcherJson(buildMatcherJson(m))).toEqual(m);
+    expect(parseMatcherJson({ path_regexp: { name: "m8080", pattern: "^/a" } })).toEqual({ path_regexp: { pattern: "^/a" } });
+    expect(parseMatcherJson({ header_regexp: { "X-A": { name: "r0", pattern: "^b" } } })).toEqual({ header_regexp: { header: "X-A", pattern: "^b" } });
+  });
+
+  it("writes the matcher lines", () => {
+    const lines = buildMatcherCaddyLines(full, "m1", "\t").join("\n");
+    expect(lines).toContain("path_regexp user ");
+    expect(lines).toContain("^/user/(");
+    expect(lines).toContain("protocol https");
+    expect(lines).toContain("try_files {path} {path}/index.html");
+    expect(lines).toContain("try_policy first_exist");
+    expect(lines).toContain("vars {host} example.com www.example.com");
+    expect(buildMatcherCaddyLines({ header_regexp: { header: "X-A", pattern: "^b" } }, "m1", "\t").join("\n")).toContain("header_regexp X-A ^b");
+  });
+
+  it("writes a path regexp and a header regexp in one matcher, as Caddy allows", () => {
+    const lines = buildMatcherCaddyLines({ path_regexp: { pattern: "^/a" }, header_regexp: { header: "X-A", pattern: "^b" } }, "m1", "\t").join("\n");
+    expect(lines).toContain("path_regexp");
+    expect(lines).toContain("header_regexp");
+  });
+
+  it("counts a site with only the new matchers as having matchers, and not as a host or path only one", () => {
+    expect(hasAnyMatcher({ protocol: "https" })).toBe(true);
+    expect(isPathOnlyMatcher({ path: ["/a"], protocol: "https" })).toBe(false);
+    expect(isPathOnlyMatcher({ path: ["/a"] })).toBe(true);
+    expect(isHostOnlyMatcher({ host: ["a.com"], vars: { "{x}": ["1"] } })).toBe(false);
+  });
+});
+
+describe("a site's own ACME email, CA and key type (#341)", () => {
+  const site = (tlsAdvanced: import("./types").TlsAdvancedConfig, extra: Partial<ProxyEntry> = {}) =>
+    proxy({ tls: true, tlsIssuer: "acme", externalHost: "example.com", externalScheme: "https", tlsAdvanced, ...extra });
+  const staging = "https://acme-staging-v02.api.letsencrypt.org/directory";
+
+  it("writes the email in the tls line and the CA and key type in its block", () => {
+    const block = proxyToBlock(site({ acmeEmail: "me@example.com", acmeCa: staging, keyType: "p256" }));
+    expect(block).toContain("tls me@example.com {");
+    expect(block).toContain(`ca ${staging}`);
+    expect(block).toContain("key_type p256");
+  });
+
+  it("writes a lone email as a one-line tls, and nothing without settings", () => {
+    expect(proxyToBlock(site({ acmeEmail: "me@example.com" }))).toMatch(/\ttls me@example.com\n/);
+    expect(proxyToBlock(site({ protocolMin: "tls1.2" }))).toContain("tls {");
+    expect(proxyToBlock(proxy({ tls: true, tlsIssuer: "acme", externalHost: "example.com", externalScheme: "https" }))).not.toMatch(/\ttls\b/);
+  });
+
+  it("writes key_type for an internal-issuer site too", () => {
+    const block = proxyToBlock(proxy({ tls: true, tlsIssuer: "internal", externalHost: "example.com", externalScheme: "https", tlsAdvanced: { keyType: "ed25519" } }));
+    expect(block).toContain("issuer internal");
+    expect(block).toContain("key_type ed25519");
+  });
+
+  it("gives the site a policy of its own in the JSON push and reads it back", () => {
+    const entry = site({ acmeEmail: "me@example.com", acmeCa: staging, keyType: "p256" }, { serverKey: "srv0" });
+    const config = mergeProxy({ apps: { http: { servers: {} } } } as CaddyConfig, entry);
+    const policies = config.apps?.tls?.automation?.policies ?? [];
+    expect(policies.find(p => p.subjects?.some(s => s === "example.com"))).toEqual({
+      subjects: ["example.com"], issuers: [{ module: "acme", ca: staging, email: "me@example.com" }], key_type: "p256",
+    });
+    // The host is the Caddyfile's, so the policy is read by it, as useProxies does with the host it has.
+    expect(parseSiteAcmeSettings(config.apps?.tls?.automation?.policies, "example.com")).toEqual({ acmeEmail: "me@example.com", acmeCa: staging, keyType: "p256" });
+    expect(parseSiteAcmeSettings(config.apps?.tls?.automation?.policies, "other.example.com")).toBeUndefined();
+  });
+
+  it("keeps the internal CA in a policy that only sets a key type", () => {
+    const entry = proxy({ tls: true, tlsIssuer: "internal", externalHost: "example.com", externalScheme: "https", tlsAdvanced: { keyType: "ed25519" } });
+    const config = mergeProxy({ apps: { http: { servers: {} } } } as CaddyConfig, entry);
+    const policy = (config.apps?.tls?.automation?.policies ?? []).find(p => p.subjects?.some(s => s === "example.com"));
+    expect(policy).toEqual({ subjects: ["example.com"], issuers: [{ module: "internal" }], key_type: "ed25519" });
+  });
+});
+
+describe("server options on the JSON side (#328)", () => {
+  const extras = { keepaliveInterval: "30s", keepaliveIdle: "1m", readBodyIdle: "5s", strictSniHost: true, logCredentials: true, enableFullDuplex: true };
+
+  it("applyServerExtras writes the Caddy JSON fields and parseServerExtras reads them back", () => {
+    const server = { listen: [":8443"], routes: [] } as CaddyServer;
+    applyServerExtras(server, extras);
+    expect(server).toMatchObject({
+      keepalive_interval: "30s", keepalive_idle: "1m", read_idle_timeout: "5s", strict_sni_host: true, enable_full_duplex: true,
+      logs: { should_log_credentials: true },
+    });
+    expect(parseServerExtras(server)).toEqual(extras);
+  });
+
+  it("reads the nanosecond durations Caddy returns", () => {
+    const server = { listen: [":8443"], routes: [], keepalive_interval: 30e9, keepalive_idle: 90e9 } as unknown as CaddyServer;
+    expect(parseServerExtras(server)).toEqual({ keepaliveInterval: "30s", keepaliveIdle: "90s" });
+  });
+
+  it("keeps the access log's logger name and removes the options that were cleared", () => {
+    const server = { listen: [":8443"], routes: [], logs: { default_logger_name: "access" } } as unknown as CaddyServer;
+    applyServerExtras(server, extras);
+    expect((server as Record<string, unknown>).logs).toEqual({ default_logger_name: "access", should_log_credentials: true });
+    applyServerExtras(server, undefined);
+    expect(server).toEqual({ listen: [":8443"], routes: [], logs: { default_logger_name: "access" } });
+  });
+
+  it("reads the options of a server into its proxies", () => {
+    const config = {
+      apps: { http: { servers: { srv0: {
+        listen: [":8443"], strict_sni_host: true,
+        routes: [{ handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:9000" }] }] }],
+      } } } },
+    } as unknown as CaddyConfig;
+    expect(parseProxies(config)[0].serverExtras).toEqual({ strictSniHost: true });
+  });
+});
+
+describe("TLS and listener global options (#329)", () => {
+  const all = {
+    autoHttps: "disable_redirects", defaultSni: "example.com", keyType: "p256", ocspStaplingOff: true,
+    preferredChains: { mode: "root_common_name" as const, names: ["ISRG Root X1", "Other Root"] },
+    certIssuer: "internal", defaultBind: ["127.0.0.1", "[::1]"],
+  };
+
+  it("writes every option and reads them back", () => {
+    const patched = buildGlobalOptionsPatch("", all);
+    for (const line of ["auto_https disable_redirects", "default_sni example.com", "key_type p256", "ocsp_stapling off", "cert_issuer internal", "default_bind 127.0.0.1 [::1]"]) {
+      expect(patched).toContain(line);
+    }
+    expect(patched).toContain('root_common_name "ISRG Root X1" "Other Root"');
+    expect(parseGlobalOptions(patched)).toEqual(all);
+  });
+
+  it("writes preferred_chains smallest on one line", () => {
+    const patched = buildGlobalOptionsPatch("", { preferredChains: { mode: "smallest" } });
+    expect(patched).toContain("preferred_chains smallest");
+    expect(parseGlobalOptions(patched).preferredChains).toEqual({ mode: "smallest" });
+  });
+
+  it("writes local_certs, but not next to an explicit cert_issuer, which Caddy rejects", () => {
+    expect(buildGlobalOptionsPatch("", { localCerts: true })).toContain("local_certs");
+    expect(buildGlobalOptionsPatch("", { localCerts: true, certIssuer: "acme" })).not.toContain("local_certs");
+  });
+
+  it("keeps the body of a cert_issuer it does not know as written", () => {
+    const src = "{\n\tcert_issuer zerossl {\n\t\temail me@example.com\n\t}\n}\n";
+    const opts = parseGlobalOptions(src);
+    expect(opts.certIssuer).toBe("zerossl");
+    expect(opts.certIssuerBody).toEqual(["email me@example.com"]);
+    const patched = buildGlobalOptionsPatch(src, opts);
+    expect(patched.match(/cert_issuer/g)).toHaveLength(1);
+    expect(parseGlobalOptions(patched)).toEqual(opts);
+  });
+
+  it("moves a hand-written option outside the managed section into it instead of duplicating it", () => {
+    const src = `{\n\tauto_https off\n${OPTS_BEGIN}\n\temail me@example.com\n${OPTS_END}\n}\n`;
+    const opts = parseGlobalOptions(src);
+    expect(opts.autoHttps).toBe("off");
+    const patched = buildGlobalOptionsPatch(src, { ...opts, keyType: "p384" });
+    expect(patched.match(/auto_https/g)).toHaveLength(1);
+    expect(parseGlobalOptions(patched)).toMatchObject({ autoHttps: "off", keyType: "p384", email: "me@example.com" });
+  });
+
+  it("leaves a hand-written admin block it cannot represent where it is", () => {
+    const src = `{\n\tadmin localhost:2019 {\n\t\tconfig {\n\t\t\tpersist off\n\t\t}\n\t}\n${OPTS_BEGIN}\n\temail me@example.com\n${OPTS_END}\n}\n`;
+    const opts = parseGlobalOptions(src);
+    expect(opts.adminAddress).toBeUndefined();
+    const patched = buildGlobalOptionsPatch(src, opts);
+    expect(patched).toContain("persist off");
+    expect(patched.match(/admin/g)).toHaveLength(1);
+  });
+
+  it("leaves several cert_issuer fallbacks where they are", () => {
+    const src = `{\n\tcert_issuer acme\n\tcert_issuer internal\n${OPTS_BEGIN}\n\temail me@example.com\n${OPTS_END}\n}\n`;
+    expect(parseGlobalOptions(src).certIssuer).toBeUndefined();
+    const patched = buildGlobalOptionsPatch(src, parseGlobalOptions(src));
+    expect(patched.match(/cert_issuer/g)).toHaveLength(2);
+  });
+
+  it("quotes a value with a trailing backslash so Caddy reads it back verbatim", () => {
+    const patched = buildGlobalOptionsPatch("", { preferredChains: { mode: "any_common_name", names: ["a b\\"] } });
+    expect(patched).toContain("any_common_name `a b\\`");
+  });
+});
+
+describe("the admin global option (#330)", () => {
+  it("round-trips the stock socket address and leaves it as written", () => {
+    const src = '{\n\tadmin "unix//run/caddy/admin.socket"\n}\n\nimport /etc/caddy/conf.d/*\n';
+    const opts = parseGlobalOptions(src);
+    expect(opts.adminAddress).toBe('"unix//run/caddy/admin.socket"');
+    const patched = buildGlobalOptionsPatch(src, opts);
+    expect(patched.match(/admin /g)).toHaveLength(1);
+    expect(patched).toContain('admin "unix//run/caddy/admin.socket"');
+  });
+
+  it("writes the address, origins and enforce_origin and reads them back", () => {
+    const want = { adminAddress: "127.0.0.1:2019", adminOrigins: ["localhost:2019", "admin.example.com"], adminEnforceOrigin: true };
+    const patched = buildGlobalOptionsPatch("", want);
+    expect(patched).toContain("admin 127.0.0.1:2019 {");
+    expect(patched).toContain("origins localhost:2019 admin.example.com");
+    expect(patched).toContain("enforce_origin");
+    expect(parseGlobalOptions(patched)).toEqual(want);
+  });
+
+  it("writes and reads admin off", () => {
+    const patched = buildGlobalOptionsPatch("", { adminOff: true });
+    expect(patched).toContain("admin off");
+    expect(parseGlobalOptions(patched)).toEqual({ adminOff: true });
+  });
+});
+
+describe("metrics per_host (#342)", () => {
+  it("writes the metrics option with per_host and reads it back", () => {
+    const patched = buildGlobalOptionsPatch("", { metricsEnabled: true, metricsPerHost: true });
+    expect(patched).toContain("metrics {");
+    expect(patched).toContain("per_host");
+    expect(parseGlobalOptions(patched)).toMatchObject({ metricsEnabled: true, metricsPerHost: true });
+  });
+
+  it("keeps a plain metrics line when per_host is off", () => {
+    const patched = buildGlobalOptionsPatch("", { metricsEnabled: true });
+    expect(patched).toMatch(/^\s*metrics$/m);
+    expect(parseGlobalOptions(patched).metricsPerHost).toBeUndefined();
+  });
+});
+

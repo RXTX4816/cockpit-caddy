@@ -352,6 +352,25 @@ export function parseConfCustomTlsCaMap(content: string): Record<string, string>
 
 
 /**
+ * One line of a `format filter` block, `request>headers>Cookie hash` (#334); undefined for any
+ * other line. `ip_mask` takes the IPv4 and then the IPv6 prefix length.
+ */
+export function parseFieldFilterLine(line: string): import("./types").LogFieldFilter | undefined {
+  const m = line.trim().match(/^(\S+)\s+(delete|hash|replace|ip_mask)(?:\s+(.*))?$/);
+  if (!m) return undefined;
+  const [, field, filter, rest] = m;
+  const args = [...(rest ?? "").matchAll(/"((?:[^"\\]|\\.)*)"|(\S+)/g)].map(a => a[1] ?? a[2]);
+  if (filter === "replace") return args.length ? { field, filter, value: args[0] } : undefined;
+  if (filter === "ip_mask") {
+    const v4 = parseInt(args[0] ?? "", 10);
+    const v6 = parseInt(args[1] ?? "", 10);
+    return isNaN(v4) ? undefined : { field, filter, ipv4: v4, ...(isNaN(v6) ? {} : { ipv6: v6 }) };
+  }
+  return { field, filter: filter as "delete" | "hash" };
+}
+
+
+/**
  * Returns address → AccessLogConfig by reading `log { }` blocks from the conf.d
  * site blocks. Used as a fallback when the JSON API config was last pushed by
  * older code that didn't include the logging section.
@@ -375,6 +394,19 @@ export function parseConfAccessLogMap(content: string): Record<string, import(".
     }
     if (!logLines.length) continue;
 
+    // `log_skip` sits next to the log block: a path, or a named matcher defined on a line of its own (#334).
+    const skipPaths: string[] = [];
+    for (let i = 1; i < lines.length; i++) {
+      const skip = lines[i].trim().match(/^log_skip\s+(\S+)$/);
+      if (!skip) continue;
+      if (skip[1].startsWith("@")) {
+        const def = lines.find(l => new RegExp(`^\\s*${skip[1].replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s+path\\s+`).test(l));
+        if (def) skipPaths.push(...def.trim().split(/\s+/).slice(2));
+      } else {
+        skipPaths.push(skip[1]);
+      }
+    }
+
     let output: import("./types").AccessLogOutput = "stderr";
     let filePath: string | undefined;
     let format: import("./types").AccessLogFormat | undefined;
@@ -383,9 +415,12 @@ export function parseConfAccessLogMap(content: string): Record<string, import(".
     let rollKeepCount: number | undefined;
     let rollKeepDays: number | undefined;
     let rollCompress: boolean | undefined;
+    const fieldFilters: import("./types").LogFieldFilter[] = [];
 
     for (const line of logLines) {
       if (line === "roll_uncompressed") { rollCompress = false; continue; }
+      const filter = parseFieldFilterLine(line);
+      if (filter) { fieldFilters.push(filter); continue; }
       const m = line.match(/^(\w+)\s+(.*)/);
       if (!m) continue;
       const [, key, val] = m;
@@ -400,6 +435,9 @@ export function parseConfAccessLogMap(content: string): Record<string, import(".
           output = val.trim() as import("./types").AccessLogOutput;
         }
       } else if (key === "format") {
+        // `format filter {` keeps its encoder in `wrap`, read below.
+        if (!/^filter\b/.test(val.trim())) format = val.trim() as import("./types").AccessLogFormat;
+      } else if (key === "wrap") {
         format = val.trim() as import("./types").AccessLogFormat;
       } else if (key === "level") {
         level = val.trim() as import("./types").AccessLogLevel;
@@ -413,7 +451,7 @@ export function parseConfAccessLogMap(content: string): Record<string, import(".
         if (hrs) rollKeepDays = Math.round(parseFloat(hrs[1]) / 24);
       }
     }
-    setBlockResult(result, block, { output, filePath, format, level, rollSizeMb, rollKeepCount, rollKeepDays, rollCompress });
+    setBlockResult(result, block, { output, filePath, format, level, rollSizeMb, rollKeepCount, rollKeepDays, rollCompress, ...(fieldFilters.length ? { fieldFilters } : {}), ...(skipPaths.length ? { skipPaths } : {}) });
   }
   return result;
 }
@@ -826,4 +864,28 @@ export function parseDnsProviderDirective(val: string, lines: string[], i: numbe
   }
   if (Object.keys(literal).length) config.literal = literal;
   return { config, next: j };
+}
+
+
+/**
+ * Turns a user-entered value into exactly one Caddyfile token that Caddy reads back verbatim.
+ * Plain values stay as they are (unless `always`); otherwise double quotes with `\"` escapes.
+ * Caddy's lexer has no escape for a backslash, so a value with `\` right before a quote or at
+ * the end uses backticks (no escapes at all), and a value with newlines, or one that fits
+ * neither form, uses a heredoc whose marker occurs nowhere in the value. The body and marker sit at column 0, so Caddy strips
+ * no indentation from it.
+ */
+export function caddyQuote(value: string, opts: { always?: boolean } = {}): string {
+  const needsQuotes = opts.always || value === "" || /[\s"`\\]/.test(value) || value.startsWith("#") || value === "{" || value === "}";
+  if (!value.includes("\n") && !value.includes("\r")) {
+    if (!needsQuotes) return value;
+    // No backslash sits before a quote or at the end, so `\"` is the only escape Caddy needs.
+    if (!/\\("|$)/.test(value)) return `"${value.split('"').join('\\"')}"`;
+    if (!value.includes("`")) return `\`${value}\``;
+  }
+  // Caddy's lexer ends a heredoc as soon as the text read so far ends with the marker, even
+  // mid-line, so the marker must not occur anywhere in the value.
+  let marker = "END";
+  for (let i = 1; value.includes(marker); i++) marker = `END${i}`;
+  return `<<${marker}\n${value}\n${marker}`;
 }
