@@ -841,7 +841,8 @@ export function caddyQuote(value: string, opts: { always?: boolean } = {}): stri
   const needsQuotes = opts.always || value === "" || /[\s"`\\]/.test(value) || value.startsWith("#") || value === "{" || value === "}";
   if (!value.includes("\n") && !value.includes("\r")) {
     if (!needsQuotes) return value;
-    if (!/\\("|$)/.test(value)) return `"${value.replace(/"/g, '\\"')}"`;
+    // No backslash sits before a quote or at the end, so `\"` is the only escape Caddy needs.
+    if (!/\\("|$)/.test(value)) return `"${value.split('"').join('\\"')}"`;
     if (!value.includes("`")) return `\`${value}\``;
   }
   // Caddy's lexer ends a heredoc as soon as the text read so far ends with the marker, even
