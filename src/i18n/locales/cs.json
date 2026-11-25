@@ -1290,7 +1290,7 @@
   "modules": {
     "title": "Moduly Caddy",
     "loading": "Načítání modulů…",
-    "unknown": "Moduly tohoto Caddy se nepodařilo přečíst (je dostupný příkaz caddy?).",
+    "unknown": "Moduly tohoto Caddy se nepodařilo načíst: neodpověděl příkaz caddy ani Admin API.",
     "help": "Co nainstalovaný Caddy umí nad rámec standardního sestavení. Funkce, která potřebuje chybějící modul, selže při načtení konfigurace, proto zkontrolujte nejdřív zde.",
     "cap_dns": "Poskytovatelé DNS challenge",
     "cap_layer4": "Vrstva 4 (proxy TCP a UDP)",
@@ -1303,6 +1303,8 @@
     "all": "Všechny moduly ({{count}})",
     "filter": "Filtrovat moduly",
     "no_match": "Žádný modul neodpovídá.",
-    "non_standard": "Moduly, které nejsou součástí samotného Caddy: {{count}}"
+    "non_standard": "Moduly, které nejsou součástí samotného Caddy: {{count}}",
+    "not_known": "Neznámé",
+    "probed": "Tento Caddy je dostupný jen přes Admin API, které seznam modulů nemá. Každá funkce byla otestována převodem malé konfigurace; testují se jen běžní poskytovatelé DNS."
   }
 }

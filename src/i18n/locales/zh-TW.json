@@ -1290,7 +1290,7 @@
   "modules": {
     "title": "Caddy 模組",
     "loading": "正在讀取模組…",
-    "unknown": "無法讀取此 Caddy 的模組(caddy 指令可用嗎?)。",
+    "unknown": "無法讀取此 Caddy 的模組：caddy 指令和 Admin API 都沒有回應。",
     "help": "已安裝的 Caddy 在標準建置之外還能做什麼。需要缺少模組的功能會在 Caddy 載入設定時失敗,所以請先在這裡確認。",
     "cap_dns": "DNS 驗證提供者",
     "cap_layer4": "第 4 層(TCP 和 UDP 代理)",
@@ -1303,6 +1303,8 @@
     "all": "所有模組({{count}})",
     "filter": "篩選模組",
     "no_match": "沒有符合的模組。",
-    "non_standard": "不屬於 Caddy 本身的模組:{{count}}"
+    "non_standard": "不屬於 Caddy 本身的模組:{{count}}",
+    "not_known": "未知",
+    "probed": "此 Caddy 只能透過 Admin API 存取，而 Admin API 沒有模組清單。每項功能都透過轉換一個小設定來偵測；只偵測常見的 DNS 供應商。"
   }
 }

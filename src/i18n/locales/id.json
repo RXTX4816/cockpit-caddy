@@ -1290,7 +1290,7 @@
   "modules": {
     "title": "Modul Caddy",
     "loading": "Membaca modul…",
-    "unknown": "Modul Caddy ini tidak dapat dibaca (apakah perintah caddy tersedia?).",
+    "unknown": "Modul Caddy ini tidak dapat dibaca: perintah caddy maupun Admin API tidak menjawab.",
     "help": "Apa yang bisa dilakukan Caddy terpasang di luar build standar. Fitur yang membutuhkan modul yang hilang gagal saat Caddy memuat konfigurasi, jadi periksa di sini dulu.",
     "cap_dns": "Penyedia tantangan DNS",
     "cap_layer4": "Layer 4 (proksi TCP dan UDP)",
@@ -1303,6 +1303,8 @@
     "all": "Semua modul ({{count}})",
     "filter": "Saring modul",
     "no_match": "Tidak ada modul yang cocok.",
-    "non_standard": "Modul yang bukan bagian dari Caddy sendiri: {{count}}"
+    "non_standard": "Modul yang bukan bagian dari Caddy sendiri: {{count}}",
+    "not_known": "Tidak diketahui",
+    "probed": "Caddy ini hanya dapat dijangkau melalui Admin API, yang tidak memiliki daftar modul. Setiap fitur diuji dengan mengadaptasi konfigurasi kecil; hanya penyedia DNS umum yang diuji."
   }
 }

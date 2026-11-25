@@ -1290,7 +1290,7 @@
   "modules": {
     "title": "Caddy modules",
     "loading": "Reading the modules…",
-    "unknown": "The modules of this Caddy could not be read (is the caddy command available?).",
+    "unknown": "The modules of this Caddy could not be read: neither the caddy command nor the Admin API answered.",
     "help": "What the installed Caddy can do beyond a stock build. A feature that needs a missing module fails when Caddy loads the config, so check here first.",
     "cap_dns": "DNS challenge providers",
     "cap_layer4": "Layer 4 (TCP and UDP proxying)",
@@ -1303,6 +1303,8 @@
     "all": "All modules ({{count}})",
     "filter": "Filter modules",
     "no_match": "No module matches.",
-    "non_standard": "Modules that are not part of Caddy itself: {{count}}"
+    "non_standard": "Modules that are not part of Caddy itself: {{count}}",
+    "not_known": "Not known",
+    "probed": "This Caddy is only reachable over the Admin API, which has no list of modules. Each feature was tested by adapting a small config; only common DNS providers are tested."
   }
 }

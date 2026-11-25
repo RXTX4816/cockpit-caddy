@@ -1290,7 +1290,7 @@
   "modules": {
     "title": "Caddy 模块",
     "loading": "正在读取模块…",
-    "unknown": "无法读取此 Caddy 的模块(caddy 命令可用吗?)。",
+    "unknown": "无法读取此 Caddy 的模块：caddy 命令和 Admin API 都没有响应。",
     "help": "已安装的 Caddy 在标准构建之外还能做什么。需要缺失模块的功能会在 Caddy 加载配置时失败,所以请先在这里确认。",
     "cap_dns": "DNS 验证提供商",
     "cap_layer4": "第 4 层(TCP 和 UDP 代理)",
@@ -1303,6 +1303,8 @@
     "all": "所有模块({{count}})",
     "filter": "筛选模块",
     "no_match": "没有匹配的模块。",
-    "non_standard": "不属于 Caddy 本身的模块:{{count}}"
+    "non_standard": "不属于 Caddy 本身的模块:{{count}}",
+    "not_known": "未知",
+    "probed": "此 Caddy 只能通过 Admin API 访问，而 Admin API 没有模块列表。每项功能都通过转换一个小配置来检测；只检测常见的 DNS 提供商。"
   }
 }

@@ -1290,7 +1290,7 @@
   "modules": {
     "title": "Modulele Caddy",
     "loading": "Se citesc modulele…",
-    "unknown": "Modulele acestui Caddy nu au putut fi citite (este disponibilă comanda caddy?).",
+    "unknown": "Modulele acestui Caddy nu au putut fi citite: nu au răspuns nici comanda caddy, nici Admin API.",
     "help": "Ce poate face Caddy instalat peste o versiune standard. O funcție care are nevoie de un modul lipsă eșuează când Caddy încarcă configurația, așa că verifică mai întâi aici.",
     "cap_dns": "Furnizori pentru provocarea DNS",
     "cap_layer4": "Nivelul 4 (proxy TCP și UDP)",
@@ -1303,6 +1303,8 @@
     "all": "Toate modulele ({{count}})",
     "filter": "Filtrează modulele",
     "no_match": "Niciun modul nu se potrivește.",
-    "non_standard": "Module care nu fac parte din Caddy însuși: {{count}}"
+    "non_standard": "Module care nu fac parte din Caddy însuși: {{count}}",
+    "not_known": "Necunoscut",
+    "probed": "Acest Caddy este accesibil doar prin Admin API, care nu are o listă de module. Fiecare funcție a fost testată prin adaptarea unei configurații mici; sunt testați doar furnizorii DNS uzuali."
   }
 }

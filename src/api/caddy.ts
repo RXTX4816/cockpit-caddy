@@ -105,7 +105,15 @@ async function curlPost(
     const raw = out.slice(0, nl).trim();
     let msg = raw;
     try { msg = (JSON.parse(raw) as { error?: string }).error ?? raw; } catch { /* keep raw */ }
-    throw new Error(msg || `HTTP ${code}`);
+    throw new AdminHttpError(msg || `HTTP ${code}`, code);
+  }
+}
+
+/** The Admin API answered with an HTTP error; its message is the body's `error`. */
+class AdminHttpError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(message);
+    this.name = "AdminHttpError";
   }
 }
 
@@ -217,6 +225,22 @@ export async function applyCaddyfileViaApi(content: string): Promise<void> {
     throw new CaddyfileError(e instanceof Error ? e.message : String(e));
   }
   await notifyConfigChanged();
+}
+
+/**
+ * Adapts a Caddyfile through the Admin API's `/adapt` endpoint without loading it: what a check
+ * can use when there is no local `caddy` binary. Throws CaddyfileError with Caddy's message when
+ * the adapter rejects it, and the transport's own error when Caddy can't be reached.
+ */
+export async function adaptCaddyfileViaApi(content: string): Promise<void> {
+  try {
+    await (transport === "unix"
+      ? unixPost("/adapt", content, "text/caddyfile")
+      : tcpPost("/adapt", content, "text/caddyfile"));
+  } catch (e) {
+    if (e instanceof AdminHttpError) throw new CaddyfileError(e.message);
+    throw e;
+  }
 }
 
 /** `import [/etc/caddy/]conf.d/*` or `…/*.conf`, the globs whose files can be inlined. */

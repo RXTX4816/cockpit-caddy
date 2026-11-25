@@ -28,15 +28,6 @@ export function parseDnsProviders(listModulesOutput: string): string[] {
     .sort();
 }
 
-/** The DNS provider modules the installed Caddy has; empty when it has none or can't be asked. */
-export async function listDnsProviders(): Promise<string[]> {
-  try {
-    return parseDnsProviders(await getHost().run(["caddy", "list-modules"], { superuser: "try", stderr: "ignore" }));
-  } catch {
-    return [];
-  }
-}
-
 const envPart = (s: string) => s.toUpperCase().replace(/\*/g, "WILDCARD").replace(/[^A-Z0-9]+/g, "_").replace(/^_+|_+$/g, "");
 
 /**

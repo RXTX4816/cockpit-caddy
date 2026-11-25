@@ -1290,7 +1290,7 @@
   "modules": {
     "title": "Caddy modülleri",
     "loading": "Modüller okunuyor…",
-    "unknown": "Bu Caddy'nin modülleri okunamadı (caddy komutu kullanılabilir mi?).",
+    "unknown": "Bu Caddy'nin modülleri okunamadı: ne caddy komutu ne de Admin API yanıt verdi.",
     "help": "Kurulu Caddy'nin standart yapının ötesinde neler yapabildiği. Eksik bir modül gerektiren özellik, Caddy yapılandırmayı yüklerken başarısız olur, bu yüzden önce buraya bakın.",
     "cap_dns": "DNS doğrulama sağlayıcıları",
     "cap_layer4": "Katman 4 (TCP ve UDP vekili)",
@@ -1303,6 +1303,8 @@
     "all": "Tüm modüller ({{count}})",
     "filter": "Modülleri filtrele",
     "no_match": "Eşleşen modül yok.",
-    "non_standard": "Caddy'nin kendisine ait olmayan modüller: {{count}}"
+    "non_standard": "Caddy'nin kendisine ait olmayan modüller: {{count}}",
+    "not_known": "Bilinmiyor",
+    "probed": "Bu Caddy'ye yalnızca modül listesi olmayan Admin API üzerinden ulaşılabiliyor. Her özellik küçük bir yapılandırma dönüştürülerek denendi; yalnızca yaygın DNS sağlayıcıları denenir."
   }
 }

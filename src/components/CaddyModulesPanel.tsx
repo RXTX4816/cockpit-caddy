@@ -42,13 +42,16 @@ export function CaddyModulesPanel() {
     <>
       <HelperText style={{ marginBottom: "0.5rem" }}>
         <HelperTextItem>{t("modules.help")}</HelperTextItem>
+        {modules.source === "admin-api" && <HelperTextItem>{t("modules.probed")}</HelperTextItem>}
       </HelperText>
       <DescriptionList isHorizontal isCompact>
         {moduleCapabilities(modules).map(c => (
           <DescriptionListGroup key={c.key}>
             <DescriptionListTerm>{t(`modules.cap_${c.key}`)}</DescriptionListTerm>
             <DescriptionListDescription>
-              <Label isCompact color={c.available ? "green" : "grey"}>{c.available ? t("modules.installed") : t("modules.missing")}</Label>
+              <Label isCompact color={c.available ? "green" : "grey"}>
+                {c.available ? t("modules.installed") : c.available === false ? t("modules.missing") : t("modules.not_known")}
+              </Label>
               {c.key === "dns" && c.available && <> {t("modules.dns_providers", { count: modules.dnsProviders.length })}</>}
               {!c.available && <> <a href={c.docs} target="_blank" rel="noopener noreferrer">{t("modules.how_to_get")}</a></>}
             </DescriptionListDescription>

@@ -1290,7 +1290,7 @@
   "modules": {
     "title": "Moduły Caddy",
     "loading": "Odczytywanie modułów…",
-    "unknown": "Nie udało się odczytać modułów tego Caddy (czy polecenie caddy jest dostępne?).",
+    "unknown": "Nie udało się odczytać modułów tego Caddy: nie odpowiedziało ani polecenie caddy, ani Admin API.",
     "help": "Co zainstalowany Caddy potrafi ponad standardową kompilację. Funkcja wymagająca brakującego modułu zawodzi przy ładowaniu konfiguracji, więc sprawdź to najpierw tutaj.",
     "cap_dns": "Dostawcy wyzwania DNS",
     "cap_layer4": "Warstwa 4 (proxy TCP i UDP)",
@@ -1303,6 +1303,8 @@
     "all": "Wszystkie moduły ({{count}})",
     "filter": "Filtruj moduły",
     "no_match": "Żaden moduł nie pasuje.",
-    "non_standard": "Moduły, które nie są częścią samego Caddy: {{count}}"
+    "non_standard": "Moduły, które nie są częścią samego Caddy: {{count}}",
+    "not_known": "Nieznane",
+    "probed": "Ten Caddy jest dostępny tylko przez Admin API, które nie ma listy modułów. Każdą funkcję sprawdzono, adaptując małą konfigurację; sprawdzani są tylko popularni dostawcy DNS."
   }
 }

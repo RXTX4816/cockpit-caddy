@@ -1290,7 +1290,7 @@
   "modules": {
     "title": "Caddyn moduulit",
     "loading": "Luetaan moduuleja…",
-    "unknown": "Tämän Caddyn moduuleja ei voitu lukea (onko caddy-komento käytettävissä?).",
+    "unknown": "Tämän Caddyn moduuleja ei voitu lukea: caddy-komento eikä Admin API vastannut.",
     "help": "Mitä asennettu Caddy osaa vakiorakennetta enemmän. Ominaisuus, joka tarvitsee puuttuvan moduulin, epäonnistuu kun Caddy lataa asetukset, joten tarkista ensin täältä.",
     "cap_dns": "DNS-haasteen tarjoajat",
     "cap_layer4": "Taso 4 (TCP- ja UDP-välitys)",
@@ -1303,6 +1303,8 @@
     "all": "Kaikki moduulit ({{count}})",
     "filter": "Suodata moduuleja",
     "no_match": "Mikään moduuli ei täsmää.",
-    "non_standard": "Moduulit, jotka eivät kuulu Caddyyn itseensä: {{count}}"
+    "non_standard": "Moduulit, jotka eivät kuulu Caddyyn itseensä: {{count}}",
+    "not_known": "Ei tiedossa",
+    "probed": "Tähän Caddyyn pääsee vain Admin API:n kautta, jossa ei ole moduuliluetteloa. Jokainen ominaisuus testattiin muuntamalla pieni asetus; vain yleiset DNS-palveluntarjoajat testataan."
   }
 }

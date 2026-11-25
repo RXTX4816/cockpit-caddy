@@ -1290,7 +1290,7 @@
   "modules": {
     "title": "Caddy 모듈",
     "loading": "모듈을 읽는 중…",
-    "unknown": "이 Caddy의 모듈을 읽을 수 없습니다(caddy 명령을 쓸 수 있나요?).",
+    "unknown": "이 Caddy의 모듈을 읽을 수 없습니다. caddy 명령도 Admin API도 응답하지 않았습니다.",
     "help": "설치된 Caddy가 표준 빌드 이상으로 할 수 있는 것입니다. 없는 모듈이 필요한 기능은 Caddy가 구성을 불러올 때 실패하므로 먼저 여기서 확인하세요.",
     "cap_dns": "DNS 챌린지 제공자",
     "cap_layer4": "레이어 4(TCP 및 UDP 프록시)",
@@ -1303,6 +1303,8 @@
     "all": "모든 모듈({{count}})",
     "filter": "모듈 필터",
     "no_match": "일치하는 모듈이 없습니다.",
-    "non_standard": "Caddy 자체에 포함되지 않은 모듈: {{count}}"
+    "non_standard": "Caddy 자체에 포함되지 않은 모듈: {{count}}",
+    "not_known": "알 수 없음",
+    "probed": "이 Caddy는 모듈 목록이 없는 Admin API로만 연결할 수 있습니다. 각 기능은 작은 설정을 변환해 확인했으며, 일반적인 DNS 공급자만 확인합니다."
   }
 }

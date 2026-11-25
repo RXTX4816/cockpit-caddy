@@ -1290,7 +1290,7 @@
   "modules": {
     "title": "Moduli di Caddy",
     "loading": "Lettura dei moduli…",
-    "unknown": "Non è stato possibile leggere i moduli di questo Caddy (il comando caddy è disponibile?).",
+    "unknown": "Impossibile leggere i moduli di questo Caddy: né il comando caddy né l’Admin API hanno risposto.",
     "help": "Cosa sa fare il Caddy installato oltre a una build standard. Una funzione che richiede un modulo mancante fallisce quando Caddy carica la configurazione, quindi controlla prima qui.",
     "cap_dns": "Provider della sfida DNS",
     "cap_layer4": "Livello 4 (proxy TCP e UDP)",
@@ -1303,6 +1303,8 @@
     "all": "Tutti i moduli ({{count}})",
     "filter": "Filtra i moduli",
     "no_match": "Nessun modulo corrisponde.",
-    "non_standard": "Moduli che non fanno parte di Caddy stesso: {{count}}"
+    "non_standard": "Moduli che non fanno parte di Caddy stesso: {{count}}",
+    "not_known": "Sconosciuto",
+    "probed": "Questo Caddy è raggiungibile solo tramite l’Admin API, che non ha un elenco dei moduli. Ogni funzione è stata provata adattando una piccola configurazione; vengono provati solo i provider DNS comuni."
   }
 }

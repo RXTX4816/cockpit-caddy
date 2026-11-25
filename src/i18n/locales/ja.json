@@ -1290,7 +1290,7 @@
   "modules": {
     "title": "Caddy のモジュール",
     "loading": "モジュールを読み取り中…",
-    "unknown": "この Caddy のモジュールを読み取れませんでした(caddy コマンドは使えますか?)。",
+    "unknown": "この Caddy のモジュールを読み取れませんでした。caddy コマンドも Admin API も応答しませんでした。",
     "help": "インストール済みの Caddy が標準ビルド以外にできること。足りないモジュールが必要な機能は、Caddy が設定を読み込むときに失敗するので、先にここで確認してください。",
     "cap_dns": "DNS チャレンジのプロバイダー",
     "cap_layer4": "レイヤー 4(TCP と UDP のプロキシ)",
@@ -1303,6 +1303,8 @@
     "all": "すべてのモジュール({{count}})",
     "filter": "モジュールを絞り込む",
     "no_match": "一致するモジュールはありません。",
-    "non_standard": "Caddy 本体に含まれないモジュール: {{count}}"
+    "non_standard": "Caddy 本体に含まれないモジュール: {{count}}",
+    "not_known": "不明",
+    "probed": "この Caddy には Admin API でしか接続できず、Admin API にはモジュール一覧がありません。各機能は小さな設定を変換して確認しました。DNS プロバイダーは一般的なものだけを確認します。"
   }
 }

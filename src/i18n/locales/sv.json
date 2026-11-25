@@ -1290,7 +1290,7 @@
   "modules": {
     "title": "Caddy-moduler",
     "loading": "Läser modulerna…",
-    "unknown": "Modulerna i den här Caddy kunde inte läsas (finns kommandot caddy?).",
+    "unknown": "Modulerna i denna Caddy kunde inte läsas: varken kommandot caddy eller Admin-API:t svarade.",
     "help": "Vad den installerade Caddy kan utöver ett standardbygge. En funktion som kräver en saknad modul misslyckas när Caddy läser in konfigurationen, så kontrollera här först.",
     "cap_dns": "Leverantörer för DNS-utmaning",
     "cap_layer4": "Lager 4 (TCP- och UDP-proxy)",
@@ -1303,6 +1303,8 @@
     "all": "Alla moduler ({{count}})",
     "filter": "Filtrera moduler",
     "no_match": "Ingen modul matchar.",
-    "non_standard": "Moduler som inte ingår i själva Caddy: {{count}}"
+    "non_standard": "Moduler som inte ingår i själva Caddy: {{count}}",
+    "not_known": "Okänt",
+    "probed": "Denna Caddy nås bara via Admin-API:t, som saknar modullista. Varje funktion testades genom att anpassa en liten konfiguration; bara vanliga DNS-leverantörer testas."
   }
 }
