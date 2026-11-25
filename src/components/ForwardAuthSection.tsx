@@ -5,11 +5,12 @@ import {
   FormHelperText,
   HelperText,
   HelperTextItem,
+  TextArea,
   TextInput,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import { SectionShell } from "./sectionLayout";
-import type { ForwardAuthConfig } from "../api";
+import type { ForwardAuthConfig, HeaderOperation } from "../api";
 import { SectionActions } from "./SectionActions";
 
 interface Props {
@@ -36,6 +37,23 @@ function parseHeaders(raw: string): string[] {
   return raw.split(/[\s,]+/).map(s => s.trim()).filter(Boolean);
 }
 
+/** One `header_up` per line: `Name value` sets it, `+Name value` adds to it, `-Name` removes it (#336). */
+export function headerUpToText(ops: HeaderOperation[] | undefined): string {
+  return (ops ?? []).map(h => h.op === "delete" ? `-${h.name}` : `${h.op === "add" ? "+" : ""}${h.name} ${h.value ?? ""}`.trimEnd()).join("\n");
+}
+
+export function headerUpFromText(text: string): HeaderOperation[] | undefined {
+  const ops: HeaderOperation[] = [];
+  for (const line of text.split("\n").map(l => l.trim()).filter(Boolean)) {
+    const m = line.match(/^([+-]?)(\S+)(?:\s+(.*))?$/);
+    if (!m) continue;
+    const [, sign, name, value] = m;
+    if (sign === "-") ops.push({ op: "delete", name });
+    else if (value) ops.push({ op: sign === "+" ? "add" : "set", name, value });
+  }
+  return ops.length ? ops : undefined;
+}
+
 export function validateForwardAuth(fa: ForwardAuthConfig | undefined): string | null {
   if (!fa) return null;
   if (fa.upstreamUrl.trim() && !fa.uri?.trim()) return "forward_auth.validation_uri_required";
@@ -48,6 +66,8 @@ export function ForwardAuthSection({ value, onChange, isDisabled, uriError, urlE
   const expanded = isExpandedProp ?? internalExpanded;
   const setExpanded = onToggleExpanded ?? setInternalExpanded;
   const [headersInput, setHeadersInput] = useState(() => headersToString(value?.copyHeaders ?? []));
+  const [headerUpInput, setHeaderUpInput] = useState(() => headerUpToText(value?.headerUp));
+  const [trustedInput, setTrustedInput] = useState(() => value?.trustedProxies?.join(" ") ?? "");
 
   const enabled = !!value;
 
@@ -137,7 +157,43 @@ export function ForwardAuthSection({ value, onChange, isDisabled, uriError, urlE
                 isDisabled={isDisabled}
               />
               <FormHelperText>
-                <HelperText><HelperTextItem>{t("forward_auth.field_copy_headers_help")}</HelperTextItem></HelperText>
+                <HelperText>
+                  <HelperTextItem>{t("forward_auth.field_copy_headers_help")}</HelperTextItem>
+                  <HelperTextItem>{t("forward_auth.field_copy_headers_rename_help")}</HelperTextItem>
+                </HelperText>
+              </FormHelperText>
+            </FormGroup>
+
+            <FormGroup label={t("forward_auth.field_header_up")} fieldId="fa-header-up">
+              <TextArea
+                id="fa-header-up"
+                value={headerUpInput}
+                onChange={(_e, v) => {
+                  setHeaderUpInput(v);
+                  update({ headerUp: headerUpFromText(v) });
+                }}
+                rows={3}
+                placeholder={"X-Real-IP {remote_host}\n-Cookie"}
+                isDisabled={isDisabled}
+              />
+              <FormHelperText>
+                <HelperText><HelperTextItem>{t("forward_auth.field_header_up_help")}</HelperTextItem></HelperText>
+              </FormHelperText>
+            </FormGroup>
+
+            <FormGroup label={t("forward_auth.field_trusted_proxies")} fieldId="fa-trusted-proxies">
+              <TextInput
+                id="fa-trusted-proxies"
+                value={trustedInput}
+                onChange={(_e, v) => {
+                  setTrustedInput(v);
+                  update({ trustedProxies: v.trim() ? v.trim().split(/[\s,]+/) : undefined });
+                }}
+                placeholder="private_ranges 203.0.113.0/24"
+                isDisabled={isDisabled}
+              />
+              <FormHelperText>
+                <HelperText><HelperTextItem>{t("forward_auth.field_trusted_proxies_help")}</HelperTextItem></HelperText>
               </FormHelperText>
             </FormGroup>
 

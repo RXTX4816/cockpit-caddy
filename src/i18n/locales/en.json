@@ -177,7 +177,18 @@
     "field_hide": "Hidden files",
     "field_hide_help": "Names or patterns that are never served, separated by spaces.",
     "field_precompressed": "Precompressed files",
-    "field_precompressed_help": "Serve file.zst, file.br or file.gz next to the original when the browser accepts that encoding."
+    "field_precompressed_help": "Serve file.zst, file.br or file.gz next to the original when the browser accepts that encoding.",
+    "field_browse_template": "Listing template",
+    "field_browse_template_help": "A template file for the directory listing. Only used when directory listing is on.",
+    "field_status": "Status code",
+    "field_status_help": "Answer every file with this status code instead of 200, for example 404 for a custom error page.",
+    "field_disable_canonical_uris": "Keep trailing slashes as they are",
+    "field_disable_canonical_uris_help": "Do not redirect to add or remove a trailing slash on directories and files.",
+    "field_templates": "Run files through templates",
+    "field_templates_help": "Turns on Caddy's template engine for the served files, so they can use include, .Req and the other template actions.",
+    "field_templates_mime": "MIME types",
+    "field_templates_root": "Directory for includes",
+    "field_templates_root_help": "Where include and the other file actions look for files. Empty means the site root."
   },
   "edit_static": {
     "title": "Edit Static Server — :{{port}}",
@@ -206,7 +217,15 @@
     "env_field_value": "Value",
     "env_add_button": "Add variable",
     "field_try_files": "Try files",
-    "field_try_files_help": "Optional. Candidates tried in order before PHP; a front-controller app usually needs {path} {path}/ /index.php?{query}."
+    "field_try_files_help": "Optional. Candidates tried in order before PHP; a front-controller app usually needs {path} {path}/ /index.php?{query}.",
+    "field_dial_timeout": "Connect timeout",
+    "field_read_timeout": "Read timeout",
+    "field_write_timeout": "Write timeout",
+    "no_timeout": "none",
+    "field_capture_stderr": "Log the PHP process's stderr",
+    "field_capture_stderr_help": "Write what PHP-FPM prints to its stderr into Caddy's log.",
+    "field_resolve_root_symlink": "Resolve symlinks in the root",
+    "field_resolve_root_symlink_help": "Follow symlinks in the root directory before SCRIPT_FILENAME is built, which opcache setups with release symlinks need."
   },
   "add_respond": {
     "title": "Add Static Response",
@@ -251,7 +270,11 @@
     "validation_port_range": "Port must be between 1 and 65535",
     "validation_port_duplicate": "Port {{port}} is already in use",
     "validation_to_required": "Redirect target is required",
-    "confirm_body": "This will create a redirect on :{{port}} → {{to}} ({{code}}) and reload Caddy's configuration."
+    "confirm_body": "This will create a redirect on :{{port}} → {{to}} ({{code}}) and reload Caddy's configuration.",
+    "code_html": "HTML page",
+    "code_html_help": "Answers with a page that redirects in the browser instead of a status code. Unlike a status code redirect, it keeps the #fragment of the URL.",
+    "keep_path": "Keep the path and query",
+    "keep_path_help": "Adds {uri} to the target, so /a?b=1 on this site goes to /a?b=1 on the target."
   },
   "basic_auth": {
     "heading": "HTTP Basic Auth",
@@ -260,14 +283,32 @@
     "field_password": "Password",
     "field_password_keep": "Leave empty to keep existing",
     "add_button": "Add account",
-    "remove_button": "Remove account"
+    "remove_button": "Remove account",
+    "realm": "Realm",
+    "algorithm": "Hash algorithm",
+    "algorithm_default": "bcrypt (default)",
+    "algorithm_argon2id": "argon2id (stronger)",
+    "algorithm_mismatch": "Accounts that keep their password still have a hash made with the other algorithm. Enter their passwords again."
   },
   "transport": {
     "heading": "Upstream Timeouts",
     "section_title": "Upstream Timeouts (optional)",
     "dial_timeout": "Connect timeout",
     "response_header_timeout": "Response header timeout",
-    "defaults_help": "Leave a field empty to use Caddy's default, shown greyed out. A response header timeout cuts off long polling and slow responses."
+    "defaults_help": "Leave a field empty to use Caddy's default, shown greyed out. A response header timeout cuts off long polling and slow responses.",
+    "streaming_help": "Streaming (websockets, event streams): leave empty to keep Caddy's defaults.",
+    "flush_interval": "Flush interval",
+    "flush_interval_placeholder": "-1 sends every write at once",
+    "stream_timeout": "Stream timeout",
+    "stream_close_delay": "Stream close delay",
+    "connection_title": "Upstream connection",
+    "tls_server_name": "TLS server name",
+    "versions": "HTTP versions",
+    "read_timeout": "Read timeout",
+    "write_timeout": "Write timeout",
+    "keepalive": "Keep-alive",
+    "keepalive_idle_conns": "Idle connections kept",
+    "keepalive_idle_conns_per_host": "Idle connections kept per host"
   },
   "server_timeouts": {
     "heading": "Server Timeouts & Limits",
@@ -282,7 +323,17 @@
     "max_header_bytes_help": "Maximum request header size (Caddy's default: 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "Disable HTTP/3",
-    "http3_help": "Caddy enables HTTP/1.1, HTTP/2, and HTTP/3 by default whenever TLS is configured. HTTP/3 runs over UDP on the same port as HTTPS — if UDP is blocked by your firewall, disabling it here falls back to HTTP/1.1 and HTTP/2 only."
+    "http3_help": "Caddy enables HTTP/1.1, HTTP/2, and HTTP/3 by default whenever TLS is configured. HTTP/3 runs over UDP on the same port as HTTPS — if UDP is blocked by your firewall, disabling it here falls back to HTTP/1.1 and HTTP/2 only.",
+    "keepalive_interval": "TCP keep-alive interval",
+    "keepalive_idle": "TCP keep-alive idle time",
+    "options_label": "Connection options",
+    "strict_sni_host": "Strict SNI host",
+    "strict_sni_host_help": "Reject requests whose Host header differs from the TLS server name.",
+    "log_credentials": "Log credentials",
+    "log_credentials_help": "Write the Authorization and Cookie headers to the access log.",
+    "enable_full_duplex": "Full duplex for HTTP/1",
+    "enable_full_duplex_help": "Let a handler read the request body while it writes the response.",
+    "read_body_idle": "Request body idle timeout"
   },
   "request_body": {
     "field_label": "Max request body size",
@@ -303,7 +354,30 @@
     "field_find_placeholder": "^/api/(.*)",
     "field_replace_placeholder": "/$1",
     "field_replace_help": "Use $1, $2 for capture groups",
-    "type_aria": "Rewrite type"
+    "type_aria": "Rewrite type",
+    "type_strip_suffix": "Strip suffix",
+    "type_uri_replace": "Replace text",
+    "type_query": "Query string",
+    "type_method": "Method",
+    "field_suffix": "Suffix",
+    "field_suffix_placeholder": ".html",
+    "field_text_find": "Find (plain text)",
+    "field_limit": "At most",
+    "field_limit_placeholder": "all",
+    "field_method": "Method",
+    "query_op": "Change",
+    "query_op_set": "Set",
+    "query_op_add": "Add",
+    "query_op_delete": "Delete",
+    "query_op_rename": "Rename",
+    "query_op_replace": "Replace",
+    "query_key": "Name",
+    "query_value": "Value",
+    "query_new_key": "New name",
+    "query_search": "Search (regex)",
+    "query_remove": "Remove change",
+    "query_add": "Add change",
+    "invalid": "Fill in every field of the rewrite."
   },
   "probe": {
     "status_pending": "Checking…",
@@ -386,7 +460,9 @@
     "validation_max_fails": "Max fails must be 1 or greater",
     "validation_needs_health_uri": "Interval, timeout and expected status need a health check path",
     "validation_health_uri": "The health check path must start with /",
-    "validation_health_status": "Use a status code like 200 or a class like 2xx"
+    "validation_health_status": "Use a status code like 200 or a class like 2xx",
+    "retry_methods": "Retry only these methods",
+    "validation_methods": "Methods are words like GET or HEAD, separated by spaces."
   },
   "response_headers": {
     "heading": "Response Headers",
@@ -413,7 +489,12 @@
     "field_name": "Header name",
     "field_value": "Value",
     "add_button": "Add",
-    "presets_label": "Presets"
+    "presets_label": "Presets",
+    "down_heading": "Response headers from the upstream",
+    "down_section_title": "Response headers from the upstream (optional)",
+    "op_replace": "Replace",
+    "field_search": "Header value to find (regular expression)",
+    "field_replacement": "Replacement"
   },
   "edit_redirect": {
     "title": "Edit Redirect — :{{port}}",
@@ -568,7 +649,16 @@
     "roll_keep_count": "Rolled files to keep",
     "roll_keep_days": "Max age of rolled files (days)",
     "roll_compress": "Compress rolled files (gzip)",
-    "roll_help": "Caddy rotates the log file by default. Leave a field empty to use Caddy's default, shown greyed out."
+    "roll_help": "Caddy rotates the log file by default. Leave a field empty to use Caddy's default, shown greyed out.",
+    "field_filters": "Field filters",
+    "field_filters_help": "One per line: a field path, then delete, hash, replace <text> or ip_mask <IPv4 bits> [<IPv6 bits>], for example request>headers>Authorization delete.",
+    "field_filters_invalid": "Each line needs a field path and one of delete, hash, replace <text> or ip_mask <bits>.",
+    "include": "Take in loggers",
+    "include_help": "Logger names this log writes, space-separated, for example http.log.access. Empty means all.",
+    "exclude": "Leave out loggers",
+    "exclude_help": "Logger names this log skips, space-separated, for example http.log.access.log0.",
+    "skip_paths": "Paths to leave out of the log",
+    "skip_paths_help": "Space-separated paths, wildcards allowed, for example /health* /ping. Requests to them are not logged."
   },
   "config_check": {
     "button": "Check Config",
@@ -696,7 +786,39 @@
     "tab_tls": "TLS & ACME",
     "tab_logging": "Logging & metrics",
     "tab_proxy": "Proxy headers & protocols",
-    "tabs_aria": "Settings sections"
+    "tabs_aria": "Settings sections",
+    "tls_advanced_title": "Advanced TLS",
+    "auto_https": "Automatic HTTPS",
+    "auto_https_off": "Off",
+    "auto_https_disable_redirects": "No HTTP to HTTPS redirects",
+    "auto_https_ignore_loaded_certs": "Ignore loaded certificates",
+    "issuer": "Certificate issuer",
+    "issuer_local_certs": "Caddy's own CA for every site",
+    "issuer_internal": "Internal CA",
+    "issuer_acme": "ACME",
+    "key_type": "Key type",
+    "preferred_chains": "Preferred certificate chain",
+    "preferred_chains_smallest": "Smallest chain",
+    "preferred_chains_root": "By root common name",
+    "preferred_chains_any": "By any common name",
+    "preferred_chains_names": "Common names",
+    "preferred_chains_names_help": "Separated by commas.",
+    "default_sni": "Default SNI",
+    "default_sni_help": "The server name Caddy assumes when a client sends none.",
+    "default_bind": "Default bind addresses",
+    "default_bind_help": "Space-separated addresses that sites without a bind option listen on.",
+    "ocsp_stapling_off": "Turn OCSP stapling off",
+    "admin_title": "Admin endpoint",
+    "admin_off": "Turn the admin endpoint off",
+    "admin_off_help": "The plugin needs the admin API to read and change the running configuration.",
+    "admin_address": "Admin address",
+    "admin_address_help": "Where Caddy's admin API listens, written as in the Caddyfile. The plugin connects to the address in its own setting, so change both together.",
+    "admin_origins": "Allowed origins",
+    "admin_origins_help": "Space-separated hosts that may call the admin API from a browser.",
+    "admin_enforce_origin": "Enforce origins",
+    "metrics_per_host": "Label metrics by host",
+    "metrics_per_host_help": "Adds the requested host to each request metric, so sites can be told apart. Every distinct host becomes its own series.",
+    "auto_https_disable_certs": "No certificate management"
   },
   "ca": {
     "title": "Internal Certificate Authority",
@@ -799,7 +921,12 @@
     "field_copy_headers": "Copy headers",
     "field_copy_headers_help": "Space or comma-separated response headers to copy from the auth service to the upstream request (e.g. Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "Auth URI is required when an auth service URL is set"
+    "validation_uri_required": "Auth URI is required when an auth service URL is set",
+    "field_copy_headers_rename_help": "Write Name>Other to copy a header under another name.",
+    "field_header_up": "Request headers to the auth service",
+    "field_header_up_help": "One per line: Name value sets a header, +Name value adds one, -Name removes one.",
+    "field_trusted_proxies": "Trusted proxies",
+    "field_trusted_proxies_help": "Ranges whose X-Forwarded-* headers are kept on the request to the auth service, separated by spaces. private_ranges stands for the private networks."
   },
   "tls_policy": {
     "heading": "TLS Policy",
@@ -847,7 +974,15 @@
     "custom_file_unreadable": "File not found or not readable by Caddy's user",
     "custom_file_readable": "File is readable",
     "custom_file_valid_expiry": "Valid — expires {{date}}",
-    "custom_cert_lifetime_note": "A custom certificate is loaded above — certificate lifetime and renewal window don't apply, since Caddy isn't issuing anything itself."
+    "custom_cert_lifetime_note": "A custom certificate is loaded above — certificate lifetime and renewal window don't apply, since Caddy isn't issuing anything itself.",
+    "acme_email": "ACME email",
+    "acme_email_help": "The account email for this site's certificates. It only applies to automatic HTTPS; empty uses the global one.",
+    "acme_global_placeholder": "Global email",
+    "acme_ca": "ACME CA directory URL",
+    "acme_ca_help": "Where this site gets its certificates, for example the Let's Encrypt staging URL while testing. Empty uses the global CA.",
+    "key_type": "Key type",
+    "acme_invalid_email": "Enter an email address such as admin@example.com.",
+    "acme_invalid_ca": "Enter an http:// or https:// URL."
   },
   "error_handler": {
     "heading": "Custom error handlers",
@@ -913,7 +1048,22 @@
     "ip_kind_remote": "Connection IP",
     "ip_kind_client_help": "The visitor's IP, taken from the forwarded header when the request comes through one of the trusted proxies (Settings). Without trusted proxies it is the same as the connection IP.",
     "ip_kind_remote_help": "The IP of the TCP connection. Behind a proxy or CDN that is the proxy's address, not the visitor's.",
-    "ip_range": "IP address or range"
+    "ip_range": "IP address or range",
+    "type_path_regexp": "Path regex",
+    "type_header_regexp": "Header regex",
+    "field_regexp_name": "Name (optional)",
+    "field_header_name_regexp": "Header name for the regex",
+    "field_regexp_name_header": "Name of the header regex (optional)",
+    "regexp_help": "A name makes the groups available as {re.name.1}, for example in a rewrite. Caddy allows one regex per matcher.",
+    "type_protocol": "Protocol",
+    "protocol_any": "any",
+    "type_file": "Files",
+    "field_try_files": "Files to look for",
+    "field_try_policy": "How to pick",
+    "try_policy_default": "first existing",
+    "file_help": "Matches when one of the files exists. Placeholders such as {path} work.",
+    "type_vars": "Variables",
+    "vars_help": "One per line: a placeholder, then the values it may have, for example {host} example.com www.example.com."
   },
   "handle_path": {
     "label": "Strip matched path prefix (handle_path)"
@@ -1059,5 +1209,44 @@
     "site_inherit_help": "Uses the DNS provider set under Settings → DNS challenge, or the HTTP challenge when none is set.",
     "site_override_help": "This site uses its own DNS provider and credentials. Saving new credentials restarts Caddy, because it reads them only when it starts.",
     "site_wildcard_warning": "Wildcard certificates need the DNS challenge. Set a DNS provider for this site, or one under Settings → DNS challenge."
+  },
+  "encode": {
+    "heading": "Compression",
+    "section_title": "Compression settings (optional)",
+    "help": "Used while compression is on in General. Without choices Caddy compresses with gzip and zstd.",
+    "algorithms": "Algorithms and order",
+    "algorithms_default": "gzip, zstd (default)",
+    "algorithms_zstd_gzip": "zstd, then gzip",
+    "algorithms_gzip": "gzip only",
+    "algorithms_zstd": "zstd only",
+    "minimum_length": "Minimum size",
+    "minimum_length_help": "Responses with fewer bytes than this are sent as they are. Caddy's default is 512.",
+    "invalid_number": "Enter a whole number of bytes.",
+    "match_status": "Only these status codes",
+    "match_status_help": "Space-separated codes or classes such as 2xx 404. Empty means every status.",
+    "invalid_status": "Enter status codes like 200 or classes like 2xx.",
+    "match_headers": "Only these response headers",
+    "match_headers_help": "One per line: the header name, then its value. Wildcards such as text/* work.",
+    "invalid_header": "Each line needs a header name and a value."
+  },
+  "dynamic_upstreams": {
+    "heading": "Dynamic Upstreams",
+    "section_title": "Dynamic Upstreams (advanced, optional)",
+    "help": "Look the upstreams up in DNS. The target above is the fallback when a lookup finds nothing. Several sources are combined.",
+    "add_button": "Add DNS source",
+    "type": "Lookup type",
+    "name_srv": "SRV name",
+    "name_a": "Host name",
+    "refresh": "Refresh interval",
+    "resolvers": "DNS resolvers",
+    "dial_fallback_delay": "Dial fallback delay",
+    "grace_period": "Grace period",
+    "versions": "Address families",
+    "versions_both": "IPv4 and IPv6",
+    "validation_name": "A source with settings needs a name.",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

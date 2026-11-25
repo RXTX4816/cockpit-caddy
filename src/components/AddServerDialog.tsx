@@ -22,7 +22,7 @@ import { parseHostPort } from "@rxtx4816/cockpit-plugin-base-react/lib/uri";
 import type { ServerDef, ErrorHandlerConfig } from "../api";
 import { namedServerIsHostless } from "../api";
 import { type TlsValues, tlsValuesToAdvanced, tlsValuesToMtls, tlsConfigToValues } from "./TlsSection";
-import { type ServerTimeoutValues } from "./ServerTimeoutsSection";
+import { serverExtrasFromValues, TIMEOUTS_EMPTY, type ServerTimeoutValues } from "./ServerTimeoutsSection";
 import { type AccessLogValues, accessLogValuesToConfig, accessLogConfigToValues } from "./AccessLogSection";
 import { ServerDialogTabs, serverTabFlags } from "./ServerDialogTabs";
 import { firstTabWithError, type ProxyTabKey } from "./proxyDialogParts";
@@ -56,9 +56,7 @@ export function AddServerDialog({ existingKeys, onAdd, onClose }: Props) {
   const [newPort, setNewPort] = useState("");
   const [tls, setTls] = useState(true);
   const [tlsValues, setTlsValues] = useState<TlsValues>(tlsConfigToValues(undefined, undefined));
-  const [serverTimeouts, setServerTimeouts] = useState<ServerTimeoutValues>({
-    readTimeout: "", readHeaderTimeout: "", writeTimeout: "", idleTimeout: "", maxHeaderBytes: "", disableHttp3: false,
-  });
+  const [serverTimeouts, setServerTimeouts] = useState<ServerTimeoutValues>(TIMEOUTS_EMPTY);
   const [accessLog, setAccessLog] = useState<AccessLogValues>(accessLogConfigToValues(undefined));
   const [errorHandlers, setErrorHandlers] = useState<ErrorHandlerConfig[]>([]);
 
@@ -285,6 +283,7 @@ export function AddServerDialog({ existingKeys, onAdd, onClose }: Props) {
                     ? parseInt(serverTimeouts.maxHeaderBytes, 10)
                     : undefined,
                   disableHttp3: serverTimeouts.disableHttp3 || undefined,
+                  serverExtras: serverExtrasFromValues(serverTimeouts),
                   accessLog: accessLogValuesToConfig(accessLog),
                   errorHandlers: errorHandlers.length ? errorHandlers : undefined,
                 });

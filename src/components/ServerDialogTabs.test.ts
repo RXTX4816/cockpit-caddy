@@ -1,13 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { accessLogConfigToValues } from "./AccessLogSection";
 import { serverTabFlags, type ServerTabValues } from "./ServerDialogTabs";
+import { TIMEOUTS_EMPTY } from "./ServerTimeoutsSection";
 import { tlsConfigToValues } from "./TlsSection";
 
 const empty = (): ServerTabValues => ({
   tlsValues: tlsConfigToValues(undefined, undefined),
   accessLog: accessLogConfigToValues(undefined),
   errorHandlers: [],
-  serverTimeouts: { readTimeout: "", readHeaderTimeout: "", writeTimeout: "", idleTimeout: "", maxHeaderBytes: "", disableHttp3: false },
+  serverTimeouts: { ...TIMEOUTS_EMPTY },
 });
 
 describe("serverTabFlags", () => {

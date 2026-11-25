@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { AccessLogSection, accessLogHasError, accessLogValuesToConfig, type AccessLogValues } from "./AccessLogSection";
 import { ErrorHandlersSection } from "./ErrorHandlersSection";
-import { ServerTimeoutsSection, type ServerTimeoutValues } from "./ServerTimeoutsSection";
+import { ServerTimeoutsSection, serverExtrasFromValues, type ServerTimeoutValues } from "./ServerTimeoutsSection";
 import { TlsSection, tlsValuesHaveErrors, tlsValuesToAdvanced, tlsValuesToMtls, type TlsValues } from "./TlsSection";
 import { ProxyDialogTabs, type ProxyTab, type ProxyTabKey } from "./proxyDialogParts";
 import type { TabFlags } from "./proxyTabFlags";
@@ -25,7 +25,7 @@ export function serverTabFlags(v: ServerTabValues, generalHasError: boolean): Ta
       routing: false,
       upstreams: false,
       logging: !!accessLogValuesToConfig(v.accessLog) || v.errorHandlers.length > 0,
-      limits: !!(st.readTimeout || st.readHeaderTimeout || st.writeTimeout || st.idleTimeout || st.maxHeaderBytes || st.disableHttp3),
+      limits: !!(st.readTimeout || st.readHeaderTimeout || st.writeTimeout || st.idleTimeout || st.maxHeaderBytes || st.disableHttp3) || !!serverExtrasFromValues(st),
     },
     hasError: {
       general: generalHasError,

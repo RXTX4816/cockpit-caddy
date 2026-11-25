@@ -24,9 +24,16 @@ import { readGlobalOptions, syncGlobalOptions, reloadCaddy, fetchStorageInfo, ch
 import type { DnsChallengeConfig, GlobalOptions, StorageInfo } from "../api";
 import { DnsChallengeFields, dnsDraftFromConfig, dnsDraftToConfig, validateDnsDraft, type DnsDraft } from "./DnsChallengeFields";
 import { CertLifetimeSelect } from "./CertLifetimeSelect";
+import { GlobalTlsFields, globalTlsFromValues, globalTlsToValues, type GlobalTlsValues } from "./GlobalTlsFields";
+import { GlobalAdminFields, globalAdminFromValues, globalAdminToValues, type GlobalAdminValues } from "./GlobalAdminFields";
 import { AccessLogSection, type AccessLogValues, accessLogConfigToValues, accessLogHasError, accessLogValuesToConfig } from "./AccessLogSection";
 import { Notice } from "./Notice";
 import { ProxyDialogTabs, type ProxyTab } from "./proxyDialogParts";
+
+/** True when any of the options a section writes is set. */
+function isSet(o: object): boolean {
+  return Object.values(o).some(v => v !== undefined && v !== false && v !== "" && !(Array.isArray(v) && !v.length));
+}
 
 type SettingsTabKey = "core" | "tls" | "logging" | "proxy";
 const SETTINGS_TAB_ORDER: SettingsTabKey[] = ["core", "tls", "logging", "proxy"];
@@ -87,6 +94,8 @@ export function GlobalOptionsTab() {
   const [onDemandBurst, setOnDemandBurst] = useState("");
   const [internalCertLifetime, setInternalCertLifetime] = useState("");
   const [renewalWindowRatio, setRenewalWindowRatio] = useState("");
+  const [globalTls, setGlobalTls] = useState<GlobalTlsValues>(globalTlsToValues({}));
+  const [globalAdmin, setGlobalAdmin] = useState<GlobalAdminValues>(globalAdminToValues({}));
   const [storagePath, setStoragePath] = useState("");
   const [storageInfo, setStorageInfo] = useState<StorageInfo | null>(null);
   const [storageInfoError, setStorageInfoError] = useState<string | null>(null);
@@ -94,6 +103,7 @@ export function GlobalOptionsTab() {
   const [metricsListenAddress, setMetricsListenAddress] = useState("");
   const [metricsPath, setMetricsPath] = useState("");
   const [metricsPlainFormat, setMetricsPlainFormat] = useState(false);
+  const [metricsPerHost, setMetricsPerHost] = useState(false);
   const [runtimeLog, setRuntimeLog] = useState<AccessLogValues>(accessLogConfigToValues(undefined));
   const [trustedProxiesEnabled, setTrustedProxiesEnabled] = useState(false);
   const [trustedProxiesRanges, setTrustedProxiesRanges] = useState("");
@@ -147,12 +157,15 @@ export function GlobalOptionsTab() {
         setOnDemandBurst(opts.onDemandBurst != null ? String(opts.onDemandBurst) : "");
         setInternalCertLifetime(opts.internalCertLifetime ?? "");
         setRenewalWindowRatio(opts.renewalWindowRatio != null ? String(opts.renewalWindowRatio) : "");
+        setGlobalTls(globalTlsToValues(opts));
+        setGlobalAdmin(globalAdminToValues(opts));
         setStoragePath(opts.storagePath ?? "");
         loadStorageInfo(opts.storagePath);
         setMetricsEnabled(opts.metricsEnabled ?? false);
         setMetricsListenAddress(opts.metricsListenAddress ?? "");
         setMetricsPath(opts.metricsPath ?? "");
         setMetricsPlainFormat(opts.metricsPlainFormat ?? false);
+        setMetricsPerHost(opts.metricsPerHost ?? false);
         setRuntimeLog(accessLogConfigToValues(opts.runtimeLog));
         setTrustedProxiesEnabled(!!opts.trustedProxies);
         setTrustedProxiesRanges(opts.trustedProxies?.ranges.join(" ") ?? "");
@@ -201,8 +214,8 @@ export function GlobalOptionsTab() {
     proxy: !!(trustedProxiesRangesErr || proxyProtocolTimeoutErr),
   };
   const configured: Record<SettingsTabKey, boolean> = {
-    core: !!(httpPort || httpsPort || debug || gracePeriod || shutdownDelay || storagePath),
-    tls: !!(email || acmeCA || acmeCARoot || acmeEabKeyId || acmeEabMacKey || dnsEnabled || onDemandEnabled || internalCertLifetime || renewalWindowRatio),
+    core: !!(httpPort || httpsPort || debug || gracePeriod || shutdownDelay || storagePath) || isSet(globalAdminFromValues(globalAdmin)),
+    tls: !!(email || acmeCA || acmeCARoot || acmeEabKeyId || acmeEabMacKey || dnsEnabled || onDemandEnabled || internalCertLifetime || renewalWindowRatio) || isSet(globalTlsFromValues(globalTls)),
     logging: metricsEnabled || !!accessLogValuesToConfig(runtimeLog),
     proxy: trustedProxiesEnabled || proxyProtocolEnabled,
   };
@@ -359,6 +372,13 @@ export function GlobalOptionsTab() {
             <HelperText><HelperTextItem>{t("global_opts.storage_root_help")}</HelperTextItem></HelperText>
           </FormHelperText>
         </FormGroup>
+
+        <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
+
+        <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+          {t("global_opts.admin_title")}
+        </Title>
+        <GlobalAdminFields value={globalAdmin} onChange={setGlobalAdmin} isDisabled={isConfirming} />
 
     </>) },
     { key: "tls", label: t("global_opts.tab_tls"), configured: configured.tls, hasError: hasError.tls, content: (<>
@@ -602,6 +622,13 @@ export function GlobalOptionsTab() {
           )}
         </FormGroup>
 
+        <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
+
+        <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+          {t("global_opts.tls_advanced_title")}
+        </Title>
+        <GlobalTlsFields value={globalTls} onChange={setGlobalTls} isDisabled={isConfirming} />
+
     </>) },
     { key: "logging", label: t("global_opts.tab_logging"), configured: configured.logging, hasError: hasError.logging, content: (<>
         <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
@@ -674,6 +701,17 @@ export function GlobalOptionsTab() {
               />
             </FormGroup>
 
+            <FormGroup fieldId="go-metrics-per-host">
+              <Checkbox
+                id="go-metrics-per-host"
+                label={t("global_opts.metrics_per_host")}
+                description={t("global_opts.metrics_per_host_help")}
+                isChecked={metricsPerHost}
+                onChange={(_e, v) => setMetricsPerHost(v)}
+                isDisabled={isConfirming}
+              />
+            </FormGroup>
+
             {!metricsListenAddressErr && metricsListenAddress.trim() && (() => {
               const url = metricsLinkUrl(metricsListenAddress, metricsPath);
               return url ? (
@@ -700,6 +738,7 @@ export function GlobalOptionsTab() {
           value={runtimeLog}
           onChange={setRuntimeLog}
           isDisabled={isConfirming}
+          showLoggerFilters
         />
 
     </>) },
@@ -940,11 +979,14 @@ export function GlobalOptionsTab() {
                     onDemandBurst: onDemandEnabled && onDemandBurst.trim() ? parseInt(onDemandBurst, 10) : undefined,
                     internalCertLifetime: internalCertLifetime.trim() || undefined,
                     renewalWindowRatio: renewalWindowRatio.trim() ? Number(renewalWindowRatio.trim()) : undefined,
+                    ...globalTlsFromValues(globalTls),
+                    ...globalAdminFromValues(globalAdmin),
                     storagePath: storagePath.trim() || undefined,
                     metricsEnabled: metricsEnabled || undefined,
                     metricsListenAddress: metricsEnabled ? (metricsListenAddress.trim() || undefined) : undefined,
                     metricsPath: metricsEnabled ? (metricsPath.trim() || undefined) : undefined,
                     metricsPlainFormat: metricsEnabled ? (metricsPlainFormat || undefined) : undefined,
+                    metricsPerHost: metricsEnabled ? (metricsPerHost || undefined) : undefined,
                     runtimeLog: accessLogValuesToConfig(runtimeLog),
                     trustedProxies: trustedProxiesEnabled && trustedProxiesRanges.trim() ? {
                       ranges: trustedProxiesRanges.trim().split(/\s+/),

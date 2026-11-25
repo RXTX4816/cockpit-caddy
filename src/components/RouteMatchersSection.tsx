@@ -36,6 +36,31 @@ type IpKind = "client_ip" | "remote_ip";
 const HTTP_METHODS = ["GET", "HEAD", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"] as const;
 const EXPRESSION_DOCS = "https://caddyserver.com/docs/caddyfile/matchers#expression";
 
+/** A matcher Caddy would reject: a header regexp without its header, or a file matcher without files (#331). */
+export function validateRouteMatch(m: RouteMatch | undefined): boolean {
+  if (!m) return false;
+  const bad = (f: RouteMatchFields | undefined) => (!!f?.header_regexp?.pattern && !f.header_regexp.header.trim())
+    || (!!f?.file && !f.file.try_files.length);
+  return bad(m) || bad(m.not);
+}
+
+const PROTOCOLS = ["http", "https", "grpc"] as const;
+const TRY_POLICIES = ["first_exist", "first_exist_fallback", "smallest_size", "largest_size", "most_recently_modified"] as const;
+
+/** One `vars` per line: the placeholder, then its values (#331). */
+export function varsToText(vars: Record<string, string[]> | undefined): string {
+  return Object.entries(vars ?? {}).map(([k, v]) => [k, ...v].join(" ")).join("\n");
+}
+
+export function varsFromText(text: string): Record<string, string[]> | undefined {
+  const out: Record<string, string[]> = {};
+  for (const line of text.split("\n").map(l => l.trim()).filter(Boolean)) {
+    const [name, ...values] = line.split(/\s+/);
+    if (values.length) out[name] = values;
+  }
+  return Object.keys(out).length ? out : undefined;
+}
+
 /** Drops empty lists/objects so "no matcher" stays detectable. */
 function cleanFields<T extends RouteMatchFields>(merged: T): T {
   if (!merged.path?.length) delete merged.path;
@@ -45,6 +70,11 @@ function cleanFields<T extends RouteMatchFields>(merged: T): T {
   if (merged.query && !Object.keys(merged.query).length) delete merged.query;
   if (!merged.remote_ip?.ranges.length) delete merged.remote_ip;
   if (!merged.client_ip?.ranges.length) delete merged.client_ip;
+  if (!merged.path_regexp?.pattern && !merged.path_regexp?.name) delete merged.path_regexp;
+  if (!merged.header_regexp?.pattern && !merged.header_regexp?.header && !merged.header_regexp?.name) delete merged.header_regexp;
+  if (!merged.protocol) delete merged.protocol;
+  if (!merged.file?.try_files.length && !merged.file?.try_policy) delete merged.file;
+  if (merged.vars && !Object.keys(merged.vars).length) delete merged.vars;
   return merged;
 }
 
@@ -156,6 +186,7 @@ function MatcherFields({ value, onChange, isDisabled, idPrefix, labelPrefix }: F
   const [newQueryName, setNewQueryName] = useState("");
   const [newQueryVal, setNewQueryVal] = useState("");
   const patch = patchFields;
+  const [varsDraft, setVarsDraft] = useState(() => varsToText(value?.vars));
 
   // Path
   function addPath() {
@@ -468,6 +499,124 @@ function MatcherFields({ value, onChange, isDisabled, idPrefix, labelPrefix }: F
             {text("matchers.add_cidr")}
           </Button>
         </div>
+      </div>
+
+      {/* Regular expressions, protocol, files and variables (#331) */}
+      <div>
+        <strong style={{ fontSize: "0.9rem" }}>{text("matchers.type_path_regexp")}</strong>
+        <div style={{ display: "flex", gap: "0.4rem", marginTop: "0.35rem", flexWrap: "wrap" }}>
+          <TextInput
+            aria-label={t("matchers.field_regexp_name")}
+            placeholder={text("matchers.field_regexp_name")}
+            value={value?.path_regexp?.name ?? ""}
+            onChange={(_e, v) => onChange(patch(value, { path_regexp: { pattern: value?.path_regexp?.pattern ?? "", ...(v ? { name: v } : {}) } }))}
+            isDisabled={isDisabled}
+            style={{ flex: "1 1 8rem" }}
+          />
+          <TextInput
+            aria-label={t("matchers.type_path_regexp")}
+            placeholder="^/user/(\d+)$"
+            value={value?.path_regexp?.pattern ?? ""}
+            onChange={(_e, v) => onChange(patch(value, { path_regexp: { pattern: v, ...(value?.path_regexp?.name ? { name: value.path_regexp.name } : {}) } }))}
+            isDisabled={isDisabled}
+            style={{ flex: "3 1 14rem" }}
+          />
+        </div>
+      </div>
+
+      <div>
+        <strong style={{ fontSize: "0.9rem" }}>{text("matchers.type_header_regexp")}</strong>
+        <div style={{ display: "flex", gap: "0.4rem", marginTop: "0.35rem", flexWrap: "wrap" }}>
+          <TextInput
+            aria-label={t("matchers.field_header_name_regexp")}
+            placeholder={text("matchers.field_header_name")}
+            value={value?.header_regexp?.header ?? ""}
+            onChange={(_e, v) => onChange(patch(value, { header_regexp: { header: v, pattern: value?.header_regexp?.pattern ?? "", ...(value?.header_regexp?.name ? { name: value.header_regexp.name } : {}) } }))}
+            isDisabled={isDisabled}
+            style={{ flex: "1 1 8rem" }}
+          />
+          <TextInput
+            aria-label={t("matchers.field_regexp_name_header")}
+            placeholder={text("matchers.field_regexp_name")}
+            value={value?.header_regexp?.name ?? ""}
+            onChange={(_e, v) => onChange(patch(value, { header_regexp: { header: value?.header_regexp?.header ?? "", pattern: value?.header_regexp?.pattern ?? "", ...(v ? { name: v } : {}) } }))}
+            isDisabled={isDisabled}
+            style={{ flex: "1 1 8rem" }}
+          />
+          <TextInput
+            aria-label={t("matchers.type_header_regexp")}
+            placeholder="^Bearer .+$"
+            value={value?.header_regexp?.pattern ?? ""}
+            onChange={(_e, v) => onChange(patch(value, { header_regexp: { header: value?.header_regexp?.header ?? "", pattern: v, ...(value?.header_regexp?.name ? { name: value.header_regexp.name } : {}) } }))}
+            isDisabled={isDisabled}
+            style={{ flex: "3 1 14rem" }}
+          />
+        </div>
+        <HelperText style={{ marginTop: "0.25rem" }}>
+          <HelperTextItem>{text("matchers.regexp_help")}</HelperTextItem>
+        </HelperText>
+      </div>
+
+      <div>
+        <strong style={{ fontSize: "0.9rem" }}>{text("matchers.type_protocol")}</strong>
+        <div style={{ marginTop: "0.35rem" }}>
+          <FormSelect
+            id={`${idPrefix}-protocol`}
+            aria-label={t("matchers.type_protocol")}
+            value={value?.protocol ?? ""}
+            onChange={(_e, v) => onChange(patch(value, { protocol: v || undefined }))}
+            isDisabled={isDisabled}
+            style={{ maxWidth: "16rem" }}
+          >
+            <FormSelectOption value="" label={text("matchers.protocol_any")} />
+            {PROTOCOLS.map(p => <FormSelectOption key={p} value={p} label={p} />)}
+          </FormSelect>
+        </div>
+      </div>
+
+      <div>
+        <strong style={{ fontSize: "0.9rem" }}>{text("matchers.type_file")}</strong>
+        <div style={{ display: "flex", gap: "0.4rem", marginTop: "0.35rem", flexWrap: "wrap" }}>
+          <TextInput
+            aria-label={t("matchers.field_try_files")}
+            placeholder="{path} {path}/index.html"
+            value={value?.file?.try_files.join(" ") ?? ""}
+            onChange={(_e, v) => onChange(patch(value, { file: { try_files: v.trim() ? v.trim().split(/\s+/) : [], ...(value?.file?.try_policy ? { try_policy: value.file.try_policy } : {}) } }))}
+            isDisabled={isDisabled}
+            style={{ flex: "3 1 14rem" }}
+          />
+          <FormSelect
+            id={`${idPrefix}-try-policy`}
+            aria-label={t("matchers.field_try_policy")}
+            value={value?.file?.try_policy ?? ""}
+            onChange={(_e, v) => onChange(patch(value, { file: { try_files: value?.file?.try_files ?? [], ...(v ? { try_policy: v } : {}) } }))}
+            isDisabled={isDisabled}
+            style={{ flex: "1 1 10rem" }}
+          >
+            <FormSelectOption value="" label={text("matchers.try_policy_default")} />
+            {TRY_POLICIES.map(p => <FormSelectOption key={p} value={p} label={p} />)}
+          </FormSelect>
+        </div>
+        <HelperText style={{ marginTop: "0.25rem" }}>
+          <HelperTextItem>{text("matchers.file_help")}</HelperTextItem>
+        </HelperText>
+      </div>
+
+      <div>
+        <strong style={{ fontSize: "0.9rem" }}>{text("matchers.type_vars")}</strong>
+        <TextArea
+          aria-label={t("matchers.type_vars")}
+          value={varsDraft}
+          onChange={(_e, v) => { setVarsDraft(v); onChange(patch(value, { vars: varsFromText(v) })); }}
+          isDisabled={isDisabled}
+          resizeOrientation="vertical"
+          rows={2}
+          placeholder="{host} example.com www.example.com"
+          style={{ marginTop: "0.35rem", fontFamily: "var(--pf-t--global--font--family--mono)" }}
+        />
+        <HelperText style={{ marginTop: "0.25rem" }}>
+          <HelperTextItem>{text("matchers.vars_help")}</HelperTextItem>
+        </HelperText>
       </div>
     </>
   );

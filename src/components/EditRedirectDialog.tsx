@@ -22,8 +22,7 @@ import { ProxyTabs } from "./ProxyTabs";
 import { firstTabWithError, type ProxyTabKey } from "./proxyDialogParts";
 import { proxyTabStateFlags, proxyTabStateFromEntry, useProxyTabState } from "./proxyTabState";
 import { Notice } from "./Notice";
-
-const REDIRECT_CODES = [301, 302, 307, 308] as const;
+import { RedirectModeField, joinRedirectTarget, redirectModeOf, splitRedirectTarget, type RedirectMode } from "./RedirectModeField";
 
 interface Props {
   proxy: ProxyEntry;
@@ -37,8 +36,9 @@ export function EditRedirectDialog({ proxy, existingPorts, onSave, onClose }: Pr
   const toast = useToast();
   const confirmAction = useConfirmAction();
 
-  const [to, setTo] = useState(proxy.redirect?.to ?? "");
-  const [code, setCode] = useState<301 | 302 | 307 | 308>(proxy.redirect?.code ?? 308);
+  const [to, setTo] = useState(splitRedirectTarget(proxy.redirect?.to ?? "").to);
+  const [keepPath, setKeepPath] = useState(splitRedirectTarget(proxy.redirect?.to ?? "").keepPath);
+  const [code, setCode] = useState<RedirectMode>(redirectModeOf(proxy.redirect));
   const [label, setLabel] = useState(proxy.label ?? "");
   const [tabState, updateTabState] = useProxyTabState(proxyTabStateFromEntry(proxy));
   const [activeTab, setActiveTab] = useState<ProxyTabKey>("general");
@@ -117,21 +117,7 @@ export function EditRedirectDialog({ proxy, existingPorts, onSave, onClose }: Pr
                 )}
               </FormGroup>
 
-              <FormGroup label={t("add_redirect.field_code")} fieldId="edit-redirect-code" isRequired>
-                <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap" }}>
-                  {REDIRECT_CODES.map(c => (
-                    <Button
-                      key={c}
-                      variant={code === c ? "primary" : "secondary"}
-                      size="sm"
-                      onClick={() => setCode(c)}
-                      isDisabled={isLocked}
-                    >
-                      {t(`add_redirect.code_${c}`)}
-                    </Button>
-                  ))}
-                </div>
-              </FormGroup>
+              <RedirectModeField idPrefix="edit-redirect" mode={code} onModeChange={setCode} keepPath={keepPath} onKeepPathChange={setKeepPath} isDisabled={isLocked} />
               <SnippetImportsField value={imports} onChange={setImports} snippetSettings={proxy.snippetSettings} isDisabled={isLocked} />
             </Form>
           }
@@ -152,7 +138,7 @@ export function EditRedirectDialog({ proxy, existingPorts, onSave, onClose }: Pr
                 const updated: ProxyEntry = {
                   ...proxy,
                   label: label.trim() || undefined,
-                  redirect: { to: to.trim(), code },
+                  redirect: { to: joinRedirectTarget(to, keepPath), code: code === "html" ? 302 : code, html: code === "html" || undefined },
                   matchers: tabState.matchers ?? undefined,
                   imports,
                   handlePath: tabState.handlePath || undefined,
