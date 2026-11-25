@@ -4680,3 +4680,50 @@ describe("server options on the JSON side (#328)", () => {
     expect(parseProxies(config)[0].serverExtras).toEqual({ strictSniHost: true });
   });
 });
+
+describe("TLS and listener global options (#329)", () => {
+  const all = {
+    autoHttps: "disable_redirects", defaultSni: "example.com", keyType: "p256", ocspStaplingOff: true,
+    preferredChains: { mode: "root_common_name" as const, names: ["ISRG Root X1", "Other Root"] },
+    certIssuer: "internal", defaultBind: ["127.0.0.1", "[::1]"],
+  };
+
+  it("writes every option and reads them back", () => {
+    const patched = buildGlobalOptionsPatch("", all);
+    for (const line of ["auto_https disable_redirects", "default_sni example.com", "key_type p256", "ocsp_stapling off", "cert_issuer internal", "default_bind 127.0.0.1 [::1]"]) {
+      expect(patched).toContain(line);
+    }
+    expect(patched).toContain('root_common_name "ISRG Root X1" "Other Root"');
+    expect(parseGlobalOptions(patched)).toEqual(all);
+  });
+
+  it("writes preferred_chains smallest on one line", () => {
+    const patched = buildGlobalOptionsPatch("", { preferredChains: { mode: "smallest" } });
+    expect(patched).toContain("preferred_chains smallest");
+    expect(parseGlobalOptions(patched).preferredChains).toEqual({ mode: "smallest" });
+  });
+
+  it("writes local_certs, but not next to an explicit cert_issuer, which Caddy rejects", () => {
+    expect(buildGlobalOptionsPatch("", { localCerts: true })).toContain("local_certs");
+    expect(buildGlobalOptionsPatch("", { localCerts: true, certIssuer: "acme" })).not.toContain("local_certs");
+  });
+
+  it("keeps the body of a cert_issuer it does not know as written", () => {
+    const src = "{\n\tcert_issuer zerossl {\n\t\temail me@example.com\n\t}\n}\n";
+    const opts = parseGlobalOptions(src);
+    expect(opts.certIssuer).toBe("zerossl");
+    expect(opts.certIssuerBody).toEqual(["email me@example.com"]);
+    const patched = buildGlobalOptionsPatch(src, opts);
+    expect(patched.match(/cert_issuer/g)).toHaveLength(1);
+    expect(parseGlobalOptions(patched)).toEqual(opts);
+  });
+
+  it("moves a hand-written option outside the managed section into it instead of duplicating it", () => {
+    const src = `{\n\tauto_https off\n${OPTS_BEGIN}\n\temail me@example.com\n${OPTS_END}\n}\n`;
+    const opts = parseGlobalOptions(src);
+    expect(opts.autoHttps).toBe("off");
+    const patched = buildGlobalOptionsPatch(src, { ...opts, keyType: "p384" });
+    expect(patched.match(/auto_https/g)).toHaveLength(1);
+    expect(parseGlobalOptions(patched)).toMatchObject({ autoHttps: "off", keyType: "p384", email: "me@example.com" });
+  });
+});

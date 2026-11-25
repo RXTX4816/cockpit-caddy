@@ -12,7 +12,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { CONF_HEADER, buildServerEntry, proxiesToCaddyfile, parseProxies, parseConfExternalAddresses, proxyAddressKeys, resolveInternalIssuerSettings, surgicallyWriteProxy, buildMigratedConfContent, migrateCaddyfile, parseConfTlsIssuerMap, parseConfTlsOnDemandMap, parseConfTlsMap, expandPlaceholderShorthands } from "./caddy";
 import { snippetsToConf, parseSnippets, parseConfSiteImports, parseConfSiteBlocks, separateSnippetSettings } from "./snippets";
-import { buildServerExtrasLines } from "./globalOptions";
+import { buildGlobalOptionsPatch, buildServerExtrasLines } from "./globalOptions";
 import { parseServerExtras } from "./caddyJsonModel";
 import type { CaddyConfig, CaddyServer, ProxyEntry } from "./types";
 
@@ -831,5 +831,29 @@ describe.runIf(available || required)("caddy adapt accepts the server options (#
     expect(parseServerExtras(server)).toEqual({
       keepaliveInterval: "30s", keepaliveIdle: "1m", strictSniHost: true, logCredentials: true, enableFullDuplex: true,
     });
+  });
+});
+
+describe.runIf(available || required)("caddy adapt accepts the TLS global options (#329)", () => {
+  const site = ":8080 {\n\trespond ok\n}\n";
+
+  it("accepts every option in one global block and sees the ones it keeps in the JSON", () => {
+    const patched = buildGlobalOptionsPatch("", {
+      autoHttps: "disable_redirects", defaultSni: "example.com", keyType: "p256", ocspStaplingOff: true,
+      preferredChains: { mode: "root_common_name", names: ["ISRG Root X1"] }, certIssuer: "acme", defaultBind: ["127.0.0.1"],
+    });
+    const config = adapt(`${patched}\n${site}`);
+    const policy = config.apps?.tls?.automation?.policies?.[0] as Record<string, unknown>;
+    expect(policy.key_type).toBe("p256");
+    expect(policy.disable_ocsp_stapling).toBe(true);
+    expect((policy.issuers as Array<Record<string, unknown>>)[0]).toMatchObject({ module: "acme", preferred_chains: { root_common_name: ["ISRG Root X1"] } });
+    const server = Object.values(config.apps?.http?.servers ?? {})[0] as CaddyServer;
+    expect(server.listen).toEqual(["127.0.0.1:8080"]);
+    expect(server.automatic_https).toEqual({ disable_redirects: true });
+  });
+
+  it("accepts local_certs", () => {
+    const config = adapt(`${buildGlobalOptionsPatch("", { localCerts: true })}\n${site}`);
+    expect(config.apps?.tls?.automation?.policies?.[0]?.issuers?.[0]).toMatchObject({ module: "internal" });
   });
 });

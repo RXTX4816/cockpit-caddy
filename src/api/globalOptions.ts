@@ -220,7 +220,28 @@ export interface GlobalOptions {
   trustedProxies?: import("./types").TrustedProxiesConfig;
   /** Accept the PROXY protocol on incoming connections (#157) — see ProxyProtocolConfig. */
   proxyProtocol?: import("./types").ProxyProtocolConfig;
+  /** `auto_https`: `off`, `disable_redirects`, `disable_certs` or `ignore_loaded_certs` (#329). */
+  autoHttps?: string;
+  /** `local_certs`: issue every certificate from Caddy's own CA (#329). */
+  localCerts?: boolean;
+  /** `default_sni`: the server name used when a client sends none (#329). */
+  defaultSni?: string;
+  /** `key_type`: `ed25519`, `p256`, `p384`, `rsa2048` or `rsa4096` (#329). */
+  keyType?: string;
+  /** `ocsp_stapling off` (#329). */
+  ocspStaplingOff?: boolean;
+  /** `preferred_chains` for ACME issuers: `smallest`, or chains by root or any common name (#329). */
+  preferredChains?: PreferredChains;
+  /** `cert_issuer <name and arguments>`; a body, when it has one, is kept as written (#329). */
+  certIssuer?: string;
+  certIssuerBody?: string[];
+  /** `default_bind`: the addresses sites bind to when they name none (#329). */
+  defaultBind?: string[];
 }
+
+export type PreferredChains =
+  | { mode: "smallest" }
+  | { mode: "root_common_name" | "any_common_name"; names: string[] };
 
 
 /**
@@ -232,6 +253,7 @@ export const KNOWN_GLOBAL_OPTION_KEYS = new Set([
   "http_port", "https_port", "debug", "grace_period", "shutdown_delay",
   "email", "acme_ca", "acme_ca_root", "acme_eab", "acme_dns", "on_demand_tls",
   "renewal_window_ratio", "storage", "metrics", "log",
+  "auto_https", "local_certs", "default_sni", "key_type", "ocsp_stapling", "preferred_chains", "cert_issuer", "default_bind",
 ]);
 
 
@@ -264,6 +286,16 @@ export function dnsProviderLines(directive: string, cfg: import("./types").DnsCh
     ...Object.entries(cfg.literal ?? {}).filter(([k]) => k).map(([k, v]) => `${indent}\t${k} ${v}`),
   ];
   return entries.length ? [`${head} {`, ...entries, `${indent}}`] : [head];
+}
+
+
+/** Splits `a "b c" d` into `a`, `b c`, `d`. */
+function splitTokens(text: string): string[] {
+  return [...text.matchAll(/"([^"]*)"|(\S+)/g)].map(m => m[1] ?? m[2]);
+}
+
+function quoteToken(v: string): string {
+  return /[\s"]/.test(v) ? `"${v.replace(/"/g, '\\"')}"` : v;
 }
 
 
@@ -314,6 +346,43 @@ export function parseOptionLines(lines: string[]): GlobalOptions {
           else if (im[1] === "burst") opts.onDemandBurst = parseInt(im[2], 10);
         }
         i++;
+      }
+    } else if (key === "auto_https" && val) {
+      opts.autoHttps = val.trim();
+    } else if (key === "local_certs") {
+      opts.localCerts = true;
+    } else if (key === "default_sni" && val) {
+      opts.defaultSni = val.trim();
+    } else if (key === "key_type" && val) {
+      opts.keyType = val.trim();
+    } else if (key === "ocsp_stapling" && val?.trim() === "off") {
+      opts.ocspStaplingOff = true;
+    } else if (key === "default_bind" && val) {
+      opts.defaultBind = val.trim().split(/\s+/);
+    } else if (key === "preferred_chains" && val) {
+      if (val.trim() === "smallest") opts.preferredChains = { mode: "smallest" };
+      else if (line.endsWith("{")) {
+        i++;
+        while (i < lines.length && lines[i].trim() !== "}") {
+          const im = lines[i].trim().match(/^(root_common_name|any_common_name)\s+(.+)$/);
+          if (im) opts.preferredChains = { mode: im[1] as "root_common_name" | "any_common_name", names: splitTokens(im[2]) };
+          i++;
+        }
+      }
+    } else if (key === "cert_issuer" && val) {
+      opts.certIssuer = val.replace(/\s*\{$/, "").trim();
+      if (line.endsWith("{")) {
+        const body: string[] = [];
+        let depth = 1;
+        i++;
+        while (i < lines.length) {
+          const inner = lines[i].trim();
+          depth += (inner.match(/\{/g) ?? []).length - (inner.match(/\}/g) ?? []).length;
+          if (depth <= 0) break;
+          body.push(inner);
+          i++;
+        }
+        opts.certIssuerBody = body;
       }
     } else if (line.startsWith(INTERNAL_LIFETIME_MARKER)) {
       const marked = line.slice(INTERNAL_LIFETIME_MARKER.length).trim();
@@ -434,6 +503,16 @@ export function parseOptionLines(lines: string[]): GlobalOptions {
 }
 
 
+const ABSORBED_FIELDS: ReadonlySet<string> = new Set([
+  "autoHttps", "localCerts", "defaultSni", "keyType", "ocspStaplingOff", "preferredChains", "certIssuer", "certIssuerBody",
+  "defaultBind",
+]);
+
+function isAbsorbedField(k: string): boolean {
+  return ABSORBED_FIELDS.has(k);
+}
+
+
 /**
  * Parse global options from a Caddyfile string. Prefers the cockpit-caddy:opts
  * managed section; if absent, falls back to scanning the real top-level global
@@ -446,11 +525,37 @@ export function parseGlobalOptions(content: string): GlobalOptions {
   const ei = content.indexOf(GLOBAL_OPTS_END);
   if (bi !== -1 && ei !== -1) {
     const section = content.slice(bi + GLOBAL_OPTS_BEGIN.length, ei);
-    return parseOptionLines(section.split("\n"));
+    const opts = parseOptionLines(section.split("\n"));
+    const outside = parseOptionLines(globalLinesOutsideSection(content).split("\n"));
+    for (const k of Object.keys(outside) as Array<keyof GlobalOptions>) {
+      if (opts[k] === undefined && isAbsorbedField(k)) (opts as Record<string, unknown>)[k] = outside[k];
+    }
+    return opts;
   }
   const gb = findGlobalBlock(content);
   if (!gb) return {};
   return parseOptionLines(content.slice(gb.open + 1, gb.close).split("\n"));
+}
+
+
+/**
+ * Options added after the managed section existed (#329, #330). A Caddyfile that has the
+ * section may still carry them as hand-written lines outside it (the stock one has `admin`),
+ * so reading looks there too and a save moves them into the section instead of duplicating them.
+ */
+export const ABSORBED_GLOBAL_OPTION_KEYS = new Set([
+  "auto_https", "local_certs", "default_sni", "key_type", "ocsp_stapling", "preferred_chains", "cert_issuer", "default_bind",
+]);
+
+
+/** The global block's lines outside the managed opts section, or "" without one. */
+function globalLinesOutsideSection(content: string): string {
+  const gb = findGlobalBlock(content);
+  if (!gb) return "";
+  const inner = content.slice(gb.open + 1, gb.close);
+  const bi = inner.indexOf(GLOBAL_OPTS_BEGIN);
+  const ei = inner.indexOf(GLOBAL_OPTS_END);
+  return bi !== -1 && ei !== -1 ? inner.slice(0, bi) + inner.slice(ei + GLOBAL_OPTS_END.length) : inner;
 }
 
 
@@ -461,14 +566,14 @@ export function parseGlobalOptions(content: string): GlobalOptions {
  * already exist outside the markers aren't duplicated (which `caddy validate`
  * would reject).
  */
-export function stripKnownGlobalOptionLines(blockInner: string): string {
+export function stripKnownGlobalOptionLines(blockInner: string, keys: ReadonlySet<string> = KNOWN_GLOBAL_OPTION_KEYS): string {
   const lines = blockInner.split("\n");
   const out: string[] = [];
   let i = 0;
   while (i < lines.length) {
     const trimmed = lines[i].trim();
     const key = trimmed.split(/\s+/)[0];
-    if (KNOWN_GLOBAL_OPTION_KEYS.has(key)) {
+    if (keys.has(key)) {
       if (trimmed.endsWith("{")) {
         let depth = 1;
         i++;
@@ -522,6 +627,22 @@ export function buildGlobalOptionsLines(opts: GlobalOptions): string {
     lines.push(`\t\troot ${opts.storagePath}`);
     lines.push("\t}");
   }
+  // #329 — TLS and listener defaults. `local_certs` is itself a kind of issuer, which Caddy
+  // rejects next to `cert_issuer` ("global options are ambiguous"), so the explicit issuer wins.
+  if (opts.autoHttps) lines.push(`\tauto_https ${opts.autoHttps}`);
+  if (opts.localCerts && !opts.certIssuer) lines.push("\tlocal_certs");
+  if (opts.defaultSni) lines.push(`\tdefault_sni ${opts.defaultSni}`);
+  if (opts.keyType) lines.push(`\tkey_type ${opts.keyType}`);
+  if (opts.ocspStaplingOff) lines.push("\tocsp_stapling off");
+  if (opts.preferredChains?.mode === "smallest") lines.push("\tpreferred_chains smallest");
+  else if (opts.preferredChains?.names.length) {
+    lines.push("\tpreferred_chains {", `\t\t${opts.preferredChains.mode} ${opts.preferredChains.names.map(quoteToken).join(" ")}`, "\t}");
+  }
+  if (opts.certIssuer) {
+    if (opts.certIssuerBody?.length) lines.push(`\tcert_issuer ${opts.certIssuer} {`, ...opts.certIssuerBody.map(l => `\t\t${l}`), "\t}");
+    else lines.push(`\tcert_issuer ${opts.certIssuer}`);
+  }
+  if (opts.defaultBind?.length) lines.push(`\tdefault_bind ${opts.defaultBind.join(" ")}`);
   // Turns on request-level `caddy_http_*` instrumentation across every server — the
   // dedicated site block that actually exposes /metrics is written separately into
   // conf.d (see buildMetricsSiteBlock), since a bare global option can't also declare
@@ -558,7 +679,19 @@ export function buildGlobalOptionsPatch(diskContent: string, opts: GlobalOptions
   const body = buildGlobalOptionsLines(opts);
   let base = diskContent;
   const hasMarkers = diskContent.includes(GLOBAL_OPTS_BEGIN) && diskContent.includes(GLOBAL_OPTS_END);
-  if (!hasMarkers) {
+  if (hasMarkers) {
+    const gb = findGlobalBlock(diskContent);
+    if (gb) {
+      // The section is rewritten from what parseGlobalOptions read, which included these.
+      const inner = diskContent.slice(gb.open + 1, gb.close);
+      const bi = inner.indexOf(GLOBAL_OPTS_BEGIN);
+      const ei = inner.indexOf(GLOBAL_OPTS_END) + GLOBAL_OPTS_END.length;
+      const stripped = stripKnownGlobalOptionLines(inner.slice(0, bi), ABSORBED_GLOBAL_OPTION_KEYS)
+        + inner.slice(bi, ei)
+        + stripKnownGlobalOptionLines(inner.slice(ei), ABSORBED_GLOBAL_OPTION_KEYS);
+      base = diskContent.slice(0, gb.open + 1) + stripped + diskContent.slice(gb.close);
+    }
+  } else {
     const gb = findGlobalBlock(diskContent);
     if (gb) {
       const inner = stripKnownGlobalOptionLines(diskContent.slice(gb.open + 1, gb.close));

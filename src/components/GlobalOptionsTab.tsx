@@ -24,6 +24,7 @@ import { readGlobalOptions, syncGlobalOptions, reloadCaddy, fetchStorageInfo, ch
 import type { DnsChallengeConfig, GlobalOptions, StorageInfo } from "../api";
 import { DnsChallengeFields, dnsDraftFromConfig, dnsDraftToConfig, validateDnsDraft, type DnsDraft } from "./DnsChallengeFields";
 import { CertLifetimeSelect } from "./CertLifetimeSelect";
+import { GlobalTlsFields, globalTlsFromValues, globalTlsToValues, type GlobalTlsValues } from "./GlobalTlsFields";
 import { AccessLogSection, type AccessLogValues, accessLogConfigToValues, accessLogValuesToConfig } from "./AccessLogSection";
 
 function isDuration(v: string): boolean {
@@ -83,6 +84,7 @@ export function GlobalOptionsTab() {
   const [onDemandBurst, setOnDemandBurst] = useState("");
   const [internalCertLifetime, setInternalCertLifetime] = useState("");
   const [renewalWindowRatio, setRenewalWindowRatio] = useState("");
+  const [globalTls, setGlobalTls] = useState<GlobalTlsValues>(globalTlsToValues({}));
   const [storagePath, setStoragePath] = useState("");
   const [storageInfo, setStorageInfo] = useState<StorageInfo | null>(null);
   const [storageInfoError, setStorageInfoError] = useState<string | null>(null);
@@ -143,6 +145,7 @@ export function GlobalOptionsTab() {
         setOnDemandBurst(opts.onDemandBurst != null ? String(opts.onDemandBurst) : "");
         setInternalCertLifetime(opts.internalCertLifetime ?? "");
         setRenewalWindowRatio(opts.renewalWindowRatio != null ? String(opts.renewalWindowRatio) : "");
+        setGlobalTls(globalTlsToValues(opts));
         setStoragePath(opts.storagePath ?? "");
         loadStorageInfo(opts.storagePath);
         setMetricsEnabled(opts.metricsEnabled ?? false);
@@ -619,6 +622,13 @@ export function GlobalOptionsTab() {
         <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
 
         <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+          {t("global_opts.tls_advanced_title")}
+        </Title>
+        <GlobalTlsFields value={globalTls} onChange={setGlobalTls} isDisabled={isConfirming} />
+
+        <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
+
+        <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
           {t("global_opts.storage_title")}
         </Title>
 
@@ -930,6 +940,7 @@ export function GlobalOptionsTab() {
                     onDemandBurst: onDemandEnabled && onDemandBurst.trim() ? parseInt(onDemandBurst, 10) : undefined,
                     internalCertLifetime: internalCertLifetime.trim() || undefined,
                     renewalWindowRatio: renewalWindowRatio.trim() ? Number(renewalWindowRatio.trim()) : undefined,
+                    ...globalTlsFromValues(globalTls),
                     storagePath: storagePath.trim() || undefined,
                     metricsEnabled: metricsEnabled || undefined,
                     metricsListenAddress: metricsEnabled ? (metricsListenAddress.trim() || undefined) : undefined,

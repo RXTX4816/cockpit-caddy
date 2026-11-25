@@ -15,7 +15,7 @@ import { parseCertLifetimeDuration, parseProxies, subjectsInclude, findAutomatio
 export { CONF_D_IMPORT_LINE, withConfDImport, setBlockResult, extractRawBlocksFromCaddyfile, migrateCaddyfile, extractLogFilePaths, parseLegacyLabelsFromCaddyfile, parseConfExternalAddresses, parseConfTlsMap, parseConfTlsIssuerMap, parseConfTlsOnDemandMap, parseConfTlsDnsMap, parseConfCustomTlsCaMap, parseConfAccessLogMap, parseLabelsFromCaddyfile, CONF_HEADER, parseConfForwardAuthMap, surgicallyReplaceBlock, surgicallyRemoveBlock, hostsConflict, findServerBlock, deduplicateServerBlocks, surgicallyRemoveServerBlock, findGlobalBlock, parseDnsProviderDirective } from "./caddyfileDocument";
 export type { RawBlock } from "./caddyfileDocument";
 export { patchMainCaddyfile, dnsProviderLines, parseGlobalOptions, buildGlobalOptionsPatch, buildMetricsSiteBlock, parseMetricsSiteBlock } from "./globalOptions";
-export type { GlobalOptions } from "./globalOptions";
+export type { GlobalOptions, PreferredChains } from "./globalOptions";
 export { caddyQuote, hasAnyMatcher, isPathOnlyMatcher, expandPlaceholderShorthands, proxyToBlock, surgicallyWriteProxy, surgicallyEditProxy, proxiesToCaddyfile, tlsSubjectHost, tlsSubjectHosts, routeHosts, namedServerIsHostless, parseServerDefsFromConf, serverDefToBlock, surgicallyWriteServerBlock } from "./siteBlocks";
 export { collapsePlaceholderShorthands, parseProxies, standaloneProxyId, buildServerEntry, mergeProxy, removeProxy, mergeNamedServer, removeNamedServer } from "./caddyJsonModel";
 
