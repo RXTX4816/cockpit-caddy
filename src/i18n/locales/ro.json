@@ -177,7 +177,18 @@
     "field_hide": "Fișiere ascunse",
     "field_hide_help": "Nume sau tipare care nu sunt servite niciodată, separate prin spații.",
     "field_precompressed": "Fișiere precomprimate",
-    "field_precompressed_help": "Servește file.zst, file.br sau file.gz de lângă original când browserul acceptă acea codificare."
+    "field_precompressed_help": "Servește file.zst, file.br sau file.gz de lângă original când browserul acceptă acea codificare.",
+    "field_browse_template": "Șablon pentru listă",
+    "field_browse_template_help": "Un fișier șablon pentru lista directorului. Folosit doar când lista directoarelor este activată.",
+    "field_status": "Cod de stare",
+    "field_status_help": "Răspunde la fiecare fișier cu acest cod în loc de 200, de exemplu 404 pentru o pagină de eroare proprie.",
+    "field_disable_canonical_uris": "Lasă barele oblice finale neschimbate",
+    "field_disable_canonical_uris_help": "Nu redirecționa pentru a adăuga sau a elimina o bară oblică finală la directoare și fișiere.",
+    "field_templates": "Procesează fișierele prin șabloane",
+    "field_templates_help": "Activează motorul de șabloane Caddy pentru fișierele servite, care pot astfel folosi include, .Req și celelalte acțiuni de șablon.",
+    "field_templates_mime": "Tipuri MIME",
+    "field_templates_root": "Director pentru include",
+    "field_templates_root_help": "Unde caută fișiere include și celelalte acțiuni pe fișiere. Gol înseamnă rădăcina site-ului."
   },
   "edit_static": {
     "title": "Editează serverul static — :{{port}}",
@@ -206,7 +217,15 @@
     "env_field_value": "Valoare",
     "env_add_button": "Adaugă variabilă",
     "field_try_files": "Fișiere încercate (try_files)",
-    "field_try_files_help": "Opțional. Candidați încercați în ordine înainte de PHP; o aplicație cu front controller are de obicei nevoie de {path} {path}/ /index.php?{query}."
+    "field_try_files_help": "Opțional. Candidați încercați în ordine înainte de PHP; o aplicație cu front controller are de obicei nevoie de {path} {path}/ /index.php?{query}.",
+    "field_dial_timeout": "Timp limită de conectare",
+    "field_read_timeout": "Timp limită de citire",
+    "field_write_timeout": "Timp limită de scriere",
+    "no_timeout": "niciunul",
+    "field_capture_stderr": "Înregistrează stderr al procesului PHP",
+    "field_capture_stderr_help": "Scrie în jurnalul Caddy ce afișează PHP-FPM pe stderr.",
+    "field_resolve_root_symlink": "Rezolvă legăturile simbolice din rădăcină",
+    "field_resolve_root_symlink_help": "Urmează legăturile simbolice din directorul rădăcină înainte de a construi SCRIPT_FILENAME, de care au nevoie configurațiile opcache cu legături de release."
   },
   "add_respond": {
     "title": "Adaugă răspuns static",
@@ -251,7 +270,11 @@
     "validation_port_range": "Portul trebuie să fie între 1 și 65535",
     "validation_port_duplicate": "Portul {{port}} este deja folosit",
     "validation_to_required": "Ținta redirecționării este obligatorie",
-    "confirm_body": "Va fi creată o redirecționare :{{port}} → {{to}} ({{code}}) și configurația Caddy va fi reîncărcată."
+    "confirm_body": "Va fi creată o redirecționare :{{port}} → {{to}} ({{code}}) și configurația Caddy va fi reîncărcată.",
+    "code_html": "Pagină HTML",
+    "code_html_help": "Răspunde cu o pagină care redirecționează în browser, în loc de un cod de stare. Spre deosebire de o redirecționare cu cod de stare, păstrează #fragmentul URL-ului.",
+    "keep_path": "Păstrează calea și interogarea",
+    "keep_path_help": "Adaugă {uri} la destinație, astfel încât /a?b=1 de pe acest site duce la /a?b=1 de pe destinație."
   },
   "basic_auth": {
     "heading": "Autentificare HTTP Basic",
@@ -260,14 +283,32 @@
     "field_password": "Parolă",
     "field_password_keep": "Lasă gol pentru a păstra parola existentă",
     "add_button": "Adaugă cont",
-    "remove_button": "Elimină contul"
+    "remove_button": "Elimină contul",
+    "realm": "Realm",
+    "algorithm": "Algoritm de hash",
+    "algorithm_default": "bcrypt (implicit)",
+    "algorithm_argon2id": "argon2id (mai puternic)",
+    "algorithm_mismatch": "Conturile care își păstrează parola au încă un hash făcut cu celălalt algoritm. Introdu din nou parolele lor."
   },
   "transport": {
     "heading": "Timeout-uri upstream",
     "section_title": "Timeout-uri upstream (opțional)",
     "dial_timeout": "Timeout de conectare",
     "response_header_timeout": "Timeout pentru antetele răspunsului",
-    "defaults_help": "Lăsați un câmp gol pentru a folosi valoarea implicită Caddy, afișată cu gri. O limită de timp pentru antetele răspunsului întrerupe long polling-ul și răspunsurile lente."
+    "defaults_help": "Lăsați un câmp gol pentru a folosi valoarea implicită Caddy, afișată cu gri. O limită de timp pentru antetele răspunsului întrerupe long polling-ul și răspunsurile lente.",
+    "streaming_help": "Streaming (websocket-uri, fluxuri de evenimente): lăsați gol pentru valorile implicite Caddy.",
+    "flush_interval": "Interval de golire",
+    "flush_interval_placeholder": "-1 trimite fiecare scriere imediat",
+    "stream_timeout": "Timp limită al fluxului",
+    "stream_close_delay": "Întârziere la închiderea fluxului",
+    "connection_title": "Conexiunea la upstream",
+    "tls_server_name": "Numele serverului TLS",
+    "versions": "Versiuni HTTP",
+    "read_timeout": "Timp limită de citire",
+    "write_timeout": "Timp limită de scriere",
+    "keepalive": "Keep-alive",
+    "keepalive_idle_conns": "Conexiuni inactive păstrate",
+    "keepalive_idle_conns_per_host": "Conexiuni inactive păstrate per gazdă"
   },
   "server_timeouts": {
     "heading": "Timeout-uri și limite ale serverului",
@@ -282,7 +323,17 @@
     "max_header_bytes_help": "Dimensiunea maximă a antetelor cererii (implicit în Caddy: 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "Dezactivează HTTP/3",
-    "http3_help": "Caddy activează implicit HTTP/1.1, HTTP/2 și HTTP/3 ori de câte ori TLS este configurat. HTTP/3 rulează peste UDP pe același port ca HTTPS — dacă firewall-ul blochează UDP, dezactivarea aici lasă doar HTTP/1.1 și HTTP/2."
+    "http3_help": "Caddy activează implicit HTTP/1.1, HTTP/2 și HTTP/3 ori de câte ori TLS este configurat. HTTP/3 rulează peste UDP pe același port ca HTTPS — dacă firewall-ul blochează UDP, dezactivarea aici lasă doar HTTP/1.1 și HTTP/2.",
+    "keepalive_interval": "Interval keep-alive TCP",
+    "keepalive_idle": "Inactivitate înainte de keep-alive TCP",
+    "options_label": "Opțiuni de conexiune",
+    "strict_sni_host": "Gazdă SNI strictă",
+    "strict_sni_host_help": "Respinge cererile al căror antet Host diferă de numele serverului TLS.",
+    "log_credentials": "Înregistrează credențialele",
+    "log_credentials_help": "Scrie antetele Authorization și Cookie în jurnalul de acces.",
+    "enable_full_duplex": "Full duplex pentru HTTP/1",
+    "enable_full_duplex_help": "Permite unui handler să citească corpul cererii în timp ce scrie răspunsul.",
+    "read_body_idle": "Timp de inactivitate pentru corpul cererii"
   },
   "request_body": {
     "field_label": "Dimensiunea maximă a corpului cererii",
@@ -303,7 +354,30 @@
     "field_find_placeholder": "^/api/(.*)",
     "field_replace_placeholder": "/$1",
     "field_replace_help": "Folosește $1, $2 pentru grupurile de captură",
-    "type_aria": "Tipul rescrierii"
+    "type_aria": "Tipul rescrierii",
+    "type_strip_suffix": "Elimină sufixul",
+    "type_uri_replace": "Înlocuiește text",
+    "type_query": "Șir de interogare",
+    "type_method": "Metodă",
+    "field_suffix": "Sufix",
+    "field_suffix_placeholder": ".html",
+    "field_text_find": "Caută (text simplu)",
+    "field_limit": "Cel mult",
+    "field_limit_placeholder": "toate",
+    "field_method": "Metodă",
+    "query_op": "Modificare",
+    "query_op_set": "Setează",
+    "query_op_add": "Adaugă",
+    "query_op_delete": "Șterge",
+    "query_op_rename": "Redenumește",
+    "query_op_replace": "Înlocuiește",
+    "query_key": "Nume",
+    "query_value": "Valoare",
+    "query_new_key": "Nume nou",
+    "query_search": "Caută (regex)",
+    "query_remove": "Elimină modificarea",
+    "query_add": "Adaugă o modificare",
+    "invalid": "Completează toate câmpurile rescrierii."
   },
   "probe": {
     "status_pending": "Se verifică…",
@@ -386,7 +460,9 @@
     "validation_max_fails": "Eșecurile max. trebuie să fie cel puțin 1",
     "validation_needs_health_uri": "Intervalul, limita de timp și starea așteptată necesită o cale de verificare",
     "validation_health_uri": "Calea verificării trebuie să înceapă cu /",
-    "validation_health_status": "Folosiți un cod ca 200 sau o clasă ca 2xx"
+    "validation_health_status": "Folosiți un cod ca 200 sau o clasă ca 2xx",
+    "retry_methods": "Reîncearcă doar aceste metode",
+    "validation_methods": "Metodele sunt cuvinte precum GET sau HEAD, separate prin spații."
   },
   "response_headers": {
     "heading": "Antete de răspuns",
@@ -413,7 +489,12 @@
     "field_name": "Numele antetului",
     "field_value": "Valoare",
     "add_button": "Adaugă",
-    "presets_label": "Presetări"
+    "presets_label": "Presetări",
+    "down_heading": "Anteturi de răspuns de la upstream",
+    "down_section_title": "Anteturi de răspuns de la upstream (opțional)",
+    "op_replace": "Înlocuiește",
+    "field_search": "Valoarea antetului de căutat (expresie regulată)",
+    "field_replacement": "Înlocuire"
   },
   "edit_redirect": {
     "title": "Editează redirecționarea — :{{port}}",
@@ -568,7 +649,16 @@
     "roll_keep_count": "Fișiere rotite păstrate",
     "roll_keep_days": "Vechime max. a fișierelor rotite (zile)",
     "roll_compress": "Comprimă fișierele rotite (gzip)",
-    "roll_help": "Caddy rotește fișierul jurnal în mod implicit. Lăsați un câmp gol pentru a folosi valoarea implicită Caddy, afișată cu gri."
+    "roll_help": "Caddy rotește fișierul jurnal în mod implicit. Lăsați un câmp gol pentru a folosi valoarea implicită Caddy, afișată cu gri.",
+    "field_filters": "Filtre de câmpuri",
+    "field_filters_help": "Unul pe linie: calea unui câmp, apoi delete, hash, replace <text> sau ip_mask <biți IPv4> [<biți IPv6>], de exemplu request>headers>Authorization delete.",
+    "field_filters_invalid": "Fiecare linie are nevoie de calea unui câmp și de delete, hash, replace <text> sau ip_mask <biți>.",
+    "include": "Include loggere",
+    "include_help": "Numele loggerelor pe care le scrie acest jurnal, separate prin spații, de exemplu http.log.access. Gol înseamnă toate.",
+    "exclude": "Exclude loggere",
+    "exclude_help": "Numele loggerelor pe care acest jurnal le omite, separate prin spații, de exemplu http.log.access.log0.",
+    "skip_paths": "Căi omise din jurnal",
+    "skip_paths_help": "Căi separate prin spații, metacaractere permise, de exemplu /health* /ping. Cererile către ele nu sunt înregistrate."
   },
   "config_check": {
     "button": "Verifică configurația",
@@ -691,7 +781,39 @@
     "proxy_protocol_allow_help": "Intervale CIDR separate prin spații care au voie să trimită antete ale protocolului PROXY — limitează-le la IP-urile echilibratorului tău pentru a preveni falsificarea IP-ului clientului. Lasă gol pentru a accepta orice sursă.",
     "proxy_protocol_timeout": "Timeout pentru citirea antetului (opțional)",
     "proxy_protocol_timeout_help": "Timpul maxim de așteptare a antetului protocolului PROXY înainte de renunțare (durată Go, de ex. 2s). Lasă gol pentru valoarea implicită Caddy.",
-    "on_demand_rate_deprecated": "Caddy nu mai recomandă interval și burst. Goliți ambele și bazați-vă pe endpoint-ul ask."
+    "on_demand_rate_deprecated": "Caddy nu mai recomandă interval și burst. Goliți ambele și bazați-vă pe endpoint-ul ask.",
+    "tls_advanced_title": "TLS avansat",
+    "auto_https": "HTTPS automat",
+    "auto_https_off": "Dezactivat",
+    "auto_https_disable_redirects": "Fără redirecționări de la HTTP la HTTPS",
+    "auto_https_ignore_loaded_certs": "Ignoră certificatele încărcate",
+    "issuer": "Emitent de certificate",
+    "issuer_local_certs": "CA propriu Caddy pentru fiecare site",
+    "issuer_internal": "CA intern",
+    "issuer_acme": "ACME",
+    "key_type": "Tip de cheie",
+    "preferred_chains": "Lanț de certificate preferat",
+    "preferred_chains_smallest": "Cel mai mic lanț",
+    "preferred_chains_root": "După numele comun al rădăcinii",
+    "preferred_chains_any": "După orice nume comun",
+    "preferred_chains_names": "Nume comune",
+    "preferred_chains_names_help": "Separate prin virgule.",
+    "default_sni": "SNI implicit",
+    "default_sni_help": "Numele de server pe care Caddy îl presupune când un client nu trimite niciunul.",
+    "default_bind": "Adrese bind implicite",
+    "default_bind_help": "Adrese separate prin spații pe care ascultă site-urile fără opțiunea bind.",
+    "ocsp_stapling_off": "Dezactivează OCSP stapling",
+    "admin_title": "Punct final de administrare",
+    "admin_off": "Dezactivează punctul final de administrare",
+    "admin_off_help": "Pluginul are nevoie de API-ul de administrare pentru a citi și a schimba configurația în execuție.",
+    "admin_address": "Adresă de administrare",
+    "admin_address_help": "Unde ascultă API-ul de administrare Caddy, scrisă ca în Caddyfile. Pluginul se conectează la adresa din propria setare, deci schimbă-le pe ambele împreună.",
+    "admin_origins": "Origini permise",
+    "admin_origins_help": "Gazde separate prin spații care pot apela API-ul de administrare dintr-un browser.",
+    "admin_enforce_origin": "Impune originile",
+    "metrics_per_host": "Etichetează metricile după gazdă",
+    "metrics_per_host_help": "Adaugă gazda cerută la fiecare metrică de cerere, ca site-urile să poată fi deosebite. Fiecare gazdă diferită devine o serie proprie.",
+    "auto_https_disable_certs": "Fără gestionarea certificatelor"
   },
   "ca": {
     "title": "Autoritate de certificare internă",
@@ -794,7 +916,12 @@
     "field_copy_headers": "Copiază antetele",
     "field_copy_headers_help": "Antete de răspuns separate prin spații sau virgule, copiate de la serviciul de autentificare în cererea către upstream (de ex. Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "URI-ul de autentificare este obligatoriu când este setat un URL al serviciului de autentificare"
+    "validation_uri_required": "URI-ul de autentificare este obligatoriu când este setat un URL al serviciului de autentificare",
+    "field_copy_headers_rename_help": "Scrie Name>Other pentru a copia un antet sub alt nume.",
+    "field_header_up": "Antete ale cererii către serviciul de autentificare",
+    "field_header_up_help": "Unul pe linie: Name value setează un antet, +Name value adaugă unul, -Name elimină unul.",
+    "field_trusted_proxies": "Proxy de încredere",
+    "field_trusted_proxies_help": "Intervale ale căror antete X-Forwarded-* sunt păstrate în cererea către serviciul de autentificare, separate prin spații. private_ranges înseamnă rețelele private."
   },
   "tls_policy": {
     "heading": "Politică TLS",
@@ -842,7 +969,15 @@
     "custom_file_unreadable": "Fișierul nu a fost găsit sau nu poate fi citit de utilizatorul Caddy",
     "custom_file_readable": "Fișierul poate fi citit",
     "custom_file_valid_expiry": "Valid — expiră la {{date}}",
-    "custom_cert_lifetime_note": "Mai sus este încărcat un certificat propriu — durata de valabilitate și fereastra de reînnoire nu se aplică, deoarece Caddy nu emite nimic singur."
+    "custom_cert_lifetime_note": "Mai sus este încărcat un certificat propriu — durata de valabilitate și fereastra de reînnoire nu se aplică, deoarece Caddy nu emite nimic singur.",
+    "acme_email": "E-mail ACME",
+    "acme_email_help": "E-mailul contului pentru certificatele acestui site. Se aplică doar HTTPS automat; gol folosește pe cel global.",
+    "acme_global_placeholder": "E-mail global",
+    "acme_ca": "URL-ul directorului CA ACME",
+    "acme_ca_help": "De unde primește acest site certificatele, de exemplu URL-ul de test Let's Encrypt în timpul testării. Gol folosește CA-ul global.",
+    "key_type": "Tip de cheie",
+    "acme_invalid_email": "Introdu o adresă de e-mail precum admin@example.com.",
+    "acme_invalid_ca": "Introdu un URL http:// sau https://."
   },
   "error_handler": {
     "heading": "Handlere de erori personalizate",
@@ -908,7 +1043,22 @@
     "ip_kind_remote": "IP-ul conexiunii",
     "ip_kind_client_help": "IP-ul vizitatorului, luat din antetul de redirecționare când cererea vine printr-unul dintre proxy-urile de încredere (Setări). Fără proxy-uri de încredere este același cu IP-ul conexiunii.",
     "ip_kind_remote_help": "IP-ul conexiunii TCP. În spatele unui proxy sau CDN este adresa proxy-ului, nu a vizitatorului.",
-    "ip_range": "Adresă IP sau interval"
+    "ip_range": "Adresă IP sau interval",
+    "type_path_regexp": "Regex pentru cale",
+    "type_header_regexp": "Regex pentru antet",
+    "field_regexp_name": "Nume (opțional)",
+    "field_header_name_regexp": "Numele antetului pentru regex",
+    "field_regexp_name_header": "Numele regexului antetului (opțional)",
+    "regexp_help": "Un nume face grupurile disponibile ca {re.name.1}, de exemplu într-o rescriere. Caddy permite un regex per matcher.",
+    "type_protocol": "Protocol",
+    "protocol_any": "oricare",
+    "type_file": "Fișiere",
+    "field_try_files": "Fișiere de căutat",
+    "field_try_policy": "Cum se alege",
+    "try_policy_default": "primul existent",
+    "file_help": "Se potrivește când există unul dintre fișiere. Substituenții precum {path} funcționează.",
+    "type_vars": "Variabile",
+    "vars_help": "Una pe linie: un substituent și valorile pe care le poate avea, de exemplu {host} example.com www.example.com."
   },
   "handle_path": {
     "label": "Elimină prefixul de cale potrivit (handle_path)"
@@ -1059,5 +1209,44 @@
     "label": "Adrese de bind",
     "help": "Adresele pe care ascultă acest site, separate prin spații, de exemplu 127.0.0.1 ::1. Gol ascultă pe toate adresele. O gazdă care este o singură adresă IP se leagă deja la ea.",
     "invalid": "Introdu adrese IP sau nume de gazdă, fără port."
+  },
+  "encode": {
+    "heading": "Compresie",
+    "section_title": "Compresie (opțional)",
+    "help": "Se aplică cât timp compresia este activată la General. Fără alegeri, Caddy comprimă cu gzip și zstd.",
+    "algorithms": "Algoritmi și ordine",
+    "algorithms_default": "gzip, zstd (implicit)",
+    "algorithms_zstd_gzip": "zstd, apoi gzip",
+    "algorithms_gzip": "doar gzip",
+    "algorithms_zstd": "doar zstd",
+    "minimum_length": "Dimensiune minimă",
+    "minimum_length_help": "Răspunsurile cu mai puțini octeți decât atât sunt trimise ca atare. Valoarea implicită Caddy este 512.",
+    "invalid_number": "Introdu un număr întreg de octeți.",
+    "match_status": "Doar aceste coduri de stare",
+    "match_status_help": "Coduri sau clase separate prin spații, ca 2xx 404. Gol înseamnă orice stare.",
+    "invalid_status": "Introdu coduri ca 200 sau clase ca 2xx.",
+    "match_headers": "Doar aceste anteturi de răspuns",
+    "match_headers_help": "Unul pe linie: numele antetului, apoi valoarea. Funcționează metacaractere precum text/*.",
+    "invalid_header": "Fiecare linie are nevoie de un nume de antet și o valoare."
+  },
+  "dynamic_upstreams": {
+    "heading": "Upstream-uri dinamice",
+    "section_title": "Upstream-uri dinamice (avansat, opțional)",
+    "help": "Caută upstream-urile în DNS. Ținta de mai sus este varianta de rezervă când căutarea nu găsește nimic. Mai multe surse sunt combinate.",
+    "add_button": "Adaugă sursă DNS",
+    "type": "Tipul căutării",
+    "name_srv": "Nume SRV",
+    "name_a": "Nume de gazdă",
+    "refresh": "Interval de reîmprospătare",
+    "resolvers": "Rezolvatoare DNS",
+    "dial_fallback_delay": "Întârzierea conexiunii de rezervă",
+    "grace_period": "Perioadă de grație",
+    "versions": "Familii de adrese",
+    "versions_both": "IPv4 și IPv6",
+    "validation_name": "O sursă cu setări are nevoie de un nume.",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

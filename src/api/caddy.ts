@@ -7,7 +7,7 @@ import { applyConfigChange, type FileChange } from "./configChange";
 import { listConfDFiles, readCaddyfile, writeCaddyfile } from "./systemd";
 import { externalHostList } from "./externalHosts";
 import { withConfDImport, type RawBlock, extractRawBlocksFromCaddyfile, migrateCaddyfile, extractLogFilePaths, parseConfExternalAddresses, parseLabelsFromCaddyfile, CONF_HEADER, findGlobalBlock } from "./caddyfileDocument";
-import { buildTrustedProxiesLines, buildProxyProtocolLines, patchMainCaddyfile, type GlobalOptions, INTERNAL_LIFETIME_MARKER, parseGlobalOptions, buildGlobalOptionsPatch, METRICS_SITE_BEGIN, METRICS_SITE_END, buildMetricsSiteBlock, parseMetricsSiteBlock } from "./globalOptions";
+import { buildTrustedProxiesLines, buildProxyProtocolLines, buildServerExtrasLines, patchMainCaddyfile, type GlobalOptions, INTERNAL_LIFETIME_MARKER, parseGlobalOptions, buildGlobalOptionsPatch, METRICS_SITE_BEGIN, METRICS_SITE_END, buildMetricsSiteBlock, parseMetricsSiteBlock } from "./globalOptions";
 import { buildExternalAddress, surgicallyWriteProxy, proxiesToCaddyfile, tlsSubjectHost, tlsSubjectHosts, namedServerIsHostless, parseServerDefsFromConf, surgicallyWriteServerBlock } from "./siteBlocks";
 import { parseCertLifetimeDuration, parseProxies, subjectsInclude, findAutomationPolicy } from "./caddyJsonModel";
 
@@ -15,7 +15,7 @@ import { parseCertLifetimeDuration, parseProxies, subjectsInclude, findAutomatio
 export { CONF_D_IMPORT_LINE, withConfDImport, setBlockResult, extractRawBlocksFromCaddyfile, migrateCaddyfile, extractLogFilePaths, parseLegacyLabelsFromCaddyfile, parseConfExternalAddresses, parseConfTlsMap, parseConfTlsIssuerMap, parseConfTlsOnDemandMap, parseConfTlsDnsMap, parseConfCustomTlsCaMap, parseConfAccessLogMap, parseLabelsFromCaddyfile, CONF_HEADER, parseConfForwardAuthMap, surgicallyReplaceBlock, surgicallyRemoveBlock, hostsConflict, findServerBlock, deduplicateServerBlocks, surgicallyRemoveServerBlock, findGlobalBlock, parseDnsProviderDirective } from "./caddyfileDocument";
 export type { RawBlock } from "./caddyfileDocument";
 export { patchMainCaddyfile, dnsProviderLines, parseGlobalOptions, buildGlobalOptionsPatch, buildMetricsSiteBlock, parseMetricsSiteBlock } from "./globalOptions";
-export type { GlobalOptions } from "./globalOptions";
+export type { GlobalOptions, PreferredChains } from "./globalOptions";
 export { caddyQuote, hasAnyMatcher, isPathOnlyMatcher, expandPlaceholderShorthands, proxyToBlock, surgicallyWriteProxy, surgicallyEditProxy, proxiesToCaddyfile, tlsSubjectHost, tlsSubjectHosts, routeHosts, namedServerIsHostless, parseServerDefsFromConf, serverDefToBlock, surgicallyWriteServerBlock } from "./siteBlocks";
 export { collapsePlaceholderShorthands, parseProxies, standaloneProxyId, buildServerEntry, mergeProxy, removeProxy, mergeNamedServer, removeNamedServer } from "./caddyJsonModel";
 
@@ -676,8 +676,10 @@ export function applyGlobalInternalLifetimeToServer(
  * `--plaintext <pw>`: argv is readable by every local user in /proc/<pid>/cmdline (#255).
  * With stdin not a terminal, caddy reads one newline-terminated line (no confirmation prompt).
  */
-export async function hashPassword(plaintext: string): Promise<string> {
-  const proc = cockpit.spawn(["caddy", "hash-password"], { superuser: "try", err: "message" });
+export async function hashPassword(plaintext: string, algorithm?: "bcrypt" | "argon2id"): Promise<string> {
+  // bcrypt is what `caddy hash-password` does without the flag, which older Caddy lacks (#337).
+  const argv = algorithm === "argon2id" ? ["caddy", "hash-password", "--algorithm", "argon2id"] : ["caddy", "hash-password"];
+  const proc = cockpit.spawn(argv, { superuser: "try", err: "message" });
   proc.input(`${plaintext}\n`);
   return (await proc).trim();
 }
@@ -782,7 +784,7 @@ function buildManagedServersBlocks(
   proxyProtocol?: import("./types").ProxyProtocolConfig,
 ): string {
   const relevant = proxies.filter(p => !p.namedServerKey &&
-    (p.serverReadTimeout || p.serverReadHeaderTimeout || p.serverWriteTimeout || p.serverIdleTimeout || p.maxHeaderBytes || p.disableHttp3));
+    (p.serverReadTimeout || p.serverReadHeaderTimeout || p.serverWriteTimeout || p.serverIdleTimeout || p.maxHeaderBytes || p.disableHttp3 || p.serverExtras));
 
   const byPort = new Map<number, ProxyEntry[]>();
   for (const p of relevant) {
@@ -801,10 +803,19 @@ function buildManagedServersBlocks(
       const idleTimeout = group.find(p => p.serverIdleTimeout)?.serverIdleTimeout;
       const maxHeaderBytes = group.find(p => p.maxHeaderBytes)?.maxHeaderBytes;
       const disableHttp3 = group.some(p => p.disableHttp3);
+      const extras: import("./types").ServerExtras = {
+        keepaliveInterval: group.find(p => p.serverExtras?.keepaliveInterval)?.serverExtras?.keepaliveInterval,
+        keepaliveIdle: group.find(p => p.serverExtras?.keepaliveIdle)?.serverExtras?.keepaliveIdle,
+        readBodyIdle: group.find(p => p.serverExtras?.readBodyIdle)?.serverExtras?.readBodyIdle,
+        strictSniHost: group.some(p => p.serverExtras?.strictSniHost),
+        logCredentials: group.some(p => p.serverExtras?.logCredentials),
+        enableFullDuplex: group.some(p => p.serverExtras?.enableFullDuplex),
+      };
 
       const lines = [`\tservers :${port} {`];
       const tLines: string[] = [];
       if (readTimeout) tLines.push(`\t\t\tread_body ${readTimeout}`);
+      if (extras.readBodyIdle) tLines.push(`\t\t\tread_body_idle ${extras.readBodyIdle}`);
       if (readHeaderTimeout) tLines.push(`\t\t\tread_header ${readHeaderTimeout}`);
       if (writeTimeout) tLines.push(`\t\t\twrite ${writeTimeout}`);
       if (idleTimeout) tLines.push(`\t\t\tidle ${idleTimeout}`);
@@ -813,6 +824,7 @@ function buildManagedServersBlocks(
       // #51 — Caddy enables h1/h2/h3 by default; explicitly list h1+h2 only to opt out of
       // h3. `protocols` is only valid inside this global `servers` block, not per-site.
       if (disableHttp3) lines.push("\t\tprotocols h1 h2");
+      lines.push(...buildServerExtrasLines(extras, "\t\t"));
       // #153 — this port already has its own `servers :PORT { }` block for other settings,
       // which means the global (portless) `servers { trusted_proxies ... }` block would be
       // completely ignored for it (verified against a live instance — no merging happens),

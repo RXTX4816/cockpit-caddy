@@ -15,12 +15,12 @@ import {
   TextInput,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
-import { PhpTryFilesField } from "./FileServerOptionsFields";
+import { PhpOptionsFields, PhpTryFilesField, phpOptionsDraft, phpOptionsFromDraft, phpOptionsHaveErrors } from "./FileServerOptionsFields";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { CaddyApiError } from "../api";
 import { TlsModeField, hasPublicName, tlsModeToEntry, type TlsMode } from "./TlsModeField";
-import type { ProxyEntry } from "../api";
+import type { PhpFastcgiConfig, ProxyEntry } from "../api";
 import { SnippetImportsField } from "./SnippetImportsField";
 import { ProxyTabs } from "./ProxyTabs";
 import { firstTabWithError, type ProxyTabKey } from "./proxyDialogParts";
@@ -31,7 +31,7 @@ interface Props {
   existingPorts: number[];
   onAdd: (entry: Omit<ProxyEntry, "id" | "serverKey">) => Promise<void>;
   onClose: () => void;
-  initialValues?: { port?: string; upstream?: string; root?: string; index?: string; splitPath?: string; tryFiles?: string; tls?: boolean; compress?: boolean; label?: string };
+  initialValues?: { port?: string; upstream?: string; root?: string; index?: string; splitPath?: string; tryFiles?: string; phpOptions?: PhpFastcgiConfig; tls?: boolean; compress?: boolean; label?: string };
   initialEnv?: EnvEntry[];
   /** Duplicate: the source's Security / Routing / Logging / Limits settings (#293). */
   initialTabState?: Partial<ProxyTabState>;
@@ -49,6 +49,7 @@ export function AddPhpFastcgiDialog({ existingPorts, onAdd, onClose, initialValu
   const [index, setIndex] = useState(initialValues?.index ?? "");
   const [splitPath, setSplitPath] = useState(initialValues?.splitPath ?? "");
   const [tryFiles, setTryFiles] = useState(initialValues?.tryFiles ?? "");
+  const [phpOptions, setPhpOptions] = useState(() => phpOptionsDraft(initialValues?.phpOptions));
   const [env, setEnv] = useState<EnvEntry[]>(initialEnv ?? []);
   // #246: where the certificate comes from; ACME needs a public name in the site address.
   const [tlsModeChoice, setTlsModeChoice] = useState<TlsMode>((initialValues?.tls ?? true) ? "internal" : "off");
@@ -78,6 +79,8 @@ export function AddPhpFastcgiDialog({ existingPorts, onAdd, onClose, initialValu
 
     if (!root.trim()) { setRootErr(t("add_static.validation_root_required")); ok = false; }
     else setRootErr(null);
+
+    if (phpOptionsHaveErrors(phpOptions)) ok = false;
 
     return ok;
   }
@@ -206,6 +209,7 @@ export function AddPhpFastcgiDialog({ existingPorts, onAdd, onClose, initialValu
               </FormGroup>
 
               <PhpTryFilesField id="php-try-files" value={tryFiles} onChange={setTryFiles} isDisabled={isLocked} />
+              <PhpOptionsFields idPrefix="php" value={phpOptions} onChange={setPhpOptions} isDisabled={isLocked} />
 
               <TlsModeField id="php-tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isLocked} onDemand={tlsOnDemand} onOnDemandChange={setTlsOnDemand} />
 
@@ -256,6 +260,7 @@ export function AddPhpFastcgiDialog({ existingPorts, onAdd, onClose, initialValu
                       index: index.trim() || undefined,
                       splitPath: splitPath.trim() ? splitPath.trim().split(/\s+/) : undefined,
                       tryFiles: tryFiles.trim() || undefined,
+                      ...phpOptionsFromDraft(phpOptions),
                       env: envEntriesToRecord(env),
                     },
                     ...tabEntry,

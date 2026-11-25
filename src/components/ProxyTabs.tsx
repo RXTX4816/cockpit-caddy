@@ -4,7 +4,9 @@ import { useTranslation } from "react-i18next";
 import { isPathOnlyMatcher } from "../api";
 import { AccessLogSection } from "./AccessLogSection";
 import { BindSection } from "./BindSection";
+import { EncodeSection } from "./EncodeSection";
 import { BasicAuthSection } from "./BasicAuthSection";
+import { DynamicUpstreamsSection } from "./DynamicUpstreamsSection";
 import { ErrorHandlersSection } from "./ErrorHandlersSection";
 import { ForwardAuthSection, validateForwardAuth } from "./ForwardAuthSection";
 import { LbRetrySection } from "./LbRetrySection";
@@ -66,7 +68,7 @@ export function ProxyTabs({ state: s, onChange, general, generalHasError, active
 
   const tabs: ProxyTab[] = [{ key: "general", hasError: flags.hasError.general, content: general }];
   if (layout === "route") {
-    tabs.push({ key: "routing", configured: flags.configured.routing, content: routeMatchers });
+    tabs.push({ key: "routing", configured: flags.configured.routing, hasError: flags.hasError.routing, content: routeMatchers });
   } else {
     tabs.push(
       {
@@ -75,7 +77,7 @@ export function ProxyTabs({ state: s, onChange, general, generalHasError, active
         hasError: flags.hasError.security,
         content: (
           <>
-            <BasicAuthSection value={s.basicAuth} onChange={v => onChange({ basicAuth: v })} isDisabled={isDisabled} />
+            <BasicAuthSection value={s.basicAuth} onChange={v => onChange({ basicAuth: v })} options={s.basicAuthOptions} onOptionsChange={v => onChange({ basicAuthOptions: v })} isDisabled={isDisabled} />
             {isProxy && (
               <ForwardAuthSection value={s.forwardAuth} onChange={v => onChange({ forwardAuth: v })} isDisabled={isDisabled} uriError={forwardAuthErr ?? undefined} />
             )}
@@ -88,12 +90,15 @@ export function ProxyTabs({ state: s, onChange, general, generalHasError, active
       {
         key: "routing",
         configured: flags.configured.routing,
+        hasError: flags.hasError.routing,
         content: (
           <>
             {routeMatchers}
             {isProxy && <RewriteSection value={s.rewrite} onChange={v => onChange({ rewrite: v })} isDisabled={isDisabled} />}
             <RequestHeadersSection value={s.requestHeaders} onChange={v => onChange({ requestHeaders: v })} isDisabled={isDisabled} />
+            {isProxy && <RequestHeadersSection variant="down" value={s.upstreamResponseHeaders} onChange={v => onChange({ upstreamResponseHeaders: v })} isDisabled={isDisabled} />}
             <ResponseHeadersSection value={s.responseHeaders} onChange={v => onChange({ responseHeaders: v })} isDisabled={isDisabled} />
+            <EncodeSection value={s.encode} onChange={v => onChange({ encode: v })} isDisabled={isDisabled} />
             {isProxy && (
               <NamedRouteField
                 idPrefix={`${idPrefix}-`}
@@ -116,6 +121,7 @@ export function ProxyTabs({ state: s, onChange, general, generalHasError, active
         content: (
           <>
             <UpstreamsSection value={s.extraUpstreams} lbPolicy={s.lbPolicy} onChange={(u, p) => onChange({ extraUpstreams: u, lbPolicy: p })} lbArgs={s.lbArgs} onLbArgsChange={a => onChange({ lbArgs: a })} isDisabled={isDisabled} />
+            <DynamicUpstreamsSection value={s.dynamicUpstreams} onChange={v => onChange({ dynamicUpstreams: v })} isDisabled={isDisabled} />
             <LbRetrySection value={s.lbRetry} onChange={v => onChange({ lbRetry: v })} isDisabled={isDisabled} />
             <TransportSection value={s.transport} onChange={v => onChange({ transport: v })} isDisabled={isDisabled} />
           </>
@@ -128,7 +134,7 @@ export function ProxyTabs({ state: s, onChange, general, generalHasError, active
         configured: flags.configured.logging,
         content: (
           <>
-            <AccessLogSection value={s.accessLog} onChange={v => onChange({ accessLog: v })} isDisabled={isDisabled} />
+            <AccessLogSection value={s.accessLog} onChange={v => onChange({ accessLog: v })} isDisabled={isDisabled} showSkipPaths={showTls} />
             <ErrorHandlersSection
               value={s.errorHandlers}
               onChange={v => onChange({ errorHandlers: v })}

@@ -23,8 +23,8 @@ import { parseHostPort } from "@rxtx4816/cockpit-plugin-base-react/lib/uri";
 import type { ServerDef, ErrorHandlerConfig } from "../api";
 import { namedServerIsHostless } from "../api";
 import { TlsSection, type TlsValues, tlsValuesToAdvanced, tlsValuesToMtls, tlsConfigToValues, tlsValuesHaveErrors } from "./TlsSection";
-import { ServerTimeoutsSection, type ServerTimeoutValues } from "./ServerTimeoutsSection";
-import { AccessLogSection, type AccessLogValues, accessLogValuesToConfig, accessLogConfigToValues } from "./AccessLogSection";
+import { ServerTimeoutsSection, serverExtrasFromValues, TIMEOUTS_EMPTY, type ServerTimeoutValues } from "./ServerTimeoutsSection";
+import { AccessLogSection, type AccessLogValues, accessLogValuesToConfig, accessLogConfigToValues, validateFieldFilters } from "./AccessLogSection";
 import { ErrorHandlersSection } from "./ErrorHandlersSection";
 import { sectionAccordionProps } from "./sectionAccordion";
 import { AccordionRow } from "./AccordionRow";
@@ -57,9 +57,7 @@ export function AddServerDialog({ existingKeys, onAdd, onClose }: Props) {
   const [newPort, setNewPort] = useState("");
   const [tls, setTls] = useState(true);
   const [tlsValues, setTlsValues] = useState<TlsValues>(tlsConfigToValues(undefined, undefined));
-  const [serverTimeouts, setServerTimeouts] = useState<ServerTimeoutValues>({
-    readTimeout: "", readHeaderTimeout: "", writeTimeout: "", idleTimeout: "", maxHeaderBytes: "", disableHttp3: false,
-  });
+  const [serverTimeouts, setServerTimeouts] = useState<ServerTimeoutValues>(TIMEOUTS_EMPTY);
   const [accessLog, setAccessLog] = useState<AccessLogValues>(accessLogConfigToValues(undefined));
   const [errorHandlers, setErrorHandlers] = useState<ErrorHandlerConfig[]>([]);
 
@@ -287,6 +285,7 @@ export function AddServerDialog({ existingKeys, onAdd, onClose }: Props) {
                     ? parseInt(serverTimeouts.maxHeaderBytes, 10)
                     : undefined,
                   disableHttp3: serverTimeouts.disableHttp3 || undefined,
+                  serverExtras: serverExtrasFromValues(serverTimeouts),
                   accessLog: accessLogValuesToConfig(accessLog),
                   errorHandlers: errorHandlers.length ? errorHandlers : undefined,
                 });
@@ -302,7 +301,7 @@ export function AddServerDialog({ existingKeys, onAdd, onClose }: Props) {
           </>
         ) : (
           <>
-            <Button variant="primary" onClick={handleAddClick} isDisabled={tlsValuesHaveErrors(tlsValues)}>
+            <Button variant="primary" onClick={handleAddClick} isDisabled={tlsValuesHaveErrors(tlsValues) || (accessLog.enabled && validateFieldFilters(accessLog.fieldFilters))}>
               {t("servers.add_server")}
             </Button>
             <Button variant="link" onClick={onClose}>

@@ -55,7 +55,7 @@ export function ProxyCard({ proxy, onEdit, onDelete, onDuplicate, probeStatuses 
               </code>
               <div style={chipRow}>
                 <Label isCompact color="purple">{t("proxies.type_redirect")}</Label>
-                <Label isCompact color="purple" variant="outline">{proxy.redirect.code}</Label>
+                <Label isCompact color="purple" variant="outline">{proxy.redirect.html ? "html" : proxy.redirect.code}</Label>
               </div>
             </>
           ) : proxy.staticResponse ? (

@@ -22,8 +22,8 @@ import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
 import type { ServerDef, ErrorHandlerConfig } from "../api";
 import { namedServerIsHostless } from "../api";
 import { TlsSection, type TlsValues, tlsValuesToAdvanced, tlsValuesToMtls, tlsConfigToValues, tlsValuesHaveErrors } from "./TlsSection";
-import { ServerTimeoutsSection, type ServerTimeoutValues } from "./ServerTimeoutsSection";
-import { AccessLogSection, type AccessLogValues, accessLogValuesToConfig, accessLogConfigToValues } from "./AccessLogSection";
+import { ServerTimeoutsSection, serverExtrasFromValues, serverExtrasToValues, type ServerTimeoutValues } from "./ServerTimeoutsSection";
+import { AccessLogSection, type AccessLogValues, accessLogValuesToConfig, accessLogConfigToValues, validateFieldFilters } from "./AccessLogSection";
 import { ErrorHandlersSection } from "./ErrorHandlersSection";
 import { sectionAccordionProps } from "./sectionAccordion";
 import { AccordionRow } from "./AccordionRow";
@@ -51,6 +51,7 @@ export function EditServerDialog({ def, onSave, onClose }: Props) {
     idleTimeout: def.serverIdleTimeout ?? "",
     maxHeaderBytes: def.maxHeaderBytes != null ? String(def.maxHeaderBytes) : "",
     disableHttp3: def.disableHttp3 ?? false,
+    ...serverExtrasToValues(def.serverExtras),
   });
   const [accessLog, setAccessLog] = useState<AccessLogValues>(accessLogConfigToValues(def.accessLog));
   const [errorHandlers, setErrorHandlers] = useState<ErrorHandlerConfig[]>(def.errorHandlers ?? []);
@@ -250,6 +251,7 @@ export function EditServerDialog({ def, onSave, onClose }: Props) {
                     ? parseInt(serverTimeouts.maxHeaderBytes, 10)
                     : undefined,
                   disableHttp3: serverTimeouts.disableHttp3 || undefined,
+                  serverExtras: serverExtrasFromValues(serverTimeouts),
                   accessLog: accessLogValuesToConfig(accessLog),
                   errorHandlers: errorHandlers.length ? errorHandlers : undefined,
                   routeLabels: def.routeLabels,
@@ -266,7 +268,7 @@ export function EditServerDialog({ def, onSave, onClose }: Props) {
           </>
         ) : (
           <>
-            <Button variant="primary" onClick={handleSaveClick} isDisabled={tlsValuesHaveErrors(tlsValues)}>
+            <Button variant="primary" onClick={handleSaveClick} isDisabled={tlsValuesHaveErrors(tlsValues) || (accessLog.enabled && validateFieldFilters(accessLog.fieldFilters))}>
               {t("common.save")}
             </Button>
             <Button variant="link" onClick={onClose}>

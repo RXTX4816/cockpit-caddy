@@ -177,7 +177,18 @@
     "field_hide": "隐藏的文件",
     "field_hide_help": "永不返回的名称或模式，用空格分隔。",
     "field_precompressed": "预压缩文件",
-    "field_precompressed_help": "浏览器接受相应编码时，返回原文件旁的 file.zst、file.br 或 file.gz。"
+    "field_precompressed_help": "浏览器接受相应编码时，返回原文件旁的 file.zst、file.br 或 file.gz。",
+    "field_browse_template": "列表模板",
+    "field_browse_template_help": "目录列表使用的模板文件。仅在开启目录列表时使用。",
+    "field_status": "状态码",
+    "field_status_help": "以此状态码代替 200 响应每个文件,例如用 404 配合自定义错误页。",
+    "field_disable_canonical_uris": "保持末尾斜杠不变",
+    "field_disable_canonical_uris_help": "不为目录和文件添加或去掉末尾斜杠而进行重定向。",
+    "field_templates": "用模板处理文件",
+    "field_templates_help": "为所提供的文件启用 Caddy 的模板引擎,文件即可使用 include、.Req 等模板操作。",
+    "field_templates_mime": "MIME 类型",
+    "field_templates_root": "include 目录",
+    "field_templates_root_help": "include 等文件操作查找文件的位置。留空表示站点根目录。"
   },
   "edit_static": {
     "title": "编辑静态服务器 — :{{port}}",
@@ -206,7 +217,15 @@
     "env_field_value": "值",
     "env_add_button": "添加变量",
     "field_try_files": "尝试文件（try_files）",
-    "field_try_files_help": "可选。在 PHP 之前依次尝试的候选项；前端控制器应用通常需要 {path} {path}/ /index.php?{query}。"
+    "field_try_files_help": "可选。在 PHP 之前依次尝试的候选项；前端控制器应用通常需要 {path} {path}/ /index.php?{query}。",
+    "field_dial_timeout": "连接超时",
+    "field_read_timeout": "读取超时",
+    "field_write_timeout": "写入超时",
+    "no_timeout": "无",
+    "field_capture_stderr": "记录 PHP 进程的 stderr",
+    "field_capture_stderr_help": "把 PHP-FPM 输出到 stderr 的内容写入 Caddy 日志。",
+    "field_resolve_root_symlink": "解析根目录中的符号链接",
+    "field_resolve_root_symlink_help": "在构建 SCRIPT_FILENAME 之前跟随根目录中的符号链接,使用发布符号链接的 opcache 部署需要这样做。"
   },
   "add_respond": {
     "title": "添加静态响应",
@@ -251,7 +270,11 @@
     "validation_port_range": "端口必须在 1 到 65535 之间",
     "validation_port_duplicate": "端口 {{port}} 已被占用",
     "validation_to_required": "必须填写重定向目标",
-    "confirm_body": "将创建重定向 :{{port}} → {{to}}（{{code}}），并重新加载 Caddy 配置。"
+    "confirm_body": "将创建重定向 :{{port}} → {{to}}（{{code}}），并重新加载 Caddy 配置。",
+    "code_html": "HTML 页面",
+    "code_html_help": "返回一个在浏览器中跳转的页面,而不是状态码。与状态码重定向不同,它会保留 URL 的 #片段。",
+    "keep_path": "保留路径和查询",
+    "keep_path_help": "在目标后追加 {uri},因此本站的 /a?b=1 会跳转到目标的 /a?b=1。"
   },
   "basic_auth": {
     "heading": "HTTP Basic 认证",
@@ -260,14 +283,32 @@
     "field_password": "密码",
     "field_password_keep": "留空以保留现有密码",
     "add_button": "添加账户",
-    "remove_button": "移除账户"
+    "remove_button": "移除账户",
+    "realm": "Realm(认证域)",
+    "algorithm": "哈希算法",
+    "algorithm_default": "bcrypt(默认)",
+    "algorithm_argon2id": "argon2id(更强)",
+    "algorithm_mismatch": "保留原密码的账户仍然带有另一种算法生成的哈希。请重新输入这些账户的密码。"
   },
   "transport": {
     "heading": "上游超时",
     "section_title": "上游超时（可选）",
     "dial_timeout": "连接超时",
     "response_header_timeout": "响应头超时",
-    "defaults_help": "留空即使用 Caddy 的默认值（以灰色显示）。响应头超时会中断长轮询和较慢的响应。"
+    "defaults_help": "留空即使用 Caddy 的默认值（以灰色显示）。响应头超时会中断长轮询和较慢的响应。",
+    "streaming_help": "流式传输(WebSocket、事件流):留空则使用 Caddy 默认值。",
+    "flush_interval": "刷新间隔",
+    "flush_interval_placeholder": "-1 表示每次写入立即发送",
+    "stream_timeout": "流超时",
+    "stream_close_delay": "流关闭延迟",
+    "connection_title": "上游连接",
+    "tls_server_name": "TLS 服务器名称",
+    "versions": "HTTP 版本",
+    "read_timeout": "读取超时",
+    "write_timeout": "写入超时",
+    "keepalive": "Keep-alive",
+    "keepalive_idle_conns": "保留的空闲连接数",
+    "keepalive_idle_conns_per_host": "每个主机保留的空闲连接数"
   },
   "server_timeouts": {
     "heading": "服务器超时与限制",
@@ -282,7 +323,17 @@
     "max_header_bytes_help": "请求头的最大大小（Caddy 默认值：16 KB）",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "禁用 HTTP/3",
-    "http3_help": "只要配置了 TLS，Caddy 默认会启用 HTTP/1.1、HTTP/2 和 HTTP/3。HTTP/3 通过 UDP 在与 HTTPS 相同的端口上运行——如果防火墙阻止了 UDP，在此禁用后将只使用 HTTP/1.1 和 HTTP/2。"
+    "http3_help": "只要配置了 TLS，Caddy 默认会启用 HTTP/1.1、HTTP/2 和 HTTP/3。HTTP/3 通过 UDP 在与 HTTPS 相同的端口上运行——如果防火墙阻止了 UDP，在此禁用后将只使用 HTTP/1.1 和 HTTP/2。",
+    "keepalive_interval": "TCP keep-alive 间隔",
+    "keepalive_idle": "TCP keep-alive 前的空闲时间",
+    "options_label": "连接选项",
+    "strict_sni_host": "严格检查 SNI 主机",
+    "strict_sni_host_help": "拒绝 Host 请求头与 TLS 服务器名称不一致的请求。",
+    "log_credentials": "记录凭据",
+    "log_credentials_help": "将 Authorization 和 Cookie 请求头写入访问日志。",
+    "enable_full_duplex": "HTTP/1 全双工",
+    "enable_full_duplex_help": "允许处理程序在写入响应的同时读取请求体。",
+    "read_body_idle": "请求体空闲超时"
   },
   "request_body": {
     "field_label": "请求体最大大小",
@@ -303,7 +354,30 @@
     "field_find_placeholder": "^/api/(.*)",
     "field_replace_placeholder": "/$1",
     "field_replace_help": "捕获组使用 $1、$2",
-    "type_aria": "重写类型"
+    "type_aria": "重写类型",
+    "type_strip_suffix": "去掉后缀",
+    "type_uri_replace": "替换文本",
+    "type_query": "查询字符串",
+    "type_method": "方法",
+    "field_suffix": "后缀",
+    "field_suffix_placeholder": ".html",
+    "field_text_find": "查找(纯文本)",
+    "field_limit": "最多",
+    "field_limit_placeholder": "全部",
+    "field_method": "方法",
+    "query_op": "更改",
+    "query_op_set": "设置",
+    "query_op_add": "添加",
+    "query_op_delete": "删除",
+    "query_op_rename": "重命名",
+    "query_op_replace": "替换",
+    "query_key": "名称",
+    "query_value": "值",
+    "query_new_key": "新名称",
+    "query_search": "搜索(正则)",
+    "query_remove": "移除更改",
+    "query_add": "添加更改",
+    "invalid": "请填写重写的所有字段。"
   },
   "probe": {
     "status_pending": "检查中…",
@@ -386,7 +460,9 @@
     "validation_max_fails": "最大失败次数必须至少为 1",
     "validation_needs_health_uri": "间隔、超时和期望状态需要健康检查路径",
     "validation_health_uri": "健康检查路径必须以 / 开头",
-    "validation_health_status": "请填写 200 这样的状态码或 2xx 这样的类别"
+    "validation_health_status": "请填写 200 这样的状态码或 2xx 这样的类别",
+    "retry_methods": "仅重试这些方法",
+    "validation_methods": "方法是 GET、HEAD 之类的单词,用空格分隔。"
   },
   "response_headers": {
     "heading": "响应头",
@@ -413,7 +489,12 @@
     "field_name": "标头名称",
     "field_value": "值",
     "add_button": "添加",
-    "presets_label": "预设"
+    "presets_label": "预设",
+    "down_heading": "上游响应头",
+    "down_section_title": "上游响应头(可选)",
+    "op_replace": "替换",
+    "field_search": "要查找的头值(正则表达式)",
+    "field_replacement": "替换为"
   },
   "edit_redirect": {
     "title": "编辑重定向 — :{{port}}",
@@ -568,7 +649,16 @@
     "roll_keep_count": "保留的轮转文件数",
     "roll_keep_days": "轮转文件的最长保留天数",
     "roll_compress": "压缩轮转文件（gzip）",
-    "roll_help": "Caddy 默认会轮转日志文件。留空即使用以灰色显示的 Caddy 默认值。"
+    "roll_help": "Caddy 默认会轮转日志文件。留空即使用以灰色显示的 Caddy 默认值。",
+    "field_filters": "字段过滤器",
+    "field_filters_help": "每行一个:字段路径,后接 delete、hash、replace <文本> 或 ip_mask <IPv4 位数> [<IPv6 位数>],例如 request>headers>Authorization delete。",
+    "field_filters_invalid": "每一行都需要字段路径,以及 delete、hash、replace <文本> 或 ip_mask <位数> 之一。",
+    "include": "纳入的日志记录器",
+    "include_help": "此日志写入的记录器名称,以空格分隔,例如 http.log.access。留空表示全部。",
+    "exclude": "排除的日志记录器",
+    "exclude_help": "此日志跳过的记录器名称,以空格分隔,例如 http.log.access.log0。",
+    "skip_paths": "不写入日志的路径",
+    "skip_paths_help": "以空格分隔的路径,可使用通配符,例如 /health* /ping。对这些路径的请求不会被记录。"
   },
   "config_check": {
     "button": "检查配置",
@@ -691,7 +781,39 @@
     "proxy_protocol_allow_help": "以空格分隔、允许发送 PROXY 协议标头的 CIDR 范围——请限制为负载均衡器自身的 IP，以防客户端 IP 被伪造。留空则接受任何来源。",
     "proxy_protocol_timeout": "标头读取超时（可选）",
     "proxy_protocol_timeout_help": "放弃前等待 PROXY 协议标头的最长时间（Go 时长，例如 2s）。留空则使用 Caddy 默认。",
-    "on_demand_rate_deprecated": "Caddy 已不再推荐 interval 和 burst。请清空两者，改用 ask 端点。"
+    "on_demand_rate_deprecated": "Caddy 已不再推荐 interval 和 burst。请清空两者，改用 ask 端点。",
+    "tls_advanced_title": "高级 TLS",
+    "auto_https": "自动 HTTPS",
+    "auto_https_off": "关闭",
+    "auto_https_disable_redirects": "不将 HTTP 重定向到 HTTPS",
+    "auto_https_ignore_loaded_certs": "忽略已加载的证书",
+    "issuer": "证书颁发者",
+    "issuer_local_certs": "所有站点使用 Caddy 自带的 CA",
+    "issuer_internal": "内部 CA",
+    "issuer_acme": "ACME",
+    "key_type": "密钥类型",
+    "preferred_chains": "首选证书链",
+    "preferred_chains_smallest": "最短证书链",
+    "preferred_chains_root": "按根证书的通用名称",
+    "preferred_chains_any": "按任意通用名称",
+    "preferred_chains_names": "通用名称",
+    "preferred_chains_names_help": "以逗号分隔。",
+    "default_sni": "默认 SNI",
+    "default_sni_help": "客户端未发送服务器名称时 Caddy 假定的名称。",
+    "default_bind": "默认绑定地址",
+    "default_bind_help": "以空格分隔的地址,未设置 bind 选项的站点在这些地址上监听。",
+    "ocsp_stapling_off": "关闭 OCSP stapling",
+    "admin_title": "管理端点",
+    "admin_off": "关闭管理端点",
+    "admin_off_help": "插件需要管理 API 来读取和修改运行中的配置。",
+    "admin_address": "管理地址",
+    "admin_address_help": "Caddy 管理 API 的监听位置,写法与 Caddyfile 相同。插件连接的是自身设置中的地址,因此请同时修改两处。",
+    "admin_origins": "允许的来源",
+    "admin_origins_help": "可以从浏览器调用管理 API 的主机,以空格分隔。",
+    "admin_enforce_origin": "强制检查来源",
+    "metrics_per_host": "按主机为指标添加标签",
+    "metrics_per_host_help": "在每个请求指标上加入所请求的主机,以便区分站点。每个不同的主机都会成为单独的时间序列。",
+    "auto_https_disable_certs": "不管理证书"
   },
   "ca": {
     "title": "内部证书颁发机构",
@@ -794,7 +916,12 @@
     "field_copy_headers": "复制标头",
     "field_copy_headers_help": "以空格或逗号分隔的响应头，会从认证服务复制到发往上游的请求中（例如 Remote-User, Remote-Groups）",
     "indicator": "Forward Auth",
-    "validation_uri_required": "设置了认证服务 URL 时必须填写认证 URI"
+    "validation_uri_required": "设置了认证服务 URL 时必须填写认证 URI",
+    "field_copy_headers_rename_help": "写成 Name>Other,即可以另一个名称复制该请求头。",
+    "field_header_up": "发往认证服务的请求头",
+    "field_header_up_help": "每行一个:Name value 设置请求头,+Name value 添加,-Name 删除。",
+    "field_trusted_proxies": "受信任的代理",
+    "field_trusted_proxies_help": "在发往认证服务的请求中保留其 X-Forwarded-* 请求头的地址范围,以空格分隔。private_ranges 代表私有网络。"
   },
   "tls_policy": {
     "heading": "TLS 策略",
@@ -842,7 +969,15 @@
     "custom_file_unreadable": "文件不存在或 Caddy 用户无法读取",
     "custom_file_readable": "文件可读",
     "custom_file_valid_expiry": "有效——{{date}} 到期",
-    "custom_cert_lifetime_note": "上方已加载自定义证书——证书有效期和续期窗口不适用，因为 Caddy 自己不签发任何证书。"
+    "custom_cert_lifetime_note": "上方已加载自定义证书——证书有效期和续期窗口不适用，因为 Caddy 自己不签发任何证书。",
+    "acme_email": "ACME 邮箱",
+    "acme_email_help": "此站点证书使用的账户邮箱。仅适用于自动 HTTPS;留空则使用全局邮箱。",
+    "acme_global_placeholder": "全局邮箱",
+    "acme_ca": "ACME CA 目录 URL",
+    "acme_ca_help": "此站点从哪里获取证书,例如测试时使用 Let's Encrypt 的 staging URL。留空则使用全局 CA。",
+    "key_type": "密钥类型",
+    "acme_invalid_email": "请输入类似 admin@example.com 的邮箱地址。",
+    "acme_invalid_ca": "请输入以 http:// 或 https:// 开头的 URL。"
   },
   "error_handler": {
     "heading": "自定义错误处理",
@@ -908,7 +1043,22 @@
     "ip_kind_remote": "连接 IP",
     "ip_kind_client_help": "访问者的 IP。请求经过受信任代理（设置）时从转发头中获取；没有受信任代理时与连接 IP 相同。",
     "ip_kind_remote_help": "TCP 连接的 IP。在代理或 CDN 之后，这是代理的地址，而不是访问者的。",
-    "ip_range": "IP 地址或范围"
+    "ip_range": "IP 地址或范围",
+    "type_path_regexp": "路径正则",
+    "type_header_regexp": "请求头正则",
+    "field_regexp_name": "名称(可选)",
+    "field_header_name_regexp": "用于正则的请求头名称",
+    "field_regexp_name_header": "请求头正则的名称(可选)",
+    "regexp_help": "设置名称后,分组可作为 {re.name.1} 使用,例如在重写中。Caddy 每个匹配器只允许一个正则。",
+    "type_protocol": "协议",
+    "protocol_any": "任意",
+    "type_file": "文件",
+    "field_try_files": "要查找的文件",
+    "field_try_policy": "选择方式",
+    "try_policy_default": "第一个存在的",
+    "file_help": "其中一个文件存在时匹配。可使用 {path} 之类的占位符。",
+    "type_vars": "变量",
+    "vars_help": "每行一个:占位符及其可取的值,例如 {host} example.com www.example.com。"
   },
   "handle_path": {
     "label": "去除匹配的路径前缀（handle_path）"
@@ -1059,5 +1209,44 @@
     "label": "绑定地址",
     "help": "此站点监听的地址,以空格分隔,例如 127.0.0.1 ::1。留空表示监听所有地址。主机若是单个 IP 地址,则已经绑定到该地址。",
     "invalid": "请输入 IP 地址或主机名,不带端口。"
+  },
+  "encode": {
+    "heading": "压缩",
+    "section_title": "压缩设置(可选)",
+    "help": "在“常规”中开启压缩时生效。不作选择时,Caddy 使用 gzip 和 zstd 压缩。",
+    "algorithms": "算法及顺序",
+    "algorithms_default": "gzip、zstd(默认)",
+    "algorithms_zstd_gzip": "先 zstd,后 gzip",
+    "algorithms_gzip": "仅 gzip",
+    "algorithms_zstd": "仅 zstd",
+    "minimum_length": "最小大小",
+    "minimum_length_help": "小于此字节数的响应将原样发送。Caddy 的默认值为 512。",
+    "invalid_number": "请输入整数字节数。",
+    "match_status": "仅这些状态码",
+    "match_status_help": "以空格分隔的状态码或 2xx 404 之类的类别。留空表示所有状态。",
+    "invalid_status": "请输入 200 之类的状态码或 2xx 之类的类别。",
+    "match_headers": "仅这些响应头",
+    "match_headers_help": "每行一个:先写响应头名称,再写值。支持 text/* 之类的通配符。",
+    "invalid_header": "每一行都需要响应头名称和值。"
+  },
+  "dynamic_upstreams": {
+    "heading": "动态上游",
+    "section_title": "动态上游(高级,可选)",
+    "help": "通过 DNS 查找上游。查找无结果时使用上面的目标作为后备。多个来源会合并。",
+    "add_button": "添加 DNS 来源",
+    "type": "查询类型",
+    "name_srv": "SRV 名称",
+    "name_a": "主机名",
+    "refresh": "刷新间隔",
+    "resolvers": "DNS 解析器",
+    "dial_fallback_delay": "备用连接延迟",
+    "grace_period": "宽限期",
+    "versions": "地址族",
+    "versions_both": "IPv4 和 IPv6",
+    "validation_name": "带有设置的来源需要名称。",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

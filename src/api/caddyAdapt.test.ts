@@ -10,8 +10,11 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync, writeFileSync, rmSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { CONF_HEADER, buildServerEntry, proxiesToCaddyfile, parseProxies, parseConfExternalAddresses, proxyAddressKeys, resolveInternalIssuerSettings, surgicallyWriteProxy, buildMigratedConfContent, migrateCaddyfile, parseConfTlsIssuerMap, parseConfTlsOnDemandMap, parseConfTlsMap, expandPlaceholderShorthands } from "./caddy";
+import { CONF_HEADER, parseConfAccessLogMap, mergeProxy, buildServerEntry, proxiesToCaddyfile, parseProxies, parseConfExternalAddresses, proxyAddressKeys, resolveInternalIssuerSettings, surgicallyWriteProxy, buildMigratedConfContent, migrateCaddyfile, parseConfTlsIssuerMap, parseConfTlsOnDemandMap, parseConfTlsMap, expandPlaceholderShorthands } from "./caddy";
 import { snippetsToConf, parseSnippets, parseConfSiteImports, parseConfSiteBlocks, separateSnippetSettings } from "./snippets";
+import { buildEncodeHandler, buildFilterEncoder, buildRedirectHandler, buildRewriteHandler, parseServerExtras } from "./caddyJsonModel";
+import { buildGlobalOptionsPatch, buildServerExtrasLines } from "./globalOptions";
+import { buildMatcherJson } from "./siteBlocks";
 import type { CaddyConfig, CaddyServer, ProxyEntry } from "./types";
 
 function hasCaddy(): boolean {
@@ -143,6 +146,12 @@ describe.runIf(available || required)("forward_auth instant-apply JSON matches t
     ["https upstream with copy_headers", { upstreamUrl: "https://auth.example.com:9091", uri: "/api/verify?rd=x", copyHeaders: ["Remote-User", "Remote-Groups"] }],
     ["https upstream without a port", { upstreamUrl: "https://auth.example.com", uri: "/", copyHeaders: ["Remote-User"] }],
     ["http upstream without copy_headers or port", { upstreamUrl: "http://auth.local", uri: "/verify", copyHeaders: [] }],
+    ["renamed copy_headers, header_up and trusted_proxies (#336)", {
+      upstreamUrl: "http://auth.local:9091", uri: "/verify", copyHeaders: ["Remote-User", "Remote-Groups>X-Groups"],
+      headerUp: [{ op: "set" as const, name: "X-Extra", value: "1" }, { op: "delete" as const, name: "X-Cookie" }],
+      trustedProxies: ["private_ranges", "203.0.113.0/24"],
+    }],
+    ["only trusted_proxies (#336)", { upstreamUrl: "http://auth.local", uri: "/verify", copyHeaders: [], trustedProxies: ["203.0.113.0/24", "198.51.100.7"] }],
   ];
 
   it.each(cases)("%s", (_name, forwardAuth) => {
@@ -159,6 +168,16 @@ describe.runIf(available || required)("forward_auth instant-apply JSON matches t
     expect(p.targetHost).toBe("localhost");
     expect(p.targetPort).toBe(8000);
     expect(p.forwardAuth).toEqual(forwardAuth);
+  });
+
+  it("reads the renamed headers, header_up and trusted_proxies back (#336)", () => {
+    const forwardAuth = {
+      upstreamUrl: "http://auth.local:9091", uri: "/verify", copyHeaders: ["Remote-Groups>X-Groups", "Remote-User"],
+      headerUp: [{ op: "set" as const, name: "X-Extra", value: "1" }, { op: "delete" as const, name: "X-Cookie" }],
+      trustedProxies: ["private_ranges", "203.0.113.0/24"],
+    };
+    const [p] = parseProxies(adapt(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, targetPort: 8000, forwardAuth })])));
+    expect(p.forwardAuth).toMatchObject({ ...forwardAuth, headerUp: expect.arrayContaining(forwardAuth.headerUp) });
   });
 });
 
@@ -845,3 +864,344 @@ describe.runIf(available || required)("caddy adapt accepts bind, several hosts a
   });
 });
 
+describe.runIf(available || required)("caddy adapt accepts the basic_auth realm and algorithm (#337)", () => {
+  const accounts = [{ username: "alice", passwordHash: "$argon2id$v=19$m=47104,t=1,p=1$c2FsdHNhbHRzYWx0$aGFzaGhhc2hoYXNoaGFzaGhhc2hoYXNoaGFzaGhhc2g" }];
+
+  it("reads the algorithm and realm back from a real adapt", () => {
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, basicAuth: accounts, basicAuthOptions: { algorithm: "argon2id", realm: "Private area" } })]);
+    const [p] = readBack(conf);
+    expect(p.basicAuthOptions).toEqual({ algorithm: "argon2id", realm: "Private area" });
+    expect(p.basicAuth).toEqual(accounts);
+  });
+
+  it("writes bcrypt in front of a realm, because the realm comes second", () => {
+    const bcrypt = [{ username: "bob", passwordHash: "$2a$14$HfqUPi8ecmhKr2br56YonenjapN.9FYZm5cv78bUrYuhZWGotTGWC" }];
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, basicAuth: bcrypt, basicAuthOptions: { realm: "Only us" } })]);
+    expect(conf).toContain('basic_auth bcrypt "Only us" {');
+    expect(readBack(conf)[0].basicAuthOptions).toEqual({ realm: "Only us" });
+  });
+
+  it("reads no options from a plain basic_auth", () => {
+    const bcrypt = [{ username: "bob", passwordHash: "$2a$14$HfqUPi8ecmhKr2br56YonenjapN.9FYZm5cv78bUrYuhZWGotTGWC" }];
+    expect(readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, basicAuth: bcrypt })]))[0].basicAuthOptions).toBeUndefined();
+  });
+});
+
+describe.runIf(available || required)("caddy adapt accepts redir html (#338)", () => {
+  const targets = ["https://example.com{uri}", "https://x.org/a?b=1&c='d'<e>"];
+
+  it.each(targets)("reads the html redirect to %s back from a real adapt", to => {
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, targetPort: 0, redirect: { to, code: 302, html: true } })]);
+    expect(readBack(conf)[0].redirect).toEqual({ to, code: 302, html: true });
+  });
+
+  it.each(targets)("builds the very page Caddy builds for %s", to => {
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, targetPort: 0, redirect: { to, code: 302, html: true } })]);
+    const server = Object.values(adapt(conf).apps?.http?.servers ?? {})[0] as CaddyServer;
+    const caddys = (server.routes?.[0]?.handle?.[0]) as unknown as { body: string };
+    expect((buildRedirectHandler({ to, code: 302, html: true }) as unknown as { body: string }).body).toBe(caddys.body);
+  });
+});
+
+describe.runIf(available || required)("caddy adapt accepts the encode options (#335)", () => {
+  const options = { algorithms: ["zstd" as const, "gzip" as const], minimumLength: 1024, matchStatus: ["2xx", "404"], matchHeaders: [{ name: "Content-Type", value: "text/*" }] };
+
+  it("reads them back from a real adapt", () => {
+    const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, compress: true, encodeOptions: options })]));
+    expect(p.compress).toBe(true);
+    expect(p.encodeOptions).toEqual(options);
+  });
+
+  it("builds the handler Caddy builds", () => {
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, compress: true, encodeOptions: options })]);
+    const server = Object.values(adapt(conf).apps?.http?.servers ?? {})[0] as CaddyServer;
+    const real = server.routes?.[0]?.handle?.find(h => h.handler === "encode") as unknown as Record<string, unknown>;
+    expect(buildEncodeHandler(options)).toMatchObject({ prefer: real.prefer, minimum_length: real.minimum_length, match: real.match });
+  });
+
+  it("reads plain compression back as no options", () => {
+    const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, compress: true })]));
+    expect(p.compress).toBe(true);
+    expect(p.encodeOptions).toBeUndefined();
+  });
+});
+
+describe.runIf(available || required)("caddy adapt accepts the file_server and php_fastcgi options (#340)", () => {
+  it("reads the file_server options back from a real adapt", () => {
+    const fileServer = { root: "/srv/www", browse: true, browseTemplate: "/etc/caddy/listing.html", disableCanonicalUris: true, status: 404 };
+    const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, targetPort: 0, fileServer })]));
+    expect(p.fileServer).toMatchObject(fileServer);
+  });
+
+  it("reads the php_fastcgi options back from a real adapt", () => {
+    const phpFastcgi = {
+      upstream: "localhost:9000", root: "/srv/php", captureStderr: true, resolveRootSymlink: true, dialTimeout: "3s", readTimeout: "10s", writeTimeout: "20s",
+    };
+    const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, targetPort: 0, phpFastcgi })]));
+    expect(p.phpFastcgi).toMatchObject(phpFastcgi);
+  });
+});
+
+describe.runIf(available || required)("caddy adapt accepts the templates directive (#339)", () => {
+  it("reads plain templates back", () => {
+    const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, targetPort: 0, fileServer: { root: "/srv/www", templates: {} } })]));
+    expect(p.fileServer?.templates).toEqual({});
+  });
+
+  it("reads the mime types and root back", () => {
+    const templates = { mime: ["text/html", "text/css"], root: "/srv/inc" };
+    const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, targetPort: 0, fileServer: { root: "/srv/www", templates } })]));
+    expect(p.fileServer?.templates).toEqual(templates);
+  });
+
+  it("reads no templates from a plain static site", () => {
+    const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, targetPort: 0, fileServer: { root: "/srv/www" } })]));
+    expect(p.fileServer?.templates).toBeUndefined();
+  });
+});
+
+describe.runIf(available || required)("caddy adapt accepts access log field filters (#334)", () => {
+  const filters = [
+    { field: "request>headers>Authorization", filter: "delete" as const },
+    { field: "request>headers>Cookie", filter: "hash" as const },
+    { field: "request>uri", filter: "replace" as const, value: "secret" },
+    { field: "request>remote_ip", filter: "ip_mask" as const, ipv4: 24, ipv6: 64 },
+  ];
+
+  it("reads the filters back from a real adapt", () => {
+    const accessLog = { output: "stderr" as const, format: "console" as const, fieldFilters: filters };
+    const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, accessLog })]));
+    expect(p.accessLog?.format).toBe("console");
+    expect(p.accessLog?.fieldFilters).toEqual(expect.arrayContaining(filters));
+    expect(p.accessLog?.fieldFilters).toHaveLength(4);
+  });
+
+  it("builds the encoder Caddy builds", () => {
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, accessLog: { output: "stderr", format: "console", fieldFilters: filters } })]);
+    const logs = adapt(conf).logging?.logs ?? {};
+    const real = Object.values(logs).find(l => l.encoder?.format === "filter")?.encoder;
+    expect(buildFilterEncoder("console", filters)).toEqual(real);
+  });
+
+  it("accepts include and exclude in Caddy's own log", () => {
+    const patched = buildGlobalOptionsPatch("", { runtimeLog: { output: "stderr", include: ["http.log.access"], exclude: ["admin"] } });
+    const logs = adapt(`${patched}\n:8080 {\n\trespond ok\n}\n`).logging?.logs ?? {};
+    expect(logs.default).toMatchObject({ include: ["http.log.access"], exclude: ["admin"] });
+  });
+});
+
+describe.runIf(available || required)("caddy adapt accepts log_skip (#334)", () => {
+  it("reads a lone path and several paths back from the adapted JSON of a hostless site", () => {
+    for (const skipPaths of [["/health*"], ["/health*", "/ping"]]) {
+      const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, accessLog: { output: "stderr", skipPaths } })]);
+      const proxies = readBack(conf);
+      expect(proxies).toHaveLength(1);
+      expect(proxies[0].accessLog?.skipPaths).toEqual(skipPaths);
+    }
+  });
+
+  it("takes a site with a host as one site and reads its paths from the Caddyfile, where Caddy names the logger itself", () => {
+    for (const skipPaths of [["/health*"], ["/health*", "/ping"]]) {
+      const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, externalHost: "example.com", accessLog: { output: "stderr", skipPaths } })]);
+      expect(readBack(conf)).toHaveLength(1);
+      expect(Object.values(parseConfAccessLogMap(conf))[0].skipPaths).toEqual(skipPaths);
+    }
+  });
+
+  it("builds the route Caddy builds", () => {
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, accessLog: { output: "stderr", skipPaths: ["/health*", "/ping"] } })]);
+    const real = Object.values(adapt(conf).apps?.http?.servers ?? {})[0] as CaddyServer;
+    const pushed = buildServerEntry(entry({ tls: false, externalPort: 8080, accessLog: { output: "stderr", skipPaths: ["/health*", "/ping"] } }));
+    expect(pushed.routes?.[0]).toEqual(real.routes?.[0]);
+  });
+});
+
+describe.runIf(available || required)("caddy adapt accepts the new rewrites (#332)", () => {
+  const rewrites: import("./types").RewriteConfig[] = [
+    { type: "strip_suffix", value: ".html" },
+    { type: "uri_replace", find: "/old", replace: "/new" },
+    { type: "uri_replace", find: "a b", replace: "", limit: 2 },
+    { type: "method", method: "GET" },
+    { type: "query", ops: [{ op: "set", key: "page", value: "1" }] },
+    { type: "query", ops: [
+      { op: "rename", key: "q", value: "query" }, { op: "set", key: "a", value: "b c" }, { op: "add", key: "x", value: "y" },
+      { op: "replace", key: "id", search: "^(\\d+)$", replace: "n$1" }, { op: "delete", key: "debug" },
+    ] },
+  ];
+
+  it.each(rewrites)("reads %j back from a real adapt", rewrite => {
+    const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, rewrite })]));
+    expect(p.rewrite).toEqual(rewrite);
+  });
+
+  it.each(rewrites)("builds the handler Caddy builds for %j", rewrite => {
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, rewrite })]);
+    const server = Object.values(adapt(conf).apps?.http?.servers ?? {})[0] as CaddyServer;
+    const real = server.routes?.[0]?.handle?.find(h => h.handler === "rewrite");
+    expect(buildRewriteHandler(rewrite)).toEqual(real);
+  });
+});
+
+describe.runIf(available || required)("caddy adapt accepts the new matchers (#331)", () => {
+  const cases: Array<[string, import("./types").RouteMatch]> = [
+    ["a named path_regexp", { path_regexp: { pattern: "^/user/(\\d+)$", name: "user" } }],
+    ["a path_regexp without a name", { path_regexp: { pattern: "^/a/(.*)$" } }],
+    ["a header_regexp", { header_regexp: { header: "X-Token", pattern: "^v(\\d+)$", name: "token" } }],
+    ["protocol", { protocol: "https" }],
+    ["file", { file: { try_files: ["{path}", "{path}/index.html"], try_policy: "first_exist" } }],
+    ["vars", { vars: { "{host}": ["example.com", "www.example.com"] } }],
+    ["a protocol next to a path and a method", { path: ["/api/*"], method: ["GET"], protocol: "https" }],
+    ["a path_regexp next to a header_regexp", { path_regexp: { pattern: "^/a", name: "p" }, header_regexp: { header: "X", pattern: "b", name: "h" } }],
+  ];
+
+  it.each(cases)("reads %s back from a real adapt", (_name, matchers) => {
+    const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, matchers })]));
+    expect(p.matchers).toEqual(matchers);
+  });
+
+  it.each(cases)("builds the matcher Caddy builds for %s", (_name, matchers) => {
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, matchers })]);
+    const server = Object.values(adapt(conf).apps?.http?.servers ?? {})[0] as CaddyServer;
+    const real = server.routes?.[0]?.match?.[0] as Record<string, unknown>;
+    const built = buildMatcherJson(matchers) as Record<string, unknown>;
+    // Caddy names a regexp after its matcher; a name chosen in the form is the same on both sides.
+    const strip = (o: Record<string, unknown>) => JSON.parse(JSON.stringify(o, (k, v) => (k === "name" && /^m\d+$/.test(v) ? undefined : v))) as Record<string, unknown>;
+    expect(strip(built)).toEqual(strip(real));
+  });
+});
+
+describe.runIf(available || required)("caddy adapt accepts the site's own ACME settings (#341)", () => {
+  const staging = "https://acme-staging-v02.api.letsencrypt.org/directory";
+  const acmeSite = (tlsAdvanced: import("./types").TlsAdvancedConfig) =>
+    entry({ tls: true, tlsIssuer: "acme", externalHost: "example.com", externalScheme: "https", externalPort: 443, tlsAdvanced });
+
+  it.each([
+    ["email, CA and key type", { acmeEmail: "me@example.com", acmeCa: staging, keyType: "p256" }],
+    ["only a CA", { acmeCa: staging }],
+    ["only an email", { acmeEmail: "me@example.com" }],
+    ["only a key type", { keyType: "ed25519" }],
+  ])("reads %s back from a real adapt", (_name, tlsAdvanced) => {
+    const [p] = readBack(proxiesToCaddyfile([acmeSite(tlsAdvanced)]));
+    expect(p.tlsAdvanced).toMatchObject(tlsAdvanced);
+  });
+
+  it("builds the policy Caddy builds for a CA, email and key type", () => {
+    const tlsAdvanced = { acmeEmail: "me@example.com", acmeCa: staging, keyType: "p256" };
+    const real = adapt(proxiesToCaddyfile([acmeSite(tlsAdvanced)])).apps?.tls?.automation?.policies?.find(p => p.subjects?.some(s => s === "example.com"));
+    const pushed = mergeProxy({ apps: { http: { servers: {} } } } as CaddyConfig, acmeSite(tlsAdvanced)).apps?.tls?.automation?.policies?.find(p => p.subjects?.some(s => s === "example.com"));
+    expect(pushed).toEqual(real);
+  });
+
+  it("reads key_type of an internal-issuer site", () => {
+    const e = entry({ tls: true, tlsIssuer: "internal", externalHost: "example.com", externalScheme: "https", externalPort: 443, tlsAdvanced: { keyType: "ed25519" } });
+    const [p] = readBack(proxiesToCaddyfile([e]));
+    expect(p.tlsAdvanced?.keyType).toBe("ed25519");
+  });
+});
+
+describe.runIf(available || required)("caddy adapt accepts the server options (#328)", () => {
+  it("reads them back from a real adapt", () => {
+    const lines = buildServerExtrasLines({
+      keepaliveInterval: "30s", keepaliveIdle: "1m", strictSniHost: true, logCredentials: true, enableFullDuplex: true,
+    }, "\t\t");
+    const conf = `{\n\tservers :8443 {\n${lines.join("\n")}\n\t}\n}\n\n:8443 {\n\trespond ok\n}\n`;
+    const server = Object.values(adapt(conf).apps?.http?.servers ?? {})[0] as CaddyServer;
+    expect(parseServerExtras(server)).toEqual({
+      keepaliveInterval: "30s", keepaliveIdle: "1m", strictSniHost: true, logCredentials: true, enableFullDuplex: true,
+    });
+  });
+
+  it("reads read_body_idle from the timeouts block", () => {
+    const conf = "{\n\tservers :8443 {\n\t\ttimeouts {\n\t\t\tread_body_idle 5s\n\t\t}\n\t}\n}\n\n:8443 {\n\trespond ok\n}\n";
+    const server = Object.values(adapt(conf).apps?.http?.servers ?? {})[0] as CaddyServer;
+    expect(parseServerExtras(server)).toEqual({ readBodyIdle: "5s" });
+  });
+});
+
+describe.runIf(available || required)("caddy adapt accepts the TLS and admin global options (#329, #330)", () => {
+  const site = ":8080 {\n\trespond ok\n}\n";
+
+  it("accepts every option in one global block and sees the ones it keeps in the JSON", () => {
+    const patched = buildGlobalOptionsPatch("", {
+      autoHttps: "disable_redirects", defaultSni: "example.com", keyType: "p256", ocspStaplingOff: true,
+      preferredChains: { mode: "root_common_name", names: ["ISRG Root X1"] }, certIssuer: "acme", defaultBind: ["127.0.0.1"],
+      adminAddress: "127.0.0.1:2019", adminOrigins: ["localhost:2019"], adminEnforceOrigin: true,
+    });
+    const config = adapt(`${patched}\n${site}`);
+    expect(config.admin).toEqual({ listen: "127.0.0.1:2019", enforce_origin: true, origins: ["localhost:2019"] });
+    const policy = config.apps?.tls?.automation?.policies?.[0] as Record<string, unknown>;
+    expect(policy.key_type).toBe("p256");
+    expect(policy.disable_ocsp_stapling).toBe(true);
+    expect((policy.issuers as Array<Record<string, unknown>>)[0]).toMatchObject({ module: "acme", preferred_chains: { root_common_name: ["ISRG Root X1"] } });
+    const server = Object.values(config.apps?.http?.servers ?? {})[0] as CaddyServer;
+    expect(server.listen).toEqual(["127.0.0.1:8080"]);
+    expect(server.automatic_https).toEqual({ disable_redirects: true });
+  });
+
+  it("accepts local_certs and admin off", () => {
+    const config = adapt(`${buildGlobalOptionsPatch("", { localCerts: true, adminOff: true })}\n${site}`);
+    expect(config.admin).toEqual({ disabled: true });
+    expect(config.apps?.tls?.automation?.policies?.[0]?.issuers?.[0]).toMatchObject({ module: "internal" });
+  });
+});
+
+describe.runIf(available || required)("caddy adapt accepts metrics per_host (#342)", () => {
+  it("turns it on in the HTTP app's metrics", () => {
+    const conf = `${buildGlobalOptionsPatch("", { metricsEnabled: true, metricsPerHost: true })}\n:8080 {\n\trespond ok\n}\n`;
+    expect((adapt(conf).apps?.http as { metrics?: unknown } | undefined)?.metrics).toEqual({ per_host: true });
+  });
+});
+
+describe.runIf(available || required)("caddy adapt accepts header_down (#324)", () => {
+  it("reads back set, add, delete and replace from a real adapt", () => {
+    const ops = [
+      { op: "set" as const, name: "X-A", value: "1" },
+      { op: "add" as const, name: "X-B", value: "2" },
+      { op: "delete" as const, name: "Server" },
+      { op: "replace" as const, name: "Location", value: "http://backend", replacement: "https://front" },
+    ];
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, upstreamResponseHeaders: ops })]);
+    expect(readBack(conf)[0].upstreamResponseHeaders).toEqual(expect.arrayContaining(ops));
+    expect(readBack(conf)[0].upstreamResponseHeaders).toHaveLength(4);
+  });
+});
+
+describe.runIf(available || required)("caddy adapt accepts the streaming options (#325)", () => {
+  it("reads them back from a real adapt", () => {
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, flushInterval: "-1", streamTimeout: "24h", streamCloseDelay: "5m" })]);
+    const [p] = readBack(conf);
+    expect(p.flushInterval).toBe("-1");
+    expect(p.streamTimeout).toBe("24h");
+    expect(p.streamCloseDelay).toBe("5m");
+  });
+});
+
+describe.runIf(available || required)("caddy adapt accepts the remaining transport options (#327)", () => {
+  it("reads them back from a real adapt", () => {
+    const conf = proxiesToCaddyfile([entry({
+      tls: false, externalPort: 8080, targetScheme: "https", tlsServerName: "backend.internal", keepalive: "2m",
+      keepaliveIdleConns: 20, keepaliveIdleConnsPerHost: 4, httpVersions: ["h2c", "2"], readTimeout: "30s", writeTimeout: "10s",
+      extraUpstreams: [{ host: "b", port: 1 }], lbRetry: { retries: 2, retryMethods: ["GET", "HEAD"] },
+    })]);
+    const [p] = readBack(conf);
+    expect(p).toMatchObject({
+      tlsServerName: "backend.internal", keepalive: "2m", keepaliveIdleConns: 20, keepaliveIdleConnsPerHost: 4,
+      httpVersions: ["h2c", "2"], readTimeout: "30s", writeTimeout: "10s",
+    });
+    expect(p.lbRetry?.retryMethods).toEqual(["GET", "HEAD"]);
+  });
+
+  it("keepalive off", () => {
+    expect(readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, keepalive: "off" })]))[0].keepalive).toBe("off");
+  });
+});
+
+describe.runIf(available || required)("caddy adapt accepts dynamic upstreams (#326)", () => {
+  const srv = { type: "srv" as const, name: "_http._tcp.example.com", refresh: "1m", resolvers: ["1.1.1.1"], dialTimeout: "2s", dialFallbackDelay: "1s", gracePeriod: "5s" };
+  const a = { type: "a" as const, name: "backend.example.com", port: "8080", refresh: "30s", versions: "ipv6" as const };
+
+  it.each([[[srv]], [[a]], [[srv, a]], [[{ type: "srv" as const, name: "_x._tcp.example.com" }]]])("reads %j back from a real adapt", sources => {
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, dynamicUpstreams: sources })]);
+    expect(readBack(conf)[0].dynamicUpstreams).toEqual(sources);
+  });
+});

@@ -177,7 +177,18 @@
     "field_hide": "File nascosti",
     "field_hide_help": "Nomi o pattern che non vengono mai serviti, separati da spazi.",
     "field_precompressed": "File precompressi",
-    "field_precompressed_help": "Servi file.zst, file.br o file.gz accanto all’originale quando il browser accetta quella codifica."
+    "field_precompressed_help": "Servi file.zst, file.br o file.gz accanto all’originale quando il browser accetta quella codifica.",
+    "field_browse_template": "Modello dell'elenco",
+    "field_browse_template_help": "Un file modello per l'elenco della directory. Usato solo quando l'elenco delle directory è attivo.",
+    "field_status": "Codice di stato",
+    "field_status_help": "Rispondi a ogni file con questo codice invece di 200, ad esempio 404 per una pagina di errore personalizzata.",
+    "field_disable_canonical_uris": "Lascia invariate le barre finali",
+    "field_disable_canonical_uris_help": "Non reindirizzare per aggiungere o togliere una barra finale su directory e file.",
+    "field_templates": "Elabora i file con i modelli",
+    "field_templates_help": "Attiva il motore di modelli di Caddy per i file serviti, che così possono usare include, .Req e le altre azioni di modello.",
+    "field_templates_mime": "Tipi MIME",
+    "field_templates_root": "Directory per gli include",
+    "field_templates_root_help": "Dove include e le altre azioni sui file cercano i file. Vuoto significa la radice del sito."
   },
   "edit_static": {
     "title": "Modifica server statico — :{{port}}",
@@ -206,7 +217,15 @@
     "env_field_value": "Valore",
     "env_add_button": "Aggiungi variabile",
     "field_try_files": "File da provare (try_files)",
-    "field_try_files_help": "Facoltativo. Candidati provati in ordine prima di PHP; un’app con front controller di solito richiede {path} {path}/ /index.php?{query}."
+    "field_try_files_help": "Facoltativo. Candidati provati in ordine prima di PHP; un’app con front controller di solito richiede {path} {path}/ /index.php?{query}.",
+    "field_dial_timeout": "Timeout di connessione",
+    "field_read_timeout": "Timeout di lettura",
+    "field_write_timeout": "Timeout di scrittura",
+    "no_timeout": "nessuno",
+    "field_capture_stderr": "Registra lo stderr del processo PHP",
+    "field_capture_stderr_help": "Scrive nel registro di Caddy ciò che PHP-FPM stampa su stderr.",
+    "field_resolve_root_symlink": "Risolvi i link simbolici nella radice",
+    "field_resolve_root_symlink_help": "Segue i link simbolici nella directory radice prima di costruire SCRIPT_FILENAME, come servono alle configurazioni opcache con link di release."
   },
   "add_respond": {
     "title": "Aggiungi risposta statica",
@@ -251,7 +270,11 @@
     "validation_port_range": "La porta deve essere compresa tra 1 e 65535",
     "validation_port_duplicate": "La porta {{port}} è già in uso",
     "validation_to_required": "La destinazione del reindirizzamento è obbligatoria",
-    "confirm_body": "Verrà creato un reindirizzamento su :{{port}} → {{to}} ({{code}}) e la configurazione di Caddy verrà ricaricata."
+    "confirm_body": "Verrà creato un reindirizzamento su :{{port}} → {{to}} ({{code}}) e la configurazione di Caddy verrà ricaricata.",
+    "code_html": "Pagina HTML",
+    "code_html_help": "Risponde con una pagina che reindirizza nel browser invece di un codice di stato. A differenza di un reindirizzamento con codice di stato, mantiene il #fragment dell'URL.",
+    "keep_path": "Mantieni percorso e query",
+    "keep_path_help": "Aggiunge {uri} alla destinazione, così /a?b=1 su questo sito va a /a?b=1 sulla destinazione."
   },
   "basic_auth": {
     "heading": "Autenticazione HTTP Basic",
@@ -260,14 +283,32 @@
     "field_password": "Password",
     "field_password_keep": "Lascia vuoto per mantenere quella esistente",
     "add_button": "Aggiungi account",
-    "remove_button": "Rimuovi account"
+    "remove_button": "Rimuovi account",
+    "realm": "Realm",
+    "algorithm": "Algoritmo di hash",
+    "algorithm_default": "bcrypt (predefinito)",
+    "algorithm_argon2id": "argon2id (più robusto)",
+    "algorithm_mismatch": "Gli account che mantengono la password hanno ancora un hash dell'altro algoritmo. Inserisci di nuovo le loro password."
   },
   "transport": {
     "heading": "Timeout dell'upstream",
     "section_title": "Timeout dell'upstream (facoltativi)",
     "dial_timeout": "Timeout di connessione",
     "response_header_timeout": "Timeout degli header di risposta",
-    "defaults_help": "Lascia un campo vuoto per usare il valore predefinito di Caddy, mostrato in grigio. Un timeout delle intestazioni di risposta interrompe il long polling e le risposte lente."
+    "defaults_help": "Lascia un campo vuoto per usare il valore predefinito di Caddy, mostrato in grigio. Un timeout delle intestazioni di risposta interrompe il long polling e le risposte lente.",
+    "streaming_help": "Streaming (websocket, flussi di eventi): lascia vuoto per usare i valori predefiniti di Caddy.",
+    "flush_interval": "Intervallo di flush",
+    "flush_interval_placeholder": "-1 invia ogni scrittura subito",
+    "stream_timeout": "Timeout dello stream",
+    "stream_close_delay": "Ritardo di chiusura dello stream",
+    "connection_title": "Connessione all'upstream",
+    "tls_server_name": "Nome server TLS",
+    "versions": "Versioni HTTP",
+    "read_timeout": "Timeout di lettura",
+    "write_timeout": "Timeout di scrittura",
+    "keepalive": "Keep-alive",
+    "keepalive_idle_conns": "Connessioni inattive mantenute",
+    "keepalive_idle_conns_per_host": "Connessioni inattive mantenute per host"
   },
   "server_timeouts": {
     "heading": "Timeout e limiti del server",
@@ -282,7 +323,17 @@
     "max_header_bytes_help": "Dimensione massima delle intestazioni della richiesta (predefinito di Caddy: 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "Disattiva HTTP/3",
-    "http3_help": "Caddy abilita HTTP/1.1, HTTP/2 e HTTP/3 per impostazione predefinita quando TLS è configurato. HTTP/3 usa UDP sulla stessa porta di HTTPS: se il firewall blocca UDP, disattivandolo qui si torna solo a HTTP/1.1 e HTTP/2."
+    "http3_help": "Caddy abilita HTTP/1.1, HTTP/2 e HTTP/3 per impostazione predefinita quando TLS è configurato. HTTP/3 usa UDP sulla stessa porta di HTTPS: se il firewall blocca UDP, disattivandolo qui si torna solo a HTTP/1.1 e HTTP/2.",
+    "keepalive_interval": "Intervallo keep-alive TCP",
+    "keepalive_idle": "Inattività prima del keep-alive TCP",
+    "options_label": "Opzioni di connessione",
+    "strict_sni_host": "Host SNI rigoroso",
+    "strict_sni_host_help": "Rifiuta le richieste con intestazione Host diversa dal nome server TLS.",
+    "log_credentials": "Registra le credenziali",
+    "log_credentials_help": "Scrive le intestazioni Authorization e Cookie nel registro di accesso.",
+    "enable_full_duplex": "Full duplex per HTTP/1",
+    "enable_full_duplex_help": "Permette a un gestore di leggere il corpo della richiesta mentre scrive la risposta.",
+    "read_body_idle": "Timeout di inattività del corpo della richiesta"
   },
   "request_body": {
     "field_label": "Dimensione massima del corpo della richiesta",
@@ -303,7 +354,30 @@
     "field_find_placeholder": "^/api/(.*)",
     "field_replace_placeholder": "/$1",
     "field_replace_help": "Usa $1, $2 per i gruppi di cattura",
-    "type_aria": "Tipo di riscrittura"
+    "type_aria": "Tipo di riscrittura",
+    "type_strip_suffix": "Rimuovi suffisso",
+    "type_uri_replace": "Sostituisci testo",
+    "type_query": "Stringa di query",
+    "type_method": "Metodo",
+    "field_suffix": "Suffisso",
+    "field_suffix_placeholder": ".html",
+    "field_text_find": "Cerca (testo semplice)",
+    "field_limit": "Al massimo",
+    "field_limit_placeholder": "tutti",
+    "field_method": "Metodo",
+    "query_op": "Modifica",
+    "query_op_set": "Imposta",
+    "query_op_add": "Aggiungi",
+    "query_op_delete": "Elimina",
+    "query_op_rename": "Rinomina",
+    "query_op_replace": "Sostituisci",
+    "query_key": "Nome",
+    "query_value": "Valore",
+    "query_new_key": "Nuovo nome",
+    "query_search": "Cerca (regex)",
+    "query_remove": "Rimuovi modifica",
+    "query_add": "Aggiungi modifica",
+    "invalid": "Compila tutti i campi della riscrittura."
   },
   "probe": {
     "status_pending": "Verifica in corso…",
@@ -386,7 +460,9 @@
     "validation_max_fails": "I guasti max devono essere almeno 1",
     "validation_needs_health_uri": "Intervallo, timeout e stato atteso richiedono un percorso di controllo",
     "validation_health_uri": "Il percorso del controllo deve iniziare con /",
-    "validation_health_status": "Usa un codice come 200 o una classe come 2xx"
+    "validation_health_status": "Usa un codice come 200 o una classe come 2xx",
+    "retry_methods": "Riprova solo questi metodi",
+    "validation_methods": "I metodi sono parole come GET o HEAD, separate da spazi."
   },
   "response_headers": {
     "heading": "Header di risposta",
@@ -413,7 +489,12 @@
     "field_name": "Nome dell'header",
     "field_value": "Valore",
     "add_button": "Aggiungi",
-    "presets_label": "Preimpostazioni"
+    "presets_label": "Preimpostazioni",
+    "down_heading": "Intestazioni di risposta dell'upstream",
+    "down_section_title": "Intestazioni di risposta dell'upstream (facoltativo)",
+    "op_replace": "Sostituisci",
+    "field_search": "Valore dell'intestazione da cercare (espressione regolare)",
+    "field_replacement": "Sostituzione"
   },
   "edit_redirect": {
     "title": "Modifica reindirizzamento — :{{port}}",
@@ -568,7 +649,16 @@
     "roll_keep_count": "File ruotati da conservare",
     "roll_keep_days": "Età max. dei file ruotati (giorni)",
     "roll_compress": "Comprimi i file ruotati (gzip)",
-    "roll_help": "Caddy ruota il file di log per impostazione predefinita. Lascia un campo vuoto per usare il valore predefinito di Caddy, mostrato in grigio."
+    "roll_help": "Caddy ruota il file di log per impostazione predefinita. Lascia un campo vuoto per usare il valore predefinito di Caddy, mostrato in grigio.",
+    "field_filters": "Filtri dei campi",
+    "field_filters_help": "Uno per riga: il percorso di un campo, poi delete, hash, replace <testo> o ip_mask <bit IPv4> [<bit IPv6>], ad esempio request>headers>Authorization delete.",
+    "field_filters_invalid": "Ogni riga richiede il percorso di un campo e delete, hash, replace <testo> o ip_mask <bit>.",
+    "include": "Includi logger",
+    "include_help": "Nomi dei logger che questo registro scrive, separati da spazi, ad esempio http.log.access. Vuoto significa tutti.",
+    "exclude": "Escludi logger",
+    "exclude_help": "Nomi dei logger che questo registro salta, separati da spazi, ad esempio http.log.access.log0.",
+    "skip_paths": "Percorsi esclusi dal registro",
+    "skip_paths_help": "Percorsi separati da spazi, con caratteri jolly consentiti, ad esempio /health* /ping. Le richieste a questi percorsi non vengono registrate."
   },
   "config_check": {
     "button": "Controlla configurazione",
@@ -691,7 +781,39 @@
     "proxy_protocol_allow_help": "Intervalli CIDR separati da spazi autorizzati a inviare header del protocollo PROXY: limitali agli IP del tuo load balancer per evitare lo spoofing dell'IP del client. Lascia vuoto per accettare qualsiasi origine.",
     "proxy_protocol_timeout": "Timeout di lettura dell'header (facoltativo)",
     "proxy_protocol_timeout_help": "Tempo massimo di attesa dell'header del protocollo PROXY prima di rinunciare (durata Go, es. 2s). Lascia vuoto per il valore predefinito di Caddy.",
-    "on_demand_rate_deprecated": "Caddy non consiglia più interval e burst. Svuota entrambi e affidati all'endpoint ask."
+    "on_demand_rate_deprecated": "Caddy non consiglia più interval e burst. Svuota entrambi e affidati all'endpoint ask.",
+    "tls_advanced_title": "TLS avanzato",
+    "auto_https": "HTTPS automatico",
+    "auto_https_off": "Disattivato",
+    "auto_https_disable_redirects": "Nessun reindirizzamento da HTTP a HTTPS",
+    "auto_https_ignore_loaded_certs": "Ignora i certificati caricati",
+    "issuer": "Emittente dei certificati",
+    "issuer_local_certs": "CA propria di Caddy per ogni sito",
+    "issuer_internal": "CA interna",
+    "issuer_acme": "ACME",
+    "key_type": "Tipo di chiave",
+    "preferred_chains": "Catena di certificati preferita",
+    "preferred_chains_smallest": "Catena più corta",
+    "preferred_chains_root": "Per nome comune della radice",
+    "preferred_chains_any": "Per qualsiasi nome comune",
+    "preferred_chains_names": "Nomi comuni",
+    "preferred_chains_names_help": "Separati da virgole.",
+    "default_sni": "SNI predefinito",
+    "default_sni_help": "Il nome del server che Caddy presume quando un client non ne invia uno.",
+    "default_bind": "Indirizzi bind predefiniti",
+    "default_bind_help": "Indirizzi separati da spazi su cui ascoltano i siti senza opzione bind.",
+    "ocsp_stapling_off": "Disattiva OCSP stapling",
+    "admin_title": "Endpoint di amministrazione",
+    "admin_off": "Disattiva l'endpoint di amministrazione",
+    "admin_off_help": "Il plugin ha bisogno dell'API di amministrazione per leggere e modificare la configurazione in esecuzione.",
+    "admin_address": "Indirizzo di amministrazione",
+    "admin_address_help": "Dove ascolta l'API di amministrazione di Caddy, scritto come nel Caddyfile. Il plugin si collega all'indirizzo della propria impostazione, quindi modifica entrambi insieme.",
+    "admin_origins": "Origini consentite",
+    "admin_origins_help": "Host separati da spazi che possono chiamare l'API di amministrazione da un browser.",
+    "admin_enforce_origin": "Imponi le origini",
+    "metrics_per_host": "Etichetta le metriche per host",
+    "metrics_per_host_help": "Aggiunge l'host richiesto a ogni metrica di richiesta, così i siti si distinguono. Ogni host diverso diventa una serie a sé.",
+    "auto_https_disable_certs": "Nessuna gestione dei certificati"
   },
   "ca": {
     "title": "Autorità di certificazione interna",
@@ -794,7 +916,12 @@
     "field_copy_headers": "Copia header",
     "field_copy_headers_help": "Header di risposta, separati da spazi o virgole, da copiare dal servizio di autenticazione alla richiesta verso l'upstream (es. Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "L'URI di autenticazione è obbligatorio quando è impostato un URL del servizio di autenticazione"
+    "validation_uri_required": "L'URI di autenticazione è obbligatorio quando è impostato un URL del servizio di autenticazione",
+    "field_copy_headers_rename_help": "Scrivi Name>Other per copiare un'intestazione con un altro nome.",
+    "field_header_up": "Intestazioni della richiesta al servizio di autenticazione",
+    "field_header_up_help": "Una per riga: Name value imposta un'intestazione, +Name value ne aggiunge una, -Name ne rimuove una.",
+    "field_trusted_proxies": "Proxy attendibili",
+    "field_trusted_proxies_help": "Intervalli le cui intestazioni X-Forwarded-* restano nella richiesta al servizio di autenticazione, separati da spazi. private_ranges indica le reti private."
   },
   "tls_policy": {
     "heading": "Policy TLS",
@@ -842,7 +969,15 @@
     "custom_file_unreadable": "File non trovato o non leggibile dall'utente di Caddy",
     "custom_file_readable": "Il file è leggibile",
     "custom_file_valid_expiry": "Valido: scade il {{date}}",
-    "custom_cert_lifetime_note": "Sopra è caricato un certificato personalizzato: durata e finestra di rinnovo non si applicano, perché Caddy non emette nulla da sé."
+    "custom_cert_lifetime_note": "Sopra è caricato un certificato personalizzato: durata e finestra di rinnovo non si applicano, perché Caddy non emette nulla da sé.",
+    "acme_email": "Email ACME",
+    "acme_email_help": "L'email dell'account per i certificati di questo sito. Vale solo per l'HTTPS automatico; vuoto usa quella globale.",
+    "acme_global_placeholder": "Email globale",
+    "acme_ca": "URL della directory della CA ACME",
+    "acme_ca_help": "Da dove questo sito ottiene i certificati, ad esempio l'URL di staging di Let's Encrypt durante i test. Vuoto usa la CA globale.",
+    "key_type": "Tipo di chiave",
+    "acme_invalid_email": "Inserisci un indirizzo email come admin@example.com.",
+    "acme_invalid_ca": "Inserisci un URL http:// o https://."
   },
   "error_handler": {
     "heading": "Gestori di errori personalizzati",
@@ -908,7 +1043,22 @@
     "ip_kind_remote": "IP della connessione",
     "ip_kind_client_help": "L’IP del visitatore, presa dall’intestazione inoltrata quando la richiesta arriva tramite uno dei proxy fidati (Impostazioni). Senza proxy fidati coincide con l’IP della connessione.",
     "ip_kind_remote_help": "L’IP della connessione TCP. Dietro un proxy o una CDN è l’indirizzo del proxy, non del visitatore.",
-    "ip_range": "Indirizzo IP o intervallo"
+    "ip_range": "Indirizzo IP o intervallo",
+    "type_path_regexp": "Regex del percorso",
+    "type_header_regexp": "Regex dell'intestazione",
+    "field_regexp_name": "Nome (facoltativo)",
+    "field_header_name_regexp": "Nome dell'intestazione per la regex",
+    "field_regexp_name_header": "Nome della regex dell'intestazione (facoltativo)",
+    "regexp_help": "Un nome rende i gruppi disponibili come {re.name.1}, ad esempio in una riscrittura. Caddy consente una regex per matcher.",
+    "type_protocol": "Protocollo",
+    "protocol_any": "qualsiasi",
+    "type_file": "File",
+    "field_try_files": "File da cercare",
+    "field_try_policy": "Come scegliere",
+    "try_policy_default": "il primo esistente",
+    "file_help": "Corrisponde quando esiste uno dei file. I segnaposto come {path} funzionano.",
+    "type_vars": "Variabili",
+    "vars_help": "Una per riga: un segnaposto e i valori che può avere, ad esempio {host} example.com www.example.com."
   },
   "handle_path": {
     "label": "Rimuovi il prefisso di percorso corrispondente (handle_path)"
@@ -1059,5 +1209,44 @@
     "label": "Indirizzi di bind",
     "help": "Gli indirizzi su cui questo sito ascolta, separati da spazi, ad esempio 127.0.0.1 ::1. Vuoto ascolta su ogni indirizzo. Un host che è un solo indirizzo IP vi è già legato.",
     "invalid": "Inserisci indirizzi IP o nomi host, senza porta."
+  },
+  "encode": {
+    "heading": "Compressione",
+    "section_title": "Compressione (facoltativo)",
+    "help": "Vale quando la compressione è attiva in Generale. Senza scelte Caddy comprime con gzip e zstd.",
+    "algorithms": "Algoritmi e ordine",
+    "algorithms_default": "gzip, zstd (predefinito)",
+    "algorithms_zstd_gzip": "zstd, poi gzip",
+    "algorithms_gzip": "solo gzip",
+    "algorithms_zstd": "solo zstd",
+    "minimum_length": "Dimensione minima",
+    "minimum_length_help": "Le risposte con meno byte di questo valore vengono inviate così come sono. Il valore predefinito di Caddy è 512.",
+    "invalid_number": "Inserisci un numero intero di byte.",
+    "match_status": "Solo questi codici di stato",
+    "match_status_help": "Codici o classi separati da spazi, come 2xx 404. Vuoto significa tutti gli stati.",
+    "invalid_status": "Inserisci codici come 200 o classi come 2xx.",
+    "match_headers": "Solo queste intestazioni di risposta",
+    "match_headers_help": "Una per riga: il nome dell'intestazione e il suo valore. Funzionano i caratteri jolly come text/*.",
+    "invalid_header": "Ogni riga richiede un nome di intestazione e un valore."
+  },
+  "dynamic_upstreams": {
+    "heading": "Upstream dinamici",
+    "section_title": "Upstream dinamici (avanzato, facoltativo)",
+    "help": "Cerca gli upstream nel DNS. La destinazione qui sopra è il ripiego quando la ricerca non trova nulla. Più sorgenti vengono combinate.",
+    "add_button": "Aggiungi sorgente DNS",
+    "type": "Tipo di ricerca",
+    "name_srv": "Nome SRV",
+    "name_a": "Nome host",
+    "refresh": "Intervallo di aggiornamento",
+    "resolvers": "Resolver DNS",
+    "dial_fallback_delay": "Ritardo della connessione di ripiego",
+    "grace_period": "Periodo di tolleranza",
+    "versions": "Famiglie di indirizzi",
+    "versions_both": "IPv4 e IPv6",
+    "validation_name": "Una sorgente con impostazioni richiede un nome.",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

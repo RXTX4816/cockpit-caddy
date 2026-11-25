@@ -177,7 +177,18 @@
     "field_hide": "Verborgen bestanden",
     "field_hide_help": "Namen of patronen die nooit worden geserveerd, gescheiden door spaties.",
     "field_precompressed": "Vooraf gecomprimeerde bestanden",
-    "field_precompressed_help": "file.zst, file.br of file.gz naast het origineel serveren als de browser die codering accepteert."
+    "field_precompressed_help": "file.zst, file.br of file.gz naast het origineel serveren als de browser die codering accepteert.",
+    "field_browse_template": "Sjabloon voor de lijst",
+    "field_browse_template_help": "Een sjabloonbestand voor de maplijst. Wordt alleen gebruikt als de maplijst aan staat.",
+    "field_status": "Statuscode",
+    "field_status_help": "Elk bestand beantwoorden met deze statuscode in plaats van 200, bijvoorbeeld 404 voor een eigen foutpagina.",
+    "field_disable_canonical_uris": "Slashes aan het eind laten staan",
+    "field_disable_canonical_uris_help": "Niet doorverwijzen om een slash aan het eind van mappen en bestanden toe te voegen of te verwijderen.",
+    "field_templates": "Bestanden door sjablonen halen",
+    "field_templates_help": "Zet Caddy's sjabloonengine aan voor de geserveerde bestanden, zodat ze include, .Req en de andere sjabloonacties kunnen gebruiken.",
+    "field_templates_mime": "MIME-typen",
+    "field_templates_root": "Map voor includes",
+    "field_templates_root_help": "Waar include en de andere bestandsacties bestanden zoeken. Leeg betekent de siteroot."
   },
   "edit_static": {
     "title": "Statische server bewerken — :{{port}}",
@@ -206,7 +217,15 @@
     "env_field_value": "Waarde",
     "env_add_button": "Variabele toevoegen",
     "field_try_files": "Bestanden proberen (try_files)",
-    "field_try_files_help": "Optioneel. Kandidaten die vóór PHP op volgorde worden geprobeerd; een front-controller-app heeft meestal {path} {path}/ /index.php?{query} nodig."
+    "field_try_files_help": "Optioneel. Kandidaten die vóór PHP op volgorde worden geprobeerd; een front-controller-app heeft meestal {path} {path}/ /index.php?{query} nodig.",
+    "field_dial_timeout": "Verbindings-timeout",
+    "field_read_timeout": "Lees-timeout",
+    "field_write_timeout": "Schrijf-timeout",
+    "no_timeout": "geen",
+    "field_capture_stderr": "stderr van het PHP-proces loggen",
+    "field_capture_stderr_help": "Schrijft wat PHP-FPM naar stderr afdrukt in het logboek van Caddy.",
+    "field_resolve_root_symlink": "Symlinks in de root oplossen",
+    "field_resolve_root_symlink_help": "Volgt symlinks in de rootmap voordat SCRIPT_FILENAME wordt opgebouwd, wat opcache-opstellingen met release-symlinks nodig hebben."
   },
   "add_respond": {
     "title": "Statisch antwoord toevoegen",
@@ -251,7 +270,11 @@
     "validation_port_range": "De poort moet tussen 1 en 65535 liggen",
     "validation_port_duplicate": "Poort {{port}} is al in gebruik",
     "validation_to_required": "Omleidingsdoel is verplicht",
-    "confirm_body": "Er wordt een omleiding op :{{port}} → {{to}} ({{code}}) aangemaakt en de Caddy-configuratie wordt herladen."
+    "confirm_body": "Er wordt een omleiding op :{{port}} → {{to}} ({{code}}) aangemaakt en de Caddy-configuratie wordt herladen.",
+    "code_html": "HTML-pagina",
+    "code_html_help": "Antwoordt met een pagina die in de browser doorstuurt in plaats van met een statuscode. Anders dan een doorverwijzing met statuscode blijft het #fragment van de URL behouden.",
+    "keep_path": "Pad en query behouden",
+    "keep_path_help": "Voegt {uri} toe aan het doel, zodat /a?b=1 op deze site naar /a?b=1 op het doel gaat."
   },
   "basic_auth": {
     "heading": "HTTP Basic Auth",
@@ -260,14 +283,32 @@
     "field_password": "Wachtwoord",
     "field_password_keep": "Laat leeg om het bestaande te behouden",
     "add_button": "Account toevoegen",
-    "remove_button": "Account verwijderen"
+    "remove_button": "Account verwijderen",
+    "realm": "Realm",
+    "algorithm": "Hash-algoritme",
+    "algorithm_default": "bcrypt (standaard)",
+    "algorithm_argon2id": "argon2id (sterker)",
+    "algorithm_mismatch": "Accounts die hun wachtwoord behouden hebben nog een hash van het andere algoritme. Voer hun wachtwoorden opnieuw in."
   },
   "transport": {
     "heading": "Upstream-time-outs",
     "section_title": "Upstream-time-outs (optioneel)",
     "dial_timeout": "Verbindingstime-out",
     "response_header_timeout": "Time-out voor antwoordheaders",
-    "defaults_help": "Laat een veld leeg om de standaardwaarde van Caddy te gebruiken (grijs weergegeven). Een time-out voor response-headers breekt long polling en trage antwoorden af."
+    "defaults_help": "Laat een veld leeg om de standaardwaarde van Caddy te gebruiken (grijs weergegeven). Een time-out voor response-headers breekt long polling en trage antwoorden af.",
+    "streaming_help": "Streaming (websockets, eventstreams): laat leeg voor de standaardwaarden van Caddy.",
+    "flush_interval": "Flush-interval",
+    "flush_interval_placeholder": "-1 verstuurt elke schrijfactie direct",
+    "stream_timeout": "Stream-timeout",
+    "stream_close_delay": "Vertraging bij sluiten van stream",
+    "connection_title": "Verbinding met de upstream",
+    "tls_server_name": "TLS-servernaam",
+    "versions": "HTTP-versies",
+    "read_timeout": "Lees-timeout",
+    "write_timeout": "Schrijf-timeout",
+    "keepalive": "Keep-alive",
+    "keepalive_idle_conns": "Bewaarde inactieve verbindingen",
+    "keepalive_idle_conns_per_host": "Bewaarde inactieve verbindingen per host"
   },
   "server_timeouts": {
     "heading": "Servertime-outs & -limieten",
@@ -282,7 +323,17 @@
     "max_header_bytes_help": "Maximale grootte van de request-headers (standaard in Caddy: 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "HTTP/3 uitschakelen",
-    "http3_help": "Caddy schakelt HTTP/1.1, HTTP/2 en HTTP/3 standaard in zodra TLS is geconfigureerd. HTTP/3 loopt over UDP op dezelfde poort als HTTPS — als je firewall UDP blokkeert, valt Caddy na uitschakelen hier terug op alleen HTTP/1.1 en HTTP/2."
+    "http3_help": "Caddy schakelt HTTP/1.1, HTTP/2 en HTTP/3 standaard in zodra TLS is geconfigureerd. HTTP/3 loopt over UDP op dezelfde poort als HTTPS — als je firewall UDP blokkeert, valt Caddy na uitschakelen hier terug op alleen HTTP/1.1 en HTTP/2.",
+    "keepalive_interval": "TCP keep-alive-interval",
+    "keepalive_idle": "Inactiviteit vóór TCP keep-alive",
+    "options_label": "Verbindingsopties",
+    "strict_sni_host": "Strikte SNI-host",
+    "strict_sni_host_help": "Weigert verzoeken waarvan de Host-header afwijkt van de TLS-servernaam.",
+    "log_credentials": "Inloggegevens loggen",
+    "log_credentials_help": "Schrijft de Authorization- en Cookie-headers naar het toegangslogboek.",
+    "enable_full_duplex": "Full duplex voor HTTP/1",
+    "enable_full_duplex_help": "Laat een handler de request-body lezen terwijl hij het antwoord schrijft.",
+    "read_body_idle": "Inactiviteitstime-out voor de request-body"
   },
   "request_body": {
     "field_label": "Maximale grootte van de request-body",
@@ -303,7 +354,30 @@
     "field_find_placeholder": "^/api/(.*)",
     "field_replace_placeholder": "/$1",
     "field_replace_help": "Gebruik $1, $2 voor vanggroepen",
-    "type_aria": "Type herschrijving"
+    "type_aria": "Type herschrijving",
+    "type_strip_suffix": "Achtervoegsel verwijderen",
+    "type_uri_replace": "Tekst vervangen",
+    "type_query": "Querystring",
+    "type_method": "Methode",
+    "field_suffix": "Achtervoegsel",
+    "field_suffix_placeholder": ".html",
+    "field_text_find": "Zoeken (gewone tekst)",
+    "field_limit": "Hoogstens",
+    "field_limit_placeholder": "alle",
+    "field_method": "Methode",
+    "query_op": "Wijziging",
+    "query_op_set": "Instellen",
+    "query_op_add": "Toevoegen",
+    "query_op_delete": "Verwijderen",
+    "query_op_rename": "Hernoemen",
+    "query_op_replace": "Vervangen",
+    "query_key": "Naam",
+    "query_value": "Waarde",
+    "query_new_key": "Nieuwe naam",
+    "query_search": "Zoeken (regex)",
+    "query_remove": "Wijziging verwijderen",
+    "query_add": "Wijziging toevoegen",
+    "invalid": "Vul alle velden van de herschrijving in."
   },
   "probe": {
     "status_pending": "Controleren…",
@@ -386,7 +460,9 @@
     "validation_max_fails": "Max. fouten moet 1 of meer zijn",
     "validation_needs_health_uri": "Interval, time-out en verwachte status hebben een health-check-pad nodig",
     "validation_health_uri": "Het health-check-pad moet met / beginnen",
-    "validation_health_status": "Gebruik een statuscode zoals 200 of een klasse zoals 2xx"
+    "validation_health_status": "Gebruik een statuscode zoals 200 of een klasse zoals 2xx",
+    "retry_methods": "Alleen deze methoden opnieuw proberen",
+    "validation_methods": "Methoden zijn woorden zoals GET of HEAD, gescheiden door spaties."
   },
   "response_headers": {
     "heading": "Antwoordheaders",
@@ -413,7 +489,12 @@
     "field_name": "Headernaam",
     "field_value": "Waarde",
     "add_button": "Toevoegen",
-    "presets_label": "Voorinstellingen"
+    "presets_label": "Voorinstellingen",
+    "down_heading": "Antwoordheaders van de upstream",
+    "down_section_title": "Antwoordheaders van de upstream (optioneel)",
+    "op_replace": "Vervangen",
+    "field_search": "Te zoeken headerwaarde (reguliere expressie)",
+    "field_replacement": "Vervanging"
   },
   "edit_redirect": {
     "title": "Omleiding bewerken — :{{port}}",
@@ -568,7 +649,16 @@
     "roll_keep_count": "Te bewaren geroteerde bestanden",
     "roll_keep_days": "Max. leeftijd van geroteerde bestanden (dagen)",
     "roll_compress": "Geroteerde bestanden comprimeren (gzip)",
-    "roll_help": "Caddy roteert het logbestand standaard. Laat een veld leeg om de standaardwaarde van Caddy te gebruiken, grijs weergegeven."
+    "roll_help": "Caddy roteert het logbestand standaard. Laat een veld leeg om de standaardwaarde van Caddy te gebruiken, grijs weergegeven.",
+    "field_filters": "Veldfilters",
+    "field_filters_help": "Eén per regel: een veldpad, dan delete, hash, replace <tekst> of ip_mask <IPv4-bits> [<IPv6-bits>], bijvoorbeeld request>headers>Authorization delete.",
+    "field_filters_invalid": "Elke regel heeft een veldpad en delete, hash, replace <tekst> of ip_mask <bits> nodig.",
+    "include": "Loggers opnemen",
+    "include_help": "Loggernamen die dit logboek schrijft, gescheiden door spaties, bijvoorbeeld http.log.access. Leeg betekent alle.",
+    "exclude": "Loggers weglaten",
+    "exclude_help": "Loggernamen die dit logboek overslaat, gescheiden door spaties, bijvoorbeeld http.log.access.log0.",
+    "skip_paths": "Paden die niet worden gelogd",
+    "skip_paths_help": "Door spaties gescheiden paden, jokertekens toegestaan, bijvoorbeeld /health* /ping. Verzoeken ernaartoe worden niet gelogd."
   },
   "config_check": {
     "button": "Configuratie controleren",
@@ -691,7 +781,39 @@
     "proxy_protocol_allow_help": "Door spaties gescheiden CIDR-bereiken die PROXY-protocolheaders mogen sturen — beperk dit tot de IP's van je load balancer om vervalsing van client-IP's te voorkomen. Laat leeg om elke bron te accepteren.",
     "proxy_protocol_timeout": "Time-out voor lezen van de header (optioneel)",
     "proxy_protocol_timeout_help": "Maximale wachttijd op de PROXY-protocolheader voordat wordt opgegeven (Go-duur, bijv. 2s). Laat leeg voor de standaard van Caddy.",
-    "on_demand_rate_deprecated": "Caddy raadt interval en burst niet meer aan. Maak beide leeg en vertrouw op het ask-endpoint."
+    "on_demand_rate_deprecated": "Caddy raadt interval en burst niet meer aan. Maak beide leeg en vertrouw op het ask-endpoint.",
+    "tls_advanced_title": "Geavanceerde TLS",
+    "auto_https": "Automatische HTTPS",
+    "auto_https_off": "Uit",
+    "auto_https_disable_redirects": "Geen omleidingen van HTTP naar HTTPS",
+    "auto_https_ignore_loaded_certs": "Geladen certificaten negeren",
+    "issuer": "Certificaatuitgever",
+    "issuer_local_certs": "Eigen CA van Caddy voor elke site",
+    "issuer_internal": "Interne CA",
+    "issuer_acme": "ACME",
+    "key_type": "Sleuteltype",
+    "preferred_chains": "Voorkeursketen van certificaten",
+    "preferred_chains_smallest": "Kleinste keten",
+    "preferred_chains_root": "Op common name van de root",
+    "preferred_chains_any": "Op een willekeurige common name",
+    "preferred_chains_names": "Common names",
+    "preferred_chains_names_help": "Gescheiden door komma's.",
+    "default_sni": "Standaard-SNI",
+    "default_sni_help": "De servernaam die Caddy aanneemt als een client er geen stuurt.",
+    "default_bind": "Standaard bind-adressen",
+    "default_bind_help": "Adressen gescheiden door spaties waarop sites zonder bind-optie luisteren.",
+    "ocsp_stapling_off": "OCSP-stapling uitschakelen",
+    "admin_title": "Beheereindpunt",
+    "admin_off": "Beheereindpunt uitschakelen",
+    "admin_off_help": "De plug-in heeft de beheer-API nodig om de lopende configuratie te lezen en te wijzigen.",
+    "admin_address": "Beheeradres",
+    "admin_address_help": "Waar de beheer-API van Caddy luistert, geschreven zoals in de Caddyfile. De plug-in verbindt met het adres in zijn eigen instelling, wijzig dus beide samen.",
+    "admin_origins": "Toegestane origins",
+    "admin_origins_help": "Hosts gescheiden door spaties die de beheer-API vanuit een browser mogen aanroepen.",
+    "admin_enforce_origin": "Origins afdwingen",
+    "metrics_per_host": "Metrics labelen per host",
+    "metrics_per_host_help": "Voegt de gevraagde host toe aan elke aanvraagmetric, zodat sites te onderscheiden zijn. Elke andere host wordt een eigen reeks.",
+    "auto_https_disable_certs": "Geen certificaatbeheer"
   },
   "ca": {
     "title": "Interne certificeringsinstantie",
@@ -794,7 +916,12 @@
     "field_copy_headers": "Headers kopiëren",
     "field_copy_headers_help": "Door spaties of komma's gescheiden antwoordheaders die van de authenticatieservice naar het upstream-request worden gekopieerd (bijv. Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "Een auth-URI is verplicht als er een URL van de authenticatieservice is ingesteld"
+    "validation_uri_required": "Een auth-URI is verplicht als er een URL van de authenticatieservice is ingesteld",
+    "field_copy_headers_rename_help": "Schrijf Name>Other om een header onder een andere naam te kopiëren.",
+    "field_header_up": "Request-headers naar de authenticatiedienst",
+    "field_header_up_help": "Eén per regel: Name value stelt een header in, +Name value voegt er een toe, -Name verwijdert er een.",
+    "field_trusted_proxies": "Vertrouwde proxy's",
+    "field_trusted_proxies_help": "Bereiken waarvan de X-Forwarded-*-headers behouden blijven in het verzoek aan de authenticatiedienst, gescheiden door spaties. private_ranges staat voor de privénetwerken."
   },
   "tls_policy": {
     "heading": "TLS-beleid",
@@ -842,7 +969,15 @@
     "custom_file_unreadable": "Bestand niet gevonden of niet leesbaar voor de Caddy-gebruiker",
     "custom_file_readable": "Bestand is leesbaar",
     "custom_file_valid_expiry": "Geldig — verloopt op {{date}}",
-    "custom_cert_lifetime_note": "Hierboven is een eigen certificaat geladen — certificaatlevensduur en vernieuwingsvenster zijn niet van toepassing, omdat Caddy zelf niets uitgeeft."
+    "custom_cert_lifetime_note": "Hierboven is een eigen certificaat geladen — certificaatlevensduur en vernieuwingsvenster zijn niet van toepassing, omdat Caddy zelf niets uitgeeft.",
+    "acme_email": "ACME-e-mail",
+    "acme_email_help": "Het account-e-mailadres voor de certificaten van deze site. Geldt alleen voor automatische HTTPS; leeg gebruikt het globale.",
+    "acme_global_placeholder": "Globale e-mail",
+    "acme_ca": "URL van de ACME-CA-map",
+    "acme_ca_help": "Waar deze site zijn certificaten vandaan haalt, bijvoorbeeld de staging-URL van Let's Encrypt tijdens het testen. Leeg gebruikt de globale CA.",
+    "key_type": "Sleuteltype",
+    "acme_invalid_email": "Voer een e-mailadres in zoals admin@example.com.",
+    "acme_invalid_ca": "Voer een http://- of https://-URL in."
   },
   "error_handler": {
     "heading": "Eigen foutafhandeling",
@@ -908,7 +1043,22 @@
     "ip_kind_remote": "Verbindings-IP",
     "ip_kind_client_help": "Het IP van de bezoeker, uit de doorstuurheader wanneer het verzoek via een van de vertrouwde proxy's (Instellingen) komt. Zonder vertrouwde proxy's is het gelijk aan het verbindings-IP.",
     "ip_kind_remote_help": "Het IP van de TCP-verbinding. Achter een proxy of CDN is dat het adres van de proxy, niet van de bezoeker.",
-    "ip_range": "IP-adres of bereik"
+    "ip_range": "IP-adres of bereik",
+    "type_path_regexp": "Pad-regex",
+    "type_header_regexp": "Header-regex",
+    "field_regexp_name": "Naam (optioneel)",
+    "field_header_name_regexp": "Headernaam voor de regex",
+    "field_regexp_name_header": "Naam van de header-regex (optioneel)",
+    "regexp_help": "Een naam maakt de groepen beschikbaar als {re.name.1}, bijvoorbeeld in een herschrijving. Caddy staat één regex per matcher toe.",
+    "type_protocol": "Protocol",
+    "protocol_any": "willekeurig",
+    "type_file": "Bestanden",
+    "field_try_files": "Te zoeken bestanden",
+    "field_try_policy": "Hoe te kiezen",
+    "try_policy_default": "eerste bestaande",
+    "file_help": "Komt overeen als een van de bestanden bestaat. Plaatshouders zoals {path} werken.",
+    "type_vars": "Variabelen",
+    "vars_help": "Eén per regel: een plaatshouder en de waarden die hij mag hebben, bijvoorbeeld {host} example.com www.example.com."
   },
   "handle_path": {
     "label": "Overeenkomend padprefix verwijderen (handle_path)"
@@ -1059,5 +1209,44 @@
     "label": "Bind-adressen",
     "help": "De adressen waarop deze site luistert, gescheiden door spaties, bijvoorbeeld 127.0.0.1 ::1. Leeg luistert op elk adres. Een host die één IP-adres is, bindt er al aan.",
     "invalid": "Voer IP-adressen of hostnamen in, zonder poort."
+  },
+  "encode": {
+    "heading": "Compressie",
+    "section_title": "Compressie-instellingen (optioneel)",
+    "help": "Geldt zolang compressie aan staat bij Algemeen. Zonder keuzes comprimeert Caddy met gzip en zstd.",
+    "algorithms": "Algoritmen en volgorde",
+    "algorithms_default": "gzip, zstd (standaard)",
+    "algorithms_zstd_gzip": "zstd, dan gzip",
+    "algorithms_gzip": "alleen gzip",
+    "algorithms_zstd": "alleen zstd",
+    "minimum_length": "Minimale grootte",
+    "minimum_length_help": "Antwoorden met minder bytes dan dit worden ongewijzigd verstuurd. De standaard van Caddy is 512.",
+    "invalid_number": "Voer een geheel aantal bytes in.",
+    "match_status": "Alleen deze statuscodes",
+    "match_status_help": "Door spaties gescheiden codes of klassen zoals 2xx 404. Leeg betekent elke status.",
+    "invalid_status": "Voer statuscodes in zoals 200 of klassen zoals 2xx.",
+    "match_headers": "Alleen deze antwoordheaders",
+    "match_headers_help": "Eén per regel: de headernaam, dan de waarde. Jokertekens zoals text/* werken.",
+    "invalid_header": "Elke regel heeft een headernaam en een waarde nodig."
+  },
+  "dynamic_upstreams": {
+    "heading": "Dynamische upstreams",
+    "section_title": "Dynamische upstreams (geavanceerd, optioneel)",
+    "help": "Zoek de upstreams op via DNS. Het doel hierboven is de terugval als de opzoeking niets vindt. Meerdere bronnen worden gecombineerd.",
+    "add_button": "DNS-bron toevoegen",
+    "type": "Type opzoeking",
+    "name_srv": "SRV-naam",
+    "name_a": "Hostnaam",
+    "refresh": "Vernieuwingsinterval",
+    "resolvers": "DNS-resolvers",
+    "dial_fallback_delay": "Vertraging van de terugvalverbinding",
+    "grace_period": "Uitstelperiode",
+    "versions": "Adresfamilies",
+    "versions_both": "IPv4 en IPv6",
+    "validation_name": "Een bron met instellingen heeft een naam nodig.",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }
