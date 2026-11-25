@@ -22,12 +22,11 @@ import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { parseHostPort } from "@rxtx4816/cockpit-plugin-base-react/lib/uri";
 import type { ServerDef, ErrorHandlerConfig } from "../api";
 import { namedServerIsHostless } from "../api";
-import { TlsSection, type TlsValues, tlsValuesToAdvanced, tlsValuesToMtls, tlsConfigToValues, tlsValuesHaveErrors } from "./TlsSection";
-import { ServerTimeoutsSection, type ServerTimeoutValues } from "./ServerTimeoutsSection";
-import { AccessLogSection, type AccessLogValues, accessLogValuesToConfig, accessLogConfigToValues } from "./AccessLogSection";
-import { ErrorHandlersSection } from "./ErrorHandlersSection";
-import { sectionAccordionProps } from "./sectionAccordion";
-import { AccordionRow } from "./AccordionRow";
+import { type TlsValues, tlsValuesToAdvanced, tlsValuesToMtls, tlsConfigToValues } from "./TlsSection";
+import { type ServerTimeoutValues } from "./ServerTimeoutsSection";
+import { type AccessLogValues, accessLogValuesToConfig, accessLogConfigToValues } from "./AccessLogSection";
+import { ServerDialogTabs, serverTabFlags } from "./ServerDialogTabs";
+import { firstTabWithError, type ProxyTabKey } from "./proxyDialogParts";
 
 interface Props {
   existingKeys: string[];
@@ -66,7 +65,7 @@ export function AddServerDialog({ existingKeys, onAdd, onClose }: Props) {
   const [nameErr, setNameErr] = useState<string | null>(null);
   const [keyErr, setKeyErr] = useState<string | null>(null);
   const [addrErr, setAddrErr] = useState<string | null>(null);
-  const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<ProxyTabKey>("general");
 
   function handleNameChange(v: string) {
     setName(v);
@@ -105,25 +104,19 @@ export function AddServerDialog({ existingKeys, onAdd, onClose }: Props) {
   }
 
   function handleAddClick() {
-    if (validate()) confirmAction.confirm();
+    const generalOk = validate();
+    const tab = firstTabWithError(serverTabFlags({ tlsValues, accessLog, errorHandlers, serverTimeouts }, !generalOk).hasError);
+    if (tab) {
+      setActiveTab(tab);
+      return;
+    }
+    confirmAction.confirm();
   }
 
   const isLocked = confirmAction.step !== "idle";
   const isSaving = confirmAction.step === "submitting";
 
-  return (
-    <Modal isOpen onClose={onClose} aria-label={t("servers.add_server")} variant="medium">
-      <ModalHeader title={t("servers.add_server")} />
-      <ModalBody>
-        {isLocked && (
-          <Alert
-            variant="warning"
-            isInline
-            title={t("servers.confirm_add")}
-            style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}
-          />
-        )}
-
+  const general = (
         <Form isHorizontal>
           <FormGroup label={t("servers.field_name")} fieldId="server-name" isRequired>
             <TextInput
@@ -230,30 +223,39 @@ export function AddServerDialog({ existingKeys, onAdd, onClose }: Props) {
             />
           </FormGroup>
         </Form>
+  );
 
-        <div
-          style={{
-            border: "1px solid var(--pf-t--global--border--color--default)",
-            borderRadius: "var(--pf-t--global--border--radius--small)",
-            padding: "0 0.75rem",
-            marginTop: "var(--pf-v6-global--spacer--md)",
-            display: "flex",
-            flexDirection: "column",
+  return (
+    <Modal isOpen onClose={onClose} aria-label={t("servers.add_server")} variant="medium">
+      <ModalHeader title={t("servers.add_server")} />
+      <ModalBody>
+        {isLocked && (
+          <Alert
+            variant="warning"
+            isInline
+            title={t("servers.confirm_add")}
+            style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}
+          />
+        )}
+
+        <ServerDialogTabs
+          general={general}
+          generalHasError={!!(nameErr || keyErr || addrErr)}
+          active={activeTab}
+          onSelect={setActiveTab}
+          isDisabled={isLocked}
+          hostless={namedServerIsHostless(listenAddresses)}
+          tlsValues={tlsValues}
+          accessLog={accessLog}
+          errorHandlers={errorHandlers}
+          serverTimeouts={serverTimeouts}
+          onChange={p => {
+            if (p.tlsValues) setTlsValues(p.tlsValues);
+            if (p.accessLog) setAccessLog(p.accessLog);
+            if (p.errorHandlers) setErrorHandlers(p.errorHandlers);
+            if (p.serverTimeouts) setServerTimeouts(p.serverTimeouts);
           }}
-        >
-          <AccordionRow>
-            <TlsSection value={tlsValues} onChange={setTlsValues} isDisabled={isLocked} hostless={namedServerIsHostless(listenAddresses)} {...sectionAccordionProps("tls", expandedSection, setExpandedSection)} />
-          </AccordionRow>
-          <AccordionRow>
-            <AccessLogSection value={accessLog} onChange={setAccessLog} isDisabled={isLocked} {...sectionAccordionProps("accessLog", expandedSection, setExpandedSection)} />
-          </AccordionRow>
-          <AccordionRow>
-            <ErrorHandlersSection value={errorHandlers} onChange={setErrorHandlers} isDisabled={isLocked} {...sectionAccordionProps("errorHandlers", expandedSection, setExpandedSection)} />
-          </AccordionRow>
-          <AccordionRow last>
-            <ServerTimeoutsSection value={serverTimeouts} onChange={setServerTimeouts} isDisabled={isLocked} {...sectionAccordionProps("serverTimeouts", expandedSection, setExpandedSection)} />
-          </AccordionRow>
-        </div>
+        />
 
         {confirmAction.error && (
           <Alert
@@ -302,7 +304,7 @@ export function AddServerDialog({ existingKeys, onAdd, onClose }: Props) {
           </>
         ) : (
           <>
-            <Button variant="primary" onClick={handleAddClick} isDisabled={tlsValuesHaveErrors(tlsValues)}>
+            <Button variant="primary" onClick={handleAddClick}>
               {t("servers.add_server")}
             </Button>
             <Button variant="link" onClick={onClose}>
