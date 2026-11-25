@@ -676,8 +676,10 @@ export function applyGlobalInternalLifetimeToServer(
  * `--plaintext <pw>`: argv is readable by every local user in /proc/<pid>/cmdline (#255).
  * With stdin not a terminal, caddy reads one newline-terminated line (no confirmation prompt).
  */
-export async function hashPassword(plaintext: string): Promise<string> {
-  const proc = cockpit.spawn(["caddy", "hash-password"], { superuser: "try", err: "message" });
+export async function hashPassword(plaintext: string, algorithm?: "bcrypt" | "argon2id"): Promise<string> {
+  // bcrypt is what `caddy hash-password` does without the flag, which older Caddy lacks (#337).
+  const argv = algorithm === "argon2id" ? ["caddy", "hash-password", "--algorithm", "argon2id"] : ["caddy", "hash-password"];
+  const proc = cockpit.spawn(argv, { superuser: "try", err: "message" });
   proc.input(`${plaintext}\n`);
   return (await proc).trim();
 }

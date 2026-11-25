@@ -177,7 +177,18 @@
     "field_hide": "Piilotetut tiedostot",
     "field_hide_help": "Nimet tai kuviot, joita ei koskaan palauteta, välilyönnein erotettuina.",
     "field_precompressed": "Valmiiksi pakatut tiedostot",
-    "field_precompressed_help": "Palauta alkuperäisen vieressä oleva file.zst, file.br tai file.gz, kun selain hyväksyy kyseisen koodauksen."
+    "field_precompressed_help": "Palauta alkuperäisen vieressä oleva file.zst, file.br tai file.gz, kun selain hyväksyy kyseisen koodauksen.",
+    "field_browse_template": "Luettelon malline",
+    "field_browse_template_help": "Mallitiedosto hakemistoluettelolle. Käytössä vain, kun hakemistoluettelo on päällä.",
+    "field_status": "Tilakoodi",
+    "field_status_help": "Vastaa jokaiseen tiedostoon tällä tilakoodilla 200:n sijaan, esimerkiksi 404 omaa virhesivua varten.",
+    "field_disable_canonical_uris": "Jätä loppukauttaviivat ennalleen",
+    "field_disable_canonical_uris_help": "Älä ohjaa lisäämään tai poistamaan loppukauttaviivaa hakemistoista ja tiedostoista.",
+    "field_templates": "Käsittele tiedostot malleilla",
+    "field_templates_help": "Ottaa Caddyn mallimoottorin käyttöön tarjoiltaville tiedostoille, jotta ne voivat käyttää include, .Req ja muita mallitoimintoja.",
+    "field_templates_mime": "MIME-tyypit",
+    "field_templates_root": "Include-hakemisto",
+    "field_templates_root_help": "Mistä include ja muut tiedostotoiminnot etsivät tiedostoja. Tyhjä tarkoittaa sivuston juurta."
   },
   "edit_static": {
     "title": "Muokkaa staattista palvelinta — :{{port}}",
@@ -206,7 +217,15 @@
     "env_field_value": "Arvo",
     "env_add_button": "Lisää muuttuja",
     "field_try_files": "Kokeiltavat tiedostot (try_files)",
-    "field_try_files_help": "Valinnainen. Ehdokkaat, joita kokeillaan järjestyksessä ennen PHP:tä; front controller -sovellus tarvitsee yleensä {path} {path}/ /index.php?{query}."
+    "field_try_files_help": "Valinnainen. Ehdokkaat, joita kokeillaan järjestyksessä ennen PHP:tä; front controller -sovellus tarvitsee yleensä {path} {path}/ /index.php?{query}.",
+    "field_dial_timeout": "Yhteyden aikakatkaisu",
+    "field_read_timeout": "Lukemisen aikakatkaisu",
+    "field_write_timeout": "Kirjoittamisen aikakatkaisu",
+    "no_timeout": "ei mitään",
+    "field_capture_stderr": "Kirjaa PHP-prosessin stderr",
+    "field_capture_stderr_help": "Kirjoittaa sen, mitä PHP-FPM tulostaa stderriin, Caddyn lokiin.",
+    "field_resolve_root_symlink": "Ratkaise juuren symboliset linkit",
+    "field_resolve_root_symlink_help": "Seuraa juurihakemiston symbolisia linkkejä ennen SCRIPT_FILENAME-arvon muodostamista, mitä opcache-asetukset julkaisulinkkeineen tarvitsevat."
   },
   "add_respond": {
     "title": "Lisää staattinen vastaus",
@@ -251,7 +270,11 @@
     "validation_port_range": "Portin on oltava välillä 1–65535",
     "validation_port_duplicate": "Portti {{port}} on jo käytössä",
     "validation_to_required": "Uudelleenohjauksen kohde on pakollinen",
-    "confirm_body": "Luodaan uudelleenohjaus :{{port}} → {{to}} ({{code}}) ja Caddyn asetukset ladataan uudelleen."
+    "confirm_body": "Luodaan uudelleenohjaus :{{port}} → {{to}} ({{code}}) ja Caddyn asetukset ladataan uudelleen.",
+    "code_html": "HTML-sivu",
+    "code_html_help": "Vastaa sivulla, joka ohjaa selaimessa tilakoodin sijaan. Toisin kuin tilakoodiohjaus, se säilyttää URL-osoitteen #fragmentin.",
+    "keep_path": "Säilytä polku ja kysely",
+    "keep_path_help": "Lisää kohteeseen {uri}, joten /a?b=1 tällä sivustolla johtaa osoitteeseen /a?b=1 kohteessa."
   },
   "basic_auth": {
     "heading": "HTTP Basic -todennus",
@@ -260,7 +283,12 @@
     "field_password": "Salasana",
     "field_password_keep": "Jätä tyhjäksi säilyttääksesi nykyisen",
     "add_button": "Lisää tili",
-    "remove_button": "Poista tili"
+    "remove_button": "Poista tili",
+    "realm": "Realm",
+    "algorithm": "Tiivistealgoritmi",
+    "algorithm_default": "bcrypt (oletus)",
+    "algorithm_argon2id": "argon2id (vahvempi)",
+    "algorithm_mismatch": "Tilit, joiden salasana säilyy, sisältävät yhä toisella algoritmilla tehdyn tiivisteen. Syötä niiden salasanat uudelleen."
   },
   "transport": {
     "heading": "Upstreamin aikakatkaisut",
@@ -325,7 +353,30 @@
     "field_find_placeholder": "^/api/(.*)",
     "field_replace_placeholder": "/$1",
     "field_replace_help": "Käytä $1, $2 kaappausryhmille",
-    "type_aria": "Uudelleenkirjoituksen tyyppi"
+    "type_aria": "Uudelleenkirjoituksen tyyppi",
+    "type_strip_suffix": "Poista pääte",
+    "type_uri_replace": "Korvaa teksti",
+    "type_query": "Kyselymerkkijono",
+    "type_method": "Metodi",
+    "field_suffix": "Pääte",
+    "field_suffix_placeholder": ".html",
+    "field_text_find": "Etsi (pelkkä teksti)",
+    "field_limit": "Enintään",
+    "field_limit_placeholder": "kaikki",
+    "field_method": "Metodi",
+    "query_op": "Muutos",
+    "query_op_set": "Aseta",
+    "query_op_add": "Lisää",
+    "query_op_delete": "Poista",
+    "query_op_rename": "Nimeä uudelleen",
+    "query_op_replace": "Korvaa",
+    "query_key": "Nimi",
+    "query_value": "Arvo",
+    "query_new_key": "Uusi nimi",
+    "query_search": "Etsi (regex)",
+    "query_remove": "Poista muutos",
+    "query_add": "Lisää muutos",
+    "invalid": "Täytä uudelleenkirjoituksen kaikki kentät."
   },
   "probe": {
     "status_pending": "Tarkistetaan…",
@@ -597,7 +648,16 @@
     "roll_keep_count": "Säilytettävät kierrätetyt tiedostot",
     "roll_keep_days": "Kierrätettyjen tiedostojen enimmäisikä (päivää)",
     "roll_compress": "Pakkaa kierrätetyt tiedostot (gzip)",
-    "roll_help": "Caddy kierrättää lokitiedoston oletuksena. Jätä kenttä tyhjäksi käyttääksesi Caddyn oletusta, joka näkyy harmaana."
+    "roll_help": "Caddy kierrättää lokitiedoston oletuksena. Jätä kenttä tyhjäksi käyttääksesi Caddyn oletusta, joka näkyy harmaana.",
+    "field_filters": "Kenttäsuodattimet",
+    "field_filters_help": "Yksi riviä kohti: kentän polku ja sitten delete, hash, replace <teksti> tai ip_mask <IPv4-bitit> [<IPv6-bitit>], esimerkiksi request>headers>Authorization delete.",
+    "field_filters_invalid": "Jokaisella rivillä on oltava kentän polku ja delete, hash, replace <teksti> tai ip_mask <bitit>.",
+    "include": "Ota mukaan lokittajat",
+    "include_help": "Lokittajien nimet, joita tämä loki kirjoittaa, välilyönnein erotettuina, esimerkiksi http.log.access. Tyhjä tarkoittaa kaikkia.",
+    "exclude": "Jätä pois lokittajat",
+    "exclude_help": "Lokittajien nimet, jotka tämä loki ohittaa, välilyönnein erotettuina, esimerkiksi http.log.access.log0.",
+    "skip_paths": "Lokista pois jätettävät polut",
+    "skip_paths_help": "Välilyönnein erotetut polut, jokerimerkit sallittu, esimerkiksi /health* /ping. Niihin tehtyjä pyyntöjä ei kirjata."
   },
   "config_check": {
     "button": "Tarkista asetukset",
@@ -855,7 +915,12 @@
     "field_copy_headers": "Kopioi otsakkeet",
     "field_copy_headers_help": "Välilyönneillä tai pilkuilla erotetut vastausotsakkeet, jotka kopioidaan todennuspalvelulta upstream-pyyntöön (esim. Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "Todennuksen URI on pakollinen, kun todennuspalvelun URL on asetettu"
+    "validation_uri_required": "Todennuksen URI on pakollinen, kun todennuspalvelun URL on asetettu",
+    "field_copy_headers_rename_help": "Kirjoita Name>Other kopioidaksesi otsakkeen toisella nimellä.",
+    "field_header_up": "Todennuspalvelulle lähtevän pyynnön otsakkeet",
+    "field_header_up_help": "Yksi riviä kohti: Name value asettaa otsakkeen, +Name value lisää yhden, -Name poistaa yhden.",
+    "field_trusted_proxies": "Luotetut välityspalvelimet",
+    "field_trusted_proxies_help": "Alueet, joiden X-Forwarded-*-otsakkeet säilyvät todennuspalvelulle menevässä pyynnössä, välilyönnein erotettuina. private_ranges tarkoittaa yksityisiä verkkoja."
   },
   "tls_policy": {
     "heading": "TLS-käytäntö",
@@ -903,7 +968,15 @@
     "custom_file_unreadable": "Tiedostoa ei löytynyt tai Caddyn käyttäjä ei voi lukea sitä",
     "custom_file_readable": "Tiedosto on luettavissa",
     "custom_file_valid_expiry": "Voimassa — vanhenee {{date}}",
-    "custom_cert_lifetime_note": "Yllä on ladattu oma varmenne — varmenteen voimassaoloaika ja uusimisikkuna eivät koske sitä, koska Caddy ei itse myönnä mitään."
+    "custom_cert_lifetime_note": "Yllä on ladattu oma varmenne — varmenteen voimassaoloaika ja uusimisikkuna eivät koske sitä, koska Caddy ei itse myönnä mitään.",
+    "acme_email": "ACME-sähköposti",
+    "acme_email_help": "Tämän sivuston varmenteiden tilin sähköposti. Koskee vain automaattista HTTPS:ää; tyhjä käyttää yleistä.",
+    "acme_global_placeholder": "Yleinen sähköposti",
+    "acme_ca": "ACME CA:n hakemisto-URL",
+    "acme_ca_help": "Mistä tämä sivusto saa varmenteensa, esimerkiksi Let's Encryptin testi-URL testauksen aikana. Tyhjä käyttää yleistä CA:ta.",
+    "key_type": "Avaintyyppi",
+    "acme_invalid_email": "Anna sähköpostiosoite, esimerkiksi admin@example.com.",
+    "acme_invalid_ca": "Anna URL, joka alkaa http:// tai https://."
   },
   "error_handler": {
     "heading": "Mukautetut virheenkäsittelijät",
@@ -969,7 +1042,22 @@
     "ip_kind_remote": "Yhteyden IP",
     "ip_kind_client_help": "Vierailijan IP, joka otetaan välitysotsakkeesta, kun pyyntö tulee jonkin luotetun välityspalvelimen kautta (Asetukset). Ilman luotettuja välityspalvelimia se on sama kuin yhteyden IP.",
     "ip_kind_remote_help": "TCP-yhteyden IP. Välityspalvelimen tai CDN:n takana se on välityspalvelimen osoite, ei vierailijan.",
-    "ip_range": "IP-osoite tai -alue"
+    "ip_range": "IP-osoite tai -alue",
+    "type_path_regexp": "Polun regex",
+    "type_header_regexp": "Otsakkeen regex",
+    "field_regexp_name": "Nimi (valinnainen)",
+    "field_header_name_regexp": "Otsakkeen nimi regexiä varten",
+    "field_regexp_name_header": "Otsakkeen regexin nimi (valinnainen)",
+    "regexp_help": "Nimi tekee ryhmistä käytettävissä muodossa {re.name.1}, esimerkiksi uudelleenkirjoituksessa. Caddy sallii yhden regexin per täsmääjä.",
+    "type_protocol": "Protokolla",
+    "protocol_any": "mikä tahansa",
+    "type_file": "Tiedostot",
+    "field_try_files": "Etsittävät tiedostot",
+    "field_try_policy": "Valintatapa",
+    "try_policy_default": "ensimmäinen olemassa oleva",
+    "file_help": "Täsmää, kun jokin tiedostoista on olemassa. Paikanvaraajat kuten {path} toimivat.",
+    "type_vars": "Muuttujat",
+    "vars_help": "Yksi riviä kohti: paikanvaraaja ja arvot, jotka sillä voi olla, esimerkiksi {host} example.com www.example.com."
   },
   "handle_path": {
     "label": "Poista täsmännyt polun etuliite (handle_path)"
@@ -1115,6 +1203,25 @@
     "site_inherit_help": "Käyttää kohdassa Asetukset → DNS-haaste asetettua DNS-palveluntarjoajaa tai HTTP-haastetta, jos sitä ei ole asetettu.",
     "site_override_help": "Tämä sivusto käyttää omaa DNS-palveluntarjoajaa ja tunnuksia. Uusien tunnusten tallentaminen käynnistää Caddyn uudelleen, koska se lukee ne vain käynnistyessään.",
     "site_wildcard_warning": "Jokerimerkkivarmenteet tarvitsevat DNS-haasteen. Aseta DNS-palveluntarjoaja tälle sivustolle tai kohdassa Asetukset → DNS-haaste."
+  },
+  "encode": {
+    "heading": "Pakkaus",
+    "section_title": "Pakkausasetukset (valinnainen)",
+    "help": "Käytössä, kun pakkaus on päällä Yleiset-välilehdellä. Ilman valintoja Caddy pakkaa gzipillä ja zstd:llä.",
+    "algorithms": "Algoritmit ja järjestys",
+    "algorithms_default": "gzip, zstd (oletus)",
+    "algorithms_zstd_gzip": "zstd, sitten gzip",
+    "algorithms_gzip": "vain gzip",
+    "algorithms_zstd": "vain zstd",
+    "minimum_length": "Vähimmäiskoko",
+    "minimum_length_help": "Tätä pienemmät vastaukset lähetetään sellaisinaan. Caddyn oletus on 512.",
+    "invalid_number": "Anna tavujen määrä kokonaislukuna.",
+    "match_status": "Vain nämä tilakoodit",
+    "match_status_help": "Välilyönnein erotetut koodit tai luokat, kuten 2xx 404. Tyhjä tarkoittaa kaikkia tiloja.",
+    "invalid_status": "Anna tilakoodeja kuten 200 tai luokkia kuten 2xx.",
+    "match_headers": "Vain nämä vastausotsakkeet",
+    "match_headers_help": "Yksi riviä kohti: otsakkeen nimi ja arvo. Jokerimerkit kuten text/* toimivat.",
+    "invalid_header": "Jokaisella rivillä on oltava otsakkeen nimi ja arvo."
   },
   "dynamic_upstreams": {
     "heading": "Dynaamiset upstreamit",

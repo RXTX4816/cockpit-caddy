@@ -3,6 +3,7 @@ import { Checkbox } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import { isPathOnlyMatcher } from "../api";
 import { AccessLogSection } from "./AccessLogSection";
+import { EncodeSection } from "./EncodeSection";
 import { BasicAuthSection } from "./BasicAuthSection";
 import { DynamicUpstreamsSection } from "./DynamicUpstreamsSection";
 import { ErrorHandlersSection } from "./ErrorHandlersSection";
@@ -66,7 +67,7 @@ export function ProxyTabs({ state: s, onChange, general, generalHasError, active
 
   const tabs: ProxyTab[] = [{ key: "general", hasError: flags.hasError.general, content: general }];
   if (layout === "route") {
-    tabs.push({ key: "routing", configured: flags.configured.routing, content: routeMatchers });
+    tabs.push({ key: "routing", configured: flags.configured.routing, hasError: flags.hasError.routing, content: routeMatchers });
   } else {
     tabs.push(
       {
@@ -75,7 +76,7 @@ export function ProxyTabs({ state: s, onChange, general, generalHasError, active
         hasError: flags.hasError.security,
         content: (
           <>
-            <BasicAuthSection value={s.basicAuth} onChange={v => onChange({ basicAuth: v })} isDisabled={isDisabled} />
+            <BasicAuthSection value={s.basicAuth} onChange={v => onChange({ basicAuth: v })} options={s.basicAuthOptions} onOptionsChange={v => onChange({ basicAuthOptions: v })} isDisabled={isDisabled} />
             {isProxy && (
               <ForwardAuthSection value={s.forwardAuth} onChange={v => onChange({ forwardAuth: v })} isDisabled={isDisabled} uriError={forwardAuthErr ?? undefined} />
             )}
@@ -88,6 +89,7 @@ export function ProxyTabs({ state: s, onChange, general, generalHasError, active
       {
         key: "routing",
         configured: flags.configured.routing,
+        hasError: flags.hasError.routing,
         content: (
           <>
             {routeMatchers}
@@ -95,6 +97,7 @@ export function ProxyTabs({ state: s, onChange, general, generalHasError, active
             <RequestHeadersSection value={s.requestHeaders} onChange={v => onChange({ requestHeaders: v })} isDisabled={isDisabled} />
             {isProxy && <RequestHeadersSection variant="down" value={s.upstreamResponseHeaders} onChange={v => onChange({ upstreamResponseHeaders: v })} isDisabled={isDisabled} />}
             <ResponseHeadersSection value={s.responseHeaders} onChange={v => onChange({ responseHeaders: v })} isDisabled={isDisabled} />
+            <EncodeSection value={s.encode} onChange={v => onChange({ encode: v })} isDisabled={isDisabled} />
             {isProxy && (
               <NamedRouteField
                 idPrefix={`${idPrefix}-`}
@@ -130,7 +133,7 @@ export function ProxyTabs({ state: s, onChange, general, generalHasError, active
         configured: flags.configured.logging,
         content: (
           <>
-            <AccessLogSection value={s.accessLog} onChange={v => onChange({ accessLog: v })} isDisabled={isDisabled} />
+            <AccessLogSection value={s.accessLog} onChange={v => onChange({ accessLog: v })} isDisabled={isDisabled} showSkipPaths={showTls} />
             <ErrorHandlersSection
               value={s.errorHandlers}
               onChange={v => onChange({ errorHandlers: v })}

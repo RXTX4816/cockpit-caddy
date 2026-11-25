@@ -60,6 +60,18 @@ export function matcherFieldLines(m: import("./types").RouteMatchFields, indent:
   if (m.client_ip?.ranges.length) {
     lines.push(`${indent}client_ip ${m.client_ip.ranges.join(" ")}`);
   }
+  // Caddy takes one regular expression per matcher (#331), so a second one is the writer's to refuse.
+  if (m.path_regexp?.pattern) lines.push(`${indent}path_regexp ${m.path_regexp.name ? `${m.path_regexp.name} ` : ""}${caddyQuote(m.path_regexp.pattern)}`);
+  if (m.header_regexp?.pattern) lines.push(`${indent}header_regexp ${m.header_regexp.name ? `${m.header_regexp.name} ` : ""}${m.header_regexp.header} ${caddyQuote(m.header_regexp.pattern)}`);
+  if (m.protocol) lines.push(`${indent}protocol ${m.protocol}`);
+  if (m.file?.try_files.length) {
+    lines.push(`${indent}file {`, `${indent}\ttry_files ${m.file.try_files.join(" ")}`);
+    if (m.file.try_policy) lines.push(`${indent}\ttry_policy ${m.file.try_policy}`);
+    lines.push(`${indent}}`);
+  }
+  for (const [name, values] of Object.entries(m.vars ?? {})) {
+    if (values.length) lines.push(`${indent}vars ${name} ${values.map(v => caddyQuote(v)).join(" ")}`);
+  }
   return lines;
 }
 
@@ -97,6 +109,12 @@ export function matcherFieldsJson(m: import("./types").RouteMatchFields): Record
   }
   if (m.remote_ip?.ranges.length) obj.remote_ip = { ranges: m.remote_ip.ranges };
   if (m.client_ip?.ranges.length) obj.client_ip = { ranges: m.client_ip.ranges };
+  if (m.path_regexp?.pattern) obj.path_regexp = { ...(m.path_regexp.name ? { name: m.path_regexp.name } : {}), pattern: m.path_regexp.pattern };
+  if (m.header_regexp?.pattern) obj.header_regexp = { [m.header_regexp.header]: { ...(m.header_regexp.name ? { name: m.header_regexp.name } : {}), pattern: m.header_regexp.pattern } };
+  if (m.protocol) obj.protocol = m.protocol;
+  if (m.file?.try_files.length) obj.file = { try_files: m.file.try_files.map(expandPlaceholderShorthands), ...(m.file.try_policy ? { try_policy: m.file.try_policy } : {}) };
+  const vars = Object.entries(m.vars ?? {}).filter(([, v]) => v.length);
+  if (vars.length) obj.vars = Object.fromEntries(vars.map(([k, v]) => [expandPlaceholderShorthands(k), v]));
   return obj;
 }
 
@@ -121,6 +139,7 @@ export function hasAnyMatcher(m: import("./types").RouteMatch | undefined): m is
 /** Returns true when only path matchers are set (needed for handle_path eligibility). */
 export function isPathOnlyMatcher(m: import("./types").RouteMatch | undefined): boolean {
   return !!m && !!(m.path?.length) && !m.host?.length && !m.method?.length && !m.header && !m.query && !m.remote_ip && !m.client_ip
+    && !m.path_regexp && !m.header_regexp && !m.protocol && !m.file && !m.vars
     && !(m.not && Object.keys(matcherFieldsJson(m.not)).length) && !m.expression?.trim();
 }
 
@@ -223,19 +242,60 @@ export function buildForwardAuthCaddyLines(fa: import("./types").ForwardAuthConf
   const lines = [`\tforward_auth ${fa.upstreamUrl} {`];
   lines.push(`\t\turi ${fa.uri || "/"}`);
   if (fa.copyHeaders.length) lines.push(`\t\tcopy_headers ${fa.copyHeaders.join(" ")}`);
+  for (const h of fa.headerUp ?? []) lines.push(headerOpLine("\t\theader_up", h));
+  if (fa.trustedProxies?.length) lines.push(`\t\ttrusted_proxies ${fa.trustedProxies.join(" ")}`);
   lines.push("\t}");
   return lines;
 }
 
 
-export function buildBasicAuthCaddyLines(accounts: { username: string; passwordHash: string }[]): string[] {
-  return ["\tbasic_auth {", ...accounts.map(a => `\t\t${a.username} ${a.passwordHash}`), "\t}"];
+/**
+ * `encode <algorithms>`, with its options in a block (#335). Caddy's `status 2xx` is a class and
+ * `header Name value` takes one value, so a header with several values is written as several lines.
+ */
+export function buildEncodeLines(indent: string, options?: import("./types").EncodeOptions): string[] {
+  const head = `${indent}encode ${(options?.algorithms?.length ? options.algorithms : ["gzip", "zstd"]).join(" ")}`;
+  const inner: string[] = [];
+  if (options?.minimumLength != null) inner.push(`${indent}\tminimum_length ${options.minimumLength}`);
+  const match: string[] = [];
+  if (options?.matchStatus?.length) match.push(`${indent}\t\tstatus ${options.matchStatus.join(" ")}`);
+  for (const h of options?.matchHeaders ?? []) match.push(`${indent}\t\theader ${h.name} ${caddyQuote(h.value)}`);
+  if (match.length) inner.push(`${indent}\tmatch {`, ...match, `${indent}\t}`);
+  return inner.length ? [`${head} {`, ...inner, `${indent}}`] : [head];
+}
+
+
+/** `basic_auth [<algorithm> [<realm>]] {`: a realm needs the algorithm before it, so bcrypt is spelled out then. */
+export function basicAuthOpenLine(indent: string, options?: import("./types").BasicAuthOptions): string {
+  const algorithm = options?.algorithm ?? (options?.realm ? "bcrypt" : undefined);
+  return `${indent}basic_auth${algorithm ? ` ${algorithm}` : ""}${options?.realm ? ` ${caddyQuote(options.realm)}` : ""} {`;
+}
+
+
+export function buildBasicAuthCaddyLines(accounts: { username: string; passwordHash: string }[], options?: import("./types").BasicAuthOptions): string[] {
+  return [basicAuthOpenLine("\t", options), ...accounts.map(a => `\t\t${a.username} ${a.passwordHash}`), "\t}"];
 }
 
 
 export function buildRewriteCaddyLines(rewrite: import("./types").RewriteConfig, indent = "\t"): string[] {
   if (rewrite.type === "strip_prefix") return [`${indent}uri strip_prefix ${rewrite.value}`];
   if (rewrite.type === "add_prefix") return [`${indent}rewrite ${rewrite.value}{uri}`];
+  if (rewrite.type === "strip_suffix") return [`${indent}uri strip_suffix ${rewrite.value}`];
+  if (rewrite.type === "method") return [`${indent}method ${rewrite.method}`];
+  if (rewrite.type === "uri_replace") {
+    return [`${indent}uri replace ${caddyQuote(rewrite.find)} ${caddyQuote(rewrite.replace, { always: true })}${rewrite.limit ? ` ${rewrite.limit}` : ""}`];
+  }
+  if (rewrite.type === "query") {
+    const line = (o: import("./types").QueryOp) =>
+      o.op === "delete" ? `-${o.key}`
+        : o.op === "add" ? `+${o.key} ${caddyQuote(o.value ?? "", { always: true })}`
+        : o.op === "rename" ? `${o.key}>${o.value ?? ""}`
+        : o.op === "replace" ? `${o.key} ${caddyQuote(o.search ?? "", { always: true })} ${caddyQuote(o.replace ?? "", { always: true })}`
+        : `${o.key} ${caddyQuote(o.value ?? "", { always: true })}`;
+    return rewrite.ops.length === 1
+      ? [`${indent}uri query ${line(rewrite.ops[0])}`]
+      : [`${indent}uri query {`, ...rewrite.ops.map(o => `${indent}\t${line(o)}`), `${indent}}`];
+  }
   // `uri path_regexp` replaces the matching part of the path, like the JSON rewrite handler's
   // path_regexp; a `path_regexp` matcher + `rewrite` replaced the whole URI instead (#254).
   // Both use Go's $1 backreferences.
@@ -508,7 +568,7 @@ export function buildTlsCaddyLines(p: Pick<ProxyEntry, "tls" | "tlsIssuer" | "tl
   const renewalWindowRatio = (hostless || hasCustomCert) ? undefined : adv?.renewalWindowRatio;
   const hasAdvanced = adv && (
     adv.protocolMin || adv.protocolMax || adv.cipherSuites?.length || adv.curves?.length
-    || certLifetime || renewalWindowRatio !== undefined
+    || certLifetime || renewalWindowRatio !== undefined || adv.keyType
   );
   const hasMtls = mtls?.mode;
   // #253: a certificate file has nothing to obtain, so on_demand only goes with an issuer.
@@ -534,8 +594,15 @@ export function buildTlsCaddyLines(p: Pick<ProxyEntry, "tls" | "tlsIssuer" | "tl
   if (p.tlsIssuer === "acme" && !hostless) {
     // #289: a site's own DNS provider; Caddy fills in the global acme_dns one only when unset.
     const dnsLines = p.dnsChallenge?.provider ? dnsProviderLines("dns", p.dnsChallenge, "\t\t") : [];
-    const policy = [...buildTlsPolicyBlockLines(adv, mtls), ...onDemandLines, ...dnsLines];
-    return policy.length ? ["\ttls {", ...policy, "\t}"] : [];
+    // #341: the site's own account email, CA and key type; unset ones fall back to the global ones.
+    const email = adv?.acmeEmail?.trim();
+    const own = [
+      ...(adv?.acmeCa?.trim() ? [`\t\tca ${adv.acmeCa.trim()}`] : []),
+      ...(adv?.keyType ? [`\t\tkey_type ${adv.keyType}`] : []),
+    ];
+    const policy = [...own, ...buildTlsPolicyBlockLines(adv, mtls), ...onDemandLines, ...dnsLines];
+    if (!policy.length) return email ? [`\ttls ${email}`] : [];
+    return [`\ttls${email ? ` ${email}` : ""} {`, ...policy, "\t}"];
   }
 
   if (!hasAdvanced && !hasMtls && !onDemandLines.length) return ["\ttls internal"];
@@ -551,6 +618,7 @@ export function buildTlsCaddyLines(p: Pick<ProxyEntry, "tls" | "tlsIssuer" | "tl
   if (renewalWindowRatio !== undefined) {
     lines.push(`\t\trenewal_window_ratio ${renewalWindowRatio}`);
   }
+  if (adv?.keyType) lines.push(`\t\tkey_type ${adv.keyType}`);
   lines.push(...buildTlsPolicyBlockLines(adv, mtls));
   lines.push(...onDemandLines);
   lines.push("\t}");
@@ -594,7 +662,7 @@ export function buildTlsPolicyBlockLines(
 
 /** True when a static site has any `file_server` sub-directive set (#262). */
 export function hasFileServerOptions(fs: import("./types").FileServerConfig): boolean {
-  return !!(fs.index?.length || fs.hide?.length || fs.precompressed?.length);
+  return !!(fs.index?.length || fs.hide?.length || fs.precompressed?.length || fs.disableCanonicalUris || fs.status || (fs.browse && fs.browseTemplate));
 }
 
 
@@ -605,12 +673,28 @@ export function hasFileServerOptions(fs: import("./types").FileServerConfig): bo
 export function buildFileServerLines(fs: import("./types").FileServerConfig, indent: string): string[] {
   const lines = [`${indent}root * ${caddyQuote(fs.root)}`];
   if (fs.spa) lines.push(`${indent}try_files {path} /index.html`);
-  const head = fs.browse ? `${indent}file_server browse` : `${indent}file_server`;
+  // A listing template is an argument of the block's own `browse`, so then the head has none.
+  const template = fs.browse ? fs.browseTemplate : undefined;
+  if (fs.templates) {
+    const t = fs.templates;
+    if (t.mime?.length || t.root) {
+      lines.push(`${indent}templates {`);
+      if (t.mime?.length) lines.push(`${indent}\tmime ${t.mime.join(" ")}`);
+      if (t.root) lines.push(`${indent}\troot ${caddyQuote(t.root)}`);
+      lines.push(`${indent}}`);
+    } else {
+      lines.push(`${indent}templates`);
+    }
+  }
+  const head = fs.browse && !template ? `${indent}file_server browse` : `${indent}file_server`;
   if (!hasFileServerOptions(fs)) {
     lines.push(head);
     return lines;
   }
   lines.push(`${head} {`);
+  if (template) lines.push(`${indent}\tbrowse ${caddyQuote(template)}`);
+  if (fs.disableCanonicalUris) lines.push(`${indent}\tdisable_canonical_uris`);
+  if (fs.status) lines.push(`${indent}\tstatus ${fs.status}`);
   if (fs.index?.length) lines.push(`${indent}\tindex ${fs.index.map(v => caddyQuote(v)).join(" ")}`);
   if (fs.hide?.length) lines.push(`${indent}\thide ${fs.hide.map(v => caddyQuote(v)).join(" ")}`);
   if (fs.precompressed?.length) lines.push(`${indent}\tprecompressed ${fs.precompressed.join(" ")}`);
@@ -629,11 +713,17 @@ export function buildPhpFastcgiLines(php: import("./types").PhpFastcgiConfig, in
   if (php.tryFiles?.trim()) lines.push(`${indent}try_files ${php.tryFiles.trim()}`);
   const { upstream, index, splitPath, env } = php;
   const envEntries = env ? Object.entries(env) : [];
-  if (index || splitPath?.length || envEntries.length) {
+  const hasOptions = !!(php.captureStderr || php.resolveRootSymlink || php.dialTimeout || php.readTimeout || php.writeTimeout);
+  if (index || splitPath?.length || envEntries.length || hasOptions) {
     lines.push(`${indent}php_fastcgi ${upstream} {`);
     if (index) lines.push(`${indent}\tindex ${index}`);
     if (splitPath?.length) lines.push(`${indent}\tsplit ${splitPath.join(" ")}`);
     for (const [k, v] of envEntries) lines.push(`${indent}\tenv ${k} ${caddyQuote(v)}`);
+    if (php.captureStderr) lines.push(`${indent}\tcapture_stderr`);
+    if (php.resolveRootSymlink) lines.push(`${indent}\tresolve_root_symlink`);
+    if (php.dialTimeout) lines.push(`${indent}\tdial_timeout ${php.dialTimeout}`);
+    if (php.readTimeout) lines.push(`${indent}\tread_timeout ${php.readTimeout}`);
+    if (php.writeTimeout) lines.push(`${indent}\twrite_timeout ${php.writeTimeout}`);
     lines.push(`${indent}}`);
   } else {
     lines.push(`${indent}php_fastcgi ${upstream}`);
@@ -679,11 +769,11 @@ export function buildRouteHandlerLines(p: ProxyEntry, indent: string): string[] 
       lines.push(`${indent}respond ${statusCode}`);
     }
   } else if (p.redirect) {
-    lines.push(`${indent}redir ${p.redirect.to} ${p.redirect.code}`);
+    lines.push(`${indent}redir ${p.redirect.to} ${p.redirect.html ? "html" : p.redirect.code}`);
   } else if (p.fileServer) {
-    if (p.compress) lines.push(`${indent}encode gzip zstd`);
+    if (p.compress) lines.push(...buildEncodeLines(indent, p.encodeOptions));
     if (p.basicAuth?.length) {
-      lines.push(`${indent}basic_auth {`);
+      lines.push(basicAuthOpenLine(indent, p.basicAuthOptions));
       for (const a of p.basicAuth) lines.push(`${indent}\t${a.username} ${a.passwordHash}`);
       lines.push(`${indent}}`);
     }
@@ -692,9 +782,9 @@ export function buildRouteHandlerLines(p: ProxyEntry, indent: string): string[] 
     }
     lines.push(...buildFileServerLines(p.fileServer, indent));
   } else if (p.phpFastcgi) {
-    if (p.compress) lines.push(`${indent}encode gzip zstd`);
+    if (p.compress) lines.push(...buildEncodeLines(indent, p.encodeOptions));
     if (p.basicAuth?.length) {
-      lines.push(`${indent}basic_auth {`);
+      lines.push(basicAuthOpenLine(indent, p.basicAuthOptions));
       for (const a of p.basicAuth) lines.push(`${indent}\t${a.username} ${a.passwordHash}`);
       lines.push(`${indent}}`);
     }
@@ -703,9 +793,9 @@ export function buildRouteHandlerLines(p: ProxyEntry, indent: string): string[] 
     }
     lines.push(...buildPhpFastcgiLines(p.phpFastcgi, indent));
   } else {
-    if (p.compress) lines.push(`${indent}encode gzip zstd`);
+    if (p.compress) lines.push(...buildEncodeLines(indent, p.encodeOptions));
     if (p.basicAuth?.length) {
-      lines.push(`${indent}basic_auth {`);
+      lines.push(basicAuthOpenLine(indent, p.basicAuthOptions));
       for (const a of p.basicAuth) lines.push(`${indent}\t${a.username} ${a.passwordHash}`);
       lines.push(`${indent}}`);
     }
@@ -803,7 +893,7 @@ export function patchRawBlock(raw: string, proxy: ProxyEntry): string {
     trimmed === name || trimmed.startsWith(`${name} `) || trimmed.startsWith(`${name}\t`) || trimmed === `${name}{`;
 
   // The directives the plugin writes again below are dropped here, each with its whole block.
-  const rewritten = ["tls", "encode", "root", "file_server", "header", "basic_auth", "forward_auth", "reverse_proxy", "php_fastcgi"];
+  const rewritten = ["tls", "encode", "root", "templates", "file_server", "header", "basic_auth", "forward_auth", "reverse_proxy", "php_fastcgi"];
   // try_files belongs to the static and PHP forms (#262); on any other site it's the user's.
   if (proxy.fileServer || proxy.phpFastcgi) rewritten.push("try_files");
 
@@ -837,21 +927,21 @@ export function patchRawBlock(raw: string, proxy: ProxyEntry): string {
   // Re-add updated directives before closing brace
   kept.push(...buildTlsCaddyLines(proxy, !tlsSubjectHosts(proxy.externalHost).length));
   if (proxy.fileServer) {
-    if (proxy.compress) kept.push("\tencode gzip zstd");
-    if (proxy.basicAuth?.length) kept.push(...buildBasicAuthCaddyLines(proxy.basicAuth));
+    if (proxy.compress) kept.push(...buildEncodeLines("\t", proxy.encodeOptions));
+    if (proxy.basicAuth?.length) kept.push(...buildBasicAuthCaddyLines(proxy.basicAuth, proxy.basicAuthOptions));
     for (const h of proxy.responseHeaders ?? []) {
       kept.push(headerOpLine(`\theader`, h, { quoteSet: true }));
     }
     kept.push(...buildFileServerLines(proxy.fileServer, "\t"));
   } else if (proxy.phpFastcgi) {
     // A hand-written PHP site (#247): its root/php_fastcgi/file_server were skipped above.
-    if (proxy.compress) kept.push("\tencode gzip zstd");
-    if (proxy.basicAuth?.length) kept.push(...buildBasicAuthCaddyLines(proxy.basicAuth));
+    if (proxy.compress) kept.push(...buildEncodeLines("\t", proxy.encodeOptions));
+    if (proxy.basicAuth?.length) kept.push(...buildBasicAuthCaddyLines(proxy.basicAuth, proxy.basicAuthOptions));
     for (const h of proxy.responseHeaders ?? []) kept.push(headerOpLine("\theader", h, { quoteSet: true }));
     kept.push(...buildPhpFastcgiLines(proxy.phpFastcgi, "\t"));
   } else {
-    if (proxy.compress) kept.push("\tencode gzip zstd");
-    if (proxy.basicAuth?.length) kept.push(...buildBasicAuthCaddyLines(proxy.basicAuth));
+    if (proxy.compress) kept.push(...buildEncodeLines("\t", proxy.encodeOptions));
+    if (proxy.basicAuth?.length) kept.push(...buildBasicAuthCaddyLines(proxy.basicAuth, proxy.basicAuthOptions));
     // `header` lines were dropped above with the other rewritten directives.
     for (const h of proxy.responseHeaders ?? []) kept.push(headerOpLine("\theader", h, { quoteSet: true, defer: true }));
     if (proxy.forwardAuth) kept.push(...buildForwardAuthCaddyLines(proxy.forwardAuth));

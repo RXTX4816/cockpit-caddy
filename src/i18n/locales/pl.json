@@ -177,7 +177,18 @@
     "field_hide": "Ukryte pliki",
     "field_hide_help": "Nazwy lub wzorce, które nigdy nie są udostępniane, rozdzielone spacjami.",
     "field_precompressed": "Pliki wstępnie skompresowane",
-    "field_precompressed_help": "Zwracaj file.zst, file.br lub file.gz obok oryginału, gdy przeglądarka akceptuje to kodowanie."
+    "field_precompressed_help": "Zwracaj file.zst, file.br lub file.gz obok oryginału, gdy przeglądarka akceptuje to kodowanie.",
+    "field_browse_template": "Szablon listingu",
+    "field_browse_template_help": "Plik szablonu dla listingu katalogu. Używany tylko przy włączonym listingu katalogów.",
+    "field_status": "Kod stanu",
+    "field_status_help": "Odpowiadaj na każdy plik tym kodem zamiast 200, np. 404 dla własnej strony błędu.",
+    "field_disable_canonical_uris": "Zostaw końcowe ukośniki bez zmian",
+    "field_disable_canonical_uris_help": "Nie przekierowuj, aby dodać lub usunąć końcowy ukośnik w katalogach i plikach.",
+    "field_templates": "Przetwarzaj pliki szablonami",
+    "field_templates_help": "Włącza silnik szablonów Caddy dla serwowanych plików, aby mogły używać include, .Req i innych akcji szablonów.",
+    "field_templates_mime": "Typy MIME",
+    "field_templates_root": "Katalog dla include",
+    "field_templates_root_help": "Gdzie include i inne akcje na plikach szukają plików. Puste oznacza katalog główny witryny."
   },
   "edit_static": {
     "title": "Edytuj serwer statyczny — :{{port}}",
@@ -206,7 +217,15 @@
     "env_field_value": "Wartość",
     "env_add_button": "Dodaj zmienną",
     "field_try_files": "Próbowane pliki (try_files)",
-    "field_try_files_help": "Opcjonalne. Kandydaci sprawdzani kolejno przed PHP; aplikacja z front controllerem zwykle potrzebuje {path} {path}/ /index.php?{query}."
+    "field_try_files_help": "Opcjonalne. Kandydaci sprawdzani kolejno przed PHP; aplikacja z front controllerem zwykle potrzebuje {path} {path}/ /index.php?{query}.",
+    "field_dial_timeout": "Limit czasu połączenia",
+    "field_read_timeout": "Limit czasu odczytu",
+    "field_write_timeout": "Limit czasu zapisu",
+    "no_timeout": "brak",
+    "field_capture_stderr": "Zapisuj stderr procesu PHP",
+    "field_capture_stderr_help": "Zapisuje w dzienniku Caddy to, co PHP-FPM wypisuje na stderr.",
+    "field_resolve_root_symlink": "Rozwiązuj dowiązania symboliczne w katalogu głównym",
+    "field_resolve_root_symlink_help": "Podąża za dowiązaniami symbolicznymi w katalogu głównym przed zbudowaniem SCRIPT_FILENAME, czego wymagają konfiguracje opcache z dowiązaniami wydań."
   },
   "add_respond": {
     "title": "Dodaj odpowiedź statyczną",
@@ -251,7 +270,11 @@
     "validation_port_range": "Port musi mieścić się w zakresie 1–65535",
     "validation_port_duplicate": "Port {{port}} jest już używany",
     "validation_to_required": "Cel przekierowania jest wymagany",
-    "confirm_body": "Zostanie utworzone przekierowanie :{{port}} → {{to}} ({{code}}), a konfiguracja Caddy zostanie przeładowana."
+    "confirm_body": "Zostanie utworzone przekierowanie :{{port}} → {{to}} ({{code}}), a konfiguracja Caddy zostanie przeładowana.",
+    "code_html": "Strona HTML",
+    "code_html_help": "Odpowiada stroną, która przekierowuje w przeglądarce, zamiast kodem stanu. W odróżnieniu od przekierowania kodem stanu zachowuje #fragment adresu URL.",
+    "keep_path": "Zachowaj ścieżkę i zapytanie",
+    "keep_path_help": "Dodaje {uri} do celu, więc /a?b=1 w tej witrynie prowadzi do /a?b=1 w celu."
   },
   "basic_auth": {
     "heading": "Uwierzytelnianie HTTP Basic",
@@ -260,7 +283,12 @@
     "field_password": "Hasło",
     "field_password_keep": "Pozostaw puste, aby zachować obecne",
     "add_button": "Dodaj konto",
-    "remove_button": "Usuń konto"
+    "remove_button": "Usuń konto",
+    "realm": "Realm",
+    "algorithm": "Algorytm skrótu",
+    "algorithm_default": "bcrypt (domyślny)",
+    "algorithm_argon2id": "argon2id (silniejszy)",
+    "algorithm_mismatch": "Konta zachowujące hasło mają nadal skrót innego algorytmu. Wprowadź ich hasła ponownie."
   },
   "transport": {
     "heading": "Limity czasu upstreamu",
@@ -325,7 +353,30 @@
     "field_find_placeholder": "^/api/(.*)",
     "field_replace_placeholder": "/$1",
     "field_replace_help": "Użyj $1, $2 dla grup przechwytujących",
-    "type_aria": "Rodzaj przepisywania"
+    "type_aria": "Rodzaj przepisywania",
+    "type_strip_suffix": "Usuń sufiks",
+    "type_uri_replace": "Zamień tekst",
+    "type_query": "Ciąg zapytania",
+    "type_method": "Metoda",
+    "field_suffix": "Sufiks",
+    "field_suffix_placeholder": ".html",
+    "field_text_find": "Szukaj (zwykły tekst)",
+    "field_limit": "Najwyżej",
+    "field_limit_placeholder": "wszystkie",
+    "field_method": "Metoda",
+    "query_op": "Zmiana",
+    "query_op_set": "Ustaw",
+    "query_op_add": "Dodaj",
+    "query_op_delete": "Usuń",
+    "query_op_rename": "Zmień nazwę",
+    "query_op_replace": "Zamień",
+    "query_key": "Nazwa",
+    "query_value": "Wartość",
+    "query_new_key": "Nowa nazwa",
+    "query_search": "Szukaj (regex)",
+    "query_remove": "Usuń zmianę",
+    "query_add": "Dodaj zmianę",
+    "invalid": "Wypełnij wszystkie pola przepisania."
   },
   "probe": {
     "status_pending": "Sprawdzanie…",
@@ -597,7 +648,16 @@
     "roll_keep_count": "Liczba zachowanych plików po rotacji",
     "roll_keep_days": "Maks. wiek plików po rotacji (dni)",
     "roll_compress": "Kompresuj pliki po rotacji (gzip)",
-    "roll_help": "Caddy domyślnie rotuje plik dziennika. Zostaw pole puste, aby użyć wartości domyślnej Caddy, pokazanej na szaro."
+    "roll_help": "Caddy domyślnie rotuje plik dziennika. Zostaw pole puste, aby użyć wartości domyślnej Caddy, pokazanej na szaro.",
+    "field_filters": "Filtry pól",
+    "field_filters_help": "Po jednym w wierszu: ścieżka pola, potem delete, hash, replace <tekst> lub ip_mask <bity IPv4> [<bity IPv6>], np. request>headers>Authorization delete.",
+    "field_filters_invalid": "Każdy wiersz wymaga ścieżki pola i jednego z: delete, hash, replace <tekst>, ip_mask <bity>.",
+    "include": "Uwzględnij loggery",
+    "include_help": "Nazwy loggerów, które ten dziennik zapisuje, oddzielone spacjami, np. http.log.access. Puste oznacza wszystkie.",
+    "exclude": "Pomiń loggery",
+    "exclude_help": "Nazwy loggerów, które ten dziennik pomija, oddzielone spacjami, np. http.log.access.log0.",
+    "skip_paths": "Ścieżki pomijane w dzienniku",
+    "skip_paths_help": "Ścieżki oddzielone spacjami, dozwolone symbole wieloznaczne, np. /health* /ping. Żądania do nich nie są zapisywane."
   },
   "config_check": {
     "button": "Sprawdź konfigurację",
@@ -855,7 +915,12 @@
     "field_copy_headers": "Kopiuj nagłówki",
     "field_copy_headers_help": "Nagłówki odpowiedzi oddzielone spacjami lub przecinkami, kopiowane z usługi uwierzytelniania do żądania do upstreamu (np. Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "URI uwierzytelniania jest wymagany, gdy ustawiono URL usługi uwierzytelniania"
+    "validation_uri_required": "URI uwierzytelniania jest wymagany, gdy ustawiono URL usługi uwierzytelniania",
+    "field_copy_headers_rename_help": "Wpisz Name>Other, aby skopiować nagłówek pod inną nazwą.",
+    "field_header_up": "Nagłówki żądania do usługi uwierzytelniania",
+    "field_header_up_help": "Po jednym w wierszu: Name value ustawia nagłówek, +Name value dodaje, -Name usuwa.",
+    "field_trusted_proxies": "Zaufane serwery proxy",
+    "field_trusted_proxies_help": "Zakresy, których nagłówki X-Forwarded-* zostają w żądaniu do usługi uwierzytelniania, oddzielone spacjami. private_ranges oznacza sieci prywatne."
   },
   "tls_policy": {
     "heading": "Polityka TLS",
@@ -903,7 +968,15 @@
     "custom_file_unreadable": "Nie znaleziono pliku lub użytkownik Caddy nie może go odczytać",
     "custom_file_readable": "Plik można odczytać",
     "custom_file_valid_expiry": "Ważny — wygasa {{date}}",
-    "custom_cert_lifetime_note": "Powyżej wczytano własny certyfikat — czas ważności i okno odnowienia nie mają zastosowania, ponieważ Caddy sam niczego nie wystawia."
+    "custom_cert_lifetime_note": "Powyżej wczytano własny certyfikat — czas ważności i okno odnowienia nie mają zastosowania, ponieważ Caddy sam niczego nie wystawia.",
+    "acme_email": "E-mail ACME",
+    "acme_email_help": "E-mail konta dla certyfikatów tej witryny. Dotyczy tylko automatycznego HTTPS; puste używa globalnego.",
+    "acme_global_placeholder": "Globalny e-mail",
+    "acme_ca": "URL katalogu CA ACME",
+    "acme_ca_help": "Skąd ta witryna bierze certyfikaty, np. testowy URL Let's Encrypt podczas prób. Puste używa globalnego CA.",
+    "key_type": "Typ klucza",
+    "acme_invalid_email": "Podaj adres e-mail, np. admin@example.com.",
+    "acme_invalid_ca": "Podaj adres URL zaczynający się od http:// lub https://."
   },
   "error_handler": {
     "heading": "Własna obsługa błędów",
@@ -969,7 +1042,22 @@
     "ip_kind_remote": "IP połączenia",
     "ip_kind_client_help": "IP odwiedzającego, pobierane z nagłówka przekazania, gdy żądanie przychodzi przez jedno z zaufanych proxy (Ustawienia). Bez zaufanych proxy jest takie samo jak IP połączenia.",
     "ip_kind_remote_help": "IP połączenia TCP. Za proxy lub CDN jest to adres proxy, a nie odwiedzającego.",
-    "ip_range": "Adres IP lub zakres"
+    "ip_range": "Adres IP lub zakres",
+    "type_path_regexp": "Regex ścieżki",
+    "type_header_regexp": "Regex nagłówka",
+    "field_regexp_name": "Nazwa (opcjonalna)",
+    "field_header_name_regexp": "Nazwa nagłówka dla regexa",
+    "field_regexp_name_header": "Nazwa regexa nagłówka (opcjonalna)",
+    "regexp_help": "Nazwa udostępnia grupy jako {re.name.1}, np. w przepisaniu. Caddy dopuszcza jeden regex na matcher.",
+    "type_protocol": "Protokół",
+    "protocol_any": "dowolny",
+    "type_file": "Pliki",
+    "field_try_files": "Szukane pliki",
+    "field_try_policy": "Sposób wyboru",
+    "try_policy_default": "pierwszy istniejący",
+    "file_help": "Pasuje, gdy istnieje jeden z plików. Zmienne zastępcze, np. {path}, działają.",
+    "type_vars": "Zmienne",
+    "vars_help": "Po jednej w wierszu: zmienna zastępcza i wartości, które może mieć, np. {host} example.com www.example.com."
   },
   "handle_path": {
     "label": "Usuń dopasowany prefiks ścieżki (handle_path)"
@@ -1115,6 +1203,25 @@
     "site_inherit_help": "Używa dostawcy DNS ustawionego w Ustawienia → Wyzwanie DNS albo wyzwania HTTP, jeśli żaden nie jest ustawiony.",
     "site_override_help": "Ta witryna używa własnego dostawcy DNS i danych logowania. Zapisanie nowych danych uruchamia ponownie Caddy, bo odczytuje je tylko przy starcie.",
     "site_wildcard_warning": "Certyfikaty wieloznaczne wymagają wyzwania DNS. Ustaw dostawcę DNS dla tej witryny albo w Ustawienia → Wyzwanie DNS."
+  },
+  "encode": {
+    "heading": "Kompresja",
+    "section_title": "Ustawienia kompresji (opcjonalne)",
+    "help": "Działa, gdy kompresja jest włączona w Ogólnych. Bez wyborów Caddy kompresuje gzip i zstd.",
+    "algorithms": "Algorytmy i kolejność",
+    "algorithms_default": "gzip, zstd (domyślnie)",
+    "algorithms_zstd_gzip": "zstd, potem gzip",
+    "algorithms_gzip": "tylko gzip",
+    "algorithms_zstd": "tylko zstd",
+    "minimum_length": "Minimalny rozmiar",
+    "minimum_length_help": "Odpowiedzi mniejsze niż ta liczba bajtów są wysyłane bez zmian. Domyślnie Caddy używa 512.",
+    "invalid_number": "Podaj liczbę całkowitą bajtów.",
+    "match_status": "Tylko te kody stanu",
+    "match_status_help": "Kody lub klasy oddzielone spacjami, np. 2xx 404. Puste oznacza każdy stan.",
+    "invalid_status": "Podaj kody stanu, np. 200, lub klasy, np. 2xx.",
+    "match_headers": "Tylko te nagłówki odpowiedzi",
+    "match_headers_help": "Po jednym w wierszu: nazwa nagłówka, potem wartość. Działają symbole wieloznaczne, np. text/*.",
+    "invalid_header": "Każdy wiersz wymaga nazwy nagłówka i wartości."
   },
   "dynamic_upstreams": {
     "heading": "Dynamiczne upstreamy",

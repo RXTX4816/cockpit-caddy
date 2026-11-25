@@ -177,7 +177,18 @@
     "field_hide": "Скрытые файлы",
     "field_hide_help": "Имена или шаблоны, которые никогда не отдаются, через пробел.",
     "field_precompressed": "Предварительно сжатые файлы",
-    "field_precompressed_help": "Отдавать file.zst, file.br или file.gz рядом с оригиналом, если браузер принимает это кодирование."
+    "field_precompressed_help": "Отдавать file.zst, file.br или file.gz рядом с оригиналом, если браузер принимает это кодирование.",
+    "field_browse_template": "Шаблон списка",
+    "field_browse_template_help": "Файл шаблона для списка каталога. Используется только при включённом списке каталогов.",
+    "field_status": "Код состояния",
+    "field_status_help": "Отвечать на любой файл этим кодом вместо 200, например 404 для собственной страницы ошибки.",
+    "field_disable_canonical_uris": "Не трогать завершающие слэши",
+    "field_disable_canonical_uris_help": "Не перенаправлять, чтобы добавить или убрать завершающий слэш у каталогов и файлов.",
+    "field_templates": "Обрабатывать файлы шаблонами",
+    "field_templates_help": "Включает шаблонизатор Caddy для отдаваемых файлов, чтобы они могли использовать include, .Req и другие действия шаблонов.",
+    "field_templates_mime": "Типы MIME",
+    "field_templates_root": "Каталог для include",
+    "field_templates_root_help": "Где include и другие файловые действия ищут файлы. Пусто — корень сайта."
   },
   "edit_static": {
     "title": "Изменить статический сервер — :{{port}}",
@@ -206,7 +217,15 @@
     "env_field_value": "Значение",
     "env_add_button": "Добавить переменную",
     "field_try_files": "Пробовать файлы (try_files)",
-    "field_try_files_help": "Необязательно. Варианты, проверяемые по порядку перед PHP; приложению с фронт-контроллером обычно нужно {path} {path}/ /index.php?{query}."
+    "field_try_files_help": "Необязательно. Варианты, проверяемые по порядку перед PHP; приложению с фронт-контроллером обычно нужно {path} {path}/ /index.php?{query}.",
+    "field_dial_timeout": "Тайм-аут подключения",
+    "field_read_timeout": "Тайм-аут чтения",
+    "field_write_timeout": "Тайм-аут записи",
+    "no_timeout": "нет",
+    "field_capture_stderr": "Писать stderr процесса PHP в журнал",
+    "field_capture_stderr_help": "Записывает в журнал Caddy то, что PHP-FPM выводит в stderr.",
+    "field_resolve_root_symlink": "Разрешать символические ссылки в корне",
+    "field_resolve_root_symlink_help": "Переходит по символическим ссылкам в корневом каталоге перед построением SCRIPT_FILENAME — это нужно конфигурациям opcache со ссылками на релизы."
   },
   "add_respond": {
     "title": "Добавить статический ответ",
@@ -251,7 +270,11 @@
     "validation_port_range": "Порт должен быть в диапазоне 1–65535",
     "validation_port_duplicate": "Порт {{port}} уже используется",
     "validation_to_required": "Укажите цель перенаправления",
-    "confirm_body": "Будет создано перенаправление :{{port}} → {{to}} ({{code}}), конфигурация Caddy будет перезагружена."
+    "confirm_body": "Будет создано перенаправление :{{port}} → {{to}} ({{code}}), конфигурация Caddy будет перезагружена.",
+    "code_html": "HTML-страница",
+    "code_html_help": "Отвечает страницей, которая перенаправляет в браузере, вместо кода состояния. В отличие от перенаправления кодом состояния, сохраняет #фрагмент URL.",
+    "keep_path": "Сохранять путь и запрос",
+    "keep_path_help": "Добавляет {uri} к целевому адресу, так что /a?b=1 на этом сайте ведёт на /a?b=1 на целевом."
   },
   "basic_auth": {
     "heading": "HTTP Basic Auth",
@@ -260,7 +283,12 @@
     "field_password": "Пароль",
     "field_password_keep": "Оставьте пустым, чтобы сохранить текущий",
     "add_button": "Добавить учётную запись",
-    "remove_button": "Удалить учётную запись"
+    "remove_button": "Удалить учётную запись",
+    "realm": "Realm",
+    "algorithm": "Алгоритм хеширования",
+    "algorithm_default": "bcrypt (по умолчанию)",
+    "algorithm_argon2id": "argon2id (надёжнее)",
+    "algorithm_mismatch": "У учётных записей, сохраняющих пароль, остался хеш другого алгоритма. Введите их пароли заново."
   },
   "transport": {
     "heading": "Тайм-ауты upstream",
@@ -325,7 +353,30 @@
     "field_find_placeholder": "^/api/(.*)",
     "field_replace_placeholder": "/$1",
     "field_replace_help": "Используйте $1, $2 для групп захвата",
-    "type_aria": "Тип перезаписи"
+    "type_aria": "Тип перезаписи",
+    "type_strip_suffix": "Убрать суффикс",
+    "type_uri_replace": "Заменить текст",
+    "type_query": "Строка запроса",
+    "type_method": "Метод",
+    "field_suffix": "Суффикс",
+    "field_suffix_placeholder": ".html",
+    "field_text_find": "Найти (простой текст)",
+    "field_limit": "Не более",
+    "field_limit_placeholder": "все",
+    "field_method": "Метод",
+    "query_op": "Изменение",
+    "query_op_set": "Задать",
+    "query_op_add": "Добавить",
+    "query_op_delete": "Удалить",
+    "query_op_rename": "Переименовать",
+    "query_op_replace": "Заменить",
+    "query_key": "Имя",
+    "query_value": "Значение",
+    "query_new_key": "Новое имя",
+    "query_search": "Найти (regex)",
+    "query_remove": "Убрать изменение",
+    "query_add": "Добавить изменение",
+    "invalid": "Заполните все поля перезаписи."
   },
   "probe": {
     "status_pending": "Проверка…",
@@ -597,7 +648,16 @@
     "roll_keep_count": "Сколько ротированных файлов хранить",
     "roll_keep_days": "Макс. возраст ротированных файлов (дней)",
     "roll_compress": "Сжимать ротированные файлы (gzip)",
-    "roll_help": "Caddy по умолчанию ротирует файл журнала. Оставьте поле пустым, чтобы использовать значение Caddy по умолчанию (показано серым)."
+    "roll_help": "Caddy по умолчанию ротирует файл журнала. Оставьте поле пустым, чтобы использовать значение Caddy по умолчанию (показано серым).",
+    "field_filters": "Фильтры полей",
+    "field_filters_help": "По одному в строке: путь поля, затем delete, hash, replace <текст> или ip_mask <биты IPv4> [<биты IPv6>], например request>headers>Authorization delete.",
+    "field_filters_invalid": "В каждой строке нужны путь поля и одно из: delete, hash, replace <текст>, ip_mask <биты>.",
+    "include": "Включить логгеры",
+    "include_help": "Имена логгеров, которые пишет этот журнал, через пробел, например http.log.access. Пусто — все.",
+    "exclude": "Исключить логгеры",
+    "exclude_help": "Имена логгеров, которые этот журнал пропускает, через пробел, например http.log.access.log0.",
+    "skip_paths": "Пути, исключённые из журнала",
+    "skip_paths_help": "Пути через пробел, шаблоны допускаются, например /health* /ping. Запросы к ним не записываются."
   },
   "config_check": {
     "button": "Проверить конфигурацию",
@@ -855,7 +915,12 @@
     "field_copy_headers": "Копировать заголовки",
     "field_copy_headers_help": "Заголовки ответа через пробел или запятую, копируемые из службы аутентификации в запрос к upstream (например, Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "Если задан URL службы аутентификации, URI аутентификации обязателен"
+    "validation_uri_required": "Если задан URL службы аутентификации, URI аутентификации обязателен",
+    "field_copy_headers_rename_help": "Напишите Name>Other, чтобы скопировать заголовок под другим именем.",
+    "field_header_up": "Заголовки запроса к сервису аутентификации",
+    "field_header_up_help": "По одному в строке: Name value задаёт заголовок, +Name value добавляет, -Name удаляет.",
+    "field_trusted_proxies": "Доверенные прокси",
+    "field_trusted_proxies_help": "Диапазоны, чьи заголовки X-Forwarded-* сохраняются в запросе к сервису аутентификации, через пробел. private_ranges означает частные сети."
   },
   "tls_policy": {
     "heading": "Политика TLS",
@@ -903,7 +968,15 @@
     "custom_file_unreadable": "Файл не найден или недоступен для чтения пользователю Caddy",
     "custom_file_readable": "Файл доступен для чтения",
     "custom_file_valid_expiry": "Действителен — истекает {{date}}",
-    "custom_cert_lifetime_note": "Выше загружен собственный сертификат — срок действия и окно обновления не применяются, так как Caddy сам ничего не выпускает."
+    "custom_cert_lifetime_note": "Выше загружен собственный сертификат — срок действия и окно обновления не применяются, так как Caddy сам ничего не выпускает.",
+    "acme_email": "Email для ACME",
+    "acme_email_help": "Email учётной записи для сертификатов этого сайта. Действует только для автоматического HTTPS; пусто — глобальный.",
+    "acme_global_placeholder": "Глобальный email",
+    "acme_ca": "URL каталога ACME CA",
+    "acme_ca_help": "Откуда этот сайт получает сертификаты, например тестовый URL Let's Encrypt во время проверки. Пусто — глобальный CA.",
+    "key_type": "Тип ключа",
+    "acme_invalid_email": "Введите адрес email, например admin@example.com.",
+    "acme_invalid_ca": "Введите URL, начинающийся с http:// или https://."
   },
   "error_handler": {
     "heading": "Свои обработчики ошибок",
@@ -969,7 +1042,22 @@
     "ip_kind_remote": "IP соединения",
     "ip_kind_client_help": "IP посетителя, берётся из заголовка пересылки, если запрос пришёл через один из доверенных прокси (Настройки). Без доверенных прокси совпадает с IP соединения.",
     "ip_kind_remote_help": "IP TCP-соединения. За прокси или CDN это адрес прокси, а не посетителя.",
-    "ip_range": "IP-адрес или диапазон"
+    "ip_range": "IP-адрес или диапазон",
+    "type_path_regexp": "Regex пути",
+    "type_header_regexp": "Regex заголовка",
+    "field_regexp_name": "Имя (необязательно)",
+    "field_header_name_regexp": "Имя заголовка для regex",
+    "field_regexp_name_header": "Имя regex заголовка (необязательно)",
+    "regexp_help": "Имя делает группы доступными как {re.name.1}, например в перезаписи. Caddy допускает один regex на матчер.",
+    "type_protocol": "Протокол",
+    "protocol_any": "любой",
+    "type_file": "Файлы",
+    "field_try_files": "Искомые файлы",
+    "field_try_policy": "Как выбирать",
+    "try_policy_default": "первый существующий",
+    "file_help": "Совпадает, если существует один из файлов. Подстановки вроде {path} работают.",
+    "type_vars": "Переменные",
+    "vars_help": "По одной в строке: подстановка и значения, которые она может принимать, например {host} example.com www.example.com."
   },
   "handle_path": {
     "label": "Удалять совпавший префикс пути (handle_path)"
@@ -1115,6 +1203,25 @@
     "site_inherit_help": "Использует DNS-провайдера из Настройки → DNS-проверка или HTTP-проверку, если провайдер не задан.",
     "site_override_help": "Этот сайт использует своего DNS-провайдера и свои учётные данные. Сохранение новых данных перезапускает Caddy: он читает их только при запуске.",
     "site_wildcard_warning": "Для wildcard-сертификатов нужна DNS-проверка. Задайте DNS-провайдера для этого сайта или в Настройки → DNS-проверка."
+  },
+  "encode": {
+    "heading": "Сжатие",
+    "section_title": "Настройки сжатия (необязательно)",
+    "help": "Действуют, пока сжатие включено на вкладке «Общие». Без выбора Caddy сжимает gzip и zstd.",
+    "algorithms": "Алгоритмы и порядок",
+    "algorithms_default": "gzip, zstd (по умолчанию)",
+    "algorithms_zstd_gzip": "сначала zstd, затем gzip",
+    "algorithms_gzip": "только gzip",
+    "algorithms_zstd": "только zstd",
+    "minimum_length": "Минимальный размер",
+    "minimum_length_help": "Ответы меньше этого числа байт отправляются как есть. По умолчанию в Caddy 512.",
+    "invalid_number": "Введите целое число байт.",
+    "match_status": "Только эти коды состояния",
+    "match_status_help": "Коды или классы через пробел, например 2xx 404. Пусто — любые состояния.",
+    "invalid_status": "Введите коды вроде 200 или классы вроде 2xx.",
+    "match_headers": "Только эти заголовки ответа",
+    "match_headers_help": "По одному в строке: имя заголовка, затем значение. Работают шаблоны вроде text/*.",
+    "invalid_header": "В каждой строке нужны имя заголовка и значение."
   },
   "dynamic_upstreams": {
     "heading": "Динамические апстримы",

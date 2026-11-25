@@ -177,7 +177,18 @@
     "field_hide": "Приховані файли",
     "field_hide_help": "Імена або шаблони, які ніколи не віддаються, через пробіл.",
     "field_precompressed": "Попередньо стиснуті файли",
-    "field_precompressed_help": "Віддавати file.zst, file.br або file.gz поруч з оригіналом, якщо браузер приймає це кодування."
+    "field_precompressed_help": "Віддавати file.zst, file.br або file.gz поруч з оригіналом, якщо браузер приймає це кодування.",
+    "field_browse_template": "Шаблон списку",
+    "field_browse_template_help": "Файл шаблону для списку каталогу. Використовується лише за ввімкненого списку каталогів.",
+    "field_status": "Код стану",
+    "field_status_help": "Відповідати на кожен файл цим кодом замість 200, наприклад 404 для власної сторінки помилки.",
+    "field_disable_canonical_uris": "Не чіпати кінцеві слеші",
+    "field_disable_canonical_uris_help": "Не перенаправляти, щоб додати чи прибрати кінцевий слеш у каталогів і файлів.",
+    "field_templates": "Обробляти файли шаблонами",
+    "field_templates_help": "Вмикає шаблонізатор Caddy для файлів, що віддаються, щоб вони могли використовувати include, .Req та інші дії шаблонів.",
+    "field_templates_mime": "Типи MIME",
+    "field_templates_root": "Каталог для include",
+    "field_templates_root_help": "Де include та інші файлові дії шукають файли. Порожньо — корінь сайту."
   },
   "edit_static": {
     "title": "Змінити статичний сервер — :{{port}}",
@@ -206,7 +217,15 @@
     "env_field_value": "Значення",
     "env_add_button": "Додати змінну",
     "field_try_files": "Пробувати файли (try_files)",
-    "field_try_files_help": "Необов’язково. Варіанти, які по черзі перевіряються перед PHP; застосунку з фронт-контролером зазвичай потрібно {path} {path}/ /index.php?{query}."
+    "field_try_files_help": "Необов’язково. Варіанти, які по черзі перевіряються перед PHP; застосунку з фронт-контролером зазвичай потрібно {path} {path}/ /index.php?{query}.",
+    "field_dial_timeout": "Тайм-аут з'єднання",
+    "field_read_timeout": "Тайм-аут читання",
+    "field_write_timeout": "Тайм-аут запису",
+    "no_timeout": "немає",
+    "field_capture_stderr": "Записувати stderr процесу PHP",
+    "field_capture_stderr_help": "Записує до журналу Caddy те, що PHP-FPM виводить у stderr.",
+    "field_resolve_root_symlink": "Розв'язувати символічні посилання в корені",
+    "field_resolve_root_symlink_help": "Переходить за символічними посиланнями в кореневому каталозі перед побудовою SCRIPT_FILENAME — це потрібно конфігураціям opcache з посиланнями на релізи."
   },
   "add_respond": {
     "title": "Додати статичну відповідь",
@@ -251,7 +270,11 @@
     "validation_port_range": "Порт має бути в діапазоні 1–65535",
     "validation_port_duplicate": "Порт {{port}} уже використовується",
     "validation_to_required": "Вкажіть ціль переспрямування",
-    "confirm_body": "Буде створено переспрямування :{{port}} → {{to}} ({{code}}), конфігурацію Caddy буде перезавантажено."
+    "confirm_body": "Буде створено переспрямування :{{port}} → {{to}} ({{code}}), конфігурацію Caddy буде перезавантажено.",
+    "code_html": "HTML-сторінка",
+    "code_html_help": "Відповідає сторінкою, яка перенаправляє в браузері, замість коду стану. На відміну від перенаправлення кодом стану, зберігає #фрагмент URL.",
+    "keep_path": "Зберігати шлях і запит",
+    "keep_path_help": "Додає {uri} до цілі, тож /a?b=1 на цьому сайті веде на /a?b=1 на цілі."
   },
   "basic_auth": {
     "heading": "HTTP Basic Auth",
@@ -260,7 +283,12 @@
     "field_password": "Пароль",
     "field_password_keep": "Залиште порожнім, щоб зберегти поточний",
     "add_button": "Додати обліковий запис",
-    "remove_button": "Вилучити обліковий запис"
+    "remove_button": "Вилучити обліковий запис",
+    "realm": "Realm",
+    "algorithm": "Алгоритм хешування",
+    "algorithm_default": "bcrypt (типовий)",
+    "algorithm_argon2id": "argon2id (надійніший)",
+    "algorithm_mismatch": "Облікові записи, що зберігають пароль, досі мають хеш іншого алгоритму. Введіть їхні паролі заново."
   },
   "transport": {
     "heading": "Тайм-аути upstream",
@@ -325,7 +353,30 @@
     "field_find_placeholder": "^/api/(.*)",
     "field_replace_placeholder": "/$1",
     "field_replace_help": "Використовуйте $1, $2 для груп захоплення",
-    "type_aria": "Тип перезапису"
+    "type_aria": "Тип перезапису",
+    "type_strip_suffix": "Прибрати суфікс",
+    "type_uri_replace": "Замінити текст",
+    "type_query": "Рядок запиту",
+    "type_method": "Метод",
+    "field_suffix": "Суфікс",
+    "field_suffix_placeholder": ".html",
+    "field_text_find": "Знайти (звичайний текст)",
+    "field_limit": "Не більше",
+    "field_limit_placeholder": "усі",
+    "field_method": "Метод",
+    "query_op": "Зміна",
+    "query_op_set": "Задати",
+    "query_op_add": "Додати",
+    "query_op_delete": "Видалити",
+    "query_op_rename": "Перейменувати",
+    "query_op_replace": "Замінити",
+    "query_key": "Назва",
+    "query_value": "Значення",
+    "query_new_key": "Нова назва",
+    "query_search": "Знайти (regex)",
+    "query_remove": "Прибрати зміну",
+    "query_add": "Додати зміну",
+    "invalid": "Заповніть усі поля перезапису."
   },
   "probe": {
     "status_pending": "Перевірка…",
@@ -597,7 +648,16 @@
     "roll_keep_count": "Скільки ротованих файлів зберігати",
     "roll_keep_days": "Макс. вік ротованих файлів (днів)",
     "roll_compress": "Стискати ротовані файли (gzip)",
-    "roll_help": "Caddy типово ротує файл журналу. Залиште поле порожнім, щоб використати типове значення Caddy (показано сірим)."
+    "roll_help": "Caddy типово ротує файл журналу. Залиште поле порожнім, щоб використати типове значення Caddy (показано сірим).",
+    "field_filters": "Фільтри полів",
+    "field_filters_help": "По одному в рядку: шлях поля, потім delete, hash, replace <текст> або ip_mask <біти IPv4> [<біти IPv6>], наприклад request>headers>Authorization delete.",
+    "field_filters_invalid": "У кожному рядку потрібні шлях поля та одне з: delete, hash, replace <текст>, ip_mask <біти>.",
+    "include": "Включити логери",
+    "include_help": "Імена логерів, які пише цей журнал, через пробіл, наприклад http.log.access. Порожньо — усі.",
+    "exclude": "Виключити логери",
+    "exclude_help": "Імена логерів, які цей журнал пропускає, через пробіл, наприклад http.log.access.log0.",
+    "skip_paths": "Шляхи, виключені з журналу",
+    "skip_paths_help": "Шляхи через пробіл, шаблони допускаються, наприклад /health* /ping. Запити до них не записуються."
   },
   "config_check": {
     "button": "Перевірити конфігурацію",
@@ -855,7 +915,12 @@
     "field_copy_headers": "Копіювати заголовки",
     "field_copy_headers_help": "Заголовки відповіді через пробіл або кому, що копіюються зі служби автентифікації до запиту на upstream (наприклад, Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "Якщо задано URL служби автентифікації, URI автентифікації обов'язковий"
+    "validation_uri_required": "Якщо задано URL служби автентифікації, URI автентифікації обов'язковий",
+    "field_copy_headers_rename_help": "Напишіть Name>Other, щоб скопіювати заголовок під іншою назвою.",
+    "field_header_up": "Заголовки запиту до сервісу автентифікації",
+    "field_header_up_help": "По одному в рядку: Name value задає заголовок, +Name value додає, -Name видаляє.",
+    "field_trusted_proxies": "Довірені проксі",
+    "field_trusted_proxies_help": "Діапазони, чиї заголовки X-Forwarded-* зберігаються в запиті до сервісу автентифікації, через пробіл. private_ranges означає приватні мережі."
   },
   "tls_policy": {
     "heading": "Політика TLS",
@@ -903,7 +968,15 @@
     "custom_file_unreadable": "Файл не знайдено або він недоступний для читання користувачеві Caddy",
     "custom_file_readable": "Файл доступний для читання",
     "custom_file_valid_expiry": "Дійсний — спливає {{date}}",
-    "custom_cert_lifetime_note": "Вище завантажено власний сертифікат — термін дії та вікно оновлення не застосовуються, оскільки Caddy сам нічого не видає."
+    "custom_cert_lifetime_note": "Вище завантажено власний сертифікат — термін дії та вікно оновлення не застосовуються, оскільки Caddy сам нічого не видає.",
+    "acme_email": "Email для ACME",
+    "acme_email_help": "Email облікового запису для сертифікатів цього сайту. Діє лише для автоматичного HTTPS; порожньо — глобальний.",
+    "acme_global_placeholder": "Глобальний email",
+    "acme_ca": "URL каталогу ACME CA",
+    "acme_ca_help": "Звідки цей сайт отримує сертифікати, наприклад тестовий URL Let's Encrypt під час перевірки. Порожньо — глобальний CA.",
+    "key_type": "Тип ключа",
+    "acme_invalid_email": "Введіть адресу email, наприклад admin@example.com.",
+    "acme_invalid_ca": "Введіть URL, що починається з http:// або https://."
   },
   "error_handler": {
     "heading": "Власні обробники помилок",
@@ -969,7 +1042,22 @@
     "ip_kind_remote": "IP з’єднання",
     "ip_kind_client_help": "IP відвідувача, береться із заголовка пересилання, якщо запит прийшов через один із довірених проксі (Налаштування). Без довірених проксі збігається з IP з’єднання.",
     "ip_kind_remote_help": "IP TCP-з’єднання. За проксі чи CDN це адреса проксі, а не відвідувача.",
-    "ip_range": "IP-адреса або діапазон"
+    "ip_range": "IP-адреса або діапазон",
+    "type_path_regexp": "Regex шляху",
+    "type_header_regexp": "Regex заголовка",
+    "field_regexp_name": "Назва (необов'язково)",
+    "field_header_name_regexp": "Назва заголовка для regex",
+    "field_regexp_name_header": "Назва regex заголовка (необов'язково)",
+    "regexp_help": "Назва робить групи доступними як {re.name.1}, наприклад у перезаписі. Caddy допускає один regex на матчер.",
+    "type_protocol": "Протокол",
+    "protocol_any": "будь-який",
+    "type_file": "Файли",
+    "field_try_files": "Файли для пошуку",
+    "field_try_policy": "Як вибирати",
+    "try_policy_default": "перший наявний",
+    "file_help": "Збігається, якщо існує один із файлів. Підстановки на кшталт {path} працюють.",
+    "type_vars": "Змінні",
+    "vars_help": "По одній у рядку: підстановка та значення, яких вона може набувати, наприклад {host} example.com www.example.com."
   },
   "handle_path": {
     "label": "Вилучати збіглий префікс шляху (handle_path)"
@@ -1115,6 +1203,25 @@
     "site_inherit_help": "Використовує DNS-провайдера з Налаштування → DNS-перевірка або HTTP-перевірку, якщо провайдера не задано.",
     "site_override_help": "Цей сайт використовує власного DNS-провайдера й облікові дані. Збереження нових даних перезапускає Caddy, бо він читає їх лише під час запуску.",
     "site_wildcard_warning": "Для wildcard-сертифікатів потрібна DNS-перевірка. Задайте DNS-провайдера для цього сайту або в Налаштування → DNS-перевірка."
+  },
+  "encode": {
+    "heading": "Стиснення",
+    "section_title": "Налаштування стиснення (необов'язково)",
+    "help": "Діють, поки стиснення ввімкнено на вкладці «Загальні». Без вибору Caddy стискає gzip і zstd.",
+    "algorithms": "Алгоритми й порядок",
+    "algorithms_default": "gzip, zstd (типово)",
+    "algorithms_zstd_gzip": "спочатку zstd, потім gzip",
+    "algorithms_gzip": "лише gzip",
+    "algorithms_zstd": "лише zstd",
+    "minimum_length": "Мінімальний розмір",
+    "minimum_length_help": "Відповіді менші за цю кількість байтів надсилаються як є. Типове значення Caddy — 512.",
+    "invalid_number": "Введіть ціле число байтів.",
+    "match_status": "Лише ці коди стану",
+    "match_status_help": "Коди або класи через пробіл, наприклад 2xx 404. Порожньо — будь-які стани.",
+    "invalid_status": "Введіть коди на кшталт 200 або класи на кшталт 2xx.",
+    "match_headers": "Лише ці заголовки відповіді",
+    "match_headers_help": "По одному в рядку: назва заголовка, потім значення. Працюють шаблони на кшталт text/*.",
+    "invalid_header": "У кожному рядку потрібні назва заголовка й значення."
   },
   "dynamic_upstreams": {
     "heading": "Динамічні апстими",

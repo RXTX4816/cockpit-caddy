@@ -177,7 +177,18 @@
     "field_hide": "숨긴 파일",
     "field_hide_help": "절대 제공하지 않을 이름이나 패턴(공백으로 구분).",
     "field_precompressed": "미리 압축된 파일",
-    "field_precompressed_help": "브라우저가 해당 인코딩을 받으면 원본 옆의 file.zst, file.br, file.gz를 제공합니다."
+    "field_precompressed_help": "브라우저가 해당 인코딩을 받으면 원본 옆의 file.zst, file.br, file.gz를 제공합니다.",
+    "field_browse_template": "목록 템플릿",
+    "field_browse_template_help": "디렉터리 목록용 템플릿 파일입니다. 디렉터리 목록이 켜져 있을 때만 사용됩니다.",
+    "field_status": "상태 코드",
+    "field_status_help": "모든 파일에 200 대신 이 상태 코드로 응답합니다. 예를 들어 사용자 지정 오류 페이지용 404.",
+    "field_disable_canonical_uris": "끝 슬래시를 그대로 두기",
+    "field_disable_canonical_uris_help": "디렉터리와 파일에 끝 슬래시를 붙이거나 떼는 리디렉션을 하지 않습니다.",
+    "field_templates": "파일을 템플릿으로 처리",
+    "field_templates_help": "제공하는 파일에 Caddy의 템플릿 엔진을 적용하여 include, .Req 등 템플릿 동작을 쓸 수 있게 합니다.",
+    "field_templates_mime": "MIME 형식",
+    "field_templates_root": "include 디렉터리",
+    "field_templates_root_help": "include 등 파일 동작이 파일을 찾는 위치입니다. 비워 두면 사이트 루트입니다."
   },
   "edit_static": {
     "title": "정적 서버 편집 — :{{port}}",
@@ -206,7 +217,15 @@
     "env_field_value": "값",
     "env_add_button": "변수 추가",
     "field_try_files": "시도할 파일(try_files)",
-    "field_try_files_help": "선택 사항. PHP 전에 순서대로 시도할 후보입니다. 프런트 컨트롤러 앱에는 보통 {path} {path}/ /index.php?{query}가 필요합니다."
+    "field_try_files_help": "선택 사항. PHP 전에 순서대로 시도할 후보입니다. 프런트 컨트롤러 앱에는 보통 {path} {path}/ /index.php?{query}가 필요합니다.",
+    "field_dial_timeout": "연결 타임아웃",
+    "field_read_timeout": "읽기 타임아웃",
+    "field_write_timeout": "쓰기 타임아웃",
+    "no_timeout": "없음",
+    "field_capture_stderr": "PHP 프로세스의 stderr 기록",
+    "field_capture_stderr_help": "PHP-FPM이 stderr에 출력하는 내용을 Caddy 로그에 기록합니다.",
+    "field_resolve_root_symlink": "루트의 심볼릭 링크 해석",
+    "field_resolve_root_symlink_help": "SCRIPT_FILENAME을 만들기 전에 루트 디렉터리의 심볼릭 링크를 따라갑니다. 릴리스 심볼릭 링크를 쓰는 opcache 구성에 필요합니다."
   },
   "add_respond": {
     "title": "정적 응답 추가",
@@ -251,7 +270,11 @@
     "validation_port_range": "포트는 1~65535 사이여야 합니다",
     "validation_port_duplicate": "포트 {{port}}은(는) 이미 사용 중입니다",
     "validation_to_required": "리디렉션 대상을 입력하세요",
-    "confirm_body": "리디렉션 :{{port}} → {{to}}({{code}})을(를) 만들고 Caddy 설정을 다시 불러옵니다."
+    "confirm_body": "리디렉션 :{{port}} → {{to}}({{code}})을(를) 만들고 Caddy 설정을 다시 불러옵니다.",
+    "code_html": "HTML 페이지",
+    "code_html_help": "상태 코드 대신 브라우저에서 리디렉션하는 페이지로 응답합니다. 상태 코드 리디렉션과 달리 URL의 #프래그먼트가 유지됩니다.",
+    "keep_path": "경로와 쿼리 유지",
+    "keep_path_help": "대상에 {uri}를 덧붙여, 이 사이트의 /a?b=1이 대상의 /a?b=1로 이동합니다."
   },
   "basic_auth": {
     "heading": "HTTP Basic 인증",
@@ -260,7 +283,12 @@
     "field_password": "비밀번호",
     "field_password_keep": "기존 값을 유지하려면 비워 두세요",
     "add_button": "계정 추가",
-    "remove_button": "계정 제거"
+    "remove_button": "계정 제거",
+    "realm": "영역(realm)",
+    "algorithm": "해시 알고리즘",
+    "algorithm_default": "bcrypt(기본값)",
+    "algorithm_argon2id": "argon2id(더 강력함)",
+    "algorithm_mismatch": "비밀번호를 유지하는 계정에는 아직 다른 알고리즘의 해시가 있습니다. 비밀번호를 다시 입력하세요."
   },
   "transport": {
     "heading": "업스트림 시간 제한",
@@ -325,7 +353,30 @@
     "field_find_placeholder": "^/api/(.*)",
     "field_replace_placeholder": "/$1",
     "field_replace_help": "캡처 그룹에는 $1, $2를 사용하세요",
-    "type_aria": "재작성 유형"
+    "type_aria": "재작성 유형",
+    "type_strip_suffix": "접미사 제거",
+    "type_uri_replace": "텍스트 바꾸기",
+    "type_query": "쿼리 문자열",
+    "type_method": "메서드",
+    "field_suffix": "접미사",
+    "field_suffix_placeholder": ".html",
+    "field_text_find": "찾기(일반 텍스트)",
+    "field_limit": "최대",
+    "field_limit_placeholder": "전부",
+    "field_method": "메서드",
+    "query_op": "변경",
+    "query_op_set": "설정",
+    "query_op_add": "추가",
+    "query_op_delete": "삭제",
+    "query_op_rename": "이름 바꾸기",
+    "query_op_replace": "바꾸기",
+    "query_key": "이름",
+    "query_value": "값",
+    "query_new_key": "새 이름",
+    "query_search": "찾기(정규식)",
+    "query_remove": "변경 제거",
+    "query_add": "변경 추가",
+    "invalid": "다시 쓰기의 모든 항목을 입력하세요."
   },
   "probe": {
     "status_pending": "확인 중…",
@@ -597,7 +648,16 @@
     "roll_keep_count": "보관할 순환 파일 수",
     "roll_keep_days": "순환 파일 최대 보관 기간(일)",
     "roll_compress": "순환 파일 압축(gzip)",
-    "roll_help": "Caddy는 기본적으로 로그 파일을 순환합니다. 회색으로 표시된 Caddy 기본값을 쓰려면 필드를 비워 두세요."
+    "roll_help": "Caddy는 기본적으로 로그 파일을 순환합니다. 회색으로 표시된 Caddy 기본값을 쓰려면 필드를 비워 두세요.",
+    "field_filters": "필드 필터",
+    "field_filters_help": "한 줄에 하나: 필드 경로 다음에 delete, hash, replace <텍스트> 또는 ip_mask <IPv4 비트> [<IPv6 비트>]를 씁니다. 예: request>headers>Authorization delete",
+    "field_filters_invalid": "각 줄에는 필드 경로와 delete, hash, replace <텍스트>, ip_mask <비트> 중 하나가 필요합니다.",
+    "include": "포함할 로거",
+    "include_help": "이 로그가 기록할 로거 이름(공백으로 구분)입니다. 예: http.log.access. 비워 두면 전부입니다.",
+    "exclude": "제외할 로거",
+    "exclude_help": "이 로그가 건너뛸 로거 이름(공백으로 구분)입니다. 예: http.log.access.log0",
+    "skip_paths": "로그에서 제외할 경로",
+    "skip_paths_help": "공백으로 구분한 경로이며 와일드카드를 쓸 수 있습니다. 예: /health* /ping. 이 경로로의 요청은 기록되지 않습니다."
   },
   "config_check": {
     "button": "설정 점검",
@@ -855,7 +915,12 @@
     "field_copy_headers": "헤더 복사",
     "field_copy_headers_help": "인증 서비스에서 업스트림 요청으로 복사할 응답 헤더(공백 또는 쉼표 구분, 예: Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "인증 서비스 URL을 설정하면 인증 URI가 필요합니다"
+    "validation_uri_required": "인증 서비스 URL을 설정하면 인증 URI가 필요합니다",
+    "field_copy_headers_rename_help": "Name>Other로 쓰면 헤더를 다른 이름으로 복사합니다.",
+    "field_header_up": "인증 서비스로 보내는 요청 헤더",
+    "field_header_up_help": "한 줄에 하나: Name value는 헤더를 설정하고, +Name value는 추가하며, -Name은 제거합니다.",
+    "field_trusted_proxies": "신뢰하는 프록시",
+    "field_trusted_proxies_help": "인증 서비스로 보내는 요청에서 X-Forwarded-* 헤더를 유지할 범위(공백으로 구분)입니다. private_ranges는 사설 네트워크를 뜻합니다."
   },
   "tls_policy": {
     "heading": "TLS 정책",
@@ -903,7 +968,15 @@
     "custom_file_unreadable": "파일이 없거나 Caddy 사용자가 읽을 수 없습니다",
     "custom_file_readable": "파일을 읽을 수 있습니다",
     "custom_file_valid_expiry": "유효 — {{date}}에 만료",
-    "custom_cert_lifetime_note": "위에 사용자 지정 인증서가 불러와져 있습니다 — Caddy가 직접 발급하지 않으므로 인증서 수명과 갱신 창은 적용되지 않습니다."
+    "custom_cert_lifetime_note": "위에 사용자 지정 인증서가 불러와져 있습니다 — Caddy가 직접 발급하지 않으므로 인증서 수명과 갱신 창은 적용되지 않습니다.",
+    "acme_email": "ACME 이메일",
+    "acme_email_help": "이 사이트의 인증서에 쓰는 계정 이메일입니다. 자동 HTTPS에만 적용되며, 비워 두면 전역 설정을 씁니다.",
+    "acme_global_placeholder": "전역 이메일",
+    "acme_ca": "ACME CA 디렉터리 URL",
+    "acme_ca_help": "이 사이트가 인증서를 받는 곳입니다. 테스트 중에는 Let's Encrypt 스테이징 URL 등을 쓸 수 있습니다. 비워 두면 전역 CA를 씁니다.",
+    "key_type": "키 유형",
+    "acme_invalid_email": "admin@example.com 같은 이메일 주소를 입력하세요.",
+    "acme_invalid_ca": "http:// 또는 https://로 시작하는 URL을 입력하세요."
   },
   "error_handler": {
     "heading": "사용자 지정 오류 처리기",
@@ -969,7 +1042,22 @@
     "ip_kind_remote": "연결 IP",
     "ip_kind_client_help": "방문자의 IP입니다. 신뢰할 수 있는 프록시(설정)를 거친 요청이면 전달 헤더에서 가져옵니다. 신뢰할 수 있는 프록시가 없으면 연결 IP와 같습니다.",
     "ip_kind_remote_help": "TCP 연결의 IP입니다. 프록시나 CDN 뒤에서는 방문자가 아닌 프록시의 주소입니다.",
-    "ip_range": "IP 주소 또는 범위"
+    "ip_range": "IP 주소 또는 범위",
+    "type_path_regexp": "경로 정규식",
+    "type_header_regexp": "헤더 정규식",
+    "field_regexp_name": "이름(선택)",
+    "field_header_name_regexp": "정규식을 적용할 헤더 이름",
+    "field_regexp_name_header": "헤더 정규식의 이름(선택)",
+    "regexp_help": "이름을 지정하면 그룹을 {re.name.1}로 다시 쓰기 등에서 쓸 수 있습니다. Caddy는 매처당 정규식 하나만 허용합니다.",
+    "type_protocol": "프로토콜",
+    "protocol_any": "모두",
+    "type_file": "파일",
+    "field_try_files": "찾을 파일",
+    "field_try_policy": "선택 방식",
+    "try_policy_default": "처음 존재하는 것",
+    "file_help": "파일 중 하나가 있으면 일치합니다. {path} 같은 자리 표시자를 쓸 수 있습니다.",
+    "type_vars": "변수",
+    "vars_help": "한 줄에 하나: 자리 표시자와 가질 수 있는 값. 예: {host} example.com www.example.com"
   },
   "handle_path": {
     "label": "일치한 경로 접두사 제거(handle_path)"
@@ -1115,6 +1203,25 @@
     "site_inherit_help": "설정 → DNS 챌린지에서 지정한 DNS 공급자를 사용하며, 지정하지 않았으면 HTTP 챌린지를 사용합니다.",
     "site_override_help": "이 사이트는 자체 DNS 공급자와 자격 증명을 사용합니다. 새 자격 증명을 저장하면 Caddy가 다시 시작됩니다. Caddy는 시작할 때만 이를 읽기 때문입니다.",
     "site_wildcard_warning": "와일드카드 인증서에는 DNS 챌린지가 필요합니다. 이 사이트용 DNS 공급자를 지정하거나 설정 → DNS 챌린지에서 지정하세요."
+  },
+  "encode": {
+    "heading": "압축",
+    "section_title": "압축 설정(선택)",
+    "help": "일반 탭에서 압축이 켜져 있을 때 사용됩니다. 선택하지 않으면 Caddy는 gzip과 zstd로 압축합니다.",
+    "algorithms": "알고리즘과 순서",
+    "algorithms_default": "gzip, zstd(기본값)",
+    "algorithms_zstd_gzip": "zstd, 그다음 gzip",
+    "algorithms_gzip": "gzip만",
+    "algorithms_zstd": "zstd만",
+    "minimum_length": "최소 크기",
+    "minimum_length_help": "이 바이트 수보다 작은 응답은 그대로 보냅니다. Caddy 기본값은 512입니다.",
+    "invalid_number": "바이트 수를 정수로 입력하세요.",
+    "match_status": "다음 상태 코드만",
+    "match_status_help": "공백으로 구분한 코드 또는 2xx 404 같은 클래스. 비워 두면 모든 상태입니다.",
+    "invalid_status": "200 같은 코드나 2xx 같은 클래스를 입력하세요.",
+    "match_headers": "다음 응답 헤더만",
+    "match_headers_help": "한 줄에 하나: 헤더 이름, 그다음 값. text/* 같은 와일드카드를 쓸 수 있습니다.",
+    "invalid_header": "각 줄에는 헤더 이름과 값이 필요합니다."
   },
   "dynamic_upstreams": {
     "heading": "동적 업스트림",

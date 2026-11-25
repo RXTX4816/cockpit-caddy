@@ -177,7 +177,18 @@
     "field_hide": "الملفات المخفية",
     "field_hide_help": "أسماء أو أنماط لا تُقدَّم أبدًا، مفصولة بمسافات.",
     "field_precompressed": "الملفات المضغوطة مسبقًا",
-    "field_precompressed_help": "تقديم file.zst أو file.br أو file.gz الموجود بجانب الأصلي عندما يقبل المتصفح هذا الترميز."
+    "field_precompressed_help": "تقديم file.zst أو file.br أو file.gz الموجود بجانب الأصلي عندما يقبل المتصفح هذا الترميز.",
+    "field_browse_template": "قالب القائمة",
+    "field_browse_template_help": "ملف قالب لعرض محتويات المجلد. يُستخدم فقط عندما يكون عرض المجلد مفعّلًا.",
+    "field_status": "رمز الحالة",
+    "field_status_help": "الرد على كل ملف بهذا الرمز بدل 200، مثلًا 404 لصفحة خطأ مخصصة.",
+    "field_disable_canonical_uris": "ترك الشرطة المائلة اللاحقة كما هي",
+    "field_disable_canonical_uris_help": "عدم إعادة التوجيه لإضافة الشرطة المائلة اللاحقة أو إزالتها في المجلدات والملفات.",
+    "field_templates": "تشغيل الملفات عبر القوالب",
+    "field_templates_help": "يفعّل محرك قوالب Caddy للملفات المقدَّمة، فيمكنها استخدام include و.Req وبقية إجراءات القوالب.",
+    "field_templates_mime": "أنواع MIME",
+    "field_templates_root": "مجلد الملفات المضمَّنة",
+    "field_templates_root_help": "المكان الذي تبحث فيه include وبقية إجراءات الملفات عن الملفات. الفراغ يعني جذر الموقع."
   },
   "edit_static": {
     "title": "تعديل الخادم الثابت — :{{port}}",
@@ -206,7 +217,15 @@
     "env_field_value": "القيمة",
     "env_add_button": "إضافة متغير",
     "field_try_files": "تجربة الملفات (try_files)",
-    "field_try_files_help": "اختياري. مرشحات تُجرَّب بالترتيب قبل PHP؛ تطبيقات وحدة التحكم الأمامية تحتاج عادةً إلى {path} {path}/ /index.php?{query}."
+    "field_try_files_help": "اختياري. مرشحات تُجرَّب بالترتيب قبل PHP؛ تطبيقات وحدة التحكم الأمامية تحتاج عادةً إلى {path} {path}/ /index.php?{query}.",
+    "field_dial_timeout": "مهلة الاتصال",
+    "field_read_timeout": "مهلة القراءة",
+    "field_write_timeout": "مهلة الكتابة",
+    "no_timeout": "بلا",
+    "field_capture_stderr": "تسجيل stderr لعملية PHP",
+    "field_capture_stderr_help": "كتابة ما يطبعه PHP-FPM على stderr في سجل Caddy.",
+    "field_resolve_root_symlink": "حلّ الروابط الرمزية في الجذر",
+    "field_resolve_root_symlink_help": "اتباع الروابط الرمزية في المجلد الجذر قبل بناء SCRIPT_FILENAME، وهو ما تحتاجه إعدادات opcache ذات روابط الإصدارات."
   },
   "add_respond": {
     "title": "إضافة استجابة ثابتة",
@@ -251,7 +270,11 @@
     "validation_port_range": "يجب أن يكون المنفذ بين 1 و65535",
     "validation_port_duplicate": "المنفذ {{port}} مستخدم بالفعل",
     "validation_to_required": "هدف إعادة التوجيه مطلوب",
-    "confirm_body": "سيتم إنشاء إعادة توجيه :{{port}} → {{to}} ({{code}}) وإعادة تحميل إعدادات Caddy."
+    "confirm_body": "سيتم إنشاء إعادة توجيه :{{port}} → {{to}} ({{code}}) وإعادة تحميل إعدادات Caddy.",
+    "code_html": "صفحة HTML",
+    "code_html_help": "يردّ بصفحة تعيد التوجيه داخل المتصفح بدل رمز حالة. وعلى عكس إعادة التوجيه برمز حالة، يحتفظ بـ #fragment من العنوان.",
+    "keep_path": "الاحتفاظ بالمسار والاستعلام",
+    "keep_path_help": "يضيف {uri} إلى الهدف، فيذهب /a?b=1 على هذا الموقع إلى /a?b=1 على الهدف."
   },
   "basic_auth": {
     "heading": "مصادقة HTTP Basic",
@@ -260,7 +283,12 @@
     "field_password": "كلمة المرور",
     "field_password_keep": "اتركه فارغًا للاحتفاظ بالكلمة الحالية",
     "add_button": "إضافة حساب",
-    "remove_button": "إزالة الحساب"
+    "remove_button": "إزالة الحساب",
+    "realm": "النطاق (Realm)",
+    "algorithm": "خوارزمية التجزئة",
+    "algorithm_default": "bcrypt (الافتراضي)",
+    "algorithm_argon2id": "argon2id (أقوى)",
+    "algorithm_mismatch": "الحسابات التي تُبقي كلمة مرورها ما زالت تحمل تجزئة بالخوارزمية الأخرى. أدخل كلمات مرورها من جديد."
   },
   "transport": {
     "heading": "مهل الخادم الأعلى",
@@ -325,7 +353,30 @@
     "field_find_placeholder": "^/api/(.*)",
     "field_replace_placeholder": "/$1",
     "field_replace_help": "استخدم $1 و$2 لمجموعات الالتقاط",
-    "type_aria": "نوع إعادة الكتابة"
+    "type_aria": "نوع إعادة الكتابة",
+    "type_strip_suffix": "إزالة اللاحقة",
+    "type_uri_replace": "استبدال نص",
+    "type_query": "سلسلة الاستعلام",
+    "type_method": "الطريقة",
+    "field_suffix": "اللاحقة",
+    "field_suffix_placeholder": ".html",
+    "field_text_find": "بحث (نص عادي)",
+    "field_limit": "بحد أقصى",
+    "field_limit_placeholder": "الكل",
+    "field_method": "الطريقة",
+    "query_op": "تغيير",
+    "query_op_set": "تعيين",
+    "query_op_add": "إضافة",
+    "query_op_delete": "حذف",
+    "query_op_rename": "إعادة تسمية",
+    "query_op_replace": "استبدال",
+    "query_key": "الاسم",
+    "query_value": "القيمة",
+    "query_new_key": "الاسم الجديد",
+    "query_search": "بحث (regex)",
+    "query_remove": "إزالة التغيير",
+    "query_add": "إضافة تغيير",
+    "invalid": "املأ كل حقول إعادة الكتابة."
   },
   "probe": {
     "status_pending": "جارٍ الفحص…",
@@ -597,7 +648,16 @@
     "roll_keep_count": "عدد الملفات المدوَّرة المحتفظ بها",
     "roll_keep_days": "أقصى عمر للملفات المدوَّرة (أيام)",
     "roll_compress": "ضغط الملفات المدوَّرة (gzip)",
-    "roll_help": "يدوّر Caddy ملف السجل افتراضيًا. اترك الحقل فارغًا لاستخدام القيمة الافتراضية لـ Caddy، المعروضة باللون الرمادي."
+    "roll_help": "يدوّر Caddy ملف السجل افتراضيًا. اترك الحقل فارغًا لاستخدام القيمة الافتراضية لـ Caddy، المعروضة باللون الرمادي.",
+    "field_filters": "مرشحات الحقول",
+    "field_filters_help": "واحد في كل سطر: مسار حقل ثم delete أو hash أو replace <نص> أو ip_mask <بتات IPv4> [<بتات IPv6>]، مثل request>headers>Authorization delete.",
+    "field_filters_invalid": "يحتاج كل سطر إلى مسار حقل وإحدى القيم: delete أو hash أو replace <نص> أو ip_mask <بتات>.",
+    "include": "تضمين المسجِّلات",
+    "include_help": "أسماء المسجِّلات التي يكتبها هذا السجل، مفصولة بمسافات، مثل http.log.access. الفراغ يعني الكل.",
+    "exclude": "استبعاد المسجِّلات",
+    "exclude_help": "أسماء المسجِّلات التي يتخطاها هذا السجل، مفصولة بمسافات، مثل http.log.access.log0.",
+    "skip_paths": "مسارات تُستثنى من السجل",
+    "skip_paths_help": "مسارات مفصولة بمسافات، والأحرف البديلة مسموحة، مثل /health* /ping. لا تُسجَّل الطلبات إليها."
   },
   "config_check": {
     "button": "فحص الإعدادات",
@@ -855,7 +915,12 @@
     "field_copy_headers": "نسخ الترويسات",
     "field_copy_headers_help": "ترويسات استجابة مفصولة بمسافات أو فواصل تُنسخ من خدمة المصادقة إلى الطلب المتجه إلى الخادم الأعلى (مثل Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "URI المصادقة مطلوب عند تعيين عنوان خدمة المصادقة"
+    "validation_uri_required": "URI المصادقة مطلوب عند تعيين عنوان خدمة المصادقة",
+    "field_copy_headers_rename_help": "اكتب Name>Other لنسخ ترويسة باسم آخر.",
+    "field_header_up": "ترويسات الطلب إلى خدمة المصادقة",
+    "field_header_up_help": "واحدة في كل سطر: Name value تعيّن ترويسة، و+Name value تضيف واحدة، و-Name تحذفها.",
+    "field_trusted_proxies": "الوكلاء الموثوقون",
+    "field_trusted_proxies_help": "نطاقات تُحفظ ترويسات X-Forwarded-* الخاصة بها في الطلب إلى خدمة المصادقة، مفصولة بمسافات. تمثّل private_ranges الشبكات الخاصة."
   },
   "tls_policy": {
     "heading": "سياسة TLS",
@@ -903,7 +968,15 @@
     "custom_file_unreadable": "الملف غير موجود أو لا يستطيع مستخدم Caddy قراءته",
     "custom_file_readable": "الملف قابل للقراءة",
     "custom_file_valid_expiry": "صالحة — تنتهي في {{date}}",
-    "custom_cert_lifetime_note": "حُمّلت شهادة مخصصة أعلاه — لا تنطبق مدة الصلاحية ونافذة التجديد لأن Caddy لا يُصدر شيئًا بنفسه."
+    "custom_cert_lifetime_note": "حُمّلت شهادة مخصصة أعلاه — لا تنطبق مدة الصلاحية ونافذة التجديد لأن Caddy لا يُصدر شيئًا بنفسه.",
+    "acme_email": "بريد ACME",
+    "acme_email_help": "بريد الحساب لشهادات هذا الموقع. يسري على HTTPS التلقائي فقط؛ الفراغ يستخدم البريد العام.",
+    "acme_global_placeholder": "البريد العام",
+    "acme_ca": "عنوان دليل ACME CA",
+    "acme_ca_help": "من أين يحصل هذا الموقع على شهاداته، مثل عنوان Let's Encrypt التجريبي أثناء الاختبار. الفراغ يستخدم المرجع العام.",
+    "key_type": "نوع المفتاح",
+    "acme_invalid_email": "أدخل عنوان بريد مثل admin@example.com.",
+    "acme_invalid_ca": "أدخل عنوان URL يبدأ بـ http:// أو https://."
   },
   "error_handler": {
     "heading": "معالجات أخطاء مخصصة",
@@ -969,7 +1042,22 @@
     "ip_kind_remote": "IP الاتصال",
     "ip_kind_client_help": "عنوان IP للزائر، يؤخذ من ترويسة التمرير عندما يمر الطلب عبر أحد الوكلاء الموثوقين (الإعدادات). بدون وكلاء موثوقين يكون هو نفسه IP الاتصال.",
     "ip_kind_remote_help": "عنوان IP لاتصال TCP. خلف وكيل أو شبكة CDN يكون عنوان الوكيل، لا عنوان الزائر.",
-    "ip_range": "عنوان IP أو نطاق"
+    "ip_range": "عنوان IP أو نطاق",
+    "type_path_regexp": "تعبير نمطي للمسار",
+    "type_header_regexp": "تعبير نمطي للترويسة",
+    "field_regexp_name": "الاسم (اختياري)",
+    "field_header_name_regexp": "اسم الترويسة للتعبير النمطي",
+    "field_regexp_name_header": "اسم التعبير النمطي للترويسة (اختياري)",
+    "regexp_help": "يجعل الاسم المجموعات متاحة بصيغة {re.name.1}، مثلًا في إعادة كتابة. يسمح Caddy بتعبير نمطي واحد لكل مطابق.",
+    "type_protocol": "البروتوكول",
+    "protocol_any": "أي",
+    "type_file": "ملفات",
+    "field_try_files": "الملفات المطلوب البحث عنها",
+    "field_try_policy": "طريقة الاختيار",
+    "try_policy_default": "أول ملف موجود",
+    "file_help": "يطابق عند وجود أحد الملفات. تعمل العناصر النائبة مثل {path}.",
+    "type_vars": "المتغيرات",
+    "vars_help": "واحد في كل سطر: عنصر نائب ثم القيم الممكنة له، مثل {host} example.com www.example.com."
   },
   "handle_path": {
     "label": "إزالة بادئة المسار المطابقة (handle_path)"
@@ -1115,6 +1203,25 @@
     "site_inherit_help": "يستخدم مزوّد DNS المضبوط في الإعدادات ← تحدي DNS، أو تحدي HTTP إن لم يُضبط أي مزوّد.",
     "site_override_help": "يستخدم هذا الموقع مزوّد DNS وبيانات اعتماد خاصة به. حفظ بيانات اعتماد جديدة يعيد تشغيل Caddy، لأنه لا يقرؤها إلا عند بدء التشغيل.",
     "site_wildcard_warning": "شهادات أحرف البدل تحتاج إلى تحدي DNS. اضبط مزوّد DNS لهذا الموقع، أو في الإعدادات ← تحدي DNS."
+  },
+  "encode": {
+    "heading": "الضغط",
+    "section_title": "إعدادات الضغط (اختياري)",
+    "help": "تُستخدم عندما يكون الضغط مفعّلًا في عام. بدون اختيارات يضغط Caddy بـ gzip وzstd.",
+    "algorithms": "الخوارزميات وترتيبها",
+    "algorithms_default": "gzip، zstd (الافتراضي)",
+    "algorithms_zstd_gzip": "zstd ثم gzip",
+    "algorithms_gzip": "gzip فقط",
+    "algorithms_zstd": "zstd فقط",
+    "minimum_length": "الحجم الأدنى",
+    "minimum_length_help": "تُرسل الاستجابات الأصغر من هذا العدد من البايتات كما هي. الافتراضي في Caddy هو 512.",
+    "invalid_number": "أدخل عددًا صحيحًا من البايتات.",
+    "match_status": "رموز الحالة هذه فقط",
+    "match_status_help": "رموز أو فئات مفصولة بمسافات مثل 2xx 404. الفراغ يعني كل الحالات.",
+    "invalid_status": "أدخل رموز حالة مثل 200 أو فئات مثل 2xx.",
+    "match_headers": "ترويسات الاستجابة هذه فقط",
+    "match_headers_help": "واحدة في كل سطر: اسم الترويسة ثم قيمتها. تعمل الأحرف البديلة مثل text/*.",
+    "invalid_header": "يحتاج كل سطر إلى اسم ترويسة وقيمة."
   },
   "dynamic_upstreams": {
     "heading": "الخوادم الخلفية الديناميكية",

@@ -177,7 +177,18 @@
     "field_hide": "File nascosti",
     "field_hide_help": "Nomi o pattern che non vengono mai serviti, separati da spazi.",
     "field_precompressed": "File precompressi",
-    "field_precompressed_help": "Servi file.zst, file.br o file.gz accanto all’originale quando il browser accetta quella codifica."
+    "field_precompressed_help": "Servi file.zst, file.br o file.gz accanto all’originale quando il browser accetta quella codifica.",
+    "field_browse_template": "Modello dell'elenco",
+    "field_browse_template_help": "Un file modello per l'elenco della directory. Usato solo quando l'elenco delle directory è attivo.",
+    "field_status": "Codice di stato",
+    "field_status_help": "Rispondi a ogni file con questo codice invece di 200, ad esempio 404 per una pagina di errore personalizzata.",
+    "field_disable_canonical_uris": "Lascia invariate le barre finali",
+    "field_disable_canonical_uris_help": "Non reindirizzare per aggiungere o togliere una barra finale su directory e file.",
+    "field_templates": "Elabora i file con i modelli",
+    "field_templates_help": "Attiva il motore di modelli di Caddy per i file serviti, che così possono usare include, .Req e le altre azioni di modello.",
+    "field_templates_mime": "Tipi MIME",
+    "field_templates_root": "Directory per gli include",
+    "field_templates_root_help": "Dove include e le altre azioni sui file cercano i file. Vuoto significa la radice del sito."
   },
   "edit_static": {
     "title": "Modifica server statico — :{{port}}",
@@ -206,7 +217,15 @@
     "env_field_value": "Valore",
     "env_add_button": "Aggiungi variabile",
     "field_try_files": "File da provare (try_files)",
-    "field_try_files_help": "Facoltativo. Candidati provati in ordine prima di PHP; un’app con front controller di solito richiede {path} {path}/ /index.php?{query}."
+    "field_try_files_help": "Facoltativo. Candidati provati in ordine prima di PHP; un’app con front controller di solito richiede {path} {path}/ /index.php?{query}.",
+    "field_dial_timeout": "Timeout di connessione",
+    "field_read_timeout": "Timeout di lettura",
+    "field_write_timeout": "Timeout di scrittura",
+    "no_timeout": "nessuno",
+    "field_capture_stderr": "Registra lo stderr del processo PHP",
+    "field_capture_stderr_help": "Scrive nel registro di Caddy ciò che PHP-FPM stampa su stderr.",
+    "field_resolve_root_symlink": "Risolvi i link simbolici nella radice",
+    "field_resolve_root_symlink_help": "Segue i link simbolici nella directory radice prima di costruire SCRIPT_FILENAME, come servono alle configurazioni opcache con link di release."
   },
   "add_respond": {
     "title": "Aggiungi risposta statica",
@@ -251,7 +270,11 @@
     "validation_port_range": "La porta deve essere compresa tra 1 e 65535",
     "validation_port_duplicate": "La porta {{port}} è già in uso",
     "validation_to_required": "La destinazione del reindirizzamento è obbligatoria",
-    "confirm_body": "Verrà creato un reindirizzamento su :{{port}} → {{to}} ({{code}}) e la configurazione di Caddy verrà ricaricata."
+    "confirm_body": "Verrà creato un reindirizzamento su :{{port}} → {{to}} ({{code}}) e la configurazione di Caddy verrà ricaricata.",
+    "code_html": "Pagina HTML",
+    "code_html_help": "Risponde con una pagina che reindirizza nel browser invece di un codice di stato. A differenza di un reindirizzamento con codice di stato, mantiene il #fragment dell'URL.",
+    "keep_path": "Mantieni percorso e query",
+    "keep_path_help": "Aggiunge {uri} alla destinazione, così /a?b=1 su questo sito va a /a?b=1 sulla destinazione."
   },
   "basic_auth": {
     "heading": "Autenticazione HTTP Basic",
@@ -260,7 +283,12 @@
     "field_password": "Password",
     "field_password_keep": "Lascia vuoto per mantenere quella esistente",
     "add_button": "Aggiungi account",
-    "remove_button": "Rimuovi account"
+    "remove_button": "Rimuovi account",
+    "realm": "Realm",
+    "algorithm": "Algoritmo di hash",
+    "algorithm_default": "bcrypt (predefinito)",
+    "algorithm_argon2id": "argon2id (più robusto)",
+    "algorithm_mismatch": "Gli account che mantengono la password hanno ancora un hash dell'altro algoritmo. Inserisci di nuovo le loro password."
   },
   "transport": {
     "heading": "Timeout dell'upstream",
@@ -325,7 +353,30 @@
     "field_find_placeholder": "^/api/(.*)",
     "field_replace_placeholder": "/$1",
     "field_replace_help": "Usa $1, $2 per i gruppi di cattura",
-    "type_aria": "Tipo di riscrittura"
+    "type_aria": "Tipo di riscrittura",
+    "type_strip_suffix": "Rimuovi suffisso",
+    "type_uri_replace": "Sostituisci testo",
+    "type_query": "Stringa di query",
+    "type_method": "Metodo",
+    "field_suffix": "Suffisso",
+    "field_suffix_placeholder": ".html",
+    "field_text_find": "Cerca (testo semplice)",
+    "field_limit": "Al massimo",
+    "field_limit_placeholder": "tutti",
+    "field_method": "Metodo",
+    "query_op": "Modifica",
+    "query_op_set": "Imposta",
+    "query_op_add": "Aggiungi",
+    "query_op_delete": "Elimina",
+    "query_op_rename": "Rinomina",
+    "query_op_replace": "Sostituisci",
+    "query_key": "Nome",
+    "query_value": "Valore",
+    "query_new_key": "Nuovo nome",
+    "query_search": "Cerca (regex)",
+    "query_remove": "Rimuovi modifica",
+    "query_add": "Aggiungi modifica",
+    "invalid": "Compila tutti i campi della riscrittura."
   },
   "probe": {
     "status_pending": "Verifica in corso…",
@@ -597,7 +648,16 @@
     "roll_keep_count": "File ruotati da conservare",
     "roll_keep_days": "Età max. dei file ruotati (giorni)",
     "roll_compress": "Comprimi i file ruotati (gzip)",
-    "roll_help": "Caddy ruota il file di log per impostazione predefinita. Lascia un campo vuoto per usare il valore predefinito di Caddy, mostrato in grigio."
+    "roll_help": "Caddy ruota il file di log per impostazione predefinita. Lascia un campo vuoto per usare il valore predefinito di Caddy, mostrato in grigio.",
+    "field_filters": "Filtri dei campi",
+    "field_filters_help": "Uno per riga: il percorso di un campo, poi delete, hash, replace <testo> o ip_mask <bit IPv4> [<bit IPv6>], ad esempio request>headers>Authorization delete.",
+    "field_filters_invalid": "Ogni riga richiede il percorso di un campo e delete, hash, replace <testo> o ip_mask <bit>.",
+    "include": "Includi logger",
+    "include_help": "Nomi dei logger che questo registro scrive, separati da spazi, ad esempio http.log.access. Vuoto significa tutti.",
+    "exclude": "Escludi logger",
+    "exclude_help": "Nomi dei logger che questo registro salta, separati da spazi, ad esempio http.log.access.log0.",
+    "skip_paths": "Percorsi esclusi dal registro",
+    "skip_paths_help": "Percorsi separati da spazi, con caratteri jolly consentiti, ad esempio /health* /ping. Le richieste a questi percorsi non vengono registrate."
   },
   "config_check": {
     "button": "Controlla configurazione",
@@ -855,7 +915,12 @@
     "field_copy_headers": "Copia header",
     "field_copy_headers_help": "Header di risposta, separati da spazi o virgole, da copiare dal servizio di autenticazione alla richiesta verso l'upstream (es. Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "L'URI di autenticazione è obbligatorio quando è impostato un URL del servizio di autenticazione"
+    "validation_uri_required": "L'URI di autenticazione è obbligatorio quando è impostato un URL del servizio di autenticazione",
+    "field_copy_headers_rename_help": "Scrivi Name>Other per copiare un'intestazione con un altro nome.",
+    "field_header_up": "Intestazioni della richiesta al servizio di autenticazione",
+    "field_header_up_help": "Una per riga: Name value imposta un'intestazione, +Name value ne aggiunge una, -Name ne rimuove una.",
+    "field_trusted_proxies": "Proxy attendibili",
+    "field_trusted_proxies_help": "Intervalli le cui intestazioni X-Forwarded-* restano nella richiesta al servizio di autenticazione, separati da spazi. private_ranges indica le reti private."
   },
   "tls_policy": {
     "heading": "Policy TLS",
@@ -903,7 +968,15 @@
     "custom_file_unreadable": "File non trovato o non leggibile dall'utente di Caddy",
     "custom_file_readable": "Il file è leggibile",
     "custom_file_valid_expiry": "Valido: scade il {{date}}",
-    "custom_cert_lifetime_note": "Sopra è caricato un certificato personalizzato: durata e finestra di rinnovo non si applicano, perché Caddy non emette nulla da sé."
+    "custom_cert_lifetime_note": "Sopra è caricato un certificato personalizzato: durata e finestra di rinnovo non si applicano, perché Caddy non emette nulla da sé.",
+    "acme_email": "Email ACME",
+    "acme_email_help": "L'email dell'account per i certificati di questo sito. Vale solo per l'HTTPS automatico; vuoto usa quella globale.",
+    "acme_global_placeholder": "Email globale",
+    "acme_ca": "URL della directory della CA ACME",
+    "acme_ca_help": "Da dove questo sito ottiene i certificati, ad esempio l'URL di staging di Let's Encrypt durante i test. Vuoto usa la CA globale.",
+    "key_type": "Tipo di chiave",
+    "acme_invalid_email": "Inserisci un indirizzo email come admin@example.com.",
+    "acme_invalid_ca": "Inserisci un URL http:// o https://."
   },
   "error_handler": {
     "heading": "Gestori di errori personalizzati",
@@ -969,7 +1042,22 @@
     "ip_kind_remote": "IP della connessione",
     "ip_kind_client_help": "L’IP del visitatore, presa dall’intestazione inoltrata quando la richiesta arriva tramite uno dei proxy fidati (Impostazioni). Senza proxy fidati coincide con l’IP della connessione.",
     "ip_kind_remote_help": "L’IP della connessione TCP. Dietro un proxy o una CDN è l’indirizzo del proxy, non del visitatore.",
-    "ip_range": "Indirizzo IP o intervallo"
+    "ip_range": "Indirizzo IP o intervallo",
+    "type_path_regexp": "Regex del percorso",
+    "type_header_regexp": "Regex dell'intestazione",
+    "field_regexp_name": "Nome (facoltativo)",
+    "field_header_name_regexp": "Nome dell'intestazione per la regex",
+    "field_regexp_name_header": "Nome della regex dell'intestazione (facoltativo)",
+    "regexp_help": "Un nome rende i gruppi disponibili come {re.name.1}, ad esempio in una riscrittura. Caddy consente una regex per matcher.",
+    "type_protocol": "Protocollo",
+    "protocol_any": "qualsiasi",
+    "type_file": "File",
+    "field_try_files": "File da cercare",
+    "field_try_policy": "Come scegliere",
+    "try_policy_default": "il primo esistente",
+    "file_help": "Corrisponde quando esiste uno dei file. I segnaposto come {path} funzionano.",
+    "type_vars": "Variabili",
+    "vars_help": "Una per riga: un segnaposto e i valori che può avere, ad esempio {host} example.com www.example.com."
   },
   "handle_path": {
     "label": "Rimuovi il prefisso di percorso corrispondente (handle_path)"
@@ -1115,6 +1203,25 @@
     "site_inherit_help": "Usa il provider DNS impostato in Impostazioni → Sfida DNS, oppure la sfida HTTP se non ce n'è uno.",
     "site_override_help": "Questo sito usa un proprio provider DNS e credenziali proprie. Salvare nuove credenziali riavvia Caddy, che le legge solo all'avvio.",
     "site_wildcard_warning": "I certificati wildcard richiedono la sfida DNS. Imposta un provider DNS per questo sito o in Impostazioni → Sfida DNS."
+  },
+  "encode": {
+    "heading": "Compressione",
+    "section_title": "Compressione (facoltativo)",
+    "help": "Vale quando la compressione è attiva in Generale. Senza scelte Caddy comprime con gzip e zstd.",
+    "algorithms": "Algoritmi e ordine",
+    "algorithms_default": "gzip, zstd (predefinito)",
+    "algorithms_zstd_gzip": "zstd, poi gzip",
+    "algorithms_gzip": "solo gzip",
+    "algorithms_zstd": "solo zstd",
+    "minimum_length": "Dimensione minima",
+    "minimum_length_help": "Le risposte con meno byte di questo valore vengono inviate così come sono. Il valore predefinito di Caddy è 512.",
+    "invalid_number": "Inserisci un numero intero di byte.",
+    "match_status": "Solo questi codici di stato",
+    "match_status_help": "Codici o classi separati da spazi, come 2xx 404. Vuoto significa tutti gli stati.",
+    "invalid_status": "Inserisci codici come 200 o classi come 2xx.",
+    "match_headers": "Solo queste intestazioni di risposta",
+    "match_headers_help": "Una per riga: il nome dell'intestazione e il suo valore. Funzionano i caratteri jolly come text/*.",
+    "invalid_header": "Ogni riga richiede un nome di intestazione e un valore."
   },
   "dynamic_upstreams": {
     "heading": "Upstream dinamici",

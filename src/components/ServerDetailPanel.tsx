@@ -78,7 +78,7 @@ function routeTypeLabel(proxy: ProxyEntry, t: (k: string) => string): { label: s
 
 function FlagChips({ proxy, t }: { proxy: ProxyEntry; t: (k: string) => string }) {
   const chips: { label: string; color: EntryTypeColor }[] = [];
-  if (proxy.redirect) chips.push({ label: String(proxy.redirect.code), color: "purple" });
+  if (proxy.redirect) chips.push({ label: proxy.redirect.html ? "html" : String(proxy.redirect.code), color: "purple" });
   if (proxy.staticResponse?.close) chips.push({ label: t("proxies.indicator_close"), color: "grey" });
   if (proxy.rewrite) chips.push({ label: t(`rewrite.type_${proxy.rewrite.type}`), color: "teal" });
   if (proxy.fileServer?.browse) chips.push({ label: t("proxies.indicator_browse"), color: "teal" });

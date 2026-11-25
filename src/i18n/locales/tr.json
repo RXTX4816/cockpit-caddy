@@ -177,7 +177,18 @@
     "field_hide": "Gizli dosyalar",
     "field_hide_help": "Hiçbir zaman sunulmayan adlar veya kalıplar, boşlukla ayrılmış.",
     "field_precompressed": "Önceden sıkıştırılmış dosyalar",
-    "field_precompressed_help": "Tarayıcı bu kodlamayı kabul ediyorsa özgün dosyanın yanındaki file.zst, file.br veya file.gz sunulur."
+    "field_precompressed_help": "Tarayıcı bu kodlamayı kabul ediyorsa özgün dosyanın yanındaki file.zst, file.br veya file.gz sunulur.",
+    "field_browse_template": "Liste şablonu",
+    "field_browse_template_help": "Dizin listesi için bir şablon dosyası. Yalnızca dizin listesi açıkken kullanılır.",
+    "field_status": "Durum kodu",
+    "field_status_help": "Her dosyaya 200 yerine bu durum koduyla yanıt verir, örneğin özel bir hata sayfası için 404.",
+    "field_disable_canonical_uris": "Sondaki eğik çizgileri olduğu gibi bırak",
+    "field_disable_canonical_uris_help": "Dizinlere ve dosyalara sondaki eğik çizgiyi eklemek veya kaldırmak için yönlendirme yapma.",
+    "field_templates": "Dosyaları şablonlardan geçir",
+    "field_templates_help": "Sunulan dosyalar için Caddy'nin şablon motorunu açar; böylece include, .Req ve diğer şablon eylemlerini kullanabilirler.",
+    "field_templates_mime": "MIME türleri",
+    "field_templates_root": "Include dizini",
+    "field_templates_root_help": "include ve diğer dosya eylemlerinin dosya aradığı yer. Boş, site kökü demektir."
   },
   "edit_static": {
     "title": "Statik sunucuyu düzenle — :{{port}}",
@@ -206,7 +217,15 @@
     "env_field_value": "Değer",
     "env_add_button": "Değişken ekle",
     "field_try_files": "Denenecek dosyalar (try_files)",
-    "field_try_files_help": "İsteğe bağlı. PHP'den önce sırayla denenen adaylar; ön denetleyicili bir uygulama genellikle {path} {path}/ /index.php?{query} gerektirir."
+    "field_try_files_help": "İsteğe bağlı. PHP'den önce sırayla denenen adaylar; ön denetleyicili bir uygulama genellikle {path} {path}/ /index.php?{query} gerektirir.",
+    "field_dial_timeout": "Bağlantı zaman aşımı",
+    "field_read_timeout": "Okuma zaman aşımı",
+    "field_write_timeout": "Yazma zaman aşımı",
+    "no_timeout": "yok",
+    "field_capture_stderr": "PHP işleminin stderr çıktısını kaydet",
+    "field_capture_stderr_help": "PHP-FPM'nin stderr'e yazdıklarını Caddy günlüğüne yazar.",
+    "field_resolve_root_symlink": "Kökteki sembolik bağlantıları çöz",
+    "field_resolve_root_symlink_help": "SCRIPT_FILENAME oluşturulmadan önce kök dizindeki sembolik bağlantıları izler; sürüm bağlantılı opcache kurulumları buna ihtiyaç duyar."
   },
   "add_respond": {
     "title": "Statik yanıt ekle",
@@ -251,7 +270,11 @@
     "validation_port_range": "Bağlantı noktası 1 ile 65535 arasında olmalıdır",
     "validation_port_duplicate": "{{port}} bağlantı noktası zaten kullanılıyor",
     "validation_to_required": "Yönlendirme hedefi zorunludur",
-    "confirm_body": ":{{port}} → {{to}} ({{code}}) yönlendirmesi oluşturulacak ve Caddy yapılandırması yeniden yüklenecek."
+    "confirm_body": ":{{port}} → {{to}} ({{code}}) yönlendirmesi oluşturulacak ve Caddy yapılandırması yeniden yüklenecek.",
+    "code_html": "HTML sayfası",
+    "code_html_help": "Durum kodu yerine tarayıcıda yönlendiren bir sayfayla yanıt verir. Durum koduyla yönlendirmenin aksine URL'nin #parçasını korur.",
+    "keep_path": "Yolu ve sorguyu koru",
+    "keep_path_help": "Hedefe {uri} ekler; böylece bu sitedeki /a?b=1, hedefteki /a?b=1 adresine gider."
   },
   "basic_auth": {
     "heading": "HTTP Basic Auth",
@@ -260,7 +283,12 @@
     "field_password": "Parola",
     "field_password_keep": "Mevcut parolayı korumak için boş bırakın",
     "add_button": "Hesap ekle",
-    "remove_button": "Hesabı kaldır"
+    "remove_button": "Hesabı kaldır",
+    "realm": "Realm",
+    "algorithm": "Karma algoritması",
+    "algorithm_default": "bcrypt (varsayılan)",
+    "algorithm_argon2id": "argon2id (daha güçlü)",
+    "algorithm_mismatch": "Parolasını koruyan hesapların hâlâ diğer algoritmayla üretilmiş bir karması var. Parolalarını yeniden girin."
   },
   "transport": {
     "heading": "Upstream zaman aşımları",
@@ -325,7 +353,30 @@
     "field_find_placeholder": "^/api/(.*)",
     "field_replace_placeholder": "/$1",
     "field_replace_help": "Yakalama grupları için $1, $2 kullanın",
-    "type_aria": "Yeniden yazma türü"
+    "type_aria": "Yeniden yazma türü",
+    "type_strip_suffix": "Sonek kaldır",
+    "type_uri_replace": "Metni değiştir",
+    "type_query": "Sorgu dizesi",
+    "type_method": "Yöntem",
+    "field_suffix": "Sonek",
+    "field_suffix_placeholder": ".html",
+    "field_text_find": "Ara (düz metin)",
+    "field_limit": "En fazla",
+    "field_limit_placeholder": "tümü",
+    "field_method": "Yöntem",
+    "query_op": "Değişiklik",
+    "query_op_set": "Ayarla",
+    "query_op_add": "Ekle",
+    "query_op_delete": "Sil",
+    "query_op_rename": "Yeniden adlandır",
+    "query_op_replace": "Değiştir",
+    "query_key": "Ad",
+    "query_value": "Değer",
+    "query_new_key": "Yeni ad",
+    "query_search": "Ara (regex)",
+    "query_remove": "Değişikliği kaldır",
+    "query_add": "Değişiklik ekle",
+    "invalid": "Yeniden yazmanın tüm alanlarını doldurun."
   },
   "probe": {
     "status_pending": "Denetleniyor…",
@@ -597,7 +648,16 @@
     "roll_keep_count": "Saklanacak döndürülmüş dosya sayısı",
     "roll_keep_days": "Döndürülmüş dosyaların en fazla yaşı (gün)",
     "roll_compress": "Döndürülmüş dosyaları sıkıştır (gzip)",
-    "roll_help": "Caddy günlük dosyasını varsayılan olarak döndürür. Gri gösterilen Caddy varsayılanını kullanmak için alanı boş bırakın."
+    "roll_help": "Caddy günlük dosyasını varsayılan olarak döndürür. Gri gösterilen Caddy varsayılanını kullanmak için alanı boş bırakın.",
+    "field_filters": "Alan filtreleri",
+    "field_filters_help": "Satır başına bir tane: bir alan yolu, sonra delete, hash, replace <metin> veya ip_mask <IPv4 bit> [<IPv6 bit>], örneğin request>headers>Authorization delete.",
+    "field_filters_invalid": "Her satırda bir alan yolu ve delete, hash, replace <metin> veya ip_mask <bit> olmalıdır.",
+    "include": "Kaydediciler dahil et",
+    "include_help": "Bu günlüğün yazdığı kaydedici adları, boşlukla ayrılmış, örneğin http.log.access. Boş, hepsi demektir.",
+    "exclude": "Kaydedicileri hariç tut",
+    "exclude_help": "Bu günlüğün atladığı kaydedici adları, boşlukla ayrılmış, örneğin http.log.access.log0.",
+    "skip_paths": "Günlüğe yazılmayacak yollar",
+    "skip_paths_help": "Boşlukla ayrılmış yollar, joker karakterlere izin verilir, örneğin /health* /ping. Bunlara yapılan istekler günlüğe yazılmaz."
   },
   "config_check": {
     "button": "Yapılandırmayı denetle",
@@ -855,7 +915,12 @@
     "field_copy_headers": "Başlıkları kopyala",
     "field_copy_headers_help": "Kimlik doğrulama hizmetinden upstream isteğine kopyalanacak, boşluk veya virgülle ayrılmış yanıt başlıkları (ör. Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "Kimlik doğrulama hizmeti URL'si ayarlandığında kimlik doğrulama URI'si zorunludur"
+    "validation_uri_required": "Kimlik doğrulama hizmeti URL'si ayarlandığında kimlik doğrulama URI'si zorunludur",
+    "field_copy_headers_rename_help": "Bir başlığı başka bir adla kopyalamak için Name>Other yazın.",
+    "field_header_up": "Kimlik doğrulama hizmetine giden istek başlıkları",
+    "field_header_up_help": "Satır başına bir tane: Name value başlık ayarlar, +Name value ekler, -Name kaldırır.",
+    "field_trusted_proxies": "Güvenilir vekil sunucular",
+    "field_trusted_proxies_help": "Kimlik doğrulama hizmetine giden istekte X-Forwarded-* başlıkları korunan aralıklar, boşlukla ayrılmış. private_ranges özel ağları ifade eder."
   },
   "tls_policy": {
     "heading": "TLS ilkesi",
@@ -903,7 +968,15 @@
     "custom_file_unreadable": "Dosya bulunamadı ya da Caddy kullanıcısı tarafından okunamıyor",
     "custom_file_readable": "Dosya okunabilir",
     "custom_file_valid_expiry": "Geçerli — {{date}} tarihinde sona eriyor",
-    "custom_cert_lifetime_note": "Yukarıda özel bir sertifika yüklü — Caddy kendisi bir şey vermediği için sertifika ömrü ve yenileme penceresi geçerli değildir."
+    "custom_cert_lifetime_note": "Yukarıda özel bir sertifika yüklü — Caddy kendisi bir şey vermediği için sertifika ömrü ve yenileme penceresi geçerli değildir.",
+    "acme_email": "ACME e-postası",
+    "acme_email_help": "Bu sitenin sertifikaları için hesap e-postası. Yalnızca otomatik HTTPS için geçerlidir; boş, genel olanı kullanır.",
+    "acme_global_placeholder": "Genel e-posta",
+    "acme_ca": "ACME CA dizin URL'si",
+    "acme_ca_help": "Bu sitenin sertifikalarını nereden aldığı, örneğin test sırasında Let's Encrypt'in staging URL'si. Boş, genel CA'yı kullanır.",
+    "key_type": "Anahtar türü",
+    "acme_invalid_email": "admin@example.com gibi bir e-posta adresi girin.",
+    "acme_invalid_ca": "http:// veya https:// ile başlayan bir URL girin."
   },
   "error_handler": {
     "heading": "Özel hata işleyicileri",
@@ -969,7 +1042,22 @@
     "ip_kind_remote": "Bağlantı IP'si",
     "ip_kind_client_help": "Ziyaretçinin IP'si; istek güvenilen proxy'lerden (Ayarlar) biri üzerinden geldiğinde yönlendirme başlığından alınır. Güvenilen proxy yoksa bağlantı IP'siyle aynıdır.",
     "ip_kind_remote_help": "TCP bağlantısının IP'si. Bir proxy veya CDN arkasında bu, ziyaretçinin değil proxy'nin adresidir.",
-    "ip_range": "IP adresi veya aralığı"
+    "ip_range": "IP adresi veya aralığı",
+    "type_path_regexp": "Yol regex'i",
+    "type_header_regexp": "Başlık regex'i",
+    "field_regexp_name": "Ad (isteğe bağlı)",
+    "field_header_name_regexp": "Regex için başlık adı",
+    "field_regexp_name_header": "Başlık regex'inin adı (isteğe bağlı)",
+    "regexp_help": "Bir ad, grupları örneğin bir yeniden yazmada {re.name.1} olarak kullanılabilir yapar. Caddy eşleştirici başına bir regex'e izin verir.",
+    "type_protocol": "Protokol",
+    "protocol_any": "herhangi",
+    "type_file": "Dosyalar",
+    "field_try_files": "Aranacak dosyalar",
+    "field_try_policy": "Seçim yolu",
+    "try_policy_default": "ilk var olan",
+    "file_help": "Dosyalardan biri varsa eşleşir. {path} gibi yer tutucular çalışır.",
+    "type_vars": "Değişkenler",
+    "vars_help": "Satır başına bir tane: bir yer tutucu ve alabileceği değerler, örneğin {host} example.com www.example.com."
   },
   "handle_path": {
     "label": "Eşleşen yol önekini kaldır (handle_path)"
@@ -1115,6 +1203,25 @@
     "site_inherit_help": "Ayarlar → DNS doğrulaması altındaki DNS sağlayıcısını, ayarlanmamışsa HTTP doğrulamasını kullanır.",
     "site_override_help": "Bu site kendi DNS sağlayıcısını ve kimlik bilgilerini kullanır. Yeni kimlik bilgilerini kaydetmek Caddy'yi yeniden başlatır, çünkü bunları yalnızca başlarken okur.",
     "site_wildcard_warning": "Joker karakterli sertifikalar DNS doğrulaması gerektirir. Bu site için ya da Ayarlar → DNS doğrulaması altında bir DNS sağlayıcısı ayarlayın."
+  },
+  "encode": {
+    "heading": "Sıkıştırma",
+    "section_title": "Sıkıştırma ayarları (isteğe bağlı)",
+    "help": "Genel sekmesinde sıkıştırma açıkken kullanılır. Seçim yapılmazsa Caddy gzip ve zstd ile sıkıştırır.",
+    "algorithms": "Algoritmalar ve sıra",
+    "algorithms_default": "gzip, zstd (varsayılan)",
+    "algorithms_zstd_gzip": "önce zstd, sonra gzip",
+    "algorithms_gzip": "yalnızca gzip",
+    "algorithms_zstd": "yalnızca zstd",
+    "minimum_length": "En küçük boyut",
+    "minimum_length_help": "Bu bayt sayısından küçük yanıtlar olduğu gibi gönderilir. Caddy'nin varsayılanı 512'dir.",
+    "invalid_number": "Bayt sayısını tam sayı olarak girin.",
+    "match_status": "Yalnızca bu durum kodları",
+    "match_status_help": "Boşlukla ayrılmış kodlar veya 2xx 404 gibi sınıflar. Boş, her durum anlamına gelir.",
+    "invalid_status": "200 gibi durum kodları veya 2xx gibi sınıflar girin.",
+    "match_headers": "Yalnızca bu yanıt başlıkları",
+    "match_headers_help": "Satır başına bir tane: başlık adı, sonra değeri. text/* gibi joker karakterler çalışır.",
+    "invalid_header": "Her satırda bir başlık adı ve bir değer olmalıdır."
   },
   "dynamic_upstreams": {
     "heading": "Dinamik upstream'ler",

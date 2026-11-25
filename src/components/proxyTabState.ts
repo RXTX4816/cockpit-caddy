@@ -1,7 +1,8 @@
 import { useCallback, useState } from "react";
 import type { ErrorHandlerConfig, ForwardAuthConfig, HeaderOperation, LbPolicy, ProxyEntry, RewriteConfig, RouteMatch } from "../api";
 import { accessLogConfigToValues, accessLogValuesToConfig, type AccessLogValues } from "./AccessLogSection";
-import { resolveBasicAuth, type AuthEntry } from "./BasicAuthSection";
+import { BASIC_AUTH_OPTIONS_EMPTY, basicAuthHashMismatch, basicAuthOptionsFromValues, basicAuthOptionsToValues, resolveBasicAuth, type AuthEntry, type BasicAuthOptionValues } from "./BasicAuthSection";
+import { ENCODE_EMPTY, encodeFromValues, encodeToValues, validateEncode, type EncodeValues } from "./EncodeSection";
 import { dynamicUpstreamsToConfig, dynamicUpstreamsToValues, type DynamicSourceValues } from "./DynamicUpstreamsSection";
 import { lbRetryConfigToValues, lbRetryValuesToConfig, type LbRetryValues } from "./LbRetrySection";
 import { serverExtrasFromValues, serverExtrasToValues, type ServerTimeoutValues } from "./ServerTimeoutsSection";
@@ -17,6 +18,8 @@ import { proxyTabFlags, type TabFlags } from "./proxyTabFlags";
  */
 export interface ProxyTabState {
   basicAuth: AuthEntry[];
+  basicAuthOptions: BasicAuthOptionValues;
+  encode: EncodeValues;
   forwardAuth: ForwardAuthConfig | undefined;
   tlsValues: TlsValues;
   matchers: RouteMatch | undefined;
@@ -45,6 +48,8 @@ export interface ProxyTabState {
 export function emptyProxyTabState(): ProxyTabState {
   return {
     basicAuth: [],
+    basicAuthOptions: BASIC_AUTH_OPTIONS_EMPTY,
+    encode: ENCODE_EMPTY,
     forwardAuth: undefined,
     tlsValues: tlsConfigToValues(undefined, undefined),
     matchers: undefined,
@@ -73,6 +78,8 @@ export function emptyProxyTabState(): ProxyTabState {
 export function proxyTabStateFromEntry(p: ProxyEntry): ProxyTabState {
   return {
     basicAuth: (p.basicAuth ?? []).map(a => ({ username: a.username, password: "", existingHash: a.passwordHash })),
+    basicAuthOptions: basicAuthOptionsToValues(p.basicAuthOptions),
+    encode: encodeToValues(p.encodeOptions),
     forwardAuth: p.forwardAuth,
     tlsValues: tlsConfigToValues(p.tlsAdvanced, p.mtls, p.customTls),
     matchers: p.matchers,
@@ -113,7 +120,7 @@ export function proxyTabStateFromEntry(p: ProxyEntry): ProxyTabState {
 }
 
 export type ProxyTabEntryFields = Pick<ProxyEntry,
-  | "basicAuth" | "forwardAuth" | "tlsAdvanced" | "mtls" | "customTls"
+  | "basicAuth" | "basicAuthOptions" | "encodeOptions" | "forwardAuth" | "tlsAdvanced" | "mtls" | "customTls"
   | "matchers" | "handlePath" | "rewrite" | "requestHeaders" | "responseHeaders" | "upstreamResponseHeaders" | "isNamedRoute" | "namedRouteName"
   | "extraUpstreams" | "dynamicUpstreams" | "lbPolicy" | "lbPolicyArgs" | "lbRetry" | "dialTimeout" | "responseHeaderTimeout" | "flushInterval" | "streamTimeout" | "streamCloseDelay"
   | "tlsServerName" | "keepalive" | "keepaliveIdleConns" | "keepaliveIdleConnsPerHost" | "httpVersions" | "readTimeout" | "writeTimeout"
@@ -130,7 +137,9 @@ function intOrUndefined(v: string): number | undefined {
 export async function proxyTabStateToEntry(s: ProxyTabState): Promise<ProxyTabEntryFields> {
   const st = s.serverTimeouts;
   return {
-    basicAuth: s.basicAuth.length ? await resolveBasicAuth(s.basicAuth) : undefined,
+    basicAuth: s.basicAuth.length ? await resolveBasicAuth(s.basicAuth, s.basicAuthOptions.algorithm) : undefined,
+    basicAuthOptions: s.basicAuth.length ? basicAuthOptionsFromValues(s.basicAuthOptions) : undefined,
+    encodeOptions: encodeFromValues(s.encode),
     forwardAuth: s.forwardAuth ?? undefined,
     tlsAdvanced: tlsValuesToAdvanced(s.tlsValues),
     mtls: tlsValuesToMtls(s.tlsValues),
@@ -202,7 +211,7 @@ function visibleState(s: ProxyTabState, layout: ProxyTabsLayout): ProxyTabState 
  */
 export function proxyTabStateFlags(s: ProxyTabState, generalHasError: boolean, layout: ProxyTabsLayout = "proxy"): TabFlags {
   const v = visibleState(s, layout);
-  return proxyTabFlags({ ...v, forwardAuthError: validateForwardAuth(v.forwardAuth) }, generalHasError);
+  return proxyTabFlags({ ...v, forwardAuthError: validateForwardAuth(v.forwardAuth), basicAuthError: basicAuthHashMismatch(v.basicAuth, v.basicAuthOptions.algorithm), encodeError: validateEncode(v.encode) }, generalHasError);
 }
 
 export type ProxyTabStateUpdate = (patch: Partial<ProxyTabState>) => void;

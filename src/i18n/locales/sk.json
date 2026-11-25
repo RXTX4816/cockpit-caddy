@@ -177,7 +177,18 @@
     "field_hide": "Skryté súbory",
     "field_hide_help": "Názvy alebo vzory, ktoré sa nikdy nevydajú, oddelené medzerami.",
     "field_precompressed": "Predkomprimované súbory",
-    "field_precompressed_help": "Vydať file.zst, file.br alebo file.gz vedľa originálu, ak prehliadač toto kódovanie prijíma."
+    "field_precompressed_help": "Vydať file.zst, file.br alebo file.gz vedľa originálu, ak prehliadač toto kódovanie prijíma.",
+    "field_browse_template": "Šablóna výpisu",
+    "field_browse_template_help": "Súbor šablóny pre výpis adresára. Použije sa len pri zapnutom výpise adresárov.",
+    "field_status": "Stavový kód",
+    "field_status_help": "Odpovedať na každý súbor týmto stavovým kódom namiesto 200, napríklad 404 pre vlastnú chybovú stránku.",
+    "field_disable_canonical_uris": "Ponechať koncové lomky",
+    "field_disable_canonical_uris_help": "Nepresmerovávať kvôli pridaniu alebo odobratiu koncovej lomky pri adresároch a súboroch.",
+    "field_templates": "Spracovať súbory šablónami",
+    "field_templates_help": "Zapne šablónovací systém Caddy pre obsluhované súbory, takže môžu používať include, .Req a ďalšie akcie šablón.",
+    "field_templates_mime": "Typy MIME",
+    "field_templates_root": "Adresár pre include",
+    "field_templates_root_help": "Kde include a ďalšie súborové akcie hľadajú súbory. Prázdne znamená koreň webu."
   },
   "edit_static": {
     "title": "Upraviť statický server — :{{port}}",
@@ -206,7 +217,15 @@
     "env_field_value": "Hodnota",
     "env_add_button": "Pridať premennú",
     "field_try_files": "Skúšané súbory (try_files)",
-    "field_try_files_help": "Voliteľné. Kandidáti skúšaní v poradí pred PHP; aplikácia s front controllerom zvyčajne potrebuje {path} {path}/ /index.php?{query}."
+    "field_try_files_help": "Voliteľné. Kandidáti skúšaní v poradí pred PHP; aplikácia s front controllerom zvyčajne potrebuje {path} {path}/ /index.php?{query}.",
+    "field_dial_timeout": "Časový limit pripojenia",
+    "field_read_timeout": "Časový limit čítania",
+    "field_write_timeout": "Časový limit zápisu",
+    "no_timeout": "žiadny",
+    "field_capture_stderr": "Zapisovať stderr procesu PHP",
+    "field_capture_stderr_help": "Zapisuje do logu Caddy to, čo PHP-FPM vypíše na stderr.",
+    "field_resolve_root_symlink": "Rozbaliť symbolické odkazy v koreni",
+    "field_resolve_root_symlink_help": "Pred zostavením SCRIPT_FILENAME nasleduje symbolické odkazy v koreňovom adresári, čo potrebujú zostavy s opcache a symbolickými odkazmi na vydania."
   },
   "add_respond": {
     "title": "Pridať statickú odpoveď",
@@ -251,7 +270,11 @@
     "validation_port_range": "Port musí byť v rozsahu 1–65535",
     "validation_port_duplicate": "Port {{port}} sa už používa",
     "validation_to_required": "Cieľ presmerovania je povinný",
-    "confirm_body": "Vytvorí sa presmerovanie :{{port}} → {{to}} ({{code}}) a konfigurácia Caddy sa znova načíta."
+    "confirm_body": "Vytvorí sa presmerovanie :{{port}} → {{to}} ({{code}}) a konfigurácia Caddy sa znova načíta.",
+    "code_html": "Stránka HTML",
+    "code_html_help": "Odpovie stránkou, ktorá presmeruje v prehliadači, namiesto stavového kódu. Na rozdiel od presmerovania stavovým kódom zachová #fragment adresy.",
+    "keep_path": "Zachovať cestu a dopyt",
+    "keep_path_help": "Pripojí {uri} k cieľu, takže /a?b=1 na tomto webe vedie na /a?b=1 na cieli."
   },
   "basic_auth": {
     "heading": "HTTP Basic Auth",
@@ -260,7 +283,12 @@
     "field_password": "Heslo",
     "field_password_keep": "Ponechajte prázdne na zachovanie súčasného",
     "add_button": "Pridať účet",
-    "remove_button": "Odstrániť účet"
+    "remove_button": "Odstrániť účet",
+    "realm": "Realm",
+    "algorithm": "Hashovací algoritmus",
+    "algorithm_default": "bcrypt (predvolený)",
+    "algorithm_argon2id": "argon2id (silnejší)",
+    "algorithm_mismatch": "Účty, ktoré si ponechávajú heslo, majú hash vytvorený druhým algoritmom. Zadajte ich heslá znova."
   },
   "transport": {
     "heading": "Časové limity upstreamu",
@@ -325,7 +353,30 @@
     "field_find_placeholder": "^/api/(.*)",
     "field_replace_placeholder": "/$1",
     "field_replace_help": "Pre zachytené skupiny použite $1, $2",
-    "type_aria": "Typ prepisu"
+    "type_aria": "Typ prepisu",
+    "type_strip_suffix": "Odstrániť príponu",
+    "type_uri_replace": "Nahradiť text",
+    "type_query": "Reťazec dopytu",
+    "type_method": "Metóda",
+    "field_suffix": "Prípona",
+    "field_suffix_placeholder": ".html",
+    "field_text_find": "Hľadať (obyčajný text)",
+    "field_limit": "Najviac",
+    "field_limit_placeholder": "všetko",
+    "field_method": "Metóda",
+    "query_op": "Zmena",
+    "query_op_set": "Nastaviť",
+    "query_op_add": "Pridať",
+    "query_op_delete": "Odstrániť",
+    "query_op_rename": "Premenovať",
+    "query_op_replace": "Nahradiť",
+    "query_key": "Názov",
+    "query_value": "Hodnota",
+    "query_new_key": "Nový názov",
+    "query_search": "Hľadať (regex)",
+    "query_remove": "Odstrániť zmenu",
+    "query_add": "Pridať zmenu",
+    "invalid": "Vyplňte všetky polia prepisu."
   },
   "probe": {
     "status_pending": "Kontroluje sa…",
@@ -597,7 +648,16 @@
     "roll_keep_count": "Počet ponechaných rotovaných súborov",
     "roll_keep_days": "Max. vek rotovaných súborov (dni)",
     "roll_compress": "Komprimovať rotované súbory (gzip)",
-    "roll_help": "Caddy predvolene rotuje súbor protokolu. Nechajte pole prázdne pre predvolenú hodnotu Caddy, zobrazenú sivou."
+    "roll_help": "Caddy predvolene rotuje súbor protokolu. Nechajte pole prázdne pre predvolenú hodnotu Caddy, zobrazenú sivou.",
+    "field_filters": "Filtre polí",
+    "field_filters_help": "Jeden na riadok: cesta poľa, potom delete, hash, replace <text> alebo ip_mask <bity IPv4> [<bity IPv6>], napríklad request>headers>Authorization delete.",
+    "field_filters_invalid": "Každý riadok potrebuje cestu poľa a jedno z delete, hash, replace <text> alebo ip_mask <bity>.",
+    "include": "Zahrnúť loggery",
+    "include_help": "Názvy loggerov, ktoré tento log zapisuje, oddelené medzerami, napríklad http.log.access. Prázdne znamená všetky.",
+    "exclude": "Vynechať loggery",
+    "exclude_help": "Názvy loggerov, ktoré tento log preskakuje, oddelené medzerami, napríklad http.log.access.log0.",
+    "skip_paths": "Cesty vynechané z logu",
+    "skip_paths_help": "Cesty oddelené medzerami, zástupné znaky sú povolené, napríklad /health* /ping. Požiadavky na ne sa nezapisujú."
   },
   "config_check": {
     "button": "Skontrolovať konfiguráciu",
@@ -855,7 +915,12 @@
     "field_copy_headers": "Kopírovať hlavičky",
     "field_copy_headers_help": "Hlavičky odpovede oddelené medzerami alebo čiarkami, ktoré sa skopírujú z overovacej služby do požiadavky na upstream (napr. Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "Ak je nastavená URL overovacej služby, URI overenia je povinné"
+    "validation_uri_required": "Ak je nastavená URL overovacej služby, URI overenia je povinné",
+    "field_copy_headers_rename_help": "Napíšte Name>Other na skopírovanie hlavičky pod iným názvom.",
+    "field_header_up": "Hlavičky požiadavky na autentifikačnú službu",
+    "field_header_up_help": "Jedna na riadok: Name value hlavičku nastaví, +Name value pridá, -Name odstráni.",
+    "field_trusted_proxies": "Dôveryhodné proxy",
+    "field_trusted_proxies_help": "Rozsahy, ktorých hlavičky X-Forwarded-* zostanú v požiadavke na autentifikačnú službu, oddelené medzerami. private_ranges znamená súkromné siete."
   },
   "tls_policy": {
     "heading": "Politika TLS",
@@ -903,7 +968,15 @@
     "custom_file_unreadable": "Súbor sa nenašiel alebo ho používateľ Caddy nemôže čítať",
     "custom_file_readable": "Súbor je čitateľný",
     "custom_file_valid_expiry": "Platný — vyprší {{date}}",
-    "custom_cert_lifetime_note": "Vyššie je načítaný vlastný certifikát — platnosť a okno obnovenia sa neuplatnia, pretože Caddy sám nič nevydáva."
+    "custom_cert_lifetime_note": "Vyššie je načítaný vlastný certifikát — platnosť a okno obnovenia sa neuplatnia, pretože Caddy sám nič nevydáva.",
+    "acme_email": "E-mail pre ACME",
+    "acme_email_help": "E-mail účtu pre certifikáty tohto webu. Platí len pre automatické HTTPS; prázdne použije globálny.",
+    "acme_global_placeholder": "Globálny e-mail",
+    "acme_ca": "URL adresára ACME CA",
+    "acme_ca_help": "Odkiaľ tento web získava certifikáty, napríklad testovacia URL Let's Encrypt pri skúšaní. Prázdne použije globálnu CA.",
+    "key_type": "Typ kľúča",
+    "acme_invalid_email": "Zadajte e-mailovú adresu, napríklad admin@example.com.",
+    "acme_invalid_ca": "Zadajte URL začínajúcu http:// alebo https://."
   },
   "error_handler": {
     "heading": "Vlastné spracovanie chýb",
@@ -969,7 +1042,22 @@
     "ip_kind_remote": "IP spojenia",
     "ip_kind_client_help": "IP návštevníka, prevzatá z preposielacej hlavičky, keď požiadavka príde cez niektorú z dôveryhodných proxy (Nastavenia). Bez dôveryhodných proxy je rovnaká ako IP spojenia.",
     "ip_kind_remote_help": "IP spojenia TCP. Za proxy alebo CDN je to adresa proxy, nie návštevníka.",
-    "ip_range": "IP adresa alebo rozsah"
+    "ip_range": "IP adresa alebo rozsah",
+    "type_path_regexp": "Regex cesty",
+    "type_header_regexp": "Regex hlavičky",
+    "field_regexp_name": "Názov (voliteľný)",
+    "field_header_name_regexp": "Názov hlavičky pre regex",
+    "field_regexp_name_header": "Názov regexu hlavičky (voliteľný)",
+    "regexp_help": "Názov sprístupní skupiny ako {re.name.1}, napríklad v prepise. Caddy povoľuje jeden regex na matcher.",
+    "type_protocol": "Protokol",
+    "protocol_any": "akýkoľvek",
+    "type_file": "Súbory",
+    "field_try_files": "Hľadané súbory",
+    "field_try_policy": "Ako vybrať",
+    "try_policy_default": "prvý existujúci",
+    "file_help": "Zhoduje sa, keď existuje niektorý zo súborov. Zástupné symboly ako {path} fungujú.",
+    "type_vars": "Premenné",
+    "vars_help": "Jedna na riadok: zástupný symbol a hodnoty, ktoré môže mať, napríklad {host} example.com www.example.com."
   },
   "handle_path": {
     "label": "Odstrániť zodpovedajúci prefix cesty (handle_path)"
@@ -1115,6 +1203,25 @@
     "site_inherit_help": "Použije poskytovateľa DNS nastaveného v Nastavenia → Výzva DNS, alebo výzvu HTTP, ak nie je nastavený žiadny.",
     "site_override_help": "Táto stránka používa vlastného poskytovateľa DNS a prihlasovacie údaje. Uloženie nových údajov reštartuje Caddy, pretože ich načíta len pri štarte.",
     "site_wildcard_warning": "Certifikáty so zástupným znakom vyžadujú výzvu DNS. Nastavte poskytovateľa DNS pre túto stránku alebo v Nastavenia → Výzva DNS."
+  },
+  "encode": {
+    "heading": "Kompresia",
+    "section_title": "Nastavenia kompresie (voliteľné)",
+    "help": "Platí, keď je vo Všeobecnom zapnutá kompresia. Bez volieb Caddy komprimuje gzip a zstd.",
+    "algorithms": "Algoritmy a poradie",
+    "algorithms_default": "gzip, zstd (predvolené)",
+    "algorithms_zstd_gzip": "zstd, potom gzip",
+    "algorithms_gzip": "iba gzip",
+    "algorithms_zstd": "iba zstd",
+    "minimum_length": "Minimálna veľkosť",
+    "minimum_length_help": "Odpovede menšie než tento počet bajtov sa odošlú bez zmeny. Predvolená hodnota Caddy je 512.",
+    "invalid_number": "Zadajte celé číslo bajtov.",
+    "match_status": "Len tieto stavové kódy",
+    "match_status_help": "Kódy alebo triedy oddelené medzerami, napr. 2xx 404. Prázdne znamená všetky stavy.",
+    "invalid_status": "Zadajte stavové kódy ako 200 alebo triedy ako 2xx.",
+    "match_headers": "Len tieto hlavičky odpovede",
+    "match_headers_help": "Jedna na riadok: názov hlavičky a jej hodnota. Fungujú zástupné znaky ako text/*.",
+    "invalid_header": "Každý riadok potrebuje názov hlavičky a hodnotu."
   },
   "dynamic_upstreams": {
     "heading": "Dynamické upstreamy",

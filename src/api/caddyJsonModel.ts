@@ -92,6 +92,19 @@ export function parseMatcherFieldsJson(match: Record<string, unknown>): import("
     const ci = (match.client_ip as { ranges?: string[] }).ranges;
     if (ci?.length) m.client_ip = { ranges: ci };
   }
+  // The name Caddy's adapter gives a regexp (`m8080`, `r0`, `nr_x`) is the matcher's own; only a chosen one is kept (#331).
+  const chosenName = (name: string | undefined) => name && !/^(m\d+|r\d+|nr_.+)$/.test(name) ? name : undefined;
+  const pr = match.path_regexp as { pattern?: string; name?: string } | undefined;
+  if (pr?.pattern) m.path_regexp = { pattern: pr.pattern, ...(chosenName(pr.name) ? { name: chosenName(pr.name) } : {}) };
+  const hr = match.header_regexp as Record<string, { pattern?: string; name?: string }> | undefined;
+  const hrEntry = hr ? Object.entries(hr).find(([, v]) => v?.pattern) : undefined;
+  if (hrEntry) m.header_regexp = { header: hrEntry[0], pattern: hrEntry[1].pattern!, ...(chosenName(hrEntry[1].name) ? { name: chosenName(hrEntry[1].name) } : {}) };
+  if (typeof match.protocol === "string" && match.protocol) m.protocol = match.protocol;
+  const file = match.file as { try_files?: string[]; try_policy?: string } | undefined;
+  if (file?.try_files?.length) m.file = { try_files: file.try_files.map(collapsePlaceholderShorthands), ...(file.try_policy ? { try_policy: file.try_policy } : {}) };
+  if (match.vars && typeof match.vars === "object" && Object.keys(match.vars).length) {
+    m.vars = Object.fromEntries(Object.entries(match.vars as Record<string, string[]>).map(([k, v]) => [collapsePlaceholderShorthands(k), v]));
+  }
   return m;
 }
 
@@ -115,7 +128,8 @@ export function parseMatcherJson(match: Record<string, unknown> | undefined): im
 
 /** True when the matcher is a host list and nothing else (a hostname-only site block). */
 export function isHostOnlyMatcher(m: import("./types").RouteMatch | undefined): m is import("./types").RouteMatch & { host: string[] } {
-  return !!m?.host?.length && !m.path && !m.method && !m.header && !m.query && !m.remote_ip && !m.client_ip && !m.not && !m.expression;
+  return !!m?.host?.length && !m.path && !m.method && !m.header && !m.query && !m.remote_ip && !m.client_ip && !m.not && !m.expression
+    && !m.path_regexp && !m.header_regexp && !m.protocol && !m.file && !m.vars;
 }
 
 
@@ -160,6 +174,21 @@ export function forwardAuthDial(url: string): { dial: string; tls: boolean } {
 export const RP_HEADER_PLACEHOLDER = /^\{http\.reverse_proxy\.header\.(.+)\}$/;
 
 
+/** What `private_ranges` stands for in forward_auth's `trusted_proxies` (Caddy 2.11). */
+export const PRIVATE_RANGES = ["192.168.0.0/16", "172.16.0.0/12", "10.0.0.0/8", "127.0.0.1/8", "fd00::/8", "::1"];
+
+const FORWARD_AUTH_DEFAULT_HEADERS: Record<string, string> = {
+  "X-Forwarded-Method": "{http.request.method}",
+  "X-Forwarded-Uri": "{http.request.uri}",
+};
+
+/** `Name` copies a header as it is, `Name>Other` copies it under another name (#336). */
+export function splitCopyHeader(entry: string): { from: string; to: string } {
+  const i = entry.indexOf(">");
+  return i > 0 && i < entry.length - 1 ? { from: entry.slice(0, i), to: entry.slice(i + 1) } : { from: entry, to: entry };
+}
+
+
 /**
  * Builds the same JSON as Caddy's own forward_auth Caddyfile adapter (#248): on a 2xx from
  * the auth service, each copied header is first deleted from the client's request and then
@@ -170,26 +199,30 @@ export function buildForwardAuthHandler(fa: import("./types").ForwardAuthConfig)
   if (!fa.upstreamUrl.trim()) return null;
   const { dial, tls } = forwardAuthDial(fa.upstreamUrl);
   const responseRoutes: Array<Record<string, unknown>> = [{ handle: [{ handler: "vars" }] }];
-  for (const name of [...fa.copyHeaders].sort()) {
-    const placeholder = `{http.reverse_proxy.header.${name}}`;
-    responseRoutes.push({ handle: [{ handler: "headers", request: { delete: [name] } }] });
+  for (const entry of [...fa.copyHeaders].sort()) {
+    const { from, to } = splitCopyHeader(entry);
+    const placeholder = `{http.reverse_proxy.header.${from}}`;
+    responseRoutes.push({ handle: [{ handler: "headers", request: { delete: [to] } }] });
     responseRoutes.push({
-      handle: [{ handler: "headers", request: { set: { [name]: [placeholder] } } }],
+      handle: [{ handler: "headers", request: { set: { [to]: [placeholder] } } }],
       match: [{ not: [{ vars: { [placeholder]: [""] } }] }],
     });
   }
+  const userHeaders = (buildReverseProxyHeadersJson(fa.headerUp, undefined)?.request ?? {}) as Record<string, unknown>;
+  const request: Record<string, unknown> = {
+    ...userHeaders,
+    set: {
+      ...Object.fromEntries(Object.entries(FORWARD_AUTH_DEFAULT_HEADERS).map(([k, v]) => [k, [v]])),
+      ...(userHeaders.set as Record<string, string[]> | undefined),
+    },
+  };
+  const trusted = fa.trustedProxies?.flatMap(r => r === "private_ranges" ? PRIVATE_RANGES : [r]);
   const rp: Record<string, unknown> = {
     handle_response: [{ match: { status_code: [2] }, routes: responseRoutes }],
     handler: "reverse_proxy",
-    headers: {
-      request: {
-        set: {
-          "X-Forwarded-Method": ["{http.request.method}"],
-          "X-Forwarded-Uri": ["{http.request.uri}"],
-        },
-      },
-    },
+    headers: { request },
     rewrite: { method: "GET", uri: fa.uri || "/" },
+    ...(trusted?.length ? { trusted_proxies: trusted } : {}),
     ...(tls ? { transport: { protocol: "http", tls: {} } } : {}),
     upstreams: [{ dial }],
   };
@@ -235,9 +268,24 @@ export function extractForwardAuthFromProxy(rp: CaddyReverseProxyHandler): impor
   const copyHandle = handles.find(h => h.handler === "copy_response_headers") as { include?: string[] } | undefined;
   const fromSets = handles.flatMap(h => {
     const set = (h.request as { set?: Record<string, string[]> } | undefined)?.set ?? {};
-    return Object.entries(set).filter(([, v]) => RP_HEADER_PLACEHOLDER.test(v?.[0] ?? "")).map(([k]) => k);
+    return Object.entries(set).flatMap(([to, v]) => {
+      const from = RP_HEADER_PLACEHOLDER.exec(v?.[0] ?? "")?.[1];
+      return from ? [from === to ? to : `${from}>${to}`] : [];
+    });
   });
-  return { upstreamUrl, uri: uri?.uri, copyHeaders: copyHandle?.include ?? fromSets };
+  // The auth request's own headers: the two Caddy always sets are not the user's (#336).
+  const ownHeaders = parseRequestHeadersJson(raw.headers as Record<string, unknown> | undefined)
+    .filter(h => !(h.op === "set" && h.name in FORWARD_AUTH_DEFAULT_HEADERS && jsonPlaceholderToCaddy(FORWARD_AUTH_DEFAULT_HEADERS[h.name]) === h.value));
+  const trustedRaw = raw.trusted_proxies as string[] | undefined;
+  const hasPrivate = !!trustedRaw && PRIVATE_RANGES.every(r => trustedRaw.includes(r));
+  const trusted = trustedRaw?.length
+    ? hasPrivate ? ["private_ranges", ...trustedRaw.filter(r => !PRIVATE_RANGES.includes(r))] : trustedRaw
+    : undefined;
+  return {
+    upstreamUrl, uri: uri?.uri, copyHeaders: copyHandle?.include ?? fromSets,
+    ...(ownHeaders.length ? { headerUp: ownHeaders } : {}),
+    ...(trusted ? { trustedProxies: trusted } : {}),
+  };
 }
 
 
@@ -260,8 +308,25 @@ export function detectForwardAuth(handles: AnyHandler[]): import("./types").Forw
 }
 
 
-export function buildEncodeHandler(): CaddyHandler {
-  return { handler: "encode", encodings: { gzip: {}, zstd: {} } };
+export function buildEncodeHandler(options?: import("./types").EncodeOptions): CaddyHandler {
+  const algorithms = options?.algorithms?.length ? options.algorithms : undefined;
+  const handler: Record<string, unknown> = {
+    handler: "encode",
+    encodings: Object.fromEntries((algorithms ?? ["gzip", "zstd"]).map(a => [a, {}])),
+  };
+  if (algorithms) handler.prefer = algorithms;
+  if (options?.minimumLength != null) handler.minimum_length = options.minimumLength;
+  const match: Record<string, unknown> = {};
+  // A status class (2xx) is stored as its first digit, as Caddy's adapter does.
+  const codes = (options?.matchStatus ?? []).map(c => /xx$/i.test(c) ? parseInt(c[0], 10) : parseInt(c, 10));
+  if (codes.length) match.status_code = codes;
+  if (options?.matchHeaders?.length) {
+    const headers: Record<string, string[]> = {};
+    for (const h of options.matchHeaders) (headers[h.name] ??= []).push(h.value);
+    match.headers = headers;
+  }
+  if (Object.keys(match).length) handler.match = match;
+  return handler as unknown as CaddyHandler;
 }
 
 
@@ -272,15 +337,87 @@ export function buildRequestBodyHandler(maxSize: number): CaddyHandler {
 }
 
 
-export function buildBasicAuthHandler(accounts: { username: string; passwordHash: string }[]): CaddyHandler {
+/** The `encode` options that differ from plain `encode gzip zstd` (#335). */
+export function parseEncodeOptionsJson(h: AnyHandler): import("./types").EncodeOptions | undefined {
+  if (h.handler !== "encode") return undefined;
+  const e = h as { prefer?: string[]; encodings?: Record<string, unknown>; minimum_length?: number; match?: { status_code?: number[]; headers?: Record<string, string[]> } };
+  const order = (e.prefer?.length ? e.prefer : Object.keys(e.encodings ?? {})).filter((a): a is "gzip" | "zstd" => a === "gzip" || a === "zstd");
+  // Without a `prefer` Caddy lists no order; that and gzip + zstd both is what a plain `encode gzip zstd` is.
+  const isDefault = order.length === 2 && order[0] === "gzip" && order[1] === "zstd";
+  const o: import("./types").EncodeOptions = {
+    algorithms: order.length && !isDefault ? [...new Set(order)] : undefined,
+    minimumLength: typeof e.minimum_length === "number" && e.minimum_length > 0 ? e.minimum_length : undefined,
+    matchStatus: e.match?.status_code?.length ? e.match.status_code.map(c => c < 10 ? `${c}xx` : String(c)) : undefined,
+    matchHeaders: e.match?.headers ? Object.entries(e.match.headers).flatMap(([name, values]) => values.map(value => ({ name, value }))) : undefined,
+  };
+  for (const k of Object.keys(o) as Array<keyof typeof o>) if (o[k] == null) delete o[k];
+  return Object.keys(o).length ? o : undefined;
+}
+
+
+const GO_HTML_ESCAPES: Record<string, string> = { "&": "&amp;", "'": "&#39;", "<": "&lt;", ">": "&gt;", '"': "&#34;" };
+
+/** Go's `html.EscapeString`, which Caddy applies to an html redirect's target. */
+function goHtmlEscape(s: string): string {
+  return s.replace(/[&'<>"]/g, c => GO_HTML_ESCAPES[c]);
+}
+
+function goHtmlUnescape(s: string): string {
+  return s.replace(/&(amp|#39|lt|gt|#34);/g, (_m, e: string) => ({ amp: "&", "#39": "'", lt: "<", gt: ">", "#34": '"' })[e] ?? _m);
+}
+
+
+/**
+ * What Caddy's `redir <to> html` becomes: a page with a script and a meta refresh, so the
+ * browser keeps the URL fragment. The body is Caddy's own, byte for byte, to match what a
+ * reload from the Caddyfile gives (checked with `caddy adapt` on 2.11.7).
+ */
+export function buildRedirectHandler(redirect: import("./types").RedirectConfig): CaddyHandler {
+  const to = caddyPlaceholderToJson(redirect.to);
+  if (redirect.html) {
+    const t = goHtmlEscape(to);
+    const body = `<!DOCTYPE html>\n<html>\n\t<head>\n\t\t<title>Redirecting...</title>\n\t\t<script>window.location.replace("${t}");</script>\n`
+      + `\t\t<meta http-equiv="refresh" content="0; URL='${t}'">\n\t</head>\n\t<body>Redirecting to <a href="${t}">${t}</a>...</body>\n</html>\n`;
+    return { handler: "static_response", body, headers: { "Content-Type": ["text/html; charset=utf-8"] }, status_code: 200 } as CaddyHandler;
+  }
+  return { handler: "static_response", headers: { Location: [to] }, status_code: redirect.code } as CaddyHandler;
+}
+
+
+/** The target of an html-mode redirect handler, or undefined for any other handler. */
+export function parseHtmlRedirect(h: AnyHandler): string | undefined {
+  if (h.handler !== "static_response") return undefined;
+  const sr = h as { body?: string; headers?: Record<string, string[]> };
+  if (!sr.body?.includes("<title>Redirecting...</title>") || sr.headers?.["Location"]) return undefined;
+  const m = sr.body.match(/window\.location\.replace\("([^"]*)"\);/);
+  return m ? goHtmlUnescape(m[1]) : undefined;
+}
+
+
+export function buildBasicAuthHandler(accounts: { username: string; passwordHash: string }[], options?: import("./types").BasicAuthOptions): CaddyHandler {
   return {
     handler: "authentication",
     providers: {
       http_basic: {
         accounts: accounts.map(a => ({ username: a.username, password: a.passwordHash })),
+        ...(options?.algorithm ? { hash: { algorithm: options.algorithm } } : {}),
+        ...(options?.realm ? { realm: options.realm } : {}),
       },
     },
   };
+}
+
+
+/** The realm and the hash algorithm, when they differ from Caddy's defaults (#337). */
+export function parseBasicAuthOptionsJson(h: AnyHandler): import("./types").BasicAuthOptions | undefined {
+  const providers = (h as { providers?: Record<string, unknown> }).providers;
+  const basic = providers?.["http_basic"] as { realm?: string; hash?: { algorithm?: string } } | undefined;
+  const options: import("./types").BasicAuthOptions = {
+    realm: basic?.realm || undefined,
+    algorithm: basic?.hash?.algorithm === "argon2id" ? "argon2id" : undefined,
+  };
+  for (const k of Object.keys(options) as Array<keyof typeof options>) if (options[k] == null) delete options[k];
+  return Object.keys(options).length ? options : undefined;
 }
 
 
@@ -299,6 +436,21 @@ export function buildRewriteHandler(rewrite: import("./types").RewriteConfig): C
   if (rewrite.type === "add_prefix") {
     return { handler: "rewrite", uri: `${rewrite.value}{http.request.uri}` };
   }
+  if (rewrite.type === "strip_suffix") return { handler: "rewrite", strip_path_suffix: rewrite.value };
+  if (rewrite.type === "method") return { handler: "rewrite", method: rewrite.method };
+  if (rewrite.type === "uri_replace") {
+    return { handler: "rewrite", uri_substring: [{ find: rewrite.find, ...(rewrite.replace ? { replace: rewrite.replace } : {}), ...(rewrite.limit ? { limit: rewrite.limit } : {}) }] } as CaddyHandler;
+  }
+  if (rewrite.type === "query") {
+    const query: Record<string, unknown[]> = {};
+    const push = (name: string, item: unknown) => { (query[name] ??= []).push(item); };
+    for (const o of rewrite.ops) {
+      if (o.op === "delete") push("delete", o.key);
+      else if (o.op === "replace") push("replace", { key: o.key, search_regexp: o.search ?? "", replace: o.replace ?? "" });
+      else push(o.op, { key: o.key, val: o.value ?? "" });
+    }
+    return { handler: "rewrite", query } as CaddyHandler;
+  }
   // Caddy's adapter leaves an empty replacement out; match it so both apply paths agree (#254).
   return { handler: "rewrite", path_regexp: [{ find: rewrite.find, ...(rewrite.replace ? { replace: rewrite.replace } : {}) }] };
 }
@@ -306,8 +458,27 @@ export function buildRewriteHandler(rewrite: import("./types").RewriteConfig): C
 
 export function parseRewriteFromHandle(h: AnyHandler): import("./types").RewriteConfig | undefined {
   if (h.handler !== "rewrite") return undefined;
-  const rw = h as { handler: string; strip_path_prefix?: string; uri?: string; path_regexp?: Array<{ find: string; replace: string }> };
+  const rw = h as {
+    handler: string; strip_path_prefix?: string; strip_path_suffix?: string; uri?: string; method?: string;
+    path_regexp?: Array<{ find: string; replace: string }>;
+    uri_substring?: Array<{ find: string; replace?: string; limit?: number }>;
+    query?: Record<string, unknown[]>;
+  };
   if (rw.strip_path_prefix) return { type: "strip_prefix", value: rw.strip_path_prefix };
+  if (rw.strip_path_suffix) return { type: "strip_suffix", value: rw.strip_path_suffix };
+  if (rw.method) return { type: "method", method: rw.method };
+  if (rw.uri_substring?.[0]) {
+    const { find, replace, limit } = rw.uri_substring[0];
+    return { type: "uri_replace", find, replace: replace ?? "", ...(limit ? { limit } : {}) };
+  }
+  if (rw.query) {
+    const ops: import("./types").QueryOp[] = [];
+    const items = (name: string) => (rw.query?.[name] ?? []) as Array<Record<string, string>>;
+    for (const name of ["rename", "set", "add"] as const) for (const i of items(name)) ops.push({ op: name, key: i.key, value: i.val ?? "" });
+    for (const i of items("replace")) ops.push({ op: "replace", key: i.key, search: i.search_regexp ?? "", replace: i.replace ?? "" });
+    for (const key of (rw.query.delete ?? []) as string[]) ops.push({ op: "delete", key });
+    if (ops.length) return { type: "query", ops };
+  }
   if (rw.uri) {
     const m = rw.uri.match(/^(.+)\{http\.request\.uri\}$/);
     if (m) return { type: "add_prefix", value: m[1] };
@@ -435,8 +606,13 @@ export function isConfigSourcePath(p: string): boolean {
 /** The `file_server` options (#262) of a static site, from its JSON handler and routes. */
 export function parseFileServerOptions(
   fsHandle: Record<string, unknown>, routes: JsonRoute[],
-): Pick<import("./types").FileServerConfig, "spa" | "index" | "hide" | "precompressed"> {
-  const out: Pick<import("./types").FileServerConfig, "spa" | "index" | "hide" | "precompressed"> = {};
+): Pick<import("./types").FileServerConfig, "spa" | "index" | "hide" | "precompressed" | "disableCanonicalUris" | "status" | "browseTemplate"> {
+  const out: Pick<import("./types").FileServerConfig, "spa" | "index" | "hide" | "precompressed" | "disableCanonicalUris" | "status" | "browseTemplate"> = {};
+  if (fsHandle.canonical_uris === false) out.disableCanonicalUris = true;
+  const status = typeof fsHandle.status_code === "string" ? parseInt(fsHandle.status_code, 10) : fsHandle.status_code;
+  if (typeof status === "number" && status > 0) out.status = status;
+  const template = (fsHandle.browse as { template_file?: string } | undefined)?.template_file;
+  if (template) out.browseTemplate = template;
   if (findTryFiles(routes) === "{path} /index.html") out.spa = true;
   const index = fsHandle.index_names;
   if (Array.isArray(index) && index.length) out.index = index as string[];
@@ -478,7 +654,10 @@ export function detectPhpFastcgiFromRoutes(
   const tryFiles = (rewriteRoute?.match?.[0]?.file as { try_files?: string[] } | undefined)?.try_files;
   const index = tryFiles?.length ? tryFiles[tryFiles.length - 1] : undefined;
 
-  const transport = rp.transport as { split_path?: string[]; env?: Record<string, string> } | undefined;
+  const transport = rp.transport as {
+    split_path?: string[]; env?: Record<string, string>; capture_stderr?: boolean; resolve_root_symlink?: boolean;
+    dial_timeout?: number | string; read_timeout?: number | string; write_timeout?: number | string;
+  } | undefined;
   const splitPath = transport?.split_path;
   const isDefaultSplit = Array.isArray(splitPath) && splitPath.length === 1 && splitPath[0] === ".php";
   const env = transport?.env;
@@ -490,6 +669,11 @@ export function detectPhpFastcgiFromRoutes(
     splitPath: Array.isArray(splitPath) && !isDefaultSplit ? splitPath : undefined,
     env: env && Object.keys(env).length ? env : undefined,
     ...(userTryFiles ? { tryFiles: userTryFiles } : {}),
+    ...(transport?.capture_stderr ? { captureStderr: true } : {}),
+    ...(transport?.resolve_root_symlink ? { resolveRootSymlink: true } : {}),
+    ...(parseDuration(transport?.dial_timeout) ? { dialTimeout: parseDuration(transport?.dial_timeout) } : {}),
+    ...(parseDuration(transport?.read_timeout) ? { readTimeout: parseDuration(transport?.read_timeout) } : {}),
+    ...(parseDuration(transport?.write_timeout) ? { writeTimeout: parseDuration(transport?.write_timeout) } : {}),
   };
 }
 
@@ -582,7 +766,7 @@ export function parseRouteToEntry(
   externalPort: number,
   externalHost: string | undefined,
   server: CaddyServer,
-  accessLog: import("./types").AccessLogConfig | undefined,
+  siteAccessLog: import("./types").AccessLogConfig | undefined,
   serverReadTimeout: string | undefined,
   serverReadHeaderTimeout: string | undefined,
   serverWriteTimeout: string | undefined,
@@ -619,6 +803,10 @@ export function parseRouteToEntry(
   const effectiveHandles: AnyHandler[] = subrouteH?.routes?.length
     ? subrouteH.routes.flatMap(r => (r.handle ?? []) as AnyHandler[])
     : handles;
+  // A `log_skip` inside the site's own subroute keeps its paths in the site's log settings (#334).
+  const innerSkipPaths = (subrouteH?.routes ?? []).filter(isLogSkipRoute)
+    .flatMap(r => logSkipRoutePaths(r as { match?: Array<Record<string, unknown>> }).paths);
+  const accessLog = siteAccessLog && innerSkipPaths.length ? { ...siteAccessLog, skipPaths: innerSkipPaths } : siteAccessLog;
 
   // Detect php_fastcgi (#35) — must run before the redirect/static_response checks below,
   // since php_fastcgi's own trailing-slash-redirect route is itself a static_response with
@@ -645,8 +833,29 @@ export function parseRouteToEntry(
       matchers,
       serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, serverExtras, accessLog,
       errorHandlers: parseErrorHandlers(server),
-      tlsAdvanced: phpTlsPolicy ? parseTlsAdvanced(phpTlsPolicy, automationPolicies, tlsSubjectHosts(externalHost)[0]) : undefined,
+      tlsAdvanced: phpTlsPolicy ? parseTlsAdvanced(phpTlsPolicy, automationPolicies, tlsSubjectHosts(externalHost)[0]) : parseSiteAcmeSettings(automationPolicies, tlsSubjectHosts(externalHost)[0]),
       mtls: phpTlsPolicy ? parseMtls(phpTlsPolicy) : undefined,
+    };
+  }
+
+  // Detect the `redir ... html` form (#338): a page, not a Location header.
+  const htmlRedirect = effectiveHandles.map(parseHtmlRedirect).find(Boolean);
+  if (htmlRedirect) {
+    return {
+      id: routeId,
+      externalPort,
+      externalHost,
+      targetHost: "localhost",
+      targetPort: 0,
+      targetScheme: "http",
+      tls: false,
+      tlsSkipVerify: false,
+      serverKey: key,
+      namedServerKey,
+      redirect: { to: jsonPlaceholderToCaddy(htmlRedirect), code: 302, html: true },
+      matchers,
+      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, accessLog,
+      errorHandlers: parseErrorHandlers(server),
     };
   }
 
@@ -703,8 +912,10 @@ export function parseRouteToEntry(
     { handler: string; root?: string; browse?: Record<string, unknown>; [k: string]: unknown } | undefined;
   if (fsHandle) {
     const fsCompress = effectiveHandles.some(h => h.handler === "encode");
+    const fsEncodeOptions = parseEncodeOptionsJson(effectiveHandles.find(h => h.handler === "encode") ?? ({} as AnyHandler));
     const fsAuthHandle = effectiveHandles.find(h => h.handler === "authentication");
     const fsBasicAuth = fsAuthHandle ? parseBasicAuthJson(fsAuthHandle) : undefined;
+    const fsBasicAuthOptions = fsAuthHandle ? parseBasicAuthOptionsJson(fsAuthHandle) : undefined;
     // The Caddyfile adapter emits one headers handler per `header` line, so read them all.
     const fsResponseHeaders = effectiveHandles.flatMap(parseResponseHeadersJson);
     const fsTls = serverHasTls(server, automationPolicies, externalHost);
@@ -728,16 +939,19 @@ export function parseRouteToEntry(
           ?? (effectiveHandles.find(h => h.handler === "vars" && typeof (h as { root?: unknown }).root === "string") as { root?: string } | undefined)?.root
           ?? "",
         browse: fsHandle.browse !== undefined,
+        ...(parseTemplatesJson(effectiveHandles) ? { templates: parseTemplatesJson(effectiveHandles) } : {}),
         ...parseFileServerOptions(fsHandle, subrouteH?.routes?.length ? subrouteH.routes : [route]),
       },
       requestBodyMaxSize: parseRequestBodyMaxSize(effectiveHandles),
       compress: fsCompress || undefined,
+      encodeOptions: fsEncodeOptions,
       basicAuth: fsBasicAuth?.length ? fsBasicAuth : undefined,
+      basicAuthOptions: fsBasicAuth?.length ? fsBasicAuthOptions : undefined,
       responseHeaders: fsResponseHeaders.length ? fsResponseHeaders : undefined,
       matchers,
       serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, serverExtras, accessLog,
       errorHandlers: parseErrorHandlers(server),
-      tlsAdvanced: fsTlsPolicy ? parseTlsAdvanced(fsTlsPolicy, automationPolicies, tlsSubjectHosts(externalHost)[0]) : undefined,
+      tlsAdvanced: fsTlsPolicy ? parseTlsAdvanced(fsTlsPolicy, automationPolicies, tlsSubjectHosts(externalHost)[0]) : parseSiteAcmeSettings(automationPolicies, tlsSubjectHosts(externalHost)[0]),
       mtls: fsTlsPolicy ? parseMtls(fsTlsPolicy) : undefined,
     };
   }
@@ -802,8 +1016,10 @@ export function parseRouteToEntry(
   const customTls = parseCustomTls(tlsPolicy, certLoadFiles);
 
   const compress = effectiveHandles.some(h => h.handler === "encode");
+  const encodeOptions = parseEncodeOptionsJson(effectiveHandles.find(h => h.handler === "encode") ?? ({} as AnyHandler));
   const authHandle = effectiveHandles.find(h => h.handler === "authentication");
   const basicAuth = authHandle ? parseBasicAuthJson(authHandle) : undefined;
+  const basicAuthOptions = authHandle ? parseBasicAuthOptionsJson(authHandle) : undefined;
   const rewriteHandle = effectiveHandles.find(h => h.handler === "rewrite");
   const rewrite = rewriteHandle ? parseRewriteFromHandle(rewriteHandle) : undefined;
   const responseHeadersParsed = effectiveHandles.flatMap(parseResponseHeadersJson);
@@ -837,8 +1053,10 @@ export function parseRouteToEntry(
     serverKey: key,
     namedServerKey,
     compress: compress || undefined,
+    encodeOptions,
     requestBodyMaxSize: parseRequestBodyMaxSize(effectiveHandles),
     basicAuth: basicAuth?.length ? basicAuth : undefined,
+    basicAuthOptions: basicAuth?.length ? basicAuthOptions : undefined,
     dialTimeout: dialTimeout || undefined,
     responseHeaderTimeout: responseHeaderTimeout || undefined,
     tlsServerName: tlsServerName || undefined,
@@ -866,7 +1084,7 @@ export function parseRouteToEntry(
     errorHandlers: parseErrorHandlers(server),
     replaceUpstreamErrors: reraisesUpstreamErrors(rp) || undefined,
     forwardAuth,
-    tlsAdvanced: tlsPolicy ? parseTlsAdvanced(tlsPolicy, automationPolicies, tlsSubjectHosts(externalHost)[0]) : undefined,
+    tlsAdvanced: tlsPolicy ? parseTlsAdvanced(tlsPolicy, automationPolicies, tlsSubjectHosts(externalHost)[0]) : parseSiteAcmeSettings(automationPolicies, tlsSubjectHosts(externalHost)[0]),
     mtls: tlsPolicy ? parseMtls(tlsPolicy) : undefined,
     customTls,
   };
@@ -878,6 +1096,7 @@ export function parseProxies(config: CaddyConfig, serverDefs?: import("./types")
   const automationPolicies = config.apps?.tls?.automation?.policies;
   const certLoadFiles = config.apps?.tls?.certificates?.load_files;
   const proxies: ProxyEntry[] = [];
+  const logSkipByServer = new Map<string, Array<{ paths: string[]; hosts: string[] }>>();
 
   for (const [key, server] of Object.entries(servers)) {
     // Handle :9393, localhost:9393, https://localhost:9393
@@ -909,7 +1128,7 @@ export function parseProxies(config: CaddyConfig, serverDefs?: import("./types")
         accessLog = {
           output,
           filePath: loggerCfg.writer?.filename,
-          format: loggerCfg.encoder?.format as import("./types").AccessLogFormat | undefined,
+          ...parseLogEncoder(loggerCfg.encoder),
           level: loggerCfg.level as import("./types").AccessLogLevel | undefined,
           rollSizeMb: loggerCfg.writer?.roll_size_mb,
           rollKeepCount: loggerCfg.writer?.roll_keep,
@@ -919,7 +1138,11 @@ export function parseProxies(config: CaddyConfig, serverDefs?: import("./types")
       }
     }
 
-    const routes = server.routes ?? [];
+    // `log_skip` routes are no sites of their own: their paths belong to the site's log (#334).
+    const allRoutes = server.routes ?? [];
+    const routes = allRoutes.filter(r => !isLogSkipRoute(r));
+    const skipRoutes = allRoutes.filter(r => isLogSkipRoute(r));
+    if (skipRoutes.length) logSkipByServer.set(key, skipRoutes.map(logSkipRoutePaths));
 
     // Determine whether this is a named server (multiple content routes, not from named_routes)
     // Skip routes that come from the `named_routes` map (invoke placeholders are already loaded)
@@ -1021,6 +1244,15 @@ export function parseProxies(config: CaddyConfig, serverDefs?: import("./types")
         if (entry) proxies.push(entry);
       }
     }
+  }
+
+  // The paths of a server's `log_skip` routes go to the sites they match: all of them without a host (#334).
+  for (const p of proxies) {
+    const rules = logSkipByServer.get(p.serverKey);
+    if (!rules || !p.accessLog) continue;
+    const hosts = externalHostList(p.externalHost);
+    const paths = rules.filter(r => !r.hosts.length || r.hosts.some(h => hosts.includes(h))).flatMap(r => r.paths);
+    if (paths.length) p.accessLog = { ...p.accessLog, skipPaths: [...new Set([...(p.accessLog.skipPaths ?? []), ...paths])] };
   }
 
   return proxies.sort((a, b) => {
@@ -1366,6 +1598,23 @@ export function serverHasTls(
 }
 
 
+/** A route that only tells Caddy not to log what matches, which `log_skip` adapts to (#334). */
+export function isLogSkipRoute(route: { handle?: AnyHandler[] } | undefined): boolean {
+  const handles = (route?.handle ?? []) as AnyHandler[];
+  return handles.length > 0 && handles.every(h => h.handler === "vars" && (h as { log_skip?: boolean }).log_skip === true && Object.keys(h).length === 2);
+}
+
+
+/** The paths (and the hosts, when it names any) of the requests a `log_skip` route keeps out of the log. */
+export function logSkipRoutePaths(route: { match?: Array<Record<string, unknown>> }): { paths: string[]; hosts: string[] } {
+  const matches = route.match ?? [];
+  return {
+    paths: matches.flatMap(m => (m.path as string[] | undefined) ?? []),
+    hosts: matches.flatMap(m => (m.host as string[] | undefined) ?? []),
+  };
+}
+
+
 /** Stable logger name for a proxy's access log, keyed by port. */
 export function accessLoggerName(port: number): string {
   return `cockpit-access-${port}`;
@@ -1378,6 +1627,19 @@ export function applyAccessLog(server: CaddyServer, proxy: { externalPort: numbe
   } else {
     delete (server as Record<string, unknown>).logs;
   }
+  // `log_skip` is a route ahead of the site's own, with the site's host matcher and the paths (#334).
+  const routes = (server.routes ?? []).filter(r => !isLogSkipRoute(r));
+  const paths = proxy.accessLog?.skipPaths;
+  if (paths?.length && routes.length) {
+    const base = routes[0].match as Array<Record<string, unknown>> | undefined;
+    // A site that matches a path of its own can't be narrowed the same way: write none.
+    if (!base?.some(m => m.path)) {
+      const match = base?.length ? base.map(m => ({ ...m, path: paths })) : [{ path: paths }];
+      server.routes = [{ match, handle: [{ handler: "vars", log_skip: true } as CaddyHandler] } as CaddyRoute, ...routes];
+      return;
+    }
+  }
+  server.routes = routes;
 }
 
 
@@ -1433,7 +1695,29 @@ export function parseTlsAdvanced(
   const lifetime = parseCertLifetimeDuration(automationPolicy?.issuers?.[0]?.lifetime);
   if (lifetime) { cfg.certLifetime = lifetime; hasData = true; }
   if (automationPolicy?.renewal_window_ratio !== undefined) { cfg.renewalWindowRatio = automationPolicy.renewal_window_ratio; hasData = true; }
+  const own = parseSiteAcmeSettings(automationPolicies, host);
+  if (own) { Object.assign(cfg, own); hasData = true; }
   return hasData ? cfg : undefined;
+}
+
+
+/**
+ * A site's own ACME account and key type (#341), from the policy that names its host; the shared
+ * catch-all policy is the global one. A site on automatic HTTPS has no connection policy, so this
+ * is read on its own too.
+ */
+export function parseSiteAcmeSettings(
+  automationPolicies: import("./types").CaddyAutomationPolicy[] | undefined,
+  host: string | undefined,
+): Pick<import("./types").TlsAdvancedConfig, "acmeEmail" | "acmeCa" | "keyType"> | undefined {
+  const scoped = host ? automationPolicies?.find(p => subjectsInclude(p.subjects, host)) : undefined;
+  const acme = scoped?.issuers?.find(i => i.module === "acme") as { email?: string; ca?: string } | undefined;
+  const out: Pick<import("./types").TlsAdvancedConfig, "acmeEmail" | "acmeCa" | "keyType"> = {
+    ...(acme?.email ? { acmeEmail: acme.email } : {}),
+    ...(acme?.ca ? { acmeCa: acme.ca } : {}),
+    ...(scoped?.key_type ? { keyType: scoped.key_type } : {}),
+  };
+  return Object.keys(out).length ? out : undefined;
 }
 
 
@@ -1529,6 +1813,7 @@ export function rebuildTlsAutomationPolicies(
   changedServerKey: string,
   changedAdv: import("./types").TlsAdvancedConfig | undefined,
   changedHosts: string[],
+  changedIssuer?: "acme" | "internal",
 ): import("./types").CaddyTlsApp | undefined {
   const hasTls = Object.values(servers).some(
     s => Array.isArray(s.tls_connection_policies) && s.tls_connection_policies.length > 0,
@@ -1557,13 +1842,26 @@ export function rebuildTlsAutomationPolicies(
 
   const policies: import("./types").CaddyAutomationPolicy[] = [defaultPolicy, ...otherSubjectPolicies];
 
-  if (changedHosts.length && isChangedServerLive && hasCustomInternalIssuer(changedAdv)) {
+  // #341: a site on its own ACME account, CA or key type gets a policy of its own; the default
+  // issuers stay for whatever it leaves unset.
+  if (changedHosts.length && isChangedServerLive && changedIssuer === "acme" && (changedAdv?.acmeEmail || changedAdv?.acmeCa || changedAdv?.keyType)) {
+    const issuer = { module: "acme", ...(changedAdv.acmeCa ? { ca: changedAdv.acmeCa } : {}), ...(changedAdv.acmeEmail ? { email: changedAdv.acmeEmail } : {}) };
+    policies.push({
+      subjects: changedHosts,
+      ...(changedAdv.acmeCa || changedAdv.acmeEmail ? { issuers: [issuer] } : {}),
+      ...(changedAdv.keyType ? { key_type: changedAdv.keyType } : {}),
+    });
+  } else if (changedHosts.length && isChangedServerLive && changedAdv?.keyType && !hasCustomInternalIssuer(changedAdv)) {
+    // The internal CA is the default; a key type on its own still needs an issuer to keep it.
+    policies.push({ subjects: changedHosts, issuers: [{ module: "internal" }], key_type: changedAdv.keyType });
+  } else if (changedHosts.length && isChangedServerLive && hasCustomInternalIssuer(changedAdv)) {
     const issuer: { module: string; lifetime?: string } = { module: "internal" };
     if (changedAdv?.certLifetime) issuer.lifetime = changedAdv.certLifetime;
     policies.push({
       subjects: changedHosts,
       issuers: [issuer],
       ...(changedAdv?.renewalWindowRatio !== undefined ? { renewal_window_ratio: changedAdv.renewalWindowRatio } : {}),
+      ...(changedAdv?.keyType ? { key_type: changedAdv.keyType } : {}),
     });
   }
 
@@ -1695,11 +1993,7 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
   }
   if (proxy.redirect) {
     const route: CaddyRoute = {
-      handle: [{
-        handler: "static_response",
-        headers: { Location: [caddyPlaceholderToJson(proxy.redirect.to)] },
-        status_code: proxy.redirect.code,
-      }],
+      handle: [buildRedirectHandler(proxy.redirect)],
       terminal: isTerminal,
     };
     if (matchArr) route.match = matchArr;
@@ -1711,10 +2005,10 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
   if (proxy.fileServer) {
     const fsHandles: CaddyHandler[] = [];
     if (proxy.requestBodyMaxSize) fsHandles.push(buildRequestBodyHandler(proxy.requestBodyMaxSize));
-    if (proxy.compress) fsHandles.push(buildEncodeHandler());
-    if (proxy.basicAuth?.length) fsHandles.push(buildBasicAuthHandler(proxy.basicAuth));
+    if (proxy.compress) fsHandles.push(buildEncodeHandler(proxy.encodeOptions));
+    if (proxy.basicAuth?.length) fsHandles.push(buildBasicAuthHandler(proxy.basicAuth, proxy.basicAuthOptions));
     if (proxy.responseHeaders?.length) fsHandles.push(buildResponseHeadersHandler(proxy.responseHeaders));
-    fsHandles.push(buildFileServerJson(proxy.fileServer));
+    fsHandles.push(...buildFileServerHandlers(proxy.fileServer));
     const route: CaddyRoute = { handle: withSpaFallback(proxy.fileServer, fsHandles), terminal: isTerminal };
     if (matchArr) route.match = matchArr;
     const server: CaddyServer = { listen: [listenAddr], routes: [route] };
@@ -1727,8 +2021,8 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
   if (proxy.requestBodyMaxSize) handles.push(buildRequestBodyHandler(proxy.requestBodyMaxSize));
   const handlePathRwSingle = proxy.handlePath ? buildHandlePathRewriteJson(proxy.matchers) : undefined;
   if (handlePathRwSingle) handles.push(handlePathRwSingle);
-  if (proxy.compress) handles.push(buildEncodeHandler());
-  if (proxy.basicAuth?.length) handles.push(buildBasicAuthHandler(proxy.basicAuth));
+  if (proxy.compress) handles.push(buildEncodeHandler(proxy.encodeOptions));
+  if (proxy.basicAuth?.length) handles.push(buildBasicAuthHandler(proxy.basicAuth, proxy.basicAuthOptions));
   if (proxy.responseHeaders?.length) handles.push(buildResponseHeadersHandler(proxy.responseHeaders));
   if (proxy.rewrite) handles.push(buildRewriteHandler(proxy.rewrite));
   if (proxy.forwardAuth) {
@@ -1746,10 +2040,37 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
 }
 
 
-/** The `file_server` handler with its options (#262). */
+/** The `templates` handler of a static site and then its file_server (#339). */
+export function buildFileServerHandlers(fs: import("./types").FileServerConfig): CaddyHandler[] {
+  const out: CaddyHandler[] = [];
+  if (fs.templates) {
+    out.push({
+      handler: "templates",
+      ...(fs.templates.root ? { file_root: fs.templates.root } : {}),
+      ...(fs.templates.mime?.length ? { mime_types: fs.templates.mime } : {}),
+    } as CaddyHandler);
+  }
+  out.push(buildFileServerJson(fs));
+  return out;
+}
+
+
+/** The `templates` options of a route's handlers, or undefined without the directive (#339). */
+export function parseTemplatesJson(handles: AnyHandler[]): import("./types").TemplatesConfig | undefined {
+  const h = handles.find(x => x.handler === "templates") as { file_root?: string; mime_types?: string[] } | undefined;
+  if (!h) return undefined;
+  return {
+    ...(h.mime_types?.length ? { mime: h.mime_types } : {}),
+    ...(h.file_root ? { root: h.file_root } : {}),
+  };
+}
+
+
 export function buildFileServerJson(fs: import("./types").FileServerConfig): CaddyHandler {
   const h: Record<string, unknown> = { handler: "file_server", root: fs.root };
-  if (fs.browse) h.browse = {};
+  if (fs.browse) h.browse = fs.browseTemplate ? { template_file: fs.browseTemplate } : {};
+  if (fs.disableCanonicalUris) h.canonical_uris = false;
+  if (fs.status) h.status_code = fs.status;
   if (fs.index?.length) h.index_names = fs.index;
   if (fs.hide?.length) h.hide = fs.hide;
   if (fs.precompressed?.length) {
@@ -1784,17 +2105,17 @@ export function patchHandles(handles: CaddyHandler[], proxy: ProxyEntry): CaddyH
   if (proxy.fileServer) {
     const fsHandles: CaddyHandler[] = [];
     if (proxy.requestBodyMaxSize) fsHandles.push(buildRequestBodyHandler(proxy.requestBodyMaxSize));
-    if (proxy.compress) fsHandles.push(buildEncodeHandler());
-    if (proxy.basicAuth?.length) fsHandles.push(buildBasicAuthHandler(proxy.basicAuth));
+    if (proxy.compress) fsHandles.push(buildEncodeHandler(proxy.encodeOptions));
+    if (proxy.basicAuth?.length) fsHandles.push(buildBasicAuthHandler(proxy.basicAuth, proxy.basicAuthOptions));
     if (proxy.responseHeaders?.length) fsHandles.push(buildResponseHeadersHandler(proxy.responseHeaders));
-    fsHandles.push(buildFileServerJson(proxy.fileServer));
+    fsHandles.push(...buildFileServerHandlers(proxy.fileServer));
     return withSpaFallback(proxy.fileServer, fsHandles);
   }
   let found = false;
   // Strip any existing encode/authentication/rewrite/headers/file_server/forward_auth/
   // request_body handlers; we'll re-add the correct ones below
   const withoutRewrite = handles.filter(h => {
-    if (h.handler === "rewrite" || h.handler === "headers" || h.handler === "encode" || h.handler === "authentication" || h.handler === "file_server" || h.handler === "request_body") return false;
+    if (h.handler === "rewrite" || h.handler === "headers" || h.handler === "encode" || h.handler === "authentication" || h.handler === "file_server" || h.handler === "templates" || h.handler === "request_body") return false;
     if (h.handler === "subroute") {
       const isAuthSubroute = (h.routes as Array<{ handle?: AnyHandler[] }> | undefined)?.some(r =>
         (r.handle ?? []).some(sh => sh.handler === "reverse_proxy" && isForwardAuthProxy(sh as CaddyReverseProxyHandler)),
@@ -1828,8 +2149,8 @@ export function patchHandles(handles: CaddyHandler[], proxy: ProxyEntry): CaddyH
   // configured — request_body must run first, before anything that reads the body.
   const prefix: CaddyHandler[] = [];
   if (proxy.requestBodyMaxSize) prefix.push(buildRequestBodyHandler(proxy.requestBodyMaxSize));
-  if (proxy.compress) prefix.push(buildEncodeHandler());
-  if (proxy.basicAuth?.length) prefix.push(buildBasicAuthHandler(proxy.basicAuth));
+  if (proxy.compress) prefix.push(buildEncodeHandler(proxy.encodeOptions));
+  if (proxy.basicAuth?.length) prefix.push(buildBasicAuthHandler(proxy.basicAuth, proxy.basicAuthOptions));
   if (proxy.responseHeaders?.length) prefix.push(buildResponseHeadersHandler(proxy.responseHeaders));
   if (proxy.rewrite) prefix.push(buildRewriteHandler(proxy.rewrite));
   if (proxy.forwardAuth) {
@@ -1853,7 +2174,7 @@ export function patchServer(original: CaddyServer, proxy: ProxyEntry): CaddyServ
   }
 
   const siteMatch = siteHostMatch(proxy);
-  server.routes = (original.routes ?? []).map(route => {
+  server.routes = (original.routes ?? []).filter(route => !isLogSkipRoute(route)).map(route => {
     const patched: CaddyRoute = { ...route, handle: patchHandles((route.handle ?? []) as CaddyHandler[], proxy) };
     if (siteMatch) patched.match = siteMatch;
     // A name list set by an earlier multi-host save would otherwise outlive the edit
@@ -1877,6 +2198,33 @@ export function buildLoggingWriter(accessLog: import("./types").AccessLogConfig)
   if (accessLog.rollKeepDays) writer.roll_keep_days = accessLog.rollKeepDays;
   if (accessLog.rollCompress === false) writer.roll_gzip = false;
   return writer;
+}
+
+
+/** The `filter` encoder of #334: the field filters, wrapped around the encoder that writes the entry. */
+export function buildFilterEncoder(format: string | undefined, filters: import("./types").LogFieldFilter[]): import("./types").CaddyLogEncoder {
+  const fields: NonNullable<import("./types").CaddyLogEncoder["fields"]> = {};
+  for (const f of filters) {
+    fields[f.field] = f.filter === "replace" ? { filter: "replace", value: f.value ?? "" }
+      : f.filter === "ip_mask" ? { filter: "ip_mask", ...(f.ipv4 != null ? { ipv4_cidr: f.ipv4 } : {}), ...(f.ipv6 != null ? { ipv6_cidr: f.ipv6 } : {}) }
+      : { filter: f.filter };
+  }
+  return { format: "filter", wrap: { format: format ?? "json" }, fields };
+}
+
+
+/** The format and field filters of a logger's encoder (#334), reading `filter` through to what it wraps. */
+export function parseLogEncoder(encoder: import("./types").CaddyLogEncoder | undefined): Pick<import("./types").AccessLogConfig, "format" | "fieldFilters"> {
+  if (encoder?.format !== "filter") return { format: encoder?.format as import("./types").AccessLogFormat | undefined };
+  const fieldFilters = Object.entries(encoder.fields ?? {}).flatMap(([field, f]): import("./types").LogFieldFilter[] => {
+    if (f.filter === "replace") return [{ field, filter: "replace", value: f.value ?? "" }];
+    if (f.filter === "ip_mask") return [{ field, filter: "ip_mask", ...(f.ipv4_cidr != null ? { ipv4: f.ipv4_cidr } : {}), ...(f.ipv6_cidr != null ? { ipv6: f.ipv6_cidr } : {}) }];
+    return f.filter === "delete" || f.filter === "hash" ? [{ field, filter: f.filter }] : [];
+  });
+  return {
+    format: encoder.wrap?.format as import("./types").AccessLogFormat | undefined,
+    ...(fieldFilters.length ? { fieldFilters } : {}),
+  };
 }
 
 
@@ -1909,7 +2257,8 @@ export function patchLoggingLogs(
       writer: buildLoggingWriter(proxy.accessLog),
       include: [incKey],
     };
-    if (proxy.accessLog.format) logEntry.encoder = { format: proxy.accessLog.format };
+    if (proxy.accessLog.fieldFilters?.length) logEntry.encoder = buildFilterEncoder(proxy.accessLog.format, proxy.accessLog.fieldFilters);
+    else if (proxy.accessLog.format) logEntry.encoder = { format: proxy.accessLog.format };
     if (proxy.accessLog.level) logEntry.level = proxy.accessLog.level;
     existingLogs[loggerName] = logEntry;
 
@@ -1980,7 +2329,7 @@ export function mergeProxy(config: CaddyConfig, proxy: ProxyEntry): CaddyConfig 
   servers[proxy.serverKey] = (original && !proxy.redirect && !proxy.staticResponse) ? patchServer(original, proxy) : buildServerEntry(proxy);
 
   const logging = patchLoggingLogs(config, original, proxy);
-  const automation = rebuildTlsAutomationPolicies(config, servers, proxy.serverKey, proxy.tlsAdvanced, tlsSubjectHosts(proxy.externalHost));
+  const automation = rebuildTlsAutomationPolicies(config, servers, proxy.serverKey, proxy.tlsAdvanced, tlsSubjectHosts(proxy.externalHost), proxy.tlsIssuer);
   const certificates = rebuildTlsCertificates(config, proxy);
 
   return {
@@ -2120,7 +2469,8 @@ export function mergeNamedServer(
     const existingLogs = { ...(config.logging?.logs ?? {}) };
     existingLogs[loggerName] = {
       writer: buildLoggingWriter(def.accessLog),
-      ...(def.accessLog.format ? { encoder: { format: def.accessLog.format } } : {}),
+      ...(def.accessLog.fieldFilters?.length ? { encoder: buildFilterEncoder(def.accessLog.format, def.accessLog.fieldFilters) }
+        : def.accessLog.format ? { encoder: { format: def.accessLog.format } } : {}),
       ...(def.accessLog.level ? { level: def.accessLog.level } : {}),
     };
     const defExcludes = new Set<string>(existingLogs.default?.exclude ?? []);
@@ -2194,26 +2544,22 @@ export function buildRouteHandlesForEntry(proxy: ProxyEntry): CaddyHandler[] {
   if (proxy.redirect) {
     const result: CaddyHandler[] = [];
     if (handlePathRw) result.push(handlePathRw);
-    result.push({
-      handler: "static_response",
-      headers: { Location: [caddyPlaceholderToJson(proxy.redirect.to)] },
-      status_code: proxy.redirect.code,
-    });
+    result.push(buildRedirectHandler(proxy.redirect));
     return result;
   }
   if (proxy.fileServer) {
     const handles: CaddyHandler[] = [];
     if (handlePathRw) handles.push(handlePathRw);
-    if (proxy.compress) handles.push(buildEncodeHandler());
-    if (proxy.basicAuth?.length) handles.push(buildBasicAuthHandler(proxy.basicAuth));
+    if (proxy.compress) handles.push(buildEncodeHandler(proxy.encodeOptions));
+    if (proxy.basicAuth?.length) handles.push(buildBasicAuthHandler(proxy.basicAuth, proxy.basicAuthOptions));
     if (proxy.responseHeaders?.length) handles.push(buildResponseHeadersHandler(proxy.responseHeaders));
-    handles.push(buildFileServerJson(proxy.fileServer));
+    handles.push(...buildFileServerHandlers(proxy.fileServer));
     return withSpaFallback(proxy.fileServer, handles);
   }
   const handles: CaddyHandler[] = [];
   if (handlePathRw) handles.push(handlePathRw);
-  if (proxy.compress) handles.push(buildEncodeHandler());
-  if (proxy.basicAuth?.length) handles.push(buildBasicAuthHandler(proxy.basicAuth));
+  if (proxy.compress) handles.push(buildEncodeHandler(proxy.encodeOptions));
+  if (proxy.basicAuth?.length) handles.push(buildBasicAuthHandler(proxy.basicAuth, proxy.basicAuthOptions));
   if (proxy.responseHeaders?.length) handles.push(buildResponseHeadersHandler(proxy.responseHeaders));
   if (proxy.rewrite) handles.push(buildRewriteHandler(proxy.rewrite));
   if (proxy.forwardAuth) {

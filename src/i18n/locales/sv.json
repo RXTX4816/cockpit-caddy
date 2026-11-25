@@ -177,7 +177,18 @@
     "field_hide": "Dolda filer",
     "field_hide_help": "Namn eller mönster som aldrig serveras, åtskilda med mellanslag.",
     "field_precompressed": "Förkomprimerade filer",
-    "field_precompressed_help": "Servera file.zst, file.br eller file.gz bredvid originalet när webbläsaren accepterar den kodningen."
+    "field_precompressed_help": "Servera file.zst, file.br eller file.gz bredvid originalet när webbläsaren accepterar den kodningen.",
+    "field_browse_template": "Mall för listan",
+    "field_browse_template_help": "En mallfil för kataloglistan. Används bara när kataloglistning är på.",
+    "field_status": "Statuskod",
+    "field_status_help": "Svara på varje fil med den här statuskoden i stället för 200, till exempel 404 för en egen felsida.",
+    "field_disable_canonical_uris": "Låt avslutande snedstreck vara",
+    "field_disable_canonical_uris_help": "Omdirigera inte för att lägga till eller ta bort ett avslutande snedstreck på kataloger och filer.",
+    "field_templates": "Kör filerna genom mallar",
+    "field_templates_help": "Slår på Caddys mallmotor för de filer som serveras, så att de kan använda include, .Req och de andra mallåtgärderna.",
+    "field_templates_mime": "MIME-typer",
+    "field_templates_root": "Katalog för include",
+    "field_templates_root_help": "Var include och de andra filåtgärderna letar efter filer. Tomt betyder webbplatsens rot."
   },
   "edit_static": {
     "title": "Redigera statisk server — :{{port}}",
@@ -206,7 +217,15 @@
     "env_field_value": "Värde",
     "env_add_button": "Lägg till variabel",
     "field_try_files": "Prova filer (try_files)",
-    "field_try_files_help": "Valfritt. Kandidater som provas i tur och ordning före PHP; en app med front controller behöver oftast {path} {path}/ /index.php?{query}."
+    "field_try_files_help": "Valfritt. Kandidater som provas i tur och ordning före PHP; en app med front controller behöver oftast {path} {path}/ /index.php?{query}.",
+    "field_dial_timeout": "Anslutningstimeout",
+    "field_read_timeout": "Lästimeout",
+    "field_write_timeout": "Skrivtimeout",
+    "no_timeout": "ingen",
+    "field_capture_stderr": "Logga stderr från PHP-processen",
+    "field_capture_stderr_help": "Skriver det PHP-FPM skriver på stderr till Caddys logg.",
+    "field_resolve_root_symlink": "Lös symlänkar i roten",
+    "field_resolve_root_symlink_help": "Följer symlänkar i rotkatalogen innan SCRIPT_FILENAME byggs, vilket opcache-upplägg med release-symlänkar behöver."
   },
   "add_respond": {
     "title": "Lägg till statiskt svar",
@@ -251,7 +270,11 @@
     "validation_port_range": "Porten måste vara mellan 1 och 65535",
     "validation_port_duplicate": "Port {{port}} används redan",
     "validation_to_required": "Omdirigeringsmål krävs",
-    "confirm_body": "En omdirigering på :{{port}} → {{to}} ({{code}}) skapas och Caddys konfiguration läses in igen."
+    "confirm_body": "En omdirigering på :{{port}} → {{to}} ({{code}}) skapas och Caddys konfiguration läses in igen.",
+    "code_html": "HTML-sida",
+    "code_html_help": "Svarar med en sida som omdirigerar i webbläsaren i stället för en statuskod. Till skillnad från en omdirigering med statuskod behålls URL:ens #fragment.",
+    "keep_path": "Behåll sökväg och fråga",
+    "keep_path_help": "Lägger till {uri} på målet, så /a?b=1 på den här webbplatsen går till /a?b=1 på målet."
   },
   "basic_auth": {
     "heading": "HTTP Basic Auth",
@@ -260,7 +283,12 @@
     "field_password": "Lösenord",
     "field_password_keep": "Lämna tomt för att behålla det befintliga",
     "add_button": "Lägg till konto",
-    "remove_button": "Ta bort konto"
+    "remove_button": "Ta bort konto",
+    "realm": "Realm",
+    "algorithm": "Hashalgoritm",
+    "algorithm_default": "bcrypt (standard)",
+    "algorithm_argon2id": "argon2id (starkare)",
+    "algorithm_mismatch": "Konton som behåller sitt lösenord har fortfarande en hash från den andra algoritmen. Ange deras lösenord igen."
   },
   "transport": {
     "heading": "Tidsgränser för upstream",
@@ -325,7 +353,30 @@
     "field_find_placeholder": "^/api/(.*)",
     "field_replace_placeholder": "/$1",
     "field_replace_help": "Använd $1, $2 för fångstgrupper",
-    "type_aria": "Typ av omskrivning"
+    "type_aria": "Typ av omskrivning",
+    "type_strip_suffix": "Ta bort suffix",
+    "type_uri_replace": "Ersätt text",
+    "type_query": "Frågesträng",
+    "type_method": "Metod",
+    "field_suffix": "Suffix",
+    "field_suffix_placeholder": ".html",
+    "field_text_find": "Sök (vanlig text)",
+    "field_limit": "Högst",
+    "field_limit_placeholder": "alla",
+    "field_method": "Metod",
+    "query_op": "Ändring",
+    "query_op_set": "Sätt",
+    "query_op_add": "Lägg till",
+    "query_op_delete": "Ta bort",
+    "query_op_rename": "Byt namn",
+    "query_op_replace": "Ersätt",
+    "query_key": "Namn",
+    "query_value": "Värde",
+    "query_new_key": "Nytt namn",
+    "query_search": "Sök (regex)",
+    "query_remove": "Ta bort ändring",
+    "query_add": "Lägg till ändring",
+    "invalid": "Fyll i alla fält för omskrivningen."
   },
   "probe": {
     "status_pending": "Kontrollerar…",
@@ -597,7 +648,16 @@
     "roll_keep_count": "Antal roterade filer att behålla",
     "roll_keep_days": "Max. ålder på roterade filer (dagar)",
     "roll_compress": "Komprimera roterade filer (gzip)",
-    "roll_help": "Caddy roterar loggfilen som standard. Lämna ett fält tomt för att använda Caddys standardvärde, som visas i grått."
+    "roll_help": "Caddy roterar loggfilen som standard. Lämna ett fält tomt för att använda Caddys standardvärde, som visas i grått.",
+    "field_filters": "Fältfilter",
+    "field_filters_help": "Ett per rad: en fältsökväg och sedan delete, hash, replace <text> eller ip_mask <IPv4-bitar> [<IPv6-bitar>], till exempel request>headers>Authorization delete.",
+    "field_filters_invalid": "Varje rad behöver en fältsökväg och delete, hash, replace <text> eller ip_mask <bitar>.",
+    "include": "Ta med loggare",
+    "include_help": "Loggarnamn som den här loggen skriver, avgränsade med mellanslag, till exempel http.log.access. Tomt betyder alla.",
+    "exclude": "Utelämna loggare",
+    "exclude_help": "Loggarnamn som den här loggen hoppar över, avgränsade med mellanslag, till exempel http.log.access.log0.",
+    "skip_paths": "Sökvägar som inte loggas",
+    "skip_paths_help": "Mellanslagsavgränsade sökvägar, jokertecken tillåtna, till exempel /health* /ping. Förfrågningar till dem loggas inte."
   },
   "config_check": {
     "button": "Kontrollera konfiguration",
@@ -855,7 +915,12 @@
     "field_copy_headers": "Kopiera huvuden",
     "field_copy_headers_help": "Svarshuvuden separerade med blanksteg eller kommatecken som kopieras från autentiseringstjänsten till begäran mot upstream (t.ex. Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "Autentiserings-URI krävs när en URL till autentiseringstjänsten är angiven"
+    "validation_uri_required": "Autentiserings-URI krävs när en URL till autentiseringstjänsten är angiven",
+    "field_copy_headers_rename_help": "Skriv Name>Other för att kopiera ett huvud under ett annat namn.",
+    "field_header_up": "Förfrågningshuvuden till autentiseringstjänsten",
+    "field_header_up_help": "Ett per rad: Name value sätter ett huvud, +Name value lägger till ett, -Name tar bort ett.",
+    "field_trusted_proxies": "Betrodda proxyservrar",
+    "field_trusted_proxies_help": "Intervall vars X-Forwarded-*-huvuden behålls i förfrågan till autentiseringstjänsten, avgränsade med mellanslag. private_ranges står för de privata nätverken."
   },
   "tls_policy": {
     "heading": "TLS-policy",
@@ -903,7 +968,15 @@
     "custom_file_unreadable": "Filen hittades inte eller kan inte läsas av Caddys användare",
     "custom_file_readable": "Filen är läsbar",
     "custom_file_valid_expiry": "Giltigt — går ut {{date}}",
-    "custom_cert_lifetime_note": "Ett eget certifikat är inläst ovan — certifikatets livslängd och förnyelsefönster gäller inte, eftersom Caddy inte utfärdar något själv."
+    "custom_cert_lifetime_note": "Ett eget certifikat är inläst ovan — certifikatets livslängd och förnyelsefönster gäller inte, eftersom Caddy inte utfärdar något själv.",
+    "acme_email": "ACME-e-post",
+    "acme_email_help": "Kontots e-postadress för den här webbplatsens certifikat. Gäller bara automatisk HTTPS; tomt använder den globala.",
+    "acme_global_placeholder": "Global e-post",
+    "acme_ca": "URL till ACME-CA:ns katalog",
+    "acme_ca_help": "Varifrån den här webbplatsen får sina certifikat, till exempel Let's Encrypts test-URL under provning. Tomt använder den globala CA:n.",
+    "key_type": "Nyckeltyp",
+    "acme_invalid_email": "Ange en e-postadress som admin@example.com.",
+    "acme_invalid_ca": "Ange en URL som börjar med http:// eller https://."
   },
   "error_handler": {
     "heading": "Anpassad felhantering",
@@ -969,7 +1042,22 @@
     "ip_kind_remote": "Anslutningens IP",
     "ip_kind_client_help": "Besökarens IP, hämtad ur vidarebefordringsrubriken när begäran kommer via någon av de betrodda proxyservrarna (Inställningar). Utan betrodda proxyservrar är den samma som anslutningens IP.",
     "ip_kind_remote_help": "TCP-anslutningens IP. Bakom en proxy eller ett CDN är det proxyns adress, inte besökarens.",
-    "ip_range": "IP-adress eller intervall"
+    "ip_range": "IP-adress eller intervall",
+    "type_path_regexp": "Sökvägs-regex",
+    "type_header_regexp": "Huvud-regex",
+    "field_regexp_name": "Namn (valfritt)",
+    "field_header_name_regexp": "Huvudnamn för regexet",
+    "field_regexp_name_header": "Namn på huvud-regexet (valfritt)",
+    "regexp_help": "Ett namn gör grupperna tillgängliga som {re.name.1}, till exempel i en omskrivning. Caddy tillåter ett regex per matchare.",
+    "type_protocol": "Protokoll",
+    "protocol_any": "valfritt",
+    "type_file": "Filer",
+    "field_try_files": "Filer att leta efter",
+    "field_try_policy": "Hur man väljer",
+    "try_policy_default": "första som finns",
+    "file_help": "Matchar när en av filerna finns. Platshållare som {path} fungerar.",
+    "type_vars": "Variabler",
+    "vars_help": "En per rad: en platshållare och de värden den får ha, till exempel {host} example.com www.example.com."
   },
   "handle_path": {
     "label": "Ta bort det matchade sökvägsprefixet (handle_path)"
@@ -1115,6 +1203,25 @@
     "site_inherit_help": "Använder DNS-leverantören under Inställningar → DNS-utmaning, eller HTTP-utmaningen om ingen är angiven.",
     "site_override_help": "Den här webbplatsen använder en egen DNS-leverantör och egna inloggningsuppgifter. Att spara nya uppgifter startar om Caddy, eftersom Caddy bara läser dem vid start.",
     "site_wildcard_warning": "Jokerteckencertifikat kräver DNS-utmaningen. Ange en DNS-leverantör för den här webbplatsen, eller under Inställningar → DNS-utmaning."
+  },
+  "encode": {
+    "heading": "Komprimering",
+    "section_title": "Komprimeringsinställningar (valfritt)",
+    "help": "Gäller så länge komprimering är på under Allmänt. Utan val komprimerar Caddy med gzip och zstd.",
+    "algorithms": "Algoritmer och ordning",
+    "algorithms_default": "gzip, zstd (standard)",
+    "algorithms_zstd_gzip": "zstd, sedan gzip",
+    "algorithms_gzip": "endast gzip",
+    "algorithms_zstd": "endast zstd",
+    "minimum_length": "Minsta storlek",
+    "minimum_length_help": "Svar med färre byte än så skickas som de är. Caddys standard är 512.",
+    "invalid_number": "Ange ett heltal för antal byte.",
+    "match_status": "Endast dessa statuskoder",
+    "match_status_help": "Mellanslagsavgränsade koder eller klasser som 2xx 404. Tomt betyder alla statusar.",
+    "invalid_status": "Ange statuskoder som 200 eller klasser som 2xx.",
+    "match_headers": "Endast dessa svarshuvuden",
+    "match_headers_help": "Ett per rad: huvudets namn och sedan värdet. Jokertecken som text/* fungerar.",
+    "invalid_header": "Varje rad behöver ett huvudnamn och ett värde."
   },
   "dynamic_upstreams": {
     "heading": "Dynamiska upstreams",
