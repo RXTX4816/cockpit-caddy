@@ -596,7 +596,16 @@
     "roll_keep_count": "Aufzubewahrende rotierte Dateien",
     "roll_keep_days": "Max. Alter rotierter Dateien (Tage)",
     "roll_compress": "Rotierte Dateien komprimieren (gzip)",
-    "roll_help": "Caddy rotiert die Logdatei standardmäßig. Lass ein Feld leer, um Caddys Standardwert zu nutzen, der grau angezeigt wird."
+    "roll_help": "Caddy rotiert die Logdatei standardmäßig. Lass ein Feld leer, um Caddys Standardwert zu nutzen, der grau angezeigt wird.",
+    "field_filters": "Feldfilter",
+    "field_filters_help": "Einer pro Zeile: ein Feldpfad, dann delete, hash, replace <Text> oder ip_mask <IPv4-Bits> [<IPv6-Bits>], zum Beispiel request>headers>Authorization delete.",
+    "field_filters_invalid": "Jede Zeile braucht einen Feldpfad und delete, hash, replace <Text> oder ip_mask <Bits>.",
+    "include": "Logger aufnehmen",
+    "include_help": "Logger-Namen, die dieses Log schreibt, durch Leerzeichen getrennt, zum Beispiel http.log.access. Leer heißt alle.",
+    "exclude": "Logger auslassen",
+    "exclude_help": "Logger-Namen, die dieses Log überspringt, durch Leerzeichen getrennt, zum Beispiel http.log.access.log0.",
+    "skip_paths": "Pfade, die nicht protokolliert werden",
+    "skip_paths_help": "Durch Leerzeichen getrennte Pfade, Platzhalter erlaubt, zum Beispiel /health* /ping. Anfragen darauf werden nicht protokolliert."
   },
   "config_check": {
     "button": "Konfiguration prüfen",

@@ -596,7 +596,16 @@
     "roll_keep_count": "Fichiers archivés à conserver",
     "roll_keep_days": "Âge max. des fichiers archivés (jours)",
     "roll_compress": "Compresser les fichiers archivés (gzip)",
-    "roll_help": "Caddy fait tourner le fichier journal par défaut. Laissez un champ vide pour utiliser la valeur par défaut de Caddy, affichée en grisé."
+    "roll_help": "Caddy fait tourner le fichier journal par défaut. Laissez un champ vide pour utiliser la valeur par défaut de Caddy, affichée en grisé.",
+    "field_filters": "Filtres de champs",
+    "field_filters_help": "Un par ligne : un chemin de champ, puis delete, hash, replace <texte> ou ip_mask <bits IPv4> [<bits IPv6>], par exemple request>headers>Authorization delete.",
+    "field_filters_invalid": "Chaque ligne doit avoir un chemin de champ et delete, hash, replace <texte> ou ip_mask <bits>.",
+    "include": "Prendre en compte des loggers",
+    "include_help": "Noms des loggers que ce journal écrit, séparés par des espaces, par exemple http.log.access. Vide signifie tous.",
+    "exclude": "Exclure des loggers",
+    "exclude_help": "Noms des loggers que ce journal ignore, séparés par des espaces, par exemple http.log.access.log0.",
+    "skip_paths": "Chemins exclus du journal",
+    "skip_paths_help": "Chemins séparés par des espaces, jokers autorisés, par exemple /health* /ping. Les requêtes vers ces chemins ne sont pas journalisées."
   },
   "config_check": {
     "button": "Vérifier la configuration",

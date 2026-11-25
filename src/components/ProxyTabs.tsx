@@ -130,7 +130,7 @@ export function ProxyTabs({ state: s, onChange, general, generalHasError, active
         configured: flags.configured.logging,
         content: (
           <>
-            <AccessLogSection value={s.accessLog} onChange={v => onChange({ accessLog: v })} isDisabled={isDisabled} />
+            <AccessLogSection value={s.accessLog} onChange={v => onChange({ accessLog: v })} isDisabled={isDisabled} showSkipPaths={showTls} />
             <ErrorHandlersSection
               value={s.errorHandlers}
               onChange={v => onChange({ errorHandlers: v })}

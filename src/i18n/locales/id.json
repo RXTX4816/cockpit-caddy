@@ -596,7 +596,16 @@
     "roll_keep_count": "Jumlah berkas rotasi yang disimpan",
     "roll_keep_days": "Usia maks. berkas rotasi (hari)",
     "roll_compress": "Kompres berkas rotasi (gzip)",
-    "roll_help": "Caddy merotasi file log secara bawaan. Biarkan kolom kosong untuk memakai nilai bawaan Caddy, yang ditampilkan abu-abu."
+    "roll_help": "Caddy merotasi file log secara bawaan. Biarkan kolom kosong untuk memakai nilai bawaan Caddy, yang ditampilkan abu-abu.",
+    "field_filters": "Filter bidang",
+    "field_filters_help": "Satu per baris: jalur bidang, lalu delete, hash, replace <teks> atau ip_mask <bit IPv4> [<bit IPv6>], misalnya request>headers>Authorization delete.",
+    "field_filters_invalid": "Setiap baris memerlukan jalur bidang dan salah satu dari delete, hash, replace <teks> atau ip_mask <bit>.",
+    "include": "Sertakan logger",
+    "include_help": "Nama logger yang ditulis log ini, dipisahkan spasi, misalnya http.log.access. Kosong berarti semua.",
+    "exclude": "Kecualikan logger",
+    "exclude_help": "Nama logger yang dilewati log ini, dipisahkan spasi, misalnya http.log.access.log0.",
+    "skip_paths": "Jalur yang tidak dicatat di log",
+    "skip_paths_help": "Jalur dipisahkan spasi, wildcard diizinkan, misalnya /health* /ping. Permintaan ke jalur ini tidak dicatat."
   },
   "config_check": {
     "button": "Periksa konfigurasi",

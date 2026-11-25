@@ -596,7 +596,16 @@
     "roll_keep_count": "Fișiere rotite păstrate",
     "roll_keep_days": "Vechime max. a fișierelor rotite (zile)",
     "roll_compress": "Comprimă fișierele rotite (gzip)",
-    "roll_help": "Caddy rotește fișierul jurnal în mod implicit. Lăsați un câmp gol pentru a folosi valoarea implicită Caddy, afișată cu gri."
+    "roll_help": "Caddy rotește fișierul jurnal în mod implicit. Lăsați un câmp gol pentru a folosi valoarea implicită Caddy, afișată cu gri.",
+    "field_filters": "Filtre de câmpuri",
+    "field_filters_help": "Unul pe linie: calea unui câmp, apoi delete, hash, replace <text> sau ip_mask <biți IPv4> [<biți IPv6>], de exemplu request>headers>Authorization delete.",
+    "field_filters_invalid": "Fiecare linie are nevoie de calea unui câmp și de delete, hash, replace <text> sau ip_mask <biți>.",
+    "include": "Include loggere",
+    "include_help": "Numele loggerelor pe care le scrie acest jurnal, separate prin spații, de exemplu http.log.access. Gol înseamnă toate.",
+    "exclude": "Exclude loggere",
+    "exclude_help": "Numele loggerelor pe care acest jurnal le omite, separate prin spații, de exemplu http.log.access.log0.",
+    "skip_paths": "Căi omise din jurnal",
+    "skip_paths_help": "Căi separate prin spații, metacaractere permise, de exemplu /health* /ping. Cererile către ele nu sunt înregistrate."
   },
   "config_check": {
     "button": "Verifică configurația",

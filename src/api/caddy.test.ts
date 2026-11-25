@@ -52,9 +52,10 @@ import {
   CONF_D_IMPORT_LINE,
   parseConfTlsIssuerMap,
 } from "./caddy";
-import { PRIVATE_RANGES, buildForwardAuthHandler, extractForwardAuthFromProxy, forwardAuthResponseRoutes, buildBasicAuthHandler, buildEncodeHandler, buildFileServerHandlers, buildFileServerJson, parseFileServerOptions, parseTemplatesJson, buildRedirectHandler, parseEncodeOptionsJson, parseBasicAuthOptionsJson, parseHtmlRedirect } from "./caddyJsonModel";
+import { patchServer, buildFilterEncoder, parseLogEncoder, PRIVATE_RANGES, buildForwardAuthHandler, extractForwardAuthFromProxy, forwardAuthResponseRoutes, buildBasicAuthHandler, buildEncodeHandler, buildFileServerHandlers, buildFileServerJson, parseFileServerOptions, parseTemplatesJson, buildRedirectHandler, parseEncodeOptionsJson, parseBasicAuthOptionsJson, parseHtmlRedirect } from "./caddyJsonModel";
 import { proxiesToCaddyfile } from "./caddy";
 import { buildForwardAuthCaddyLines, buildPhpFastcgiLines } from "./siteBlocks";
+import { buildLogCaddyLines } from "./globalOptions";
 import type { CaddyConfig, CaddyReverseProxyHandler, CaddyServer, ProxyEntry, RouteMatch, ServerDef } from "./types";
 
 // ---------------------------------------------------------------------------
@@ -4830,6 +4831,105 @@ describe("forward_auth header_up, trusted_proxies and renamed copy_headers (#336
     const read = extractForwardAuthFromProxy(h.routes[0].handle[0] as never);
     expect(read.headerUp).toBeUndefined();
     expect(read.trustedProxies).toBeUndefined();
+  });
+});
+
+describe("access log field filters, include and exclude (#334)", () => {
+  const filters: import("./types").LogFieldFilter[] = [
+    { field: "request>headers>Authorization", filter: "delete" },
+    { field: "request>headers>Cookie", filter: "hash" },
+    { field: "request>uri", filter: "replace", value: "a b" },
+    { field: "request>remote_ip", filter: "ip_mask", ipv4: 24, ipv6: 64 },
+  ];
+
+  it("writes a format filter block around the format", () => {
+    const lines = buildLogCaddyLines({ output: "stderr", format: "console", fieldFilters: filters }).join("\n");
+    expect(lines).toContain("format filter {");
+    expect(lines).toContain("wrap console");
+    expect(lines).toContain("request>headers>Authorization delete");
+    expect(lines).toContain("request>headers>Cookie hash");
+    expect(lines).toContain('request>uri replace "a b"');
+    expect(lines).toContain("request>remote_ip ip_mask 24 64");
+    expect(buildLogCaddyLines({ output: "stderr", format: "json" }).join("\n")).toContain("format json");
+  });
+
+  it("wraps json when no format is chosen", () => {
+    expect(buildLogCaddyLines({ output: "stderr", fieldFilters: filters }).join("\n")).toContain("wrap json");
+  });
+
+  it("reads the filters back from the conf.d Caddyfile", () => {
+    const conf = `example.com {\n${buildLogCaddyLines({ output: "stderr", format: "console", fieldFilters: filters }).join("\n")}\n\trespond ok\n}\n`;
+    const [log] = Object.values(parseConfAccessLogMap(conf));
+    expect(log.format).toBe("console");
+    expect(log.fieldFilters).toEqual(filters);
+  });
+
+  it("builds the filter encoder Caddy builds and reads it back", () => {
+    const encoder = buildFilterEncoder("json", filters);
+    expect(encoder).toEqual({
+      format: "filter", wrap: { format: "json" },
+      fields: {
+        "request>headers>Authorization": { filter: "delete" },
+        "request>headers>Cookie": { filter: "hash" },
+        "request>uri": { filter: "replace", value: "a b" },
+        "request>remote_ip": { filter: "ip_mask", ipv4_cidr: 24, ipv6_cidr: 64 },
+      },
+    });
+    expect(parseLogEncoder(encoder)).toEqual({ format: "json", fieldFilters: filters });
+    expect(parseLogEncoder({ format: "console" })).toEqual({ format: "console" });
+  });
+
+  it("writes and reads include and exclude of Caddy's own log", () => {
+    const patched = buildGlobalOptionsPatch("", { runtimeLog: { output: "stderr", include: ["http.log.access", "admin"], exclude: ["http.log.access.log0"], fieldFilters: filters.slice(0, 2) } });
+    expect(patched).toContain("include http.log.access admin");
+    expect(patched).toContain("exclude http.log.access.log0");
+    expect(parseGlobalOptions(patched).runtimeLog).toMatchObject({ include: ["http.log.access", "admin"], exclude: ["http.log.access.log0"], fieldFilters: filters.slice(0, 2) });
+  });
+});
+
+describe("access log log_skip (#334)", () => {
+  const withSkip = (skipPaths: string[], extra: Partial<ProxyEntry> = {}) => proxy({ tls: false, accessLog: { output: "stderr", skipPaths }, ...extra });
+
+  it("writes a lone path as it is and several as a named matcher", () => {
+    expect(proxyToBlock(withSkip(["/health*"]))).toContain("\tlog_skip /health*");
+    const block = proxyToBlock(withSkip(["/health*", "/ping"]));
+    expect(block).toContain("@cockpit-log-skip path /health* /ping");
+    expect(block).toContain("log_skip @cockpit-log-skip");
+  });
+
+  it("reads both forms back from the conf.d Caddyfile", () => {
+    for (const paths of [["/health*"], ["/health*", "/ping"]]) {
+      const [log] = Object.values(parseConfAccessLogMap(proxiesToCaddyfile([withSkip(paths)])));
+      expect(log.skipPaths).toEqual(paths);
+    }
+  });
+
+  it("puts a route ahead of the site's own in the JSON push and reads it back", () => {
+    const server = buildServerEntry(withSkip(["/health*", "/ping"]));
+    expect(server.routes).toHaveLength(2);
+    expect(server.routes?.[0]).toEqual({ match: [{ path: ["/health*", "/ping"] }], handle: [{ handler: "vars", log_skip: true }] });
+    const config = { apps: { http: { servers: { srv0: server } } }, logging: { logs: { "cockpit-access-7700": { writer: { output: "stderr" }, include: ["http.log.access.cockpit-access-7700"] } } } } as unknown as CaddyConfig;
+    const entries = parseProxies(config);
+    expect(entries).toHaveLength(1);
+    expect(entries[0].accessLog?.skipPaths).toEqual(["/health*", "/ping"]);
+  });
+
+  it("keeps the host matcher of the site on the skip route", () => {
+    const server = buildServerEntry(withSkip(["/x"], { externalHost: "a.example.com, b.example.com" }));
+    expect(server.routes?.[0].match).toEqual([{ host: ["a.example.com", "b.example.com"], path: ["/x"] }]);
+  });
+
+  it("drops the route when the paths are cleared and when the site has its own path matcher", () => {
+    const withRoute = buildServerEntry(withSkip(["/x"]));
+    expect(patchServer(withRoute, withSkip([])).routes).toHaveLength(1);
+    expect(buildServerEntry(withSkip(["/x"], { matchers: { path: ["/api/*"] } })).routes).toHaveLength(1);
+  });
+
+  it("does not patch the skip route as if it were the site", () => {
+    const original = buildServerEntry(withSkip(["/x"]));
+    const patched = patchServer(original, withSkip(["/x"], { targetPort: 9999 }));
+    expect(patched.routes).toHaveLength(2);
+    expect(patched.routes?.[0]).toEqual(original.routes?.[0]);
   });
 });
 

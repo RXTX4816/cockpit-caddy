@@ -596,7 +596,16 @@
     "roll_keep_count": "Säilytettävät kierrätetyt tiedostot",
     "roll_keep_days": "Kierrätettyjen tiedostojen enimmäisikä (päivää)",
     "roll_compress": "Pakkaa kierrätetyt tiedostot (gzip)",
-    "roll_help": "Caddy kierrättää lokitiedoston oletuksena. Jätä kenttä tyhjäksi käyttääksesi Caddyn oletusta, joka näkyy harmaana."
+    "roll_help": "Caddy kierrättää lokitiedoston oletuksena. Jätä kenttä tyhjäksi käyttääksesi Caddyn oletusta, joka näkyy harmaana.",
+    "field_filters": "Kenttäsuodattimet",
+    "field_filters_help": "Yksi riviä kohti: kentän polku ja sitten delete, hash, replace <teksti> tai ip_mask <IPv4-bitit> [<IPv6-bitit>], esimerkiksi request>headers>Authorization delete.",
+    "field_filters_invalid": "Jokaisella rivillä on oltava kentän polku ja delete, hash, replace <teksti> tai ip_mask <bitit>.",
+    "include": "Ota mukaan lokittajat",
+    "include_help": "Lokittajien nimet, joita tämä loki kirjoittaa, välilyönnein erotettuina, esimerkiksi http.log.access. Tyhjä tarkoittaa kaikkia.",
+    "exclude": "Jätä pois lokittajat",
+    "exclude_help": "Lokittajien nimet, jotka tämä loki ohittaa, välilyönnein erotettuina, esimerkiksi http.log.access.log0.",
+    "skip_paths": "Lokista pois jätettävät polut",
+    "skip_paths_help": "Välilyönnein erotetut polut, jokerimerkit sallittu, esimerkiksi /health* /ping. Niihin tehtyjä pyyntöjä ei kirjata."
   },
   "config_check": {
     "button": "Tarkista asetukset",

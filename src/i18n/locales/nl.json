@@ -596,7 +596,16 @@
     "roll_keep_count": "Te bewaren geroteerde bestanden",
     "roll_keep_days": "Max. leeftijd van geroteerde bestanden (dagen)",
     "roll_compress": "Geroteerde bestanden comprimeren (gzip)",
-    "roll_help": "Caddy roteert het logbestand standaard. Laat een veld leeg om de standaardwaarde van Caddy te gebruiken, grijs weergegeven."
+    "roll_help": "Caddy roteert het logbestand standaard. Laat een veld leeg om de standaardwaarde van Caddy te gebruiken, grijs weergegeven.",
+    "field_filters": "Veldfilters",
+    "field_filters_help": "Eén per regel: een veldpad, dan delete, hash, replace <tekst> of ip_mask <IPv4-bits> [<IPv6-bits>], bijvoorbeeld request>headers>Authorization delete.",
+    "field_filters_invalid": "Elke regel heeft een veldpad en delete, hash, replace <tekst> of ip_mask <bits> nodig.",
+    "include": "Loggers opnemen",
+    "include_help": "Loggernamen die dit logboek schrijft, gescheiden door spaties, bijvoorbeeld http.log.access. Leeg betekent alle.",
+    "exclude": "Loggers weglaten",
+    "exclude_help": "Loggernamen die dit logboek overslaat, gescheiden door spaties, bijvoorbeeld http.log.access.log0.",
+    "skip_paths": "Paden die niet worden gelogd",
+    "skip_paths_help": "Door spaties gescheiden paden, jokertekens toegestaan, bijvoorbeeld /health* /ping. Verzoeken ernaartoe worden niet gelogd."
   },
   "config_check": {
     "button": "Configuratie controleren",

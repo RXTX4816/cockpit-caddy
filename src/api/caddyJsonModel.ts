@@ -689,7 +689,7 @@ export function parseRouteToEntry(
   externalPort: number,
   externalHost: string | undefined,
   server: CaddyServer,
-  accessLog: import("./types").AccessLogConfig | undefined,
+  siteAccessLog: import("./types").AccessLogConfig | undefined,
   serverReadTimeout: string | undefined,
   serverReadHeaderTimeout: string | undefined,
   serverWriteTimeout: string | undefined,
@@ -725,6 +725,10 @@ export function parseRouteToEntry(
   const effectiveHandles: AnyHandler[] = subrouteH?.routes?.length
     ? subrouteH.routes.flatMap(r => (r.handle ?? []) as AnyHandler[])
     : handles;
+  // A `log_skip` inside the site's own subroute keeps its paths in the site's log settings (#334).
+  const innerSkipPaths = (subrouteH?.routes ?? []).filter(isLogSkipRoute)
+    .flatMap(r => logSkipRoutePaths(r as { match?: Array<Record<string, unknown>> }).paths);
+  const accessLog = siteAccessLog && innerSkipPaths.length ? { ...siteAccessLog, skipPaths: innerSkipPaths } : siteAccessLog;
 
   // Detect php_fastcgi (#35) — must run before the redirect/static_response checks below,
   // since php_fastcgi's own trailing-slash-redirect route is itself a static_response with
@@ -992,6 +996,7 @@ export function parseProxies(config: CaddyConfig, serverDefs?: import("./types")
   const automationPolicies = config.apps?.tls?.automation?.policies;
   const certLoadFiles = config.apps?.tls?.certificates?.load_files;
   const proxies: ProxyEntry[] = [];
+  const logSkipByServer = new Map<string, Array<{ paths: string[]; hosts: string[] }>>();
 
   for (const [key, server] of Object.entries(servers)) {
     // Handle :9393, localhost:9393, https://localhost:9393
@@ -1022,7 +1027,7 @@ export function parseProxies(config: CaddyConfig, serverDefs?: import("./types")
         accessLog = {
           output,
           filePath: loggerCfg.writer?.filename,
-          format: loggerCfg.encoder?.format as import("./types").AccessLogFormat | undefined,
+          ...parseLogEncoder(loggerCfg.encoder),
           level: loggerCfg.level as import("./types").AccessLogLevel | undefined,
           rollSizeMb: loggerCfg.writer?.roll_size_mb,
           rollKeepCount: loggerCfg.writer?.roll_keep,
@@ -1032,7 +1037,11 @@ export function parseProxies(config: CaddyConfig, serverDefs?: import("./types")
       }
     }
 
-    const routes = server.routes ?? [];
+    // `log_skip` routes are no sites of their own: their paths belong to the site's log (#334).
+    const allRoutes = server.routes ?? [];
+    const routes = allRoutes.filter(r => !isLogSkipRoute(r));
+    const skipRoutes = allRoutes.filter(r => isLogSkipRoute(r));
+    if (skipRoutes.length) logSkipByServer.set(key, skipRoutes.map(logSkipRoutePaths));
 
     // Determine whether this is a named server (multiple content routes, not from named_routes)
     // Skip routes that come from the `named_routes` map (invoke placeholders are already loaded)
@@ -1134,6 +1143,15 @@ export function parseProxies(config: CaddyConfig, serverDefs?: import("./types")
         if (entry) proxies.push(entry);
       }
     }
+  }
+
+  // The paths of a server's `log_skip` routes go to the sites they match: all of them without a host (#334).
+  for (const p of proxies) {
+    const rules = logSkipByServer.get(p.serverKey);
+    if (!rules || !p.accessLog) continue;
+    const hosts = externalHostList(p.externalHost);
+    const paths = rules.filter(r => !r.hosts.length || r.hosts.some(h => hosts.includes(h))).flatMap(r => r.paths);
+    if (paths.length) p.accessLog = { ...p.accessLog, skipPaths: [...new Set([...(p.accessLog.skipPaths ?? []), ...paths])] };
   }
 
   return proxies.sort((a, b) => {
@@ -1370,6 +1388,23 @@ export function serverHasTls(
 }
 
 
+/** A route that only tells Caddy not to log what matches, which `log_skip` adapts to (#334). */
+export function isLogSkipRoute(route: { handle?: AnyHandler[] } | undefined): boolean {
+  const handles = (route?.handle ?? []) as AnyHandler[];
+  return handles.length > 0 && handles.every(h => h.handler === "vars" && (h as { log_skip?: boolean }).log_skip === true && Object.keys(h).length === 2);
+}
+
+
+/** The paths (and the hosts, when it names any) of the requests a `log_skip` route keeps out of the log. */
+export function logSkipRoutePaths(route: { match?: Array<Record<string, unknown>> }): { paths: string[]; hosts: string[] } {
+  const matches = route.match ?? [];
+  return {
+    paths: matches.flatMap(m => (m.path as string[] | undefined) ?? []),
+    hosts: matches.flatMap(m => (m.host as string[] | undefined) ?? []),
+  };
+}
+
+
 /** Stable logger name for a proxy's access log, keyed by port. */
 export function accessLoggerName(port: number): string {
   return `cockpit-access-${port}`;
@@ -1382,6 +1417,19 @@ export function applyAccessLog(server: CaddyServer, proxy: { externalPort: numbe
   } else {
     delete (server as Record<string, unknown>).logs;
   }
+  // `log_skip` is a route ahead of the site's own, with the site's host matcher and the paths (#334).
+  const routes = (server.routes ?? []).filter(r => !isLogSkipRoute(r));
+  const paths = proxy.accessLog?.skipPaths;
+  if (paths?.length && routes.length) {
+    const base = routes[0].match as Array<Record<string, unknown>> | undefined;
+    // A site that matches a path of its own can't be narrowed the same way: write none.
+    if (!base?.some(m => m.path)) {
+      const match = base?.length ? base.map(m => ({ ...m, path: paths })) : [{ path: paths }];
+      server.routes = [{ match, handle: [{ handler: "vars", log_skip: true } as CaddyHandler] } as CaddyRoute, ...routes];
+      return;
+    }
+  }
+  server.routes = routes;
 }
 
 
@@ -1881,7 +1929,7 @@ export function patchServer(original: CaddyServer, proxy: ProxyEntry): CaddyServ
   }
 
   const siteMatch = siteHostMatch(proxy);
-  server.routes = (original.routes ?? []).map(route => {
+  server.routes = (original.routes ?? []).filter(route => !isLogSkipRoute(route)).map(route => {
     const patched: CaddyRoute = { ...route, handle: patchHandles((route.handle ?? []) as CaddyHandler[], proxy) };
     if (siteMatch) patched.match = siteMatch;
     // A name list set by an earlier multi-host save would otherwise outlive the edit
@@ -1905,6 +1953,33 @@ export function buildLoggingWriter(accessLog: import("./types").AccessLogConfig)
   if (accessLog.rollKeepDays) writer.roll_keep_days = accessLog.rollKeepDays;
   if (accessLog.rollCompress === false) writer.roll_gzip = false;
   return writer;
+}
+
+
+/** The `filter` encoder of #334: the field filters, wrapped around the encoder that writes the entry. */
+export function buildFilterEncoder(format: string | undefined, filters: import("./types").LogFieldFilter[]): import("./types").CaddyLogEncoder {
+  const fields: NonNullable<import("./types").CaddyLogEncoder["fields"]> = {};
+  for (const f of filters) {
+    fields[f.field] = f.filter === "replace" ? { filter: "replace", value: f.value ?? "" }
+      : f.filter === "ip_mask" ? { filter: "ip_mask", ...(f.ipv4 != null ? { ipv4_cidr: f.ipv4 } : {}), ...(f.ipv6 != null ? { ipv6_cidr: f.ipv6 } : {}) }
+      : { filter: f.filter };
+  }
+  return { format: "filter", wrap: { format: format ?? "json" }, fields };
+}
+
+
+/** The format and field filters of a logger's encoder (#334), reading `filter` through to what it wraps. */
+export function parseLogEncoder(encoder: import("./types").CaddyLogEncoder | undefined): Pick<import("./types").AccessLogConfig, "format" | "fieldFilters"> {
+  if (encoder?.format !== "filter") return { format: encoder?.format as import("./types").AccessLogFormat | undefined };
+  const fieldFilters = Object.entries(encoder.fields ?? {}).flatMap(([field, f]): import("./types").LogFieldFilter[] => {
+    if (f.filter === "replace") return [{ field, filter: "replace", value: f.value ?? "" }];
+    if (f.filter === "ip_mask") return [{ field, filter: "ip_mask", ...(f.ipv4_cidr != null ? { ipv4: f.ipv4_cidr } : {}), ...(f.ipv6_cidr != null ? { ipv6: f.ipv6_cidr } : {}) }];
+    return f.filter === "delete" || f.filter === "hash" ? [{ field, filter: f.filter }] : [];
+  });
+  return {
+    format: encoder.wrap?.format as import("./types").AccessLogFormat | undefined,
+    ...(fieldFilters.length ? { fieldFilters } : {}),
+  };
 }
 
 
@@ -1937,7 +2012,8 @@ export function patchLoggingLogs(
       writer: buildLoggingWriter(proxy.accessLog),
       include: [incKey],
     };
-    if (proxy.accessLog.format) logEntry.encoder = { format: proxy.accessLog.format };
+    if (proxy.accessLog.fieldFilters?.length) logEntry.encoder = buildFilterEncoder(proxy.accessLog.format, proxy.accessLog.fieldFilters);
+    else if (proxy.accessLog.format) logEntry.encoder = { format: proxy.accessLog.format };
     if (proxy.accessLog.level) logEntry.level = proxy.accessLog.level;
     existingLogs[loggerName] = logEntry;
 
@@ -2147,7 +2223,8 @@ export function mergeNamedServer(
     const existingLogs = { ...(config.logging?.logs ?? {}) };
     existingLogs[loggerName] = {
       writer: buildLoggingWriter(def.accessLog),
-      ...(def.accessLog.format ? { encoder: { format: def.accessLog.format } } : {}),
+      ...(def.accessLog.fieldFilters?.length ? { encoder: buildFilterEncoder(def.accessLog.format, def.accessLog.fieldFilters) }
+        : def.accessLog.format ? { encoder: { format: def.accessLog.format } } : {}),
       ...(def.accessLog.level ? { level: def.accessLog.level } : {}),
     };
     const defExcludes = new Set<string>(existingLogs.default?.exclude ?? []);

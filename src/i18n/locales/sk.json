@@ -596,7 +596,16 @@
     "roll_keep_count": "Počet ponechaných rotovaných súborov",
     "roll_keep_days": "Max. vek rotovaných súborov (dni)",
     "roll_compress": "Komprimovať rotované súbory (gzip)",
-    "roll_help": "Caddy predvolene rotuje súbor protokolu. Nechajte pole prázdne pre predvolenú hodnotu Caddy, zobrazenú sivou."
+    "roll_help": "Caddy predvolene rotuje súbor protokolu. Nechajte pole prázdne pre predvolenú hodnotu Caddy, zobrazenú sivou.",
+    "field_filters": "Filtre polí",
+    "field_filters_help": "Jeden na riadok: cesta poľa, potom delete, hash, replace <text> alebo ip_mask <bity IPv4> [<bity IPv6>], napríklad request>headers>Authorization delete.",
+    "field_filters_invalid": "Každý riadok potrebuje cestu poľa a jedno z delete, hash, replace <text> alebo ip_mask <bity>.",
+    "include": "Zahrnúť loggery",
+    "include_help": "Názvy loggerov, ktoré tento log zapisuje, oddelené medzerami, napríklad http.log.access. Prázdne znamená všetky.",
+    "exclude": "Vynechať loggery",
+    "exclude_help": "Názvy loggerov, ktoré tento log preskakuje, oddelené medzerami, napríklad http.log.access.log0.",
+    "skip_paths": "Cesty vynechané z logu",
+    "skip_paths_help": "Cesty oddelené medzerami, zástupné znaky sú povolené, napríklad /health* /ping. Požiadavky na ne sa nezapisujú."
   },
   "config_check": {
     "button": "Skontrolovať konfiguráciu",

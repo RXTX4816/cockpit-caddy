@@ -596,7 +596,16 @@
     "roll_keep_count": "Arquivos rotacionados a manter",
     "roll_keep_days": "Idade máx. dos arquivos rotacionados (dias)",
     "roll_compress": "Compactar arquivos rotacionados (gzip)",
-    "roll_help": "O Caddy rotaciona o arquivo de log por padrão. Deixe um campo vazio para usar o padrão do Caddy, mostrado em cinza."
+    "roll_help": "O Caddy rotaciona o arquivo de log por padrão. Deixe um campo vazio para usar o padrão do Caddy, mostrado em cinza.",
+    "field_filters": "Filtros de campos",
+    "field_filters_help": "Um por linha: o caminho de um campo e depois delete, hash, replace <texto> ou ip_mask <bits IPv4> [<bits IPv6>], por exemplo request>headers>Authorization delete.",
+    "field_filters_invalid": "Cada linha precisa do caminho de um campo e de delete, hash, replace <texto> ou ip_mask <bits>.",
+    "include": "Incluir loggers",
+    "include_help": "Nomes de loggers que este log grava, separados por espaços, por exemplo http.log.access. Vazio significa todos.",
+    "exclude": "Excluir loggers",
+    "exclude_help": "Nomes de loggers que este log ignora, separados por espaços, por exemplo http.log.access.log0.",
+    "skip_paths": "Caminhos fora do log",
+    "skip_paths_help": "Caminhos separados por espaços, com curingas permitidos, por exemplo /health* /ping. As requisições a eles não são registradas."
   },
   "config_check": {
     "button": "Verificar configuração",

@@ -10,9 +10,10 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync, writeFileSync, rmSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { CONF_HEADER, buildServerEntry, proxiesToCaddyfile, parseProxies, parseConfExternalAddresses, proxyAddressKeys, resolveInternalIssuerSettings, surgicallyWriteProxy, buildMigratedConfContent, migrateCaddyfile, parseConfTlsIssuerMap, parseConfTlsOnDemandMap, parseConfTlsMap, expandPlaceholderShorthands } from "./caddy";
+import { CONF_HEADER, parseConfAccessLogMap, buildServerEntry, proxiesToCaddyfile, parseProxies, parseConfExternalAddresses, proxyAddressKeys, resolveInternalIssuerSettings, surgicallyWriteProxy, buildMigratedConfContent, migrateCaddyfile, parseConfTlsIssuerMap, parseConfTlsOnDemandMap, parseConfTlsMap, expandPlaceholderShorthands } from "./caddy";
 import { snippetsToConf, parseSnippets, parseConfSiteImports, parseConfSiteBlocks, separateSnippetSettings } from "./snippets";
-import { buildEncodeHandler, buildRedirectHandler } from "./caddyJsonModel";
+import { buildEncodeHandler, buildFilterEncoder, buildRedirectHandler } from "./caddyJsonModel";
+import { buildGlobalOptionsPatch } from "./globalOptions";
 import type { CaddyConfig, CaddyServer, ProxyEntry } from "./types";
 
 function hasCaddy(): boolean {
@@ -927,6 +928,62 @@ describe.runIf(available || required)("caddy adapt accepts the templates directi
   it("reads no templates from a plain static site", () => {
     const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, targetPort: 0, fileServer: { root: "/srv/www" } })]));
     expect(p.fileServer?.templates).toBeUndefined();
+  });
+});
+
+describe.runIf(available || required)("caddy adapt accepts access log field filters (#334)", () => {
+  const filters = [
+    { field: "request>headers>Authorization", filter: "delete" as const },
+    { field: "request>headers>Cookie", filter: "hash" as const },
+    { field: "request>uri", filter: "replace" as const, value: "secret" },
+    { field: "request>remote_ip", filter: "ip_mask" as const, ipv4: 24, ipv6: 64 },
+  ];
+
+  it("reads the filters back from a real adapt", () => {
+    const accessLog = { output: "stderr" as const, format: "console" as const, fieldFilters: filters };
+    const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, accessLog })]));
+    expect(p.accessLog?.format).toBe("console");
+    expect(p.accessLog?.fieldFilters).toEqual(expect.arrayContaining(filters));
+    expect(p.accessLog?.fieldFilters).toHaveLength(4);
+  });
+
+  it("builds the encoder Caddy builds", () => {
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, accessLog: { output: "stderr", format: "console", fieldFilters: filters } })]);
+    const logs = adapt(conf).logging?.logs ?? {};
+    const real = Object.values(logs).find(l => l.encoder?.format === "filter")?.encoder;
+    expect(buildFilterEncoder("console", filters)).toEqual(real);
+  });
+
+  it("accepts include and exclude in Caddy's own log", () => {
+    const patched = buildGlobalOptionsPatch("", { runtimeLog: { output: "stderr", include: ["http.log.access"], exclude: ["admin"] } });
+    const logs = adapt(`${patched}\n:8080 {\n\trespond ok\n}\n`).logging?.logs ?? {};
+    expect(logs.default).toMatchObject({ include: ["http.log.access"], exclude: ["admin"] });
+  });
+});
+
+describe.runIf(available || required)("caddy adapt accepts log_skip (#334)", () => {
+  it("reads a lone path and several paths back from the adapted JSON of a hostless site", () => {
+    for (const skipPaths of [["/health*"], ["/health*", "/ping"]]) {
+      const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, accessLog: { output: "stderr", skipPaths } })]);
+      const proxies = readBack(conf);
+      expect(proxies).toHaveLength(1);
+      expect(proxies[0].accessLog?.skipPaths).toEqual(skipPaths);
+    }
+  });
+
+  it("takes a site with a host as one site and reads its paths from the Caddyfile, where Caddy names the logger itself", () => {
+    for (const skipPaths of [["/health*"], ["/health*", "/ping"]]) {
+      const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, externalHost: "example.com", accessLog: { output: "stderr", skipPaths } })]);
+      expect(readBack(conf)).toHaveLength(1);
+      expect(Object.values(parseConfAccessLogMap(conf))[0].skipPaths).toEqual(skipPaths);
+    }
+  });
+
+  it("builds the route Caddy builds", () => {
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, accessLog: { output: "stderr", skipPaths: ["/health*", "/ping"] } })]);
+    const real = Object.values(adapt(conf).apps?.http?.servers ?? {})[0] as CaddyServer;
+    const pushed = buildServerEntry(entry({ tls: false, externalPort: 8080, accessLog: { output: "stderr", skipPaths: ["/health*", "/ping"] } }));
+    expect(pushed.routes?.[0]).toEqual(real.routes?.[0]);
   });
 });
 

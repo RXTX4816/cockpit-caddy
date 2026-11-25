@@ -596,7 +596,16 @@
     "roll_keep_count": "Rolled files to keep",
     "roll_keep_days": "Max age of rolled files (days)",
     "roll_compress": "Compress rolled files (gzip)",
-    "roll_help": "Caddy rotates the log file by default. Leave a field empty to use Caddy's default, shown greyed out."
+    "roll_help": "Caddy rotates the log file by default. Leave a field empty to use Caddy's default, shown greyed out.",
+    "field_filters": "Field filters",
+    "field_filters_help": "One per line: a field path, then delete, hash, replace <text> or ip_mask <IPv4 bits> [<IPv6 bits>], for example request>headers>Authorization delete.",
+    "field_filters_invalid": "Each line needs a field path and one of delete, hash, replace <text> or ip_mask <bits>.",
+    "include": "Take in loggers",
+    "include_help": "Logger names this log writes, space-separated, for example http.log.access. Empty means all.",
+    "exclude": "Leave out loggers",
+    "exclude_help": "Logger names this log skips, space-separated, for example http.log.access.log0.",
+    "skip_paths": "Paths to leave out of the log",
+    "skip_paths_help": "Space-separated paths, wildcards allowed, for example /health* /ping. Requests to them are not logged."
   },
   "config_check": {
     "button": "Check Config",

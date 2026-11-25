@@ -596,7 +596,16 @@
     "roll_keep_count": "Antal roterade filer att behålla",
     "roll_keep_days": "Max. ålder på roterade filer (dagar)",
     "roll_compress": "Komprimera roterade filer (gzip)",
-    "roll_help": "Caddy roterar loggfilen som standard. Lämna ett fält tomt för att använda Caddys standardvärde, som visas i grått."
+    "roll_help": "Caddy roterar loggfilen som standard. Lämna ett fält tomt för att använda Caddys standardvärde, som visas i grått.",
+    "field_filters": "Fältfilter",
+    "field_filters_help": "Ett per rad: en fältsökväg och sedan delete, hash, replace <text> eller ip_mask <IPv4-bitar> [<IPv6-bitar>], till exempel request>headers>Authorization delete.",
+    "field_filters_invalid": "Varje rad behöver en fältsökväg och delete, hash, replace <text> eller ip_mask <bitar>.",
+    "include": "Ta med loggare",
+    "include_help": "Loggarnamn som den här loggen skriver, avgränsade med mellanslag, till exempel http.log.access. Tomt betyder alla.",
+    "exclude": "Utelämna loggare",
+    "exclude_help": "Loggarnamn som den här loggen hoppar över, avgränsade med mellanslag, till exempel http.log.access.log0.",
+    "skip_paths": "Sökvägar som inte loggas",
+    "skip_paths_help": "Mellanslagsavgränsade sökvägar, jokertecken tillåtna, till exempel /health* /ping. Förfrågningar till dem loggas inte."
   },
   "config_check": {
     "button": "Kontrollera konfiguration",

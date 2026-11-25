@@ -596,7 +596,16 @@
     "roll_keep_count": "保持するローテーション済みファイル数",
     "roll_keep_days": "ローテーション済みファイルの最大保持日数",
     "roll_compress": "ローテーション済みファイルを圧縮（gzip）",
-    "roll_help": "Caddy は既定でログファイルをローテーションします。Caddy の既定値（灰色で表示）を使うには、欄を空のままにしてください。"
+    "roll_help": "Caddy は既定でログファイルをローテーションします。Caddy の既定値（灰色で表示）を使うには、欄を空のままにしてください。",
+    "field_filters": "フィールドフィルター",
+    "field_filters_help": "1 行に 1 つ:フィールドのパス、続けて delete、hash、replace <テキスト>、または ip_mask <IPv4 のビット数> [<IPv6 のビット数>]。例: request>headers>Authorization delete",
+    "field_filters_invalid": "各行にフィールドのパスと、delete、hash、replace <テキスト>、ip_mask <ビット数> のいずれかが必要です。",
+    "include": "取り込むロガー",
+    "include_help": "このログが書き込むロガー名(スペース区切り)。例: http.log.access。空欄はすべてです。",
+    "exclude": "除外するロガー",
+    "exclude_help": "このログが除外するロガー名(スペース区切り)。例: http.log.access.log0",
+    "skip_paths": "ログに記録しないパス",
+    "skip_paths_help": "スペース区切りのパス。ワイルドカードも使えます。例: /health* /ping。これらへのリクエストは記録されません。"
   },
   "config_check": {
     "button": "設定をチェック",

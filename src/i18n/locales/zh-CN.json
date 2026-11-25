@@ -596,7 +596,16 @@
     "roll_keep_count": "保留的轮转文件数",
     "roll_keep_days": "轮转文件的最长保留天数",
     "roll_compress": "压缩轮转文件（gzip）",
-    "roll_help": "Caddy 默认会轮转日志文件。留空即使用以灰色显示的 Caddy 默认值。"
+    "roll_help": "Caddy 默认会轮转日志文件。留空即使用以灰色显示的 Caddy 默认值。",
+    "field_filters": "字段过滤器",
+    "field_filters_help": "每行一个:字段路径,后接 delete、hash、replace <文本> 或 ip_mask <IPv4 位数> [<IPv6 位数>],例如 request>headers>Authorization delete。",
+    "field_filters_invalid": "每一行都需要字段路径,以及 delete、hash、replace <文本> 或 ip_mask <位数> 之一。",
+    "include": "纳入的日志记录器",
+    "include_help": "此日志写入的记录器名称,以空格分隔,例如 http.log.access。留空表示全部。",
+    "exclude": "排除的日志记录器",
+    "exclude_help": "此日志跳过的记录器名称,以空格分隔,例如 http.log.access.log0。",
+    "skip_paths": "不写入日志的路径",
+    "skip_paths_help": "以空格分隔的路径,可使用通配符,例如 /health* /ping。对这些路径的请求不会被记录。"
   },
   "config_check": {
     "button": "检查配置",

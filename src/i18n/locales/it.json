@@ -596,7 +596,16 @@
     "roll_keep_count": "File ruotati da conservare",
     "roll_keep_days": "Età max. dei file ruotati (giorni)",
     "roll_compress": "Comprimi i file ruotati (gzip)",
-    "roll_help": "Caddy ruota il file di log per impostazione predefinita. Lascia un campo vuoto per usare il valore predefinito di Caddy, mostrato in grigio."
+    "roll_help": "Caddy ruota il file di log per impostazione predefinita. Lascia un campo vuoto per usare il valore predefinito di Caddy, mostrato in grigio.",
+    "field_filters": "Filtri dei campi",
+    "field_filters_help": "Uno per riga: il percorso di un campo, poi delete, hash, replace <testo> o ip_mask <bit IPv4> [<bit IPv6>], ad esempio request>headers>Authorization delete.",
+    "field_filters_invalid": "Ogni riga richiede il percorso di un campo e delete, hash, replace <testo> o ip_mask <bit>.",
+    "include": "Includi logger",
+    "include_help": "Nomi dei logger che questo registro scrive, separati da spazi, ad esempio http.log.access. Vuoto significa tutti.",
+    "exclude": "Escludi logger",
+    "exclude_help": "Nomi dei logger che questo registro salta, separati da spazi, ad esempio http.log.access.log0.",
+    "skip_paths": "Percorsi esclusi dal registro",
+    "skip_paths_help": "Percorsi separati da spazi, con caratteri jolly consentiti, ad esempio /health* /ping. Le richieste a questi percorsi non vengono registrate."
   },
   "config_check": {
     "button": "Controlla configurazione",

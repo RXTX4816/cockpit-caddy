@@ -182,6 +182,10 @@ export interface CaddyLogWriter {
 
 export interface CaddyLogEncoder {
   format: string;
+  /** `format: "filter"` only (#334): what to do with fields, keyed by their path (`request>headers>Cookie`). */
+  fields?: Record<string, { filter: string; value?: string; ipv4_cidr?: number; ipv6_cidr?: number }>;
+  /** `format: "filter"` only: the encoder that writes the filtered entry. */
+  wrap?: { format: string };
 }
 
 export interface CaddyLoggerConfig {
@@ -251,6 +255,25 @@ export interface AccessLogConfig {
   /** Compress rolled files with gzip. Caddy's own default is true when rotation is
    *  configured at all; only written as `roll_uncompressed` when explicitly false. */
   rollCompress?: boolean;
+  /** Fields to drop, hash, replace or mask before an entry is written (`format filter`, #334). */
+  fieldFilters?: LogFieldFilter[];
+  /** `log_skip`: requests to these paths are not logged (#334). Only for a site's own log. */
+  skipPaths?: string[];
+  /** Caddy's own log only: logger namespaces this log takes in or leaves out (#334). */
+  include?: string[];
+  exclude?: string[];
+}
+
+/** One line of `format filter { <field> <filter> … }`. */
+export interface LogFieldFilter {
+  /** The field's path, e.g. `request>headers>Authorization`. */
+  field: string;
+  filter: "delete" | "hash" | "replace" | "ip_mask";
+  /** `replace`: what to write instead. */
+  value?: string;
+  /** `ip_mask`: how many leading bits of an IPv4 / IPv6 address to keep. */
+  ipv4?: number;
+  ipv6?: number;
 }
 
 /** Trusted proxy CIDR ranges + client-IP header config (#153) — global (applies to every

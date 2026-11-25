@@ -596,7 +596,16 @@
     "roll_keep_count": "Archivos rotados que se conservan",
     "roll_keep_days": "Antigüedad máx. de los archivos rotados (días)",
     "roll_compress": "Comprimir los archivos rotados (gzip)",
-    "roll_help": "Caddy rota el archivo de registro de forma predeterminada. Deja un campo vacío para usar el valor predeterminado de Caddy, que se muestra en gris."
+    "roll_help": "Caddy rota el archivo de registro de forma predeterminada. Deja un campo vacío para usar el valor predeterminado de Caddy, que se muestra en gris.",
+    "field_filters": "Filtros de campos",
+    "field_filters_help": "Uno por línea: la ruta de un campo y luego delete, hash, replace <texto> o ip_mask <bits IPv4> [<bits IPv6>], por ejemplo request>headers>Authorization delete.",
+    "field_filters_invalid": "Cada línea necesita la ruta de un campo y delete, hash, replace <texto> o ip_mask <bits>.",
+    "include": "Incluir registradores",
+    "include_help": "Nombres de registradores que escribe este registro, separados por espacios, por ejemplo http.log.access. Vacío significa todos.",
+    "exclude": "Excluir registradores",
+    "exclude_help": "Nombres de registradores que este registro omite, separados por espacios, por ejemplo http.log.access.log0.",
+    "skip_paths": "Rutas que se omiten del registro",
+    "skip_paths_help": "Rutas separadas por espacios, con comodines permitidos, por ejemplo /health* /ping. Las peticiones a ellas no se registran."
   },
   "config_check": {
     "button": "Comprobar configuración",

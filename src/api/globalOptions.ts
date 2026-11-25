@@ -2,7 +2,7 @@
 // parsing it into GlobalOptions, patching changed options back in, the metrics site block and the
 // DNS-challenge provider lines. Pure: no Host, no I/O. Builds on caddyfileDocument.
 
-import { findGlobalBlock, parseDnsProviderDirective } from "./caddyfileDocument";
+import { findGlobalBlock, parseDnsProviderDirective, parseFieldFilterLine } from "./caddyfileDocument";
 
 /** Generates the Caddyfile block for a single proxy (label comment + block body). */
 /**
@@ -55,6 +55,19 @@ export function buildProxyProtocolLines(pp: import("./types").ProxyProtocolConfi
 }
 
 
+function quoteFilterValue(v: string): string {
+  return /[\s"]/.test(v) || v === "" ? `"${v.replace(/"/g, '\\"')}"` : v;
+}
+
+
+/** One `format filter` line (#334): what to do with a field before the entry is written. */
+export function fieldFilterLine(f: import("./types").LogFieldFilter): string {
+  if (f.filter === "replace") return `${f.field} replace ${quoteFilterValue(f.value ?? "")}`;
+  if (f.filter === "ip_mask") return `${f.field} ip_mask ${f.ipv4 ?? 32}${f.ipv6 != null ? ` ${f.ipv6}` : ""}`;
+  return `${f.field} ${f.filter}`;
+}
+
+
 export function buildLogCaddyLines(log: import("./types").AccessLogConfig): string[] {
   const lines = ["\tlog {"];
   const rollLines = log.output === "file" ? buildLogRollLines(log, "\t\t\t") : [];
@@ -67,9 +80,19 @@ export function buildLogCaddyLines(log: import("./types").AccessLogConfig): stri
   } else {
     lines.push(`\t\toutput ${log.output}`);
   }
-  if (log.format) lines.push(`\t\tformat ${log.format}`);
+  if (log.fieldFilters?.length) {
+    // The encoder that writes the entry goes in `wrap`; without a choice that is JSON.
+    lines.push("\t\tformat filter {", `\t\t\twrap ${log.format ?? "json"}`, ...log.fieldFilters.map(f => `\t\t\t${fieldFilterLine(f)}`), "\t\t}");
+  } else if (log.format) {
+    lines.push(`\t\tformat ${log.format}`);
+  }
   if (log.level) lines.push(`\t\tlevel ${log.level}`);
+  if (log.include?.length) lines.push(`\t\tinclude ${log.include.join(" ")}`);
+  if (log.exclude?.length) lines.push(`\t\texclude ${log.exclude.join(" ")}`);
   lines.push("\t}");
+  // `log_skip` takes one matcher: a lone path as it is, several as a named matcher (#334).
+  if (log.skipPaths?.length === 1) lines.push(`\tlog_skip ${log.skipPaths[0]}`);
+  else if (log.skipPaths?.length) lines.push(`\t@cockpit-log-skip path ${log.skipPaths.join(" ")}`, "\tlog_skip @cockpit-log-skip");
   return lines;
 }
 
@@ -332,6 +355,8 @@ export function parseOptionLines(lines: string[]): GlobalOptions {
         if (depth <= 0) break;
         if (inner === "}") { i++; continue; }
         if (inner === "roll_uncompressed") { runtimeLog.rollCompress = false; i++; continue; }
+        const filter = parseFieldFilterLine(inner);
+        if (filter) { (runtimeLog.fieldFilters ??= []).push(filter); i++; continue; }
         const im = inner.match(/^(\S+)(?:\s+(.*))?$/);
         if (im) {
           const [, ik, iv] = im;
@@ -345,7 +370,11 @@ export function parseOptionLines(lines: string[]): GlobalOptions {
           } else if (ik === "level" && iv) {
             runtimeLog.level = iv.trim() as import("./types").AccessLogLevel;
           } else if (ik === "format" && iv) {
+            if (!/^filter\b/.test(iv.trim())) runtimeLog.format = iv.trim() as import("./types").AccessLogFormat;
+          } else if (ik === "wrap" && iv) {
             runtimeLog.format = iv.trim() as import("./types").AccessLogFormat;
+          } else if ((ik === "include" || ik === "exclude") && iv) {
+            runtimeLog[ik] = iv.trim().split(/\s+/);
           } else if (ik === "roll_size" && iv) {
             const mb = iv.trim().match(/^(\d+(?:\.\d+)?)MiB$/i);
             if (mb) runtimeLog.rollSizeMb = Math.round(parseFloat(mb[1]));

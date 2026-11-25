@@ -24,7 +24,7 @@ import type { ServerDef, ErrorHandlerConfig } from "../api";
 import { namedServerIsHostless } from "../api";
 import { TlsSection, type TlsValues, tlsValuesToAdvanced, tlsValuesToMtls, tlsConfigToValues, tlsValuesHaveErrors } from "./TlsSection";
 import { ServerTimeoutsSection, type ServerTimeoutValues } from "./ServerTimeoutsSection";
-import { AccessLogSection, type AccessLogValues, accessLogValuesToConfig, accessLogConfigToValues } from "./AccessLogSection";
+import { AccessLogSection, type AccessLogValues, accessLogValuesToConfig, accessLogConfigToValues, validateFieldFilters } from "./AccessLogSection";
 import { ErrorHandlersSection } from "./ErrorHandlersSection";
 import { sectionAccordionProps } from "./sectionAccordion";
 import { AccordionRow } from "./AccordionRow";
@@ -302,7 +302,7 @@ export function AddServerDialog({ existingKeys, onAdd, onClose }: Props) {
           </>
         ) : (
           <>
-            <Button variant="primary" onClick={handleAddClick} isDisabled={tlsValuesHaveErrors(tlsValues)}>
+            <Button variant="primary" onClick={handleAddClick} isDisabled={tlsValuesHaveErrors(tlsValues) || (accessLog.enabled && validateFieldFilters(accessLog.fieldFilters))}>
               {t("servers.add_server")}
             </Button>
             <Button variant="link" onClick={onClose}>

@@ -596,7 +596,16 @@
     "roll_keep_count": "Liczba zachowanych plików po rotacji",
     "roll_keep_days": "Maks. wiek plików po rotacji (dni)",
     "roll_compress": "Kompresuj pliki po rotacji (gzip)",
-    "roll_help": "Caddy domyślnie rotuje plik dziennika. Zostaw pole puste, aby użyć wartości domyślnej Caddy, pokazanej na szaro."
+    "roll_help": "Caddy domyślnie rotuje plik dziennika. Zostaw pole puste, aby użyć wartości domyślnej Caddy, pokazanej na szaro.",
+    "field_filters": "Filtry pól",
+    "field_filters_help": "Po jednym w wierszu: ścieżka pola, potem delete, hash, replace <tekst> lub ip_mask <bity IPv4> [<bity IPv6>], np. request>headers>Authorization delete.",
+    "field_filters_invalid": "Każdy wiersz wymaga ścieżki pola i jednego z: delete, hash, replace <tekst>, ip_mask <bity>.",
+    "include": "Uwzględnij loggery",
+    "include_help": "Nazwy loggerów, które ten dziennik zapisuje, oddzielone spacjami, np. http.log.access. Puste oznacza wszystkie.",
+    "exclude": "Pomiń loggery",
+    "exclude_help": "Nazwy loggerów, które ten dziennik pomija, oddzielone spacjami, np. http.log.access.log0.",
+    "skip_paths": "Ścieżki pomijane w dzienniku",
+    "skip_paths_help": "Ścieżki oddzielone spacjami, dozwolone symbole wieloznaczne, np. /health* /ping. Żądania do nich nie są zapisywane."
   },
   "config_check": {
     "button": "Sprawdź konfigurację",

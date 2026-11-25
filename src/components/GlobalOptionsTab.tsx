@@ -24,7 +24,7 @@ import { readGlobalOptions, syncGlobalOptions, reloadCaddy, fetchStorageInfo, ch
 import type { DnsChallengeConfig, GlobalOptions, StorageInfo } from "../api";
 import { DnsChallengeFields, dnsDraftFromConfig, dnsDraftToConfig, validateDnsDraft, type DnsDraft } from "./DnsChallengeFields";
 import { CertLifetimeSelect } from "./CertLifetimeSelect";
-import { AccessLogSection, type AccessLogValues, accessLogConfigToValues, accessLogValuesToConfig } from "./AccessLogSection";
+import { AccessLogSection, type AccessLogValues, accessLogConfigToValues, accessLogValuesToConfig, validateFieldFilters } from "./AccessLogSection";
 
 function isDuration(v: string): boolean {
   return !v || /^\d+(\.\d+)?(ns|us|ms|s|m|h)$/.test(v.trim());
@@ -193,7 +193,7 @@ export function GlobalOptionsTab() {
   const hasErrors = !!(dnsErr || 
     httpPortErr || httpsPortErr || gracePeriodErr || shutdownDelayErr || onDemandBurstErr || onDemandIntervalErr
     || internalCertLifetimeErr || renewalWindowRatioErr || metricsListenAddressErr || metricsPathErr
-    || trustedProxiesRangesErr || proxyProtocolTimeoutErr
+    || trustedProxiesRangesErr || proxyProtocolTimeoutErr || (runtimeLog.enabled && validateFieldFilters(runtimeLog.fieldFilters))
   );
 
   const isConfirming = confirm.step !== "idle";
@@ -765,6 +765,7 @@ export function GlobalOptionsTab() {
           value={runtimeLog}
           onChange={setRuntimeLog}
           isDisabled={isConfirming}
+          showLoggerFilters
         />
 
         <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />

@@ -596,7 +596,16 @@
     "roll_keep_count": "מספר קבצים מוחלפים לשמירה",
     "roll_keep_days": "גיל מרבי של קבצים מוחלפים (ימים)",
     "roll_compress": "דחיסת קבצים מוחלפים (gzip)",
-    "roll_help": "Caddy מבצע רוטציה לקובץ היומן כברירת מחדל. השאירו שדה ריק כדי להשתמש בברירת המחדל של Caddy, המוצגת באפור."
+    "roll_help": "Caddy מבצע רוטציה לקובץ היומן כברירת מחדל. השאירו שדה ריק כדי להשתמש בברירת המחדל של Caddy, המוצגת באפור.",
+    "field_filters": "מסנני שדות",
+    "field_filters_help": "אחד בכל שורה: נתיב שדה ואז delete, hash, replace <טקסט> או ip_mask <ביטי IPv4> [<ביטי IPv6>], למשל request>headers>Authorization delete.",
+    "field_filters_invalid": "כל שורה צריכה נתיב שדה ואחד מ-delete, hash, replace <טקסט> או ip_mask <ביטים>.",
+    "include": "הכללת לוגרים",
+    "include_help": "שמות לוגרים שהיומן הזה כותב, מופרדים ברווחים, למשל http.log.access. ריק פירושו הכול.",
+    "exclude": "החרגת לוגרים",
+    "exclude_help": "שמות לוגרים שהיומן הזה מדלג עליהם, מופרדים ברווחים, למשל http.log.access.log0.",
+    "skip_paths": "נתיבים שלא נרשמים ביומן",
+    "skip_paths_help": "נתיבים מופרדים ברווחים, תווים כלליים מותרים, למשל /health* /ping. בקשות אליהם אינן נרשמות."
   },
   "config_check": {
     "button": "בדיקת תצורה",

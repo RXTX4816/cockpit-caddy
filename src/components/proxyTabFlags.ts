@@ -2,7 +2,7 @@ import { hasAnyMatcher } from "../api";
 import type { ErrorHandlerConfig, ForwardAuthConfig, LbPolicy, HeaderOperation, RewriteConfig, RouteMatch } from "../api";
 import type { EncodeValues } from "./EncodeSection";
 import type { AccessLogValues } from "./AccessLogSection";
-import { accessLogValuesToConfig } from "./AccessLogSection";
+import { accessLogValuesToConfig, validateFieldFilters } from "./AccessLogSection";
 import type { AuthEntry, BasicAuthOptionValues } from "./BasicAuthSection";
 import { lbRetryValuesToConfig, validateLbRetry, type LbRetryValues } from "./LbRetrySection";
 import type { ServerTimeoutValues } from "./ServerTimeoutsSection";
@@ -65,7 +65,7 @@ export function proxyTabFlags(v: ProxyTabValues, generalHasError: boolean): TabF
       routing: !!v.encodeError,
       upstreams: !!validateUpstreams(v.extraUpstreams) || !!validateLbRetry(v.lbRetry)
         || (v.extraUpstreams.length > 0 && !!validateLbArgs(v.lbPolicy as LbPolicy | "", v.lbArgs, v.extraUpstreams.length + 1)),
-      logging: false,
+      logging: v.accessLog.enabled && validateFieldFilters(v.accessLog.fieldFilters),
       limits: false,
     },
   };
