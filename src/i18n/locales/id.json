@@ -1008,7 +1008,6 @@
     "field_header_name_regexp": "Nama header untuk regex",
     "field_regexp_name_header": "Nama regex header (opsional)",
     "regexp_help": "Nama membuat grup tersedia sebagai {re.name.1}, misalnya dalam penulisan ulang. Caddy mengizinkan satu regex per matcher.",
-    "regexp_once_error": "Caddy hanya mengizinkan satu regex (jalur atau header) per matcher.",
     "type_protocol": "Protokol",
     "protocol_any": "apa saja",
     "type_file": "Berkas",

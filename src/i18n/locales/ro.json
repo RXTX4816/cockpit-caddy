@@ -1008,7 +1008,6 @@
     "field_header_name_regexp": "Numele antetului pentru regex",
     "field_regexp_name_header": "Numele regexului antetului (opțional)",
     "regexp_help": "Un nume face grupurile disponibile ca {re.name.1}, de exemplu într-o rescriere. Caddy permite un regex per matcher.",
-    "regexp_once_error": "Caddy permite un singur regex (de cale sau de antet) per matcher.",
     "type_protocol": "Protocol",
     "protocol_any": "oricare",
     "type_file": "Fișiere",

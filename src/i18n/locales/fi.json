@@ -1008,7 +1008,6 @@
     "field_header_name_regexp": "Otsakkeen nimi regexiä varten",
     "field_regexp_name_header": "Otsakkeen regexin nimi (valinnainen)",
     "regexp_help": "Nimi tekee ryhmistä käytettävissä muodossa {re.name.1}, esimerkiksi uudelleenkirjoituksessa. Caddy sallii yhden regexin per täsmääjä.",
-    "regexp_once_error": "Caddy sallii vain yhden regexin (polku tai otsake) per täsmääjä.",
     "type_protocol": "Protokolla",
     "protocol_any": "mikä tahansa",
     "type_file": "Tiedostot",

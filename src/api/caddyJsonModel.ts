@@ -174,12 +174,6 @@ export function forwardAuthDial(url: string): { dial: string; tls: boolean } {
 export const RP_HEADER_PLACEHOLDER = /^\{http\.reverse_proxy\.header\.(.+)\}$/;
 
 
-/**
- * Builds the same JSON as Caddy's own forward_auth Caddyfile adapter (#248): on a 2xx from
- * the auth service, each copied header is first deleted from the client's request and then
- * set from the auth response, so the backend sees who logged in and a client can't forge
- * `Remote-User`. An `https://` auth URL gets a TLS transport.
- */
 /** What `private_ranges` stands for in forward_auth's `trusted_proxies` (Caddy 2.11). */
 export const PRIVATE_RANGES = ["192.168.0.0/16", "172.16.0.0/12", "10.0.0.0/8", "127.0.0.1/8", "fd00::/8", "::1"];
 
@@ -195,6 +189,12 @@ export function splitCopyHeader(entry: string): { from: string; to: string } {
 }
 
 
+/**
+ * Builds the same JSON as Caddy's own forward_auth Caddyfile adapter (#248): on a 2xx from
+ * the auth service, each copied header is first deleted from the client's request and then
+ * set from the auth response, so the backend sees who logged in and a client can't forge
+ * `Remote-User`. An `https://` auth URL gets a TLS transport.
+ */
 export function buildForwardAuthHandler(fa: import("./types").ForwardAuthConfig): CaddyHandler | null {
   if (!fa.upstreamUrl.trim()) return null;
   const { dial, tls } = forwardAuthDial(fa.upstreamUrl);
@@ -337,11 +337,6 @@ export function buildRequestBodyHandler(maxSize: number): CaddyHandler {
 }
 
 
-/**
- * What Caddy's `redir <to> html` becomes: a page with a script and a meta refresh, so the
- * browser keeps the URL fragment. The body is Caddy's own, byte for byte, to match what a
- * reload from the Caddyfile gives (checked with `caddy adapt` on 2.11.7).
- */
 /** The `encode` options that differ from plain `encode gzip zstd` (#335). */
 export function parseEncodeOptionsJson(h: AnyHandler): import("./types").EncodeOptions | undefined {
   if (h.handler !== "encode") return undefined;
@@ -360,11 +355,29 @@ export function parseEncodeOptionsJson(h: AnyHandler): import("./types").EncodeO
 }
 
 
+const GO_HTML_ESCAPES: Record<string, string> = { "&": "&amp;", "'": "&#39;", "<": "&lt;", ">": "&gt;", '"': "&#34;" };
+
+/** Go's `html.EscapeString`, which Caddy applies to an html redirect's target. */
+function goHtmlEscape(s: string): string {
+  return s.replace(/[&'<>"]/g, c => GO_HTML_ESCAPES[c]);
+}
+
+function goHtmlUnescape(s: string): string {
+  return s.replace(/&(amp|#39|lt|gt|#34);/g, (_m, e: string) => ({ amp: "&", "#39": "'", lt: "<", gt: ">", "#34": '"' })[e] ?? _m);
+}
+
+
+/**
+ * What Caddy's `redir <to> html` becomes: a page with a script and a meta refresh, so the
+ * browser keeps the URL fragment. The body is Caddy's own, byte for byte, to match what a
+ * reload from the Caddyfile gives (checked with `caddy adapt` on 2.11.7).
+ */
 export function buildRedirectHandler(redirect: import("./types").RedirectConfig): CaddyHandler {
   const to = caddyPlaceholderToJson(redirect.to);
   if (redirect.html) {
-    const body = `<!DOCTYPE html>\n<html>\n\t<head>\n\t\t<title>Redirecting...</title>\n\t\t<script>window.location.replace(${JSON.stringify(to)});</script>\n`
-      + `\t\t<meta http-equiv="refresh" content="0; URL='${to}'">\n\t</head>\n\t<body>Redirecting to <a href="${to}">${to}</a>...</body>\n</html>\n`;
+    const t = goHtmlEscape(to);
+    const body = `<!DOCTYPE html>\n<html>\n\t<head>\n\t\t<title>Redirecting...</title>\n\t\t<script>window.location.replace("${t}");</script>\n`
+      + `\t\t<meta http-equiv="refresh" content="0; URL='${t}'">\n\t</head>\n\t<body>Redirecting to <a href="${t}">${t}</a>...</body>\n</html>\n`;
     return { handler: "static_response", body, headers: { "Content-Type": ["text/html; charset=utf-8"] }, status_code: 200 } as CaddyHandler;
   }
   return { handler: "static_response", headers: { Location: [to] }, status_code: redirect.code } as CaddyHandler;
@@ -376,9 +389,8 @@ export function parseHtmlRedirect(h: AnyHandler): string | undefined {
   if (h.handler !== "static_response") return undefined;
   const sr = h as { body?: string; headers?: Record<string, string[]> };
   if (!sr.body?.includes("<title>Redirecting...</title>") || sr.headers?.["Location"]) return undefined;
-  const m = sr.body.match(/window\.location\.replace\(("(?:[^"\\]|\\.)*")\);/);
-  if (!m) return undefined;
-  try { return JSON.parse(m[1]) as string; } catch { return undefined; }
+  const m = sr.body.match(/window\.location\.replace\("([^"]*)"\);/);
+  return m ? goHtmlUnescape(m[1]) : undefined;
 }
 
 
@@ -1989,7 +2001,6 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
 }
 
 
-/** The `file_server` handler with its options (#262). */
 /** The `templates` handler of a static site and then its file_server (#339). */
 export function buildFileServerHandlers(fs: import("./types").FileServerConfig): CaddyHandler[] {
   const out: CaddyHandler[] = [];

@@ -1008,7 +1008,6 @@
     "field_header_name_regexp": "Назва заголовка для regex",
     "field_regexp_name_header": "Назва regex заголовка (необов'язково)",
     "regexp_help": "Назва робить групи доступними як {re.name.1}, наприклад у перезаписі. Caddy допускає один regex на матчер.",
-    "regexp_once_error": "Caddy допускає лише один regex (шляху або заголовка) на матчер.",
     "type_protocol": "Протокол",
     "protocol_any": "будь-який",
     "type_file": "Файли",

@@ -1008,7 +1008,6 @@
     "field_header_name_regexp": "Nom de l'en-tête pour la regex",
     "field_regexp_name_header": "Nom de la regex d'en-tête (facultatif)",
     "regexp_help": "Un nom rend les groupes disponibles sous la forme {re.name.1}, par exemple dans une réécriture. Caddy admet une regex par matcher.",
-    "regexp_once_error": "Caddy n'admet qu'une seule regex (chemin ou en-tête) par matcher.",
     "type_protocol": "Protocole",
     "protocol_any": "tous",
     "type_file": "Fichiers",

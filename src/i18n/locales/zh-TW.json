@@ -1008,7 +1008,6 @@
     "field_header_name_regexp": "正規表示式所用的標頭名稱",
     "field_regexp_name_header": "標頭正規表示式的名稱(選填)",
     "regexp_help": "設定名稱後,群組可作為 {re.name.1} 使用,例如在重寫中。Caddy 每個比對器只允許一個正規表示式。",
-    "regexp_once_error": "Caddy 每個比對器只允許一個正規表示式(路徑或標頭)。",
     "type_protocol": "通訊協定",
     "protocol_any": "任意",
     "type_file": "檔案",

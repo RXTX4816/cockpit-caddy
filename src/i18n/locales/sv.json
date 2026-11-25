@@ -1008,7 +1008,6 @@
     "field_header_name_regexp": "Huvudnamn för regexet",
     "field_regexp_name_header": "Namn på huvud-regexet (valfritt)",
     "regexp_help": "Ett namn gör grupperna tillgängliga som {re.name.1}, till exempel i en omskrivning. Caddy tillåter ett regex per matchare.",
-    "regexp_once_error": "Caddy tillåter bara ett regex (sökväg eller huvud) per matchare.",
     "type_protocol": "Protokoll",
     "protocol_any": "valfritt",
     "type_file": "Filer",

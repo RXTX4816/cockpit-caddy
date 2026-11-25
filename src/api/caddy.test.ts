@@ -5192,10 +5192,10 @@ describe("matchers: path_regexp, header_regexp, protocol, file and vars (#331)",
     expect(buildMatcherCaddyLines({ header_regexp: { header: "X-A", pattern: "^b" } }, "m1", "\t").join("\n")).toContain("header_regexp X-A ^b");
   });
 
-  it("writes only one regexp, since Caddy rejects two in a matcher", () => {
+  it("writes a path regexp and a header regexp in one matcher, as Caddy allows", () => {
     const lines = buildMatcherCaddyLines({ path_regexp: { pattern: "^/a" }, header_regexp: { header: "X-A", pattern: "^b" } }, "m1", "\t").join("\n");
     expect(lines).toContain("path_regexp");
-    expect(lines).not.toContain("header_regexp");
+    expect(lines).toContain("header_regexp");
   });
 
   it("counts a site with only the new matchers as having matchers, and not as a host or path only one", () => {

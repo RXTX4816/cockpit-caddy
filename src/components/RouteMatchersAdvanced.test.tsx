@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import { RouteMatchersSection, matcherHasTwoRegexps, validateRouteMatch, varsFromText, varsToText } from "./RouteMatchersSection";
+import { RouteMatchersSection, validateRouteMatch, varsFromText, varsToText } from "./RouteMatchersSection";
 
 describe("advanced route matchers (#331)", () => {
   it("reads and writes the vars lines", () => {
@@ -10,13 +10,12 @@ describe("advanced route matchers (#331)", () => {
     expect(varsFromText("{host}\n")).toBeUndefined();
   });
 
-  it("refuses two regexps in one matcher, a header regexp without a header and a file without files", () => {
-    expect(matcherHasTwoRegexps({ path_regexp: { pattern: "^/a" }, header_regexp: { header: "X", pattern: "b" } })).toBe(true);
-    expect(validateRouteMatch({ path_regexp: { pattern: "^/a" }, header_regexp: { header: "X", pattern: "b" } })).toBe(true);
+  it("refuses a header regexp without a header and a file without files, and allows both regexps", () => {
+    expect(validateRouteMatch({ path_regexp: { pattern: "^/a" }, header_regexp: { header: "X", pattern: "b" } })).toBe(false);
     expect(validateRouteMatch({ header_regexp: { header: "", pattern: "b" } })).toBe(true);
     expect(validateRouteMatch({ file: { try_files: [], try_policy: "first_exist" } })).toBe(true);
     expect(validateRouteMatch({ path_regexp: { pattern: "^/a" }, not: { header_regexp: { header: "X", pattern: "b" } } })).toBe(false);
-    expect(validateRouteMatch({ not: { path_regexp: { pattern: "^/a" }, header_regexp: { header: "X", pattern: "b" } } })).toBe(true);
+    expect(validateRouteMatch({ not: { path_regexp: { pattern: "^/a" }, header_regexp: { header: "X", pattern: "b" } } })).toBe(false);
     expect(validateRouteMatch(undefined)).toBe(false);
   });
 

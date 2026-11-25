@@ -1008,7 +1008,6 @@
     "field_header_name_regexp": "Nome do cabeçalho para a regex",
     "field_regexp_name_header": "Nome da regex do cabeçalho (opcional)",
     "regexp_help": "Um nome deixa os grupos disponíveis como {re.name.1}, por exemplo em uma reescrita. O Caddy permite uma regex por matcher.",
-    "regexp_once_error": "O Caddy permite apenas uma regex (de caminho ou de cabeçalho) por matcher.",
     "type_protocol": "Protocolo",
     "protocol_any": "qualquer",
     "type_file": "Arquivos",

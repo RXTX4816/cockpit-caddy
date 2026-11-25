@@ -79,7 +79,7 @@ export interface RouteMatch {
   expression?: string;
   /** `path_regexp [name] pattern`; a named match gives `{re.name.1}` for its groups (#331). */
   path_regexp?: { pattern: string; name?: string };
-  /** `header_regexp [name] header pattern` (#331). Caddy allows one regular expression per matcher. */
+  /** `header_regexp [name] header pattern` (#331). */
   header_regexp?: { header: string; pattern: string; name?: string };
   /** `protocol http|https|grpc` (#331). */
   protocol?: string;
@@ -96,7 +96,6 @@ export type RouteMatchFields = Omit<RouteMatch, "not" | "expression">;
 // Named Server — #49
 // ---------------------------------------------------------------------------
 
-/** A user-defined Caddy server with explicit listen addresses and multiple routes. */
 /** `basic_auth [<algorithm> [<realm>]]`: unset means Caddy's bcrypt and its default realm. */
 export interface BasicAuthOptions {
   realm?: string;
@@ -115,6 +114,7 @@ export interface EncodeOptions {
   matchHeaders?: Array<{ name: string; value: string }>;
 }
 
+/** A user-defined Caddy server with explicit listen addresses and multiple routes. */
 export interface ServerDef {
   key: string;
   name: string;

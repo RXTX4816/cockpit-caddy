@@ -862,16 +862,18 @@ describe.runIf(available || required)("caddy adapt accepts the basic_auth realm 
 });
 
 describe.runIf(available || required)("caddy adapt accepts redir html (#338)", () => {
-  it("reads the html redirect back from a real adapt", () => {
-    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, targetPort: 0, redirect: { to: "https://example.com{uri}", code: 302, html: true } })]);
-    expect(readBack(conf)[0].redirect).toEqual({ to: "https://example.com{uri}", code: 302, html: true });
+  const targets = ["https://example.com{uri}", "https://x.org/a?b=1&c='d'<e>"];
+
+  it.each(targets)("reads the html redirect to %s back from a real adapt", to => {
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, targetPort: 0, redirect: { to, code: 302, html: true } })]);
+    expect(readBack(conf)[0].redirect).toEqual({ to, code: 302, html: true });
   });
 
-  it("builds the very page Caddy builds", () => {
-    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, targetPort: 0, redirect: { to: "https://example.com{uri}", code: 302, html: true } })]);
+  it.each(targets)("builds the very page Caddy builds for %s", to => {
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, targetPort: 0, redirect: { to, code: 302, html: true } })]);
     const server = Object.values(adapt(conf).apps?.http?.servers ?? {})[0] as CaddyServer;
     const caddys = (server.routes?.[0]?.handle?.[0]) as unknown as { body: string };
-    expect((buildRedirectHandler({ to: "https://example.com{uri}", code: 302, html: true }) as unknown as { body: string }).body).toBe(caddys.body);
+    expect((buildRedirectHandler({ to, code: 302, html: true }) as unknown as { body: string }).body).toBe(caddys.body);
   });
 });
 
@@ -1023,6 +1025,7 @@ describe.runIf(available || required)("caddy adapt accepts the new matchers (#33
     ["file", { file: { try_files: ["{path}", "{path}/index.html"], try_policy: "first_exist" } }],
     ["vars", { vars: { "{host}": ["example.com", "www.example.com"] } }],
     ["a protocol next to a path and a method", { path: ["/api/*"], method: ["GET"], protocol: "https" }],
+    ["a path_regexp next to a header_regexp", { path_regexp: { pattern: "^/a", name: "p" }, header_regexp: { header: "X", pattern: "b", name: "h" } }],
   ];
 
   it.each(cases)("reads %s back from a real adapt", (_name, matchers) => {

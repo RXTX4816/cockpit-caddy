@@ -1008,7 +1008,6 @@
     "field_header_name_regexp": "正規表現を適用するヘッダー名",
     "field_regexp_name_header": "ヘッダー正規表現の名前(任意)",
     "regexp_help": "名前を付けると、グループを {re.name.1} として書き換えなどで使えます。Caddy ではマッチャーごとに正規表現は 1 つです。",
-    "regexp_once_error": "Caddy ではマッチャーごとに正規表現(パスまたはヘッダー)は 1 つだけです。",
     "type_protocol": "プロトコル",
     "protocol_any": "指定なし",
     "type_file": "ファイル",

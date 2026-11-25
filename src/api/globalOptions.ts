@@ -2,7 +2,7 @@
 // parsing it into GlobalOptions, patching changed options back in, the metrics site block and the
 // DNS-challenge provider lines. Pure: no Host, no I/O. Builds on caddyfileDocument.
 
-import { findGlobalBlock, parseDnsProviderDirective, parseFieldFilterLine } from "./caddyfileDocument";
+import { caddyQuote, findGlobalBlock, parseDnsProviderDirective, parseFieldFilterLine } from "./caddyfileDocument";
 
 /** Generates the Caddyfile block for a single proxy (label comment + block body). */
 /**
@@ -55,14 +55,11 @@ export function buildProxyProtocolLines(pp: import("./types").ProxyProtocolConfi
 }
 
 
-function quoteFilterValue(v: string): string {
-  return /[\s"]/.test(v) || v === "" ? `"${v.replace(/"/g, '\\"')}"` : v;
-}
 
 
 /** One `format filter` line (#334): what to do with a field before the entry is written. */
 export function fieldFilterLine(f: import("./types").LogFieldFilter): string {
-  if (f.filter === "replace") return `${f.field} replace ${quoteFilterValue(f.value ?? "")}`;
+  if (f.filter === "replace") return `${f.field} replace ${caddyQuote(f.value ?? "")}`;
   if (f.filter === "ip_mask") return `${f.field} ip_mask ${f.ipv4 ?? 32}${f.ipv6 != null ? ` ${f.ipv6}` : ""}`;
   return `${f.field} ${f.filter}`;
 }

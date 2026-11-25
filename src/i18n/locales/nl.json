@@ -1008,7 +1008,6 @@
     "field_header_name_regexp": "Headernaam voor de regex",
     "field_regexp_name_header": "Naam van de header-regex (optioneel)",
     "regexp_help": "Een naam maakt de groepen beschikbaar als {re.name.1}, bijvoorbeeld in een herschrijving. Caddy staat één regex per matcher toe.",
-    "regexp_once_error": "Caddy staat maar één regex (pad of header) per matcher toe.",
     "type_protocol": "Protocol",
     "protocol_any": "willekeurig",
     "type_file": "Bestanden",

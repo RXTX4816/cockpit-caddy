@@ -36,15 +36,10 @@ type IpKind = "client_ip" | "remote_ip";
 const HTTP_METHODS = ["GET", "HEAD", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"] as const;
 const EXPRESSION_DOCS = "https://caddyserver.com/docs/caddyfile/matchers#expression";
 
-/** Caddy allows one regular expression per matcher, in the include group and in the exclude group each (#331). */
-export function matcherHasTwoRegexps(m: RouteMatchFields | undefined): boolean {
-  return !!m?.path_regexp?.pattern && !!m?.header_regexp?.pattern;
-}
-
-/** A matcher Caddy would reject: two regular expressions, or a header regexp without its header (#331). */
+/** A matcher Caddy would reject: a header regexp without its header, or a file matcher without files (#331). */
 export function validateRouteMatch(m: RouteMatch | undefined): boolean {
   if (!m) return false;
-  const bad = (f: RouteMatchFields | undefined) => matcherHasTwoRegexps(f) || (!!f?.header_regexp?.pattern && !f.header_regexp.header.trim())
+  const bad = (f: RouteMatchFields | undefined) => (!!f?.header_regexp?.pattern && !f.header_regexp.header.trim())
     || (!!f?.file && !f.file.try_files.length);
   return bad(m) || bad(m.not);
 }
@@ -558,9 +553,7 @@ function MatcherFields({ value, onChange, isDisabled, idPrefix, labelPrefix }: F
           />
         </div>
         <HelperText style={{ marginTop: "0.25rem" }}>
-          <HelperTextItem variant={matcherHasTwoRegexps(value) ? "error" : "default"}>
-            {text(matcherHasTwoRegexps(value) ? "matchers.regexp_once_error" : "matchers.regexp_help")}
-          </HelperTextItem>
+          <HelperTextItem>{text("matchers.regexp_help")}</HelperTextItem>
         </HelperText>
       </div>
 

@@ -1008,7 +1008,6 @@
     "field_header_name_regexp": "Nome dell'intestazione per la regex",
     "field_regexp_name_header": "Nome della regex dell'intestazione (facoltativo)",
     "regexp_help": "Un nome rende i gruppi disponibili come {re.name.1}, ad esempio in una riscrittura. Caddy consente una regex per matcher.",
-    "regexp_once_error": "Caddy consente una sola regex (percorso o intestazione) per matcher.",
     "type_protocol": "Protocollo",
     "protocol_any": "qualsiasi",
     "type_file": "File",

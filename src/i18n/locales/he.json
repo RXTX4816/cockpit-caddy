@@ -1008,7 +1008,6 @@
     "field_header_name_regexp": "שם הכותרת ל-regex",
     "field_regexp_name_header": "שם ה-regex של הכותרת (אופציונלי)",
     "regexp_help": "שם הופך את הקבוצות לזמינות כ-{re.name.1}, למשל בשכתוב. Caddy מאפשר regex אחד לכל מתאם.",
-    "regexp_once_error": "Caddy מאפשר רק regex אחד (נתיב או כותרת) לכל מתאם.",
     "type_protocol": "פרוטוקול",
     "protocol_any": "כלשהו",
     "type_file": "קבצים",

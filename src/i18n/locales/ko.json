@@ -1008,7 +1008,6 @@
     "field_header_name_regexp": "정규식을 적용할 헤더 이름",
     "field_regexp_name_header": "헤더 정규식의 이름(선택)",
     "regexp_help": "이름을 지정하면 그룹을 {re.name.1}로 다시 쓰기 등에서 쓸 수 있습니다. Caddy는 매처당 정규식 하나만 허용합니다.",
-    "regexp_once_error": "Caddy는 매처당 정규식(경로 또는 헤더) 하나만 허용합니다.",
     "type_protocol": "프로토콜",
     "protocol_any": "모두",
     "type_file": "파일",

@@ -1008,7 +1008,6 @@
     "field_header_name_regexp": "Nazwa nagłówka dla regexa",
     "field_regexp_name_header": "Nazwa regexa nagłówka (opcjonalna)",
     "regexp_help": "Nazwa udostępnia grupy jako {re.name.1}, np. w przepisaniu. Caddy dopuszcza jeden regex na matcher.",
-    "regexp_once_error": "Caddy dopuszcza tylko jeden regex (ścieżki lub nagłówka) na matcher.",
     "type_protocol": "Protokół",
     "protocol_any": "dowolny",
     "type_file": "Pliki",

@@ -1008,7 +1008,6 @@
     "field_header_name_regexp": "regex-ის სათაურის სახელი",
     "field_regexp_name_header": "სათაურის regex-ის სახელი (არასავალდებულო)",
     "regexp_help": "სახელი ჯგუფებს ხდის ხელმისაწვდომს როგორც {re.name.1}, მაგალითად გადაწერაში. Caddy ერთ regex-ს უშვებს თითო მატჩერზე.",
-    "regexp_once_error": "Caddy მხოლოდ ერთ regex-ს (გზის ან სათაურის) უშვებს თითო მატჩერზე.",
     "type_protocol": "პროტოკოლი",
     "protocol_any": "ნებისმიერი",
     "type_file": "ფაილები",

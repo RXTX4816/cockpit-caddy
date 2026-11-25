@@ -1008,7 +1008,6 @@
     "field_header_name_regexp": "Názov hlavičky pre regex",
     "field_regexp_name_header": "Názov regexu hlavičky (voliteľný)",
     "regexp_help": "Názov sprístupní skupiny ako {re.name.1}, napríklad v prepise. Caddy povoľuje jeden regex na matcher.",
-    "regexp_once_error": "Caddy povoľuje len jeden regex (cesty alebo hlavičky) na matcher.",
     "type_protocol": "Protokol",
     "protocol_any": "akýkoľvek",
     "type_file": "Súbory",

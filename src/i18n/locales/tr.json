@@ -1008,7 +1008,6 @@
     "field_header_name_regexp": "Regex için başlık adı",
     "field_regexp_name_header": "Başlık regex'inin adı (isteğe bağlı)",
     "regexp_help": "Bir ad, grupları örneğin bir yeniden yazmada {re.name.1} olarak kullanılabilir yapar. Caddy eşleştirici başına bir regex'e izin verir.",
-    "regexp_once_error": "Caddy eşleştirici başına yalnızca bir regex'e (yol veya başlık) izin verir.",
     "type_protocol": "Protokol",
     "protocol_any": "herhangi",
     "type_file": "Dosyalar",

@@ -1008,7 +1008,6 @@
     "field_header_name_regexp": "Header name for the regex",
     "field_regexp_name_header": "Name of the header regex (optional)",
     "regexp_help": "A name makes the groups available as {re.name.1}, for example in a rewrite. Caddy allows one regex per matcher.",
-    "regexp_once_error": "Caddy allows only one regex (path or header) per matcher.",
     "type_protocol": "Protocol",
     "protocol_any": "any",
     "type_file": "Files",

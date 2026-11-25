@@ -1008,7 +1008,6 @@
     "field_header_name_regexp": "用于正则的请求头名称",
     "field_regexp_name_header": "请求头正则的名称(可选)",
     "regexp_help": "设置名称后,分组可作为 {re.name.1} 使用,例如在重写中。Caddy 每个匹配器只允许一个正则。",
-    "regexp_once_error": "Caddy 每个匹配器只允许一个正则(路径或请求头)。",
     "type_protocol": "协议",
     "protocol_any": "任意",
     "type_file": "文件",
