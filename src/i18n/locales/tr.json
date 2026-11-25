@@ -973,7 +973,23 @@
     "ip_kind_remote": "Bağlantı IP'si",
     "ip_kind_client_help": "Ziyaretçinin IP'si; istek güvenilen proxy'lerden (Ayarlar) biri üzerinden geldiğinde yönlendirme başlığından alınır. Güvenilen proxy yoksa bağlantı IP'siyle aynıdır.",
     "ip_kind_remote_help": "TCP bağlantısının IP'si. Bir proxy veya CDN arkasında bu, ziyaretçinin değil proxy'nin adresidir.",
-    "ip_range": "IP adresi veya aralığı"
+    "ip_range": "IP adresi veya aralığı",
+    "type_path_regexp": "Yol regex'i",
+    "type_header_regexp": "Başlık regex'i",
+    "field_regexp_name": "Ad (isteğe bağlı)",
+    "field_header_name_regexp": "Regex için başlık adı",
+    "field_regexp_name_header": "Başlık regex'inin adı (isteğe bağlı)",
+    "regexp_help": "Bir ad, grupları örneğin bir yeniden yazmada {re.name.1} olarak kullanılabilir yapar. Caddy eşleştirici başına bir regex'e izin verir.",
+    "regexp_once_error": "Caddy eşleştirici başına yalnızca bir regex'e (yol veya başlık) izin verir.",
+    "type_protocol": "Protokol",
+    "protocol_any": "herhangi",
+    "type_file": "Dosyalar",
+    "field_try_files": "Aranacak dosyalar",
+    "field_try_policy": "Seçim yolu",
+    "try_policy_default": "ilk var olan",
+    "file_help": "Dosyalardan biri varsa eşleşir. {path} gibi yer tutucular çalışır.",
+    "type_vars": "Değişkenler",
+    "vars_help": "Satır başına bir tane: bir yer tutucu ve alabileceği değerler, örneğin {host} example.com www.example.com."
   },
   "handle_path": {
     "label": "Eşleşen yol önekini kaldır (handle_path)"

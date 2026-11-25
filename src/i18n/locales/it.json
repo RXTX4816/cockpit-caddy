@@ -973,7 +973,23 @@
     "ip_kind_remote": "IP della connessione",
     "ip_kind_client_help": "L’IP del visitatore, presa dall’intestazione inoltrata quando la richiesta arriva tramite uno dei proxy fidati (Impostazioni). Senza proxy fidati coincide con l’IP della connessione.",
     "ip_kind_remote_help": "L’IP della connessione TCP. Dietro un proxy o una CDN è l’indirizzo del proxy, non del visitatore.",
-    "ip_range": "Indirizzo IP o intervallo"
+    "ip_range": "Indirizzo IP o intervallo",
+    "type_path_regexp": "Regex del percorso",
+    "type_header_regexp": "Regex dell'intestazione",
+    "field_regexp_name": "Nome (facoltativo)",
+    "field_header_name_regexp": "Nome dell'intestazione per la regex",
+    "field_regexp_name_header": "Nome della regex dell'intestazione (facoltativo)",
+    "regexp_help": "Un nome rende i gruppi disponibili come {re.name.1}, ad esempio in una riscrittura. Caddy consente una regex per matcher.",
+    "regexp_once_error": "Caddy consente una sola regex (percorso o intestazione) per matcher.",
+    "type_protocol": "Protocollo",
+    "protocol_any": "qualsiasi",
+    "type_file": "File",
+    "field_try_files": "File da cercare",
+    "field_try_policy": "Come scegliere",
+    "try_policy_default": "il primo esistente",
+    "file_help": "Corrisponde quando esiste uno dei file. I segnaposto come {path} funzionano.",
+    "type_vars": "Variabili",
+    "vars_help": "Una per riga: un segnaposto e i valori che può avere, ad esempio {host} example.com www.example.com."
   },
   "handle_path": {
     "label": "Rimuovi il prefisso di percorso corrispondente (handle_path)"

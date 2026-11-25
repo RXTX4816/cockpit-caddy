@@ -973,7 +973,23 @@
     "ip_kind_remote": "IP de la conexión",
     "ip_kind_client_help": "La IP del visitante, tomada de la cabecera reenviada cuando la solicitud llega a través de uno de los proxies de confianza (Ajustes). Sin proxies de confianza es la misma que la IP de la conexión.",
     "ip_kind_remote_help": "La IP de la conexión TCP. Detrás de un proxy o CDN es la dirección del proxy, no la del visitante.",
-    "ip_range": "Dirección IP o rango"
+    "ip_range": "Dirección IP o rango",
+    "type_path_regexp": "Regex de ruta",
+    "type_header_regexp": "Regex de encabezado",
+    "field_regexp_name": "Nombre (opcional)",
+    "field_header_name_regexp": "Nombre del encabezado para la regex",
+    "field_regexp_name_header": "Nombre de la regex del encabezado (opcional)",
+    "regexp_help": "Un nombre hace que los grupos estén disponibles como {re.name.1}, por ejemplo en una reescritura. Caddy admite una regex por matcher.",
+    "regexp_once_error": "Caddy admite solo una regex (de ruta o de encabezado) por matcher.",
+    "type_protocol": "Protocolo",
+    "protocol_any": "cualquiera",
+    "type_file": "Archivos",
+    "field_try_files": "Archivos que buscar",
+    "field_try_policy": "Cómo elegir",
+    "try_policy_default": "el primero que exista",
+    "file_help": "Coincide cuando existe uno de los archivos. Funcionan marcadores como {path}.",
+    "type_vars": "Variables",
+    "vars_help": "Una por línea: un marcador y los valores que puede tener, por ejemplo {host} example.com www.example.com."
   },
   "handle_path": {
     "label": "Quitar el prefijo de ruta coincidente (handle_path)"

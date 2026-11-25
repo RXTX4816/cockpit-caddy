@@ -973,7 +973,23 @@
     "ip_kind_remote": "IP-ul conexiunii",
     "ip_kind_client_help": "IP-ul vizitatorului, luat din antetul de redirecționare când cererea vine printr-unul dintre proxy-urile de încredere (Setări). Fără proxy-uri de încredere este același cu IP-ul conexiunii.",
     "ip_kind_remote_help": "IP-ul conexiunii TCP. În spatele unui proxy sau CDN este adresa proxy-ului, nu a vizitatorului.",
-    "ip_range": "Adresă IP sau interval"
+    "ip_range": "Adresă IP sau interval",
+    "type_path_regexp": "Regex pentru cale",
+    "type_header_regexp": "Regex pentru antet",
+    "field_regexp_name": "Nume (opțional)",
+    "field_header_name_regexp": "Numele antetului pentru regex",
+    "field_regexp_name_header": "Numele regexului antetului (opțional)",
+    "regexp_help": "Un nume face grupurile disponibile ca {re.name.1}, de exemplu într-o rescriere. Caddy permite un regex per matcher.",
+    "regexp_once_error": "Caddy permite un singur regex (de cale sau de antet) per matcher.",
+    "type_protocol": "Protocol",
+    "protocol_any": "oricare",
+    "type_file": "Fișiere",
+    "field_try_files": "Fișiere de căutat",
+    "field_try_policy": "Cum se alege",
+    "try_policy_default": "primul existent",
+    "file_help": "Se potrivește când există unul dintre fișiere. Substituenții precum {path} funcționează.",
+    "type_vars": "Variabile",
+    "vars_help": "Una pe linie: un substituent și valorile pe care le poate avea, de exemplu {host} example.com www.example.com."
   },
   "handle_path": {
     "label": "Elimină prefixul de cale potrivit (handle_path)"

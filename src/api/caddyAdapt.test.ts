@@ -14,6 +14,7 @@ import { CONF_HEADER, parseConfAccessLogMap, buildServerEntry, proxiesToCaddyfil
 import { snippetsToConf, parseSnippets, parseConfSiteImports, parseConfSiteBlocks, separateSnippetSettings } from "./snippets";
 import { buildEncodeHandler, buildFilterEncoder, buildRedirectHandler, buildRewriteHandler } from "./caddyJsonModel";
 import { buildGlobalOptionsPatch } from "./globalOptions";
+import { buildMatcherJson } from "./siteBlocks";
 import type { CaddyConfig, CaddyServer, ProxyEntry } from "./types";
 
 function hasCaddy(): boolean {
@@ -1010,6 +1011,33 @@ describe.runIf(available || required)("caddy adapt accepts the new rewrites (#33
     const server = Object.values(adapt(conf).apps?.http?.servers ?? {})[0] as CaddyServer;
     const real = server.routes?.[0]?.handle?.find(h => h.handler === "rewrite");
     expect(buildRewriteHandler(rewrite)).toEqual(real);
+  });
+});
+
+describe.runIf(available || required)("caddy adapt accepts the new matchers (#331)", () => {
+  const cases: Array<[string, import("./types").RouteMatch]> = [
+    ["a named path_regexp", { path_regexp: { pattern: "^/user/(\\d+)$", name: "user" } }],
+    ["a path_regexp without a name", { path_regexp: { pattern: "^/a/(.*)$" } }],
+    ["a header_regexp", { header_regexp: { header: "X-Token", pattern: "^v(\\d+)$", name: "token" } }],
+    ["protocol", { protocol: "https" }],
+    ["file", { file: { try_files: ["{path}", "{path}/index.html"], try_policy: "first_exist" } }],
+    ["vars", { vars: { "{host}": ["example.com", "www.example.com"] } }],
+    ["a protocol next to a path and a method", { path: ["/api/*"], method: ["GET"], protocol: "https" }],
+  ];
+
+  it.each(cases)("reads %s back from a real adapt", (_name, matchers) => {
+    const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, matchers })]));
+    expect(p.matchers).toEqual(matchers);
+  });
+
+  it.each(cases)("builds the matcher Caddy builds for %s", (_name, matchers) => {
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, matchers })]);
+    const server = Object.values(adapt(conf).apps?.http?.servers ?? {})[0] as CaddyServer;
+    const real = server.routes?.[0]?.match?.[0] as Record<string, unknown>;
+    const built = buildMatcherJson(matchers) as Record<string, unknown>;
+    // Caddy names a regexp after its matcher; a name chosen in the form is the same on both sides.
+    const strip = (o: Record<string, unknown>) => JSON.parse(JSON.stringify(o, (k, v) => (k === "name" && /^m\d+$/.test(v) ? undefined : v))) as Record<string, unknown>;
+    expect(strip(built)).toEqual(strip(real));
   });
 });
 

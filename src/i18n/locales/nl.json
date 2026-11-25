@@ -973,7 +973,23 @@
     "ip_kind_remote": "Verbindings-IP",
     "ip_kind_client_help": "Het IP van de bezoeker, uit de doorstuurheader wanneer het verzoek via een van de vertrouwde proxy's (Instellingen) komt. Zonder vertrouwde proxy's is het gelijk aan het verbindings-IP.",
     "ip_kind_remote_help": "Het IP van de TCP-verbinding. Achter een proxy of CDN is dat het adres van de proxy, niet van de bezoeker.",
-    "ip_range": "IP-adres of bereik"
+    "ip_range": "IP-adres of bereik",
+    "type_path_regexp": "Pad-regex",
+    "type_header_regexp": "Header-regex",
+    "field_regexp_name": "Naam (optioneel)",
+    "field_header_name_regexp": "Headernaam voor de regex",
+    "field_regexp_name_header": "Naam van de header-regex (optioneel)",
+    "regexp_help": "Een naam maakt de groepen beschikbaar als {re.name.1}, bijvoorbeeld in een herschrijving. Caddy staat één regex per matcher toe.",
+    "regexp_once_error": "Caddy staat maar één regex (pad of header) per matcher toe.",
+    "type_protocol": "Protocol",
+    "protocol_any": "willekeurig",
+    "type_file": "Bestanden",
+    "field_try_files": "Te zoeken bestanden",
+    "field_try_policy": "Hoe te kiezen",
+    "try_policy_default": "eerste bestaande",
+    "file_help": "Komt overeen als een van de bestanden bestaat. Plaatshouders zoals {path} werken.",
+    "type_vars": "Variabelen",
+    "vars_help": "Eén per regel: een plaatshouder en de waarden die hij mag hebben, bijvoorbeeld {host} example.com www.example.com."
   },
   "handle_path": {
     "label": "Overeenkomend padprefix verwijderen (handle_path)"

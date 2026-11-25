@@ -973,7 +973,23 @@
     "ip_kind_remote": "IP połączenia",
     "ip_kind_client_help": "IP odwiedzającego, pobierane z nagłówka przekazania, gdy żądanie przychodzi przez jedno z zaufanych proxy (Ustawienia). Bez zaufanych proxy jest takie samo jak IP połączenia.",
     "ip_kind_remote_help": "IP połączenia TCP. Za proxy lub CDN jest to adres proxy, a nie odwiedzającego.",
-    "ip_range": "Adres IP lub zakres"
+    "ip_range": "Adres IP lub zakres",
+    "type_path_regexp": "Regex ścieżki",
+    "type_header_regexp": "Regex nagłówka",
+    "field_regexp_name": "Nazwa (opcjonalna)",
+    "field_header_name_regexp": "Nazwa nagłówka dla regexa",
+    "field_regexp_name_header": "Nazwa regexa nagłówka (opcjonalna)",
+    "regexp_help": "Nazwa udostępnia grupy jako {re.name.1}, np. w przepisaniu. Caddy dopuszcza jeden regex na matcher.",
+    "regexp_once_error": "Caddy dopuszcza tylko jeden regex (ścieżki lub nagłówka) na matcher.",
+    "type_protocol": "Protokół",
+    "protocol_any": "dowolny",
+    "type_file": "Pliki",
+    "field_try_files": "Szukane pliki",
+    "field_try_policy": "Sposób wyboru",
+    "try_policy_default": "pierwszy istniejący",
+    "file_help": "Pasuje, gdy istnieje jeden z plików. Zmienne zastępcze, np. {path}, działają.",
+    "type_vars": "Zmienne",
+    "vars_help": "Po jednej w wierszu: zmienna zastępcza i wartości, które może mieć, np. {host} example.com www.example.com."
   },
   "handle_path": {
     "label": "Usuń dopasowany prefiks ścieżki (handle_path)"

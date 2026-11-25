@@ -973,7 +973,23 @@
     "ip_kind_remote": "Verbindungs-IP",
     "ip_kind_client_help": "Die IP des Besuchers, aus dem Forwarded-Header, wenn die Anfrage über einen der vertrauenswürdigen Proxys (Einstellungen) kommt. Ohne vertrauenswürdige Proxys ist sie gleich der Verbindungs-IP.",
     "ip_kind_remote_help": "Die IP der TCP-Verbindung. Hinter einem Proxy oder CDN ist das die Adresse des Proxys, nicht die des Besuchers.",
-    "ip_range": "IP-Adresse oder -Bereich"
+    "ip_range": "IP-Adresse oder -Bereich",
+    "type_path_regexp": "Pfad-Regex",
+    "type_header_regexp": "Header-Regex",
+    "field_regexp_name": "Name (optional)",
+    "field_header_name_regexp": "Header-Name für die Regex",
+    "field_regexp_name_header": "Name der Header-Regex (optional)",
+    "regexp_help": "Ein Name macht die Gruppen als {re.name.1} verfügbar, zum Beispiel in einer Umschreibung. Caddy erlaubt eine Regex pro Matcher.",
+    "regexp_once_error": "Caddy erlaubt nur eine Regex (Pfad oder Header) pro Matcher.",
+    "type_protocol": "Protokoll",
+    "protocol_any": "beliebig",
+    "type_file": "Dateien",
+    "field_try_files": "Zu suchende Dateien",
+    "field_try_policy": "Auswahl",
+    "try_policy_default": "erste vorhandene",
+    "file_help": "Trifft zu, wenn eine der Dateien existiert. Platzhalter wie {path} funktionieren.",
+    "type_vars": "Variablen",
+    "vars_help": "Eine pro Zeile: ein Platzhalter, dann die Werte, die er haben darf, zum Beispiel {host} example.com www.example.com."
   },
   "handle_path": {
     "label": "Getroffenes Pfadpräfix entfernen (handle_path)"

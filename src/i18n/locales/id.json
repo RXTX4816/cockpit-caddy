@@ -973,7 +973,23 @@
     "ip_kind_remote": "IP koneksi",
     "ip_kind_client_help": "IP pengunjung, diambil dari header penerusan jika permintaan datang melalui salah satu proxy tepercaya (Pengaturan). Tanpa proxy tepercaya, nilainya sama dengan IP koneksi.",
     "ip_kind_remote_help": "IP dari koneksi TCP. Di balik proxy atau CDN, itu alamat proxy, bukan pengunjung.",
-    "ip_range": "Alamat IP atau rentang"
+    "ip_range": "Alamat IP atau rentang",
+    "type_path_regexp": "Regex jalur",
+    "type_header_regexp": "Regex header",
+    "field_regexp_name": "Nama (opsional)",
+    "field_header_name_regexp": "Nama header untuk regex",
+    "field_regexp_name_header": "Nama regex header (opsional)",
+    "regexp_help": "Nama membuat grup tersedia sebagai {re.name.1}, misalnya dalam penulisan ulang. Caddy mengizinkan satu regex per matcher.",
+    "regexp_once_error": "Caddy hanya mengizinkan satu regex (jalur atau header) per matcher.",
+    "type_protocol": "Protokol",
+    "protocol_any": "apa saja",
+    "type_file": "Berkas",
+    "field_try_files": "Berkas yang dicari",
+    "field_try_policy": "Cara memilih",
+    "try_policy_default": "yang pertama ada",
+    "file_help": "Cocok saat salah satu berkas ada. Placeholder seperti {path} berfungsi.",
+    "type_vars": "Variabel",
+    "vars_help": "Satu per baris: placeholder, lalu nilai yang boleh dimilikinya, misalnya {host} example.com www.example.com."
   },
   "handle_path": {
     "label": "Hapus prefiks jalur yang cocok (handle_path)"

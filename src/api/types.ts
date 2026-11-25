@@ -73,6 +73,16 @@ export interface RouteMatch {
   not?: RouteMatchFields;
   /** CEL expression (#287), as written in a Caddyfile (placeholder shorthands like `{path}`). */
   expression?: string;
+  /** `path_regexp [name] pattern`; a named match gives `{re.name.1}` for its groups (#331). */
+  path_regexp?: { pattern: string; name?: string };
+  /** `header_regexp [name] header pattern` (#331). Caddy allows one regular expression per matcher. */
+  header_regexp?: { header: string; pattern: string; name?: string };
+  /** `protocol http|https|grpc` (#331). */
+  protocol?: string;
+  /** `file { try_files … try_policy … }`: matches when one of the files exists (#331). */
+  file?: { try_files: string[]; try_policy?: string };
+  /** `vars <placeholder> <values…>`: a placeholder is one of the values (#331). */
+  vars?: Record<string, string[]>;
 }
 
 /** The plain matcher fields, without the `not` group and the expression. */

@@ -973,7 +973,23 @@
     "ip_kind_remote": "連線 IP",
     "ip_kind_client_help": "訪客的 IP。請求經過受信任代理（設定）時從轉送標頭取得；沒有受信任代理時與連線 IP 相同。",
     "ip_kind_remote_help": "TCP 連線的 IP。在代理或 CDN 之後，這是代理的位址，而不是訪客的。",
-    "ip_range": "IP 位址或範圍"
+    "ip_range": "IP 位址或範圍",
+    "type_path_regexp": "路徑正規表示式",
+    "type_header_regexp": "標頭正規表示式",
+    "field_regexp_name": "名稱(選填)",
+    "field_header_name_regexp": "正規表示式所用的標頭名稱",
+    "field_regexp_name_header": "標頭正規表示式的名稱(選填)",
+    "regexp_help": "設定名稱後,群組可作為 {re.name.1} 使用,例如在重寫中。Caddy 每個比對器只允許一個正規表示式。",
+    "regexp_once_error": "Caddy 每個比對器只允許一個正規表示式(路徑或標頭)。",
+    "type_protocol": "通訊協定",
+    "protocol_any": "任意",
+    "type_file": "檔案",
+    "field_try_files": "要尋找的檔案",
+    "field_try_policy": "選擇方式",
+    "try_policy_default": "第一個存在的",
+    "file_help": "其中一個檔案存在時比對成功。可使用 {path} 之類的預留位置。",
+    "type_vars": "變數",
+    "vars_help": "每行一個:預留位置及其可取的值,例如 {host} example.com www.example.com。"
   },
   "handle_path": {
     "label": "移除符合的路徑前綴（handle_path）"

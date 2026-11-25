@@ -973,7 +973,23 @@
     "ip_kind_remote": "连接 IP",
     "ip_kind_client_help": "访问者的 IP。请求经过受信任代理（设置）时从转发头中获取；没有受信任代理时与连接 IP 相同。",
     "ip_kind_remote_help": "TCP 连接的 IP。在代理或 CDN 之后，这是代理的地址，而不是访问者的。",
-    "ip_range": "IP 地址或范围"
+    "ip_range": "IP 地址或范围",
+    "type_path_regexp": "路径正则",
+    "type_header_regexp": "请求头正则",
+    "field_regexp_name": "名称(可选)",
+    "field_header_name_regexp": "用于正则的请求头名称",
+    "field_regexp_name_header": "请求头正则的名称(可选)",
+    "regexp_help": "设置名称后,分组可作为 {re.name.1} 使用,例如在重写中。Caddy 每个匹配器只允许一个正则。",
+    "regexp_once_error": "Caddy 每个匹配器只允许一个正则(路径或请求头)。",
+    "type_protocol": "协议",
+    "protocol_any": "任意",
+    "type_file": "文件",
+    "field_try_files": "要查找的文件",
+    "field_try_policy": "选择方式",
+    "try_policy_default": "第一个存在的",
+    "file_help": "其中一个文件存在时匹配。可使用 {path} 之类的占位符。",
+    "type_vars": "变量",
+    "vars_help": "每行一个:占位符及其可取的值,例如 {host} example.com www.example.com。"
   },
   "handle_path": {
     "label": "去除匹配的路径前缀（handle_path）"

@@ -973,7 +973,23 @@
     "ip_kind_remote": "Anslutningens IP",
     "ip_kind_client_help": "Besökarens IP, hämtad ur vidarebefordringsrubriken när begäran kommer via någon av de betrodda proxyservrarna (Inställningar). Utan betrodda proxyservrar är den samma som anslutningens IP.",
     "ip_kind_remote_help": "TCP-anslutningens IP. Bakom en proxy eller ett CDN är det proxyns adress, inte besökarens.",
-    "ip_range": "IP-adress eller intervall"
+    "ip_range": "IP-adress eller intervall",
+    "type_path_regexp": "Sökvägs-regex",
+    "type_header_regexp": "Huvud-regex",
+    "field_regexp_name": "Namn (valfritt)",
+    "field_header_name_regexp": "Huvudnamn för regexet",
+    "field_regexp_name_header": "Namn på huvud-regexet (valfritt)",
+    "regexp_help": "Ett namn gör grupperna tillgängliga som {re.name.1}, till exempel i en omskrivning. Caddy tillåter ett regex per matchare.",
+    "regexp_once_error": "Caddy tillåter bara ett regex (sökväg eller huvud) per matchare.",
+    "type_protocol": "Protokoll",
+    "protocol_any": "valfritt",
+    "type_file": "Filer",
+    "field_try_files": "Filer att leta efter",
+    "field_try_policy": "Hur man väljer",
+    "try_policy_default": "första som finns",
+    "file_help": "Matchar när en av filerna finns. Platshållare som {path} fungerar.",
+    "type_vars": "Variabler",
+    "vars_help": "En per rad: en platshållare och de värden den får ha, till exempel {host} example.com www.example.com."
   },
   "handle_path": {
     "label": "Ta bort det matchade sökvägsprefixet (handle_path)"

@@ -973,7 +973,23 @@
     "ip_kind_remote": "IP соединения",
     "ip_kind_client_help": "IP посетителя, берётся из заголовка пересылки, если запрос пришёл через один из доверенных прокси (Настройки). Без доверенных прокси совпадает с IP соединения.",
     "ip_kind_remote_help": "IP TCP-соединения. За прокси или CDN это адрес прокси, а не посетителя.",
-    "ip_range": "IP-адрес или диапазон"
+    "ip_range": "IP-адрес или диапазон",
+    "type_path_regexp": "Regex пути",
+    "type_header_regexp": "Regex заголовка",
+    "field_regexp_name": "Имя (необязательно)",
+    "field_header_name_regexp": "Имя заголовка для regex",
+    "field_regexp_name_header": "Имя regex заголовка (необязательно)",
+    "regexp_help": "Имя делает группы доступными как {re.name.1}, например в перезаписи. Caddy допускает один regex на матчер.",
+    "regexp_once_error": "Caddy допускает только один regex (пути или заголовка) на матчер.",
+    "type_protocol": "Протокол",
+    "protocol_any": "любой",
+    "type_file": "Файлы",
+    "field_try_files": "Искомые файлы",
+    "field_try_policy": "Как выбирать",
+    "try_policy_default": "первый существующий",
+    "file_help": "Совпадает, если существует один из файлов. Подстановки вроде {path} работают.",
+    "type_vars": "Переменные",
+    "vars_help": "По одной в строке: подстановка и значения, которые она может принимать, например {host} example.com www.example.com."
   },
   "handle_path": {
     "label": "Удалять совпавший префикс пути (handle_path)"

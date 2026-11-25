@@ -973,7 +973,23 @@
     "ip_kind_remote": "IP з’єднання",
     "ip_kind_client_help": "IP відвідувача, береться із заголовка пересилання, якщо запит прийшов через один із довірених проксі (Налаштування). Без довірених проксі збігається з IP з’єднання.",
     "ip_kind_remote_help": "IP TCP-з’єднання. За проксі чи CDN це адреса проксі, а не відвідувача.",
-    "ip_range": "IP-адреса або діапазон"
+    "ip_range": "IP-адреса або діапазон",
+    "type_path_regexp": "Regex шляху",
+    "type_header_regexp": "Regex заголовка",
+    "field_regexp_name": "Назва (необов'язково)",
+    "field_header_name_regexp": "Назва заголовка для regex",
+    "field_regexp_name_header": "Назва regex заголовка (необов'язково)",
+    "regexp_help": "Назва робить групи доступними як {re.name.1}, наприклад у перезаписі. Caddy допускає один regex на матчер.",
+    "regexp_once_error": "Caddy допускає лише один regex (шляху або заголовка) на матчер.",
+    "type_protocol": "Протокол",
+    "protocol_any": "будь-який",
+    "type_file": "Файли",
+    "field_try_files": "Файли для пошуку",
+    "field_try_policy": "Як вибирати",
+    "try_policy_default": "перший наявний",
+    "file_help": "Збігається, якщо існує один із файлів. Підстановки на кшталт {path} працюють.",
+    "type_vars": "Змінні",
+    "vars_help": "По одній у рядку: підстановка та значення, яких вона може набувати, наприклад {host} example.com www.example.com."
   },
   "handle_path": {
     "label": "Вилучати збіглий префікс шляху (handle_path)"

@@ -66,7 +66,7 @@ export function ProxyTabs({ state: s, onChange, general, generalHasError, active
 
   const tabs: ProxyTab[] = [{ key: "general", hasError: flags.hasError.general, content: general }];
   if (layout === "route") {
-    tabs.push({ key: "routing", configured: flags.configured.routing, content: routeMatchers });
+    tabs.push({ key: "routing", configured: flags.configured.routing, hasError: flags.hasError.routing, content: routeMatchers });
   } else {
     tabs.push(
       {

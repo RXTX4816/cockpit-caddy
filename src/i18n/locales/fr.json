@@ -973,7 +973,23 @@
     "ip_kind_remote": "IP de la connexion",
     "ip_kind_client_help": "L’IP du visiteur, lue dans l’en-tête transféré quand la requête passe par l’un des proxys de confiance (Paramètres). Sans proxys de confiance, c’est l’IP de la connexion.",
     "ip_kind_remote_help": "L’IP de la connexion TCP. Derrière un proxy ou un CDN, c’est l’adresse du proxy, pas celle du visiteur.",
-    "ip_range": "Adresse IP ou plage"
+    "ip_range": "Adresse IP ou plage",
+    "type_path_regexp": "Regex de chemin",
+    "type_header_regexp": "Regex d'en-tête",
+    "field_regexp_name": "Nom (facultatif)",
+    "field_header_name_regexp": "Nom de l'en-tête pour la regex",
+    "field_regexp_name_header": "Nom de la regex d'en-tête (facultatif)",
+    "regexp_help": "Un nom rend les groupes disponibles sous la forme {re.name.1}, par exemple dans une réécriture. Caddy admet une regex par matcher.",
+    "regexp_once_error": "Caddy n'admet qu'une seule regex (chemin ou en-tête) par matcher.",
+    "type_protocol": "Protocole",
+    "protocol_any": "tous",
+    "type_file": "Fichiers",
+    "field_try_files": "Fichiers à chercher",
+    "field_try_policy": "Mode de choix",
+    "try_policy_default": "le premier existant",
+    "file_help": "Correspond quand l'un des fichiers existe. Les variables comme {path} fonctionnent.",
+    "type_vars": "Variables",
+    "vars_help": "Une par ligne : une variable, puis les valeurs possibles, par exemple {host} example.com www.example.com."
   },
   "handle_path": {
     "label": "Retirer le préfixe de chemin correspondant (handle_path)"

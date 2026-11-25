@@ -973,7 +973,23 @@
     "ip_kind_remote": "IP الاتصال",
     "ip_kind_client_help": "عنوان IP للزائر، يؤخذ من ترويسة التمرير عندما يمر الطلب عبر أحد الوكلاء الموثوقين (الإعدادات). بدون وكلاء موثوقين يكون هو نفسه IP الاتصال.",
     "ip_kind_remote_help": "عنوان IP لاتصال TCP. خلف وكيل أو شبكة CDN يكون عنوان الوكيل، لا عنوان الزائر.",
-    "ip_range": "عنوان IP أو نطاق"
+    "ip_range": "عنوان IP أو نطاق",
+    "type_path_regexp": "تعبير نمطي للمسار",
+    "type_header_regexp": "تعبير نمطي للترويسة",
+    "field_regexp_name": "الاسم (اختياري)",
+    "field_header_name_regexp": "اسم الترويسة للتعبير النمطي",
+    "field_regexp_name_header": "اسم التعبير النمطي للترويسة (اختياري)",
+    "regexp_help": "يجعل الاسم المجموعات متاحة بصيغة {re.name.1}، مثلًا في إعادة كتابة. يسمح Caddy بتعبير نمطي واحد لكل مطابق.",
+    "regexp_once_error": "يسمح Caddy بتعبير نمطي واحد فقط (للمسار أو للترويسة) لكل مطابق.",
+    "type_protocol": "البروتوكول",
+    "protocol_any": "أي",
+    "type_file": "ملفات",
+    "field_try_files": "الملفات المطلوب البحث عنها",
+    "field_try_policy": "طريقة الاختيار",
+    "try_policy_default": "أول ملف موجود",
+    "file_help": "يطابق عند وجود أحد الملفات. تعمل العناصر النائبة مثل {path}.",
+    "type_vars": "المتغيرات",
+    "vars_help": "واحد في كل سطر: عنصر نائب ثم القيم الممكنة له، مثل {host} example.com www.example.com."
   },
   "handle_path": {
     "label": "إزالة بادئة المسار المطابقة (handle_path)"

@@ -973,7 +973,23 @@
     "ip_kind_remote": "Yhteyden IP",
     "ip_kind_client_help": "Vierailijan IP, joka otetaan välitysotsakkeesta, kun pyyntö tulee jonkin luotetun välityspalvelimen kautta (Asetukset). Ilman luotettuja välityspalvelimia se on sama kuin yhteyden IP.",
     "ip_kind_remote_help": "TCP-yhteyden IP. Välityspalvelimen tai CDN:n takana se on välityspalvelimen osoite, ei vierailijan.",
-    "ip_range": "IP-osoite tai -alue"
+    "ip_range": "IP-osoite tai -alue",
+    "type_path_regexp": "Polun regex",
+    "type_header_regexp": "Otsakkeen regex",
+    "field_regexp_name": "Nimi (valinnainen)",
+    "field_header_name_regexp": "Otsakkeen nimi regexiä varten",
+    "field_regexp_name_header": "Otsakkeen regexin nimi (valinnainen)",
+    "regexp_help": "Nimi tekee ryhmistä käytettävissä muodossa {re.name.1}, esimerkiksi uudelleenkirjoituksessa. Caddy sallii yhden regexin per täsmääjä.",
+    "regexp_once_error": "Caddy sallii vain yhden regexin (polku tai otsake) per täsmääjä.",
+    "type_protocol": "Protokolla",
+    "protocol_any": "mikä tahansa",
+    "type_file": "Tiedostot",
+    "field_try_files": "Etsittävät tiedostot",
+    "field_try_policy": "Valintatapa",
+    "try_policy_default": "ensimmäinen olemassa oleva",
+    "file_help": "Täsmää, kun jokin tiedostoista on olemassa. Paikanvaraajat kuten {path} toimivat.",
+    "type_vars": "Muuttujat",
+    "vars_help": "Yksi riviä kohti: paikanvaraaja ja arvot, jotka sillä voi olla, esimerkiksi {host} example.com www.example.com."
   },
   "handle_path": {
     "label": "Poista täsmännyt polun etuliite (handle_path)"

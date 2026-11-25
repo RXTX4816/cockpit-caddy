@@ -973,7 +973,23 @@
     "ip_kind_remote": "IP של החיבור",
     "ip_kind_client_help": "כתובת ה-IP של המבקר, נלקחת מכותרת ההעברה כשהבקשה מגיעה דרך אחד הפרוקסים המהימנים (הגדרות). ללא פרוקסים מהימנים היא זהה ל-IP של החיבור.",
     "ip_kind_remote_help": "כתובת ה-IP של חיבור ה-TCP. מאחורי פרוקסי או CDN זו כתובת הפרוקסי, לא של המבקר.",
-    "ip_range": "כתובת IP או טווח"
+    "ip_range": "כתובת IP או טווח",
+    "type_path_regexp": "Regex לנתיב",
+    "type_header_regexp": "Regex לכותרת",
+    "field_regexp_name": "שם (אופציונלי)",
+    "field_header_name_regexp": "שם הכותרת ל-regex",
+    "field_regexp_name_header": "שם ה-regex של הכותרת (אופציונלי)",
+    "regexp_help": "שם הופך את הקבוצות לזמינות כ-{re.name.1}, למשל בשכתוב. Caddy מאפשר regex אחד לכל מתאם.",
+    "regexp_once_error": "Caddy מאפשר רק regex אחד (נתיב או כותרת) לכל מתאם.",
+    "type_protocol": "פרוטוקול",
+    "protocol_any": "כלשהו",
+    "type_file": "קבצים",
+    "field_try_files": "קבצים לחיפוש",
+    "field_try_policy": "אופן הבחירה",
+    "try_policy_default": "הראשון שקיים",
+    "file_help": "מתאים כשאחד הקבצים קיים. מציינים כמו {path} עובדים.",
+    "type_vars": "משתנים",
+    "vars_help": "אחד בכל שורה: מציין ואז הערכים שיכולים להיות לו, למשל {host} example.com www.example.com."
   },
   "handle_path": {
     "label": "הסרת קידומת הנתיב התואמת (handle_path)"

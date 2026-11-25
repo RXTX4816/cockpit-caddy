@@ -973,7 +973,23 @@
     "ip_kind_remote": "IP spojení",
     "ip_kind_client_help": "IP návštěvníka, převzatá z přeposílací hlavičky, když požadavek přijde přes některou z důvěryhodných proxy (Nastavení). Bez důvěryhodných proxy je stejná jako IP spojení.",
     "ip_kind_remote_help": "IP spojení TCP. Za proxy nebo CDN je to adresa proxy, ne návštěvníka.",
-    "ip_range": "IP adresa nebo rozsah"
+    "ip_range": "IP adresa nebo rozsah",
+    "type_path_regexp": "Regex cesty",
+    "type_header_regexp": "Regex hlavičky",
+    "field_regexp_name": "Název (volitelný)",
+    "field_header_name_regexp": "Název hlavičky pro regex",
+    "field_regexp_name_header": "Název regexu hlavičky (volitelný)",
+    "regexp_help": "Název zpřístupní skupiny jako {re.name.1}, například v přepisu. Caddy povoluje jeden regex na matcher.",
+    "regexp_once_error": "Caddy povoluje jen jeden regex (cesty nebo hlavičky) na matcher.",
+    "type_protocol": "Protokol",
+    "protocol_any": "jakýkoli",
+    "type_file": "Soubory",
+    "field_try_files": "Hledané soubory",
+    "field_try_policy": "Jak vybrat",
+    "try_policy_default": "první existující",
+    "file_help": "Odpovídá, když existuje některý ze souborů. Fungují zástupné symboly jako {path}.",
+    "type_vars": "Proměnné",
+    "vars_help": "Jedna na řádek: zástupný symbol a hodnoty, které může mít, například {host} example.com www.example.com."
   },
   "handle_path": {
     "label": "Odebrat odpovídající prefix cesty (handle_path)"

@@ -973,7 +973,23 @@
     "ip_kind_remote": "接続 IP",
     "ip_kind_client_help": "訪問者の IP です。信頼済みプロキシ（設定）経由のリクエストでは転送ヘッダーから取得します。信頼済みプロキシがなければ接続 IP と同じです。",
     "ip_kind_remote_help": "TCP 接続の IP です。プロキシや CDN の背後では訪問者ではなくプロキシのアドレスになります。",
-    "ip_range": "IP アドレスまたは範囲"
+    "ip_range": "IP アドレスまたは範囲",
+    "type_path_regexp": "パスの正規表現",
+    "type_header_regexp": "ヘッダーの正規表現",
+    "field_regexp_name": "名前(任意)",
+    "field_header_name_regexp": "正規表現を適用するヘッダー名",
+    "field_regexp_name_header": "ヘッダー正規表現の名前(任意)",
+    "regexp_help": "名前を付けると、グループを {re.name.1} として書き換えなどで使えます。Caddy ではマッチャーごとに正規表現は 1 つです。",
+    "regexp_once_error": "Caddy ではマッチャーごとに正規表現(パスまたはヘッダー)は 1 つだけです。",
+    "type_protocol": "プロトコル",
+    "protocol_any": "指定なし",
+    "type_file": "ファイル",
+    "field_try_files": "探すファイル",
+    "field_try_policy": "選び方",
+    "try_policy_default": "最初に存在するもの",
+    "file_help": "いずれかのファイルが存在するときに一致します。{path} などのプレースホルダーが使えます。",
+    "type_vars": "変数",
+    "vars_help": "1 行に 1 つ:プレースホルダーと、その取りうる値。例: {host} example.com www.example.com"
   },
   "handle_path": {
     "label": "一致したパスのプレフィックスを除去（handle_path）"

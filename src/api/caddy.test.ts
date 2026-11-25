@@ -52,9 +52,9 @@ import {
   CONF_D_IMPORT_LINE,
   parseConfTlsIssuerMap,
 } from "./caddy";
-import { buildRewriteHandler, parseRewriteFromHandle, patchServer, buildFilterEncoder, parseLogEncoder, PRIVATE_RANGES, buildForwardAuthHandler, extractForwardAuthFromProxy, forwardAuthResponseRoutes, buildBasicAuthHandler, buildEncodeHandler, buildFileServerHandlers, buildFileServerJson, parseFileServerOptions, parseTemplatesJson, buildRedirectHandler, parseEncodeOptionsJson, parseBasicAuthOptionsJson, parseHtmlRedirect } from "./caddyJsonModel";
+import { parseMatcherJson, isHostOnlyMatcher, buildRewriteHandler, parseRewriteFromHandle, patchServer, buildFilterEncoder, parseLogEncoder, PRIVATE_RANGES, buildForwardAuthHandler, extractForwardAuthFromProxy, forwardAuthResponseRoutes, buildBasicAuthHandler, buildEncodeHandler, buildFileServerHandlers, buildFileServerJson, parseFileServerOptions, parseTemplatesJson, buildRedirectHandler, parseEncodeOptionsJson, parseBasicAuthOptionsJson, parseHtmlRedirect } from "./caddyJsonModel";
 import { proxiesToCaddyfile } from "./caddy";
-import { buildForwardAuthCaddyLines, buildPhpFastcgiLines, buildRewriteCaddyLines } from "./siteBlocks";
+import { buildForwardAuthCaddyLines, buildMatcherCaddyLines, buildPhpFastcgiLines, buildRewriteCaddyLines, buildMatcherJson, hasAnyMatcher } from "./siteBlocks";
 import { buildLogCaddyLines } from "./globalOptions";
 import type { CaddyConfig, CaddyReverseProxyHandler, CaddyServer, ProxyEntry, RouteMatch, ServerDef } from "./types";
 
@@ -4962,6 +4962,56 @@ describe("rewrite: uri replace, strip_suffix, query operations and method (#332)
     expect(block).toContain('+x "y"');
     expect(block).toContain('id "^(\\d+)$" "n$1"');
     expect(block).toContain("-debug");
+  });
+});
+
+describe("matchers: path_regexp, header_regexp, protocol, file and vars (#331)", () => {
+  const full: import("./types").RouteMatch = {
+    path_regexp: { pattern: "^/user/(\\d+)$", name: "user" },
+    protocol: "https",
+    file: { try_files: ["{path}", "{path}/index.html"], try_policy: "first_exist" },
+    vars: { "{host}": ["example.com", "www.example.com"] },
+  };
+
+  it("round-trips through the JSON matcher, with placeholders expanded and collapsed", () => {
+    const json = buildMatcherJson(full);
+    expect(json).toMatchObject({
+      path_regexp: { name: "user", pattern: "^/user/(\\d+)$" }, protocol: "https",
+      file: { try_files: ["{http.request.uri.path}", "{http.request.uri.path}/index.html"], try_policy: "first_exist" },
+      vars: { "{http.request.host}": ["example.com", "www.example.com"] },
+    });
+    expect(parseMatcherJson(json)).toEqual(full);
+  });
+
+  it("round-trips a header regexp, and drops the name Caddy gives a matcher itself", () => {
+    const m = { header_regexp: { header: "X-Token", pattern: "^v(\\d+)$", name: "token" } };
+    expect(parseMatcherJson(buildMatcherJson(m))).toEqual(m);
+    expect(parseMatcherJson({ path_regexp: { name: "m8080", pattern: "^/a" } })).toEqual({ path_regexp: { pattern: "^/a" } });
+    expect(parseMatcherJson({ header_regexp: { "X-A": { name: "r0", pattern: "^b" } } })).toEqual({ header_regexp: { header: "X-A", pattern: "^b" } });
+  });
+
+  it("writes the matcher lines", () => {
+    const lines = buildMatcherCaddyLines(full, "m1", "\t").join("\n");
+    expect(lines).toContain("path_regexp user ");
+    expect(lines).toContain("^/user/(");
+    expect(lines).toContain("protocol https");
+    expect(lines).toContain("try_files {path} {path}/index.html");
+    expect(lines).toContain("try_policy first_exist");
+    expect(lines).toContain("vars {host} example.com www.example.com");
+    expect(buildMatcherCaddyLines({ header_regexp: { header: "X-A", pattern: "^b" } }, "m1", "\t").join("\n")).toContain("header_regexp X-A ^b");
+  });
+
+  it("writes only one regexp, since Caddy rejects two in a matcher", () => {
+    const lines = buildMatcherCaddyLines({ path_regexp: { pattern: "^/a" }, header_regexp: { header: "X-A", pattern: "^b" } }, "m1", "\t").join("\n");
+    expect(lines).toContain("path_regexp");
+    expect(lines).not.toContain("header_regexp");
+  });
+
+  it("counts a site with only the new matchers as having matchers, and not as a host or path only one", () => {
+    expect(hasAnyMatcher({ protocol: "https" })).toBe(true);
+    expect(isPathOnlyMatcher({ path: ["/a"], protocol: "https" })).toBe(false);
+    expect(isPathOnlyMatcher({ path: ["/a"] })).toBe(true);
+    expect(isHostOnlyMatcher({ host: ["a.com"], vars: { "{x}": ["1"] } })).toBe(false);
   });
 });
 

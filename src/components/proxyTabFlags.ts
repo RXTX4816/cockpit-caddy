@@ -2,6 +2,7 @@ import { hasAnyMatcher } from "../api";
 import type { ErrorHandlerConfig, ForwardAuthConfig, LbPolicy, HeaderOperation, RewriteConfig, RouteMatch } from "../api";
 import type { EncodeValues } from "./EncodeSection";
 import { validateRewrite } from "./RewriteSection";
+import { validateRouteMatch } from "./RouteMatchersSection";
 import type { AccessLogValues } from "./AccessLogSection";
 import { accessLogValuesToConfig, validateFieldFilters } from "./AccessLogSection";
 import type { AuthEntry, BasicAuthOptionValues } from "./BasicAuthSection";
@@ -63,7 +64,7 @@ export function proxyTabFlags(v: ProxyTabValues, generalHasError: boolean): TabF
     hasError: {
       general: generalHasError,
       security: !!v.forwardAuthError || !!v.basicAuthError || tlsValuesHaveErrors(v.tlsValues),
-      routing: !!v.encodeError || validateRewrite(v.rewrite),
+      routing: !!v.encodeError || validateRewrite(v.rewrite) || validateRouteMatch(v.matchers),
       upstreams: !!validateUpstreams(v.extraUpstreams) || !!validateLbRetry(v.lbRetry)
         || (v.extraUpstreams.length > 0 && !!validateLbArgs(v.lbPolicy as LbPolicy | "", v.lbArgs, v.extraUpstreams.length + 1)),
       logging: v.accessLog.enabled && validateFieldFilters(v.accessLog.fieldFilters),

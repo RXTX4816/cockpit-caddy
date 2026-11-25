@@ -973,7 +973,23 @@
     "ip_kind_remote": "IP da conexão",
     "ip_kind_client_help": "O IP do visitante, obtido do cabeçalho encaminhado quando a requisição passa por um dos proxies confiáveis (Configurações). Sem proxies confiáveis, é igual ao IP da conexão.",
     "ip_kind_remote_help": "O IP da conexão TCP. Por trás de um proxy ou CDN, é o endereço do proxy, não do visitante.",
-    "ip_range": "Endereço IP ou faixa"
+    "ip_range": "Endereço IP ou faixa",
+    "type_path_regexp": "Regex do caminho",
+    "type_header_regexp": "Regex do cabeçalho",
+    "field_regexp_name": "Nome (opcional)",
+    "field_header_name_regexp": "Nome do cabeçalho para a regex",
+    "field_regexp_name_header": "Nome da regex do cabeçalho (opcional)",
+    "regexp_help": "Um nome deixa os grupos disponíveis como {re.name.1}, por exemplo em uma reescrita. O Caddy permite uma regex por matcher.",
+    "regexp_once_error": "O Caddy permite apenas uma regex (de caminho ou de cabeçalho) por matcher.",
+    "type_protocol": "Protocolo",
+    "protocol_any": "qualquer",
+    "type_file": "Arquivos",
+    "field_try_files": "Arquivos a procurar",
+    "field_try_policy": "Como escolher",
+    "try_policy_default": "o primeiro que existir",
+    "file_help": "Corresponde quando um dos arquivos existe. Marcadores como {path} funcionam.",
+    "type_vars": "Variáveis",
+    "vars_help": "Uma por linha: um marcador e os valores que ele pode ter, por exemplo {host} example.com www.example.com."
   },
   "handle_path": {
     "label": "Remover o prefixo de caminho correspondente (handle_path)"

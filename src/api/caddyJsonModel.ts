@@ -92,6 +92,19 @@ export function parseMatcherFieldsJson(match: Record<string, unknown>): import("
     const ci = (match.client_ip as { ranges?: string[] }).ranges;
     if (ci?.length) m.client_ip = { ranges: ci };
   }
+  // The name Caddy's adapter gives a regexp (`m8080`, `r0`, `nr_x`) is the matcher's own; only a chosen one is kept (#331).
+  const chosenName = (name: string | undefined) => name && !/^(m\d+|r\d+|nr_.+)$/.test(name) ? name : undefined;
+  const pr = match.path_regexp as { pattern?: string; name?: string } | undefined;
+  if (pr?.pattern) m.path_regexp = { pattern: pr.pattern, ...(chosenName(pr.name) ? { name: chosenName(pr.name) } : {}) };
+  const hr = match.header_regexp as Record<string, { pattern?: string; name?: string }> | undefined;
+  const hrEntry = hr ? Object.entries(hr).find(([, v]) => v?.pattern) : undefined;
+  if (hrEntry) m.header_regexp = { header: hrEntry[0], pattern: hrEntry[1].pattern!, ...(chosenName(hrEntry[1].name) ? { name: chosenName(hrEntry[1].name) } : {}) };
+  if (typeof match.protocol === "string" && match.protocol) m.protocol = match.protocol;
+  const file = match.file as { try_files?: string[]; try_policy?: string } | undefined;
+  if (file?.try_files?.length) m.file = { try_files: file.try_files.map(collapsePlaceholderShorthands), ...(file.try_policy ? { try_policy: file.try_policy } : {}) };
+  if (match.vars && typeof match.vars === "object" && Object.keys(match.vars).length) {
+    m.vars = Object.fromEntries(Object.entries(match.vars as Record<string, string[]>).map(([k, v]) => [collapsePlaceholderShorthands(k), v]));
+  }
   return m;
 }
 
@@ -115,7 +128,8 @@ export function parseMatcherJson(match: Record<string, unknown> | undefined): im
 
 /** True when the matcher is a host list and nothing else (a hostname-only site block). */
 export function isHostOnlyMatcher(m: import("./types").RouteMatch | undefined): m is import("./types").RouteMatch & { host: string[] } {
-  return !!m?.host?.length && !m.path && !m.method && !m.header && !m.query && !m.remote_ip && !m.client_ip && !m.not && !m.expression;
+  return !!m?.host?.length && !m.path && !m.method && !m.header && !m.query && !m.remote_ip && !m.client_ip && !m.not && !m.expression
+    && !m.path_regexp && !m.header_regexp && !m.protocol && !m.file && !m.vars;
 }
 
 

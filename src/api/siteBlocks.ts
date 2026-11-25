@@ -79,6 +79,18 @@ export function matcherFieldLines(m: import("./types").RouteMatchFields, indent:
   if (m.client_ip?.ranges.length) {
     lines.push(`${indent}client_ip ${m.client_ip.ranges.join(" ")}`);
   }
+  // Caddy takes one regular expression per matcher (#331), so a second one is the writer's to refuse.
+  if (m.path_regexp?.pattern) lines.push(`${indent}path_regexp ${m.path_regexp.name ? `${m.path_regexp.name} ` : ""}${caddyQuote(m.path_regexp.pattern)}`);
+  else if (m.header_regexp?.pattern) lines.push(`${indent}header_regexp ${m.header_regexp.name ? `${m.header_regexp.name} ` : ""}${m.header_regexp.header} ${caddyQuote(m.header_regexp.pattern)}`);
+  if (m.protocol) lines.push(`${indent}protocol ${m.protocol}`);
+  if (m.file?.try_files.length) {
+    lines.push(`${indent}file {`, `${indent}\ttry_files ${m.file.try_files.join(" ")}`);
+    if (m.file.try_policy) lines.push(`${indent}\ttry_policy ${m.file.try_policy}`);
+    lines.push(`${indent}}`);
+  }
+  for (const [name, values] of Object.entries(m.vars ?? {})) {
+    if (values.length) lines.push(`${indent}vars ${name} ${values.map(v => caddyQuote(v)).join(" ")}`);
+  }
   return lines;
 }
 
@@ -116,6 +128,12 @@ export function matcherFieldsJson(m: import("./types").RouteMatchFields): Record
   }
   if (m.remote_ip?.ranges.length) obj.remote_ip = { ranges: m.remote_ip.ranges };
   if (m.client_ip?.ranges.length) obj.client_ip = { ranges: m.client_ip.ranges };
+  if (m.path_regexp?.pattern) obj.path_regexp = { ...(m.path_regexp.name ? { name: m.path_regexp.name } : {}), pattern: m.path_regexp.pattern };
+  else if (m.header_regexp?.pattern) obj.header_regexp = { [m.header_regexp.header]: { ...(m.header_regexp.name ? { name: m.header_regexp.name } : {}), pattern: m.header_regexp.pattern } };
+  if (m.protocol) obj.protocol = m.protocol;
+  if (m.file?.try_files.length) obj.file = { try_files: m.file.try_files.map(expandPlaceholderShorthands), ...(m.file.try_policy ? { try_policy: m.file.try_policy } : {}) };
+  const vars = Object.entries(m.vars ?? {}).filter(([, v]) => v.length);
+  if (vars.length) obj.vars = Object.fromEntries(vars.map(([k, v]) => [expandPlaceholderShorthands(k), v]));
   return obj;
 }
 
@@ -140,6 +158,7 @@ export function hasAnyMatcher(m: import("./types").RouteMatch | undefined): m is
 /** Returns true when only path matchers are set (needed for handle_path eligibility). */
 export function isPathOnlyMatcher(m: import("./types").RouteMatch | undefined): boolean {
   return !!m && !!(m.path?.length) && !m.host?.length && !m.method?.length && !m.header && !m.query && !m.remote_ip && !m.client_ip
+    && !m.path_regexp && !m.header_regexp && !m.protocol && !m.file && !m.vars
     && !(m.not && Object.keys(matcherFieldsJson(m.not)).length) && !m.expression?.trim();
 }
 

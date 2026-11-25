@@ -973,7 +973,23 @@
     "ip_kind_remote": "Connection IP",
     "ip_kind_client_help": "The visitor's IP, taken from the forwarded header when the request comes through one of the trusted proxies (Settings). Without trusted proxies it is the same as the connection IP.",
     "ip_kind_remote_help": "The IP of the TCP connection. Behind a proxy or CDN that is the proxy's address, not the visitor's.",
-    "ip_range": "IP address or range"
+    "ip_range": "IP address or range",
+    "type_path_regexp": "Path regex",
+    "type_header_regexp": "Header regex",
+    "field_regexp_name": "Name (optional)",
+    "field_header_name_regexp": "Header name for the regex",
+    "field_regexp_name_header": "Name of the header regex (optional)",
+    "regexp_help": "A name makes the groups available as {re.name.1}, for example in a rewrite. Caddy allows one regex per matcher.",
+    "regexp_once_error": "Caddy allows only one regex (path or header) per matcher.",
+    "type_protocol": "Protocol",
+    "protocol_any": "any",
+    "type_file": "Files",
+    "field_try_files": "Files to look for",
+    "field_try_policy": "How to pick",
+    "try_policy_default": "first existing",
+    "file_help": "Matches when one of the files exists. Placeholders such as {path} work.",
+    "type_vars": "Variables",
+    "vars_help": "One per line: a placeholder, then the values it may have, for example {host} example.com www.example.com."
   },
   "handle_path": {
     "label": "Strip matched path prefix (handle_path)"
