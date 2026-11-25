@@ -729,7 +729,9 @@
     "admin_address_help": "Caddy 管理 API 的監聽位置,寫法與 Caddyfile 相同。外掛程式連線的是自身設定中的位址,因此請同時修改兩處。",
     "admin_origins": "允許的來源",
     "admin_origins_help": "可從瀏覽器呼叫管理 API 的主機,以空格分隔。",
-    "admin_enforce_origin": "強制檢查來源"
+    "admin_enforce_origin": "強制檢查來源",
+    "metrics_per_host": "依主機為指標加上標籤",
+    "metrics_per_host_help": "在每個請求指標上加入所請求的主機,以便區分網站。每個不同的主機都會成為獨立的時間序列。"
   },
   "ca": {
     "title": "內部憑證授權單位",

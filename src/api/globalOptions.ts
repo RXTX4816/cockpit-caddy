@@ -209,6 +209,8 @@ export interface GlobalOptions {
    * those), just a slightly less verbose wire format.
    */
   metricsPlainFormat?: boolean;
+  /** The global `metrics { per_host }` option: label the request metrics with the host (#342). */
+  metricsPerHost?: boolean;
   /**
    * Caddy's own runtime/error log (#158) — startup messages, reload results, TLS/ACME
    * errors, config errors — as opposed to per-site access logs (AccessLogConfig on each
@@ -420,7 +422,10 @@ export function parseOptionLines(lines: string[]): GlobalOptions {
       opts.metricsEnabled = true;
       if (line.endsWith("{")) {
         i++;
-        while (i < lines.length && lines[i].trim() !== "}") i++;
+        while (i < lines.length && lines[i].trim() !== "}") {
+          if (lines[i].trim() === "per_host") opts.metricsPerHost = true;
+          i++;
+        }
       }
     } else if (key === "log" && line.endsWith("{")) {
       // #158 — Caddy's own runtime/error logger (the *unnamed* `log` global option),
@@ -673,8 +678,8 @@ export function buildGlobalOptionsLines(opts: GlobalOptions): string {
   // Turns on request-level `caddy_http_*` instrumentation across every server — the
   // dedicated site block that actually exposes /metrics is written separately into
   // conf.d (see buildMetricsSiteBlock), since a bare global option can't also declare
-  // a listener. per_host/observe_catchall_hosts/otlp sub-options aren't exposed here.
-  if (opts.metricsEnabled) lines.push("\tmetrics");
+  // a listener. observe_catchall_hosts and otlp are not exposed here.
+  if (opts.metricsEnabled) lines.push(...(opts.metricsPerHost ? ["\tmetrics {", "\t\tper_host", "\t}"] : ["\tmetrics"]));
   // #158 — Caddy's own runtime/error logger. buildLogCaddyLines already emits exactly the
   // one-tab-indented `log { ... }` shape this global-options block needs.
   if (opts.runtimeLog) lines.push(buildLogCaddyLines(opts.runtimeLog).join("\n"));

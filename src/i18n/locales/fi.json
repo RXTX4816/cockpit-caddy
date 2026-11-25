@@ -729,7 +729,9 @@
     "admin_address_help": "Missä Caddyn hallinta-API kuuntelee, kirjoitettuna kuten Caddyfilessä. Laajennus yhdistää omassa asetuksessaan olevaan osoitteeseen, joten muuta molemmat yhdessä.",
     "admin_origins": "Sallitut originit",
     "admin_origins_help": "Välilyönnein erotetut isännät, jotka saavat kutsua hallinta-API:a selaimesta.",
-    "admin_enforce_origin": "Pakota originit"
+    "admin_enforce_origin": "Pakota originit",
+    "metrics_per_host": "Merkitse mittarit isännällä",
+    "metrics_per_host_help": "Lisää pyydetyn isännän jokaiseen pyyntömittariin, jotta sivustot erotetaan toisistaan. Jokainen eri isäntä muodostaa oman sarjansa."
   },
   "ca": {
     "title": "Sisäinen varmentaja",

@@ -729,7 +729,9 @@
     "admin_address_help": "Caddy 管理 API 的监听位置,写法与 Caddyfile 相同。插件连接的是自身设置中的地址,因此请同时修改两处。",
     "admin_origins": "允许的来源",
     "admin_origins_help": "可以从浏览器调用管理 API 的主机,以空格分隔。",
-    "admin_enforce_origin": "强制检查来源"
+    "admin_enforce_origin": "强制检查来源",
+    "metrics_per_host": "按主机为指标添加标签",
+    "metrics_per_host_help": "在每个请求指标上加入所请求的主机,以便区分站点。每个不同的主机都会成为单独的时间序列。"
   },
   "ca": {
     "title": "内部证书颁发机构",

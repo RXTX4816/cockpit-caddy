@@ -729,7 +729,9 @@
     "admin_address_help": "Waar de beheer-API van Caddy luistert, geschreven zoals in de Caddyfile. De plug-in verbindt met het adres in zijn eigen instelling, wijzig dus beide samen.",
     "admin_origins": "Toegestane origins",
     "admin_origins_help": "Hosts gescheiden door spaties die de beheer-API vanuit een browser mogen aanroepen.",
-    "admin_enforce_origin": "Origins afdwingen"
+    "admin_enforce_origin": "Origins afdwingen",
+    "metrics_per_host": "Metrics labelen per host",
+    "metrics_per_host_help": "Voegt de gevraagde host toe aan elke aanvraagmetric, zodat sites te onderscheiden zijn. Elke andere host wordt een eigen reeks."
   },
   "ca": {
     "title": "Interne certificeringsinstantie",

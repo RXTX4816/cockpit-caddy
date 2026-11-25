@@ -729,7 +729,9 @@
     "admin_address_help": "Kde počúva administračné API Caddy, zapísané ako v Caddyfile. Plugin sa pripája na adresu vo svojom nastavení, preto meňte obe spolu.",
     "admin_origins": "Povolené originy",
     "admin_origins_help": "Hostitelia oddelení medzerami, ktorí smú volať administračné API z prehliadača.",
-    "admin_enforce_origin": "Vynútiť originy"
+    "admin_enforce_origin": "Vynútiť originy",
+    "metrics_per_host": "Označiť metriky hostiteľom",
+    "metrics_per_host_help": "Pridá požadovaného hostiteľa ku každej metrike požiadavky, aby sa weby dali rozlíšiť. Každý iný hostiteľ tvorí vlastný rad."
   },
   "ca": {
     "title": "Interná certifikačná autorita",

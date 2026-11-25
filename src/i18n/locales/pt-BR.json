@@ -729,7 +729,9 @@
     "admin_address_help": "Onde a API de administração do Caddy escuta, escrito como no Caddyfile. O plugin se conecta ao endereço da própria configuração, então altere os dois juntos.",
     "admin_origins": "Origens permitidas",
     "admin_origins_help": "Hosts separados por espaços que podem chamar a API de administração de um navegador.",
-    "admin_enforce_origin": "Exigir origens"
+    "admin_enforce_origin": "Exigir origens",
+    "metrics_per_host": "Rotular métricas por host",
+    "metrics_per_host_help": "Adiciona o host solicitado a cada métrica de requisição, para distinguir os sites. Cada host diferente vira uma série própria."
   },
   "ca": {
     "title": "Autoridade certificadora interna",

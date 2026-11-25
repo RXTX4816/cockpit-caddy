@@ -729,7 +729,9 @@
     "admin_address_help": "Unde ascultă API-ul de administrare Caddy, scrisă ca în Caddyfile. Pluginul se conectează la adresa din propria setare, deci schimbă-le pe ambele împreună.",
     "admin_origins": "Origini permise",
     "admin_origins_help": "Gazde separate prin spații care pot apela API-ul de administrare dintr-un browser.",
-    "admin_enforce_origin": "Impune originile"
+    "admin_enforce_origin": "Impune originile",
+    "metrics_per_host": "Etichetează metricile după gazdă",
+    "metrics_per_host_help": "Adaugă gazda cerută la fiecare metrică de cerere, ca site-urile să poată fi deosebite. Fiecare gazdă diferită devine o serie proprie."
   },
   "ca": {
     "title": "Autoritate de certificare internă",

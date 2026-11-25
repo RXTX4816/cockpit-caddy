@@ -729,7 +729,9 @@
     "admin_address_help": "Caddy 관리 API가 수신하는 위치를 Caddyfile 형식으로 씁니다. 플러그인은 자체 설정의 주소로 연결하므로 두 곳을 함께 변경하세요.",
     "admin_origins": "허용된 오리진",
     "admin_origins_help": "브라우저에서 관리 API를 호출할 수 있는 호스트(공백으로 구분)입니다.",
-    "admin_enforce_origin": "오리진 강제"
+    "admin_enforce_origin": "오리진 강제",
+    "metrics_per_host": "호스트별로 지표에 레이블 지정",
+    "metrics_per_host_help": "요청 지표마다 요청된 호스트를 추가해 사이트를 구분할 수 있게 합니다. 서로 다른 호스트마다 별도의 시계열이 생깁니다."
   },
   "ca": {
     "title": "내부 인증 기관",

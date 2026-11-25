@@ -729,7 +729,9 @@
     "admin_address_help": "Caddy'nin yönetim API'sinin dinlediği yer, Caddyfile'daki gibi yazılır. Eklenti kendi ayarındaki adrese bağlanır, bu yüzden ikisini birlikte değiştirin.",
     "admin_origins": "İzin verilen originler",
     "admin_origins_help": "Yönetim API'sini bir tarayıcıdan çağırabilen, boşlukla ayrılmış ana makineler.",
-    "admin_enforce_origin": "Originleri zorunlu kıl"
+    "admin_enforce_origin": "Originleri zorunlu kıl",
+    "metrics_per_host": "Metrikleri ana makineye göre etiketle",
+    "metrics_per_host_help": "İstenen ana makineyi her istek metriğine ekler, böylece siteler ayırt edilebilir. Her farklı ana makine kendi serisi olur."
   },
   "ca": {
     "title": "İç sertifika yetkilisi",

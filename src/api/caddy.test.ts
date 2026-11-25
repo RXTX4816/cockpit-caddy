@@ -4753,3 +4753,19 @@ describe("the admin global option (#330)", () => {
     expect(parseGlobalOptions(patched)).toEqual({ adminOff: true });
   });
 });
+
+describe("metrics per_host (#342)", () => {
+  it("writes the metrics option with per_host and reads it back", () => {
+    const patched = buildGlobalOptionsPatch("", { metricsEnabled: true, metricsPerHost: true });
+    expect(patched).toContain("metrics {");
+    expect(patched).toContain("per_host");
+    expect(parseGlobalOptions(patched)).toMatchObject({ metricsEnabled: true, metricsPerHost: true });
+  });
+
+  it("keeps a plain metrics line when per_host is off", () => {
+    const patched = buildGlobalOptionsPatch("", { metricsEnabled: true });
+    expect(patched).toMatch(/^\s*metrics$/m);
+    expect(parseGlobalOptions(patched).metricsPerHost).toBeUndefined();
+  });
+});
+

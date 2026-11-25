@@ -860,3 +860,11 @@ describe.runIf(available || required)("caddy adapt accepts the TLS and admin glo
     expect(config.apps?.tls?.automation?.policies?.[0]?.issuers?.[0]).toMatchObject({ module: "internal" });
   });
 });
+
+describe.runIf(available || required)("caddy adapt accepts metrics per_host (#342)", () => {
+  it("turns it on in the HTTP app's metrics", () => {
+    const conf = `${buildGlobalOptionsPatch("", { metricsEnabled: true, metricsPerHost: true })}\n:8080 {\n\trespond ok\n}\n`;
+    expect((adapt(conf).apps?.http as { metrics?: unknown } | undefined)?.metrics).toEqual({ per_host: true });
+  });
+});
+

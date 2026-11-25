@@ -729,7 +729,9 @@
     "admin_address_help": "Var Caddys admin-API lyssnar, skrivet som i Caddyfile. Tillägget ansluter till adressen i sin egen inställning, så ändra båda tillsammans.",
     "admin_origins": "Tillåtna origins",
     "admin_origins_help": "Mellanslagsavgränsade värdar som får anropa admin-API:et från en webbläsare.",
-    "admin_enforce_origin": "Tvinga origins"
+    "admin_enforce_origin": "Tvinga origins",
+    "metrics_per_host": "Märk mätvärden per värd",
+    "metrics_per_host_help": "Lägger till den begärda värden på varje förfrågningsmått så att webbplatser kan särskiljas. Varje olik värd blir en egen serie."
   },
   "ca": {
     "title": "Intern certifikatutfärdare",

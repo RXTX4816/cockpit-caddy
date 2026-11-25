@@ -729,7 +729,9 @@
     "admin_address_help": "Caddy の管理 API が待ち受ける場所を Caddyfile と同じ書式で指定します。プラグインは自身の設定のアドレスに接続するため、両方を同時に変更してください。",
     "admin_origins": "許可するオリジン",
     "admin_origins_help": "ブラウザーから管理 API を呼び出せるホスト(スペース区切り)。",
-    "admin_enforce_origin": "オリジンを強制"
+    "admin_enforce_origin": "オリジンを強制",
+    "metrics_per_host": "メトリクスにホストのラベルを付ける",
+    "metrics_per_host_help": "リクエストごとのメトリクスに要求されたホストを追加し、サイトを区別できるようにします。ホストごとに別の系列になります。"
   },
   "ca": {
     "title": "内部認証局",

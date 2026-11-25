@@ -94,6 +94,7 @@ export function GlobalOptionsTab() {
   const [metricsListenAddress, setMetricsListenAddress] = useState("");
   const [metricsPath, setMetricsPath] = useState("");
   const [metricsPlainFormat, setMetricsPlainFormat] = useState(false);
+  const [metricsPerHost, setMetricsPerHost] = useState(false);
   const [runtimeLog, setRuntimeLog] = useState<AccessLogValues>(accessLogConfigToValues(undefined));
   const [trustedProxiesEnabled, setTrustedProxiesEnabled] = useState(false);
   const [trustedProxiesRanges, setTrustedProxiesRanges] = useState("");
@@ -155,6 +156,7 @@ export function GlobalOptionsTab() {
         setMetricsListenAddress(opts.metricsListenAddress ?? "");
         setMetricsPath(opts.metricsPath ?? "");
         setMetricsPlainFormat(opts.metricsPlainFormat ?? false);
+        setMetricsPerHost(opts.metricsPerHost ?? false);
         setRuntimeLog(accessLogConfigToValues(opts.runtimeLog));
         setTrustedProxiesEnabled(!!opts.trustedProxies);
         setTrustedProxiesRanges(opts.trustedProxies?.ranges.join(" ") ?? "");
@@ -759,6 +761,17 @@ export function GlobalOptionsTab() {
               />
             </FormGroup>
 
+            <FormGroup fieldId="go-metrics-per-host">
+              <Checkbox
+                id="go-metrics-per-host"
+                label={t("global_opts.metrics_per_host")}
+                description={t("global_opts.metrics_per_host_help")}
+                isChecked={metricsPerHost}
+                onChange={(_e, v) => setMetricsPerHost(v)}
+                isDisabled={isConfirming}
+              />
+            </FormGroup>
+
             {!metricsListenAddressErr && metricsListenAddress.trim() && (() => {
               const url = metricsLinkUrl(metricsListenAddress, metricsPath);
               return url ? (
@@ -957,6 +970,7 @@ export function GlobalOptionsTab() {
                     metricsListenAddress: metricsEnabled ? (metricsListenAddress.trim() || undefined) : undefined,
                     metricsPath: metricsEnabled ? (metricsPath.trim() || undefined) : undefined,
                     metricsPlainFormat: metricsEnabled ? (metricsPlainFormat || undefined) : undefined,
+                    metricsPerHost: metricsEnabled ? (metricsPerHost || undefined) : undefined,
                     runtimeLog: accessLogValuesToConfig(runtimeLog),
                     trustedProxies: trustedProxiesEnabled && trustedProxiesRanges.trim() ? {
                       ranges: trustedProxiesRanges.trim().split(/\s+/),

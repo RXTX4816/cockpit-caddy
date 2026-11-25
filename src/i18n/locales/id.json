@@ -729,7 +729,9 @@
     "admin_address_help": "Tempat API admin Caddy mendengarkan, ditulis seperti di Caddyfile. Plugin tersambung ke alamat pada pengaturannya sendiri, jadi ubah keduanya bersamaan.",
     "admin_origins": "Origin yang diizinkan",
     "admin_origins_help": "Host dipisahkan spasi yang boleh memanggil API admin dari browser.",
-    "admin_enforce_origin": "Paksakan origin"
+    "admin_enforce_origin": "Paksakan origin",
+    "metrics_per_host": "Beri label metrik per host",
+    "metrics_per_host_help": "Menambahkan host yang diminta ke setiap metrik permintaan agar situs dapat dibedakan. Setiap host berbeda menjadi seri tersendiri."
   },
   "ca": {
     "title": "Otoritas sertifikat internal",

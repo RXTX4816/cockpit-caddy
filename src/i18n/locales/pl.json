@@ -729,7 +729,9 @@
     "admin_address_help": "Gdzie nasłuchuje API administracji Caddy, zapisane jak w Caddyfile. Wtyczka łączy się z adresem z własnego ustawienia, więc zmień oba razem.",
     "admin_origins": "Dozwolone originy",
     "admin_origins_help": "Hosty oddzielone spacjami, które mogą wywoływać API administracji z przeglądarki.",
-    "admin_enforce_origin": "Wymuszaj originy"
+    "admin_enforce_origin": "Wymuszaj originy",
+    "metrics_per_host": "Oznaczaj metryki hostem",
+    "metrics_per_host_help": "Dodaje żądany host do każdej metryki żądania, aby rozróżnić witryny. Każdy inny host tworzy osobną serię."
   },
   "ca": {
     "title": "Wewnętrzny urząd certyfikacji",
