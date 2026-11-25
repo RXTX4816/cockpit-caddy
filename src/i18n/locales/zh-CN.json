@@ -1025,7 +1025,8 @@
     "routing": "路由",
     "upstreams": "上游",
     "logging": "日志与错误",
-    "limits": "限制"
+    "limits": "限制",
+    "tree": "树"
   },
   "dns": {
     "global_title": "DNS 质询",
@@ -1057,5 +1058,14 @@
     "site_inherit_help": "使用“设置 → DNS 质询”中设置的 DNS 提供商；未设置时使用 HTTP 质询。",
     "site_override_help": "此站点使用自己的 DNS 提供商和凭据。保存新凭据会重启 Caddy，因为它只在启动时读取凭据。",
     "site_wildcard_warning": "通配符证书需要 DNS 质询。请为此站点设置 DNS 提供商，或在“设置 → DNS 质询”中设置。"
+  },
+  "tree": {
+    "aria_label": "站点的 route 和 handle 块",
+    "site": "站点",
+    "kind_opaque": "块",
+    "no_matcher": "所有请求",
+    "handlers": "指令",
+    "unreadable": "无法把此站点的块读成树。请在原始编辑器中编辑。",
+    "read_only_help": "此站点的 route 和 handle 块,按原样显示。目前只读:请在原始编辑器中编辑。"
   }
 }

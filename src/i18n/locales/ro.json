@@ -1025,7 +1025,8 @@
     "routing": "Rutare",
     "upstreams": "Upstream-uri",
     "logging": "Jurnale și erori",
-    "limits": "Limite"
+    "limits": "Limite",
+    "tree": "Arbore"
   },
   "dns": {
     "global_title": "Provocarea DNS",
@@ -1057,5 +1058,14 @@
     "site_inherit_help": "Folosește furnizorul DNS setat în Setări → Provocare DNS sau provocarea HTTP dacă nu e setat niciunul.",
     "site_override_help": "Acest site folosește propriul furnizor DNS și propriile date de acces. Salvarea unor date noi repornește Caddy, care le citește doar la pornire.",
     "site_wildcard_warning": "Certificatele wildcard au nevoie de provocarea DNS. Setează un furnizor DNS pentru acest site sau în Setări → Provocare DNS."
+  },
+  "tree": {
+    "aria_label": "Blocurile route și handle ale site-ului",
+    "site": "Site",
+    "kind_opaque": "Bloc",
+    "no_matcher": "toate cererile",
+    "handlers": "Directive",
+    "unreadable": "Blocurile acestui site nu au putut fi citite ca arbore. Editează-le în editorul brut.",
+    "read_only_help": "Blocurile route și handle ale acestui site, așa cum sunt scrise. Doar citire deocamdată: editează-le în editorul brut."
   }
 }

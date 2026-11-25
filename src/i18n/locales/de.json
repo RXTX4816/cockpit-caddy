@@ -1025,7 +1025,8 @@
     "routing": "Routing",
     "upstreams": "Upstreams",
     "logging": "Logging & Fehler",
-    "limits": "Limits"
+    "limits": "Limits",
+    "tree": "Baum"
   },
   "dns": {
     "global_title": "DNS-Challenge",
@@ -1057,5 +1058,14 @@
     "site_inherit_help": "Nutzt den DNS-Anbieter aus Einstellungen → DNS-Challenge, oder die HTTP-Challenge, wenn keiner gesetzt ist.",
     "site_override_help": "Diese Site nutzt einen eigenen DNS-Anbieter mit eigenen Zugangsdaten. Neue Zugangsdaten zu speichern startet Caddy neu, weil Caddy sie nur beim Start liest.",
     "site_wildcard_warning": "Wildcard-Zertifikate brauchen die DNS-Challenge. Setze einen DNS-Anbieter für diese Site oder unter Einstellungen → DNS-Challenge."
+  },
+  "tree": {
+    "aria_label": "Route- und Handle-Blöcke der Site",
+    "site": "Site",
+    "kind_opaque": "Block",
+    "no_matcher": "alle Anfragen",
+    "handlers": "Direktiven",
+    "unreadable": "Die Blöcke dieser Site ließen sich nicht als Baum lesen. Bearbeiten Sie sie im Rohtext-Editor.",
+    "read_only_help": "Die route- und handle-Blöcke dieser Site, wie geschrieben. Vorerst nur lesbar: Bearbeiten Sie sie im Rohtext-Editor."
   }
 }

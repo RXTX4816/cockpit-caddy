@@ -38,7 +38,7 @@ describe("proxyTabFlags", () => {
 
   it("errors mark their tab", () => {
     const flags = proxyTabFlags({ ...base, forwardAuthError: "forward_auth.validation_uri_required", extraUpstreams: [{ host: "", port: "x" }] }, true);
-    expect(flags.hasError).toEqual({ general: true, security: true, routing: false, upstreams: true, logging: false, limits: false });
+    expect(flags.hasError).toEqual({ general: true, security: true, routing: false, upstreams: true, logging: false, limits: false, tree: false });
   });
 });
 

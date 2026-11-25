@@ -1025,7 +1025,8 @@
     "routing": "Routing",
     "upstreams": "Upstream",
     "logging": "Log ed errori",
-    "limits": "Limiti"
+    "limits": "Limiti",
+    "tree": "Albero"
   },
   "dns": {
     "global_title": "Sfida DNS",
@@ -1057,5 +1058,14 @@
     "site_inherit_help": "Usa il provider DNS impostato in Impostazioni → Sfida DNS, oppure la sfida HTTP se non ce n'è uno.",
     "site_override_help": "Questo sito usa un proprio provider DNS e credenziali proprie. Salvare nuove credenziali riavvia Caddy, che le legge solo all'avvio.",
     "site_wildcard_warning": "I certificati wildcard richiedono la sfida DNS. Imposta un provider DNS per questo sito o in Impostazioni → Sfida DNS."
+  },
+  "tree": {
+    "aria_label": "Blocchi route e handle del sito",
+    "site": "Sito",
+    "kind_opaque": "Blocco",
+    "no_matcher": "tutte le richieste",
+    "handlers": "Direttive",
+    "unreadable": "Non è stato possibile leggere i blocchi di questo sito come albero. Modificali nell'editor grezzo.",
+    "read_only_help": "I blocchi route e handle di questo sito, come scritti. Per ora in sola lettura: modificali nell'editor grezzo."
   }
 }

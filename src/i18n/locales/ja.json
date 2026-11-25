@@ -1025,7 +1025,8 @@
     "routing": "ルーティング",
     "upstreams": "アップストリーム",
     "logging": "ログとエラー",
-    "limits": "制限"
+    "limits": "制限",
+    "tree": "ツリー"
   },
   "dns": {
     "global_title": "DNS チャレンジ",
@@ -1057,5 +1058,14 @@
     "site_inherit_help": "設定 → DNS チャレンジで設定した DNS プロバイダーを使います。未設定なら HTTP チャレンジを使います。",
     "site_override_help": "このサイトは専用の DNS プロバイダーと認証情報を使います。新しい認証情報を保存すると Caddy が再起動します（起動時にのみ読み込むため）。",
     "site_wildcard_warning": "ワイルドカード証明書には DNS チャレンジが必要です。このサイト用、または 設定 → DNS チャレンジ で DNS プロバイダーを設定してください。"
+  },
+  "tree": {
+    "aria_label": "サイトの route・handle ブロック",
+    "site": "サイト",
+    "kind_opaque": "ブロック",
+    "no_matcher": "すべてのリクエスト",
+    "handlers": "ディレクティブ",
+    "unreadable": "このサイトのブロックをツリーとして読み取れませんでした。生のエディターで編集してください。",
+    "read_only_help": "このサイトの route と handle のブロックを、書かれたとおりに表示します。今のところ読み取り専用です。生のエディターで編集してください。"
   }
 }

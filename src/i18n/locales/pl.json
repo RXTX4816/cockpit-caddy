@@ -1025,7 +1025,8 @@
     "routing": "Routing",
     "upstreams": "Upstreamy",
     "logging": "Logi i błędy",
-    "limits": "Limity"
+    "limits": "Limity",
+    "tree": "Drzewo"
   },
   "dns": {
     "global_title": "Wyzwanie DNS",
@@ -1057,5 +1058,14 @@
     "site_inherit_help": "Używa dostawcy DNS ustawionego w Ustawienia → Wyzwanie DNS albo wyzwania HTTP, jeśli żaden nie jest ustawiony.",
     "site_override_help": "Ta witryna używa własnego dostawcy DNS i danych logowania. Zapisanie nowych danych uruchamia ponownie Caddy, bo odczytuje je tylko przy starcie.",
     "site_wildcard_warning": "Certyfikaty wieloznaczne wymagają wyzwania DNS. Ustaw dostawcę DNS dla tej witryny albo w Ustawienia → Wyzwanie DNS."
+  },
+  "tree": {
+    "aria_label": "Bloki route i handle witryny",
+    "site": "Witryna",
+    "kind_opaque": "Blok",
+    "no_matcher": "wszystkie żądania",
+    "handlers": "Dyrektywy",
+    "unreadable": "Bloków tej witryny nie udało się odczytać jako drzewa. Edytuj je w surowym edytorze.",
+    "read_only_help": "Bloki route i handle tej witryny, tak jak je napisano. Na razie tylko do odczytu: edytuj je w surowym edytorze."
   }
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { surgicallyEditProxy, surgicallyWriteProxy } from "./caddy";
-import { braceDelta, hasNestedBlocks } from "./siteTree";
+import { braceDelta, childNodes, hasNestedBlocks, nodeHandlers, parseSiteTree, serializeSiteTree } from "./siteTree";
 import type { ProxyEntry } from "./types";
 
 const FLAT = `example.com {
@@ -84,5 +84,64 @@ describe("saving a site with route or nested handle blocks leaves them as writte
     const written = surgicallyWriteProxy(conf(plain), entry({ externalHost: undefined, externalPort: 7700, targetPort: 9999 }));
     expect(written).toContain("reverse_proxy http://localhost:9999");
     expect(written).not.toContain("7701");
+  });
+});
+
+describe("the tree of a site (#349)", () => {
+  const FULL = `example.com {
+\t# the app
+\t@api path /api/*
+\ttls internal
+\troute {
+\t\theader X-A 1
+\t\thandle @api {
+\t\t\treverse_proxy localhost:9000 {
+\t\t\t\theader_up X-B 2
+\t\t\t}
+\t\t}
+\t\thandle_path /static/* {
+\t\t\tfile_server
+\t\t}
+\t}
+\thandle_errors {
+\t\trespond "{err.status_code}"
+\t}
+}`;
+
+  it("reads route, handle and handle_path into nodes with their matchers and children", () => {
+    const tree = parseSiteTree(FULL)!;
+    const roots = childNodes(tree.items);
+    expect(roots.map(n => [n.kind, n.matcher])).toEqual([["route", ""], ["opaque", ""]]);
+    const route = roots[0];
+    expect(nodeHandlers(route)).toEqual(["header X-A 1"]);
+    const kids = childNodes(route.items);
+    expect(kids.map(n => [n.kind, n.matcher])).toEqual([["handle", "@api"], ["handle_path", "/static/*"]]);
+    // reverse_proxy { … } is a block the tree does not look into
+    expect(childNodes(kids[0].items).map(n => [n.kind, n.header.trim()])).toEqual([["opaque", "reverse_proxy localhost:9000 {"]]);
+    expect(nodeHandlers(kids[1])).toEqual(["file_server"]);
+  });
+
+  it("shows a flat site as its top-level handle blocks only", () => {
+    const tree = parseSiteTree(FLAT)!;
+    expect(childNodes(tree.items).map(n => [n.kind, n.matcher])).toEqual([["handle", "/api/*"], ["handle", ""]]);
+    expect(childNodes(tree.items).every(n => childNodes(n.items).length === 0)).toBe(true);
+  });
+
+  it("puts every line back where it was, byte for byte", () => {
+    for (const text of [FULL, FLAT, ROUTE, NESTED, "example.com {\n}", "example.com {\n\n\t# only a comment\n\n}"]) {
+      expect(serializeSiteTree(parseSiteTree(text)!)).toBe(text);
+    }
+  });
+
+  it("keeps a header with a trailing comment and one with the block on its own line as written", () => {
+    const text = "example.com {\n\thandle /a/* { # first\n\t\trespond ok\n\t}\n\troute {\n\t\thandle {\n\t\t\trespond \"{}\"\n\t\t}\n\t}\n}";
+    const tree = parseSiteTree(text)!;
+    expect(childNodes(tree.items).map(n => n.kind)).toEqual(["handle", "route"]);
+    expect(serializeSiteTree(tree)).toBe(text);
+  });
+
+  it("returns nothing for text whose braces do not balance", () => {
+    expect(parseSiteTree("example.com {\n\troute {\n\t\trespond ok\n}")).toBeUndefined();
+    expect(parseSiteTree("not a block")).toBeUndefined();
   });
 });

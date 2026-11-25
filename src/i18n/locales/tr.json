@@ -1025,7 +1025,8 @@
     "routing": "Yönlendirme",
     "upstreams": "Upstream'ler",
     "logging": "Günlükler ve hatalar",
-    "limits": "Sınırlar"
+    "limits": "Sınırlar",
+    "tree": "Ağaç"
   },
   "dns": {
     "global_title": "DNS doğrulaması",
@@ -1057,5 +1058,14 @@
     "site_inherit_help": "Ayarlar → DNS doğrulaması altındaki DNS sağlayıcısını, ayarlanmamışsa HTTP doğrulamasını kullanır.",
     "site_override_help": "Bu site kendi DNS sağlayıcısını ve kimlik bilgilerini kullanır. Yeni kimlik bilgilerini kaydetmek Caddy'yi yeniden başlatır, çünkü bunları yalnızca başlarken okur.",
     "site_wildcard_warning": "Joker karakterli sertifikalar DNS doğrulaması gerektirir. Bu site için ya da Ayarlar → DNS doğrulaması altında bir DNS sağlayıcısı ayarlayın."
+  },
+  "tree": {
+    "aria_label": "Sitenin route ve handle blokları",
+    "site": "Site",
+    "kind_opaque": "Blok",
+    "no_matcher": "tüm istekler",
+    "handlers": "Yönergeler",
+    "unreadable": "Bu sitenin blokları ağaç olarak okunamadı. Ham düzenleyicide düzenleyin.",
+    "read_only_help": "Bu sitenin route ve handle blokları, yazıldığı gibi. Şimdilik salt okunur: ham düzenleyicide düzenleyin."
   }
 }

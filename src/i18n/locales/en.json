@@ -1025,7 +1025,8 @@
     "routing": "Routing",
     "upstreams": "Upstreams",
     "logging": "Logging & errors",
-    "limits": "Limits"
+    "limits": "Limits",
+    "tree": "Tree"
   },
   "dns": {
     "global_title": "DNS challenge",
@@ -1057,5 +1058,14 @@
     "site_inherit_help": "Uses the DNS provider set under Settings → DNS challenge, or the HTTP challenge when none is set.",
     "site_override_help": "This site uses its own DNS provider and credentials. Saving new credentials restarts Caddy, because it reads them only when it starts.",
     "site_wildcard_warning": "Wildcard certificates need the DNS challenge. Set a DNS provider for this site, or one under Settings → DNS challenge."
+  },
+  "tree": {
+    "aria_label": "Route and handle blocks of the site",
+    "site": "Site",
+    "kind_opaque": "Block",
+    "no_matcher": "all requests",
+    "handlers": "Directives",
+    "unreadable": "The blocks of this site could not be read as a tree. Edit them in the raw editor.",
+    "read_only_help": "The route and handle blocks of this site, as written. Read-only for now: edit them in the raw editor."
   }
 }

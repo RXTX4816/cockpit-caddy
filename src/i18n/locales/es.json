@@ -1025,7 +1025,8 @@
     "routing": "Enrutamiento",
     "upstreams": "Upstreams",
     "logging": "Registro y errores",
-    "limits": "Límites"
+    "limits": "Límites",
+    "tree": "Árbol"
   },
   "dns": {
     "global_title": "Desafío DNS",
@@ -1057,5 +1058,14 @@
     "site_inherit_help": "Usa el proveedor DNS de Ajustes → Desafío DNS, o el desafío HTTP si no hay ninguno.",
     "site_override_help": "Este sitio usa su propio proveedor DNS y credenciales. Guardar credenciales nuevas reinicia Caddy, porque solo las lee al arrancar.",
     "site_wildcard_warning": "Los certificados comodín necesitan el desafío DNS. Define un proveedor DNS para este sitio o en Ajustes → Desafío DNS."
+  },
+  "tree": {
+    "aria_label": "Bloques route y handle del sitio",
+    "site": "Sitio",
+    "kind_opaque": "Bloque",
+    "no_matcher": "todas las peticiones",
+    "handlers": "Directivas",
+    "unreadable": "No se pudieron leer los bloques de este sitio como un árbol. Edítelos en el editor en bruto.",
+    "read_only_help": "Los bloques route y handle de este sitio, tal como están escritos. Solo lectura por ahora: edítelos en el editor en bruto."
   }
 }

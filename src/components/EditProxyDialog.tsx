@@ -175,6 +175,7 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
           onSelect={setActiveTab}
           isDisabled={isConfirming}
           idPrefix="edit-proxy"
+          siteText={proxy.siteText}
           showTls={!proxy.namedServerKey}
           hostless={!externalHost.trim()}
           generalHasError={generalHasError}

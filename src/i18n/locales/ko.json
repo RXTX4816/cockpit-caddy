@@ -1025,7 +1025,8 @@
     "routing": "라우팅",
     "upstreams": "업스트림",
     "logging": "로그 및 오류",
-    "limits": "한도"
+    "limits": "한도",
+    "tree": "트리"
   },
   "dns": {
     "global_title": "DNS 챌린지",
@@ -1057,5 +1058,14 @@
     "site_inherit_help": "설정 → DNS 챌린지에서 지정한 DNS 공급자를 사용하며, 지정하지 않았으면 HTTP 챌린지를 사용합니다.",
     "site_override_help": "이 사이트는 자체 DNS 공급자와 자격 증명을 사용합니다. 새 자격 증명을 저장하면 Caddy가 다시 시작됩니다. Caddy는 시작할 때만 이를 읽기 때문입니다.",
     "site_wildcard_warning": "와일드카드 인증서에는 DNS 챌린지가 필요합니다. 이 사이트용 DNS 공급자를 지정하거나 설정 → DNS 챌린지에서 지정하세요."
+  },
+  "tree": {
+    "aria_label": "사이트의 route 및 handle 블록",
+    "site": "사이트",
+    "kind_opaque": "블록",
+    "no_matcher": "모든 요청",
+    "handlers": "지시문",
+    "unreadable": "이 사이트의 블록을 트리로 읽을 수 없습니다. 원시 편집기에서 편집하세요.",
+    "read_only_help": "이 사이트의 route 및 handle 블록을 쓰인 그대로 보여줍니다. 지금은 읽기 전용이며 원시 편집기에서 편집하세요."
   }
 }

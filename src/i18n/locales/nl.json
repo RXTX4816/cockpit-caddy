@@ -1025,7 +1025,8 @@
     "routing": "Routering",
     "upstreams": "Upstreams",
     "logging": "Logging & fouten",
-    "limits": "Limieten"
+    "limits": "Limieten",
+    "tree": "Boom"
   },
   "dns": {
     "global_title": "DNS-challenge",
@@ -1057,5 +1058,14 @@
     "site_inherit_help": "Gebruikt de DNS-provider uit Instellingen → DNS-challenge, of de HTTP-challenge als er geen is ingesteld.",
     "site_override_help": "Deze site gebruikt een eigen DNS-provider en eigen inloggegevens. Nieuwe gegevens opslaan herstart Caddy, omdat Caddy ze alleen bij het starten leest.",
     "site_wildcard_warning": "Wildcardcertificaten hebben de DNS-challenge nodig. Stel een DNS-provider in voor deze site, of onder Instellingen → DNS-challenge."
+  },
+  "tree": {
+    "aria_label": "Route- en handle-blokken van de site",
+    "site": "Site",
+    "kind_opaque": "Blok",
+    "no_matcher": "alle verzoeken",
+    "handlers": "Directieven",
+    "unreadable": "De blokken van deze site konden niet als boom worden gelezen. Bewerk ze in de ruwe editor.",
+    "read_only_help": "De route- en handle-blokken van deze site, zoals geschreven. Voorlopig alleen-lezen: bewerk ze in de ruwe editor."
   }
 }

@@ -1025,7 +1025,8 @@
     "routing": "Reititys",
     "upstreams": "Upstreamit",
     "logging": "Lokit ja virheet",
-    "limits": "Rajat"
+    "limits": "Rajat",
+    "tree": "Puu"
   },
   "dns": {
     "global_title": "DNS-haaste",
@@ -1057,5 +1058,14 @@
     "site_inherit_help": "Käyttää kohdassa Asetukset → DNS-haaste asetettua DNS-palveluntarjoajaa tai HTTP-haastetta, jos sitä ei ole asetettu.",
     "site_override_help": "Tämä sivusto käyttää omaa DNS-palveluntarjoajaa ja tunnuksia. Uusien tunnusten tallentaminen käynnistää Caddyn uudelleen, koska se lukee ne vain käynnistyessään.",
     "site_wildcard_warning": "Jokerimerkkivarmenteet tarvitsevat DNS-haasteen. Aseta DNS-palveluntarjoaja tälle sivustolle tai kohdassa Asetukset → DNS-haaste."
+  },
+  "tree": {
+    "aria_label": "Sivuston route- ja handle-lohkot",
+    "site": "Sivusto",
+    "kind_opaque": "Lohko",
+    "no_matcher": "kaikki pyynnöt",
+    "handlers": "Direktiivit",
+    "unreadable": "Tämän sivuston lohkoja ei voitu lukea puuna. Muokkaa niitä raakaeditorissa.",
+    "read_only_help": "Tämän sivuston route- ja handle-lohkot sellaisina kuin ne on kirjoitettu. Toistaiseksi vain luku: muokkaa niitä raakaeditorissa."
   }
 }

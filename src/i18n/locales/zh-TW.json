@@ -1025,7 +1025,8 @@
     "routing": "路由",
     "upstreams": "上游",
     "logging": "日誌與錯誤",
-    "limits": "限制"
+    "limits": "限制",
+    "tree": "樹狀"
   },
   "dns": {
     "global_title": "DNS 挑戰",
@@ -1057,5 +1058,14 @@
     "site_inherit_help": "使用「設定 → DNS 驗證」中設定的 DNS 供應商；未設定時使用 HTTP 驗證。",
     "site_override_help": "此網站使用自己的 DNS 供應商和憑證。儲存新憑證會重新啟動 Caddy，因為它只在啟動時讀取憑證。",
     "site_wildcard_warning": "萬用字元憑證需要 DNS 驗證。請為此網站設定 DNS 供應商，或在「設定 → DNS 驗證」中設定。"
+  },
+  "tree": {
+    "aria_label": "網站的 route 和 handle 區塊",
+    "site": "網站",
+    "kind_opaque": "區塊",
+    "no_matcher": "所有請求",
+    "handlers": "指令",
+    "unreadable": "無法把此網站的區塊讀成樹狀。請在原始編輯器中編輯。",
+    "read_only_help": "此網站的 route 和 handle 區塊,依原樣顯示。目前唯讀:請在原始編輯器中編輯。"
   }
 }

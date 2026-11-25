@@ -1025,7 +1025,8 @@
     "routing": "Perutean",
     "upstreams": "Upstream",
     "logging": "Log & kesalahan",
-    "limits": "Batasan"
+    "limits": "Batasan",
+    "tree": "Pohon"
   },
   "dns": {
     "global_title": "Tantangan DNS",
@@ -1057,5 +1058,14 @@
     "site_inherit_help": "Memakai penyedia DNS yang diatur di Pengaturan → Tantangan DNS, atau tantangan HTTP bila belum diatur.",
     "site_override_help": "Situs ini memakai penyedia DNS dan kredensialnya sendiri. Menyimpan kredensial baru akan memulai ulang Caddy, karena Caddy hanya membacanya saat mulai.",
     "site_wildcard_warning": "Sertifikat wildcard memerlukan tantangan DNS. Atur penyedia DNS untuk situs ini, atau di Pengaturan → Tantangan DNS."
+  },
+  "tree": {
+    "aria_label": "Blok route dan handle situs",
+    "site": "Situs",
+    "kind_opaque": "Blok",
+    "no_matcher": "semua permintaan",
+    "handlers": "Direktif",
+    "unreadable": "Blok situs ini tidak dapat dibaca sebagai pohon. Edit di editor mentah.",
+    "read_only_help": "Blok route dan handle situs ini, seperti tertulis. Hanya baca untuk saat ini: edit di editor mentah."
   }
 }

@@ -1025,7 +1025,8 @@
     "routing": "Routage",
     "upstreams": "Upstreams",
     "logging": "Journaux et erreurs",
-    "limits": "Limites"
+    "limits": "Limites",
+    "tree": "Arbre"
   },
   "dns": {
     "global_title": "Défi DNS",
@@ -1057,5 +1058,14 @@
     "site_inherit_help": "Utilise le fournisseur DNS défini dans Paramètres → Défi DNS, ou le défi HTTP s'il n'y en a pas.",
     "site_override_help": "Ce site utilise son propre fournisseur DNS et ses propres identifiants. Enregistrer de nouveaux identifiants redémarre Caddy, qui ne les lit qu'au démarrage.",
     "site_wildcard_warning": "Les certificats génériques nécessitent le défi DNS. Définissez un fournisseur DNS pour ce site, ou dans Paramètres → Défi DNS."
+  },
+  "tree": {
+    "aria_label": "Blocs route et handle du site",
+    "site": "Site",
+    "kind_opaque": "Bloc",
+    "no_matcher": "toutes les requêtes",
+    "handlers": "Directives",
+    "unreadable": "Les blocs de ce site n'ont pas pu être lus comme un arbre. Modifiez-les dans l'éditeur brut.",
+    "read_only_help": "Les blocs route et handle de ce site, tels qu'écrits. En lecture seule pour l'instant : modifiez-les dans l'éditeur brut."
   }
 }

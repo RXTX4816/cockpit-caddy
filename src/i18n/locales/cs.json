@@ -1025,7 +1025,8 @@
     "routing": "Směrování",
     "upstreams": "Upstreamy",
     "logging": "Logování a chyby",
-    "limits": "Limity"
+    "limits": "Limity",
+    "tree": "Strom"
   },
   "dns": {
     "global_title": "Ověření přes DNS",
@@ -1057,5 +1058,14 @@
     "site_inherit_help": "Použije poskytovatele DNS nastaveného v Nastavení → Výzva DNS, nebo výzvu HTTP, pokud žádný není nastaven.",
     "site_override_help": "Tento web používá vlastního poskytovatele DNS a přihlašovací údaje. Uložení nových údajů restartuje Caddy, protože je načítá jen při startu.",
     "site_wildcard_warning": "Certifikáty se zástupným znakem vyžadují výzvu DNS. Nastavte poskytovatele DNS pro tento web, nebo v Nastavení → Výzva DNS."
+  },
+  "tree": {
+    "aria_label": "Bloky route a handle webu",
+    "site": "Web",
+    "kind_opaque": "Blok",
+    "no_matcher": "všechny požadavky",
+    "handlers": "Direktivy",
+    "unreadable": "Bloky tohoto webu nešlo přečíst jako strom. Upravte je v surovém editoru.",
+    "read_only_help": "Bloky route a handle tohoto webu tak, jak jsou napsané. Zatím jen pro čtení: upravujte je v surovém editoru."
   }
 }

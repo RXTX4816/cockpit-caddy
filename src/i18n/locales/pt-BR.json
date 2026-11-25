@@ -1025,7 +1025,8 @@
     "routing": "Roteamento",
     "upstreams": "Upstreams",
     "logging": "Logs e erros",
-    "limits": "Limites"
+    "limits": "Limites",
+    "tree": "Árvore"
   },
   "dns": {
     "global_title": "Desafio DNS",
@@ -1057,5 +1058,14 @@
     "site_inherit_help": "Usa o provedor DNS definido em Configurações → Desafio DNS, ou o desafio HTTP se nenhum estiver definido.",
     "site_override_help": "Este site usa seu próprio provedor DNS e credenciais. Salvar novas credenciais reinicia o Caddy, que só as lê ao iniciar.",
     "site_wildcard_warning": "Certificados curinga precisam do desafio DNS. Defina um provedor DNS para este site ou em Configurações → Desafio DNS."
+  },
+  "tree": {
+    "aria_label": "Blocos route e handle do site",
+    "site": "Site",
+    "kind_opaque": "Bloco",
+    "no_matcher": "todas as requisições",
+    "handlers": "Diretivas",
+    "unreadable": "Não foi possível ler os blocos deste site como árvore. Edite-os no editor bruto.",
+    "read_only_help": "Os blocos route e handle deste site, como escritos. Somente leitura por enquanto: edite-os no editor bruto."
   }
 }
