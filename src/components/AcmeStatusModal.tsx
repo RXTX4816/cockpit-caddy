@@ -1,7 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { i18n } from "@rxtx4816/cockpit-plugin-base-react/i18n";
 import {
-  Alert,
   Button,
   DataList,
   DataListCell,
@@ -30,6 +29,7 @@ import {
 } from "../api";
 import type { AcmeHostStatus, GlobalOptions, HostCertStatus, StoredCert } from "../api";
 import { PemBlock, useCertDownload } from "./CertificateView";
+import { Notice } from "./Notice";
 
 const formatDate = (d: Date) => d.toLocaleDateString(i18n.language, { year: "numeric", month: "short", day: "numeric" });
 
@@ -102,7 +102,7 @@ function CertificateDetails({ host, cert, storagePath, onBack }: { host: string;
           </DescriptionListGroup>
         ))}
       </DescriptionList>
-      {error && <Alert variant="danger" isInline title={t("acme.cert_load_error")}>{error}</Alert>}
+      {error && <Notice variant="danger" title={t("acme.cert_load_error")}>{error}</Notice>}
       {!pem && !error && <Spinner size="md" />}
       {pem && (
         <PemBlock
@@ -194,7 +194,7 @@ export function AcmeStatusModal({ onClose }: Props) {
     <Modal isOpen onClose={onClose} aria-label={t("acme.title")} variant="large">
       <ModalHeader title={t("acme.title")} />
       <ModalBody>
-        {error && <Alert variant="danger" isInline title={t("acme.load_error")}>{error}</Alert>}
+        {error && <Notice variant="danger" title={t("acme.load_error")}>{error}</Notice>}
 
         {!hosts && !error && (
           <div style={{ display: "flex", justifyContent: "center", padding: "2rem" }}>
@@ -219,7 +219,7 @@ export function AcmeStatusModal({ onClose }: Props) {
 
         {hosts && hasAnyHost && !openHost && (
           <>
-            <Alert variant="info" isInline title={t("acme.intro")} style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }} />
+            <Notice variant="info" title={t("acme.intro")} />
             <DataList aria-label={t("acme.title")} isCompact>
               <DataListItem>
                 <DataListItemRow>

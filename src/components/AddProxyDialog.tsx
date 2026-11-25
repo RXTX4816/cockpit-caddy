@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import {
-  Alert,
   Button,
   Checkbox,
   Form,
@@ -35,6 +34,7 @@ import {
   FormSelect,
   FormSelectOption,
 } from "@patternfly/react-core";
+import { Notice } from "./Notice";
 
 interface FormState {
   externalScheme: string;
@@ -181,11 +181,9 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
       <ModalHeader title={t("add_proxy.title")} />
       <ModalBody>
         {isLocked && (
-          <Alert
+          <Notice
             variant="warning"
-            isInline
             title={t("add_proxy.confirm_body", { port: form.externalPort, target: targetUrl })}
-            style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}
           />
         )}
 
@@ -309,7 +307,7 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
         />
 
         {confirmAction.error && (
-          <Alert variant="danger" isInline title={confirmAction.error} style={{ marginTop: "var(--pf-v6-global--spacer--md)" }} />
+          <Notice variant="danger" title={confirmAction.error} />
         )}
       </ModalBody>
       <ModalFooter>

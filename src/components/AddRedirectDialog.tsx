@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  Alert,
   Button,
   Form,
   FormGroup,
@@ -26,6 +25,7 @@ import { ProxyTabs } from "./ProxyTabs";
 import { firstTabWithError, type ProxyTabKey } from "./proxyDialogParts";
 import { proxyTabStateFlags, useProxyTabState, type ProxyTabState } from "./proxyTabState";
 import { parseListenPort } from "./AddServerDialog";
+import { Notice } from "./Notice";
 import { RedirectModeField, joinRedirectTarget, splitRedirectTarget, type RedirectMode } from "./RedirectModeField";
 
 interface InitialValues {
@@ -121,11 +121,9 @@ export function AddRedirectDialog({ existingPorts, onAdd, onClose, initialValues
       <ModalHeader title={t("add_redirect.title")} />
       <ModalBody>
         {isLocked && (
-          <Alert
+          <Notice
             variant="warning"
-            isInline
             title={t("add_redirect.confirm_body", { port: serverCtx ? serverCtx.port : port, to: joinRedirectTarget(to, keepPath), code })}
-            style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}
           />
         )}
 
@@ -227,7 +225,7 @@ export function AddRedirectDialog({ existingPorts, onAdd, onClose, initialValues
         />
 
         {confirmAction.error && (
-          <Alert variant="danger" isInline title={confirmAction.error} style={{ marginTop: "var(--pf-v6-global--spacer--md)" }} />
+          <Notice variant="danger" title={confirmAction.error} />
         )}
       </ModalBody>
       <ModalFooter>

@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import {
-  Alert,
   Button,
   Checkbox,
   Form,
@@ -29,6 +28,7 @@ import { SnippetImportsField } from "./SnippetImportsField";
 import { InlineAddressField, TargetField, firstTabWithError, type ProxyTabKey } from "./proxyDialogParts";
 import { ProxyTabs } from "./ProxyTabs";
 import { proxyTabStateFlags, proxyTabStateFromEntry, proxyTabStateToEntry, useProxyTabState } from "./proxyTabState";
+import { Notice } from "./Notice";
 
 interface Props {
   proxy: ProxyEntry;
@@ -138,11 +138,9 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
       <ModalBody>
         <div ref={warningRef} />
         {isConfirming && (
-          <Alert
+          <Notice
             variant="warning"
-            isInline
             title={t("edit_proxy.confirm_save_body", { port: externalPort })}
-            style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}
           />
         )}
 
@@ -246,7 +244,7 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
         />
 
         {saveConfirm.error && (
-          <Alert variant="danger" isInline title={saveConfirm.error} style={{ marginTop: "var(--pf-v6-global--spacer--md)" }} />
+          <Notice variant="danger" title={saveConfirm.error} />
         )}
       </ModalBody>
       <ModalFooter>

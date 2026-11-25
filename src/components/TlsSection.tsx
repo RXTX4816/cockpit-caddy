@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import {
-  Alert,
   Button,
   Checkbox,
   FormGroup,
@@ -17,6 +16,7 @@ import { ResettableTextInput, SectionShell } from "./sectionLayout";
 import type { MtlsMode, TlsProtocolVersion } from "../api";
 import { readFile, parseCertDetails, type CertDetails } from "../api";
 import { SectionActions } from "./SectionActions";
+import { Notice } from "./Notice";
 
 export interface TlsValues {
   protocolMin: TlsProtocolVersion | "";
@@ -338,18 +338,14 @@ export function TlsSection({ value, onChange, isDisabled, hostless, isExpanded: 
           only one policy without a hostname), so this only works for proxies with a real
           hostname; hostless ones set it once, globally, from the Global Options tab instead. */}
       {customCert ? (
-        <Alert
+        <Notice
           variant="info"
-          isInline
           title={t("tls_policy.custom_cert_lifetime_note")}
-          style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}
         />
       ) : hostless ? (
-        <Alert
+        <Notice
           variant="info"
-          isInline
           title={t("tls_policy.hostless_global_only_note")}
-          style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}
         />
       ) : (
         <>

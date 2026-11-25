@@ -1,6 +1,5 @@
 import { createContext, useContext, useState } from "react";
 import {
-  Alert,
   Dropdown,
   DropdownItem,
   DropdownList,
@@ -14,6 +13,7 @@ import {
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import type { SnippetDef } from "../api";
+import { Notice } from "./Notice";
 
 /** The known snippets (#288), provided by the proxy list so every site dialog can offer them. */
 export const SnippetsContext = createContext<SnippetDef[]>([]);
@@ -76,7 +76,7 @@ export function SnippetImportsField({ value, onChange, snippetSettings, isDisabl
         </HelperText>
       </FormHelperText>
       {snippetSettings?.length ? (
-        <Alert variant="info" isInline isPlain title={t("snippets.settings_from_snippet", { names: snippetSettings.join(", ") })} style={{ marginTop: "0.5rem" }} />
+        <Notice variant="info" isPlain title={t("snippets.settings_from_snippet", { names: snippetSettings.join(", ") })} />
       ) : null}
     </FormGroup>
   );
