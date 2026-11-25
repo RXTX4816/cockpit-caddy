@@ -907,7 +907,15 @@
     "custom_file_unreadable": "파일이 없거나 Caddy 사용자가 읽을 수 없습니다",
     "custom_file_readable": "파일을 읽을 수 있습니다",
     "custom_file_valid_expiry": "유효 — {{date}}에 만료",
-    "custom_cert_lifetime_note": "위에 사용자 지정 인증서가 불러와져 있습니다 — Caddy가 직접 발급하지 않으므로 인증서 수명과 갱신 창은 적용되지 않습니다."
+    "custom_cert_lifetime_note": "위에 사용자 지정 인증서가 불러와져 있습니다 — Caddy가 직접 발급하지 않으므로 인증서 수명과 갱신 창은 적용되지 않습니다.",
+    "acme_email": "ACME 이메일",
+    "acme_email_help": "이 사이트의 인증서에 쓰는 계정 이메일입니다. 자동 HTTPS에만 적용되며, 비워 두면 전역 설정을 씁니다.",
+    "acme_global_placeholder": "전역 이메일",
+    "acme_ca": "ACME CA 디렉터리 URL",
+    "acme_ca_help": "이 사이트가 인증서를 받는 곳입니다. 테스트 중에는 Let's Encrypt 스테이징 URL 등을 쓸 수 있습니다. 비워 두면 전역 CA를 씁니다.",
+    "key_type": "키 유형",
+    "acme_invalid_email": "admin@example.com 같은 이메일 주소를 입력하세요.",
+    "acme_invalid_ca": "http:// 또는 https://로 시작하는 URL을 입력하세요."
   },
   "error_handler": {
     "heading": "사용자 지정 오류 처리기",

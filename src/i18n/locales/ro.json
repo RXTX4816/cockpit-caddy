@@ -907,7 +907,15 @@
     "custom_file_unreadable": "Fișierul nu a fost găsit sau nu poate fi citit de utilizatorul Caddy",
     "custom_file_readable": "Fișierul poate fi citit",
     "custom_file_valid_expiry": "Valid — expiră la {{date}}",
-    "custom_cert_lifetime_note": "Mai sus este încărcat un certificat propriu — durata de valabilitate și fereastra de reînnoire nu se aplică, deoarece Caddy nu emite nimic singur."
+    "custom_cert_lifetime_note": "Mai sus este încărcat un certificat propriu — durata de valabilitate și fereastra de reînnoire nu se aplică, deoarece Caddy nu emite nimic singur.",
+    "acme_email": "E-mail ACME",
+    "acme_email_help": "E-mailul contului pentru certificatele acestui site. Se aplică doar HTTPS automat; gol folosește pe cel global.",
+    "acme_global_placeholder": "E-mail global",
+    "acme_ca": "URL-ul directorului CA ACME",
+    "acme_ca_help": "De unde primește acest site certificatele, de exemplu URL-ul de test Let's Encrypt în timpul testării. Gol folosește CA-ul global.",
+    "key_type": "Tip de cheie",
+    "acme_invalid_email": "Introdu o adresă de e-mail precum admin@example.com.",
+    "acme_invalid_ca": "Introdu un URL http:// sau https://."
   },
   "error_handler": {
     "heading": "Handlere de erori personalizate",

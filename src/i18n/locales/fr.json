@@ -907,7 +907,15 @@
     "custom_file_unreadable": "Fichier introuvable ou illisible pour l'utilisateur de Caddy",
     "custom_file_readable": "Le fichier est lisible",
     "custom_file_valid_expiry": "Valide — expire le {{date}}",
-    "custom_cert_lifetime_note": "Un certificat personnalisé est chargé ci-dessus — la durée de vie et la fenêtre de renouvellement ne s'appliquent pas, puisque Caddy n'émet rien lui-même."
+    "custom_cert_lifetime_note": "Un certificat personnalisé est chargé ci-dessus — la durée de vie et la fenêtre de renouvellement ne s'appliquent pas, puisque Caddy n'émet rien lui-même.",
+    "acme_email": "E-mail ACME",
+    "acme_email_help": "L'e-mail du compte pour les certificats de ce site. Ne vaut que pour le HTTPS automatique ; vide utilise celui de la configuration globale.",
+    "acme_global_placeholder": "E-mail global",
+    "acme_ca": "URL du répertoire de l'AC ACME",
+    "acme_ca_help": "D'où ce site obtient ses certificats, par exemple l'URL de test de Let's Encrypt pendant les essais. Vide utilise l'AC globale.",
+    "key_type": "Type de clé",
+    "acme_invalid_email": "Saisissez une adresse e-mail comme admin@example.com.",
+    "acme_invalid_ca": "Saisissez une URL http:// ou https://."
   },
   "error_handler": {
     "heading": "Gestionnaires d'erreurs personnalisés",

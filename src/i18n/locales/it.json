@@ -907,7 +907,15 @@
     "custom_file_unreadable": "File non trovato o non leggibile dall'utente di Caddy",
     "custom_file_readable": "Il file è leggibile",
     "custom_file_valid_expiry": "Valido: scade il {{date}}",
-    "custom_cert_lifetime_note": "Sopra è caricato un certificato personalizzato: durata e finestra di rinnovo non si applicano, perché Caddy non emette nulla da sé."
+    "custom_cert_lifetime_note": "Sopra è caricato un certificato personalizzato: durata e finestra di rinnovo non si applicano, perché Caddy non emette nulla da sé.",
+    "acme_email": "Email ACME",
+    "acme_email_help": "L'email dell'account per i certificati di questo sito. Vale solo per l'HTTPS automatico; vuoto usa quella globale.",
+    "acme_global_placeholder": "Email globale",
+    "acme_ca": "URL della directory della CA ACME",
+    "acme_ca_help": "Da dove questo sito ottiene i certificati, ad esempio l'URL di staging di Let's Encrypt durante i test. Vuoto usa la CA globale.",
+    "key_type": "Tipo di chiave",
+    "acme_invalid_email": "Inserisci un indirizzo email come admin@example.com.",
+    "acme_invalid_ca": "Inserisci un URL http:// o https://."
   },
   "error_handler": {
     "heading": "Gestori di errori personalizzati",

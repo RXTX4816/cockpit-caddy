@@ -52,7 +52,7 @@ import {
   CONF_D_IMPORT_LINE,
   parseConfTlsIssuerMap,
 } from "./caddy";
-import { parseMatcherJson, isHostOnlyMatcher, buildRewriteHandler, parseRewriteFromHandle, patchServer, buildFilterEncoder, parseLogEncoder, PRIVATE_RANGES, buildForwardAuthHandler, extractForwardAuthFromProxy, forwardAuthResponseRoutes, buildBasicAuthHandler, buildEncodeHandler, buildFileServerHandlers, buildFileServerJson, parseFileServerOptions, parseTemplatesJson, buildRedirectHandler, parseEncodeOptionsJson, parseBasicAuthOptionsJson, parseHtmlRedirect } from "./caddyJsonModel";
+import { parseSiteAcmeSettings, parseMatcherJson, isHostOnlyMatcher, buildRewriteHandler, parseRewriteFromHandle, patchServer, buildFilterEncoder, parseLogEncoder, PRIVATE_RANGES, buildForwardAuthHandler, extractForwardAuthFromProxy, forwardAuthResponseRoutes, buildBasicAuthHandler, buildEncodeHandler, buildFileServerHandlers, buildFileServerJson, parseFileServerOptions, parseTemplatesJson, buildRedirectHandler, parseEncodeOptionsJson, parseBasicAuthOptionsJson, parseHtmlRedirect } from "./caddyJsonModel";
 import { proxiesToCaddyfile } from "./caddy";
 import { buildForwardAuthCaddyLines, buildMatcherCaddyLines, buildPhpFastcgiLines, buildRewriteCaddyLines, buildMatcherJson, hasAnyMatcher } from "./siteBlocks";
 import { buildLogCaddyLines } from "./globalOptions";
@@ -5012,6 +5012,50 @@ describe("matchers: path_regexp, header_regexp, protocol, file and vars (#331)",
     expect(isPathOnlyMatcher({ path: ["/a"], protocol: "https" })).toBe(false);
     expect(isPathOnlyMatcher({ path: ["/a"] })).toBe(true);
     expect(isHostOnlyMatcher({ host: ["a.com"], vars: { "{x}": ["1"] } })).toBe(false);
+  });
+});
+
+describe("a site's own ACME email, CA and key type (#341)", () => {
+  const site = (tlsAdvanced: import("./types").TlsAdvancedConfig, extra: Partial<ProxyEntry> = {}) =>
+    proxy({ tls: true, tlsIssuer: "acme", externalHost: "example.com", externalScheme: "https", tlsAdvanced, ...extra });
+  const staging = "https://acme-staging-v02.api.letsencrypt.org/directory";
+
+  it("writes the email in the tls line and the CA and key type in its block", () => {
+    const block = proxyToBlock(site({ acmeEmail: "me@example.com", acmeCa: staging, keyType: "p256" }));
+    expect(block).toContain("tls me@example.com {");
+    expect(block).toContain(`ca ${staging}`);
+    expect(block).toContain("key_type p256");
+  });
+
+  it("writes a lone email as a one-line tls, and nothing without settings", () => {
+    expect(proxyToBlock(site({ acmeEmail: "me@example.com" }))).toMatch(/\ttls me@example.com\n/);
+    expect(proxyToBlock(site({ protocolMin: "tls1.2" }))).toContain("tls {");
+    expect(proxyToBlock(proxy({ tls: true, tlsIssuer: "acme", externalHost: "example.com", externalScheme: "https" }))).not.toMatch(/\ttls\b/);
+  });
+
+  it("writes key_type for an internal-issuer site too", () => {
+    const block = proxyToBlock(proxy({ tls: true, tlsIssuer: "internal", externalHost: "example.com", externalScheme: "https", tlsAdvanced: { keyType: "ed25519" } }));
+    expect(block).toContain("issuer internal");
+    expect(block).toContain("key_type ed25519");
+  });
+
+  it("gives the site a policy of its own in the JSON push and reads it back", () => {
+    const entry = site({ acmeEmail: "me@example.com", acmeCa: staging, keyType: "p256" }, { serverKey: "srv0" });
+    const config = mergeProxy({ apps: { http: { servers: {} } } } as CaddyConfig, entry);
+    const policies = config.apps?.tls?.automation?.policies ?? [];
+    expect(policies.find(p => p.subjects?.includes("example.com"))).toEqual({
+      subjects: ["example.com"], issuers: [{ module: "acme", ca: staging, email: "me@example.com" }], key_type: "p256",
+    });
+    // The host is the Caddyfile's, so the policy is read by it, as useProxies does with the host it has.
+    expect(parseSiteAcmeSettings(config.apps?.tls?.automation?.policies, "example.com")).toEqual({ acmeEmail: "me@example.com", acmeCa: staging, keyType: "p256" });
+    expect(parseSiteAcmeSettings(config.apps?.tls?.automation?.policies, "other.example.com")).toBeUndefined();
+  });
+
+  it("keeps the internal CA in a policy that only sets a key type", () => {
+    const entry = proxy({ tls: true, tlsIssuer: "internal", externalHost: "example.com", externalScheme: "https", tlsAdvanced: { keyType: "ed25519" } });
+    const config = mergeProxy({ apps: { http: { servers: {} } } } as CaddyConfig, entry);
+    const policy = (config.apps?.tls?.automation?.policies ?? []).find(p => p.subjects?.includes("example.com"));
+    expect(policy).toEqual({ subjects: ["example.com"], issuers: [{ module: "internal" }], key_type: "ed25519" });
   });
 });
 

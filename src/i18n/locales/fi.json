@@ -907,7 +907,15 @@
     "custom_file_unreadable": "Tiedostoa ei löytynyt tai Caddyn käyttäjä ei voi lukea sitä",
     "custom_file_readable": "Tiedosto on luettavissa",
     "custom_file_valid_expiry": "Voimassa — vanhenee {{date}}",
-    "custom_cert_lifetime_note": "Yllä on ladattu oma varmenne — varmenteen voimassaoloaika ja uusimisikkuna eivät koske sitä, koska Caddy ei itse myönnä mitään."
+    "custom_cert_lifetime_note": "Yllä on ladattu oma varmenne — varmenteen voimassaoloaika ja uusimisikkuna eivät koske sitä, koska Caddy ei itse myönnä mitään.",
+    "acme_email": "ACME-sähköposti",
+    "acme_email_help": "Tämän sivuston varmenteiden tilin sähköposti. Koskee vain automaattista HTTPS:ää; tyhjä käyttää yleistä.",
+    "acme_global_placeholder": "Yleinen sähköposti",
+    "acme_ca": "ACME CA:n hakemisto-URL",
+    "acme_ca_help": "Mistä tämä sivusto saa varmenteensa, esimerkiksi Let's Encryptin testi-URL testauksen aikana. Tyhjä käyttää yleistä CA:ta.",
+    "key_type": "Avaintyyppi",
+    "acme_invalid_email": "Anna sähköpostiosoite, esimerkiksi admin@example.com.",
+    "acme_invalid_ca": "Anna URL, joka alkaa http:// tai https://."
   },
   "error_handler": {
     "heading": "Mukautetut virheenkäsittelijät",

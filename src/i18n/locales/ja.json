@@ -907,7 +907,15 @@
     "custom_file_unreadable": "ファイルが見つからないか、Caddy のユーザーが読み取れません",
     "custom_file_readable": "ファイルは読み取り可能です",
     "custom_file_valid_expiry": "有効 — {{date}} に期限切れ",
-    "custom_cert_lifetime_note": "上でカスタム証明書が読み込まれています。Caddy 自身は何も発行しないため、証明書の有効期間と更新ウィンドウは適用されません。"
+    "custom_cert_lifetime_note": "上でカスタム証明書が読み込まれています。Caddy 自身は何も発行しないため、証明書の有効期間と更新ウィンドウは適用されません。",
+    "acme_email": "ACME のメールアドレス",
+    "acme_email_help": "このサイトの証明書に使うアカウントのメールアドレス。自動 HTTPS にのみ適用されます。空欄はグローバルの設定を使います。",
+    "acme_global_placeholder": "グローバルのメールアドレス",
+    "acme_ca": "ACME CA のディレクトリ URL",
+    "acme_ca_help": "このサイトが証明書を取得する場所。テスト中は Let's Encrypt のステージング URL など。空欄はグローバルの CA を使います。",
+    "key_type": "鍵の種類",
+    "acme_invalid_email": "admin@example.com のようなメールアドレスを入力してください。",
+    "acme_invalid_ca": "http:// または https:// で始まる URL を入力してください。"
   },
   "error_handler": {
     "heading": "カスタムエラーハンドラー",

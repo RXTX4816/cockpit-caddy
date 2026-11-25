@@ -907,7 +907,15 @@
     "custom_file_unreadable": "Dosya bulunamadı ya da Caddy kullanıcısı tarafından okunamıyor",
     "custom_file_readable": "Dosya okunabilir",
     "custom_file_valid_expiry": "Geçerli — {{date}} tarihinde sona eriyor",
-    "custom_cert_lifetime_note": "Yukarıda özel bir sertifika yüklü — Caddy kendisi bir şey vermediği için sertifika ömrü ve yenileme penceresi geçerli değildir."
+    "custom_cert_lifetime_note": "Yukarıda özel bir sertifika yüklü — Caddy kendisi bir şey vermediği için sertifika ömrü ve yenileme penceresi geçerli değildir.",
+    "acme_email": "ACME e-postası",
+    "acme_email_help": "Bu sitenin sertifikaları için hesap e-postası. Yalnızca otomatik HTTPS için geçerlidir; boş, genel olanı kullanır.",
+    "acme_global_placeholder": "Genel e-posta",
+    "acme_ca": "ACME CA dizin URL'si",
+    "acme_ca_help": "Bu sitenin sertifikalarını nereden aldığı, örneğin test sırasında Let's Encrypt'in staging URL'si. Boş, genel CA'yı kullanır.",
+    "key_type": "Anahtar türü",
+    "acme_invalid_email": "admin@example.com gibi bir e-posta adresi girin.",
+    "acme_invalid_ca": "http:// veya https:// ile başlayan bir URL girin."
   },
   "error_handler": {
     "heading": "Özel hata işleyicileri",

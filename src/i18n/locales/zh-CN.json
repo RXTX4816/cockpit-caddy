@@ -907,7 +907,15 @@
     "custom_file_unreadable": "文件不存在或 Caddy 用户无法读取",
     "custom_file_readable": "文件可读",
     "custom_file_valid_expiry": "有效——{{date}} 到期",
-    "custom_cert_lifetime_note": "上方已加载自定义证书——证书有效期和续期窗口不适用，因为 Caddy 自己不签发任何证书。"
+    "custom_cert_lifetime_note": "上方已加载自定义证书——证书有效期和续期窗口不适用，因为 Caddy 自己不签发任何证书。",
+    "acme_email": "ACME 邮箱",
+    "acme_email_help": "此站点证书使用的账户邮箱。仅适用于自动 HTTPS;留空则使用全局邮箱。",
+    "acme_global_placeholder": "全局邮箱",
+    "acme_ca": "ACME CA 目录 URL",
+    "acme_ca_help": "此站点从哪里获取证书,例如测试时使用 Let's Encrypt 的 staging URL。留空则使用全局 CA。",
+    "key_type": "密钥类型",
+    "acme_invalid_email": "请输入类似 admin@example.com 的邮箱地址。",
+    "acme_invalid_ca": "请输入以 http:// 或 https:// 开头的 URL。"
   },
   "error_handler": {
     "heading": "自定义错误处理",

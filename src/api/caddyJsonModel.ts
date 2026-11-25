@@ -803,7 +803,7 @@ export function parseRouteToEntry(
       matchers,
       serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, accessLog,
       errorHandlers: parseErrorHandlers(server),
-      tlsAdvanced: phpTlsPolicy ? parseTlsAdvanced(phpTlsPolicy, automationPolicies, tlsSubjectHosts(externalHost)[0]) : undefined,
+      tlsAdvanced: phpTlsPolicy ? parseTlsAdvanced(phpTlsPolicy, automationPolicies, tlsSubjectHosts(externalHost)[0]) : parseSiteAcmeSettings(automationPolicies, tlsSubjectHosts(externalHost)[0]),
       mtls: phpTlsPolicy ? parseMtls(phpTlsPolicy) : undefined,
     };
   }
@@ -921,7 +921,7 @@ export function parseRouteToEntry(
       matchers,
       serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, accessLog,
       errorHandlers: parseErrorHandlers(server),
-      tlsAdvanced: fsTlsPolicy ? parseTlsAdvanced(fsTlsPolicy, automationPolicies, tlsSubjectHosts(externalHost)[0]) : undefined,
+      tlsAdvanced: fsTlsPolicy ? parseTlsAdvanced(fsTlsPolicy, automationPolicies, tlsSubjectHosts(externalHost)[0]) : parseSiteAcmeSettings(automationPolicies, tlsSubjectHosts(externalHost)[0]),
       mtls: fsTlsPolicy ? parseMtls(fsTlsPolicy) : undefined,
     };
   }
@@ -1032,7 +1032,7 @@ export function parseRouteToEntry(
     errorHandlers: parseErrorHandlers(server),
     replaceUpstreamErrors: reraisesUpstreamErrors(rp) || undefined,
     forwardAuth,
-    tlsAdvanced: tlsPolicy ? parseTlsAdvanced(tlsPolicy, automationPolicies, tlsSubjectHosts(externalHost)[0]) : undefined,
+    tlsAdvanced: tlsPolicy ? parseTlsAdvanced(tlsPolicy, automationPolicies, tlsSubjectHosts(externalHost)[0]) : parseSiteAcmeSettings(automationPolicies, tlsSubjectHosts(externalHost)[0]),
     mtls: tlsPolicy ? parseMtls(tlsPolicy) : undefined,
     customTls,
   };
@@ -1533,7 +1533,29 @@ export function parseTlsAdvanced(
   const lifetime = parseCertLifetimeDuration(automationPolicy?.issuers?.[0]?.lifetime);
   if (lifetime) { cfg.certLifetime = lifetime; hasData = true; }
   if (automationPolicy?.renewal_window_ratio !== undefined) { cfg.renewalWindowRatio = automationPolicy.renewal_window_ratio; hasData = true; }
+  const own = parseSiteAcmeSettings(automationPolicies, host);
+  if (own) { Object.assign(cfg, own); hasData = true; }
   return hasData ? cfg : undefined;
+}
+
+
+/**
+ * A site's own ACME account and key type (#341), from the policy that names its host; the shared
+ * catch-all policy is the global one. A site on automatic HTTPS has no connection policy, so this
+ * is read on its own too.
+ */
+export function parseSiteAcmeSettings(
+  automationPolicies: import("./types").CaddyAutomationPolicy[] | undefined,
+  host: string | undefined,
+): Pick<import("./types").TlsAdvancedConfig, "acmeEmail" | "acmeCa" | "keyType"> | undefined {
+  const scoped = host ? automationPolicies?.find(p => subjectsInclude(p.subjects, host)) : undefined;
+  const acme = scoped?.issuers?.find(i => i.module === "acme") as { email?: string; ca?: string } | undefined;
+  const out: Pick<import("./types").TlsAdvancedConfig, "acmeEmail" | "acmeCa" | "keyType"> = {
+    ...(acme?.email ? { acmeEmail: acme.email } : {}),
+    ...(acme?.ca ? { acmeCa: acme.ca } : {}),
+    ...(scoped?.key_type ? { keyType: scoped.key_type } : {}),
+  };
+  return Object.keys(out).length ? out : undefined;
 }
 
 
@@ -1629,6 +1651,7 @@ export function rebuildTlsAutomationPolicies(
   changedServerKey: string,
   changedAdv: import("./types").TlsAdvancedConfig | undefined,
   changedHosts: string[],
+  changedIssuer?: "acme" | "internal",
 ): import("./types").CaddyTlsApp | undefined {
   const hasTls = Object.values(servers).some(
     s => Array.isArray(s.tls_connection_policies) && s.tls_connection_policies.length > 0,
@@ -1657,13 +1680,26 @@ export function rebuildTlsAutomationPolicies(
 
   const policies: import("./types").CaddyAutomationPolicy[] = [defaultPolicy, ...otherSubjectPolicies];
 
-  if (changedHosts.length && isChangedServerLive && hasCustomInternalIssuer(changedAdv)) {
+  // #341: a site on its own ACME account, CA or key type gets a policy of its own; the default
+  // issuers stay for whatever it leaves unset.
+  if (changedHosts.length && isChangedServerLive && changedIssuer === "acme" && (changedAdv?.acmeEmail || changedAdv?.acmeCa || changedAdv?.keyType)) {
+    const issuer = { module: "acme", ...(changedAdv.acmeCa ? { ca: changedAdv.acmeCa } : {}), ...(changedAdv.acmeEmail ? { email: changedAdv.acmeEmail } : {}) };
+    policies.push({
+      subjects: changedHosts,
+      ...(changedAdv.acmeCa || changedAdv.acmeEmail ? { issuers: [issuer] } : {}),
+      ...(changedAdv.keyType ? { key_type: changedAdv.keyType } : {}),
+    });
+  } else if (changedHosts.length && isChangedServerLive && changedAdv?.keyType && !hasCustomInternalIssuer(changedAdv)) {
+    // The internal CA is the default; a key type on its own still needs an issuer to keep it.
+    policies.push({ subjects: changedHosts, issuers: [{ module: "internal" }], key_type: changedAdv.keyType });
+  } else if (changedHosts.length && isChangedServerLive && hasCustomInternalIssuer(changedAdv)) {
     const issuer: { module: string; lifetime?: string } = { module: "internal" };
     if (changedAdv?.certLifetime) issuer.lifetime = changedAdv.certLifetime;
     policies.push({
       subjects: changedHosts,
       issuers: [issuer],
       ...(changedAdv?.renewalWindowRatio !== undefined ? { renewal_window_ratio: changedAdv.renewalWindowRatio } : {}),
+      ...(changedAdv?.keyType ? { key_type: changedAdv.keyType } : {}),
     });
   }
 
@@ -2132,7 +2168,7 @@ export function mergeProxy(config: CaddyConfig, proxy: ProxyEntry): CaddyConfig 
   servers[proxy.serverKey] = (original && !proxy.redirect && !proxy.staticResponse) ? patchServer(original, proxy) : buildServerEntry(proxy);
 
   const logging = patchLoggingLogs(config, original, proxy);
-  const automation = rebuildTlsAutomationPolicies(config, servers, proxy.serverKey, proxy.tlsAdvanced, tlsSubjectHosts(proxy.externalHost));
+  const automation = rebuildTlsAutomationPolicies(config, servers, proxy.serverKey, proxy.tlsAdvanced, tlsSubjectHosts(proxy.externalHost), proxy.tlsIssuer);
   const certificates = rebuildTlsCertificates(config, proxy);
 
   return {

@@ -907,7 +907,15 @@
     "custom_file_unreadable": "הקובץ לא נמצא או שמשתמש Caddy לא יכול לקרוא אותו",
     "custom_file_readable": "הקובץ קריא",
     "custom_file_valid_expiry": "בתוקף — יפוג ב-{{date}}",
-    "custom_cert_lifetime_note": "למעלה נטענה תעודה מותאמת — תוקף התעודה וחלון החידוש לא חלים, כי Caddy לא מנפיק כלום בעצמו."
+    "custom_cert_lifetime_note": "למעלה נטענה תעודה מותאמת — תוקף התעודה וחלון החידוש לא חלים, כי Caddy לא מנפיק כלום בעצמו.",
+    "acme_email": "אימייל ACME",
+    "acme_email_help": "אימייל החשבון לאישורי האתר הזה. חל רק על HTTPS אוטומטי; ריק משתמש בגלובלי.",
+    "acme_global_placeholder": "אימייל גלובלי",
+    "acme_ca": "כתובת ספריית ACME CA",
+    "acme_ca_help": "מאיפה האתר מקבל את האישורים שלו, למשל כתובת ה-staging של Let's Encrypt בזמן בדיקות. ריק משתמש ב-CA הגלובלי.",
+    "key_type": "סוג מפתח",
+    "acme_invalid_email": "הזינו כתובת אימייל כמו admin@example.com.",
+    "acme_invalid_ca": "הזינו כתובת שמתחילה ב-http:// או https://."
   },
   "error_handler": {
     "heading": "מטפלי שגיאות מותאמים",

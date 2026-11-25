@@ -549,7 +549,7 @@ export function buildTlsCaddyLines(p: Pick<ProxyEntry, "tls" | "tlsIssuer" | "tl
   const renewalWindowRatio = (hostless || hasCustomCert) ? undefined : adv?.renewalWindowRatio;
   const hasAdvanced = adv && (
     adv.protocolMin || adv.protocolMax || adv.cipherSuites?.length || adv.curves?.length
-    || certLifetime || renewalWindowRatio !== undefined
+    || certLifetime || renewalWindowRatio !== undefined || adv.keyType
   );
   const hasMtls = mtls?.mode;
   // #253: a certificate file has nothing to obtain, so on_demand only goes with an issuer.
@@ -575,8 +575,15 @@ export function buildTlsCaddyLines(p: Pick<ProxyEntry, "tls" | "tlsIssuer" | "tl
   if (p.tlsIssuer === "acme" && !hostless) {
     // #289: a site's own DNS provider; Caddy fills in the global acme_dns one only when unset.
     const dnsLines = p.dnsChallenge?.provider ? dnsProviderLines("dns", p.dnsChallenge, "\t\t") : [];
-    const policy = [...buildTlsPolicyBlockLines(adv, mtls), ...onDemandLines, ...dnsLines];
-    return policy.length ? ["\ttls {", ...policy, "\t}"] : [];
+    // #341: the site's own account email, CA and key type; unset ones fall back to the global ones.
+    const email = adv?.acmeEmail?.trim();
+    const own = [
+      ...(adv?.acmeCa?.trim() ? [`\t\tca ${adv.acmeCa.trim()}`] : []),
+      ...(adv?.keyType ? [`\t\tkey_type ${adv.keyType}`] : []),
+    ];
+    const policy = [...own, ...buildTlsPolicyBlockLines(adv, mtls), ...onDemandLines, ...dnsLines];
+    if (!policy.length) return email ? [`\ttls ${email}`] : [];
+    return [`\ttls${email ? ` ${email}` : ""} {`, ...policy, "\t}"];
   }
 
   if (!hasAdvanced && !hasMtls && !onDemandLines.length) return ["\ttls internal"];
@@ -592,6 +599,7 @@ export function buildTlsCaddyLines(p: Pick<ProxyEntry, "tls" | "tlsIssuer" | "tl
   if (renewalWindowRatio !== undefined) {
     lines.push(`\t\trenewal_window_ratio ${renewalWindowRatio}`);
   }
+  if (adv?.keyType) lines.push(`\t\tkey_type ${adv.keyType}`);
   lines.push(...buildTlsPolicyBlockLines(adv, mtls));
   lines.push(...onDemandLines);
   lines.push("\t}");

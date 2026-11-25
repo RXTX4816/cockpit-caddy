@@ -10,7 +10,7 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync, writeFileSync, rmSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { CONF_HEADER, parseConfAccessLogMap, buildServerEntry, proxiesToCaddyfile, parseProxies, parseConfExternalAddresses, proxyAddressKeys, resolveInternalIssuerSettings, surgicallyWriteProxy, buildMigratedConfContent, migrateCaddyfile, parseConfTlsIssuerMap, parseConfTlsOnDemandMap, parseConfTlsMap, expandPlaceholderShorthands } from "./caddy";
+import { CONF_HEADER, parseConfAccessLogMap, mergeProxy, buildServerEntry, proxiesToCaddyfile, parseProxies, parseConfExternalAddresses, proxyAddressKeys, resolveInternalIssuerSettings, surgicallyWriteProxy, buildMigratedConfContent, migrateCaddyfile, parseConfTlsIssuerMap, parseConfTlsOnDemandMap, parseConfTlsMap, expandPlaceholderShorthands } from "./caddy";
 import { snippetsToConf, parseSnippets, parseConfSiteImports, parseConfSiteBlocks, separateSnippetSettings } from "./snippets";
 import { buildEncodeHandler, buildFilterEncoder, buildRedirectHandler, buildRewriteHandler } from "./caddyJsonModel";
 import { buildGlobalOptionsPatch } from "./globalOptions";
@@ -1038,6 +1038,35 @@ describe.runIf(available || required)("caddy adapt accepts the new matchers (#33
     // Caddy names a regexp after its matcher; a name chosen in the form is the same on both sides.
     const strip = (o: Record<string, unknown>) => JSON.parse(JSON.stringify(o, (k, v) => (k === "name" && /^m\d+$/.test(v) ? undefined : v))) as Record<string, unknown>;
     expect(strip(built)).toEqual(strip(real));
+  });
+});
+
+describe.runIf(available || required)("caddy adapt accepts the site's own ACME settings (#341)", () => {
+  const staging = "https://acme-staging-v02.api.letsencrypt.org/directory";
+  const acmeSite = (tlsAdvanced: import("./types").TlsAdvancedConfig) =>
+    entry({ tls: true, tlsIssuer: "acme", externalHost: "example.com", externalScheme: "https", externalPort: 443, tlsAdvanced });
+
+  it.each([
+    ["email, CA and key type", { acmeEmail: "me@example.com", acmeCa: staging, keyType: "p256" }],
+    ["only a CA", { acmeCa: staging }],
+    ["only an email", { acmeEmail: "me@example.com" }],
+    ["only a key type", { keyType: "ed25519" }],
+  ])("reads %s back from a real adapt", (_name, tlsAdvanced) => {
+    const [p] = readBack(proxiesToCaddyfile([acmeSite(tlsAdvanced)]));
+    expect(p.tlsAdvanced).toMatchObject(tlsAdvanced);
+  });
+
+  it("builds the policy Caddy builds for a CA, email and key type", () => {
+    const tlsAdvanced = { acmeEmail: "me@example.com", acmeCa: staging, keyType: "p256" };
+    const real = adapt(proxiesToCaddyfile([acmeSite(tlsAdvanced)])).apps?.tls?.automation?.policies?.find(p => p.subjects?.includes("example.com"));
+    const pushed = mergeProxy({ apps: { http: { servers: {} } } } as CaddyConfig, acmeSite(tlsAdvanced)).apps?.tls?.automation?.policies?.find(p => p.subjects?.includes("example.com"));
+    expect(pushed).toEqual(real);
+  });
+
+  it("reads key_type of an internal-issuer site", () => {
+    const e = entry({ tls: true, tlsIssuer: "internal", externalHost: "example.com", externalScheme: "https", externalPort: 443, tlsAdvanced: { keyType: "ed25519" } });
+    const [p] = readBack(proxiesToCaddyfile([e]));
+    expect(p.tlsAdvanced?.keyType).toBe("ed25519");
   });
 });
 

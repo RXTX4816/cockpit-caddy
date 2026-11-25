@@ -907,7 +907,15 @@
     "custom_file_unreadable": "Nie znaleziono pliku lub użytkownik Caddy nie może go odczytać",
     "custom_file_readable": "Plik można odczytać",
     "custom_file_valid_expiry": "Ważny — wygasa {{date}}",
-    "custom_cert_lifetime_note": "Powyżej wczytano własny certyfikat — czas ważności i okno odnowienia nie mają zastosowania, ponieważ Caddy sam niczego nie wystawia."
+    "custom_cert_lifetime_note": "Powyżej wczytano własny certyfikat — czas ważności i okno odnowienia nie mają zastosowania, ponieważ Caddy sam niczego nie wystawia.",
+    "acme_email": "E-mail ACME",
+    "acme_email_help": "E-mail konta dla certyfikatów tej witryny. Dotyczy tylko automatycznego HTTPS; puste używa globalnego.",
+    "acme_global_placeholder": "Globalny e-mail",
+    "acme_ca": "URL katalogu CA ACME",
+    "acme_ca_help": "Skąd ta witryna bierze certyfikaty, np. testowy URL Let's Encrypt podczas prób. Puste używa globalnego CA.",
+    "key_type": "Typ klucza",
+    "acme_invalid_email": "Podaj adres e-mail, np. admin@example.com.",
+    "acme_invalid_ca": "Podaj adres URL zaczynający się od http:// lub https://."
   },
   "error_handler": {
     "heading": "Własna obsługa błędów",

@@ -907,7 +907,15 @@
     "custom_file_unreadable": "El archivo no existe o el usuario de Caddy no puede leerlo",
     "custom_file_readable": "El archivo se puede leer",
     "custom_file_valid_expiry": "Válido: caduca el {{date}}",
-    "custom_cert_lifetime_note": "Hay un certificado propio cargado arriba: la duración del certificado y la ventana de renovación no se aplican, porque Caddy no emite nada por sí mismo."
+    "custom_cert_lifetime_note": "Hay un certificado propio cargado arriba: la duración del certificado y la ventana de renovación no se aplican, porque Caddy no emite nada por sí mismo.",
+    "acme_email": "Correo ACME",
+    "acme_email_help": "El correo de la cuenta para los certificados de este sitio. Solo vale para HTTPS automático; vacío usa el global.",
+    "acme_global_placeholder": "Correo global",
+    "acme_ca": "URL del directorio de la CA ACME",
+    "acme_ca_help": "De dónde obtiene este sitio sus certificados, por ejemplo la URL de pruebas de Let's Encrypt mientras se prueba. Vacío usa la CA global.",
+    "key_type": "Tipo de clave",
+    "acme_invalid_email": "Introduzca una dirección de correo como admin@example.com.",
+    "acme_invalid_ca": "Introduzca una URL http:// o https://."
   },
   "error_handler": {
     "heading": "Gestores de errores personalizados",

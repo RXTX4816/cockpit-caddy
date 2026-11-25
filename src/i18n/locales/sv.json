@@ -907,7 +907,15 @@
     "custom_file_unreadable": "Filen hittades inte eller kan inte läsas av Caddys användare",
     "custom_file_readable": "Filen är läsbar",
     "custom_file_valid_expiry": "Giltigt — går ut {{date}}",
-    "custom_cert_lifetime_note": "Ett eget certifikat är inläst ovan — certifikatets livslängd och förnyelsefönster gäller inte, eftersom Caddy inte utfärdar något själv."
+    "custom_cert_lifetime_note": "Ett eget certifikat är inläst ovan — certifikatets livslängd och förnyelsefönster gäller inte, eftersom Caddy inte utfärdar något själv.",
+    "acme_email": "ACME-e-post",
+    "acme_email_help": "Kontots e-postadress för den här webbplatsens certifikat. Gäller bara automatisk HTTPS; tomt använder den globala.",
+    "acme_global_placeholder": "Global e-post",
+    "acme_ca": "URL till ACME-CA:ns katalog",
+    "acme_ca_help": "Varifrån den här webbplatsen får sina certifikat, till exempel Let's Encrypts test-URL under provning. Tomt använder den globala CA:n.",
+    "key_type": "Nyckeltyp",
+    "acme_invalid_email": "Ange en e-postadress som admin@example.com.",
+    "acme_invalid_ca": "Ange en URL som börjar med http:// eller https://."
   },
   "error_handler": {
     "heading": "Anpassad felhantering",

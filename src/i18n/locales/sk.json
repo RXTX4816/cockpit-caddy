@@ -907,7 +907,15 @@
     "custom_file_unreadable": "Súbor sa nenašiel alebo ho používateľ Caddy nemôže čítať",
     "custom_file_readable": "Súbor je čitateľný",
     "custom_file_valid_expiry": "Platný — vyprší {{date}}",
-    "custom_cert_lifetime_note": "Vyššie je načítaný vlastný certifikát — platnosť a okno obnovenia sa neuplatnia, pretože Caddy sám nič nevydáva."
+    "custom_cert_lifetime_note": "Vyššie je načítaný vlastný certifikát — platnosť a okno obnovenia sa neuplatnia, pretože Caddy sám nič nevydáva.",
+    "acme_email": "E-mail pre ACME",
+    "acme_email_help": "E-mail účtu pre certifikáty tohto webu. Platí len pre automatické HTTPS; prázdne použije globálny.",
+    "acme_global_placeholder": "Globálny e-mail",
+    "acme_ca": "URL adresára ACME CA",
+    "acme_ca_help": "Odkiaľ tento web získava certifikáty, napríklad testovacia URL Let's Encrypt pri skúšaní. Prázdne použije globálnu CA.",
+    "key_type": "Typ kľúča",
+    "acme_invalid_email": "Zadajte e-mailovú adresu, napríklad admin@example.com.",
+    "acme_invalid_ca": "Zadajte URL začínajúcu http:// alebo https://."
   },
   "error_handler": {
     "heading": "Vlastné spracovanie chýb",

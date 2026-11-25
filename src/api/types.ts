@@ -141,6 +141,12 @@ export interface TlsAdvancedConfig {
   certLifetime?: string;
   /** Fraction (0-1) of certificate lifetime remaining before Caddy attempts renewal */
   renewalWindowRatio?: number;
+  /** The site's own ACME account email, instead of the global one (#341). */
+  acmeEmail?: string;
+  /** The site's own ACME CA directory URL, instead of the global one (#341). */
+  acmeCa?: string;
+  /** `key_type` of the site's certificates: ed25519, p256, p384, rsa2048 or rsa4096 (#341). */
+  keyType?: string;
 }
 
 export interface MtlsConfig {
@@ -212,6 +218,7 @@ export interface CaddyAutomationPolicy {
   /** `lifetime` may come back as a number (nanoseconds) after a Caddyfile reload rather than the original duration string. */
   issuers?: Array<{ module: string; lifetime?: string | number; [key: string]: unknown }>;
   renewal_window_ratio?: number;
+  key_type?: string;
 }
 
 export interface CaddyCertLoadFile {

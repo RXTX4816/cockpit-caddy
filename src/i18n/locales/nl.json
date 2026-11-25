@@ -907,7 +907,15 @@
     "custom_file_unreadable": "Bestand niet gevonden of niet leesbaar voor de Caddy-gebruiker",
     "custom_file_readable": "Bestand is leesbaar",
     "custom_file_valid_expiry": "Geldig — verloopt op {{date}}",
-    "custom_cert_lifetime_note": "Hierboven is een eigen certificaat geladen — certificaatlevensduur en vernieuwingsvenster zijn niet van toepassing, omdat Caddy zelf niets uitgeeft."
+    "custom_cert_lifetime_note": "Hierboven is een eigen certificaat geladen — certificaatlevensduur en vernieuwingsvenster zijn niet van toepassing, omdat Caddy zelf niets uitgeeft.",
+    "acme_email": "ACME-e-mail",
+    "acme_email_help": "Het account-e-mailadres voor de certificaten van deze site. Geldt alleen voor automatische HTTPS; leeg gebruikt het globale.",
+    "acme_global_placeholder": "Globale e-mail",
+    "acme_ca": "URL van de ACME-CA-map",
+    "acme_ca_help": "Waar deze site zijn certificaten vandaan haalt, bijvoorbeeld de staging-URL van Let's Encrypt tijdens het testen. Leeg gebruikt de globale CA.",
+    "key_type": "Sleuteltype",
+    "acme_invalid_email": "Voer een e-mailadres in zoals admin@example.com.",
+    "acme_invalid_ca": "Voer een http://- of https://-URL in."
   },
   "error_handler": {
     "heading": "Eigen foutafhandeling",

@@ -907,7 +907,15 @@
     "custom_file_unreadable": "Datei nicht gefunden oder für den Caddy-Benutzer nicht lesbar",
     "custom_file_readable": "Datei ist lesbar",
     "custom_file_valid_expiry": "Gültig – läuft am {{date}} ab",
-    "custom_cert_lifetime_note": "Oben ist ein eigenes Zertifikat geladen – Zertifikatslaufzeit und Erneuerungsfenster gelten nicht, da Caddy selbst nichts ausstellt."
+    "custom_cert_lifetime_note": "Oben ist ein eigenes Zertifikat geladen – Zertifikatslaufzeit und Erneuerungsfenster gelten nicht, da Caddy selbst nichts ausstellt.",
+    "acme_email": "ACME-E-Mail",
+    "acme_email_help": "Die Konto-E-Mail für die Zertifikate dieser Site. Gilt nur für automatisches HTTPS; leer verwendet die globale.",
+    "acme_global_placeholder": "Globale E-Mail",
+    "acme_ca": "ACME-CA-Verzeichnis-URL",
+    "acme_ca_help": "Woher diese Site ihre Zertifikate bezieht, zum Beispiel die Staging-URL von Let's Encrypt beim Testen. Leer verwendet die globale CA.",
+    "key_type": "Schlüsseltyp",
+    "acme_invalid_email": "Geben Sie eine E-Mail-Adresse wie admin@example.com ein.",
+    "acme_invalid_ca": "Geben Sie eine http://- oder https://-URL ein."
   },
   "error_handler": {
     "heading": "Eigene Fehlerbehandlung",

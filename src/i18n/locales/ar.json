@@ -907,7 +907,15 @@
     "custom_file_unreadable": "الملف غير موجود أو لا يستطيع مستخدم Caddy قراءته",
     "custom_file_readable": "الملف قابل للقراءة",
     "custom_file_valid_expiry": "صالحة — تنتهي في {{date}}",
-    "custom_cert_lifetime_note": "حُمّلت شهادة مخصصة أعلاه — لا تنطبق مدة الصلاحية ونافذة التجديد لأن Caddy لا يُصدر شيئًا بنفسه."
+    "custom_cert_lifetime_note": "حُمّلت شهادة مخصصة أعلاه — لا تنطبق مدة الصلاحية ونافذة التجديد لأن Caddy لا يُصدر شيئًا بنفسه.",
+    "acme_email": "بريد ACME",
+    "acme_email_help": "بريد الحساب لشهادات هذا الموقع. يسري على HTTPS التلقائي فقط؛ الفراغ يستخدم البريد العام.",
+    "acme_global_placeholder": "البريد العام",
+    "acme_ca": "عنوان دليل ACME CA",
+    "acme_ca_help": "من أين يحصل هذا الموقع على شهاداته، مثل عنوان Let's Encrypt التجريبي أثناء الاختبار. الفراغ يستخدم المرجع العام.",
+    "key_type": "نوع المفتاح",
+    "acme_invalid_email": "أدخل عنوان بريد مثل admin@example.com.",
+    "acme_invalid_ca": "أدخل عنوان URL يبدأ بـ http:// أو https://."
   },
   "error_handler": {
     "heading": "معالجات أخطاء مخصصة",

@@ -5,6 +5,8 @@ import {
   Checkbox,
   FormGroup,
   FormHelperText,
+  FormSelect,
+  FormSelectOption,
   HelperText,
   HelperTextItem,
   Spinner,
@@ -30,7 +32,13 @@ export interface TlsValues {
   customCertFile: string;
   customKeyFile: string;
   customCaFile: string;
+  /** A site's own ACME account and key type (#341); empty means the global ones. */
+  acmeEmail: string;
+  acmeCa: string;
+  keyType: string;
 }
+
+export const KEY_TYPES = ["ed25519", "p256", "p384", "rsa2048", "rsa4096"] as const;
 
 const TLS_EMPTY: TlsValues = {
   protocolMin: "",
@@ -44,6 +52,9 @@ const TLS_EMPTY: TlsValues = {
   customCertFile: "",
   customKeyFile: "",
   customCaFile: "",
+  acmeEmail: "",
+  acmeCa: "",
+  keyType: "",
 };
 
 // Caddy's internal-issuer `lifetime` accepts Go's standard duration units plus "d",
@@ -94,6 +105,7 @@ function isConfigured(v: TlsValues): boolean {
   return !!(
     v.protocolMin || v.protocolMax || v.cipherSuites.length || v.curves.length || v.clientAuthMode
     || v.certLifetime || v.renewalWindowRatio || v.customCertFile || v.customKeyFile || v.customCaFile
+    || v.acmeEmail || v.acmeCa || v.keyType
   );
 }
 
@@ -382,6 +394,41 @@ export function TlsSection({ value, onChange, isDisabled, hostless, isExpanded: 
       )}
 
       {/* mTLS */}
+      {!customCert && (
+        <>
+          <FormGroup label={t("tls_policy.acme_email")} fieldId="tls-acme-email" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+            <TextInput
+              id="tls-acme-email"
+              type="email"
+              value={value.acmeEmail}
+              onChange={(_e, v) => set({ acmeEmail: v })}
+              placeholder={t("tls_policy.acme_global_placeholder")}
+              validated={acmeEmailInvalid(value) ? "error" : "default"}
+              isDisabled={isDisabled}
+            />
+            <FormHelperText><HelperText><HelperTextItem variant={acmeEmailInvalid(value) ? "error" : "default"}>{acmeEmailInvalid(value) ? t("tls_policy.acme_invalid_email") : t("tls_policy.acme_email_help")}</HelperTextItem></HelperText></FormHelperText>
+          </FormGroup>
+          <FormGroup label={t("tls_policy.acme_ca")} fieldId="tls-acme-ca" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+            <TextInput
+              id="tls-acme-ca"
+              value={value.acmeCa}
+              onChange={(_e, v) => set({ acmeCa: v })}
+              placeholder="https://acme-staging-v02.api.letsencrypt.org/directory"
+              validated={acmeCaInvalid(value) ? "error" : "default"}
+              isDisabled={isDisabled}
+            />
+            <FormHelperText><HelperText><HelperTextItem variant={acmeCaInvalid(value) ? "error" : "default"}>{acmeCaInvalid(value) ? t("tls_policy.acme_invalid_ca") : t("tls_policy.acme_ca_help")}</HelperTextItem></HelperText></FormHelperText>
+          </FormGroup>
+          <FormGroup label={t("tls_policy.key_type")} fieldId="tls-key-type" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+            <FormSelect id="tls-key-type" value={value.keyType} onChange={(_e, v) => set({ keyType: v })} isDisabled={isDisabled} style={{ maxWidth: "16rem" }}>
+              <FormSelectOption value="" label={t("tls_policy.proto_default")} />
+              {KEY_TYPES.map(k => <FormSelectOption key={k} value={k} label={k} />)}
+              {value.keyType && !(KEY_TYPES as readonly string[]).includes(value.keyType) && <FormSelectOption value={value.keyType} label={value.keyType} />}
+            </FormSelect>
+          </FormGroup>
+        </>
+      )}
+
       <FormGroup label={t("tls_policy.client_auth_mode")} fieldId="tls-mtls-mode" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
         <FormHelperText style={{ marginBottom: "0.25rem" }}>
           <HelperText><HelperTextItem>{t("tls_policy.client_auth_mode_help")}</HelperTextItem></HelperText>
@@ -428,8 +475,17 @@ export function TlsSection({ value, onChange, isDisabled, hostless, isExpanded: 
 }
 
 /** True if the free-text lifetime/renewal-window fields hold invalid values; gates dialog submit buttons. */
+/** An ACME email without an @, or a CA directory that is no http(s) URL (#341). */
+function acmeEmailInvalid(v: TlsValues): boolean {
+  return !!v.acmeEmail.trim() && !/^[^\s@]+@[^\s@]+$/.test(v.acmeEmail.trim());
+}
+
+function acmeCaInvalid(v: TlsValues): boolean {
+  return !!v.acmeCa.trim() && !/^https?:\/\/\S+$/.test(v.acmeCa.trim());
+}
+
 export function tlsValuesHaveErrors(v: TlsValues): boolean {
-  return !isLifetimeDuration(v.certLifetime) || !isRenewalRatio(v.renewalWindowRatio)
+  return !isLifetimeDuration(v.certLifetime) || !isRenewalRatio(v.renewalWindowRatio) || acmeEmailInvalid(v) || acmeCaInvalid(v)
     || (!!v.customCertFile.trim() !== !!v.customKeyFile.trim());
 }
 
@@ -438,8 +494,13 @@ export function tlsValuesToAdvanced(v: TlsValues): import("../api").TlsAdvancedC
   // (and never applied by buildTlsCaddyLines) once a custom certificate (#152) is loaded.
   const certLifetime = hasCustomCert(v) ? "" : v.certLifetime;
   const renewalWindowRatio = hasCustomCert(v) ? "" : v.renewalWindowRatio;
-  if (!v.protocolMin && !v.protocolMax && !v.cipherSuites.length && !v.curves.length && !certLifetime && !renewalWindowRatio) return undefined;
+  // The ACME account and the key type belong to Caddy's own issuers, not to a loaded certificate (#341).
+  const own = hasCustomCert(v) ? { email: "", ca: "", keyType: "" } : { email: v.acmeEmail.trim(), ca: v.acmeCa.trim(), keyType: v.keyType };
+  if (!v.protocolMin && !v.protocolMax && !v.cipherSuites.length && !v.curves.length && !certLifetime && !renewalWindowRatio && !own.email && !own.ca && !own.keyType) return undefined;
   return {
+    acmeEmail: own.email || undefined,
+    acmeCa: own.ca || undefined,
+    keyType: own.keyType || undefined,
     protocolMin: v.protocolMin || undefined,
     protocolMax: v.protocolMax || undefined,
     cipherSuites: v.cipherSuites.length ? v.cipherSuites : undefined,
@@ -483,5 +544,8 @@ export function tlsConfigToValues(
     customCertFile: customTls?.certFile ?? "",
     customKeyFile: customTls?.keyFile ?? "",
     customCaFile: customTls?.caFile ?? "",
+    acmeEmail: tlsAdvanced?.acmeEmail ?? "",
+    acmeCa: tlsAdvanced?.acmeCa ?? "",
+    keyType: tlsAdvanced?.keyType ?? "",
   };
 }

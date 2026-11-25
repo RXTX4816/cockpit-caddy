@@ -907,7 +907,15 @@
     "custom_file_unreadable": "Berkas tidak ditemukan atau tidak dapat dibaca pengguna Caddy",
     "custom_file_readable": "Berkas dapat dibaca",
     "custom_file_valid_expiry": "Berlaku — kedaluwarsa {{date}}",
-    "custom_cert_lifetime_note": "Sertifikat kustom dimuat di atas — masa berlaku sertifikat dan jendela pembaruan tidak berlaku, karena Caddy tidak menerbitkan apa pun sendiri."
+    "custom_cert_lifetime_note": "Sertifikat kustom dimuat di atas — masa berlaku sertifikat dan jendela pembaruan tidak berlaku, karena Caddy tidak menerbitkan apa pun sendiri.",
+    "acme_email": "Email ACME",
+    "acme_email_help": "Email akun untuk sertifikat situs ini. Hanya berlaku untuk HTTPS otomatis; kosong memakai yang global.",
+    "acme_global_placeholder": "Email global",
+    "acme_ca": "URL direktori CA ACME",
+    "acme_ca_help": "Dari mana situs ini mendapat sertifikatnya, misalnya URL staging Let's Encrypt saat menguji. Kosong memakai CA global.",
+    "key_type": "Jenis kunci",
+    "acme_invalid_email": "Masukkan alamat email seperti admin@example.com.",
+    "acme_invalid_ca": "Masukkan URL http:// atau https://."
   },
   "error_handler": {
     "heading": "Penangan galat kustom",

@@ -907,7 +907,15 @@
     "custom_file_unreadable": "Файл не найден или недоступен для чтения пользователю Caddy",
     "custom_file_readable": "Файл доступен для чтения",
     "custom_file_valid_expiry": "Действителен — истекает {{date}}",
-    "custom_cert_lifetime_note": "Выше загружен собственный сертификат — срок действия и окно обновления не применяются, так как Caddy сам ничего не выпускает."
+    "custom_cert_lifetime_note": "Выше загружен собственный сертификат — срок действия и окно обновления не применяются, так как Caddy сам ничего не выпускает.",
+    "acme_email": "Email для ACME",
+    "acme_email_help": "Email учётной записи для сертификатов этого сайта. Действует только для автоматического HTTPS; пусто — глобальный.",
+    "acme_global_placeholder": "Глобальный email",
+    "acme_ca": "URL каталога ACME CA",
+    "acme_ca_help": "Откуда этот сайт получает сертификаты, например тестовый URL Let's Encrypt во время проверки. Пусто — глобальный CA.",
+    "key_type": "Тип ключа",
+    "acme_invalid_email": "Введите адрес email, например admin@example.com.",
+    "acme_invalid_ca": "Введите URL, начинающийся с http:// или https://."
   },
   "error_handler": {
     "heading": "Свои обработчики ошибок",

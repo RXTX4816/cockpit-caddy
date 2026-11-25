@@ -907,7 +907,15 @@
     "custom_file_unreadable": "Arquivo não encontrado ou sem permissão de leitura para o usuário do Caddy",
     "custom_file_readable": "O arquivo pode ser lido",
     "custom_file_valid_expiry": "Válido — expira em {{date}}",
-    "custom_cert_lifetime_note": "Há um certificado próprio carregado acima — a validade e a janela de renovação não se aplicam, já que o Caddy não emite nada por conta própria."
+    "custom_cert_lifetime_note": "Há um certificado próprio carregado acima — a validade e a janela de renovação não se aplicam, já que o Caddy não emite nada por conta própria.",
+    "acme_email": "E-mail ACME",
+    "acme_email_help": "O e-mail da conta para os certificados deste site. Vale só para o HTTPS automático; vazio usa o global.",
+    "acme_global_placeholder": "E-mail global",
+    "acme_ca": "URL do diretório da CA ACME",
+    "acme_ca_help": "De onde este site obtém seus certificados, por exemplo a URL de testes do Let's Encrypt durante os testes. Vazio usa a CA global.",
+    "key_type": "Tipo de chave",
+    "acme_invalid_email": "Informe um endereço de e-mail como admin@example.com.",
+    "acme_invalid_ca": "Informe uma URL http:// ou https://."
   },
   "error_handler": {
     "heading": "Tratadores de erro personalizados",

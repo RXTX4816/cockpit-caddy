@@ -907,7 +907,15 @@
     "custom_file_unreadable": "File not found or not readable by Caddy's user",
     "custom_file_readable": "File is readable",
     "custom_file_valid_expiry": "Valid — expires {{date}}",
-    "custom_cert_lifetime_note": "A custom certificate is loaded above — certificate lifetime and renewal window don't apply, since Caddy isn't issuing anything itself."
+    "custom_cert_lifetime_note": "A custom certificate is loaded above — certificate lifetime and renewal window don't apply, since Caddy isn't issuing anything itself.",
+    "acme_email": "ACME email",
+    "acme_email_help": "The account email for this site's certificates. It only applies to automatic HTTPS; empty uses the global one.",
+    "acme_global_placeholder": "Global email",
+    "acme_ca": "ACME CA directory URL",
+    "acme_ca_help": "Where this site gets its certificates, for example the Let's Encrypt staging URL while testing. Empty uses the global CA.",
+    "key_type": "Key type",
+    "acme_invalid_email": "Enter an email address such as admin@example.com.",
+    "acme_invalid_ca": "Enter an http:// or https:// URL."
   },
   "error_handler": {
     "heading": "Custom error handlers",

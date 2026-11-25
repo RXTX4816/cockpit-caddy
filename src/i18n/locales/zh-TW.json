@@ -907,7 +907,15 @@
     "custom_file_unreadable": "找不到檔案，或 Caddy 使用者無法讀取",
     "custom_file_readable": "檔案可讀取",
     "custom_file_valid_expiry": "有效——{{date}} 到期",
-    "custom_cert_lifetime_note": "上方已載入自訂憑證——憑證有效期限與續約時間窗不適用，因為 Caddy 本身不會簽發任何憑證。"
+    "custom_cert_lifetime_note": "上方已載入自訂憑證——憑證有效期限與續約時間窗不適用，因為 Caddy 本身不會簽發任何憑證。",
+    "acme_email": "ACME 電子郵件",
+    "acme_email_help": "此網站憑證使用的帳戶電子郵件。僅適用於自動 HTTPS;留空則使用全域設定。",
+    "acme_global_placeholder": "全域電子郵件",
+    "acme_ca": "ACME CA 目錄 URL",
+    "acme_ca_help": "此網站從哪裡取得憑證,例如測試時使用 Let's Encrypt 的 staging URL。留空則使用全域 CA。",
+    "key_type": "金鑰類型",
+    "acme_invalid_email": "請輸入類似 admin@example.com 的電子郵件地址。",
+    "acme_invalid_ca": "請輸入以 http:// 或 https:// 開頭的 URL。"
   },
   "error_handler": {
     "heading": "自訂錯誤處理",
