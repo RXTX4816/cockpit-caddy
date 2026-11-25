@@ -113,7 +113,10 @@
     "menu_static": "Statik dosyalar",
     "menu_respond": "Sabit yanıt",
     "menu_php": "PHP sitesi",
-    "more_actions": "Diğer işlemler"
+    "more_actions": "Diğer işlemler",
+    "indicator_raw_blocks": "Ham bloklar",
+    "raw_blocks_help": "Bu sitede route veya iç içe handle blokları var. Bunları ham düzenleyicide düzenleyin; form onları olduğu gibi bırakır.",
+    "raw_blocks_notice": "Bu sitede route veya iç içe handle blokları var. Form onları yazıldığı gibi bırakır ve yalnızca sitenin adresini, bind'ını, içe aktarmalarını ve TLS'ini değiştirir. Blokları ham düzenleyicide düzenleyin."
   },
   "add_proxy": {
     "title": "Reverse proxy ekle",

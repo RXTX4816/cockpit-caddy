@@ -113,7 +113,10 @@
     "menu_static": "정적 파일",
     "menu_respond": "고정 응답",
     "menu_php": "PHP 사이트",
-    "more_actions": "추가 작업"
+    "more_actions": "추가 작업",
+    "indicator_raw_blocks": "원시 블록",
+    "raw_blocks_help": "이 사이트에는 route 블록이나 중첩된 handle 블록이 있습니다. 원시 편집기에서 편집하세요. 양식은 그대로 둡니다.",
+    "raw_blocks_notice": "이 사이트에는 route 블록이나 중첩된 handle 블록이 있습니다. 양식은 이를 쓰인 그대로 두고 사이트의 주소, bind, import, TLS만 바꿉니다. 블록은 원시 편집기에서 편집하세요."
   },
   "add_proxy": {
     "title": "리버스 프록시 추가",

@@ -113,7 +113,10 @@
     "menu_static": "Statische bestanden",
     "menu_respond": "Vast antwoord",
     "menu_php": "PHP-site",
-    "more_actions": "Meer acties"
+    "more_actions": "Meer acties",
+    "indicator_raw_blocks": "Ruwe blokken",
+    "raw_blocks_help": "Deze site heeft route- of geneste handle-blokken. Bewerk ze in de ruwe editor; het formulier laat ze zoals ze zijn.",
+    "raw_blocks_notice": "Deze site heeft route- of geneste handle-blokken. Het formulier laat ze zoals geschreven en wijzigt alleen het adres, de bind, de imports en de TLS van de site. Bewerk de blokken in de ruwe editor."
   },
   "add_proxy": {
     "title": "Reverse proxy toevoegen",

@@ -113,7 +113,10 @@
     "menu_static": "Archivos estáticos",
     "menu_respond": "Respuesta fija",
     "menu_php": "Sitio PHP",
-    "more_actions": "Más acciones"
+    "more_actions": "Más acciones",
+    "indicator_raw_blocks": "Bloques sin procesar",
+    "raw_blocks_help": "Este sitio tiene bloques route o handle anidados. Edítelos en el editor en bruto; el formulario los deja como están.",
+    "raw_blocks_notice": "Este sitio tiene bloques route o handle anidados. El formulario los deja como están escritos y solo cambia la dirección, el bind, las importaciones y el TLS del sitio. Edite los bloques en el editor en bruto."
   },
   "add_proxy": {
     "title": "Añadir reverse proxy",

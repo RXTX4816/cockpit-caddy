@@ -113,7 +113,10 @@
     "menu_static": "靜態檔案",
     "menu_respond": "固定回應",
     "menu_php": "PHP 網站",
-    "more_actions": "更多動作"
+    "more_actions": "更多動作",
+    "indicator_raw_blocks": "原始區塊",
+    "raw_blocks_help": "此網站有 route 區塊或巢狀的 handle 區塊。請在原始編輯器中編輯;表單會保持它們不變。",
+    "raw_blocks_notice": "此網站有 route 區塊或巢狀的 handle 區塊。表單會保持它們原樣,只變更網站的位址、bind、匯入和 TLS。請在原始編輯器中編輯這些區塊。"
   },
   "add_proxy": {
     "title": "新增反向代理",

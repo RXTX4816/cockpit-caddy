@@ -113,7 +113,10 @@
     "menu_static": "Staattiset tiedostot",
     "menu_respond": "Kiinteä vastaus",
     "menu_php": "PHP-sivusto",
-    "more_actions": "Lisää toimintoja"
+    "more_actions": "Lisää toimintoja",
+    "indicator_raw_blocks": "Raakalohkot",
+    "raw_blocks_help": "Tällä sivustolla on route- tai sisäkkäisiä handle-lohkoja. Muokkaa niitä raakaeditorissa; lomake jättää ne ennalleen.",
+    "raw_blocks_notice": "Tällä sivustolla on route- tai sisäkkäisiä handle-lohkoja. Lomake jättää ne sellaisiksi kuin ne on kirjoitettu ja muuttaa vain sivuston osoitetta, bindiä, tuonteja ja TLS:ää. Muokkaa lohkoja raakaeditorissa."
   },
   "add_proxy": {
     "title": "Lisää reverse proxy",

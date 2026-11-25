@@ -156,6 +156,8 @@ export function useProxies() {
       return separateSnippetSettings({
         ...p,
         imports,
+        // The Tree tab (#333) and the badge for nested blocks (#348) read the site's own text.
+        siteText: lookup(confSiteBlocks),
         label: lookup(labels),
         tls,
         externalScheme: p.externalScheme ?? lookup(confExternal)?.scheme,

@@ -113,7 +113,10 @@
     "menu_static": "File statici",
     "menu_respond": "Risposta fissa",
     "menu_php": "Sito PHP",
-    "more_actions": "Altre azioni"
+    "more_actions": "Altre azioni",
+    "indicator_raw_blocks": "Blocchi grezzi",
+    "raw_blocks_help": "Questo sito ha blocchi route o handle annidati. Modificali nell'editor grezzo; il modulo li lascia come sono.",
+    "raw_blocks_notice": "Questo sito ha blocchi route o handle annidati. Il modulo li lascia come scritti e cambia solo indirizzo, bind, import e TLS del sito. Modifica i blocchi nell'editor grezzo."
   },
   "add_proxy": {
     "title": "Aggiungi reverse proxy",

@@ -113,7 +113,10 @@
     "menu_static": "Statické soubory",
     "menu_respond": "Pevná odpověď",
     "menu_php": "Web v PHP",
-    "more_actions": "Další akce"
+    "more_actions": "Další akce",
+    "indicator_raw_blocks": "Surové bloky",
+    "raw_blocks_help": "Tento web má bloky route nebo vnořené bloky handle. Upravujte je v surovém editoru; formulář je ponechá, jak jsou.",
+    "raw_blocks_notice": "Tento web má bloky route nebo vnořené bloky handle. Formulář je ponechá, jak jsou napsané, a mění jen adresu webu, bind, importy a TLS. Bloky upravujte v surovém editoru."
   },
   "add_proxy": {
     "title": "Přidat reverse proxy",

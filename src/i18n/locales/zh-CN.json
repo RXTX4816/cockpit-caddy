@@ -113,7 +113,10 @@
     "menu_static": "静态文件",
     "menu_respond": "固定响应",
     "menu_php": "PHP 站点",
-    "more_actions": "更多操作"
+    "more_actions": "更多操作",
+    "indicator_raw_blocks": "原始块",
+    "raw_blocks_help": "此站点有 route 块或嵌套的 handle 块。请在原始编辑器中编辑;表单会保持它们不变。",
+    "raw_blocks_notice": "此站点有 route 块或嵌套的 handle 块。表单会保持它们原样,只更改站点的地址、bind、导入和 TLS。请在原始编辑器中编辑这些块。"
   },
   "add_proxy": {
     "title": "添加反向代理",

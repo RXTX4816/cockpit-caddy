@@ -113,7 +113,10 @@
     "menu_static": "Statische Dateien",
     "menu_respond": "Feste Antwort",
     "menu_php": "PHP-Site",
-    "more_actions": "Weitere Aktionen"
+    "more_actions": "Weitere Aktionen",
+    "indicator_raw_blocks": "Rohe Blöcke",
+    "raw_blocks_help": "Diese Site hat route- oder verschachtelte handle-Blöcke. Bearbeiten Sie sie im Rohtext-Editor; das Formular lässt sie, wie sie sind.",
+    "raw_blocks_notice": "Diese Site hat route- oder verschachtelte handle-Blöcke. Das Formular lässt sie, wie sie geschrieben sind, und ändert nur Adresse, Bind, Importe und TLS der Site. Bearbeiten Sie die Blöcke im Rohtext-Editor."
   },
   "add_proxy": {
     "title": "Reverse Proxy hinzufügen",

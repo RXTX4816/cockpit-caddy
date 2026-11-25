@@ -15,6 +15,7 @@ import {
   ModalHeader,
   TextInput,
 } from "@patternfly/react-core";
+import { hasRawBlocks } from "./RawBlocksBadge";
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
@@ -162,6 +163,10 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
           <span style={{ color: "var(--pf-t--global--text--color--subtle)" }}>→</span>
           <Label isCompact color="grey">{targetUrl}</Label>
         </div>
+
+        {hasRawBlocks(proxy) && (
+          <Alert variant="info" isInline title={t("proxies.raw_blocks_notice")} style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }} />
+        )}
 
         <ProxyTabs
           state={tabState}

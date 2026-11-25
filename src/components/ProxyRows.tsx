@@ -6,6 +6,7 @@ import {
   DataListItemRow,
   Label,
 } from "@patternfly/react-core";
+import { RawBlocksBadge, hasRawBlocks } from "./RawBlocksBadge";
 import { useTranslation } from "react-i18next";
 import { TlsBadge } from "./TlsBadge";
 import { RowActions } from "./RowActions";
@@ -54,13 +55,14 @@ export function SiteBadges({ proxy }: { proxy: ProxyEntry }) {
   if (proxy.isNamedRoute) chips.push({ label: t("proxies.indicator_named_route"), color: "purple" });
   for (const name of proxy.imports ?? []) chips.push({ label: name, color: "blue" });
   const showTls = proxy.tls && !proxy.redirect;
-  if (!showTls && chips.length === 0) return null;
+  if (!showTls && chips.length === 0 && !hasRawBlocks(proxy)) return null;
   return (
     <span style={{ display: "inline-flex", gap: "0.2rem", flexWrap: "nowrap", verticalAlign: "middle" }}>
       {showTls && <TlsBadge proxy={proxy} />}
       {chips.map(c => (
         <Label key={c.label} isCompact color={c.color} variant="outline">{c.label}</Label>
       ))}
+      <RawBlocksBadge proxy={proxy} />
     </span>
   );
 }
