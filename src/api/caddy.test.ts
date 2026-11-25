@@ -52,7 +52,7 @@ import {
   CONF_D_IMPORT_LINE,
   parseConfTlsIssuerMap,
 } from "./caddy";
-import { parseSiteAcmeSettings, parseMatcherJson, isHostOnlyMatcher, buildRewriteHandler, parseRewriteFromHandle, patchServer, buildFilterEncoder, parseLogEncoder, PRIVATE_RANGES, buildForwardAuthHandler, extractForwardAuthFromProxy, forwardAuthResponseRoutes, buildBasicAuthHandler, buildEncodeHandler, buildFileServerHandlers, buildFileServerJson, parseFileServerOptions, parseTemplatesJson, buildRedirectHandler, parseEncodeOptionsJson, parseBasicAuthOptionsJson, parseHtmlRedirect } from "./caddyJsonModel";
+import { parseSiteAcmeSettings, applyServerExtras, parseServerExtras, parseMatcherJson, isHostOnlyMatcher, buildRewriteHandler, parseRewriteFromHandle, patchServer, buildFilterEncoder, parseLogEncoder, PRIVATE_RANGES, buildForwardAuthHandler, extractForwardAuthFromProxy, forwardAuthResponseRoutes, buildBasicAuthHandler, buildEncodeHandler, buildFileServerHandlers, buildFileServerJson, parseFileServerOptions, parseTemplatesJson, buildRedirectHandler, parseEncodeOptionsJson, parseBasicAuthOptionsJson, parseHtmlRedirect } from "./caddyJsonModel";
 import { proxiesToCaddyfile } from "./caddy";
 import { buildForwardAuthCaddyLines, buildMatcherCaddyLines, buildPhpFastcgiLines, buildRewriteCaddyLines, buildMatcherJson, hasAnyMatcher } from "./siteBlocks";
 import { buildLogCaddyLines } from "./globalOptions";
@@ -3516,10 +3516,10 @@ describe("buildGlobalOptionsPatch — #96 no duplicate directives on first save"
     expect(patched).not.toContain("old@example.com");
   });
 
-  it("leaves other unmanaged directives (e.g. admin off) untouched", () => {
-    const content = "{\n\tadmin off\n\temail old@example.com\n}\n";
+  it("leaves other unmanaged directives (e.g. storage_clean_interval) untouched", () => {
+    const content = "{\n\tstorage_clean_interval 12h\n\temail old@example.com\n}\n";
     const patched = buildGlobalOptionsPatch(content, { email: "new@example.com" });
-    expect(patched).toContain("admin off");
+    expect(patched).toContain("storage_clean_interval 12h");
     expect(patched).toContain("email new@example.com");
   });
 
@@ -5247,6 +5247,152 @@ describe("a site's own ACME email, CA and key type (#341)", () => {
     const config = mergeProxy({ apps: { http: { servers: {} } } } as CaddyConfig, entry);
     const policy = (config.apps?.tls?.automation?.policies ?? []).find(p => p.subjects?.some(s => s === "example.com"));
     expect(policy).toEqual({ subjects: ["example.com"], issuers: [{ module: "internal" }], key_type: "ed25519" });
+  });
+});
+
+describe("server options on the JSON side (#328)", () => {
+  const extras = { keepaliveInterval: "30s", keepaliveIdle: "1m", strictSniHost: true, logCredentials: true, enableFullDuplex: true };
+
+  it("applyServerExtras writes the Caddy JSON fields and parseServerExtras reads them back", () => {
+    const server = { listen: [":8443"], routes: [] } as CaddyServer;
+    applyServerExtras(server, extras);
+    expect(server).toMatchObject({
+      keepalive_interval: "30s", keepalive_idle: "1m", strict_sni_host: true, enable_full_duplex: true,
+      logs: { should_log_credentials: true },
+    });
+    expect(parseServerExtras(server)).toEqual(extras);
+  });
+
+  it("reads the nanosecond durations Caddy returns", () => {
+    const server = { listen: [":8443"], routes: [], keepalive_interval: 30e9, keepalive_idle: 90e9 } as unknown as CaddyServer;
+    expect(parseServerExtras(server)).toEqual({ keepaliveInterval: "30s", keepaliveIdle: "90s" });
+  });
+
+  it("keeps the access log's logger name and removes the options that were cleared", () => {
+    const server = { listen: [":8443"], routes: [], logs: { default_logger_name: "access" } } as unknown as CaddyServer;
+    applyServerExtras(server, extras);
+    expect((server as Record<string, unknown>).logs).toEqual({ default_logger_name: "access", should_log_credentials: true });
+    applyServerExtras(server, undefined);
+    expect(server).toEqual({ listen: [":8443"], routes: [], logs: { default_logger_name: "access" } });
+  });
+
+  it("reads the options of a server into its proxies", () => {
+    const config = {
+      apps: { http: { servers: { srv0: {
+        listen: [":8443"], strict_sni_host: true,
+        routes: [{ handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:9000" }] }] }],
+      } } } },
+    } as unknown as CaddyConfig;
+    expect(parseProxies(config)[0].serverExtras).toEqual({ strictSniHost: true });
+  });
+});
+
+describe("TLS and listener global options (#329)", () => {
+  const all = {
+    autoHttps: "disable_redirects", defaultSni: "example.com", keyType: "p256", ocspStaplingOff: true,
+    preferredChains: { mode: "root_common_name" as const, names: ["ISRG Root X1", "Other Root"] },
+    certIssuer: "internal", defaultBind: ["127.0.0.1", "[::1]"],
+  };
+
+  it("writes every option and reads them back", () => {
+    const patched = buildGlobalOptionsPatch("", all);
+    for (const line of ["auto_https disable_redirects", "default_sni example.com", "key_type p256", "ocsp_stapling off", "cert_issuer internal", "default_bind 127.0.0.1 [::1]"]) {
+      expect(patched).toContain(line);
+    }
+    expect(patched).toContain('root_common_name "ISRG Root X1" "Other Root"');
+    expect(parseGlobalOptions(patched)).toEqual(all);
+  });
+
+  it("writes preferred_chains smallest on one line", () => {
+    const patched = buildGlobalOptionsPatch("", { preferredChains: { mode: "smallest" } });
+    expect(patched).toContain("preferred_chains smallest");
+    expect(parseGlobalOptions(patched).preferredChains).toEqual({ mode: "smallest" });
+  });
+
+  it("writes local_certs, but not next to an explicit cert_issuer, which Caddy rejects", () => {
+    expect(buildGlobalOptionsPatch("", { localCerts: true })).toContain("local_certs");
+    expect(buildGlobalOptionsPatch("", { localCerts: true, certIssuer: "acme" })).not.toContain("local_certs");
+  });
+
+  it("keeps the body of a cert_issuer it does not know as written", () => {
+    const src = "{\n\tcert_issuer zerossl {\n\t\temail me@example.com\n\t}\n}\n";
+    const opts = parseGlobalOptions(src);
+    expect(opts.certIssuer).toBe("zerossl");
+    expect(opts.certIssuerBody).toEqual(["email me@example.com"]);
+    const patched = buildGlobalOptionsPatch(src, opts);
+    expect(patched.match(/cert_issuer/g)).toHaveLength(1);
+    expect(parseGlobalOptions(patched)).toEqual(opts);
+  });
+
+  it("moves a hand-written option outside the managed section into it instead of duplicating it", () => {
+    const src = `{\n\tauto_https off\n${OPTS_BEGIN}\n\temail me@example.com\n${OPTS_END}\n}\n`;
+    const opts = parseGlobalOptions(src);
+    expect(opts.autoHttps).toBe("off");
+    const patched = buildGlobalOptionsPatch(src, { ...opts, keyType: "p384" });
+    expect(patched.match(/auto_https/g)).toHaveLength(1);
+    expect(parseGlobalOptions(patched)).toMatchObject({ autoHttps: "off", keyType: "p384", email: "me@example.com" });
+  });
+
+  it("leaves a hand-written admin block it cannot represent where it is", () => {
+    const src = `{\n\tadmin localhost:2019 {\n\t\tconfig {\n\t\t\tpersist off\n\t\t}\n\t}\n${OPTS_BEGIN}\n\temail me@example.com\n${OPTS_END}\n}\n`;
+    const opts = parseGlobalOptions(src);
+    expect(opts.adminAddress).toBeUndefined();
+    const patched = buildGlobalOptionsPatch(src, opts);
+    expect(patched).toContain("persist off");
+    expect(patched.match(/admin/g)).toHaveLength(1);
+  });
+
+  it("leaves several cert_issuer fallbacks where they are", () => {
+    const src = `{\n\tcert_issuer acme\n\tcert_issuer internal\n${OPTS_BEGIN}\n\temail me@example.com\n${OPTS_END}\n}\n`;
+    expect(parseGlobalOptions(src).certIssuer).toBeUndefined();
+    const patched = buildGlobalOptionsPatch(src, parseGlobalOptions(src));
+    expect(patched.match(/cert_issuer/g)).toHaveLength(2);
+  });
+
+  it("quotes a value with a trailing backslash so Caddy reads it back verbatim", () => {
+    const patched = buildGlobalOptionsPatch("", { preferredChains: { mode: "any_common_name", names: ["a b\\"] } });
+    expect(patched).toContain("any_common_name `a b\\`");
+  });
+});
+
+describe("the admin global option (#330)", () => {
+  it("round-trips the stock socket address and leaves it as written", () => {
+    const src = '{\n\tadmin "unix//run/caddy/admin.socket"\n}\n\nimport /etc/caddy/conf.d/*\n';
+    const opts = parseGlobalOptions(src);
+    expect(opts.adminAddress).toBe('"unix//run/caddy/admin.socket"');
+    const patched = buildGlobalOptionsPatch(src, opts);
+    expect(patched.match(/admin /g)).toHaveLength(1);
+    expect(patched).toContain('admin "unix//run/caddy/admin.socket"');
+  });
+
+  it("writes the address, origins and enforce_origin and reads them back", () => {
+    const want = { adminAddress: "127.0.0.1:2019", adminOrigins: ["localhost:2019", "admin.example.com"], adminEnforceOrigin: true };
+    const patched = buildGlobalOptionsPatch("", want);
+    expect(patched).toContain("admin 127.0.0.1:2019 {");
+    expect(patched).toContain("origins localhost:2019 admin.example.com");
+    expect(patched).toContain("enforce_origin");
+    expect(parseGlobalOptions(patched)).toEqual(want);
+  });
+
+  it("writes and reads admin off", () => {
+    const patched = buildGlobalOptionsPatch("", { adminOff: true });
+    expect(patched).toContain("admin off");
+    expect(parseGlobalOptions(patched)).toEqual({ adminOff: true });
+  });
+});
+
+describe("metrics per_host (#342)", () => {
+  it("writes the metrics option with per_host and reads it back", () => {
+    const patched = buildGlobalOptionsPatch("", { metricsEnabled: true, metricsPerHost: true });
+    expect(patched).toContain("metrics {");
+    expect(patched).toContain("per_host");
+    expect(parseGlobalOptions(patched)).toMatchObject({ metricsEnabled: true, metricsPerHost: true });
+  });
+
+  it("keeps a plain metrics line when per_host is off", () => {
+    const patched = buildGlobalOptionsPatch("", { metricsEnabled: true });
+    expect(patched).toMatch(/^\s*metrics$/m);
+    expect(parseGlobalOptions(patched).metricsPerHost).toBeUndefined();
   });
 });
 

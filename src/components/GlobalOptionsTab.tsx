@@ -24,6 +24,8 @@ import { readGlobalOptions, syncGlobalOptions, reloadCaddy, fetchStorageInfo, ch
 import type { DnsChallengeConfig, GlobalOptions, StorageInfo } from "../api";
 import { DnsChallengeFields, dnsDraftFromConfig, dnsDraftToConfig, validateDnsDraft, type DnsDraft } from "./DnsChallengeFields";
 import { CertLifetimeSelect } from "./CertLifetimeSelect";
+import { GlobalTlsFields, globalTlsFromValues, globalTlsToValues, type GlobalTlsValues } from "./GlobalTlsFields";
+import { GlobalAdminFields, globalAdminFromValues, globalAdminToValues, type GlobalAdminValues } from "./GlobalAdminFields";
 import { AccessLogSection, type AccessLogValues, accessLogConfigToValues, accessLogValuesToConfig, validateFieldFilters } from "./AccessLogSection";
 
 function isDuration(v: string): boolean {
@@ -83,6 +85,8 @@ export function GlobalOptionsTab() {
   const [onDemandBurst, setOnDemandBurst] = useState("");
   const [internalCertLifetime, setInternalCertLifetime] = useState("");
   const [renewalWindowRatio, setRenewalWindowRatio] = useState("");
+  const [globalTls, setGlobalTls] = useState<GlobalTlsValues>(globalTlsToValues({}));
+  const [globalAdmin, setGlobalAdmin] = useState<GlobalAdminValues>(globalAdminToValues({}));
   const [storagePath, setStoragePath] = useState("");
   const [storageInfo, setStorageInfo] = useState<StorageInfo | null>(null);
   const [storageInfoError, setStorageInfoError] = useState<string | null>(null);
@@ -90,6 +94,7 @@ export function GlobalOptionsTab() {
   const [metricsListenAddress, setMetricsListenAddress] = useState("");
   const [metricsPath, setMetricsPath] = useState("");
   const [metricsPlainFormat, setMetricsPlainFormat] = useState(false);
+  const [metricsPerHost, setMetricsPerHost] = useState(false);
   const [runtimeLog, setRuntimeLog] = useState<AccessLogValues>(accessLogConfigToValues(undefined));
   const [trustedProxiesEnabled, setTrustedProxiesEnabled] = useState(false);
   const [trustedProxiesRanges, setTrustedProxiesRanges] = useState("");
@@ -143,12 +148,15 @@ export function GlobalOptionsTab() {
         setOnDemandBurst(opts.onDemandBurst != null ? String(opts.onDemandBurst) : "");
         setInternalCertLifetime(opts.internalCertLifetime ?? "");
         setRenewalWindowRatio(opts.renewalWindowRatio != null ? String(opts.renewalWindowRatio) : "");
+        setGlobalTls(globalTlsToValues(opts));
+        setGlobalAdmin(globalAdminToValues(opts));
         setStoragePath(opts.storagePath ?? "");
         loadStorageInfo(opts.storagePath);
         setMetricsEnabled(opts.metricsEnabled ?? false);
         setMetricsListenAddress(opts.metricsListenAddress ?? "");
         setMetricsPath(opts.metricsPath ?? "");
         setMetricsPlainFormat(opts.metricsPlainFormat ?? false);
+        setMetricsPerHost(opts.metricsPerHost ?? false);
         setRuntimeLog(accessLogConfigToValues(opts.runtimeLog));
         setTrustedProxiesEnabled(!!opts.trustedProxies);
         setTrustedProxiesRanges(opts.trustedProxies?.ranges.join(" ") ?? "");
@@ -619,6 +627,20 @@ export function GlobalOptionsTab() {
         <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
 
         <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+          {t("global_opts.tls_advanced_title")}
+        </Title>
+        <GlobalTlsFields value={globalTls} onChange={setGlobalTls} isDisabled={isConfirming} />
+
+        <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
+
+        <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+          {t("global_opts.admin_title")}
+        </Title>
+        <GlobalAdminFields value={globalAdmin} onChange={setGlobalAdmin} isDisabled={isConfirming} />
+
+        <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
+
+        <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
           {t("global_opts.storage_title")}
         </Title>
 
@@ -735,6 +757,17 @@ export function GlobalOptionsTab() {
                 description={t("global_opts.metrics_plain_format_help")}
                 isChecked={metricsPlainFormat}
                 onChange={(_e, v) => setMetricsPlainFormat(v)}
+                isDisabled={isConfirming}
+              />
+            </FormGroup>
+
+            <FormGroup fieldId="go-metrics-per-host">
+              <Checkbox
+                id="go-metrics-per-host"
+                label={t("global_opts.metrics_per_host")}
+                description={t("global_opts.metrics_per_host_help")}
+                isChecked={metricsPerHost}
+                onChange={(_e, v) => setMetricsPerHost(v)}
                 isDisabled={isConfirming}
               />
             </FormGroup>
@@ -931,11 +964,14 @@ export function GlobalOptionsTab() {
                     onDemandBurst: onDemandEnabled && onDemandBurst.trim() ? parseInt(onDemandBurst, 10) : undefined,
                     internalCertLifetime: internalCertLifetime.trim() || undefined,
                     renewalWindowRatio: renewalWindowRatio.trim() ? Number(renewalWindowRatio.trim()) : undefined,
+                    ...globalTlsFromValues(globalTls),
+                    ...globalAdminFromValues(globalAdmin),
                     storagePath: storagePath.trim() || undefined,
                     metricsEnabled: metricsEnabled || undefined,
                     metricsListenAddress: metricsEnabled ? (metricsListenAddress.trim() || undefined) : undefined,
                     metricsPath: metricsEnabled ? (metricsPath.trim() || undefined) : undefined,
                     metricsPlainFormat: metricsEnabled ? (metricsPlainFormat || undefined) : undefined,
+                    metricsPerHost: metricsEnabled ? (metricsPerHost || undefined) : undefined,
                     runtimeLog: accessLogValuesToConfig(runtimeLog),
                     trustedProxies: trustedProxiesEnabled && trustedProxiesRanges.trim() ? {
                       ranges: trustedProxiesRanges.trim().split(/\s+/),

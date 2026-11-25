@@ -114,6 +114,20 @@ export interface EncodeOptions {
   matchHeaders?: Array<{ name: string; value: string }>;
 }
 
+/** Per-listener `servers` options beyond the timeouts and HTTP/3 switch (#328). */
+export interface ServerExtras {
+  /** `keepalive_interval`: how often TCP keep-alive probes are sent (Go duration). */
+  keepaliveInterval?: string;
+  /** `keepalive_idle`: how long a connection is idle before the first probe (Go duration). */
+  keepaliveIdle?: string;
+  /** `strict_sni_host`: reject requests whose Host header differs from the TLS SNI name. */
+  strictSniHost?: boolean;
+  /** `log_credentials`: write the Authorization and Cookie headers to the access log. */
+  logCredentials?: boolean;
+  /** `enable_full_duplex`: let HTTP/1 handlers read the body while they write the response. */
+  enableFullDuplex?: boolean;
+}
+
 /** A user-defined Caddy server with explicit listen addresses and multiple routes. */
 export interface ServerDef {
   key: string;
@@ -134,6 +148,7 @@ export interface ServerDef {
   /** When true, explicitly restricts this server to HTTP/1.1 and HTTP/2 (writes
    *  `protocols h1 h2`), opting out of Caddy's default HTTP/3 (QUIC) support (#51). */
   disableHttp3?: boolean;
+  serverExtras?: ServerExtras;
 }
 
 export interface TlsAdvancedConfig {
@@ -608,6 +623,8 @@ export interface ProxyEntry {
   /** When true, explicitly restricts this server to HTTP/1.1 and HTTP/2 (writes
    *  `protocols h1 h2`), opting out of Caddy's default HTTP/3 (QUIC) support (#51). */
   disableHttp3?: boolean;
+  /** Keep-alive, SNI, credential logging and full duplex for this listener (#328). */
+  serverExtras?: ServerExtras;
   /** Maximum allowed request body size for this route in bytes (#154) — same
    *  bytes-not-human-string convention as maxHeaderBytes. Requests over this size are
    *  rejected before reaching the upstream/handler. Not applicable to redirect/

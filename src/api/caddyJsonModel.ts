@@ -793,6 +793,7 @@ export function parseRouteToEntry(
   // #51 — Caddy enables h1/h2/h3 by default; an explicit protocols list omitting h3 is
   // how a user opted out of HTTP/3.
   const disableHttp3 = Array.isArray(server.protocols) && !server.protocols.includes("h3") || undefined;
+  const serverExtras = parseServerExtras(server);
 
   // Unwrap subroute handlers emitted by Caddy's Caddyfile adapter.
   // When Caddy reloads from Caddyfile, `handle { ... }` blocks become:
@@ -830,7 +831,7 @@ export function parseRouteToEntry(
       phpFastcgi,
       requestBodyMaxSize: parseRequestBodyMaxSize(effectiveHandles),
       matchers,
-      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, accessLog,
+      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, serverExtras, accessLog,
       errorHandlers: parseErrorHandlers(server),
       tlsAdvanced: phpTlsPolicy ? parseTlsAdvanced(phpTlsPolicy, automationPolicies, tlsSubjectHosts(externalHost)[0]) : parseSiteAcmeSettings(automationPolicies, tlsSubjectHosts(externalHost)[0]),
       mtls: phpTlsPolicy ? parseMtls(phpTlsPolicy) : undefined,
@@ -877,7 +878,7 @@ export function parseRouteToEntry(
       namedServerKey,
       redirect: { to: jsonPlaceholderToCaddy(locationHeader), code },
       matchers,
-      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, accessLog,
+      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, serverExtras, accessLog,
       errorHandlers: parseErrorHandlers(server),
     };
   }
@@ -901,7 +902,7 @@ export function parseRouteToEntry(
         close: staticResp.close || undefined,
       },
       matchers,
-      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, accessLog,
+      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, serverExtras, accessLog,
       errorHandlers: parseErrorHandlers(server),
     };
   }
@@ -948,7 +949,7 @@ export function parseRouteToEntry(
       basicAuthOptions: fsBasicAuth?.length ? fsBasicAuthOptions : undefined,
       responseHeaders: fsResponseHeaders.length ? fsResponseHeaders : undefined,
       matchers,
-      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, accessLog,
+      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, serverExtras, accessLog,
       errorHandlers: parseErrorHandlers(server),
       tlsAdvanced: fsTlsPolicy ? parseTlsAdvanced(fsTlsPolicy, automationPolicies, tlsSubjectHosts(externalHost)[0]) : parseSiteAcmeSettings(automationPolicies, tlsSubjectHosts(externalHost)[0]),
       mtls: fsTlsPolicy ? parseMtls(fsTlsPolicy) : undefined,
@@ -973,7 +974,7 @@ export function parseRouteToEntry(
       isNamedRoute: true,
       namedRouteName: invokeHandle.name,
       matchers,
-      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, accessLog,
+      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, serverExtras, accessLog,
     };
   }
 
@@ -1079,7 +1080,7 @@ export function parseRouteToEntry(
     lbRetry,
     matchers,
     handlePath,
-    serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, accessLog,
+    serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, serverExtras, accessLog,
     errorHandlers: parseErrorHandlers(server),
     replaceUpstreamErrors: reraisesUpstreamErrors(rp) || undefined,
     forwardAuth,
@@ -1115,6 +1116,7 @@ export function parseProxies(config: CaddyConfig, serverDefs?: import("./types")
     const serverWriteTimeout = parseDuration(server.write_timeout);
     const serverIdleTimeout = parseDuration(server.idle_timeout);
     const maxHeaderBytes = typeof server.max_header_bytes === "number" ? server.max_header_bytes : undefined;
+    const serverExtras = parseServerExtras(server);
 
     // Access log — look up logger by name in config.logging.logs
     const loggerName = (server.logs as { default_logger_name?: string } | undefined)?.default_logger_name;
@@ -1186,7 +1188,7 @@ export function parseProxies(config: CaddyConfig, serverDefs?: import("./types")
         phpFastcgi: phpFastcgiGroup,
         requestBodyMaxSize: parseRequestBodyMaxSize(contentRoutes.flatMap(r => (r.handle ?? []) as AnyHandler[])),
         serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
-        disableHttp3: phpDisableHttp3, accessLog,
+        disableHttp3: phpDisableHttp3, serverExtras, accessLog,
         errorHandlers: parseErrorHandlers(server),
       });
       continue;
@@ -1459,7 +1461,43 @@ export function buildReverseProxyHandler(
 }
 
 
-export type TimeoutProxy = Pick<ProxyEntry, "serverReadTimeout" | "serverReadHeaderTimeout" | "serverWriteTimeout" | "serverIdleTimeout" | "maxHeaderBytes" | "disableHttp3">;
+/** The per-listener options of #328, read from a server object. */
+export function parseServerExtras(server: CaddyServer): import("./types").ServerExtras | undefined {
+  const s = server as Record<string, unknown>;
+  const logs = s.logs as { should_log_credentials?: boolean } | undefined;
+  const extras: import("./types").ServerExtras = {
+    keepaliveInterval: parseDuration(s.keepalive_interval) || undefined,
+    keepaliveIdle: parseDuration(s.keepalive_idle) || undefined,
+    strictSniHost: s.strict_sni_host === true || undefined,
+    logCredentials: logs?.should_log_credentials === true || undefined,
+    enableFullDuplex: s.enable_full_duplex === true || undefined,
+  };
+  for (const k of Object.keys(extras) as Array<keyof typeof extras>) if (extras[k] == null) delete extras[k];
+  return Object.keys(extras).length ? extras : undefined;
+}
+
+
+/** Writes the options of #328 onto a server object, removing the ones that are not set. */
+export function applyServerExtras(server: CaddyServer, extras: import("./types").ServerExtras | undefined): void {
+  const s = server as Record<string, unknown>;
+  if (extras?.keepaliveInterval) s.keepalive_interval = extras.keepaliveInterval;
+  else delete s.keepalive_interval;
+  if (extras?.keepaliveIdle) s.keepalive_idle = extras.keepaliveIdle;
+  else delete s.keepalive_idle;
+  if (extras?.strictSniHost) s.strict_sni_host = true;
+  else delete s.strict_sni_host;
+  if (extras?.enableFullDuplex) s.enable_full_duplex = true;
+  else delete s.enable_full_duplex;
+  // `logs` also holds the access log's logger name; only the credentials flag is ours.
+  const logs = { ...(s.logs as Record<string, unknown> | undefined) };
+  if (extras?.logCredentials) logs.should_log_credentials = true;
+  else delete logs.should_log_credentials;
+  if (Object.keys(logs).length) s.logs = logs;
+  else delete s.logs;
+}
+
+
+export type TimeoutProxy = Pick<ProxyEntry, "serverReadTimeout" | "serverReadHeaderTimeout" | "serverWriteTimeout" | "serverIdleTimeout" | "maxHeaderBytes" | "disableHttp3" | "serverExtras">;
 
 
 export function applyServerTimeouts(server: CaddyServer, proxy: TimeoutProxy): CaddyServer {
@@ -1476,6 +1514,7 @@ export function applyServerTimeouts(server: CaddyServer, proxy: TimeoutProxy): C
   // #51 — Caddy enables h1/h2/h3 by default; explicitly list h1+h2 only to opt out of h3.
   if (proxy.disableHttp3) server.protocols = ["h1", "h2"];
   else delete server.protocols;
+  applyServerExtras(server, proxy.serverExtras);
   return server;
 }
 
@@ -2414,6 +2453,7 @@ export function mergeNamedServer(
     const loggerName = `cockpit-server-${def.key}`;
     (server as Record<string, unknown>).logs = { default_logger_name: loggerName };
   }
+  applyServerExtras(server, def.serverExtras);
 
   if (def.errorHandlers?.length) {
     const built = buildErrorRoutes(def.errorHandlers);
