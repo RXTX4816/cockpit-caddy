@@ -272,15 +272,30 @@ export function buildRequestBodyHandler(maxSize: number): CaddyHandler {
 }
 
 
-export function buildBasicAuthHandler(accounts: { username: string; passwordHash: string }[]): CaddyHandler {
+export function buildBasicAuthHandler(accounts: { username: string; passwordHash: string }[], options?: import("./types").BasicAuthOptions): CaddyHandler {
   return {
     handler: "authentication",
     providers: {
       http_basic: {
         accounts: accounts.map(a => ({ username: a.username, password: a.passwordHash })),
+        ...(options?.algorithm ? { hash: { algorithm: options.algorithm } } : {}),
+        ...(options?.realm ? { realm: options.realm } : {}),
       },
     },
   };
+}
+
+
+/** The realm and the hash algorithm, when they differ from Caddy's defaults (#337). */
+export function parseBasicAuthOptionsJson(h: AnyHandler): import("./types").BasicAuthOptions | undefined {
+  const providers = (h as { providers?: Record<string, unknown> }).providers;
+  const basic = providers?.["http_basic"] as { realm?: string; hash?: { algorithm?: string } } | undefined;
+  const options: import("./types").BasicAuthOptions = {
+    realm: basic?.realm || undefined,
+    algorithm: basic?.hash?.algorithm === "argon2id" ? "argon2id" : undefined,
+  };
+  for (const k of Object.keys(options) as Array<keyof typeof options>) if (options[k] == null) delete options[k];
+  return Object.keys(options).length ? options : undefined;
 }
 
 
@@ -687,6 +702,7 @@ export function parseRouteToEntry(
     const fsCompress = effectiveHandles.some(h => h.handler === "encode");
     const fsAuthHandle = effectiveHandles.find(h => h.handler === "authentication");
     const fsBasicAuth = fsAuthHandle ? parseBasicAuthJson(fsAuthHandle) : undefined;
+    const fsBasicAuthOptions = fsAuthHandle ? parseBasicAuthOptionsJson(fsAuthHandle) : undefined;
     // The Caddyfile adapter emits one headers handler per `header` line, so read them all.
     const fsResponseHeaders = effectiveHandles.flatMap(parseResponseHeadersJson);
     const fsTls = serverHasTls(server, automationPolicies, externalHost);
@@ -715,6 +731,7 @@ export function parseRouteToEntry(
       requestBodyMaxSize: parseRequestBodyMaxSize(effectiveHandles),
       compress: fsCompress || undefined,
       basicAuth: fsBasicAuth?.length ? fsBasicAuth : undefined,
+      basicAuthOptions: fsBasicAuth?.length ? fsBasicAuthOptions : undefined,
       responseHeaders: fsResponseHeaders.length ? fsResponseHeaders : undefined,
       matchers,
       serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, accessLog,
@@ -777,6 +794,7 @@ export function parseRouteToEntry(
   const compress = effectiveHandles.some(h => h.handler === "encode");
   const authHandle = effectiveHandles.find(h => h.handler === "authentication");
   const basicAuth = authHandle ? parseBasicAuthJson(authHandle) : undefined;
+  const basicAuthOptions = authHandle ? parseBasicAuthOptionsJson(authHandle) : undefined;
   const rewriteHandle = effectiveHandles.find(h => h.handler === "rewrite");
   const rewrite = rewriteHandle ? parseRewriteFromHandle(rewriteHandle) : undefined;
   const responseHeadersParsed = effectiveHandles.flatMap(parseResponseHeadersJson);
@@ -811,6 +829,7 @@ export function parseRouteToEntry(
     compress: compress || undefined,
     requestBodyMaxSize: parseRequestBodyMaxSize(effectiveHandles),
     basicAuth: basicAuth?.length ? basicAuth : undefined,
+    basicAuthOptions: basicAuth?.length ? basicAuthOptions : undefined,
     dialTimeout: dialTimeout || undefined,
     responseHeaderTimeout: responseHeaderTimeout || undefined,
     rewrite: finalRewrite,
@@ -1562,7 +1581,7 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
     const fsHandles: CaddyHandler[] = [];
     if (proxy.requestBodyMaxSize) fsHandles.push(buildRequestBodyHandler(proxy.requestBodyMaxSize));
     if (proxy.compress) fsHandles.push(buildEncodeHandler());
-    if (proxy.basicAuth?.length) fsHandles.push(buildBasicAuthHandler(proxy.basicAuth));
+    if (proxy.basicAuth?.length) fsHandles.push(buildBasicAuthHandler(proxy.basicAuth, proxy.basicAuthOptions));
     if (proxy.responseHeaders?.length) fsHandles.push(buildResponseHeadersHandler(proxy.responseHeaders));
     fsHandles.push(buildFileServerJson(proxy.fileServer));
     const route: CaddyRoute = { handle: withSpaFallback(proxy.fileServer, fsHandles), terminal: isTerminal };
@@ -1578,7 +1597,7 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
   const handlePathRwSingle = proxy.handlePath ? buildHandlePathRewriteJson(proxy.matchers) : undefined;
   if (handlePathRwSingle) handles.push(handlePathRwSingle);
   if (proxy.compress) handles.push(buildEncodeHandler());
-  if (proxy.basicAuth?.length) handles.push(buildBasicAuthHandler(proxy.basicAuth));
+  if (proxy.basicAuth?.length) handles.push(buildBasicAuthHandler(proxy.basicAuth, proxy.basicAuthOptions));
   if (proxy.responseHeaders?.length) handles.push(buildResponseHeadersHandler(proxy.responseHeaders));
   if (proxy.rewrite) handles.push(buildRewriteHandler(proxy.rewrite));
   if (proxy.forwardAuth) {
@@ -1635,7 +1654,7 @@ export function patchHandles(handles: CaddyHandler[], proxy: ProxyEntry): CaddyH
     const fsHandles: CaddyHandler[] = [];
     if (proxy.requestBodyMaxSize) fsHandles.push(buildRequestBodyHandler(proxy.requestBodyMaxSize));
     if (proxy.compress) fsHandles.push(buildEncodeHandler());
-    if (proxy.basicAuth?.length) fsHandles.push(buildBasicAuthHandler(proxy.basicAuth));
+    if (proxy.basicAuth?.length) fsHandles.push(buildBasicAuthHandler(proxy.basicAuth, proxy.basicAuthOptions));
     if (proxy.responseHeaders?.length) fsHandles.push(buildResponseHeadersHandler(proxy.responseHeaders));
     fsHandles.push(buildFileServerJson(proxy.fileServer));
     return withSpaFallback(proxy.fileServer, fsHandles);
@@ -1679,7 +1698,7 @@ export function patchHandles(handles: CaddyHandler[], proxy: ProxyEntry): CaddyH
   const prefix: CaddyHandler[] = [];
   if (proxy.requestBodyMaxSize) prefix.push(buildRequestBodyHandler(proxy.requestBodyMaxSize));
   if (proxy.compress) prefix.push(buildEncodeHandler());
-  if (proxy.basicAuth?.length) prefix.push(buildBasicAuthHandler(proxy.basicAuth));
+  if (proxy.basicAuth?.length) prefix.push(buildBasicAuthHandler(proxy.basicAuth, proxy.basicAuthOptions));
   if (proxy.responseHeaders?.length) prefix.push(buildResponseHeadersHandler(proxy.responseHeaders));
   if (proxy.rewrite) prefix.push(buildRewriteHandler(proxy.rewrite));
   if (proxy.forwardAuth) {
@@ -2054,7 +2073,7 @@ export function buildRouteHandlesForEntry(proxy: ProxyEntry): CaddyHandler[] {
     const handles: CaddyHandler[] = [];
     if (handlePathRw) handles.push(handlePathRw);
     if (proxy.compress) handles.push(buildEncodeHandler());
-    if (proxy.basicAuth?.length) handles.push(buildBasicAuthHandler(proxy.basicAuth));
+    if (proxy.basicAuth?.length) handles.push(buildBasicAuthHandler(proxy.basicAuth, proxy.basicAuthOptions));
     if (proxy.responseHeaders?.length) handles.push(buildResponseHeadersHandler(proxy.responseHeaders));
     handles.push(buildFileServerJson(proxy.fileServer));
     return withSpaFallback(proxy.fileServer, handles);
@@ -2062,7 +2081,7 @@ export function buildRouteHandlesForEntry(proxy: ProxyEntry): CaddyHandler[] {
   const handles: CaddyHandler[] = [];
   if (handlePathRw) handles.push(handlePathRw);
   if (proxy.compress) handles.push(buildEncodeHandler());
-  if (proxy.basicAuth?.length) handles.push(buildBasicAuthHandler(proxy.basicAuth));
+  if (proxy.basicAuth?.length) handles.push(buildBasicAuthHandler(proxy.basicAuth, proxy.basicAuthOptions));
   if (proxy.responseHeaders?.length) handles.push(buildResponseHeadersHandler(proxy.responseHeaders));
   if (proxy.rewrite) handles.push(buildRewriteHandler(proxy.rewrite));
   if (proxy.forwardAuth) {

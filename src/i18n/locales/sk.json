@@ -260,7 +260,12 @@
     "field_password": "Heslo",
     "field_password_keep": "Ponechajte prázdne na zachovanie súčasného",
     "add_button": "Pridať účet",
-    "remove_button": "Odstrániť účet"
+    "remove_button": "Odstrániť účet",
+    "realm": "Realm",
+    "algorithm": "Hashovací algoritmus",
+    "algorithm_default": "bcrypt (predvolený)",
+    "algorithm_argon2id": "argon2id (silnejší)",
+    "algorithm_mismatch": "Účty, ktoré si ponechávajú heslo, majú hash vytvorený druhým algoritmom. Zadajte ich heslá znova."
   },
   "transport": {
     "heading": "Časové limity upstreamu",

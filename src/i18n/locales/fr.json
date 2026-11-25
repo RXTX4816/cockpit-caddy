@@ -260,7 +260,12 @@
     "field_password": "Mot de passe",
     "field_password_keep": "Laisser vide pour conserver l'existant",
     "add_button": "Ajouter un compte",
-    "remove_button": "Supprimer le compte"
+    "remove_button": "Supprimer le compte",
+    "realm": "Realm",
+    "algorithm": "Algorithme de hachage",
+    "algorithm_default": "bcrypt (par défaut)",
+    "algorithm_argon2id": "argon2id (plus robuste)",
+    "algorithm_mismatch": "Les comptes qui gardent leur mot de passe ont encore un hash de l'autre algorithme. Saisissez à nouveau leurs mots de passe."
   },
   "transport": {
     "heading": "Délais upstream",

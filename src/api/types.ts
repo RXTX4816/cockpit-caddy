@@ -83,6 +83,12 @@ export type RouteMatchFields = Omit<RouteMatch, "not" | "expression">;
 // ---------------------------------------------------------------------------
 
 /** A user-defined Caddy server with explicit listen addresses and multiple routes. */
+/** `basic_auth [<algorithm> [<realm>]]`: unset means Caddy's bcrypt and its default realm. */
+export interface BasicAuthOptions {
+  realm?: string;
+  algorithm?: "bcrypt" | "argon2id";
+}
+
 export interface ServerDef {
   key: string;
   name: string;
@@ -433,6 +439,8 @@ export interface ProxyEntry {
   dialTimeout?: string;
   responseHeaderTimeout?: string;
   basicAuth?: { username: string; passwordHash: string }[];
+  /** The realm and hash algorithm of `basic_auth` (#337). */
+  basicAuthOptions?: BasicAuthOptions;
   /** Additional upstreams beyond the primary targetHost:targetPort */
   extraUpstreams?: Array<{ host: string; port: number }>;
   /** Load-balancing policy when multiple upstreams are configured */

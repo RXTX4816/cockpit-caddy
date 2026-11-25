@@ -247,8 +247,15 @@ export function buildForwardAuthCaddyLines(fa: import("./types").ForwardAuthConf
 }
 
 
-export function buildBasicAuthCaddyLines(accounts: { username: string; passwordHash: string }[]): string[] {
-  return ["\tbasic_auth {", ...accounts.map(a => `\t\t${a.username} ${a.passwordHash}`), "\t}"];
+/** `basic_auth [<algorithm> [<realm>]] {`: a realm needs the algorithm before it, so bcrypt is spelled out then. */
+export function basicAuthOpenLine(indent: string, options?: import("./types").BasicAuthOptions): string {
+  const algorithm = options?.algorithm ?? (options?.realm ? "bcrypt" : undefined);
+  return `${indent}basic_auth${algorithm ? ` ${algorithm}` : ""}${options?.realm ? ` ${caddyQuote(options.realm)}` : ""} {`;
+}
+
+
+export function buildBasicAuthCaddyLines(accounts: { username: string; passwordHash: string }[], options?: import("./types").BasicAuthOptions): string[] {
+  return [basicAuthOpenLine("\t", options), ...accounts.map(a => `\t\t${a.username} ${a.passwordHash}`), "\t}"];
 }
 
 
@@ -664,7 +671,7 @@ export function buildRouteHandlerLines(p: ProxyEntry, indent: string): string[] 
   } else if (p.fileServer) {
     if (p.compress) lines.push(`${indent}encode gzip zstd`);
     if (p.basicAuth?.length) {
-      lines.push(`${indent}basic_auth {`);
+      lines.push(basicAuthOpenLine(indent, p.basicAuthOptions));
       for (const a of p.basicAuth) lines.push(`${indent}\t${a.username} ${a.passwordHash}`);
       lines.push(`${indent}}`);
     }
@@ -675,7 +682,7 @@ export function buildRouteHandlerLines(p: ProxyEntry, indent: string): string[] 
   } else if (p.phpFastcgi) {
     if (p.compress) lines.push(`${indent}encode gzip zstd`);
     if (p.basicAuth?.length) {
-      lines.push(`${indent}basic_auth {`);
+      lines.push(basicAuthOpenLine(indent, p.basicAuthOptions));
       for (const a of p.basicAuth) lines.push(`${indent}\t${a.username} ${a.passwordHash}`);
       lines.push(`${indent}}`);
     }
@@ -686,7 +693,7 @@ export function buildRouteHandlerLines(p: ProxyEntry, indent: string): string[] 
   } else {
     if (p.compress) lines.push(`${indent}encode gzip zstd`);
     if (p.basicAuth?.length) {
-      lines.push(`${indent}basic_auth {`);
+      lines.push(basicAuthOpenLine(indent, p.basicAuthOptions));
       for (const a of p.basicAuth) lines.push(`${indent}\t${a.username} ${a.passwordHash}`);
       lines.push(`${indent}}`);
     }
@@ -819,7 +826,7 @@ export function patchRawBlock(raw: string, proxy: ProxyEntry): string {
   kept.push(...buildTlsCaddyLines(proxy, !tlsSubjectHosts(proxy.externalHost).length));
   if (proxy.fileServer) {
     if (proxy.compress) kept.push("\tencode gzip zstd");
-    if (proxy.basicAuth?.length) kept.push(...buildBasicAuthCaddyLines(proxy.basicAuth));
+    if (proxy.basicAuth?.length) kept.push(...buildBasicAuthCaddyLines(proxy.basicAuth, proxy.basicAuthOptions));
     for (const h of proxy.responseHeaders ?? []) {
       kept.push(headerOpLine(`\theader`, h, { quoteSet: true }));
     }
@@ -827,12 +834,12 @@ export function patchRawBlock(raw: string, proxy: ProxyEntry): string {
   } else if (proxy.phpFastcgi) {
     // A hand-written PHP site (#247): its root/php_fastcgi/file_server were skipped above.
     if (proxy.compress) kept.push("\tencode gzip zstd");
-    if (proxy.basicAuth?.length) kept.push(...buildBasicAuthCaddyLines(proxy.basicAuth));
+    if (proxy.basicAuth?.length) kept.push(...buildBasicAuthCaddyLines(proxy.basicAuth, proxy.basicAuthOptions));
     for (const h of proxy.responseHeaders ?? []) kept.push(headerOpLine("\theader", h, { quoteSet: true }));
     kept.push(...buildPhpFastcgiLines(proxy.phpFastcgi, "\t"));
   } else {
     if (proxy.compress) kept.push("\tencode gzip zstd");
-    if (proxy.basicAuth?.length) kept.push(...buildBasicAuthCaddyLines(proxy.basicAuth));
+    if (proxy.basicAuth?.length) kept.push(...buildBasicAuthCaddyLines(proxy.basicAuth, proxy.basicAuthOptions));
     // `header` lines were dropped above with the other rewritten directives.
     for (const h of proxy.responseHeaders ?? []) kept.push(headerOpLine("\theader", h, { quoteSet: true, defer: true }));
     if (proxy.forwardAuth) kept.push(...buildForwardAuthCaddyLines(proxy.forwardAuth));

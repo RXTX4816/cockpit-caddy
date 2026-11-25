@@ -260,7 +260,12 @@
     "field_password": "密码",
     "field_password_keep": "留空以保留现有密码",
     "add_button": "添加账户",
-    "remove_button": "移除账户"
+    "remove_button": "移除账户",
+    "realm": "Realm(认证域)",
+    "algorithm": "哈希算法",
+    "algorithm_default": "bcrypt(默认)",
+    "algorithm_argon2id": "argon2id(更强)",
+    "algorithm_mismatch": "保留原密码的账户仍然带有另一种算法生成的哈希。请重新输入这些账户的密码。"
   },
   "transport": {
     "heading": "上游超时",

@@ -260,7 +260,12 @@
     "field_password": "Password",
     "field_password_keep": "Leave empty to keep existing",
     "add_button": "Add account",
-    "remove_button": "Remove account"
+    "remove_button": "Remove account",
+    "realm": "Realm",
+    "algorithm": "Hash algorithm",
+    "algorithm_default": "bcrypt (default)",
+    "algorithm_argon2id": "argon2id (stronger)",
+    "algorithm_mismatch": "Accounts that keep their password still have a hash made with the other algorithm. Enter their passwords again."
   },
   "transport": {
     "heading": "Upstream Timeouts",

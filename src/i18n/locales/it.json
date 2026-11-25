@@ -260,7 +260,12 @@
     "field_password": "Password",
     "field_password_keep": "Lascia vuoto per mantenere quella esistente",
     "add_button": "Aggiungi account",
-    "remove_button": "Rimuovi account"
+    "remove_button": "Rimuovi account",
+    "realm": "Realm",
+    "algorithm": "Algoritmo di hash",
+    "algorithm_default": "bcrypt (predefinito)",
+    "algorithm_argon2id": "argon2id (più robusto)",
+    "algorithm_mismatch": "Gli account che mantengono la password hanno ancora un hash dell'altro algoritmo. Inserisci di nuovo le loro password."
   },
   "transport": {
     "heading": "Timeout dell'upstream",

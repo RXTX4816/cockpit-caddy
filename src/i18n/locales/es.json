@@ -260,7 +260,12 @@
     "field_password": "Contraseña",
     "field_password_keep": "Déjelo vacío para conservar la actual",
     "add_button": "Añadir cuenta",
-    "remove_button": "Quitar cuenta"
+    "remove_button": "Quitar cuenta",
+    "realm": "Realm",
+    "algorithm": "Algoritmo de hash",
+    "algorithm_default": "bcrypt (predeterminado)",
+    "algorithm_argon2id": "argon2id (más fuerte)",
+    "algorithm_mismatch": "Las cuentas que conservan su contraseña aún tienen un hash del otro algoritmo. Vuelva a introducir sus contraseñas."
   },
   "transport": {
     "heading": "Tiempos de espera del upstream",

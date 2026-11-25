@@ -260,7 +260,12 @@
     "field_password": "비밀번호",
     "field_password_keep": "기존 값을 유지하려면 비워 두세요",
     "add_button": "계정 추가",
-    "remove_button": "계정 제거"
+    "remove_button": "계정 제거",
+    "realm": "영역(realm)",
+    "algorithm": "해시 알고리즘",
+    "algorithm_default": "bcrypt(기본값)",
+    "algorithm_argon2id": "argon2id(더 강력함)",
+    "algorithm_mismatch": "비밀번호를 유지하는 계정에는 아직 다른 알고리즘의 해시가 있습니다. 비밀번호를 다시 입력하세요."
   },
   "transport": {
     "heading": "업스트림 시간 제한",

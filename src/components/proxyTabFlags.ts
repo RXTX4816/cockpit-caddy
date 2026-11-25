@@ -2,7 +2,7 @@ import { hasAnyMatcher } from "../api";
 import type { ErrorHandlerConfig, ForwardAuthConfig, LbPolicy, HeaderOperation, RewriteConfig, RouteMatch } from "../api";
 import type { AccessLogValues } from "./AccessLogSection";
 import { accessLogValuesToConfig } from "./AccessLogSection";
-import type { AuthEntry } from "./BasicAuthSection";
+import type { AuthEntry, BasicAuthOptionValues } from "./BasicAuthSection";
 import { lbRetryValuesToConfig, validateLbRetry, type LbRetryValues } from "./LbRetrySection";
 import type { ServerTimeoutValues } from "./ServerTimeoutsSection";
 import { tlsValuesHaveErrors, tlsValuesToAdvanced, tlsValuesToCustomTls, tlsValuesToMtls, type TlsValues } from "./TlsSection";
@@ -13,6 +13,9 @@ import type { ProxyTabKey } from "./proxyDialogParts";
 /** Everything the proxy dialog's tabs (#260) look at, minus General's own fields. */
 export interface ProxyTabValues {
   basicAuth: AuthEntry[];
+  basicAuthOptions?: BasicAuthOptionValues;
+  /** A kept account's hash was made with another algorithm than the one chosen (#337). */
+  basicAuthError?: boolean;
   forwardAuth: ForwardAuthConfig | undefined;
   forwardAuthError: string | null;
   tlsValues: TlsValues;
@@ -53,7 +56,7 @@ export function proxyTabFlags(v: ProxyTabValues, generalHasError: boolean): TabF
     },
     hasError: {
       general: generalHasError,
-      security: !!v.forwardAuthError || tlsValuesHaveErrors(v.tlsValues),
+      security: !!v.forwardAuthError || !!v.basicAuthError || tlsValuesHaveErrors(v.tlsValues),
       routing: false,
       upstreams: !!validateUpstreams(v.extraUpstreams) || !!validateLbRetry(v.lbRetry)
         || (v.extraUpstreams.length > 0 && !!validateLbArgs(v.lbPolicy as LbPolicy | "", v.lbArgs, v.extraUpstreams.length + 1)),

@@ -260,7 +260,12 @@
     "field_password": "Пароль",
     "field_password_keep": "Залиште порожнім, щоб зберегти поточний",
     "add_button": "Додати обліковий запис",
-    "remove_button": "Вилучити обліковий запис"
+    "remove_button": "Вилучити обліковий запис",
+    "realm": "Realm",
+    "algorithm": "Алгоритм хешування",
+    "algorithm_default": "bcrypt (типовий)",
+    "algorithm_argon2id": "argon2id (надійніший)",
+    "algorithm_mismatch": "Облікові записи, що зберігають пароль, досі мають хеш іншого алгоритму. Введіть їхні паролі заново."
   },
   "transport": {
     "heading": "Тайм-аути upstream",

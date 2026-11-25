@@ -260,7 +260,12 @@
     "field_password": "Пароль",
     "field_password_keep": "Оставьте пустым, чтобы сохранить текущий",
     "add_button": "Добавить учётную запись",
-    "remove_button": "Удалить учётную запись"
+    "remove_button": "Удалить учётную запись",
+    "realm": "Realm",
+    "algorithm": "Алгоритм хеширования",
+    "algorithm_default": "bcrypt (по умолчанию)",
+    "algorithm_argon2id": "argon2id (надёжнее)",
+    "algorithm_mismatch": "У учётных записей, сохраняющих пароль, остался хеш другого алгоритма. Введите их пароли заново."
   },
   "transport": {
     "heading": "Тайм-ауты upstream",

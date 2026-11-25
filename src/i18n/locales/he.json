@@ -260,7 +260,12 @@
     "field_password": "סיסמה",
     "field_password_keep": "יש להשאיר ריק כדי לשמור על הקיימת",
     "add_button": "הוספת חשבון",
-    "remove_button": "הסרת חשבון"
+    "remove_button": "הסרת חשבון",
+    "realm": "Realm",
+    "algorithm": "אלגוריתם גיבוב",
+    "algorithm_default": "bcrypt (ברירת מחדל)",
+    "algorithm_argon2id": "argon2id (חזק יותר)",
+    "algorithm_mismatch": "חשבונות ששומרים את הסיסמה שלהם עדיין מכילים גיבוב של האלגוריתם האחר. הזינו את הסיסמאות שלהם מחדש."
   },
   "transport": {
     "heading": "מגבלות זמן ל-upstream",

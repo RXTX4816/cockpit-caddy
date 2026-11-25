@@ -74,7 +74,7 @@ export function ProxyTabs({ state: s, onChange, general, generalHasError, active
         hasError: flags.hasError.security,
         content: (
           <>
-            <BasicAuthSection value={s.basicAuth} onChange={v => onChange({ basicAuth: v })} isDisabled={isDisabled} />
+            <BasicAuthSection value={s.basicAuth} onChange={v => onChange({ basicAuth: v })} options={s.basicAuthOptions} onOptionsChange={v => onChange({ basicAuthOptions: v })} isDisabled={isDisabled} />
             {isProxy && (
               <ForwardAuthSection value={s.forwardAuth} onChange={v => onChange({ forwardAuth: v })} isDisabled={isDisabled} uriError={forwardAuthErr ?? undefined} />
             )}

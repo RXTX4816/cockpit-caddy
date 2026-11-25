@@ -260,7 +260,12 @@
     "field_password": "Lösenord",
     "field_password_keep": "Lämna tomt för att behålla det befintliga",
     "add_button": "Lägg till konto",
-    "remove_button": "Ta bort konto"
+    "remove_button": "Ta bort konto",
+    "realm": "Realm",
+    "algorithm": "Hashalgoritm",
+    "algorithm_default": "bcrypt (standard)",
+    "algorithm_argon2id": "argon2id (starkare)",
+    "algorithm_mismatch": "Konton som behåller sitt lösenord har fortfarande en hash från den andra algoritmen. Ange deras lösenord igen."
   },
   "transport": {
     "heading": "Tidsgränser för upstream",

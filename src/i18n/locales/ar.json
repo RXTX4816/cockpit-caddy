@@ -260,7 +260,12 @@
     "field_password": "كلمة المرور",
     "field_password_keep": "اتركه فارغًا للاحتفاظ بالكلمة الحالية",
     "add_button": "إضافة حساب",
-    "remove_button": "إزالة الحساب"
+    "remove_button": "إزالة الحساب",
+    "realm": "النطاق (Realm)",
+    "algorithm": "خوارزمية التجزئة",
+    "algorithm_default": "bcrypt (الافتراضي)",
+    "algorithm_argon2id": "argon2id (أقوى)",
+    "algorithm_mismatch": "الحسابات التي تُبقي كلمة مرورها ما زالت تحمل تجزئة بالخوارزمية الأخرى. أدخل كلمات مرورها من جديد."
   },
   "transport": {
     "heading": "مهل الخادم الأعلى",

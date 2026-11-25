@@ -260,7 +260,12 @@
     "field_password": "Senha",
     "field_password_keep": "Deixe em branco para manter a atual",
     "add_button": "Adicionar conta",
-    "remove_button": "Remover conta"
+    "remove_button": "Remover conta",
+    "realm": "Realm",
+    "algorithm": "Algoritmo de hash",
+    "algorithm_default": "bcrypt (padrão)",
+    "algorithm_argon2id": "argon2id (mais forte)",
+    "algorithm_mismatch": "As contas que mantêm a senha ainda têm um hash do outro algoritmo. Digite as senhas delas novamente."
   },
   "transport": {
     "heading": "Timeouts do upstream",

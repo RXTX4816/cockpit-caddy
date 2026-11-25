@@ -260,7 +260,12 @@
     "field_password": "Parola",
     "field_password_keep": "Mevcut parolayı korumak için boş bırakın",
     "add_button": "Hesap ekle",
-    "remove_button": "Hesabı kaldır"
+    "remove_button": "Hesabı kaldır",
+    "realm": "Realm",
+    "algorithm": "Karma algoritması",
+    "algorithm_default": "bcrypt (varsayılan)",
+    "algorithm_argon2id": "argon2id (daha güçlü)",
+    "algorithm_mismatch": "Parolasını koruyan hesapların hâlâ diğer algoritmayla üretilmiş bir karması var. Parolalarını yeniden girin."
   },
   "transport": {
     "heading": "Upstream zaman aşımları",

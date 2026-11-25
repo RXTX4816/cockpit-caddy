@@ -52,6 +52,8 @@ import {
   CONF_D_IMPORT_LINE,
   parseConfTlsIssuerMap,
 } from "./caddy";
+import { buildBasicAuthHandler, parseBasicAuthOptionsJson } from "./caddyJsonModel";
+import { proxiesToCaddyfile } from "./caddy";
 import type { CaddyConfig, CaddyServer, ProxyEntry, RouteMatch, ServerDef } from "./types";
 
 // ---------------------------------------------------------------------------
@@ -4642,3 +4644,30 @@ describe("proxy error handlers and upstream error pages (#255)", () => {
     expect(parseProxies({ apps: { http: { servers: { srv0: old } } } })[0].replaceUpstreamErrors).toBe(true);
   });
 });
+
+describe("basic_auth options in the generated config (#337)", () => {
+  const accounts = [{ username: "alice", passwordHash: "hash1" }];
+  const base: ProxyEntry = {
+    id: "1", serverKey: "srv0", externalPort: 8080, targetHost: "localhost", targetPort: 9000,
+    targetScheme: "http", tls: false, tlsSkipVerify: false, basicAuth: accounts,
+  };
+
+  it("puts the algorithm and realm into the authentication handler", () => {
+    const h = buildBasicAuthHandler(accounts, { algorithm: "argon2id", realm: "Private" }) as unknown as { providers: { http_basic: Record<string, unknown> } };
+    expect(h.providers.http_basic).toMatchObject({ hash: { algorithm: "argon2id" }, realm: "Private" });
+    expect(parseBasicAuthOptionsJson(h as never)).toEqual({ algorithm: "argon2id", realm: "Private" });
+  });
+
+  it("leaves both out of the handler by default", () => {
+    const h = buildBasicAuthHandler(accounts) as unknown as { providers: { http_basic: Record<string, unknown> } };
+    expect(Object.keys(h.providers.http_basic)).toEqual(["accounts"]);
+  });
+
+  it("writes the algorithm and realm after basic_auth in the Caddyfile", () => {
+    expect(proxiesToCaddyfile([{ ...base, basicAuthOptions: { algorithm: "argon2id" } }])).toContain("basic_auth argon2id {");
+    expect(proxiesToCaddyfile([{ ...base, basicAuthOptions: { algorithm: "argon2id", realm: "My area" } }])).toContain('basic_auth argon2id "My area" {');
+    expect(proxiesToCaddyfile([{ ...base, basicAuthOptions: { realm: "My area" } }])).toContain('basic_auth bcrypt "My area" {');
+    expect(proxiesToCaddyfile([base])).toMatch(/basic_auth \{/);
+  });
+});
+

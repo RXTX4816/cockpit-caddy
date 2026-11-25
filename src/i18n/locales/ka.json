@@ -260,7 +260,12 @@
     "field_password": "პაროლი",
     "field_password_keep": "არსებულის შესანარჩუნებლად დატოვეთ ცარიელი",
     "add_button": "ანგარიშის დამატება",
-    "remove_button": "ანგარიშის წაშლა"
+    "remove_button": "ანგარიშის წაშლა",
+    "realm": "Realm",
+    "algorithm": "ჰეშირების ალგორითმი",
+    "algorithm_default": "bcrypt (ნაგულისხმევი)",
+    "algorithm_argon2id": "argon2id (უფრო ძლიერი)",
+    "algorithm_mismatch": "ანგარიშებს, რომლებიც პაროლს ინარჩუნებენ, ჯერ კიდევ აქვთ მეორე ალგორითმით შექმნილი ჰეში. შეიყვანეთ მათი პაროლები თავიდან."
   },
   "transport": {
     "heading": "upstream-ის ტაიმაუტები",

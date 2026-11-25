@@ -260,7 +260,12 @@
     "field_password": "Salasana",
     "field_password_keep": "Jätä tyhjäksi säilyttääksesi nykyisen",
     "add_button": "Lisää tili",
-    "remove_button": "Poista tili"
+    "remove_button": "Poista tili",
+    "realm": "Realm",
+    "algorithm": "Tiivistealgoritmi",
+    "algorithm_default": "bcrypt (oletus)",
+    "algorithm_argon2id": "argon2id (vahvempi)",
+    "algorithm_mismatch": "Tilit, joiden salasana säilyy, sisältävät yhä toisella algoritmilla tehdyn tiivisteen. Syötä niiden salasanat uudelleen."
   },
   "transport": {
     "heading": "Upstreamin aikakatkaisut",

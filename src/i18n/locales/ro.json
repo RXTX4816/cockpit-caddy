@@ -260,7 +260,12 @@
     "field_password": "Parolă",
     "field_password_keep": "Lasă gol pentru a păstra parola existentă",
     "add_button": "Adaugă cont",
-    "remove_button": "Elimină contul"
+    "remove_button": "Elimină contul",
+    "realm": "Realm",
+    "algorithm": "Algoritm de hash",
+    "algorithm_default": "bcrypt (implicit)",
+    "algorithm_argon2id": "argon2id (mai puternic)",
+    "algorithm_mismatch": "Conturile care își păstrează parola au încă un hash făcut cu celălalt algoritm. Introdu din nou parolele lor."
   },
   "transport": {
     "heading": "Timeout-uri upstream",

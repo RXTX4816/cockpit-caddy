@@ -260,7 +260,12 @@
     "field_password": "Kata sandi",
     "field_password_keep": "Kosongkan untuk mempertahankan yang ada",
     "add_button": "Tambah akun",
-    "remove_button": "Hapus akun"
+    "remove_button": "Hapus akun",
+    "realm": "Realm",
+    "algorithm": "Algoritma hash",
+    "algorithm_default": "bcrypt (bawaan)",
+    "algorithm_argon2id": "argon2id (lebih kuat)",
+    "algorithm_mismatch": "Akun yang mempertahankan kata sandinya masih memiliki hash dari algoritma lain. Masukkan ulang kata sandi mereka."
   },
   "transport": {
     "heading": "Batas waktu upstream",

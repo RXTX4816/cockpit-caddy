@@ -260,7 +260,12 @@
     "field_password": "Wachtwoord",
     "field_password_keep": "Laat leeg om het bestaande te behouden",
     "add_button": "Account toevoegen",
-    "remove_button": "Account verwijderen"
+    "remove_button": "Account verwijderen",
+    "realm": "Realm",
+    "algorithm": "Hash-algoritme",
+    "algorithm_default": "bcrypt (standaard)",
+    "algorithm_argon2id": "argon2id (sterker)",
+    "algorithm_mismatch": "Accounts die hun wachtwoord behouden hebben nog een hash van het andere algoritme. Voer hun wachtwoorden opnieuw in."
   },
   "transport": {
     "heading": "Upstream-time-outs",

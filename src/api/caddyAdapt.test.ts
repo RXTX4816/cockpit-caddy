@@ -818,3 +818,27 @@ describe.runIf(available || required)("client_ip matcher (#286)", () => {
     expect(readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, matchers })]))[0].matchers).toEqual(matchers);
   });
 });
+
+describe.runIf(available || required)("caddy adapt accepts the basic_auth realm and algorithm (#337)", () => {
+  const accounts = [{ username: "alice", passwordHash: "$argon2id$v=19$m=47104,t=1,p=1$c2FsdHNhbHRzYWx0$aGFzaGhhc2hoYXNoaGFzaGhhc2hoYXNoaGFzaGhhc2g" }];
+
+  it("reads the algorithm and realm back from a real adapt", () => {
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, basicAuth: accounts, basicAuthOptions: { algorithm: "argon2id", realm: "Private area" } })]);
+    const [p] = readBack(conf);
+    expect(p.basicAuthOptions).toEqual({ algorithm: "argon2id", realm: "Private area" });
+    expect(p.basicAuth).toEqual(accounts);
+  });
+
+  it("writes bcrypt in front of a realm, because the realm comes second", () => {
+    const bcrypt = [{ username: "bob", passwordHash: "$2a$14$HfqUPi8ecmhKr2br56YonenjapN.9FYZm5cv78bUrYuhZWGotTGWC" }];
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, basicAuth: bcrypt, basicAuthOptions: { realm: "Only us" } })]);
+    expect(conf).toContain('basic_auth bcrypt "Only us" {');
+    expect(readBack(conf)[0].basicAuthOptions).toEqual({ realm: "Only us" });
+  });
+
+  it("reads no options from a plain basic_auth", () => {
+    const bcrypt = [{ username: "bob", passwordHash: "$2a$14$HfqUPi8ecmhKr2br56YonenjapN.9FYZm5cv78bUrYuhZWGotTGWC" }];
+    expect(readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, basicAuth: bcrypt })]))[0].basicAuthOptions).toBeUndefined();
+  });
+});
+

@@ -260,7 +260,12 @@
     "field_password": "パスワード",
     "field_password_keep": "既存のものを残す場合は空欄",
     "add_button": "アカウントを追加",
-    "remove_button": "アカウントを削除"
+    "remove_button": "アカウントを削除",
+    "realm": "レルム",
+    "algorithm": "ハッシュアルゴリズム",
+    "algorithm_default": "bcrypt(既定)",
+    "algorithm_argon2id": "argon2id(より強力)",
+    "algorithm_mismatch": "パスワードを維持するアカウントには、もう一方のアルゴリズムのハッシュが残っています。パスワードを再入力してください。"
   },
   "transport": {
     "heading": "アップストリームのタイムアウト",

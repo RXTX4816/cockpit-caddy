@@ -260,7 +260,12 @@
     "field_password": "Hasło",
     "field_password_keep": "Pozostaw puste, aby zachować obecne",
     "add_button": "Dodaj konto",
-    "remove_button": "Usuń konto"
+    "remove_button": "Usuń konto",
+    "realm": "Realm",
+    "algorithm": "Algorytm skrótu",
+    "algorithm_default": "bcrypt (domyślny)",
+    "algorithm_argon2id": "argon2id (silniejszy)",
+    "algorithm_mismatch": "Konta zachowujące hasło mają nadal skrót innego algorytmu. Wprowadź ich hasła ponownie."
   },
   "transport": {
     "heading": "Limity czasu upstreamu",

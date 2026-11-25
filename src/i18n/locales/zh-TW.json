@@ -260,7 +260,12 @@
     "field_password": "密碼",
     "field_password_keep": "留空以保留現有密碼",
     "add_button": "新增帳號",
-    "remove_button": "移除帳號"
+    "remove_button": "移除帳號",
+    "realm": "Realm(驗證領域)",
+    "algorithm": "雜湊演算法",
+    "algorithm_default": "bcrypt(預設)",
+    "algorithm_argon2id": "argon2id(更強)",
+    "algorithm_mismatch": "保留原密碼的帳號仍帶有另一種演算法產生的雜湊。請重新輸入這些帳號的密碼。"
   },
   "transport": {
     "heading": "上游逾時",
