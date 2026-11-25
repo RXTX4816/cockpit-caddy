@@ -267,7 +267,12 @@
     "section_title": "Batas waktu upstream (opsional)",
     "dial_timeout": "Batas waktu koneksi",
     "response_header_timeout": "Batas waktu header respons",
-    "defaults_help": "Biarkan kolom kosong untuk memakai nilai bawaan Caddy, yang ditampilkan abu-abu. Batas waktu header respons memutus long polling dan respons yang lambat."
+    "defaults_help": "Biarkan kolom kosong untuk memakai nilai bawaan Caddy, yang ditampilkan abu-abu. Batas waktu header respons memutus long polling dan respons yang lambat.",
+    "streaming_help": "Streaming (websocket, aliran peristiwa): kosongkan untuk memakai bawaan Caddy.",
+    "flush_interval": "Interval flush",
+    "flush_interval_placeholder": "-1 mengirim setiap penulisan segera",
+    "stream_timeout": "Batas waktu stream",
+    "stream_close_delay": "Jeda penutupan stream"
   },
   "server_timeouts": {
     "heading": "Batas waktu & batasan server",

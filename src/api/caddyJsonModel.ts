@@ -769,6 +769,9 @@ export function parseRouteToEntry(
   const tlsSkipVerify = rp.transport?.tls?.insecure_skip_verify ?? false;
   const dialTimeout = parseDuration(rp.transport?.dial_timeout);
   const responseHeaderTimeout = parseDuration(rp.transport?.response_header_timeout);
+  const flushInterval = rp.flush_interval === -1 || rp.flush_interval === "-1" ? "-1" : parseDuration(rp.flush_interval);
+  const streamTimeout = parseDuration(rp.stream_timeout);
+  const streamCloseDelay = parseDuration(rp.stream_close_delay);
 
   const tls = serverHasTls(server, automationPolicies, externalHost);
   const tlsPolicy = Array.isArray(server.tls_connection_policies) ? server.tls_connection_policies[0] : undefined;
@@ -814,6 +817,9 @@ export function parseRouteToEntry(
     basicAuth: basicAuth?.length ? basicAuth : undefined,
     dialTimeout: dialTimeout || undefined,
     responseHeaderTimeout: responseHeaderTimeout || undefined,
+    flushInterval: flushInterval || undefined,
+    streamTimeout: streamTimeout || undefined,
+    streamCloseDelay: streamCloseDelay || undefined,
     rewrite: finalRewrite,
     requestHeaders: requestHeaders.length ? requestHeaders : undefined,
     upstreamResponseHeaders: upstreamResponseHeaders.length ? upstreamResponseHeaders : undefined,
@@ -1095,7 +1101,7 @@ export function parseResponseHeadersJson(h: AnyHandler): import("./types").Heade
 }
 
 export function buildReverseProxyHandler(
-  proxy: Pick<ProxyEntry, "targetHost" | "targetPort" | "targetScheme" | "tlsSkipVerify" | "requestHeaders" | "upstreamResponseHeaders" | "dialTimeout" | "responseHeaderTimeout" | "extraUpstreams" | "lbPolicy" | "lbPolicyArgs" | "lbRetry" | "replaceUpstreamErrors">,
+  proxy: Pick<ProxyEntry, "targetHost" | "targetPort" | "targetScheme" | "tlsSkipVerify" | "requestHeaders" | "upstreamResponseHeaders" | "dialTimeout" | "responseHeaderTimeout" | "flushInterval" | "streamTimeout" | "streamCloseDelay" | "extraUpstreams" | "lbPolicy" | "lbPolicyArgs" | "lbRetry" | "replaceUpstreamErrors">,
   errorHandlers?: import("./types").ErrorHandlerConfig[],
 ): CaddyReverseProxyHandler {
   const primaryDial = `${proxy.targetHost}:${proxy.targetPort}`;
@@ -1106,6 +1112,9 @@ export function buildReverseProxyHandler(
   };
   const transport = buildTransport(proxy);
   if (transport) rp.transport = transport;
+  if (proxy.flushInterval) rp.flush_interval = proxy.flushInterval === "-1" ? -1 : proxy.flushInterval;
+  if (proxy.streamTimeout) rp.stream_timeout = proxy.streamTimeout;
+  if (proxy.streamCloseDelay) rp.stream_close_delay = proxy.streamCloseDelay;
   const hdrs = buildReverseProxyHeadersJson(proxy.requestHeaders, proxy.upstreamResponseHeaders);
   if (hdrs) rp.headers = hdrs;
   if (proxy.lbPolicy && (proxy.extraUpstreams?.length ?? 0) > 0 && LB_POLICIES.has(proxy.lbPolicy)) {

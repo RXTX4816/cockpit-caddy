@@ -267,7 +267,12 @@
     "section_title": "Tiempos de espera del upstream (opcional)",
     "dial_timeout": "Tiempo de espera de conexión",
     "response_header_timeout": "Tiempo de espera de cabeceras de respuesta",
-    "defaults_help": "Deja un campo vacío para usar el valor predeterminado de Caddy, que se muestra en gris. Un tiempo límite de cabeceras de respuesta corta el long polling y las respuestas lentas."
+    "defaults_help": "Deja un campo vacío para usar el valor predeterminado de Caddy, que se muestra en gris. Un tiempo límite de cabeceras de respuesta corta el long polling y las respuestas lentas.",
+    "streaming_help": "Streaming (websockets, flujos de eventos): déjalo vacío para usar los valores por defecto de Caddy.",
+    "flush_interval": "Intervalo de vaciado",
+    "flush_interval_placeholder": "-1 envía cada escritura al instante",
+    "stream_timeout": "Tiempo máximo del stream",
+    "stream_close_delay": "Retraso de cierre del stream"
   },
   "server_timeouts": {
     "heading": "Tiempos de espera y límites del servidor",

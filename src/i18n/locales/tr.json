@@ -267,7 +267,12 @@
     "section_title": "Upstream zaman aşımları (isteğe bağlı)",
     "dial_timeout": "Bağlantı zaman aşımı",
     "response_header_timeout": "Yanıt başlığı zaman aşımı",
-    "defaults_help": "Caddy'nin varsayılanını kullanmak için alanı boş bırakın; varsayılan gri gösterilir. Yanıt başlığı zaman aşımı, long polling'i ve yavaş yanıtları keser."
+    "defaults_help": "Caddy'nin varsayılanını kullanmak için alanı boş bırakın; varsayılan gri gösterilir. Yanıt başlığı zaman aşımı, long polling'i ve yavaş yanıtları keser.",
+    "streaming_help": "Akış (websocket, olay akışları): Caddy varsayılanları için boş bırakın.",
+    "flush_interval": "Boşaltma aralığı",
+    "flush_interval_placeholder": "-1 her yazmayı hemen gönderir",
+    "stream_timeout": "Akış zaman aşımı",
+    "stream_close_delay": "Akış kapatma gecikmesi"
   },
   "server_timeouts": {
     "heading": "Sunucu zaman aşımları ve sınırları",

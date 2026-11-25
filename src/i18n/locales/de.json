@@ -267,7 +267,12 @@
     "section_title": "Upstream-Timeouts (optional)",
     "dial_timeout": "Verbindungs-Timeout",
     "response_header_timeout": "Timeout für Antwort-Header",
-    "defaults_help": "Ein leeres Feld nutzt Caddys Standardwert (grau angezeigt). Ein Timeout für die Antwort-Header bricht Long Polling und langsame Antworten ab."
+    "defaults_help": "Ein leeres Feld nutzt Caddys Standardwert (grau angezeigt). Ein Timeout für die Antwort-Header bricht Long Polling und langsame Antworten ab.",
+    "streaming_help": "Streaming (WebSockets, Event-Streams): leer lassen für die Caddy-Standardwerte.",
+    "flush_interval": "Flush-Intervall",
+    "flush_interval_placeholder": "-1 sendet jeden Schreibvorgang sofort",
+    "stream_timeout": "Stream-Timeout",
+    "stream_close_delay": "Verzögerung beim Schließen von Streams"
   },
   "server_timeouts": {
     "heading": "Server-Timeouts & -Limits",

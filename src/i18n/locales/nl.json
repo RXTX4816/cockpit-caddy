@@ -267,7 +267,12 @@
     "section_title": "Upstream-time-outs (optioneel)",
     "dial_timeout": "Verbindingstime-out",
     "response_header_timeout": "Time-out voor antwoordheaders",
-    "defaults_help": "Laat een veld leeg om de standaardwaarde van Caddy te gebruiken (grijs weergegeven). Een time-out voor response-headers breekt long polling en trage antwoorden af."
+    "defaults_help": "Laat een veld leeg om de standaardwaarde van Caddy te gebruiken (grijs weergegeven). Een time-out voor response-headers breekt long polling en trage antwoorden af.",
+    "streaming_help": "Streaming (websockets, eventstreams): laat leeg voor de standaardwaarden van Caddy.",
+    "flush_interval": "Flush-interval",
+    "flush_interval_placeholder": "-1 verstuurt elke schrijfactie direct",
+    "stream_timeout": "Stream-timeout",
+    "stream_close_delay": "Vertraging bij sluiten van stream"
   },
   "server_timeouts": {
     "heading": "Servertime-outs & -limieten",

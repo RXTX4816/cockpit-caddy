@@ -267,7 +267,12 @@
     "section_title": "Timeouts do upstream (opcional)",
     "dial_timeout": "Timeout de conexão",
     "response_header_timeout": "Timeout dos cabeçalhos de resposta",
-    "defaults_help": "Deixe um campo vazio para usar o padrão do Caddy, mostrado em cinza. Um tempo limite de cabeçalhos de resposta interrompe long polling e respostas lentas."
+    "defaults_help": "Deixe um campo vazio para usar o padrão do Caddy, mostrado em cinza. Um tempo limite de cabeçalhos de resposta interrompe long polling e respostas lentas.",
+    "streaming_help": "Streaming (websockets, fluxos de eventos): deixe vazio para manter os padrões do Caddy.",
+    "flush_interval": "Intervalo de flush",
+    "flush_interval_placeholder": "-1 envia cada gravação imediatamente",
+    "stream_timeout": "Tempo limite do stream",
+    "stream_close_delay": "Atraso para fechar o stream"
   },
   "server_timeouts": {
     "heading": "Timeouts e limites do servidor",

@@ -832,3 +832,13 @@ describe.runIf(available || required)("caddy adapt accepts header_down (#324)", 
     expect(readBack(conf)[0].upstreamResponseHeaders).toHaveLength(4);
   });
 });
+
+describe.runIf(available || required)("caddy adapt accepts the streaming options (#325)", () => {
+  it("reads them back from a real adapt", () => {
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, flushInterval: "-1", streamTimeout: "24h", streamCloseDelay: "5m" })]);
+    const [p] = readBack(conf);
+    expect(p.flushInterval).toBe("-1");
+    expect(p.streamTimeout).toBe("24h");
+    expect(p.streamCloseDelay).toBe("5m");
+  });
+});

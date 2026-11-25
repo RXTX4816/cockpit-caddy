@@ -267,7 +267,12 @@
     "section_title": "Upstreamin aikakatkaisut (valinnainen)",
     "dial_timeout": "Yhteyden aikakatkaisu",
     "response_header_timeout": "Vastausotsakkeiden aikakatkaisu",
-    "defaults_help": "Jätä kenttä tyhjäksi käyttääksesi Caddyn oletusta, joka näkyy harmaana. Vastausotsakkeiden aikakatkaisu katkaisee long pollingin ja hitaat vastaukset."
+    "defaults_help": "Jätä kenttä tyhjäksi käyttääksesi Caddyn oletusta, joka näkyy harmaana. Vastausotsakkeiden aikakatkaisu katkaisee long pollingin ja hitaat vastaukset.",
+    "streaming_help": "Suoratoisto (websocketit, tapahtumavirrat): jätä tyhjäksi, niin Caddyn oletukset pysyvät.",
+    "flush_interval": "Tyhjennysväli",
+    "flush_interval_placeholder": "-1 lähettää jokaisen kirjoituksen heti",
+    "stream_timeout": "Streamin aikakatkaisu",
+    "stream_close_delay": "Streamin sulkemisviive"
   },
   "server_timeouts": {
     "heading": "Palvelimen aikakatkaisut ja rajat",

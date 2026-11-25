@@ -267,7 +267,12 @@
     "section_title": "Upstream Timeouts (optional)",
     "dial_timeout": "Connect timeout",
     "response_header_timeout": "Response header timeout",
-    "defaults_help": "Leave a field empty to use Caddy's default, shown greyed out. A response header timeout cuts off long polling and slow responses."
+    "defaults_help": "Leave a field empty to use Caddy's default, shown greyed out. A response header timeout cuts off long polling and slow responses.",
+    "streaming_help": "Streaming (websockets, event streams): leave empty to keep Caddy's defaults.",
+    "flush_interval": "Flush interval",
+    "flush_interval_placeholder": "-1 sends every write at once",
+    "stream_timeout": "Stream timeout",
+    "stream_close_delay": "Stream close delay"
   },
   "server_timeouts": {
     "heading": "Server Timeouts & Limits",

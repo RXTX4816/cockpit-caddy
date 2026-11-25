@@ -267,7 +267,12 @@
     "section_title": "מגבלות זמן ל-upstream (אופציונלי)",
     "dial_timeout": "מגבלת זמן להתחברות",
     "response_header_timeout": "מגבלת זמן לכותרות התגובה",
-    "defaults_help": "השאירו שדה ריק כדי להשתמש בברירת המחדל של Caddy, המוצגת באפור. מגבלת זמן לכותרות התגובה קוטעת long polling ותגובות איטיות."
+    "defaults_help": "השאירו שדה ריק כדי להשתמש בברירת המחדל של Caddy, המוצגת באפור. מגבלת זמן לכותרות התגובה קוטעת long polling ותגובות איטיות.",
+    "streaming_help": "סטרימינג (websockets, זרמי אירועים): השאירו ריק לשימוש בברירות המחדל של Caddy.",
+    "flush_interval": "מרווח שטיפה",
+    "flush_interval_placeholder": "‎-1 שולח כל כתיבה מיד",
+    "stream_timeout": "פסק זמן של זרם",
+    "stream_close_delay": "השהיית סגירת זרם"
   },
   "server_timeouts": {
     "heading": "מגבלות זמן ומגבלות שרת",
