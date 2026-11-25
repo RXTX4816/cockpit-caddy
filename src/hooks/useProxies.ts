@@ -12,7 +12,9 @@ import {
   resolveInternalIssuerSettings, readGlobalOptions,
   applyGlobalInternalLifetimeToServer,
   readSnippetsConf, parseSnippets, parseConfSiteBlocks, parseConfSiteImports, separateSnippetSettings, mergeSnippetLists,
+  parseGlobalOptions,
 } from "../api";
+import { acmeAccountOf } from "../api/caddyJsonModel";
 import type { CaddyConfig, DnsChallengeConfig, ProxyEntry, ServerDef, SnippetDef } from "../api";
 import {
   addSite, editSite, replaceSiteText, removeSite, liveChangeFor, checkServerPortConflicts, withIssuer, withOnDemand, withDns,
@@ -41,6 +43,8 @@ export function useProxies() {
   const [confImports, setConfImports] = useState<Record<string, string[]>>({});
   const [pluginSnippets, setPluginSnippets] = useState<SnippetDef[]>([]);
   const [caddyfileContent, setCaddyfileContent] = useState<string>("");
+  /** Whether caddyfileContent was read, so an empty one means an empty Caddyfile. */
+  const [caddyfileRead, setCaddyfileRead] = useState(false);
   const [servers, setServers] = useState<ServerDef[]>([]);
   // Guards proxies memo from running before the first conf.d read completes.
   // Without this, config (API) can arrive before servers (disk), causing named-server
@@ -95,7 +99,7 @@ export function useProxies() {
   }, [noteConfSites]);
 
   const syncCaddyfile = useCallback(() => {
-    void readCaddyfile().then(c => setCaddyfileContent(c ?? "")).catch(() => {});
+    void readCaddyfile().then(c => { setCaddyfileContent(c ?? ""); setCaddyfileRead(true); }).catch(() => {});
   }, []);
 
   // Initial sync
@@ -122,8 +126,14 @@ export function useProxies() {
     [pluginSnippets, caddyfileContent],
   );
 
+  // The global ACME account (#341): the JSON only shows it when some site shares the global policy.
+  const acmeAccount = useMemo(
+    () => caddyfileRead ? acmeAccountOf(parseGlobalOptions(caddyfileContent)) : undefined,
+    [caddyfileRead, caddyfileContent],
+  );
+
   const proxies = useMemo(
-    () => (!serversLoaded ? [] : parseProxies(config, servers)).map(p => {
+    () => (!serversLoaded ? [] : parseProxies(config, servers, acmeAccount)).map(p => {
       if (p.namedServerKey) {
         const def = servers.find(s => s.key === p.namedServerKey);
         return { ...p, label: def?.routeLabels?.[p.id] };
@@ -184,7 +194,7 @@ export function useProxies() {
         dnsChallenge: tls && !p.customTls && lookup(confTlsIssuer) === "acme" ? lookup(confTlsDns) : undefined,
       }, lookup(confSiteBlocks), snippets);
     }),
-    [config, labels, confTls, confExternal, confAccessLog, confForwardAuth, confCustomTlsCa, confTlsIssuer, confTlsOnDemand, confTlsDns, confSiteBlocks, confImports, snippets, servers, serversLoaded],
+    [config, labels, confTls, confExternal, confAccessLog, confForwardAuth, confCustomTlsCa, confTlsIssuer, confTlsOnDemand, confTlsDns, confSiteBlocks, confImports, snippets, servers, serversLoaded, acmeAccount],
   );
 
   // #246: while any site relies on automatic HTTPS, Caddy's own Caddyfile adapter has to build
@@ -209,7 +219,7 @@ export function useProxies() {
 
   const addProxy = useCallback(
     async (entry: Omit<ProxyEntry, "id" | "serverKey">) => {
-      const result = await addSite({ config, proxies, servers }, entry);
+      const result = await addSite({ config, proxies, servers, acmeAccount }, entry);
       const site = result.site;
       if (site) {
         const { entry: saved, key } = site;
@@ -227,12 +237,12 @@ export function useProxies() {
       }
       await finish(result);
     },
-    [config, proxies, servers, finish],
+    [config, proxies, servers, acmeAccount, finish],
   );
 
   const editProxy = useCallback(
     async (entry: ProxyEntry) => {
-      const result = await editSite({ config, proxies, servers }, entry);
+      const result = await editSite({ config, proxies, servers, acmeAccount }, entry);
       const site = result.site;
       if (site) {
         const { entry: saved, key, originalKey } = site;
@@ -261,7 +271,7 @@ export function useProxies() {
       }
       await finish(result);
     },
-    [config, proxies, servers, finish],
+    [config, proxies, servers, acmeAccount, finish],
   );
 
   /** Saves the text the Tree tab made for a site's block (#350). */
@@ -274,7 +284,7 @@ export function useProxies() {
 
   const deleteProxy = useCallback(
     async (proxyId: string) => {
-      const result = await removeSite({ config, proxies, servers }, proxyId);
+      const result = await removeSite({ config, proxies, servers, acmeAccount }, proxyId);
       if (!result) return;
       const key = result.removedKey;
       if (key) {
@@ -285,7 +295,7 @@ export function useProxies() {
       }
       await finish(result);
     },
-    [config, proxies, servers, finish],
+    [config, proxies, servers, acmeAccount, finish],
   );
 
   const addServer = useCallback(

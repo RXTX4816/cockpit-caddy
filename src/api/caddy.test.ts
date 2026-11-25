@@ -52,7 +52,7 @@ import {
   CONF_D_IMPORT_LINE,
   parseConfTlsIssuerMap,
 } from "./caddy";
-import { parseSiteAcmeSettings, applyServerExtras, applyAccessLog, parseServerExtras, parseMatcherJson, isHostOnlyMatcher, buildRewriteHandler, parseRewriteFromHandle, patchServer, buildFilterEncoder, parseLogEncoder, PRIVATE_RANGES, buildForwardAuthHandler, extractForwardAuthFromProxy, forwardAuthResponseRoutes, buildBasicAuthHandler, buildEncodeHandler, buildFileServerHandlers, buildFileServerJson, parseFileServerOptions, parseTemplatesJson, buildRedirectHandler, parseEncodeOptionsJson, parseBasicAuthOptionsJson, parseHtmlRedirect } from "./caddyJsonModel";
+import { parseSiteAcmeSettings, acmeAccountOf, applyServerExtras, applyAccessLog, parseServerExtras, parseMatcherJson, isHostOnlyMatcher, buildRewriteHandler, parseRewriteFromHandle, patchServer, buildFilterEncoder, parseLogEncoder, PRIVATE_RANGES, buildForwardAuthHandler, extractForwardAuthFromProxy, forwardAuthResponseRoutes, buildBasicAuthHandler, buildEncodeHandler, buildFileServerHandlers, buildFileServerJson, parseFileServerOptions, parseTemplatesJson, buildRedirectHandler, parseEncodeOptionsJson, parseBasicAuthOptionsJson, parseHtmlRedirect } from "./caddyJsonModel";
 import { proxiesToCaddyfile } from "./caddy";
 import { buildForwardAuthCaddyLines, buildMatcherCaddyLines, buildPhpFastcgiLines, buildRewriteCaddyLines, buildMatcherJson, hasAnyMatcher, patchRawBlock, siteBindAddresses } from "./siteBlocks";
 import { buildLogCaddyLines } from "./globalOptions";
@@ -5401,6 +5401,27 @@ describe("a site's own ACME email, CA and key type (#341)", () => {
         { subjects: ["other.example.com"], issuers: [{ module: "acme", email: "g@example.com" }, { module: "acme", ca: zerossl, email: "g@example.com" }] },
       ];
       expect(parseSiteAcmeSettings(policies, "example.com")).toEqual({ acmeCa: staging });
+    });
+
+    it("uses the Caddyfile's global account instead of guessing it from another site (#341)", () => {
+      // No global email: the only other site's own email is not the global one.
+      const config = { apps: { http: { servers: {} }, tls: { automation: { policies: [
+        { subjects: ["other.example.com"], issuers: [{ module: "acme", email: "other@example.com" }] },
+      ] } } } } as unknown as CaddyConfig;
+      const policy = (c: CaddyConfig) => (c.apps?.tls?.automation?.policies ?? []).find(p => p.subjects?.some(s => s === "example.com"));
+      const guessed = policy(mergeProxy(config, site({ acmeCa: staging }, { serverKey: "srv0" })));
+      expect(guessed?.issuers).toEqual([{ module: "acme", ca: staging, email: "other@example.com" }]);
+      const known = policy(mergeProxy(config, site({ acmeCa: staging }, { serverKey: "srv0" }), acmeAccountOf({})));
+      expect(known?.issuers).toEqual([{ module: "acme", ca: staging }]);
+
+      const policies = [{ subjects: ["example.com"], issuers: [{ module: "acme", email: "other@example.com" }] }, ...(config.apps!.tls!.automation!.policies!)];
+      expect(parseSiteAcmeSettings(policies, "example.com", acmeAccountOf({}))).toEqual({ acmeEmail: "other@example.com" });
+      expect(parseSiteAcmeSettings(policies, "example.com", acmeAccountOf({ email: "other@example.com" }))).toBeUndefined();
+    });
+
+    it("builds the account Caddy copies into the issuers from the global options", () => {
+      expect(acmeAccountOf({ email: "g@example.com", acmeEabKeyId: "K", acmeEabMacKey: "M" })).toEqual(account);
+      expect(acmeAccountOf({ acmeEabKeyId: "K" })).toEqual({});
     });
   });
 

@@ -14,12 +14,15 @@ import {
 import { applyDnsSecrets, isSiteDnsVar } from "./dnsChallenge";
 import { findBlockPositions, findMatchingBlock } from "./caddyfileDocument";
 import type { CaddyConfig, DnsChallengeConfig, ProxyEntry, ServerDef } from "./types";
+import type { AcmeAccount } from "./caddyJsonModel";
 
 /** What an edit needs to know about the current state: the live config, the sites and the named servers. */
 export interface SiteEditContext {
   config: CaddyConfig;
   proxies: ProxyEntry[];
   servers: ServerDef[];
+  /** The Caddyfile's global ACME account (#341), when it was read. */
+  acmeAccount?: AcmeAccount;
 }
 
 /** How the running Caddy is brought up to date: a reload from the Caddyfile, or a JSON push. */
@@ -198,7 +201,7 @@ export async function addSite(ctx: SiteEditContext, entry: Omit<ProxyEntry, "id"
   if (sharesPortWithOtherHost(afterProxies, newProxy) || needsCaddyfileReload(newProxy)) {
     return { live: { kind: "reload" }, written, site };
   }
-  return { live: liveChangeFor(proxies, mergeProxy(config, newProxy)), written, site };
+  return { live: liveChangeFor(proxies, mergeProxy(config, newProxy, ctx.acmeAccount)), written, site };
 }
 
 export async function editSite(ctx: SiteEditContext, entry: ProxyEntry): Promise<SiteEditResult> {
@@ -262,7 +265,7 @@ export async function editSite(ctx: SiteEditContext, entry: ProxyEntry): Promise
   if (sharesPortWithOtherHost(afterProxies, entry) || needsCaddyfileReload(entry) || matchersChanged) {
     return { live: { kind: "reload" }, written, site };
   }
-  return { live: liveChangeFor(proxies, mergeProxy(config, entry)), written, site };
+  return { live: liveChangeFor(proxies, mergeProxy(config, entry, ctx.acmeAccount)), written, site };
 }
 
 /**

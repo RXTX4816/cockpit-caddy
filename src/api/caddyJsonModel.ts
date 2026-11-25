@@ -779,6 +779,7 @@ export function parseRouteToEntry(
   namedServerKey: string | undefined,
   automationPolicies: import("./types").CaddyAutomationPolicy[] | undefined,
   certLoadFiles: import("./types").CaddyCertLoadFile[] | undefined,
+  acmeAccount?: AcmeAccount,
 ): ProxyEntry | undefined {
   const handles = (route.handle ?? []) as AnyHandler[];
   let matchers = route.match?.[0] ? parseMatcherJson(route.match[0]) : undefined;
@@ -854,7 +855,7 @@ export function parseRouteToEntry(
       matchers,
       serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, serverExtras, bind, accessLog,
       errorHandlers: parseErrorHandlers(server),
-      tlsAdvanced: phpTlsPolicy ? parseTlsAdvanced(phpTlsPolicy, automationPolicies, tlsSubjectHosts(externalHost)[0]) : parseSiteAcmeSettings(automationPolicies, tlsSubjectHosts(externalHost)[0]),
+      tlsAdvanced: phpTlsPolicy ? parseTlsAdvanced(phpTlsPolicy, automationPolicies, tlsSubjectHosts(externalHost)[0], acmeAccount) : parseSiteAcmeSettings(automationPolicies, tlsSubjectHosts(externalHost)[0], acmeAccount),
       mtls: phpTlsPolicy ? parseMtls(phpTlsPolicy) : undefined,
     };
   }
@@ -972,7 +973,7 @@ export function parseRouteToEntry(
       matchers,
       serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, serverExtras, bind, accessLog,
       errorHandlers: parseErrorHandlers(server),
-      tlsAdvanced: fsTlsPolicy ? parseTlsAdvanced(fsTlsPolicy, automationPolicies, tlsSubjectHosts(externalHost)[0]) : parseSiteAcmeSettings(automationPolicies, tlsSubjectHosts(externalHost)[0]),
+      tlsAdvanced: fsTlsPolicy ? parseTlsAdvanced(fsTlsPolicy, automationPolicies, tlsSubjectHosts(externalHost)[0], acmeAccount) : parseSiteAcmeSettings(automationPolicies, tlsSubjectHosts(externalHost)[0], acmeAccount),
       mtls: fsTlsPolicy ? parseMtls(fsTlsPolicy) : undefined,
     };
   }
@@ -1105,14 +1106,15 @@ export function parseRouteToEntry(
     errorHandlers: parseErrorHandlers(server),
     replaceUpstreamErrors: reraisesUpstreamErrors(rp) || undefined,
     forwardAuth,
-    tlsAdvanced: tlsPolicy ? parseTlsAdvanced(tlsPolicy, automationPolicies, tlsSubjectHosts(externalHost)[0]) : parseSiteAcmeSettings(automationPolicies, tlsSubjectHosts(externalHost)[0]),
+    tlsAdvanced: tlsPolicy ? parseTlsAdvanced(tlsPolicy, automationPolicies, tlsSubjectHosts(externalHost)[0], acmeAccount) : parseSiteAcmeSettings(automationPolicies, tlsSubjectHosts(externalHost)[0], acmeAccount),
     mtls: tlsPolicy ? parseMtls(tlsPolicy) : undefined,
     customTls,
   };
 }
 
 
-export function parseProxies(config: CaddyConfig, serverDefs?: import("./types").ServerDef[]): ProxyEntry[] {
+/** `acmeAccount` is the global ACME account of the Caddyfile, which the JSON alone can't always tell (#341). */
+export function parseProxies(config: CaddyConfig, serverDefs?: import("./types").ServerDef[], acmeAccount?: AcmeAccount): ProxyEntry[] {
   const servers = config.apps?.http?.servers ?? {};
   const automationPolicies = config.apps?.tls?.automation?.policies;
   const certLoadFiles = config.apps?.tls?.certificates?.load_files;
@@ -1223,7 +1225,7 @@ export function parseProxies(config: CaddyConfig, serverDefs?: import("./types")
       const entry = parseRouteToEntry(
         { handle: [{ handler: "subroute", routes: contentRoutes } as CaddyHandler] } as CaddyRoute, key, externalPort, externalHost, server, accessLog,
         serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
-        String(externalPort), undefined, automationPolicies, certLoadFiles,
+        String(externalPort), undefined, automationPolicies, certLoadFiles, acmeAccount,
       );
       if (entry) proxies.push(entry);
       continue;
@@ -1235,7 +1237,7 @@ export function parseProxies(config: CaddyConfig, serverDefs?: import("./types")
         const entry = parseRouteToEntry(
           contentRoutes[i], key, externalPort, externalHost, server, accessLog,
           serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
-          `${namedDef.key}:${i}`, isNamedServer ? namedDef.key : undefined, automationPolicies, certLoadFiles,
+          `${namedDef.key}:${i}`, isNamedServer ? namedDef.key : undefined, automationPolicies, certLoadFiles, acmeAccount,
         );
         if (entry) proxies.push(entry);
       }
@@ -1246,7 +1248,7 @@ export function parseProxies(config: CaddyConfig, serverDefs?: import("./types")
       const entry = parseRouteToEntry(
         route, key, externalPort, externalHost, server, accessLog,
         serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
-        String(externalPort), undefined, automationPolicies, certLoadFiles,
+        String(externalPort), undefined, automationPolicies, certLoadFiles, acmeAccount,
       );
       if (entry) proxies.push(entry);
     } else {
@@ -1260,7 +1262,7 @@ export function parseProxies(config: CaddyConfig, serverDefs?: import("./types")
         const entry = parseRouteToEntry(
           contentRoutes[i], key, externalPort, externalHost, server, accessLog,
           serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
-          routeHost ? `host:${routeHost}` : `${key}:${i}`, undefined, automationPolicies, certLoadFiles,
+          routeHost ? `host:${routeHost}` : `${key}:${i}`, undefined, automationPolicies, certLoadFiles, acmeAccount,
         );
         if (entry) proxies.push(entry);
       }
@@ -1734,6 +1736,7 @@ export function parseTlsAdvanced(
   policy: CaddyTLSConnectionPolicy,
   automationPolicies: import("./types").CaddyAutomationPolicy[] | undefined,
   host: string | undefined,
+  acmeAccount?: AcmeAccount,
 ): import("./types").TlsAdvancedConfig | undefined {
   const cfg: import("./types").TlsAdvancedConfig = {};
   let hasData = false;
@@ -1745,7 +1748,7 @@ export function parseTlsAdvanced(
   const lifetime = parseCertLifetimeDuration(automationPolicy?.issuers?.[0]?.lifetime);
   if (lifetime) { cfg.certLifetime = lifetime; hasData = true; }
   if (automationPolicy?.renewal_window_ratio !== undefined) { cfg.renewalWindowRatio = automationPolicy.renewal_window_ratio; hasData = true; }
-  const own = parseSiteAcmeSettings(automationPolicies, host);
+  const own = parseSiteAcmeSettings(automationPolicies, host, acmeAccount);
   if (own) { Object.assign(cfg, own); hasData = true; }
   return hasData ? cfg : undefined;
 }
@@ -1756,15 +1759,29 @@ export const ZEROSSL_DIRECTORY = "https://acme.zerossl.com/v2/DV90";
 
 type AcmeIssuer = { module?: string; email?: string; ca?: string; external_account?: Record<string, unknown> };
 
+/** The global ACME account (`email`, `acme_eab`) in the shape Caddy copies it into every issuer. */
+export type AcmeAccount = { email?: string; external_account?: Record<string, unknown> };
+
+/** The global ACME account of the Caddyfile's global options. */
+export function acmeAccountOf(opts: { email?: string; acmeEabKeyId?: string; acmeEabMacKey?: string }): AcmeAccount {
+  return {
+    ...(opts.email ? { email: opts.email } : {}),
+    ...(opts.acmeEabKeyId && opts.acmeEabMacKey ? { external_account: { key_id: opts.acmeEabKeyId, mac_key: opts.acmeEabMacKey } } : {}),
+  };
+}
+
 /**
- * The global ACME account (`email`, `acme_eab`) as Caddy copies it into the issuers: from the
- * catch-all policy, or, when every site has a policy of its own, from the email all of them
- * share. `exceptHosts` leaves out the policy of the site being read or written.
+ * The global ACME account: the one read from the Caddyfile's global options when the caller has
+ * it, else as Caddy copied it into the issuers. That is the catch-all policy, or, when every site
+ * has a policy of its own and the JSON has none, the email all of them share, which is a guess.
+ * `exceptHosts` leaves out the policy of the site being read or written.
  */
 export function globalAcmeAccount(
   policies: import("./types").CaddyAutomationPolicy[] | undefined,
   exceptHosts: string[] = [],
-): { email?: string; external_account?: Record<string, unknown> } {
+  known?: AcmeAccount,
+): AcmeAccount {
+  if (known) return known;
   const acmeOf = (p: import("./types").CaddyAutomationPolicy) =>
     (p.issuers ?? []).filter(i => i.module === "acme") as AcmeIssuer[];
   const pick = (i: AcmeIssuer | undefined) => ({
@@ -1789,10 +1806,11 @@ export function globalAcmeAccount(
 export function parseSiteAcmeSettings(
   automationPolicies: import("./types").CaddyAutomationPolicy[] | undefined,
   host: string | undefined,
+  acmeAccount?: AcmeAccount,
 ): Pick<import("./types").TlsAdvancedConfig, "acmeEmail" | "acmeCa" | "keyType"> | undefined {
   const scoped = host ? automationPolicies?.find(p => subjectsInclude(p.subjects, host)) : undefined;
   const acme = scoped?.issuers?.find(i => i.module === "acme") as AcmeIssuer | undefined;
-  const globalEmail = host ? globalAcmeAccount(automationPolicies, [host]).email : undefined;
+  const globalEmail = host ? globalAcmeAccount(automationPolicies, [host], acmeAccount).email : undefined;
   const out: Pick<import("./types").TlsAdvancedConfig, "acmeEmail" | "acmeCa" | "keyType"> = {
     ...(acme?.email && acme.email !== globalEmail ? { acmeEmail: acme.email } : {}),
     ...(acme?.ca && acme.ca !== ZEROSSL_DIRECTORY ? { acmeCa: acme.ca } : {}),
@@ -1895,6 +1913,7 @@ export function rebuildTlsAutomationPolicies(
   changedAdv: import("./types").TlsAdvancedConfig | undefined,
   changedHosts: string[],
   changedIssuer?: "acme" | "internal",
+  acmeAccount?: AcmeAccount,
 ): import("./types").CaddyTlsApp | undefined {
   const hasTls = Object.values(servers).some(
     s => Array.isArray(s.tls_connection_policies) && s.tls_connection_policies.length > 0,
@@ -1927,7 +1946,7 @@ export function rebuildTlsAutomationPolicies(
   // way `caddy adapt` builds it: the global email and EAB fill in what the site leaves unset, and
   // without its own CA the site keeps Let's Encrypt with the ZeroSSL fallback.
   if (changedHosts.length && isChangedServerLive && changedIssuer === "acme" && (changedAdv?.acmeEmail || changedAdv?.acmeCa || changedAdv?.keyType)) {
-    const global = globalAcmeAccount(existing, changedHosts);
+    const global = globalAcmeAccount(existing, changedHosts, acmeAccount);
     const email = changedAdv.acmeEmail || global.email;
     const account = { ...(email ? { email } : {}), ...(global.external_account ? { external_account: global.external_account } : {}) };
     const issuers = changedAdv.acmeCa
@@ -2410,13 +2429,13 @@ export function rebuildTlsCertificates(
 }
 
 
-export function mergeProxy(config: CaddyConfig, proxy: ProxyEntry): CaddyConfig {
+export function mergeProxy(config: CaddyConfig, proxy: ProxyEntry, acmeAccount?: AcmeAccount): CaddyConfig {
   const servers = { ...(config.apps?.http?.servers ?? {}) };
   const original = servers[proxy.serverKey];
   servers[proxy.serverKey] = (original && !proxy.redirect && !proxy.staticResponse) ? patchServer(original, proxy) : buildServerEntry(proxy);
 
   const logging = patchLoggingLogs(config, original, proxy);
-  const automation = rebuildTlsAutomationPolicies(config, servers, proxy.serverKey, proxy.tlsAdvanced, tlsSubjectHosts(proxy.externalHost), proxy.tlsIssuer);
+  const automation = rebuildTlsAutomationPolicies(config, servers, proxy.serverKey, proxy.tlsAdvanced, tlsSubjectHosts(proxy.externalHost), proxy.tlsIssuer, acmeAccount);
   const certificates = rebuildTlsCertificates(config, proxy);
 
   return {
