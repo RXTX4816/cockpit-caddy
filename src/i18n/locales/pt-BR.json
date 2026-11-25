@@ -282,7 +282,16 @@
     "max_header_bytes_help": "Tamanho máximo dos cabeçalhos da requisição (padrão do Caddy: 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "Desativar HTTP/3",
-    "http3_help": "O Caddy ativa HTTP/1.1, HTTP/2 e HTTP/3 por padrão sempre que o TLS está configurado. O HTTP/3 roda sobre UDP na mesma porta do HTTPS — se o seu firewall bloqueia UDP, desativá-lo aqui volta a usar apenas HTTP/1.1 e HTTP/2."
+    "http3_help": "O Caddy ativa HTTP/1.1, HTTP/2 e HTTP/3 por padrão sempre que o TLS está configurado. O HTTP/3 roda sobre UDP na mesma porta do HTTPS — se o seu firewall bloqueia UDP, desativá-lo aqui volta a usar apenas HTTP/1.1 e HTTP/2.",
+    "keepalive_interval": "Intervalo de keep-alive TCP",
+    "keepalive_idle": "Ociosidade antes do keep-alive TCP",
+    "options_label": "Opções de conexão",
+    "strict_sni_host": "Host SNI estrito",
+    "strict_sni_host_help": "Rejeita requisições cujo cabeçalho Host difere do nome do servidor TLS.",
+    "log_credentials": "Registrar credenciais",
+    "log_credentials_help": "Grava os cabeçalhos Authorization e Cookie no log de acesso.",
+    "enable_full_duplex": "Full duplex para HTTP/1",
+    "enable_full_duplex_help": "Permite que um handler leia o corpo da requisição enquanto grava a resposta."
   },
   "request_body": {
     "field_label": "Tamanho máximo do corpo da requisição",

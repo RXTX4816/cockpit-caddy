@@ -282,7 +282,16 @@
     "max_header_bytes_help": "Maksymalny rozmiar nagłówków żądania (domyślnie w Caddy: 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "Wyłącz HTTP/3",
-    "http3_help": "Caddy domyślnie włącza HTTP/1.1, HTTP/2 i HTTP/3, gdy skonfigurowano TLS. HTTP/3 działa przez UDP na tym samym porcie co HTTPS — jeśli zapora blokuje UDP, wyłączenie go tutaj pozostawia tylko HTTP/1.1 i HTTP/2."
+    "http3_help": "Caddy domyślnie włącza HTTP/1.1, HTTP/2 i HTTP/3, gdy skonfigurowano TLS. HTTP/3 działa przez UDP na tym samym porcie co HTTPS — jeśli zapora blokuje UDP, wyłączenie go tutaj pozostawia tylko HTTP/1.1 i HTTP/2.",
+    "keepalive_interval": "Interwał TCP keep-alive",
+    "keepalive_idle": "Czas bezczynności przed TCP keep-alive",
+    "options_label": "Opcje połączenia",
+    "strict_sni_host": "Ścisły host SNI",
+    "strict_sni_host_help": "Odrzuca żądania, których nagłówek Host różni się od nazwy serwera TLS.",
+    "log_credentials": "Loguj dane uwierzytelniające",
+    "log_credentials_help": "Zapisuje nagłówki Authorization i Cookie w dzienniku dostępu.",
+    "enable_full_duplex": "Pełny dupleks dla HTTP/1",
+    "enable_full_duplex_help": "Pozwala obsłudze czytać treść żądania podczas zapisywania odpowiedzi."
   },
   "request_body": {
     "field_label": "Maksymalny rozmiar treści żądania",

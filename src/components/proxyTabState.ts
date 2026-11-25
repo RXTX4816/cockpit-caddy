@@ -3,7 +3,7 @@ import type { ErrorHandlerConfig, ForwardAuthConfig, HeaderOperation, LbPolicy, 
 import { accessLogConfigToValues, accessLogValuesToConfig, type AccessLogValues } from "./AccessLogSection";
 import { resolveBasicAuth, type AuthEntry } from "./BasicAuthSection";
 import { lbRetryConfigToValues, lbRetryValuesToConfig, type LbRetryValues } from "./LbRetrySection";
-import type { ServerTimeoutValues } from "./ServerTimeoutsSection";
+import { serverExtrasFromValues, serverExtrasToValues, type ServerTimeoutValues } from "./ServerTimeoutsSection";
 import { tlsConfigToValues, tlsValuesToAdvanced, tlsValuesToCustomTls, tlsValuesToMtls, type TlsValues } from "./TlsSection";
 import type { TransportValues } from "./TransportSection";
 import { emptyLbArgs, lbArgsFromValues, lbArgsToValues, type ExtraUpstream, type LbArgsValues } from "./UpstreamsSection";
@@ -59,7 +59,7 @@ export function emptyProxyTabState(): ProxyTabState {
     accessLog: accessLogConfigToValues(undefined),
     errorHandlers: [],
     replaceUpstreamErrors: false,
-    serverTimeouts: { readTimeout: "", readHeaderTimeout: "", writeTimeout: "", idleTimeout: "", maxHeaderBytes: "", disableHttp3: false },
+    serverTimeouts: { readTimeout: "", readHeaderTimeout: "", writeTimeout: "", idleTimeout: "", maxHeaderBytes: "", disableHttp3: false, ...serverExtrasToValues(undefined) },
     requestBodyMaxSize: "",
   };
 }
@@ -92,6 +92,7 @@ export function proxyTabStateFromEntry(p: ProxyEntry): ProxyTabState {
       idleTimeout: p.serverIdleTimeout ?? "",
       maxHeaderBytes: p.maxHeaderBytes != null ? String(p.maxHeaderBytes) : "",
       disableHttp3: p.disableHttp3 ?? false,
+      ...serverExtrasToValues(p.serverExtras),
     },
     requestBodyMaxSize: p.requestBodyMaxSize != null ? String(p.requestBodyMaxSize) : "",
   };
@@ -102,7 +103,7 @@ export type ProxyTabEntryFields = Pick<ProxyEntry,
   | "matchers" | "handlePath" | "rewrite" | "requestHeaders" | "responseHeaders" | "isNamedRoute" | "namedRouteName"
   | "extraUpstreams" | "lbPolicy" | "lbPolicyArgs" | "lbRetry" | "dialTimeout" | "responseHeaderTimeout"
   | "accessLog" | "errorHandlers" | "replaceUpstreamErrors"
-  | "serverReadTimeout" | "serverReadHeaderTimeout" | "serverWriteTimeout" | "serverIdleTimeout" | "maxHeaderBytes" | "disableHttp3"
+  | "serverReadTimeout" | "serverReadHeaderTimeout" | "serverWriteTimeout" | "serverIdleTimeout" | "maxHeaderBytes" | "disableHttp3" | "serverExtras"
   | "requestBodyMaxSize">;
 
 /** The ProxyEntry fields the tabs set; unset ones are undefined. Hashes new Basic Auth passwords. */
@@ -138,6 +139,7 @@ export async function proxyTabStateToEntry(s: ProxyTabState): Promise<ProxyTabEn
     serverIdleTimeout: st.idleTimeout.trim() || undefined,
     maxHeaderBytes: st.maxHeaderBytes.trim() ? parseInt(st.maxHeaderBytes, 10) : undefined,
     disableHttp3: st.disableHttp3 || undefined,
+    serverExtras: serverExtrasFromValues(st),
     requestBodyMaxSize: s.requestBodyMaxSize.trim() ? parseInt(s.requestBodyMaxSize, 10) : undefined,
   };
 }

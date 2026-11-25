@@ -282,7 +282,16 @@
     "max_header_bytes_help": "İstek başlıklarının en büyük boyutu (Caddy varsayılanı: 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "HTTP/3'ü devre dışı bırak",
-    "http3_help": "Caddy, TLS yapılandırıldığında varsayılan olarak HTTP/1.1, HTTP/2 ve HTTP/3'ü etkinleştirir. HTTP/3, HTTPS ile aynı bağlantı noktasında UDP üzerinden çalışır — güvenlik duvarınız UDP'yi engelliyorsa burada devre dışı bırakmak yalnızca HTTP/1.1 ve HTTP/2'ye geri döner."
+    "http3_help": "Caddy, TLS yapılandırıldığında varsayılan olarak HTTP/1.1, HTTP/2 ve HTTP/3'ü etkinleştirir. HTTP/3, HTTPS ile aynı bağlantı noktasında UDP üzerinden çalışır — güvenlik duvarınız UDP'yi engelliyorsa burada devre dışı bırakmak yalnızca HTTP/1.1 ve HTTP/2'ye geri döner.",
+    "keepalive_interval": "TCP keep-alive aralığı",
+    "keepalive_idle": "TCP keep-alive öncesi boşta kalma süresi",
+    "options_label": "Bağlantı seçenekleri",
+    "strict_sni_host": "Katı SNI ana makinesi",
+    "strict_sni_host_help": "Host başlığı TLS sunucu adından farklı olan istekleri reddeder.",
+    "log_credentials": "Kimlik bilgilerini günlüğe yaz",
+    "log_credentials_help": "Authorization ve Cookie başlıklarını erişim günlüğüne yazar.",
+    "enable_full_duplex": "HTTP/1 için tam çift yönlü",
+    "enable_full_duplex_help": "Bir işleyicinin yanıtı yazarken istek gövdesini okumasına izin verir."
   },
   "request_body": {
     "field_label": "İstek gövdesinin en büyük boyutu",

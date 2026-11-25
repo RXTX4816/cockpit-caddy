@@ -282,7 +282,16 @@
     "max_header_bytes_help": "요청 헤더의 최대 크기(Caddy 기본값: 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "HTTP/3 사용 안 함",
-    "http3_help": "Caddy는 TLS가 설정되면 기본적으로 HTTP/1.1, HTTP/2, HTTP/3을 사용합니다. HTTP/3은 HTTPS와 같은 포트의 UDP로 동작하므로, 방화벽이 UDP를 차단한다면 여기서 끄면 HTTP/1.1과 HTTP/2만 사용합니다."
+    "http3_help": "Caddy는 TLS가 설정되면 기본적으로 HTTP/1.1, HTTP/2, HTTP/3을 사용합니다. HTTP/3은 HTTPS와 같은 포트의 UDP로 동작하므로, 방화벽이 UDP를 차단한다면 여기서 끄면 HTTP/1.1과 HTTP/2만 사용합니다.",
+    "keepalive_interval": "TCP keep-alive 간격",
+    "keepalive_idle": "TCP keep-alive 전 유휴 시간",
+    "options_label": "연결 옵션",
+    "strict_sni_host": "엄격한 SNI 호스트",
+    "strict_sni_host_help": "Host 헤더가 TLS 서버 이름과 다른 요청을 거부합니다.",
+    "log_credentials": "자격 증명 기록",
+    "log_credentials_help": "Authorization 및 Cookie 헤더를 액세스 로그에 기록합니다.",
+    "enable_full_duplex": "HTTP/1 전이중 통신",
+    "enable_full_duplex_help": "핸들러가 응답을 쓰는 동안 요청 본문을 읽을 수 있게 합니다."
   },
   "request_body": {
     "field_label": "요청 본문 최대 크기",

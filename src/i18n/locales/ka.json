@@ -282,7 +282,16 @@
     "max_header_bytes_help": "მოთხოვნის სათაურების მაქსიმალური ზომა (Caddy-ის ნაგულისხმევი: 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "HTTP/3-ის გამორთვა",
-    "http3_help": "Caddy ნაგულისხმევად რთავს HTTP/1.1-ს, HTTP/2-ს და HTTP/3-ს, როცა TLS მორგებულია. HTTP/3 მუშაობს UDP-ზე იმავე პორტზე, რომელზეც HTTPS — თუ ბრანდმაუერი UDP-ს ბლოკავს, აქ გამორთვის შემდეგ მხოლოდ HTTP/1.1 და HTTP/2 დარჩება."
+    "http3_help": "Caddy ნაგულისხმევად რთავს HTTP/1.1-ს, HTTP/2-ს და HTTP/3-ს, როცა TLS მორგებულია. HTTP/3 მუშაობს UDP-ზე იმავე პორტზე, რომელზეც HTTPS — თუ ბრანდმაუერი UDP-ს ბლოკავს, აქ გამორთვის შემდეგ მხოლოდ HTTP/1.1 და HTTP/2 დარჩება.",
+    "keepalive_interval": "TCP keep-alive-ის ინტერვალი",
+    "keepalive_idle": "TCP keep-alive-მდე უქმი დრო",
+    "options_label": "კავშირის პარამეტრები",
+    "strict_sni_host": "მკაცრი SNI ჰოსტი",
+    "strict_sni_host_help": "უარყოფს მოთხოვნებს, რომელთა Host სათაური განსხვავდება TLS სერვერის სახელისგან.",
+    "log_credentials": "ავტორიზაციის მონაცემების ჟურნალი",
+    "log_credentials_help": "Authorization და Cookie სათაურებს წერს წვდომის ჟურნალში.",
+    "enable_full_duplex": "სრული დუპლექსი HTTP/1-ისთვის",
+    "enable_full_duplex_help": "ჰენდლერს საშუალებას აძლევს წაიკითხოს მოთხოვნის სხეული პასუხის წერისას."
   },
   "request_body": {
     "field_label": "მოთხოვნის ტანის მაქსიმალური ზომა",

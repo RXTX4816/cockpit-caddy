@@ -282,7 +282,16 @@
     "max_header_bytes_help": "Maximální velikost hlaviček požadavku (výchozí v Caddy: 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "Vypnout HTTP/3",
-    "http3_help": "Caddy ve výchozím stavu zapíná HTTP/1.1, HTTP/2 a HTTP/3, jakmile je nastaveno TLS. HTTP/3 běží přes UDP na stejném portu jako HTTPS — pokud firewall blokuje UDP, jeho vypnutím zde zůstane jen HTTP/1.1 a HTTP/2."
+    "http3_help": "Caddy ve výchozím stavu zapíná HTTP/1.1, HTTP/2 a HTTP/3, jakmile je nastaveno TLS. HTTP/3 běží přes UDP na stejném portu jako HTTPS — pokud firewall blokuje UDP, jeho vypnutím zde zůstane jen HTTP/1.1 a HTTP/2.",
+    "keepalive_interval": "Interval TCP keep-alive",
+    "keepalive_idle": "Nečinnost před TCP keep-alive",
+    "options_label": "Možnosti spojení",
+    "strict_sni_host": "Striktní hostitel SNI",
+    "strict_sni_host_help": "Odmítne požadavky, jejichž hlavička Host se liší od jména serveru TLS.",
+    "log_credentials": "Zapisovat přihlašovací údaje",
+    "log_credentials_help": "Zapíše hlavičky Authorization a Cookie do přístupového logu.",
+    "enable_full_duplex": "Plný duplex pro HTTP/1",
+    "enable_full_duplex_help": "Handler může číst tělo požadavku, zatímco zapisuje odpověď."
   },
   "request_body": {
     "field_label": "Maximální velikost těla požadavku",

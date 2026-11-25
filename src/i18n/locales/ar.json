@@ -282,7 +282,16 @@
     "max_header_bytes_help": "الحد الأقصى لحجم ترويسات الطلب (افتراضي Caddy: ‏16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "تعطيل HTTP/3",
-    "http3_help": "يفعّل Caddy افتراضيًا HTTP/1.1 وHTTP/2 وHTTP/3 كلما أُعدّ TLS. يعمل HTTP/3 عبر UDP على منفذ HTTPS نفسه — إذا كان جدار الحماية يحظر UDP فإن تعطيله هنا يعيد الاعتماد على HTTP/1.1 وHTTP/2 فقط."
+    "http3_help": "يفعّل Caddy افتراضيًا HTTP/1.1 وHTTP/2 وHTTP/3 كلما أُعدّ TLS. يعمل HTTP/3 عبر UDP على منفذ HTTPS نفسه — إذا كان جدار الحماية يحظر UDP فإن تعطيله هنا يعيد الاعتماد على HTTP/1.1 وHTTP/2 فقط.",
+    "keepalive_interval": "فاصل TCP keep-alive",
+    "keepalive_idle": "مدة الخمول قبل TCP keep-alive",
+    "options_label": "خيارات الاتصال",
+    "strict_sni_host": "التحقق الصارم من SNI والمضيف",
+    "strict_sni_host_help": "رفض الطلبات التي يختلف فيها ترويسة Host عن اسم خادم TLS.",
+    "log_credentials": "تسجيل بيانات الاعتماد",
+    "log_credentials_help": "كتابة ترويستي Authorization وCookie في سجل الوصول.",
+    "enable_full_duplex": "الإرسال المزدوج الكامل لـ HTTP/1",
+    "enable_full_duplex_help": "السماح للمعالج بقراءة جسم الطلب أثناء كتابة الاستجابة."
   },
   "request_body": {
     "field_label": "الحد الأقصى لحجم جسم الطلب",

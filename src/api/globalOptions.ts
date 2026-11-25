@@ -26,6 +26,21 @@ export function buildLogRollLines(log: import("./types").AccessLogConfig, indent
  * per-port `servers :PORT { }` fully replaces (doesn't merge with) the global block's
  * settings for that port, verified against a live instance.
  */
+/**
+ * `servers` lines for the per-listener options of #328. Written in every `servers` block
+ * that covers the listener, like the other options there.
+ */
+export function buildServerExtrasLines(extras: import("./types").ServerExtras | undefined, indent: string): string[] {
+  const lines: string[] = [];
+  if (extras?.keepaliveInterval) lines.push(`${indent}keepalive_interval ${extras.keepaliveInterval}`);
+  if (extras?.keepaliveIdle) lines.push(`${indent}keepalive_idle ${extras.keepaliveIdle}`);
+  if (extras?.strictSniHost) lines.push(`${indent}strict_sni_host`);
+  if (extras?.logCredentials) lines.push(`${indent}log_credentials`);
+  if (extras?.enableFullDuplex) lines.push(`${indent}enable_full_duplex`);
+  return lines;
+}
+
+
 export function buildTrustedProxiesLines(tp: import("./types").TrustedProxiesConfig, indent: string): string[] {
   const lines: string[] = [];
   if (tp.ranges.length) lines.push(`${indent}trusted_proxies static ${tp.ranges.join(" ")}`);

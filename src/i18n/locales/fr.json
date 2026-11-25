@@ -282,7 +282,16 @@
     "max_header_bytes_help": "Taille maximale des en-têtes de requête (par défaut dans Caddy : 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "Désactiver HTTP/3",
-    "http3_help": "Caddy active HTTP/1.1, HTTP/2 et HTTP/3 par défaut dès que TLS est configuré. HTTP/3 passe par UDP sur le même port que HTTPS — si votre pare-feu bloque UDP, le désactiver ici ramène à HTTP/1.1 et HTTP/2 uniquement."
+    "http3_help": "Caddy active HTTP/1.1, HTTP/2 et HTTP/3 par défaut dès que TLS est configuré. HTTP/3 passe par UDP sur le même port que HTTPS — si votre pare-feu bloque UDP, le désactiver ici ramène à HTTP/1.1 et HTTP/2 uniquement.",
+    "keepalive_interval": "Intervalle keep-alive TCP",
+    "keepalive_idle": "Inactivité avant le keep-alive TCP",
+    "options_label": "Options de connexion",
+    "strict_sni_host": "Hôte SNI strict",
+    "strict_sni_host_help": "Rejette les requêtes dont l'en-tête Host diffère du nom de serveur TLS.",
+    "log_credentials": "Journaliser les identifiants",
+    "log_credentials_help": "Écrit les en-têtes Authorization et Cookie dans le journal d'accès.",
+    "enable_full_duplex": "Full duplex pour HTTP/1",
+    "enable_full_duplex_help": "Permet à un gestionnaire de lire le corps de la requête pendant qu'il écrit la réponse."
   },
   "request_body": {
     "field_label": "Taille maximale du corps de requête",

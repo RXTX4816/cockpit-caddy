@@ -282,7 +282,16 @@
     "max_header_bytes_help": "Maximum request header size (Caddy's default: 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "Disable HTTP/3",
-    "http3_help": "Caddy enables HTTP/1.1, HTTP/2, and HTTP/3 by default whenever TLS is configured. HTTP/3 runs over UDP on the same port as HTTPS — if UDP is blocked by your firewall, disabling it here falls back to HTTP/1.1 and HTTP/2 only."
+    "http3_help": "Caddy enables HTTP/1.1, HTTP/2, and HTTP/3 by default whenever TLS is configured. HTTP/3 runs over UDP on the same port as HTTPS — if UDP is blocked by your firewall, disabling it here falls back to HTTP/1.1 and HTTP/2 only.",
+    "keepalive_interval": "TCP keep-alive interval",
+    "keepalive_idle": "TCP keep-alive idle time",
+    "options_label": "Connection options",
+    "strict_sni_host": "Strict SNI host",
+    "strict_sni_host_help": "Reject requests whose Host header differs from the TLS server name.",
+    "log_credentials": "Log credentials",
+    "log_credentials_help": "Write the Authorization and Cookie headers to the access log.",
+    "enable_full_duplex": "Full duplex for HTTP/1",
+    "enable_full_duplex_help": "Let a handler read the request body while it writes the response."
   },
   "request_body": {
     "field_label": "Max request body size",

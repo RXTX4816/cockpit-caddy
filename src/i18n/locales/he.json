@@ -282,7 +282,16 @@
     "max_header_bytes_help": "הגודל המרבי של כותרות הבקשה (ברירת המחדל של Caddy:‏ 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "השבתת HTTP/3",
-    "http3_help": "Caddy מפעיל כברירת מחדל HTTP/1.1, ‏HTTP/2 ו-HTTP/3 כשמוגדר TLS. HTTP/3 רץ על UDP באותו פורט כמו HTTPS — אם חומת האש חוסמת UDP, השבתה כאן תשאיר רק HTTP/1.1 ו-HTTP/2."
+    "http3_help": "Caddy מפעיל כברירת מחדל HTTP/1.1, ‏HTTP/2 ו-HTTP/3 כשמוגדר TLS. HTTP/3 רץ על UDP באותו פורט כמו HTTPS — אם חומת האש חוסמת UDP, השבתה כאן תשאיר רק HTTP/1.1 ו-HTTP/2.",
+    "keepalive_interval": "מרווח TCP keep-alive",
+    "keepalive_idle": "זמן סרק לפני TCP keep-alive",
+    "options_label": "אפשרויות חיבור",
+    "strict_sni_host": "מארח SNI מחמיר",
+    "strict_sni_host_help": "דוחה בקשות שכותרת Host שלהן שונה משם שרת ה-TLS.",
+    "log_credentials": "תיעוד פרטי כניסה",
+    "log_credentials_help": "כותב את הכותרות Authorization ו-Cookie ליומן הגישה.",
+    "enable_full_duplex": "דופלקס מלא עבור HTTP/1",
+    "enable_full_duplex_help": "מאפשר למטפל לקרוא את גוף הבקשה בזמן כתיבת התשובה."
   },
   "request_body": {
     "field_label": "גודל מרבי של גוף הבקשה",

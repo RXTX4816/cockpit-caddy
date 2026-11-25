@@ -282,7 +282,16 @@
     "max_header_bytes_help": "Максимальный размер заголовков запроса (по умолчанию в Caddy: 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "Отключить HTTP/3",
-    "http3_help": "Caddy по умолчанию включает HTTP/1.1, HTTP/2 и HTTP/3, если настроен TLS. HTTP/3 работает поверх UDP на том же порту, что и HTTPS — если ваш межсетевой экран блокирует UDP, после отключения здесь останутся только HTTP/1.1 и HTTP/2."
+    "http3_help": "Caddy по умолчанию включает HTTP/1.1, HTTP/2 и HTTP/3, если настроен TLS. HTTP/3 работает поверх UDP на том же порту, что и HTTPS — если ваш межсетевой экран блокирует UDP, после отключения здесь останутся только HTTP/1.1 и HTTP/2.",
+    "keepalive_interval": "Интервал TCP keep-alive",
+    "keepalive_idle": "Простой до TCP keep-alive",
+    "options_label": "Параметры соединения",
+    "strict_sni_host": "Строгая проверка SNI и хоста",
+    "strict_sni_host_help": "Отклоняет запросы, у которых заголовок Host отличается от имени сервера TLS.",
+    "log_credentials": "Записывать учётные данные",
+    "log_credentials_help": "Записывает заголовки Authorization и Cookie в журнал доступа.",
+    "enable_full_duplex": "Полный дуплекс для HTTP/1",
+    "enable_full_duplex_help": "Позволяет обработчику читать тело запроса во время записи ответа."
   },
   "request_body": {
     "field_label": "Максимальный размер тела запроса",

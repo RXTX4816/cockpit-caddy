@@ -282,7 +282,16 @@
     "max_header_bytes_help": "Ukuran maksimum header permintaan (bawaan Caddy: 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "Nonaktifkan HTTP/3",
-    "http3_help": "Caddy mengaktifkan HTTP/1.1, HTTP/2, dan HTTP/3 secara bawaan setiap kali TLS dikonfigurasi. HTTP/3 berjalan di atas UDP pada port yang sama dengan HTTPS — jika firewall memblokir UDP, menonaktifkannya di sini akan kembali ke HTTP/1.1 dan HTTP/2 saja."
+    "http3_help": "Caddy mengaktifkan HTTP/1.1, HTTP/2, dan HTTP/3 secara bawaan setiap kali TLS dikonfigurasi. HTTP/3 berjalan di atas UDP pada port yang sama dengan HTTPS — jika firewall memblokir UDP, menonaktifkannya di sini akan kembali ke HTTP/1.1 dan HTTP/2 saja.",
+    "keepalive_interval": "Interval keep-alive TCP",
+    "keepalive_idle": "Waktu diam sebelum keep-alive TCP",
+    "options_label": "Opsi koneksi",
+    "strict_sni_host": "Host SNI ketat",
+    "strict_sni_host_help": "Tolak permintaan yang header Host-nya berbeda dari nama server TLS.",
+    "log_credentials": "Catat kredensial",
+    "log_credentials_help": "Tulis header Authorization dan Cookie ke log akses.",
+    "enable_full_duplex": "Full duplex untuk HTTP/1",
+    "enable_full_duplex_help": "Izinkan handler membaca isi permintaan sambil menulis respons."
   },
   "request_body": {
     "field_label": "Ukuran maksimum body permintaan",

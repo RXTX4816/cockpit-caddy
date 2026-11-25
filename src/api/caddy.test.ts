@@ -52,6 +52,7 @@ import {
   CONF_D_IMPORT_LINE,
   parseConfTlsIssuerMap,
 } from "./caddy";
+import { applyServerExtras, parseServerExtras } from "./caddyJsonModel";
 import type { CaddyConfig, CaddyServer, ProxyEntry, RouteMatch, ServerDef } from "./types";
 
 // ---------------------------------------------------------------------------
@@ -4640,5 +4641,42 @@ describe("proxy error handlers and upstream error pages (#255)", () => {
     const rp = old.routes![0].handle!.find(h => h.handler === "reverse_proxy") as Record<string, unknown>;
     rp.handle_response = [{ match: { status_code: [4] }, routes: [{ handle: [{ handler: "error", status_code: 400 }] }] }];
     expect(parseProxies({ apps: { http: { servers: { srv0: old } } } })[0].replaceUpstreamErrors).toBe(true);
+  });
+});
+
+describe("server options on the JSON side (#328)", () => {
+  const extras = { keepaliveInterval: "30s", keepaliveIdle: "1m", strictSniHost: true, logCredentials: true, enableFullDuplex: true };
+
+  it("applyServerExtras writes the Caddy JSON fields and parseServerExtras reads them back", () => {
+    const server = { listen: [":8443"], routes: [] } as CaddyServer;
+    applyServerExtras(server, extras);
+    expect(server).toMatchObject({
+      keepalive_interval: "30s", keepalive_idle: "1m", strict_sni_host: true, enable_full_duplex: true,
+      logs: { should_log_credentials: true },
+    });
+    expect(parseServerExtras(server)).toEqual(extras);
+  });
+
+  it("reads the nanosecond durations Caddy returns", () => {
+    const server = { listen: [":8443"], routes: [], keepalive_interval: 30e9, keepalive_idle: 90e9 } as unknown as CaddyServer;
+    expect(parseServerExtras(server)).toEqual({ keepaliveInterval: "30s", keepaliveIdle: "90s" });
+  });
+
+  it("keeps the access log's logger name and removes the options that were cleared", () => {
+    const server = { listen: [":8443"], routes: [], logs: { default_logger_name: "access" } } as unknown as CaddyServer;
+    applyServerExtras(server, extras);
+    expect((server as Record<string, unknown>).logs).toEqual({ default_logger_name: "access", should_log_credentials: true });
+    applyServerExtras(server, undefined);
+    expect(server).toEqual({ listen: [":8443"], routes: [], logs: { default_logger_name: "access" } });
+  });
+
+  it("reads the options of a server into its proxies", () => {
+    const config = {
+      apps: { http: { servers: { srv0: {
+        listen: [":8443"], strict_sni_host: true,
+        routes: [{ handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:9000" }] }] }],
+      } } } },
+    } as unknown as CaddyConfig;
+    expect(parseProxies(config)[0].serverExtras).toEqual({ strictSniHost: true });
   });
 });

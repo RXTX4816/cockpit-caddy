@@ -282,7 +282,16 @@
     "max_header_bytes_help": "Pyynnön otsakkeiden enimmäiskoko (Caddyn oletus: 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "Poista HTTP/3 käytöstä",
-    "http3_help": "Caddy ottaa HTTP/1.1:n, HTTP/2:n ja HTTP/3:n oletuksena käyttöön aina, kun TLS on määritetty. HTTP/3 kulkee UDP:n yli samassa portissa kuin HTTPS — jos palomuuri estää UDP:n, sen poistaminen käytöstä tässä jättää käyttöön vain HTTP/1.1:n ja HTTP/2:n."
+    "http3_help": "Caddy ottaa HTTP/1.1:n, HTTP/2:n ja HTTP/3:n oletuksena käyttöön aina, kun TLS on määritetty. HTTP/3 kulkee UDP:n yli samassa portissa kuin HTTPS — jos palomuuri estää UDP:n, sen poistaminen käytöstä tässä jättää käyttöön vain HTTP/1.1:n ja HTTP/2:n.",
+    "keepalive_interval": "TCP keep-alive -väli",
+    "keepalive_idle": "Joutoaika ennen TCP keep-alivea",
+    "options_label": "Yhteysasetukset",
+    "strict_sni_host": "Tiukka SNI-isäntä",
+    "strict_sni_host_help": "Hylkää pyynnöt, joiden Host-otsake poikkeaa TLS-palvelimen nimestä.",
+    "log_credentials": "Kirjaa tunnistetiedot",
+    "log_credentials_help": "Kirjoittaa Authorization- ja Cookie-otsakkeet käyttölokiin.",
+    "enable_full_duplex": "Kaksisuuntainen HTTP/1",
+    "enable_full_duplex_help": "Käsittelijä voi lukea pyynnön rungon samalla kun se kirjoittaa vastausta."
   },
   "request_body": {
     "field_label": "Pyynnön rungon enimmäiskoko",

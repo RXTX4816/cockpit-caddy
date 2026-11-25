@@ -282,7 +282,16 @@
     "max_header_bytes_help": "Största storlek på förfrågans headers (Caddys standard: 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "Inaktivera HTTP/3",
-    "http3_help": "Caddy aktiverar HTTP/1.1, HTTP/2 och HTTP/3 som standard när TLS är konfigurerat. HTTP/3 går över UDP på samma port som HTTPS — om brandväggen blockerar UDP gör en inaktivering här att bara HTTP/1.1 och HTTP/2 används."
+    "http3_help": "Caddy aktiverar HTTP/1.1, HTTP/2 och HTTP/3 som standard när TLS är konfigurerat. HTTP/3 går över UDP på samma port som HTTPS — om brandväggen blockerar UDP gör en inaktivering här att bara HTTP/1.1 och HTTP/2 används.",
+    "keepalive_interval": "TCP keep-alive-intervall",
+    "keepalive_idle": "Inaktivitet före TCP keep-alive",
+    "options_label": "Anslutningsalternativ",
+    "strict_sni_host": "Strikt SNI-värd",
+    "strict_sni_host_help": "Avvisar förfrågningar vars Host-huvud skiljer sig från TLS-servernamnet.",
+    "log_credentials": "Logga inloggningsuppgifter",
+    "log_credentials_help": "Skriver huvudena Authorization och Cookie till åtkomstloggen.",
+    "enable_full_duplex": "Full duplex för HTTP/1",
+    "enable_full_duplex_help": "Låter en hanterare läsa förfrågans innehåll medan den skriver svaret."
   },
   "request_body": {
     "field_label": "Största storlek på förfrågans innehåll",

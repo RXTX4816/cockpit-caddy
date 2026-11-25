@@ -12,6 +12,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { CONF_HEADER, buildServerEntry, proxiesToCaddyfile, parseProxies, parseConfExternalAddresses, proxyAddressKeys, resolveInternalIssuerSettings, surgicallyWriteProxy, buildMigratedConfContent, migrateCaddyfile, parseConfTlsIssuerMap, parseConfTlsOnDemandMap, parseConfTlsMap, expandPlaceholderShorthands } from "./caddy";
 import { snippetsToConf, parseSnippets, parseConfSiteImports, parseConfSiteBlocks, separateSnippetSettings } from "./snippets";
+import { buildServerExtrasLines } from "./globalOptions";
+import { parseServerExtras } from "./caddyJsonModel";
 import type { CaddyConfig, CaddyServer, ProxyEntry } from "./types";
 
 function hasCaddy(): boolean {
@@ -816,5 +818,18 @@ describe.runIf(available || required)("client_ip matcher (#286)", () => {
   it("works in an exclude group too", () => {
     const matchers = { path: ["/x/*"], not: { client_ip: { ranges: ["10.0.0.0/8"] } } };
     expect(readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, matchers })]))[0].matchers).toEqual(matchers);
+  });
+});
+
+describe.runIf(available || required)("caddy adapt accepts the server options (#328)", () => {
+  it("reads them back from a real adapt", () => {
+    const lines = buildServerExtrasLines({
+      keepaliveInterval: "30s", keepaliveIdle: "1m", strictSniHost: true, logCredentials: true, enableFullDuplex: true,
+    }, "\t\t");
+    const conf = `{\n\tservers :8443 {\n${lines.join("\n")}\n\t}\n}\n\n:8443 {\n\trespond ok\n}\n`;
+    const server = Object.values(adapt(conf).apps?.http?.servers ?? {})[0] as CaddyServer;
+    expect(parseServerExtras(server)).toEqual({
+      keepaliveInterval: "30s", keepaliveIdle: "1m", strictSniHost: true, logCredentials: true, enableFullDuplex: true,
+    });
   });
 });

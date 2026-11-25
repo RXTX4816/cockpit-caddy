@@ -1,3 +1,4 @@
+import { serverExtrasToValues } from "./ServerTimeoutsSection";
 import { describe, it, expect } from "vitest";
 import { proxyTabFlags, type ProxyTabValues } from "./proxyTabFlags";
 import { accessLogConfigToValues } from "./AccessLogSection";
@@ -10,7 +11,7 @@ const base: ProxyTabValues = {
   matchers: undefined, rewrite: undefined, requestHeaders: undefined, responseHeaders: undefined, isNamedRoute: false,
   extraUpstreams: [], lbPolicy: "", lbArgs: emptyLbArgs(), lbRetry: lbRetryConfigToValues(undefined), transport: { dialTimeout: "", responseHeaderTimeout: "" },
   accessLog: accessLogConfigToValues(undefined), errorHandlers: [],
-  serverTimeouts: { readTimeout: "", readHeaderTimeout: "", writeTimeout: "", idleTimeout: "", maxHeaderBytes: "", disableHttp3: false },
+  serverTimeouts: { readTimeout: "", readHeaderTimeout: "", writeTimeout: "", idleTimeout: "", maxHeaderBytes: "", disableHttp3: false, ...serverExtrasToValues(undefined) },
   requestBodyMaxSize: "",
 };
 

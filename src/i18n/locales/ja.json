@@ -282,7 +282,16 @@
     "max_header_bytes_help": "リクエストヘッダーの最大サイズ（Caddy の既定値: 16 KB）",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "HTTP/3 を無効にする",
-    "http3_help": "Caddy は TLS が設定されていると、既定で HTTP/1.1、HTTP/2、HTTP/3 を有効にします。HTTP/3 は HTTPS と同じポートの UDP 上で動作します。ファイアウォールが UDP をブロックしている場合は、ここで無効にすると HTTP/1.1 と HTTP/2 のみになります。"
+    "http3_help": "Caddy は TLS が設定されていると、既定で HTTP/1.1、HTTP/2、HTTP/3 を有効にします。HTTP/3 は HTTPS と同じポートの UDP 上で動作します。ファイアウォールが UDP をブロックしている場合は、ここで無効にすると HTTP/1.1 と HTTP/2 のみになります。",
+    "keepalive_interval": "TCP keep-alive の間隔",
+    "keepalive_idle": "TCP keep-alive 開始までのアイドル時間",
+    "options_label": "接続オプション",
+    "strict_sni_host": "SNI ホストを厳密に検証",
+    "strict_sni_host_help": "Host ヘッダーが TLS のサーバー名と異なるリクエストを拒否します。",
+    "log_credentials": "認証情報をログに記録",
+    "log_credentials_help": "Authorization ヘッダーと Cookie ヘッダーをアクセスログに書き込みます。",
+    "enable_full_duplex": "HTTP/1 の全二重通信",
+    "enable_full_duplex_help": "ハンドラーがレスポンスを書き込みながらリクエストボディを読めるようにします。"
   },
   "request_body": {
     "field_label": "リクエスト本文の最大サイズ",

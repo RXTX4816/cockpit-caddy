@@ -282,7 +282,16 @@
     "max_header_bytes_help": "請求標頭的最大大小（Caddy 預設值：16 KB）",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "停用 HTTP/3",
-    "http3_help": "只要設定了 TLS，Caddy 預設會啟用 HTTP/1.1、HTTP/2 和 HTTP/3。HTTP/3 透過 UDP 在與 HTTPS 相同的連接埠上運作——若防火牆封鎖 UDP，在此停用後只會使用 HTTP/1.1 和 HTTP/2。"
+    "http3_help": "只要設定了 TLS，Caddy 預設會啟用 HTTP/1.1、HTTP/2 和 HTTP/3。HTTP/3 透過 UDP 在與 HTTPS 相同的連接埠上運作——若防火牆封鎖 UDP，在此停用後只會使用 HTTP/1.1 和 HTTP/2。",
+    "keepalive_interval": "TCP keep-alive 間隔",
+    "keepalive_idle": "TCP keep-alive 前的閒置時間",
+    "options_label": "連線選項",
+    "strict_sni_host": "嚴格檢查 SNI 主機",
+    "strict_sni_host_help": "拒絕 Host 標頭與 TLS 伺服器名稱不一致的請求。",
+    "log_credentials": "記錄憑證",
+    "log_credentials_help": "將 Authorization 和 Cookie 標頭寫入存取記錄。",
+    "enable_full_duplex": "HTTP/1 全雙工",
+    "enable_full_duplex_help": "允許處理程式在寫入回應的同時讀取請求本文。"
   },
   "request_body": {
     "field_label": "請求本文大小上限",

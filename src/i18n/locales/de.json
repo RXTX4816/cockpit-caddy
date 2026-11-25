@@ -282,7 +282,16 @@
     "max_header_bytes_help": "Maximale Größe der Request-Header (Caddy-Standard: 16 KB)",
     "http3_label": "HTTP/3 (QUIC)",
     "http3_checkbox": "HTTP/3 deaktivieren",
-    "http3_help": "Caddy aktiviert HTTP/1.1, HTTP/2 und HTTP/3 standardmäßig, sobald TLS konfiguriert ist. HTTP/3 läuft über UDP auf demselben Port wie HTTPS – wenn Ihre Firewall UDP blockiert, fällt Caddy nach dem Deaktivieren hier auf HTTP/1.1 und HTTP/2 zurück."
+    "http3_help": "Caddy aktiviert HTTP/1.1, HTTP/2 und HTTP/3 standardmäßig, sobald TLS konfiguriert ist. HTTP/3 läuft über UDP auf demselben Port wie HTTPS – wenn Ihre Firewall UDP blockiert, fällt Caddy nach dem Deaktivieren hier auf HTTP/1.1 und HTTP/2 zurück.",
+    "keepalive_interval": "TCP-Keep-alive-Intervall",
+    "keepalive_idle": "Leerlaufzeit vor TCP-Keep-alive",
+    "options_label": "Verbindungsoptionen",
+    "strict_sni_host": "Strikter SNI-Host",
+    "strict_sni_host_help": "Weist Anfragen ab, deren Host-Header vom TLS-Servernamen abweicht.",
+    "log_credentials": "Zugangsdaten protokollieren",
+    "log_credentials_help": "Schreibt die Header Authorization und Cookie ins Zugriffsprotokoll.",
+    "enable_full_duplex": "Vollduplex für HTTP/1",
+    "enable_full_duplex_help": "Ein Handler darf den Request-Body lesen, während er die Antwort schreibt."
   },
   "request_body": {
     "field_label": "Maximale Größe des Request-Bodys",
