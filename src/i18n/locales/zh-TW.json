@@ -1074,5 +1074,25 @@
     "site_inherit_help": "使用「設定 → DNS 驗證」中設定的 DNS 供應商；未設定時使用 HTTP 驗證。",
     "site_override_help": "此網站使用自己的 DNS 供應商和憑證。儲存新憑證會重新啟動 Caddy，因為它只在啟動時讀取憑證。",
     "site_wildcard_warning": "萬用字元憑證需要 DNS 驗證。請為此網站設定 DNS 供應商，或在「設定 → DNS 驗證」中設定。"
+  },
+  "dynamic_upstreams": {
+    "heading": "動態上游",
+    "section_title": "動態上游(進階,選填)",
+    "help": "透過 DNS 查詢上游。查詢無結果時使用上方的目標作為備援。多個來源會合併。",
+    "add_button": "新增 DNS 來源",
+    "type": "查詢類型",
+    "name_srv": "SRV 名稱",
+    "name_a": "主機名稱",
+    "refresh": "重新整理間隔",
+    "resolvers": "DNS 解析器",
+    "dial_fallback_delay": "備用連線延遲",
+    "grace_period": "寬限期",
+    "versions": "位址族",
+    "versions_both": "IPv4 與 IPv6",
+    "validation_name": "含設定的來源需要名稱。",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

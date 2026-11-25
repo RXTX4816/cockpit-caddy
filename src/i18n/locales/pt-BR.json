@@ -1074,5 +1074,25 @@
     "site_inherit_help": "Usa o provedor DNS definido em Configurações → Desafio DNS, ou o desafio HTTP se nenhum estiver definido.",
     "site_override_help": "Este site usa seu próprio provedor DNS e credenciais. Salvar novas credenciais reinicia o Caddy, que só as lê ao iniciar.",
     "site_wildcard_warning": "Certificados curinga precisam do desafio DNS. Defina um provedor DNS para este site ou em Configurações → Desafio DNS."
+  },
+  "dynamic_upstreams": {
+    "heading": "Upstreams dinâmicos",
+    "section_title": "Upstreams dinâmicos (avançado, opcional)",
+    "help": "Procura os upstreams no DNS. O destino acima é o reserva quando a consulta não encontra nada. Várias fontes são combinadas.",
+    "add_button": "Adicionar fonte DNS",
+    "type": "Tipo de consulta",
+    "name_srv": "Nome SRV",
+    "name_a": "Nome do host",
+    "refresh": "Intervalo de atualização",
+    "resolvers": "Resolvedores DNS",
+    "dial_fallback_delay": "Atraso da conexão alternativa",
+    "grace_period": "Período de tolerância",
+    "versions": "Famílias de endereços",
+    "versions_both": "IPv4 e IPv6",
+    "validation_name": "Uma fonte com configurações precisa de um nome.",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

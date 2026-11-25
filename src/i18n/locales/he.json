@@ -1074,5 +1074,25 @@
     "site_inherit_help": "משתמש בספק ה-DNS שהוגדר בהגדרות ← אתגר DNS, או באתגר HTTP אם לא הוגדר ספק.",
     "site_override_help": "אתר זה משתמש בספק DNS ובפרטי גישה משלו. שמירת פרטי גישה חדשים מפעילה מחדש את Caddy, כי הוא קורא אותם רק בעת ההפעלה.",
     "site_wildcard_warning": "תעודות עם תו כללי דורשות אתגר DNS. הגדר ספק DNS לאתר זה, או בהגדרות ← אתגר DNS."
+  },
+  "dynamic_upstreams": {
+    "heading": "שרתים אחוריים דינמיים",
+    "section_title": "שרתים אחוריים דינמיים (מתקדם, אופציונלי)",
+    "help": "חיפוש השרתים האחוריים ב-DNS. היעד שלמעלה הוא ברירת המחדל כשהחיפוש לא מוצא דבר. כמה מקורות משולבים.",
+    "add_button": "הוספת מקור DNS",
+    "type": "סוג חיפוש",
+    "name_srv": "שם SRV",
+    "name_a": "שם מארח",
+    "refresh": "מרווח רענון",
+    "resolvers": "פותרי DNS",
+    "dial_fallback_delay": "השהיית חיבור חלופי",
+    "grace_period": "תקופת חסד",
+    "versions": "משפחות כתובות",
+    "versions_both": "IPv4 ו-IPv6",
+    "validation_name": "מקור עם הגדרות זקוק לשם.",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

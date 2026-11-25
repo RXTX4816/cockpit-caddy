@@ -1662,6 +1662,7 @@ function parseRouteToEntry(
     httpVersions: tr?.versions?.length ? tr.versions : undefined,
     readTimeout: readTimeout || undefined,
     writeTimeout: writeTimeout || undefined,
+    dynamicUpstreams: parseDynamicUpstreamsJson(rp.dynamic_upstreams as Record<string, unknown> | undefined),
     flushInterval: flushInterval || undefined,
     streamTimeout: streamTimeout || undefined,
     streamCloseDelay: streamCloseDelay || undefined,
@@ -1844,6 +1845,49 @@ export function parseProxies(config: CaddyConfig, serverDefs?: import("./types")
 // Building / patching server entries
 // ---------------------------------------------------------------------------
 
+function dynamicSourceJson(s: import("./types").DynamicUpstreamSource): Record<string, unknown> {
+  return {
+    source: s.type,
+    name: s.name,
+    ...(s.type === "a" && s.port ? { port: s.port } : {}),
+    ...(s.refresh ? { refresh: s.refresh } : {}),
+    ...(s.resolvers?.length ? { resolver: { addresses: s.resolvers } } : {}),
+    ...(s.dialTimeout ? { dial_timeout: s.dialTimeout } : {}),
+    ...(s.dialFallbackDelay ? { dial_fallback_delay: s.dialFallbackDelay } : {}),
+    ...(s.gracePeriod ? { grace_period: s.gracePeriod } : {}),
+    ...(s.type === "a" && s.versions ? { versions: { [s.versions]: true } } : {}),
+  };
+}
+
+function buildDynamicUpstreamsJson(sources: import("./types").DynamicUpstreamSource[] | undefined): Record<string, unknown> | undefined {
+  const list = (sources ?? []).filter(s => s.name.trim());
+  if (!list.length) return undefined;
+  return list.length === 1 ? dynamicSourceJson(list[0]) : { source: "multi", sources: list.map(dynamicSourceJson) };
+}
+
+function parseDynamicSourceJson(j: Record<string, unknown>): import("./types").DynamicUpstreamSource | undefined {
+  if ((j.source !== "srv" && j.source !== "a") || typeof j.name !== "string") return undefined;
+  const addresses = (j.resolver as { addresses?: string[] } | undefined)?.addresses;
+  const versions = j.versions as { ipv4?: boolean; ipv6?: boolean } | undefined;
+  const out: import("./types").DynamicUpstreamSource = { type: j.source, name: j.name };
+  if (j.source === "a" && j.port != null) out.port = String(j.port);
+  const refresh = parseDuration(j.refresh); if (refresh) out.refresh = refresh;
+  if (addresses?.length) out.resolvers = addresses;
+  const dialTimeout = parseDuration(j.dial_timeout); if (dialTimeout) out.dialTimeout = dialTimeout;
+  const fallback = parseDuration(j.dial_fallback_delay); if (fallback) out.dialFallbackDelay = fallback;
+  const grace = parseDuration(j.grace_period); if (grace) out.gracePeriod = grace;
+  if (j.source === "a" && versions?.ipv4 && !versions.ipv6) out.versions = "ipv4";
+  if (j.source === "a" && versions?.ipv6 && !versions.ipv4) out.versions = "ipv6";
+  return out;
+}
+
+function parseDynamicUpstreamsJson(j: Record<string, unknown> | undefined): import("./types").DynamicUpstreamSource[] | undefined {
+  if (!j) return undefined;
+  const list = j.source === "multi" && Array.isArray(j.sources) ? (j.sources as Record<string, unknown>[]) : [j];
+  const sources = list.map(parseDynamicSourceJson).filter((s): s is import("./types").DynamicUpstreamSource => !!s);
+  return sources.length ? sources : undefined;
+}
+
 /** The reverse_proxy `headers` object: `request` is header_up, `response` is header_down (#324). */
 function buildReverseProxyHeadersJson(
   up: import("./types").HeaderOperation[] | undefined,
@@ -1943,7 +1987,7 @@ function parseResponseHeadersJson(h: AnyHandler): import("./types").HeaderOperat
 }
 
 function buildReverseProxyHandler(
-  proxy: Pick<ProxyEntry, "targetHost" | "targetPort" | "targetScheme" | "tlsSkipVerify" | "requestHeaders" | "upstreamResponseHeaders" | "dialTimeout" | "responseHeaderTimeout" | "tlsServerName" | "keepalive" | "keepaliveIdleConns" | "keepaliveIdleConnsPerHost" | "httpVersions" | "readTimeout" | "writeTimeout" | "flushInterval" | "streamTimeout" | "streamCloseDelay" | "extraUpstreams" | "lbPolicy" | "lbPolicyArgs" | "lbRetry" | "replaceUpstreamErrors">,
+  proxy: Pick<ProxyEntry, "targetHost" | "targetPort" | "targetScheme" | "tlsSkipVerify" | "requestHeaders" | "upstreamResponseHeaders" | "dynamicUpstreams" | "dialTimeout" | "responseHeaderTimeout" | "tlsServerName" | "keepalive" | "keepaliveIdleConns" | "keepaliveIdleConnsPerHost" | "httpVersions" | "readTimeout" | "writeTimeout" | "flushInterval" | "streamTimeout" | "streamCloseDelay" | "extraUpstreams" | "lbPolicy" | "lbPolicyArgs" | "lbRetry" | "replaceUpstreamErrors">,
   errorHandlers?: import("./types").ErrorHandlerConfig[],
 ): CaddyReverseProxyHandler {
   const primaryDial = `${proxy.targetHost}:${proxy.targetPort}`;
@@ -1954,6 +1998,8 @@ function buildReverseProxyHandler(
   };
   const transport = buildTransport(proxy);
   if (transport) rp.transport = transport;
+  const dynamic = buildDynamicUpstreamsJson(proxy.dynamicUpstreams);
+  if (dynamic) rp.dynamic_upstreams = dynamic;
   if (proxy.flushInterval) rp.flush_interval = proxy.flushInterval === "-1" ? -1 : proxy.flushInterval;
   if (proxy.streamTimeout) rp.stream_timeout = proxy.streamTimeout;
   if (proxy.streamCloseDelay) rp.stream_close_delay = proxy.streamCloseDelay;

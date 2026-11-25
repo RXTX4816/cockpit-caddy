@@ -268,6 +268,22 @@ export interface ProxyProtocolConfig {
   allow?: string[];
 }
 
+/** One `dynamic srv|a` source of a reverse_proxy (#326). Several sources are written as `dynamic multi`. */
+export interface DynamicUpstreamSource {
+  type: "srv" | "a";
+  /** The DNS name to look up: the SRV name, or the host of an A/AAAA lookup. */
+  name: string;
+  /** The port of an `a` lookup. */
+  port?: string;
+  refresh?: string;
+  resolvers?: string[];
+  dialTimeout?: string;
+  dialFallbackDelay?: string;
+  gracePeriod?: string;
+  /** Which address families an `a` lookup returns. */
+  versions?: "ipv4" | "ipv6";
+}
+
 export interface HeaderOperation {
   /** `replace` only exists for header_down: `value` is the regexp to find, `replacement` what it becomes. */
   op: "set" | "add" | "delete" | "replace";
@@ -452,6 +468,8 @@ export interface ProxyEntry {
   httpVersions?: string[];
   readTimeout?: string;
   writeTimeout?: string;
+  /** Upstreams found by DNS lookups, next to the static target, which Caddy falls back to when a lookup finds nothing (#326). */
+  dynamicUpstreams?: DynamicUpstreamSource[];
   /** reverse_proxy `flush_interval`: a duration, or `-1` to flush after every write (#325). */
   flushInterval?: string;
   /** reverse_proxy `stream_timeout`: how long a websocket or other upgraded stream may live (#325). */

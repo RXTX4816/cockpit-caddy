@@ -1074,5 +1074,25 @@
     "site_inherit_help": "Uses the DNS provider set under Settings → DNS challenge, or the HTTP challenge when none is set.",
     "site_override_help": "This site uses its own DNS provider and credentials. Saving new credentials restarts Caddy, because it reads them only when it starts.",
     "site_wildcard_warning": "Wildcard certificates need the DNS challenge. Set a DNS provider for this site, or one under Settings → DNS challenge."
+  },
+  "dynamic_upstreams": {
+    "heading": "Dynamic Upstreams",
+    "section_title": "Dynamic Upstreams (advanced, optional)",
+    "help": "Look the upstreams up in DNS. The target above is the fallback when a lookup finds nothing. Several sources are combined.",
+    "add_button": "Add DNS source",
+    "type": "Lookup type",
+    "name_srv": "SRV name",
+    "name_a": "Host name",
+    "refresh": "Refresh interval",
+    "resolvers": "DNS resolvers",
+    "dial_fallback_delay": "Dial fallback delay",
+    "grace_period": "Grace period",
+    "versions": "Address families",
+    "versions_both": "IPv4 and IPv6",
+    "validation_name": "A source with settings needs a name.",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

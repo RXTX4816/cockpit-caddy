@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import type { ErrorHandlerConfig, ForwardAuthConfig, HeaderOperation, LbPolicy, ProxyEntry, RewriteConfig, RouteMatch } from "../api";
 import { accessLogConfigToValues, accessLogValuesToConfig, type AccessLogValues } from "./AccessLogSection";
 import { resolveBasicAuth, type AuthEntry } from "./BasicAuthSection";
+import { dynamicUpstreamsToConfig, dynamicUpstreamsToValues, type DynamicSourceValues } from "./DynamicUpstreamsSection";
 import { lbRetryConfigToValues, lbRetryValuesToConfig, type LbRetryValues } from "./LbRetrySection";
 import type { ServerTimeoutValues } from "./ServerTimeoutsSection";
 import { tlsConfigToValues, tlsValuesToAdvanced, tlsValuesToCustomTls, tlsValuesToMtls, type TlsValues } from "./TlsSection";
@@ -27,6 +28,7 @@ export interface ProxyTabState {
   isNamedRoute: boolean;
   namedRouteName: string;
   extraUpstreams: ExtraUpstream[];
+  dynamicUpstreams: DynamicSourceValues[];
   lbPolicy: LbPolicy | "";
   /** The policy's arguments (#285). */
   lbArgs: LbArgsValues;
@@ -54,6 +56,7 @@ export function emptyProxyTabState(): ProxyTabState {
     isNamedRoute: false,
     namedRouteName: "",
     extraUpstreams: [],
+    dynamicUpstreams: [],
     lbPolicy: "",
     lbArgs: emptyLbArgs(),
     lbRetry: lbRetryConfigToValues(undefined),
@@ -80,6 +83,7 @@ export function proxyTabStateFromEntry(p: ProxyEntry): ProxyTabState {
     upstreamResponseHeaders: p.upstreamResponseHeaders,
     isNamedRoute: p.isNamedRoute ?? false,
     namedRouteName: p.namedRouteName ?? "",
+    dynamicUpstreams: dynamicUpstreamsToValues(p.dynamicUpstreams),
     extraUpstreams: (p.extraUpstreams ?? []).map(u => ({ host: u.host, port: String(u.port) })),
     lbPolicy: p.lbPolicy ?? "",
     lbArgs: lbArgsToValues(p.lbPolicyArgs),
@@ -110,7 +114,7 @@ export function proxyTabStateFromEntry(p: ProxyEntry): ProxyTabState {
 export type ProxyTabEntryFields = Pick<ProxyEntry,
   | "basicAuth" | "forwardAuth" | "tlsAdvanced" | "mtls" | "customTls"
   | "matchers" | "handlePath" | "rewrite" | "requestHeaders" | "responseHeaders" | "upstreamResponseHeaders" | "isNamedRoute" | "namedRouteName"
-  | "extraUpstreams" | "lbPolicy" | "lbPolicyArgs" | "lbRetry" | "dialTimeout" | "responseHeaderTimeout" | "flushInterval" | "streamTimeout" | "streamCloseDelay"
+  | "extraUpstreams" | "dynamicUpstreams" | "lbPolicy" | "lbPolicyArgs" | "lbRetry" | "dialTimeout" | "responseHeaderTimeout" | "flushInterval" | "streamTimeout" | "streamCloseDelay"
   | "tlsServerName" | "keepalive" | "keepaliveIdleConns" | "keepaliveIdleConnsPerHost" | "httpVersions" | "readTimeout" | "writeTimeout"
   | "accessLog" | "errorHandlers" | "replaceUpstreamErrors"
   | "serverReadTimeout" | "serverReadHeaderTimeout" | "serverWriteTimeout" | "serverIdleTimeout" | "maxHeaderBytes" | "disableHttp3"
@@ -138,6 +142,7 @@ export async function proxyTabStateToEntry(s: ProxyTabState): Promise<ProxyTabEn
     upstreamResponseHeaders: s.upstreamResponseHeaders ?? undefined,
     isNamedRoute: s.isNamedRoute || undefined,
     namedRouteName: (s.isNamedRoute && s.namedRouteName.trim()) ? s.namedRouteName.trim() : undefined,
+    dynamicUpstreams: dynamicUpstreamsToConfig(s.dynamicUpstreams),
     extraUpstreams: s.extraUpstreams.length
       ? s.extraUpstreams.map(u => ({ host: u.host.trim(), port: parseInt(u.port, 10) }))
       : undefined,
@@ -184,7 +189,7 @@ function visibleState(s: ProxyTabState, layout: ProxyTabsLayout): ProxyTabState 
   return {
     ...s,
     forwardAuth: empty.forwardAuth, rewrite: empty.rewrite, isNamedRoute: empty.isNamedRoute, namedRouteName: empty.namedRouteName,
-    extraUpstreams: empty.extraUpstreams, lbPolicy: empty.lbPolicy, lbArgs: empty.lbArgs, lbRetry: empty.lbRetry, transport: empty.transport,
+    extraUpstreams: empty.extraUpstreams, dynamicUpstreams: empty.dynamicUpstreams, lbPolicy: empty.lbPolicy, lbArgs: empty.lbArgs, lbRetry: empty.lbRetry, transport: empty.transport,
     replaceUpstreamErrors: empty.replaceUpstreamErrors,
   };
 }

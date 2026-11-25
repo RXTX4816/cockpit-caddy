@@ -1074,5 +1074,25 @@
     "site_inherit_help": "Utilise le fournisseur DNS défini dans Paramètres → Défi DNS, ou le défi HTTP s'il n'y en a pas.",
     "site_override_help": "Ce site utilise son propre fournisseur DNS et ses propres identifiants. Enregistrer de nouveaux identifiants redémarre Caddy, qui ne les lit qu'au démarrage.",
     "site_wildcard_warning": "Les certificats génériques nécessitent le défi DNS. Définissez un fournisseur DNS pour ce site, ou dans Paramètres → Défi DNS."
+  },
+  "dynamic_upstreams": {
+    "heading": "Amonts dynamiques",
+    "section_title": "Amonts dynamiques (avancé, facultatif)",
+    "help": "Cherche les amonts dans le DNS. La cible ci-dessus sert de repli quand la recherche ne trouve rien. Plusieurs sources sont combinées.",
+    "add_button": "Ajouter une source DNS",
+    "type": "Type de recherche",
+    "name_srv": "Nom SRV",
+    "name_a": "Nom d'hôte",
+    "refresh": "Intervalle d'actualisation",
+    "resolvers": "Résolveurs DNS",
+    "dial_fallback_delay": "Délai de connexion de secours",
+    "grace_period": "Délai de grâce",
+    "versions": "Familles d'adresses",
+    "versions_both": "IPv4 et IPv6",
+    "validation_name": "Une source avec des réglages a besoin d'un nom.",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

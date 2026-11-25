@@ -1074,5 +1074,25 @@
     "site_inherit_help": "Ayarlar → DNS doğrulaması altındaki DNS sağlayıcısını, ayarlanmamışsa HTTP doğrulamasını kullanır.",
     "site_override_help": "Bu site kendi DNS sağlayıcısını ve kimlik bilgilerini kullanır. Yeni kimlik bilgilerini kaydetmek Caddy'yi yeniden başlatır, çünkü bunları yalnızca başlarken okur.",
     "site_wildcard_warning": "Joker karakterli sertifikalar DNS doğrulaması gerektirir. Bu site için ya da Ayarlar → DNS doğrulaması altında bir DNS sağlayıcısı ayarlayın."
+  },
+  "dynamic_upstreams": {
+    "heading": "Dinamik upstream'ler",
+    "section_title": "Dinamik upstream'ler (gelişmiş, isteğe bağlı)",
+    "help": "Upstream'leri DNS'te arar. Arama bir şey bulamazsa yukarıdaki hedef yedek olarak kullanılır. Birden fazla kaynak birleştirilir.",
+    "add_button": "DNS kaynağı ekle",
+    "type": "Sorgu türü",
+    "name_srv": "SRV adı",
+    "name_a": "Ana makine adı",
+    "refresh": "Yenileme aralığı",
+    "resolvers": "DNS çözücüleri",
+    "dial_fallback_delay": "Yedek bağlantı gecikmesi",
+    "grace_period": "Ek süre",
+    "versions": "Adres aileleri",
+    "versions_both": "IPv4 ve IPv6",
+    "validation_name": "Ayarları olan bir kaynağın adı olmalı.",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

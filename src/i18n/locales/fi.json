@@ -1074,5 +1074,25 @@
     "site_inherit_help": "Käyttää kohdassa Asetukset → DNS-haaste asetettua DNS-palveluntarjoajaa tai HTTP-haastetta, jos sitä ei ole asetettu.",
     "site_override_help": "Tämä sivusto käyttää omaa DNS-palveluntarjoajaa ja tunnuksia. Uusien tunnusten tallentaminen käynnistää Caddyn uudelleen, koska se lukee ne vain käynnistyessään.",
     "site_wildcard_warning": "Jokerimerkkivarmenteet tarvitsevat DNS-haasteen. Aseta DNS-palveluntarjoaja tälle sivustolle tai kohdassa Asetukset → DNS-haaste."
+  },
+  "dynamic_upstreams": {
+    "heading": "Dynaamiset upstreamit",
+    "section_title": "Dynaamiset upstreamit (lisäasetus, valinnainen)",
+    "help": "Hae upstreamit DNS:stä. Yllä oleva kohde on varakohde, kun haku ei löydä mitään. Useat lähteet yhdistetään.",
+    "add_button": "Lisää DNS-lähde",
+    "type": "Haun tyyppi",
+    "name_srv": "SRV-nimi",
+    "name_a": "Isäntänimi",
+    "refresh": "Päivitysväli",
+    "resolvers": "DNS-ratkaisijat",
+    "dial_fallback_delay": "Varayhteyden viive",
+    "grace_period": "Lisäaika",
+    "versions": "Osoiteperheet",
+    "versions_both": "IPv4 ja IPv6",
+    "validation_name": "Asetuksia sisältävä lähde tarvitsee nimen.",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

@@ -1780,6 +1780,53 @@ describe("remaining transport options (#327)", () => {
   });
 });
 
+describe("dynamic upstreams (#326)", () => {
+  const srv = { type: "srv" as const, name: "_http._tcp.example.com", refresh: "1m", resolvers: ["1.1.1.1"], dialTimeout: "2s", dialFallbackDelay: "1s", gracePeriod: "5s" };
+  const a = { type: "a" as const, name: "backend.example.com", port: "8080", refresh: "30s", versions: "ipv4" as const };
+
+  it("a single srv source is written as dynamic srv with its options", () => {
+    const result = proxyToBlock(proxy({ dynamicUpstreams: [srv] }));
+    expect(result).toContain("\t\tdynamic srv _http._tcp.example.com {");
+    for (const line of ["refresh 1m", "resolvers 1.1.1.1", "dial_timeout 2s", "dial_fallback_delay 1s", "grace_period 5s"])
+      expect(result).toContain(`\t\t\t${line}`);
+  });
+
+  it("an a source takes the port and a version", () => {
+    const result = proxyToBlock(proxy({ dynamicUpstreams: [a] }));
+    expect(result).toContain("\t\tdynamic a backend.example.com 8080 {");
+    expect(result).toContain("\t\t\tversions ipv4");
+  });
+
+  it("a source without options has no braces", () => {
+    expect(proxyToBlock(proxy({ dynamicUpstreams: [{ type: "srv", name: "_x._tcp.example.com" }] }))).toContain("\t\tdynamic srv _x._tcp.example.com\n");
+  });
+
+  it("several sources are written as dynamic multi", () => {
+    const result = proxyToBlock(proxy({ dynamicUpstreams: [srv, a] }));
+    expect(result).toContain("\t\tdynamic multi {");
+    expect(result).toContain("\t\t\tsrv _http._tcp.example.com {");
+    expect(result).toContain("\t\t\ta backend.example.com 8080 {");
+  });
+
+  it("buildServerEntry writes dynamic_upstreams for one source and multi for several", () => {
+    const one = buildServerEntry(proxy({ dynamicUpstreams: [srv] })).routes[0].handle[0] as Record<string, unknown>;
+    expect(one.dynamic_upstreams).toEqual({
+      source: "srv", name: "_http._tcp.example.com", refresh: "1m", resolver: { addresses: ["1.1.1.1"] },
+      dial_timeout: "2s", dial_fallback_delay: "1s", grace_period: "5s",
+    });
+    const many = buildServerEntry(proxy({ dynamicUpstreams: [srv, a] })).routes[0].handle[0] as Record<string, unknown>;
+    expect((many.dynamic_upstreams as { source: string; sources: unknown[] }).source).toBe("multi");
+    expect((many.dynamic_upstreams as { sources: unknown[] }).sources).toHaveLength(2);
+  });
+
+  it("parseProxies reads one source and multi back", () => {
+    for (const sources of [[srv], [srv, a]]) {
+      const [p] = parseProxies({ apps: { http: { servers: { srv0: buildServerEntry(proxy({ dynamicUpstreams: sources })) } } } });
+      expect(p.dynamicUpstreams).toEqual(sources);
+    }
+  });
+});
+
 describe("buildServerEntry — requestHeaders", () => {
   it("emits headers.request.set in reverse_proxy handler", () => {
     const server = buildServerEntry(proxy({ requestHeaders: [{ op: "set", name: "X-Real-IP", value: "{remote_host}" }] }));

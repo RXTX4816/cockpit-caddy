@@ -1074,5 +1074,25 @@
     "site_inherit_help": "Folosește furnizorul DNS setat în Setări → Provocare DNS sau provocarea HTTP dacă nu e setat niciunul.",
     "site_override_help": "Acest site folosește propriul furnizor DNS și propriile date de acces. Salvarea unor date noi repornește Caddy, care le citește doar la pornire.",
     "site_wildcard_warning": "Certificatele wildcard au nevoie de provocarea DNS. Setează un furnizor DNS pentru acest site sau în Setări → Provocare DNS."
+  },
+  "dynamic_upstreams": {
+    "heading": "Upstream-uri dinamice",
+    "section_title": "Upstream-uri dinamice (avansat, opțional)",
+    "help": "Caută upstream-urile în DNS. Ținta de mai sus este varianta de rezervă când căutarea nu găsește nimic. Mai multe surse sunt combinate.",
+    "add_button": "Adaugă sursă DNS",
+    "type": "Tipul căutării",
+    "name_srv": "Nume SRV",
+    "name_a": "Nume de gazdă",
+    "refresh": "Interval de reîmprospătare",
+    "resolvers": "Rezolvatoare DNS",
+    "dial_fallback_delay": "Întârzierea conexiunii de rezervă",
+    "grace_period": "Perioadă de grație",
+    "versions": "Familii de adrese",
+    "versions_both": "IPv4 și IPv6",
+    "validation_name": "O sursă cu setări are nevoie de un nume.",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

@@ -9,7 +9,7 @@ import { TRANSPORT_EMPTY } from "./TransportSection";
 const base: ProxyTabValues = {
   basicAuth: [], forwardAuth: undefined, forwardAuthError: null, tlsValues: tlsConfigToValues(undefined, undefined),
   matchers: undefined, rewrite: undefined, requestHeaders: undefined, responseHeaders: undefined, upstreamResponseHeaders: undefined, isNamedRoute: false,
-  extraUpstreams: [], lbPolicy: "", lbArgs: emptyLbArgs(), lbRetry: lbRetryConfigToValues(undefined), transport: TRANSPORT_EMPTY,
+  extraUpstreams: [], dynamicUpstreams: [], lbPolicy: "", lbArgs: emptyLbArgs(), lbRetry: lbRetryConfigToValues(undefined), transport: TRANSPORT_EMPTY,
   accessLog: accessLogConfigToValues(undefined), errorHandlers: [],
   serverTimeouts: { readTimeout: "", readHeaderTimeout: "", writeTimeout: "", idleTimeout: "", maxHeaderBytes: "", disableHttp3: false },
   requestBodyMaxSize: "",
