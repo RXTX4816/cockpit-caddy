@@ -30,14 +30,13 @@ export function SectionActions({ onClear, onDefaults, isDisabled }: Props) {
     return (
       <Notice
         variant="warning"
-       
         title={pending === "clear" ? t("common.confirm_clear") : t("common.confirm_defaults")}
         actionLinks={
           <>
-            <Button variant="link" onClick={confirm} style={{ marginRight: "0.75rem" }}>
+            <Button variant="link" isInline onClick={confirm} style={{ marginRight: "0.75rem" }}>
               {t("common.confirm_apply")}
             </Button>
-            <Button variant="link" onClick={() => setPending(null)}>
+            <Button variant="link" isInline onClick={() => setPending(null)}>
               {t("common.cancel")}
             </Button>
           </>

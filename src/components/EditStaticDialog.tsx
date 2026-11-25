@@ -92,7 +92,6 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
         {isLocked && (
           <Notice
             variant="warning"
-           
             title={t("edit_static.confirm_body", { port })}
           />
         )}

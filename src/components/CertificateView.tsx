@@ -60,7 +60,6 @@ export function useCertDownload() {
       {savedPath && (
         <Notice
           variant={savedPath.overwritten ? "warning" : "success"}
-         
           title={savedPath.overwritten
             ? t("ca.download_overwritten", { path: savedPath.path })
             : t("ca.download_saved", { path: savedPath.path })}
@@ -95,7 +94,7 @@ export function PemBlock({ pem, copyLabel, actions }: PemBlockProps) {
   }
 
   return (
-    <div>
+    <div style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}>
       <pre data-testid="cert-pem" style={{
         fontFamily: "monospace",
         fontSize: "0.78rem",

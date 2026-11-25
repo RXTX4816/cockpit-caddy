@@ -76,7 +76,7 @@ export function SnippetImportsField({ value, onChange, snippetSettings, isDisabl
         </HelperText>
       </FormHelperText>
       {snippetSettings?.length ? (
-        <Notice variant="info" isPlain title={t("snippets.settings_from_snippet", { names: snippetSettings.join(", ") })} style={{ marginTop: "0.5rem" }} />
+        <Notice variant="info" isPlain title={t("snippets.settings_from_snippet", { names: snippetSettings.join(", ") })} />
       ) : null}
     </FormGroup>
   );

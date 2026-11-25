@@ -100,7 +100,6 @@ export function EditPhpFastcgiDialog({ proxy, existingPorts, onSave, onClose }: 
         {isLocked && (
           <Notice
             variant="warning"
-           
             title={t("php_fastcgi.edit_confirm_body", { port })}
           />
         )}

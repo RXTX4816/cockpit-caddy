@@ -72,7 +72,6 @@ export function EditRedirectDialog({ proxy, existingPorts, onSave, onClose }: Pr
         {isLocked && (
           <Notice
             variant="warning"
-           
             title={t("edit_redirect.confirm_body", { port: proxy.externalPort })}
           />
         )}

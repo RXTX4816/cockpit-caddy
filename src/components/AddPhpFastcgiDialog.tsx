@@ -101,7 +101,6 @@ export function AddPhpFastcgiDialog({ existingPorts, onAdd, onClose, initialValu
         {isLocked && (
           <Notice
             variant="warning"
-           
             title={t("php_fastcgi.add_confirm_body", { port })}
           />
         )}

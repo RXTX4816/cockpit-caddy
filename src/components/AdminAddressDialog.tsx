@@ -102,7 +102,7 @@ export function AdminAddressDialog({ onClose }: Props) {
     <Modal isOpen onClose={onClose} variant="small" aria-label={t("admin_address.title")}>
       <ModalHeader title={t("admin_address.title")} />
       <ModalBody>
-        <Notice variant="info" title={t("admin_address.storage_note")} style={{ marginBottom: "1rem" }} />
+        <Notice variant="info" title={t("admin_address.storage_note")} />
         <Form isHorizontal>
           <FormGroup label={t("admin_address.tcp_label")} fieldId="aa-tcp">
             <TextInput
@@ -129,10 +129,10 @@ export function AdminAddressDialog({ onClose }: Props) {
               {t("admin_address.test_tcp_button")}
             </Button>
             {tcpResult === "ok" && (
-              <Notice variant="success" title={t("admin_address.test_ok")} style={{ marginTop: "0.5rem" }} />
+              <Notice variant="success" title={t("admin_address.test_ok")} />
             )}
             {tcpResult === "fail" && (
-              <Notice variant="danger" title={t("admin_address.test_tcp_fail")} style={{ marginTop: "0.5rem" }} />
+              <Notice variant="danger" title={t("admin_address.test_tcp_fail")} />
             )}
           </FormGroup>
           <FormGroup label={t("admin_address.socket_label")} fieldId="aa-socket">
@@ -160,10 +160,10 @@ export function AdminAddressDialog({ onClose }: Props) {
               {t("admin_address.test_socket_button")}
             </Button>
             {socketResult === "ok" && (
-              <Notice variant="success" title={t("admin_address.test_ok")} style={{ marginTop: "0.5rem" }} />
+              <Notice variant="success" title={t("admin_address.test_ok")} />
             )}
             {socketResult === "fail" && (
-              <Notice variant="danger" title={t("admin_address.test_socket_fail")} style={{ marginTop: "0.5rem" }} />
+              <Notice variant="danger" title={t("admin_address.test_socket_fail")} />
             )}
           </FormGroup>
           <FormGroup label={t("admin_address.container_label")} fieldId="aa-container">
@@ -204,16 +204,16 @@ export function AdminAddressDialog({ onClose }: Props) {
               {t("admin_address.test_container_button")}
             </Button>
             {containerResult === "ok" && (
-              <Notice variant="success" title={t("admin_address.test_ok")} style={{ marginTop: "0.5rem" }} />
+              <Notice variant="success" title={t("admin_address.test_ok")} />
             )}
             {containerResult === "not-running" && (
-              <Notice variant="danger" title={t("admin_address.test_container_fail")} style={{ marginTop: "0.5rem" }} />
+              <Notice variant="danger" title={t("admin_address.test_container_fail")} />
             )}
             {containerResult === "socket-missing" && (
-              <Notice variant="danger" title={t("admin_address.test_docker_socket_missing")} style={{ marginTop: "0.5rem" }} />
+              <Notice variant="danger" title={t("admin_address.test_docker_socket_missing")} />
             )}
             {containerResult === "socket-unreadable" && (
-              <Notice variant="danger" title={t("admin_address.test_docker_socket_unreadable")} style={{ marginTop: "0.5rem" }} />
+              <Notice variant="danger" title={t("admin_address.test_docker_socket_unreadable")} />
             )}
           </FormGroup>
         </Form>

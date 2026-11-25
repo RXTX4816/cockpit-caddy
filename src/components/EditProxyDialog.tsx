@@ -140,7 +140,6 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
         {isConfirming && (
           <Notice
             variant="warning"
-           
             title={t("edit_proxy.confirm_save_body", { port: externalPort })}
           />
         )}

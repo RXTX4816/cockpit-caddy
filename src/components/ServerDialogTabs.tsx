@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { AccessLogSection, accessLogValuesToConfig, type AccessLogValues } from "./AccessLogSection";
+import { AccessLogSection, accessLogHasError, accessLogValuesToConfig, type AccessLogValues } from "./AccessLogSection";
 import { ErrorHandlersSection } from "./ErrorHandlersSection";
 import { ServerTimeoutsSection, type ServerTimeoutValues } from "./ServerTimeoutsSection";
 import { TlsSection, tlsValuesHaveErrors, tlsValuesToAdvanced, tlsValuesToMtls, type TlsValues } from "./TlsSection";
@@ -32,7 +32,7 @@ export function serverTabFlags(v: ServerTabValues, generalHasError: boolean): Ta
       security: tlsValuesHaveErrors(v.tlsValues),
       routing: false,
       upstreams: false,
-      logging: false,
+      logging: accessLogHasError(v.accessLog),
       limits: false,
     },
   };

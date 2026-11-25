@@ -112,9 +112,9 @@ export function RestoreDialog({ onClose }: Props) {
               {t("restore.success_body")}
             </Notice>
             {reloadOk ? (
-              <Notice variant="success" title={t("caddyfile.reloaded")} style={{ marginTop: "0.5rem" }} />
+              <Notice variant="success" title={t("caddyfile.reloaded")} />
             ) : (
-              <Notice
+              <Notice isInline={false}
                 variant="warning"
                 title={t("restore.needs_reload_title")}
                 style={{ marginTop: "0.5rem" }}
@@ -128,7 +128,7 @@ export function RestoreDialog({ onClose }: Props) {
               </Notice>
             )}
             {reloadError && (
-              <Notice variant="danger" title={reloadError} style={{ marginTop: "0.5rem" }} />
+              <Notice variant="danger" title={reloadError} />
             )}
           </>
         ) : (

@@ -123,7 +123,7 @@ export function LogTable({ lines, loading, error, onRefresh, paused, onPause, on
     <Stack hasGutter>
       {error && (
         <StackItem>
-          <Notice variant="danger" title={t("logs.load_failed")} actionLinks={<Button variant="link" onClick={onRefresh}>{t("common.retry")}</Button>}>
+          <Notice isInline={false} variant="danger" title={t("logs.load_failed")} actionLinks={<Button variant="link" onClick={onRefresh}>{t("common.retry")}</Button>}>
             {error}
           </Notice>
         </StackItem>

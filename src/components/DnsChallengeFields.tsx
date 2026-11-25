@@ -1,5 +1,4 @@
-import {
-  Button, FormGroup, FormHelperText, FormSelect, FormSelectOption, HelperText, HelperTextItem, Label, TextInput,
+import { Button, FormGroup, FormHelperText, FormSelect, FormSelectOption, HelperText, HelperTextItem, Label, TextInput,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import { DNS_MODULES_DOCS, DNS_PROVIDER_PRESETS, dnsEnvVarName, isSiteDnsVar } from "../api";
@@ -161,7 +160,7 @@ export function DnsChallengeFields({ idPrefix, providers, envNames, value, onCha
               </div>
             );
           })}
-          <Button variant="link" size="sm" isDisabled={isDisabled}
+          <Button variant="link" isInline size="sm" isDisabled={isDisabled}
             onClick={() => onChange({ ...value, rows: [...value.rows, { key: "", value: "" }] })}>
             {t("dns.add_option")}
           </Button>

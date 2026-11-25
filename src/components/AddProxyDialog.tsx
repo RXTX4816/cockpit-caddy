@@ -183,7 +183,6 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
         {isLocked && (
           <Notice
             variant="warning"
-           
             title={t("add_proxy.confirm_body", { port: form.externalPort, target: targetUrl })}
           />
         )}

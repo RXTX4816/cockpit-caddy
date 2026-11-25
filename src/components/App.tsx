@@ -147,10 +147,9 @@ function AppInner() {
           <StackItem>
             <Notice
               variant="warning"
-             
               title={t("admin.warning_title")}
               actionLinks={
-                <Button variant="link" onClick={() => setAdminBypass(true)}>
+                <Button variant="link" isInline onClick={() => setAdminBypass(true)}>
                   {t("admin.continue_button")}
                 </Button>
               }
@@ -162,7 +161,7 @@ function AppInner() {
 
         {status === "not-installed" && !adminApiOk && (
           <StackItem>
-            <Notice variant="warning" title={t("service.not_installed")}>
+            <Notice isInline={false} variant="warning" title={t("service.not_installed")}>
               <Content component="p">{t("service.not_installed_body")}</Content>
             </Notice>
           </StackItem>
@@ -170,7 +169,7 @@ function AppInner() {
 
         {unmanaged && (
           <StackItem>
-            <Notice variant="info" title={t("service.unmanaged")}>
+            <Notice isInline={false} variant="info" title={t("service.unmanaged")}>
               <Content component="p">{t("service.unmanaged_body")}</Content>
             </Notice>
           </StackItem>
@@ -193,7 +192,7 @@ function AppInner() {
 
         {apiUnreachable && (
           <StackItem>
-            <Notice variant="warning" title={t("service.api_unreachable")}>
+            <Notice isInline={false} variant="warning" title={t("service.api_unreachable")}>
               <Content component="p">{t("service.api_unreachable_body")}</Content>
             </Notice>
           </StackItem>

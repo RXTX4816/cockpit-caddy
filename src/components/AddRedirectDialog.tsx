@@ -122,7 +122,6 @@ export function AddRedirectDialog({ existingPorts, onAdd, onClose, initialValues
         {isLocked && (
           <Notice
             variant="warning"
-           
             title={t("add_redirect.confirm_body", { port: serverCtx ? serverCtx.port : port, to, code })}
           />
         )}
@@ -138,7 +137,7 @@ export function AddRedirectDialog({ existingPorts, onAdd, onClose, initialValues
           generalHasError={!!(portErr || toErr)}
           general={
             <>
-              <div>
+              <div style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}>
                 <Button variant="secondary" size="sm" onClick={applyHttpsShortcut} isDisabled={isLocked}>
                   {t("add_redirect.shortcut_http_https")}
                 </Button>

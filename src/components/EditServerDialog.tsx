@@ -195,7 +195,6 @@ export function EditServerDialog({ def, onSave, onClose }: Props) {
         {isLocked && (
           <Notice
             variant="warning"
-           
             title={t("servers.confirm_edit")}
           />
         )}
@@ -222,7 +221,6 @@ export function EditServerDialog({ def, onSave, onClose }: Props) {
         {confirmAction.error && (
           <Notice
             variant="danger"
-           
             title={confirmAction.error}
           />
         )}

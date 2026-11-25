@@ -94,7 +94,7 @@ export function SiteDnsChallengeField({ id, dns, host, isDisabled }: Props) {
         </HelperText>
       </FormHelperText>
       {wildcard && dns.mode === "inherit" && !dns.globalProvider && (
-        <Notice variant="warning" isPlain title={t("dns.site_wildcard_warning")} data-testid={`${id}-wildcard-warning`} style={{ marginTop: "0.4rem" }} />
+        <Notice variant="warning" isPlain title={t("dns.site_wildcard_warning")} data-testid={`${id}-wildcard-warning`} />
       )}
       {dns.mode === "override" && (
         <div style={{ marginTop: "0.6rem" }}>

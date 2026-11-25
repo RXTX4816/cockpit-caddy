@@ -72,7 +72,6 @@ export function InternalCaModal({ onClose }: Props) {
         {ca && !usesInternalCa && (
           <Notice
             variant="warning"
-           
             title={t("ca.not_in_use_title")}
           >
             {t("ca.not_in_use_body")}
@@ -85,7 +84,7 @@ export function InternalCaModal({ onClose }: Props) {
         )}
         {ca && (
           <>
-            <DescriptionList isHorizontal isCompact>
+            <DescriptionList isHorizontal isCompact style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}>
               <DescriptionListGroup>
                 <DescriptionListTerm>{t("ca.root_cn")}</DescriptionListTerm>
                 <DescriptionListDescription>{ca.rootCommonName}</DescriptionListDescription>
@@ -116,7 +115,7 @@ export function InternalCaModal({ onClose }: Props) {
 
             <PemBlock pem={ca.rootPem} copyLabel={t("ca.copy_tip")} />
 
-            <ExpandableSection toggleText={t("ca.intermediate_cn")} isIndented>
+            <ExpandableSection toggleText={t("ca.intermediate_cn")} isIndented style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}>
               <PemBlock
                 pem={ca.intermediatePem}
                 copyLabel={t("ca.copy_intermediate_tip")}

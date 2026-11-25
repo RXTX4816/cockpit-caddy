@@ -29,6 +29,12 @@ describe("serverTabFlags", () => {
     expect(serverTabFlags(v, false).configured.logging).toBe(true);
   });
 
+  it("flags Logging when file output has no path", () => {
+    const v = empty();
+    v.accessLog = { ...v.accessLog, enabled: true, output: "file", filePath: "" };
+    expect(serverTabFlags(v, false).hasError.logging).toBe(true);
+  });
+
   it("puts a General error on the General tab", () => {
     expect(serverTabFlags(empty(), true).hasError.general).toBe(true);
   });

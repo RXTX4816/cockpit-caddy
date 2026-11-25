@@ -104,7 +104,6 @@ export function AddRespondDialog({ existingPorts, onAdd, onClose, initialValues,
         {isLocked && (
           <Notice
             variant="warning"
-           
             title={t("add_respond.confirm_body", { port: serverCtx ? serverCtx.port : port, status: statusCode })}
           />
         )}

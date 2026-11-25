@@ -90,11 +90,11 @@ function CertificateDetails({ host, cert, storagePath, onBack }: { host: string;
 
   return (
     <div data-testid="acme-cert-view">
-      <Button variant="link" onClick={onBack}>
+      <Button variant="link" isInline onClick={onBack} style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}>
         {t("acme.back")}
       </Button>
-      <h3>{t("acme.cert_title", { host })}</h3>
-      <DescriptionList isHorizontal isCompact>
+      <h3 style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>{t("acme.cert_title", { host })}</h3>
+      <DescriptionList isHorizontal isCompact style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}>
         {rows.map(([term, value]) => (
           <DescriptionListGroup key={term}>
             <DescriptionListTerm>{term}</DescriptionListTerm>
@@ -239,7 +239,7 @@ export function AcmeStatusModal({ onClose }: Props) {
                       <DataListItemCells dataListCells={[
                         <DataListCell key="host" width={2}>
                           {certStatus?.[status.host]?.cert ? (
-                            <Button variant="link" onClick={() => setOpenHost(status.host)}>
+                            <Button variant="link" isInline onClick={() => setOpenHost(status.host)}>
                               <code id={`acme-host-${status.host}`}>{status.host}</code>
                             </Button>
                           ) : (
@@ -263,6 +263,7 @@ export function AcmeStatusModal({ onClose }: Props) {
           <ExpandableSection
             toggleText={t("acme.account_settings_title")}
             isIndented
+            style={{ marginTop: "var(--pf-v6-global--spacer--md)" }}
           >
             <DescriptionList isHorizontal isCompact>
               <DescriptionListGroup>

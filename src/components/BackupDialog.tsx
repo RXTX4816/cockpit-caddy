@@ -58,7 +58,7 @@ export function BackupDialog({ onClose }: Props) {
               {t("backup.success_body", { path: savedPath })}
             </Notice>
             {warning && (
-              <Notice variant="warning" title={t("backup.warning_partial")} style={{ marginTop: "0.5rem" }}>
+              <Notice variant="warning" title={t("backup.warning_partial")}>
                 {warning}
               </Notice>
             )}

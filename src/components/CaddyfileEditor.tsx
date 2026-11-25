@@ -13,7 +13,7 @@ import {
   ToolbarItem,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
-import { CodeEditor } from "@rxtx4816/cockpit-plugin-base-react/components";
+import { CodeEditor, useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { useCaddyfile } from "../hooks/useCaddyfile";
 import { caddyfile } from "./caddyfileLanguage";
 import { listConfDFiles, validateCaddyfile, reloadCaddy, applyCurrentCaddyfileViaApi, isCaddyManaged } from "../api";
@@ -42,6 +42,7 @@ interface Props {
 
 export function CaddyfileEditor({ unmanaged = false }: Props) {
   const { t } = useTranslation();
+  const toast = useToast();
 
   const [files, setFiles] = useState<FileEntry[]>([{ path: MAIN_PATH, label: "Caddyfile" }]);
   const [selectedPath, setSelectedPath] = useState(MAIN_PATH);
@@ -55,7 +56,6 @@ export function CaddyfileEditor({ unmanaged = false }: Props) {
   const [reloadError, setReloadError] = useState<string | null>(null);
   const [saveErr, setSaveErr] = useState<string | null>(null);
   const [needsReload, setNeedsReload] = useState(false);
-  const [reloadOk, setReloadOk] = useState(false);
 
   const { diskContent, loading, error, saving, save } = useCaddyfile(selectedPath);
 
@@ -96,7 +96,6 @@ export function CaddyfileEditor({ unmanaged = false }: Props) {
     setEditMode(true);
     setSaveErr(null);
     setNeedsReload(false);
-    setReloadOk(false);
     setReloadError(null);
   }
 
@@ -109,7 +108,6 @@ export function CaddyfileEditor({ unmanaged = false }: Props) {
     setSelectedPath(entry.path);
     setSaveErr(null);
     setNeedsReload(false);
-    setReloadOk(false);
     setReloadError(null);
   }
 
@@ -156,8 +154,7 @@ export function CaddyfileEditor({ unmanaged = false }: Props) {
     try {
       await reloadCaddy();
       setNeedsReload(false);
-      setReloadOk(true);
-      setTimeout(() => setReloadOk(false), 4000);
+      toast.success(t("caddyfile.reloaded"));
     } catch (e) {
       setReloadError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -176,27 +173,22 @@ export function CaddyfileEditor({ unmanaged = false }: Props) {
     <Stack hasGutter>
       {error && (
         <StackItem>
-          <Notice variant="danger" title={t("caddyfile.load_failed")}>{error}</Notice>
+          <Notice isInline={false} variant="danger" title={t("caddyfile.load_failed")}>{error}</Notice>
         </StackItem>
       )}
       {saveErr && (
         <StackItem>
-          <Notice variant="danger" title={t("caddyfile.save_failed")}>{saveErr}</Notice>
+          <Notice isInline={false} variant="danger" title={t("caddyfile.save_failed")}>{saveErr}</Notice>
         </StackItem>
       )}
       {reloadError && (
         <StackItem>
-          <Notice variant="danger" title={t("service.reload_failed")}>{reloadError}</Notice>
+          <Notice isInline={false} variant="danger" title={t("service.reload_failed")}>{reloadError}</Notice>
         </StackItem>
       )}
-      {reloadOk && (
+      {needsReload && (
         <StackItem>
-          <Notice variant="success" title={t("caddyfile.reloaded")} />
-        </StackItem>
-      )}
-      {needsReload && !reloadOk && (
-        <StackItem>
-          <Notice
+          <Notice isInline={false}
             variant="warning"
             title={t("caddyfile.saved_needs_reload")}
             actionLinks={

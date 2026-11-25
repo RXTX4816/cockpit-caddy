@@ -232,7 +232,6 @@ export function AddServerDialog({ existingKeys, onAdd, onClose }: Props) {
         {isLocked && (
           <Notice
             variant="warning"
-           
             title={t("servers.confirm_add")}
           />
         )}
@@ -259,7 +258,6 @@ export function AddServerDialog({ existingKeys, onAdd, onClose }: Props) {
         {confirmAction.error && (
           <Notice
             variant="danger"
-           
             title={confirmAction.error}
           />
         )}

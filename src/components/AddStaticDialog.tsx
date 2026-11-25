@@ -111,7 +111,6 @@ export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues, 
         {isLocked && (
           <Notice
             variant="warning"
-           
             title={t("add_static.confirm_body", { port: serverCtx ? serverCtx.port : port, root: root.trim() })}
           />
         )}

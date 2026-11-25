@@ -17,6 +17,7 @@ import { useTranslation } from "react-i18next";
 import { readCaddyfile, readProxyConf, scanConfigIssues, runConfigFixes, reloadCaddy, CaddyfileError } from "../api";
 import type { ConfigFinding } from "../api";
 import { Notice } from "./Notice";
+import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
 
 interface Props {
   onClose: () => void;
@@ -30,6 +31,7 @@ interface Props {
  */
 export function ConfigCheckModal({ onClose }: Props) {
   const { t } = useTranslation();
+  const toast = useToast();
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [findings, setFindings] = useState<ConfigFinding[]>([]);
@@ -38,7 +40,6 @@ export function ConfigCheckModal({ onClose }: Props) {
   const [applyError, setApplyError] = useState<string | null>(null);
   const [applied, setApplied] = useState(false);
   const [reloading, setReloading] = useState(false);
-  const [reloadOk, setReloadOk] = useState(false);
   const [reloadError, setReloadError] = useState<string | null>(null);
 
   const scan = useCallback(() => {
@@ -85,8 +86,7 @@ export function ConfigCheckModal({ onClose }: Props) {
     setReloadError(null);
     try {
       await reloadCaddy();
-      setReloadOk(true);
-      setTimeout(() => setReloadOk(false), 4000);
+      toast.success(t("caddyfile.reloaded"));
     } catch (e) {
       setReloadError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -99,10 +99,6 @@ export function ConfigCheckModal({ onClose }: Props) {
       <ModalHeader title={t("config_check.title")} />
       <ModalBody>
         <Notice variant="info" title={t("config_check.intro")} />
-
-        {reloadOk && (
-          <Notice variant="success" title={t("caddyfile.reloaded")} />
-        )}
         {reloadError && (
           <Notice variant="danger" title={reloadError} />
         )}
@@ -116,7 +112,7 @@ export function ConfigCheckModal({ onClose }: Props) {
         {loadError && (
           <Notice variant="danger" title={t("config_check.load_error")}>
             {loadError}
-            <Button variant="link" onClick={scan} style={{ marginLeft: "0.5rem" }}>{t("common.retry")}</Button>
+            <Button variant="link" isInline onClick={scan} style={{ marginLeft: "0.5rem" }}>{t("common.retry")}</Button>
           </Notice>
         )}
 
@@ -134,7 +130,6 @@ export function ConfigCheckModal({ onClose }: Props) {
             {applied && (
               <Notice
                 variant="success"
-               
                 title={t("config_check.apply_ok")}
                 actionLinks={
                   <Button variant="warning" size="sm" isLoading={reloading} isDisabled={reloading} onClick={() => void handleReload()}>

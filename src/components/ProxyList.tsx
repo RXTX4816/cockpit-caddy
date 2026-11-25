@@ -291,7 +291,6 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
           <StackItem>
             <Notice
               variant="warning"
-             
               title={t("migration.banner_title")}
               actionLinks={
                 <>
@@ -299,7 +298,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
                     {t("migration.button")}
                   </Button>
                   {onOpenBackup && (
-                    <Button variant="link" size="sm" onClick={onOpenBackup}>
+                    <Button variant="link" size="sm" isInline onClick={onOpenBackup}>
                       {t("backup.button")}
                     </Button>
                   )}
@@ -316,14 +315,14 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
 
         {apiError && (
           <StackItem>
-            <Notice
+            <Notice isInline={false}
               variant="warning"
               title={apiError.action === "add" ? t("proxies.api_error_add_title") : t("proxies.api_error_edit_title")}
               actionClose={<AlertActionCloseButton onClose={() => setApiError(null)} />}
               actionLinks={
                 <Button
                   variant="link"
-                 
+                  isInline
                   icon={<ExternalLinkAltIcon />}
                   iconPosition="end"
                   onClick={() => { onViewLogs?.(apiError.search); setApiError(null); }}
@@ -339,7 +338,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
 
         {error && (
           <StackItem>
-            <Notice
+            <Notice isInline={false}
               variant="danger"
               title={t("proxies.load_failed")}
               actionLinks={<Button variant="link" onClick={refresh}>{t("common.retry")}</Button>}
@@ -353,7 +352,6 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
           <StackItem>
             <Notice
               variant="info"
-             
               title={t("probe.confirm_title")}
               actionClose={<AlertActionCloseButton onClose={() => setProbeConfirming(false)} />}
             >
@@ -576,10 +574,9 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
           <Content>{t("migration.confirm_body")}</Content>
           <Notice
             variant="warning"
-           
             title={t("migration.backup_warning_title")}
             actionLinks={onOpenBackup && (
-              <Button variant="link" onClick={onOpenBackup}>
+              <Button variant="link" isInline onClick={onOpenBackup}>
                 {t("backup.button")}
               </Button>
             )}

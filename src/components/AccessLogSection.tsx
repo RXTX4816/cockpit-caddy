@@ -63,7 +63,7 @@ export function AccessLogSection({ value, onChange, isDisabled, idPrefix = "al",
     onChange({ ...value, ...patch });
   }
 
-  const filePathErr = value.enabled && value.output === "file" && !value.filePath.trim()
+  const filePathErr = accessLogHasError(value)
     ? t("access_log.file_path_required")
     : null;
 
@@ -219,6 +219,12 @@ export function AccessLogSection({ value, onChange, isDisabled, idPrefix = "al",
     </SectionShell>
   );
 }
+
+/** File output without a path, which Caddy rejects; Save jumps to the tab that holds it. */
+export function accessLogHasError(v: AccessLogValues): boolean {
+  return v.enabled && v.output === "file" && !v.filePath.trim();
+}
+
 
 export function accessLogValuesToConfig(v: AccessLogValues): AccessLogConfig | undefined {
   if (!v.enabled) return undefined;

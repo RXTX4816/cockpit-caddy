@@ -1,4 +1,3 @@
-import { ProxyDialogTabs, type ProxyTab } from "./proxyDialogParts";
 import { useState, useEffect, useCallback } from "react";
 import {
   ActionGroup,
@@ -25,8 +24,9 @@ import { readGlobalOptions, syncGlobalOptions, reloadCaddy, fetchStorageInfo, ch
 import type { DnsChallengeConfig, GlobalOptions, StorageInfo } from "../api";
 import { DnsChallengeFields, dnsDraftFromConfig, dnsDraftToConfig, validateDnsDraft, type DnsDraft } from "./DnsChallengeFields";
 import { CertLifetimeSelect } from "./CertLifetimeSelect";
-import { AccessLogSection, type AccessLogValues, accessLogConfigToValues, accessLogValuesToConfig } from "./AccessLogSection";
+import { AccessLogSection, type AccessLogValues, accessLogConfigToValues, accessLogHasError, accessLogValuesToConfig } from "./AccessLogSection";
 import { Notice } from "./Notice";
+import { ProxyDialogTabs, type ProxyTab } from "./proxyDialogParts";
 
 type SettingsTabKey = "core" | "tls" | "logging" | "proxy";
 const SETTINGS_TAB_ORDER: SettingsTabKey[] = ["core", "tls", "logging", "proxy"];
@@ -197,7 +197,7 @@ export function GlobalOptionsTab() {
   const hasError: Record<SettingsTabKey, boolean> = {
     core: !!(httpPortErr || httpsPortErr || gracePeriodErr || shutdownDelayErr),
     tls: !!(dnsErr || onDemandBurstErr || onDemandIntervalErr || internalCertLifetimeErr || renewalWindowRatioErr),
-    logging: !!(metricsListenAddressErr || metricsPathErr),
+    logging: !!(metricsListenAddressErr || metricsPathErr) || accessLogHasError(runtimeLog),
     proxy: !!(trustedProxiesRangesErr || proxyProtocolTimeoutErr),
   };
   const configured: Record<SettingsTabKey, boolean> = {
@@ -311,7 +311,7 @@ export function GlobalOptionsTab() {
 
         <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
 
-        <Title headingLevel="h4" size="md">
+        <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
           {t("global_opts.storage_title")}
         </Title>
 
@@ -326,7 +326,7 @@ export function GlobalOptionsTab() {
           </div>
         )}
         {storageInfo && (
-          <DescriptionList isHorizontal isCompact>
+          <DescriptionList isHorizontal isCompact style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
             <DescriptionListGroup>
               <DescriptionListTerm>{t("global_opts.storage_path")}</DescriptionListTerm>
               <DescriptionListDescription>
@@ -362,7 +362,7 @@ export function GlobalOptionsTab() {
 
     </>) },
     { key: "tls", label: t("global_opts.tab_tls"), configured: configured.tls, hasError: hasError.tls, content: (<>
-        <Title headingLevel="h4" size="md">
+        <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
           {t("global_opts.acme_title")}
         </Title>
         <Notice variant="info" title={t("global_opts.acme_note")} />
@@ -450,7 +450,7 @@ export function GlobalOptionsTab() {
 
         <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
 
-        <Title headingLevel="h4" size="md">
+        <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
           {t("dns.global_title")}
         </Title>
         {dnsProviders && !dnsProviders.length && !dnsEnabled ? (
@@ -475,7 +475,7 @@ export function GlobalOptionsTab() {
 
         <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
 
-        <Title headingLevel="h4" size="md">
+        <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
           {t("global_opts.on_demand_title")}
         </Title>
 
@@ -551,7 +551,7 @@ export function GlobalOptionsTab() {
 
         <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
 
-        <Title headingLevel="h4" size="md">
+        <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
           {t("global_opts.internal_tls_title")}
         </Title>
         <Notice variant="info" title={t("global_opts.internal_tls_note")} />
@@ -604,7 +604,7 @@ export function GlobalOptionsTab() {
 
     </>) },
     { key: "logging", label: t("global_opts.tab_logging"), configured: configured.logging, hasError: hasError.logging, content: (<>
-        <Title headingLevel="h4" size="md">
+        <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
           {t("global_opts.metrics_title")}
         </Title>
 
@@ -687,7 +687,7 @@ export function GlobalOptionsTab() {
 
         <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
 
-        <Title headingLevel="h4" size="md">
+        <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
           {t("global_opts.runtime_log_title")}
         </Title>
         <Notice variant="info" title={t("global_opts.runtime_log_note")} />
@@ -704,7 +704,7 @@ export function GlobalOptionsTab() {
 
     </>) },
     { key: "proxy", label: t("global_opts.tab_proxy"), configured: configured.proxy, hasError: hasError.proxy, content: (<>
-        <Title headingLevel="h4" size="md">
+        <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
           {t("global_opts.trusted_proxies_title")}
         </Title>
         <Notice variant="info" title={t("global_opts.trusted_proxies_note")} />
@@ -779,7 +779,7 @@ export function GlobalOptionsTab() {
 
         <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
 
-        <Title headingLevel="h4" size="md">
+        <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
           {t("global_opts.proxy_protocol_title")}
         </Title>
         <Notice variant="info" title={t("global_opts.proxy_protocol_note")} />
@@ -831,12 +831,6 @@ export function GlobalOptionsTab() {
           </>
         )}
 
-        {confirm.error != null && (
-          <Notice variant="danger" title={t("global_opts.save_error")}>
-            {confirm.error || t("global_opts.save_error_unknown")}
-          </Notice>
-        )}
-
     </>) },
   ];
   const settingsTabsNode = <ProxyDialogTabs active={activeTab} onSelect={setActiveTab} tabs={settingsTabs} ariaLabel={t("global_opts.tabs_aria")} />;
@@ -853,19 +847,19 @@ export function GlobalOptionsTab() {
     return (
       <Notice variant="danger" title={t("global_opts.load_error")}>
         {loadError}
-        <Button variant="link" onClick={load} style={{ marginLeft: "0.5rem" }}>{t("common.retry")}</Button>
+        <Button variant="link" isInline onClick={load} style={{ marginLeft: "0.5rem" }}>{t("common.retry")}</Button>
       </Notice>
     );
   }
 
   return (
     <div style={{ maxWidth: "56rem" }}>
-      <Title headingLevel="h3">
+      <Title headingLevel="h3" style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}>
         {t("global_opts.title")}
       </Title>
 
       {restartNeeded && (
-        <Notice
+        <Notice isInline={false}
           variant="warning"
           title={t("dns.restart_needed")}
           data-testid="dns-restart-needed"
@@ -884,7 +878,7 @@ export function GlobalOptionsTab() {
         />
       )}
       {needsReload && !restartNeeded && (
-        <Notice
+        <Notice isInline={false}
           variant="warning"
           title={t("global_opts.needs_reload")}
           actionLinks={
@@ -903,7 +897,6 @@ export function GlobalOptionsTab() {
       {!hasAnyOption && (
         <Notice
           variant="info"
-         
           title={t("global_opts.unmanaged_hint")}
         />
       )}
@@ -912,12 +905,16 @@ export function GlobalOptionsTab() {
         {isConfirming && (
           <Notice
             variant="warning"
-           
             title={t("global_opts.confirm_body")}
           />
         )}
 
         {settingsTabsNode}
+        {confirm.error != null && (
+          <Notice variant="danger" title={t("global_opts.save_error")}>
+            {confirm.error || t("global_opts.save_error_unknown")}
+          </Notice>
+        )}
         <ActionGroup>
           {isConfirming ? (
             <>

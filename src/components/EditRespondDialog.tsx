@@ -75,7 +75,6 @@ export function EditRespondDialog({ proxy, existingPorts: _existingPorts, onSave
         {isLocked && (
           <Notice
             variant="warning"
-           
             title={t("edit_respond.confirm_body", { port: proxy.externalPort, status: statusCode })}
           />
         )}
