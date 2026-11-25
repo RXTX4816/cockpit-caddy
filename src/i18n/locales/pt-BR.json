@@ -822,7 +822,12 @@
     "field_copy_headers": "Copiar cabeçalhos",
     "field_copy_headers_help": "Cabeçalhos de resposta, separados por espaço ou vírgula, a copiar do serviço de autenticação para a requisição ao upstream (ex.: Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "A URI de autenticação é obrigatória quando a URL do serviço de autenticação está definida"
+    "validation_uri_required": "A URI de autenticação é obrigatória quando a URL do serviço de autenticação está definida",
+    "field_copy_headers_rename_help": "Escreva Name>Other para copiar um cabeçalho com outro nome.",
+    "field_header_up": "Cabeçalhos da requisição ao serviço de autenticação",
+    "field_header_up_help": "Um por linha: Name value define um cabeçalho, +Name value adiciona um, -Name remove um.",
+    "field_trusted_proxies": "Proxies confiáveis",
+    "field_trusted_proxies_help": "Faixas cujos cabeçalhos X-Forwarded-* são mantidos na requisição ao serviço de autenticação, separadas por espaços. private_ranges representa as redes privadas."
   },
   "tls_policy": {
     "heading": "Política TLS",

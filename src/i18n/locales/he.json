@@ -822,7 +822,12 @@
     "field_copy_headers": "העתקת כותרות",
     "field_copy_headers_help": "כותרות תגובה מופרדות ברווחים או בפסיקים שיועתקו משירות האימות לבקשה אל ה-upstream (למשל Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "כשמוגדרת כתובת שירות אימות, נדרש URI אימות"
+    "validation_uri_required": "כשמוגדרת כתובת שירות אימות, נדרש URI אימות",
+    "field_copy_headers_rename_help": "כתבו Name>Other כדי להעתיק כותרת בשם אחר.",
+    "field_header_up": "כותרות הבקשה לשירות האימות",
+    "field_header_up_help": "אחת בכל שורה: Name value קובע כותרת, +Name value מוסיף אחת, -Name מסיר אחת.",
+    "field_trusted_proxies": "פרוקסי מהימנים",
+    "field_trusted_proxies_help": "טווחים שכותרות X-Forwarded-* שלהם נשמרות בבקשה לשירות האימות, מופרדים ברווחים. private_ranges מייצג את הרשתות הפרטיות."
   },
   "tls_policy": {
     "heading": "מדיניות TLS",

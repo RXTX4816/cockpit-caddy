@@ -242,6 +242,8 @@ export function buildForwardAuthCaddyLines(fa: import("./types").ForwardAuthConf
   const lines = [`\tforward_auth ${fa.upstreamUrl} {`];
   lines.push(`\t\turi ${fa.uri || "/"}`);
   if (fa.copyHeaders.length) lines.push(`\t\tcopy_headers ${fa.copyHeaders.join(" ")}`);
+  for (const h of fa.headerUp ?? []) lines.push(headerOpLine("\t\theader_up", h));
+  if (fa.trustedProxies?.length) lines.push(`\t\ttrusted_proxies ${fa.trustedProxies.join(" ")}`);
   lines.push("\t}");
   return lines;
 }

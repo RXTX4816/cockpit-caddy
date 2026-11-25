@@ -822,7 +822,12 @@
     "field_copy_headers": "Kopiuj nagłówki",
     "field_copy_headers_help": "Nagłówki odpowiedzi oddzielone spacjami lub przecinkami, kopiowane z usługi uwierzytelniania do żądania do upstreamu (np. Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "URI uwierzytelniania jest wymagany, gdy ustawiono URL usługi uwierzytelniania"
+    "validation_uri_required": "URI uwierzytelniania jest wymagany, gdy ustawiono URL usługi uwierzytelniania",
+    "field_copy_headers_rename_help": "Wpisz Name>Other, aby skopiować nagłówek pod inną nazwą.",
+    "field_header_up": "Nagłówki żądania do usługi uwierzytelniania",
+    "field_header_up_help": "Po jednym w wierszu: Name value ustawia nagłówek, +Name value dodaje, -Name usuwa.",
+    "field_trusted_proxies": "Zaufane serwery proxy",
+    "field_trusted_proxies_help": "Zakresy, których nagłówki X-Forwarded-* zostają w żądaniu do usługi uwierzytelniania, oddzielone spacjami. private_ranges oznacza sieci prywatne."
   },
   "tls_policy": {
     "heading": "Polityka TLS",

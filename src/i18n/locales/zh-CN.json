@@ -822,7 +822,12 @@
     "field_copy_headers": "复制标头",
     "field_copy_headers_help": "以空格或逗号分隔的响应头，会从认证服务复制到发往上游的请求中（例如 Remote-User, Remote-Groups）",
     "indicator": "Forward Auth",
-    "validation_uri_required": "设置了认证服务 URL 时必须填写认证 URI"
+    "validation_uri_required": "设置了认证服务 URL 时必须填写认证 URI",
+    "field_copy_headers_rename_help": "写成 Name>Other,即可以另一个名称复制该请求头。",
+    "field_header_up": "发往认证服务的请求头",
+    "field_header_up_help": "每行一个:Name value 设置请求头,+Name value 添加,-Name 删除。",
+    "field_trusted_proxies": "受信任的代理",
+    "field_trusted_proxies_help": "在发往认证服务的请求中保留其 X-Forwarded-* 请求头的地址范围,以空格分隔。private_ranges 代表私有网络。"
   },
   "tls_policy": {
     "heading": "TLS 策略",

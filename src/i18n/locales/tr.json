@@ -822,7 +822,12 @@
     "field_copy_headers": "Başlıkları kopyala",
     "field_copy_headers_help": "Kimlik doğrulama hizmetinden upstream isteğine kopyalanacak, boşluk veya virgülle ayrılmış yanıt başlıkları (ör. Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "Kimlik doğrulama hizmeti URL'si ayarlandığında kimlik doğrulama URI'si zorunludur"
+    "validation_uri_required": "Kimlik doğrulama hizmeti URL'si ayarlandığında kimlik doğrulama URI'si zorunludur",
+    "field_copy_headers_rename_help": "Bir başlığı başka bir adla kopyalamak için Name>Other yazın.",
+    "field_header_up": "Kimlik doğrulama hizmetine giden istek başlıkları",
+    "field_header_up_help": "Satır başına bir tane: Name value başlık ayarlar, +Name value ekler, -Name kaldırır.",
+    "field_trusted_proxies": "Güvenilir vekil sunucular",
+    "field_trusted_proxies_help": "Kimlik doğrulama hizmetine giden istekte X-Forwarded-* başlıkları korunan aralıklar, boşlukla ayrılmış. private_ranges özel ağları ifade eder."
   },
   "tls_policy": {
     "heading": "TLS ilkesi",

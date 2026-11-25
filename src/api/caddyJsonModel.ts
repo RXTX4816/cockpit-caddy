@@ -166,30 +166,49 @@ export const RP_HEADER_PLACEHOLDER = /^\{http\.reverse_proxy\.header\.(.+)\}$/;
  * set from the auth response, so the backend sees who logged in and a client can't forge
  * `Remote-User`. An `https://` auth URL gets a TLS transport.
  */
+/** What `private_ranges` stands for in forward_auth's `trusted_proxies` (Caddy 2.11). */
+export const PRIVATE_RANGES = ["192.168.0.0/16", "172.16.0.0/12", "10.0.0.0/8", "127.0.0.1/8", "fd00::/8", "::1"];
+
+const FORWARD_AUTH_DEFAULT_HEADERS: Record<string, string> = {
+  "X-Forwarded-Method": "{http.request.method}",
+  "X-Forwarded-Uri": "{http.request.uri}",
+};
+
+/** `Name` copies a header as it is, `Name>Other` copies it under another name (#336). */
+export function splitCopyHeader(entry: string): { from: string; to: string } {
+  const i = entry.indexOf(">");
+  return i > 0 && i < entry.length - 1 ? { from: entry.slice(0, i), to: entry.slice(i + 1) } : { from: entry, to: entry };
+}
+
+
 export function buildForwardAuthHandler(fa: import("./types").ForwardAuthConfig): CaddyHandler | null {
   if (!fa.upstreamUrl.trim()) return null;
   const { dial, tls } = forwardAuthDial(fa.upstreamUrl);
   const responseRoutes: Array<Record<string, unknown>> = [{ handle: [{ handler: "vars" }] }];
-  for (const name of [...fa.copyHeaders].sort()) {
-    const placeholder = `{http.reverse_proxy.header.${name}}`;
-    responseRoutes.push({ handle: [{ handler: "headers", request: { delete: [name] } }] });
+  for (const entry of [...fa.copyHeaders].sort()) {
+    const { from, to } = splitCopyHeader(entry);
+    const placeholder = `{http.reverse_proxy.header.${from}}`;
+    responseRoutes.push({ handle: [{ handler: "headers", request: { delete: [to] } }] });
     responseRoutes.push({
-      handle: [{ handler: "headers", request: { set: { [name]: [placeholder] } } }],
+      handle: [{ handler: "headers", request: { set: { [to]: [placeholder] } } }],
       match: [{ not: [{ vars: { [placeholder]: [""] } }] }],
     });
   }
+  const userHeaders = (buildRequestHeadersJson(fa.headerUp)?.request ?? {}) as Record<string, unknown>;
+  const request: Record<string, unknown> = {
+    ...userHeaders,
+    set: {
+      ...Object.fromEntries(Object.entries(FORWARD_AUTH_DEFAULT_HEADERS).map(([k, v]) => [k, [v]])),
+      ...(userHeaders.set as Record<string, string[]> | undefined),
+    },
+  };
+  const trusted = fa.trustedProxies?.flatMap(r => r === "private_ranges" ? PRIVATE_RANGES : [r]);
   const rp: Record<string, unknown> = {
     handle_response: [{ match: { status_code: [2] }, routes: responseRoutes }],
     handler: "reverse_proxy",
-    headers: {
-      request: {
-        set: {
-          "X-Forwarded-Method": ["{http.request.method}"],
-          "X-Forwarded-Uri": ["{http.request.uri}"],
-        },
-      },
-    },
+    headers: { request },
     rewrite: { method: "GET", uri: fa.uri || "/" },
+    ...(trusted?.length ? { trusted_proxies: trusted } : {}),
     ...(tls ? { transport: { protocol: "http", tls: {} } } : {}),
     upstreams: [{ dial }],
   };
@@ -235,9 +254,24 @@ export function extractForwardAuthFromProxy(rp: CaddyReverseProxyHandler): impor
   const copyHandle = handles.find(h => h.handler === "copy_response_headers") as { include?: string[] } | undefined;
   const fromSets = handles.flatMap(h => {
     const set = (h.request as { set?: Record<string, string[]> } | undefined)?.set ?? {};
-    return Object.entries(set).filter(([, v]) => RP_HEADER_PLACEHOLDER.test(v?.[0] ?? "")).map(([k]) => k);
+    return Object.entries(set).flatMap(([to, v]) => {
+      const from = RP_HEADER_PLACEHOLDER.exec(v?.[0] ?? "")?.[1];
+      return from ? [from === to ? to : `${from}>${to}`] : [];
+    });
   });
-  return { upstreamUrl, uri: uri?.uri, copyHeaders: copyHandle?.include ?? fromSets };
+  // The auth request's own headers: the two Caddy always sets are not the user's (#336).
+  const ownHeaders = parseRequestHeadersJson(raw.headers as Record<string, unknown> | undefined)
+    .filter(h => !(h.op === "set" && h.name in FORWARD_AUTH_DEFAULT_HEADERS && jsonPlaceholderToCaddy(FORWARD_AUTH_DEFAULT_HEADERS[h.name]) === h.value));
+  const trustedRaw = raw.trusted_proxies as string[] | undefined;
+  const hasPrivate = !!trustedRaw && PRIVATE_RANGES.every(r => trustedRaw.includes(r));
+  const trusted = trustedRaw?.length
+    ? hasPrivate ? ["private_ranges", ...trustedRaw.filter(r => !PRIVATE_RANGES.includes(r))] : trustedRaw
+    : undefined;
+  return {
+    upstreamUrl, uri: uri?.uri, copyHeaders: copyHandle?.include ?? fromSets,
+    ...(ownHeaders.length ? { headerUp: ownHeaders } : {}),
+    ...(trusted ? { trustedProxies: trusted } : {}),
+  };
 }
 
 

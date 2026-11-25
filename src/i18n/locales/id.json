@@ -822,7 +822,12 @@
     "field_copy_headers": "Salin header",
     "field_copy_headers_help": "Header respons yang dipisahkan spasi atau koma untuk disalin dari layanan autentikasi ke permintaan upstream (mis. Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "URI autentikasi wajib diisi jika URL layanan autentikasi diatur"
+    "validation_uri_required": "URI autentikasi wajib diisi jika URL layanan autentikasi diatur",
+    "field_copy_headers_rename_help": "Tulis Name>Other untuk menyalin header dengan nama lain.",
+    "field_header_up": "Header permintaan ke layanan autentikasi",
+    "field_header_up_help": "Satu per baris: Name value menetapkan header, +Name value menambahkan satu, -Name menghapus satu.",
+    "field_trusted_proxies": "Proksi tepercaya",
+    "field_trusted_proxies_help": "Rentang yang header X-Forwarded-*-nya dipertahankan pada permintaan ke layanan autentikasi, dipisahkan spasi. private_ranges berarti jaringan privat."
   },
   "tls_policy": {
     "heading": "Kebijakan TLS",

@@ -430,8 +430,12 @@ export interface ForwardAuthConfig {
   upstreamUrl: string;
   /** Path to request on the auth service, e.g. "/api/authz/forward-auth" */
   uri?: string;
-  /** Response header names to copy from auth service to the upstream request */
+  /** Response header names to copy from auth service to the upstream request; `Name>Other` renames it (#336). */
   copyHeaders: string[];
+  /** `header_up`: changes to the request sent to the auth service (#336). */
+  headerUp?: HeaderOperation[];
+  /** `trusted_proxies`: ranges whose X-Forwarded-* headers the auth request keeps; `private_ranges` is a keyword (#336). */
+  trustedProxies?: string[];
 }
 
 export interface ProxyEntry {

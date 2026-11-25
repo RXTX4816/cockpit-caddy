@@ -822,7 +822,12 @@
     "field_copy_headers": "სათაურების კოპირება",
     "field_copy_headers_help": "ჰარით ან მძიმით გამოყოფილი პასუხის სათაურები, რომლებიც ავთენტიკაციის სერვისიდან upstream-ის მოთხოვნაში კოპირდება (მაგ. Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "ავთენტიკაციის სერვისის URL-ის მითითებისას ავთენტიკაციის URI სავალდებულოა"
+    "validation_uri_required": "ავთენტიკაციის სერვისის URL-ის მითითებისას ავთენტიკაციის URI სავალდებულოა",
+    "field_copy_headers_rename_help": "დაწერეთ Name>Other სათაურის სხვა სახელით დასაკოპირებლად.",
+    "field_header_up": "მოთხოვნის სათაურები ავტორიზაციის სერვისისთვის",
+    "field_header_up_help": "თითო ხაზზე ერთი: Name value ადგენს სათაურს, +Name value ამატებს, -Name შლის.",
+    "field_trusted_proxies": "სანდო პროქსები",
+    "field_trusted_proxies_help": "დიაპაზონები, რომელთა X-Forwarded-* სათაურები რჩება ავტორიზაციის სერვისისთვის გაგზავნილ მოთხოვნაში, ინტერვალებით გამოყოფილი. private_ranges კერძო ქსელებს ნიშნავს."
   },
   "tls_policy": {
     "heading": "TLS პოლიტიკა",

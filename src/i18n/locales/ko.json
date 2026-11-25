@@ -822,7 +822,12 @@
     "field_copy_headers": "헤더 복사",
     "field_copy_headers_help": "인증 서비스에서 업스트림 요청으로 복사할 응답 헤더(공백 또는 쉼표 구분, 예: Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "인증 서비스 URL을 설정하면 인증 URI가 필요합니다"
+    "validation_uri_required": "인증 서비스 URL을 설정하면 인증 URI가 필요합니다",
+    "field_copy_headers_rename_help": "Name>Other로 쓰면 헤더를 다른 이름으로 복사합니다.",
+    "field_header_up": "인증 서비스로 보내는 요청 헤더",
+    "field_header_up_help": "한 줄에 하나: Name value는 헤더를 설정하고, +Name value는 추가하며, -Name은 제거합니다.",
+    "field_trusted_proxies": "신뢰하는 프록시",
+    "field_trusted_proxies_help": "인증 서비스로 보내는 요청에서 X-Forwarded-* 헤더를 유지할 범위(공백으로 구분)입니다. private_ranges는 사설 네트워크를 뜻합니다."
   },
   "tls_policy": {
     "heading": "TLS 정책",

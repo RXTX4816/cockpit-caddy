@@ -822,7 +822,12 @@
     "field_copy_headers": "Копировать заголовки",
     "field_copy_headers_help": "Заголовки ответа через пробел или запятую, копируемые из службы аутентификации в запрос к upstream (например, Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "Если задан URL службы аутентификации, URI аутентификации обязателен"
+    "validation_uri_required": "Если задан URL службы аутентификации, URI аутентификации обязателен",
+    "field_copy_headers_rename_help": "Напишите Name>Other, чтобы скопировать заголовок под другим именем.",
+    "field_header_up": "Заголовки запроса к сервису аутентификации",
+    "field_header_up_help": "По одному в строке: Name value задаёт заголовок, +Name value добавляет, -Name удаляет.",
+    "field_trusted_proxies": "Доверенные прокси",
+    "field_trusted_proxies_help": "Диапазоны, чьи заголовки X-Forwarded-* сохраняются в запросе к сервису аутентификации, через пробел. private_ranges означает частные сети."
   },
   "tls_policy": {
     "heading": "Политика TLS",

@@ -822,7 +822,12 @@
     "field_copy_headers": "نسخ الترويسات",
     "field_copy_headers_help": "ترويسات استجابة مفصولة بمسافات أو فواصل تُنسخ من خدمة المصادقة إلى الطلب المتجه إلى الخادم الأعلى (مثل Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "URI المصادقة مطلوب عند تعيين عنوان خدمة المصادقة"
+    "validation_uri_required": "URI المصادقة مطلوب عند تعيين عنوان خدمة المصادقة",
+    "field_copy_headers_rename_help": "اكتب Name>Other لنسخ ترويسة باسم آخر.",
+    "field_header_up": "ترويسات الطلب إلى خدمة المصادقة",
+    "field_header_up_help": "واحدة في كل سطر: Name value تعيّن ترويسة، و+Name value تضيف واحدة، و-Name تحذفها.",
+    "field_trusted_proxies": "الوكلاء الموثوقون",
+    "field_trusted_proxies_help": "نطاقات تُحفظ ترويسات X-Forwarded-* الخاصة بها في الطلب إلى خدمة المصادقة، مفصولة بمسافات. تمثّل private_ranges الشبكات الخاصة."
   },
   "tls_policy": {
     "heading": "سياسة TLS",

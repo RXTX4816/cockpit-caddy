@@ -822,7 +822,12 @@
     "field_copy_headers": "Headers kopiëren",
     "field_copy_headers_help": "Door spaties of komma's gescheiden antwoordheaders die van de authenticatieservice naar het upstream-request worden gekopieerd (bijv. Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "Een auth-URI is verplicht als er een URL van de authenticatieservice is ingesteld"
+    "validation_uri_required": "Een auth-URI is verplicht als er een URL van de authenticatieservice is ingesteld",
+    "field_copy_headers_rename_help": "Schrijf Name>Other om een header onder een andere naam te kopiëren.",
+    "field_header_up": "Request-headers naar de authenticatiedienst",
+    "field_header_up_help": "Eén per regel: Name value stelt een header in, +Name value voegt er een toe, -Name verwijdert er een.",
+    "field_trusted_proxies": "Vertrouwde proxy's",
+    "field_trusted_proxies_help": "Bereiken waarvan de X-Forwarded-*-headers behouden blijven in het verzoek aan de authenticatiedienst, gescheiden door spaties. private_ranges staat voor de privénetwerken."
   },
   "tls_policy": {
     "heading": "TLS-beleid",

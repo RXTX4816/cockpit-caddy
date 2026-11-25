@@ -822,7 +822,12 @@
     "field_copy_headers": "Kopírovať hlavičky",
     "field_copy_headers_help": "Hlavičky odpovede oddelené medzerami alebo čiarkami, ktoré sa skopírujú z overovacej služby do požiadavky na upstream (napr. Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "Ak je nastavená URL overovacej služby, URI overenia je povinné"
+    "validation_uri_required": "Ak je nastavená URL overovacej služby, URI overenia je povinné",
+    "field_copy_headers_rename_help": "Napíšte Name>Other na skopírovanie hlavičky pod iným názvom.",
+    "field_header_up": "Hlavičky požiadavky na autentifikačnú službu",
+    "field_header_up_help": "Jedna na riadok: Name value hlavičku nastaví, +Name value pridá, -Name odstráni.",
+    "field_trusted_proxies": "Dôveryhodné proxy",
+    "field_trusted_proxies_help": "Rozsahy, ktorých hlavičky X-Forwarded-* zostanú v požiadavke na autentifikačnú službu, oddelené medzerami. private_ranges znamená súkromné siete."
   },
   "tls_policy": {
     "heading": "Politika TLS",

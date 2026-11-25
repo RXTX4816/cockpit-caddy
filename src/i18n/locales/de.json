@@ -822,7 +822,12 @@
     "field_copy_headers": "Header kopieren",
     "field_copy_headers_help": "Durch Leerzeichen oder Kommas getrennte Antwort-Header, die vom Auth-Dienst in die Upstream-Anfrage übernommen werden (z. B. Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "Wenn eine URL des Auth-Dienstes gesetzt ist, ist eine Auth-URI erforderlich"
+    "validation_uri_required": "Wenn eine URL des Auth-Dienstes gesetzt ist, ist eine Auth-URI erforderlich",
+    "field_copy_headers_rename_help": "Schreiben Sie Name>Other, um einen Header unter anderem Namen zu kopieren.",
+    "field_header_up": "Request-Header zum Auth-Dienst",
+    "field_header_up_help": "Einer pro Zeile: Name value setzt einen Header, +Name value fügt einen hinzu, -Name entfernt einen.",
+    "field_trusted_proxies": "Vertrauenswürdige Proxys",
+    "field_trusted_proxies_help": "Bereiche, deren X-Forwarded-*-Header in der Anfrage an den Auth-Dienst erhalten bleiben, durch Leerzeichen getrennt. private_ranges steht für die privaten Netze."
   },
   "tls_policy": {
     "heading": "TLS-Richtlinie",

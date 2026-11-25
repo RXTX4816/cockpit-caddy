@@ -52,10 +52,10 @@ import {
   CONF_D_IMPORT_LINE,
   parseConfTlsIssuerMap,
 } from "./caddy";
-import { buildBasicAuthHandler, buildEncodeHandler, buildFileServerHandlers, buildFileServerJson, parseFileServerOptions, parseTemplatesJson, buildRedirectHandler, parseEncodeOptionsJson, parseBasicAuthOptionsJson, parseHtmlRedirect } from "./caddyJsonModel";
+import { PRIVATE_RANGES, buildForwardAuthHandler, extractForwardAuthFromProxy, forwardAuthResponseRoutes, buildBasicAuthHandler, buildEncodeHandler, buildFileServerHandlers, buildFileServerJson, parseFileServerOptions, parseTemplatesJson, buildRedirectHandler, parseEncodeOptionsJson, parseBasicAuthOptionsJson, parseHtmlRedirect } from "./caddyJsonModel";
 import { proxiesToCaddyfile } from "./caddy";
-import { buildPhpFastcgiLines } from "./siteBlocks";
-import type { CaddyConfig, CaddyServer, ProxyEntry, RouteMatch, ServerDef } from "./types";
+import { buildForwardAuthCaddyLines, buildPhpFastcgiLines } from "./siteBlocks";
+import type { CaddyConfig, CaddyReverseProxyHandler, CaddyServer, ProxyEntry, RouteMatch, ServerDef } from "./types";
 
 // ---------------------------------------------------------------------------
 // Test fixtures
@@ -4788,6 +4788,48 @@ describe("templates directive (#339)", () => {
     expect(parseTemplatesJson(handlers as never)).toEqual({ mime: ["text/html"], root: "/srv/inc" });
     expect(parseTemplatesJson([{ handler: "file_server" }] as never)).toBeUndefined();
     expect(buildFileServerHandlers({ root: "/srv" })).toHaveLength(1);
+  });
+});
+
+describe("forward_auth header_up, trusted_proxies and renamed copy_headers (#336)", () => {
+  const fa: import("./types").ForwardAuthConfig = {
+    upstreamUrl: "http://localhost:9091", uri: "/auth", copyHeaders: ["Remote-User", "Remote-Groups>X-Groups"],
+    headerUp: [{ op: "set", name: "X-Extra", value: "1" }, { op: "delete", name: "X-Cookie" }],
+    trustedProxies: ["private_ranges", "203.0.113.0/24"],
+  };
+
+  it("writes them into the forward_auth block", () => {
+    const lines = buildForwardAuthCaddyLines(fa).join("\n");
+    expect(lines).toContain("copy_headers Remote-User Remote-Groups>X-Groups");
+    expect(lines).toContain("header_up X-Extra 1");
+    expect(lines).toContain("header_up -X-Cookie");
+    expect(lines).toContain("trusted_proxies private_ranges 203.0.113.0/24");
+    expect(buildForwardAuthCaddyLines({ upstreamUrl: "http://a", uri: "/", copyHeaders: [] }).join("\n")).not.toMatch(/header_up|trusted_proxies/);
+  });
+
+  it("copies a renamed header from the auth response under its new name", () => {
+    const h = buildForwardAuthHandler(fa) as unknown as { routes: Array<{ handle: Array<Record<string, unknown>> }> };
+    const rp = h.routes[0].handle[0] as unknown as CaddyReverseProxyHandler & Record<string, unknown>;
+    const handles = forwardAuthResponseRoutes(rp)!.flatMap(r => r.handle ?? []);
+    expect(handles).toContainEqual({ handler: "headers", request: { delete: ["X-Groups"] } });
+    expect(handles).toContainEqual({ handler: "headers", request: { set: { "X-Groups": ["{http.reverse_proxy.header.Remote-Groups}"] } } });
+  });
+
+  it("builds header_up and trusted_proxies into the JSON and reads all three back", () => {
+    const h = buildForwardAuthHandler(fa) as unknown as { routes: Array<{ handle: Array<Record<string, unknown>> }> };
+    const rp = h.routes[0].handle[0] as unknown as CaddyReverseProxyHandler & Record<string, unknown>;
+    expect(rp.headers).toEqual({ request: { set: {
+      "X-Forwarded-Method": ["{http.request.method}"], "X-Forwarded-Uri": ["{http.request.uri}"], "X-Extra": ["1"],
+    }, delete: ["X-Cookie"] } });
+    expect(rp.trusted_proxies).toEqual([...PRIVATE_RANGES, "203.0.113.0/24"]);
+    expect(extractForwardAuthFromProxy(rp)).toEqual({ ...fa, copyHeaders: ["Remote-Groups>X-Groups", "Remote-User"] });
+  });
+
+  it("reads no extras from a plain forward_auth", () => {
+    const h = buildForwardAuthHandler({ upstreamUrl: "http://a:1", uri: "/x", copyHeaders: ["Remote-User"] }) as unknown as { routes: Array<{ handle: Array<Record<string, unknown>> }> };
+    const read = extractForwardAuthFromProxy(h.routes[0].handle[0] as never);
+    expect(read.headerUp).toBeUndefined();
+    expect(read.trustedProxies).toBeUndefined();
   });
 });
 

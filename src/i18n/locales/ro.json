@@ -822,7 +822,12 @@
     "field_copy_headers": "Copiază antetele",
     "field_copy_headers_help": "Antete de răspuns separate prin spații sau virgule, copiate de la serviciul de autentificare în cererea către upstream (de ex. Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "URI-ul de autentificare este obligatoriu când este setat un URL al serviciului de autentificare"
+    "validation_uri_required": "URI-ul de autentificare este obligatoriu când este setat un URL al serviciului de autentificare",
+    "field_copy_headers_rename_help": "Scrie Name>Other pentru a copia un antet sub alt nume.",
+    "field_header_up": "Antete ale cererii către serviciul de autentificare",
+    "field_header_up_help": "Unul pe linie: Name value setează un antet, +Name value adaugă unul, -Name elimină unul.",
+    "field_trusted_proxies": "Proxy de încredere",
+    "field_trusted_proxies_help": "Intervale ale căror antete X-Forwarded-* sunt păstrate în cererea către serviciul de autentificare, separate prin spații. private_ranges înseamnă rețelele private."
   },
   "tls_policy": {
     "heading": "Politică TLS",

@@ -822,7 +822,12 @@
     "field_copy_headers": "Kopiera huvuden",
     "field_copy_headers_help": "Svarshuvuden separerade med blanksteg eller kommatecken som kopieras från autentiseringstjänsten till begäran mot upstream (t.ex. Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "Autentiserings-URI krävs när en URL till autentiseringstjänsten är angiven"
+    "validation_uri_required": "Autentiserings-URI krävs när en URL till autentiseringstjänsten är angiven",
+    "field_copy_headers_rename_help": "Skriv Name>Other för att kopiera ett huvud under ett annat namn.",
+    "field_header_up": "Förfrågningshuvuden till autentiseringstjänsten",
+    "field_header_up_help": "Ett per rad: Name value sätter ett huvud, +Name value lägger till ett, -Name tar bort ett.",
+    "field_trusted_proxies": "Betrodda proxyservrar",
+    "field_trusted_proxies_help": "Intervall vars X-Forwarded-*-huvuden behålls i förfrågan till autentiseringstjänsten, avgränsade med mellanslag. private_ranges står för de privata nätverken."
   },
   "tls_policy": {
     "heading": "TLS-policy",

@@ -822,7 +822,12 @@
     "field_copy_headers": "Копіювати заголовки",
     "field_copy_headers_help": "Заголовки відповіді через пробіл або кому, що копіюються зі служби автентифікації до запиту на upstream (наприклад, Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "Якщо задано URL служби автентифікації, URI автентифікації обов'язковий"
+    "validation_uri_required": "Якщо задано URL служби автентифікації, URI автентифікації обов'язковий",
+    "field_copy_headers_rename_help": "Напишіть Name>Other, щоб скопіювати заголовок під іншою назвою.",
+    "field_header_up": "Заголовки запиту до сервісу автентифікації",
+    "field_header_up_help": "По одному в рядку: Name value задає заголовок, +Name value додає, -Name видаляє.",
+    "field_trusted_proxies": "Довірені проксі",
+    "field_trusted_proxies_help": "Діапазони, чиї заголовки X-Forwarded-* зберігаються в запиті до сервісу автентифікації, через пробіл. private_ranges означає приватні мережі."
   },
   "tls_policy": {
     "heading": "Політика TLS",

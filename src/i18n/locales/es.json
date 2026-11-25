@@ -822,7 +822,12 @@
     "field_copy_headers": "Copiar cabeceras",
     "field_copy_headers_help": "Cabeceras de respuesta, separadas por espacios o comas, que se copian del servicio de autenticación a la petición al upstream (p. ej. Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "La URI de autenticación es obligatoria si se indica una URL del servicio de autenticación"
+    "validation_uri_required": "La URI de autenticación es obligatoria si se indica una URL del servicio de autenticación",
+    "field_copy_headers_rename_help": "Escriba Name>Other para copiar un encabezado con otro nombre.",
+    "field_header_up": "Encabezados de la petición al servicio de autenticación",
+    "field_header_up_help": "Uno por línea: Name value establece un encabezado, +Name value añade uno, -Name quita uno.",
+    "field_trusted_proxies": "Proxies de confianza",
+    "field_trusted_proxies_help": "Rangos cuyos encabezados X-Forwarded-* se conservan en la petición al servicio de autenticación, separados por espacios. private_ranges equivale a las redes privadas."
   },
   "tls_policy": {
     "heading": "Política TLS",

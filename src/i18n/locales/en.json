@@ -822,7 +822,12 @@
     "field_copy_headers": "Copy headers",
     "field_copy_headers_help": "Space or comma-separated response headers to copy from the auth service to the upstream request (e.g. Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "Auth URI is required when an auth service URL is set"
+    "validation_uri_required": "Auth URI is required when an auth service URL is set",
+    "field_copy_headers_rename_help": "Write Name>Other to copy a header under another name.",
+    "field_header_up": "Request headers to the auth service",
+    "field_header_up_help": "One per line: Name value sets a header, +Name value adds one, -Name removes one.",
+    "field_trusted_proxies": "Trusted proxies",
+    "field_trusted_proxies_help": "Ranges whose X-Forwarded-* headers are kept on the request to the auth service, separated by spaces. private_ranges stands for the private networks."
   },
   "tls_policy": {
     "heading": "TLS Policy",

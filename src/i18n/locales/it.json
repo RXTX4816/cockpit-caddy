@@ -822,7 +822,12 @@
     "field_copy_headers": "Copia header",
     "field_copy_headers_help": "Header di risposta, separati da spazi o virgole, da copiare dal servizio di autenticazione alla richiesta verso l'upstream (es. Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "L'URI di autenticazione è obbligatorio quando è impostato un URL del servizio di autenticazione"
+    "validation_uri_required": "L'URI di autenticazione è obbligatorio quando è impostato un URL del servizio di autenticazione",
+    "field_copy_headers_rename_help": "Scrivi Name>Other per copiare un'intestazione con un altro nome.",
+    "field_header_up": "Intestazioni della richiesta al servizio di autenticazione",
+    "field_header_up_help": "Una per riga: Name value imposta un'intestazione, +Name value ne aggiunge una, -Name ne rimuove una.",
+    "field_trusted_proxies": "Proxy attendibili",
+    "field_trusted_proxies_help": "Intervalli le cui intestazioni X-Forwarded-* restano nella richiesta al servizio di autenticazione, separati da spazi. private_ranges indica le reti private."
   },
   "tls_policy": {
     "heading": "Policy TLS",

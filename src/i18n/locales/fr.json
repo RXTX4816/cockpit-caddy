@@ -822,7 +822,12 @@
     "field_copy_headers": "Copier les en-têtes",
     "field_copy_headers_help": "En-têtes de réponse, séparés par des espaces ou des virgules, à copier du service d'authentification vers la requête upstream (par ex. Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "L'URI d'authentification est obligatoire lorsqu'une URL de service d'authentification est définie"
+    "validation_uri_required": "L'URI d'authentification est obligatoire lorsqu'une URL de service d'authentification est définie",
+    "field_copy_headers_rename_help": "Écrivez Name>Other pour copier un en-tête sous un autre nom.",
+    "field_header_up": "En-têtes de la requête vers le service d'authentification",
+    "field_header_up_help": "Un par ligne : Name value définit un en-tête, +Name value en ajoute un, -Name en retire un.",
+    "field_trusted_proxies": "Proxys de confiance",
+    "field_trusted_proxies_help": "Plages dont les en-têtes X-Forwarded-* sont conservés dans la requête vers le service d'authentification, séparées par des espaces. private_ranges désigne les réseaux privés."
   },
   "tls_policy": {
     "heading": "Politique TLS",

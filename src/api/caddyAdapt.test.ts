@@ -144,6 +144,12 @@ describe.runIf(available || required)("forward_auth instant-apply JSON matches t
     ["https upstream with copy_headers", { upstreamUrl: "https://auth.example.com:9091", uri: "/api/verify?rd=x", copyHeaders: ["Remote-User", "Remote-Groups"] }],
     ["https upstream without a port", { upstreamUrl: "https://auth.example.com", uri: "/", copyHeaders: ["Remote-User"] }],
     ["http upstream without copy_headers or port", { upstreamUrl: "http://auth.local", uri: "/verify", copyHeaders: [] }],
+    ["renamed copy_headers, header_up and trusted_proxies (#336)", {
+      upstreamUrl: "http://auth.local:9091", uri: "/verify", copyHeaders: ["Remote-User", "Remote-Groups>X-Groups"],
+      headerUp: [{ op: "set" as const, name: "X-Extra", value: "1" }, { op: "delete" as const, name: "X-Cookie" }],
+      trustedProxies: ["private_ranges", "203.0.113.0/24"],
+    }],
+    ["only trusted_proxies (#336)", { upstreamUrl: "http://auth.local", uri: "/verify", copyHeaders: [], trustedProxies: ["203.0.113.0/24", "198.51.100.7"] }],
   ];
 
   it.each(cases)("%s", (_name, forwardAuth) => {
@@ -160,6 +166,16 @@ describe.runIf(available || required)("forward_auth instant-apply JSON matches t
     expect(p.targetHost).toBe("localhost");
     expect(p.targetPort).toBe(8000);
     expect(p.forwardAuth).toEqual(forwardAuth);
+  });
+
+  it("reads the renamed headers, header_up and trusted_proxies back (#336)", () => {
+    const forwardAuth = {
+      upstreamUrl: "http://auth.local:9091", uri: "/verify", copyHeaders: ["Remote-Groups>X-Groups", "Remote-User"],
+      headerUp: [{ op: "set" as const, name: "X-Extra", value: "1" }, { op: "delete" as const, name: "X-Cookie" }],
+      trustedProxies: ["private_ranges", "203.0.113.0/24"],
+    };
+    const [p] = parseProxies(adapt(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, targetPort: 8000, forwardAuth })])));
+    expect(p.forwardAuth).toMatchObject({ ...forwardAuth, headerUp: expect.arrayContaining(forwardAuth.headerUp) });
   });
 });
 

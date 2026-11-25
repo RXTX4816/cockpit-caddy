@@ -822,7 +822,12 @@
     "field_copy_headers": "コピーするヘッダー",
     "field_copy_headers_help": "認証サービスからアップストリームへのリクエストにコピーするレスポンスヘッダー（スペースまたはカンマ区切り。例: Remote-User, Remote-Groups）",
     "indicator": "Forward Auth",
-    "validation_uri_required": "認証サービスの URL を設定した場合、認証 URI は必須です"
+    "validation_uri_required": "認証サービスの URL を設定した場合、認証 URI は必須です",
+    "field_copy_headers_rename_help": "Name>Other と書くと、ヘッダーを別名でコピーします。",
+    "field_header_up": "認証サービスへのリクエストヘッダー",
+    "field_header_up_help": "1 行に 1 つ:Name value でヘッダーを設定、+Name value で追加、-Name で削除します。",
+    "field_trusted_proxies": "信頼するプロキシ",
+    "field_trusted_proxies_help": "認証サービスへのリクエストで X-Forwarded-* ヘッダーを保持する範囲(スペース区切り)。private_ranges はプライベートネットワークを表します。"
   },
   "tls_policy": {
     "heading": "TLS ポリシー",

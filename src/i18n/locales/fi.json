@@ -822,7 +822,12 @@
     "field_copy_headers": "Kopioi otsakkeet",
     "field_copy_headers_help": "Välilyönneillä tai pilkuilla erotetut vastausotsakkeet, jotka kopioidaan todennuspalvelulta upstream-pyyntöön (esim. Remote-User, Remote-Groups)",
     "indicator": "Forward Auth",
-    "validation_uri_required": "Todennuksen URI on pakollinen, kun todennuspalvelun URL on asetettu"
+    "validation_uri_required": "Todennuksen URI on pakollinen, kun todennuspalvelun URL on asetettu",
+    "field_copy_headers_rename_help": "Kirjoita Name>Other kopioidaksesi otsakkeen toisella nimellä.",
+    "field_header_up": "Todennuspalvelulle lähtevän pyynnön otsakkeet",
+    "field_header_up_help": "Yksi riviä kohti: Name value asettaa otsakkeen, +Name value lisää yhden, -Name poistaa yhden.",
+    "field_trusted_proxies": "Luotetut välityspalvelimet",
+    "field_trusted_proxies_help": "Alueet, joiden X-Forwarded-*-otsakkeet säilyvät todennuspalvelulle menevässä pyynnössä, välilyönnein erotettuina. private_ranges tarkoittaa yksityisiä verkkoja."
   },
   "tls_policy": {
     "heading": "TLS-käytäntö",
