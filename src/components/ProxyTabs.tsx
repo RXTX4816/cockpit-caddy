@@ -5,6 +5,7 @@ import { isPathOnlyMatcher } from "../api";
 import { AccessLogSection } from "./AccessLogSection";
 import { EncodeSection } from "./EncodeSection";
 import { BasicAuthSection } from "./BasicAuthSection";
+import { DynamicUpstreamsSection } from "./DynamicUpstreamsSection";
 import { ErrorHandlersSection } from "./ErrorHandlersSection";
 import { ForwardAuthSection, validateForwardAuth } from "./ForwardAuthSection";
 import { LbRetrySection } from "./LbRetrySection";
@@ -94,6 +95,7 @@ export function ProxyTabs({ state: s, onChange, general, generalHasError, active
             {routeMatchers}
             {isProxy && <RewriteSection value={s.rewrite} onChange={v => onChange({ rewrite: v })} isDisabled={isDisabled} />}
             <RequestHeadersSection value={s.requestHeaders} onChange={v => onChange({ requestHeaders: v })} isDisabled={isDisabled} />
+            {isProxy && <RequestHeadersSection variant="down" value={s.upstreamResponseHeaders} onChange={v => onChange({ upstreamResponseHeaders: v })} isDisabled={isDisabled} />}
             <ResponseHeadersSection value={s.responseHeaders} onChange={v => onChange({ responseHeaders: v })} isDisabled={isDisabled} />
             <EncodeSection value={s.encode} onChange={v => onChange({ encode: v })} isDisabled={isDisabled} />
             {isProxy && (
@@ -118,6 +120,7 @@ export function ProxyTabs({ state: s, onChange, general, generalHasError, active
         content: (
           <>
             <UpstreamsSection value={s.extraUpstreams} lbPolicy={s.lbPolicy} onChange={(u, p) => onChange({ extraUpstreams: u, lbPolicy: p })} lbArgs={s.lbArgs} onLbArgsChange={a => onChange({ lbArgs: a })} isDisabled={isDisabled} />
+            <DynamicUpstreamsSection value={s.dynamicUpstreams} onChange={v => onChange({ dynamicUpstreams: v })} isDisabled={isDisabled} />
             <LbRetrySection value={s.lbRetry} onChange={v => onChange({ lbRetry: v })} isDisabled={isDisabled} />
             <TransportSection value={s.transport} onChange={v => onChange({ transport: v })} isDisabled={isDisabled} />
           </>

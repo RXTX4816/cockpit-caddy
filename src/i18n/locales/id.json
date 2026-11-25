@@ -295,7 +295,20 @@
     "section_title": "Batas waktu upstream (opsional)",
     "dial_timeout": "Batas waktu koneksi",
     "response_header_timeout": "Batas waktu header respons",
-    "defaults_help": "Biarkan kolom kosong untuk memakai nilai bawaan Caddy, yang ditampilkan abu-abu. Batas waktu header respons memutus long polling dan respons yang lambat."
+    "defaults_help": "Biarkan kolom kosong untuk memakai nilai bawaan Caddy, yang ditampilkan abu-abu. Batas waktu header respons memutus long polling dan respons yang lambat.",
+    "streaming_help": "Streaming (websocket, aliran peristiwa): kosongkan untuk memakai bawaan Caddy.",
+    "flush_interval": "Interval flush",
+    "flush_interval_placeholder": "-1 mengirim setiap penulisan segera",
+    "stream_timeout": "Batas waktu stream",
+    "stream_close_delay": "Jeda penutupan stream",
+    "connection_title": "Koneksi ke upstream",
+    "tls_server_name": "Nama server TLS",
+    "versions": "Versi HTTP",
+    "read_timeout": "Batas waktu baca",
+    "write_timeout": "Batas waktu tulis",
+    "keepalive": "Keep-alive",
+    "keepalive_idle_conns": "Koneksi idle yang dipertahankan",
+    "keepalive_idle_conns_per_host": "Koneksi idle yang dipertahankan per host"
   },
   "server_timeouts": {
     "heading": "Batas waktu & batasan server",
@@ -437,7 +450,9 @@
     "validation_max_fails": "Maks. kegagalan minimal 1",
     "validation_needs_health_uri": "Interval, batas waktu, dan status yang diharapkan memerlukan jalur pemeriksaan",
     "validation_health_uri": "Jalur pemeriksaan harus diawali /",
-    "validation_health_status": "Gunakan kode seperti 200 atau kelas seperti 2xx"
+    "validation_health_status": "Gunakan kode seperti 200 atau kelas seperti 2xx",
+    "retry_methods": "Ulangi hanya metode ini",
+    "validation_methods": "Metode adalah kata seperti GET atau HEAD, dipisahkan spasi."
   },
   "response_headers": {
     "heading": "Header respons",
@@ -464,7 +479,12 @@
     "field_name": "Nama header",
     "field_value": "Nilai",
     "add_button": "Tambah",
-    "presets_label": "Prasetel"
+    "presets_label": "Prasetel",
+    "down_heading": "Header respons dari upstream",
+    "down_section_title": "Header respons dari upstream (opsional)",
+    "op_replace": "Ganti",
+    "field_search": "Nilai header yang dicari (ekspresi reguler)",
+    "field_replacement": "Pengganti"
   },
   "edit_redirect": {
     "title": "Edit pengalihan — :{{port}}",
@@ -1162,5 +1182,25 @@
     "match_headers": "Hanya header respons ini",
     "match_headers_help": "Satu per baris: nama header, lalu nilainya. Wildcard seperti text/* berfungsi.",
     "invalid_header": "Setiap baris memerlukan nama header dan nilai."
+  },
+  "dynamic_upstreams": {
+    "heading": "Upstream dinamis",
+    "section_title": "Upstream dinamis (lanjutan, opsional)",
+    "help": "Cari upstream lewat DNS. Target di atas menjadi cadangan saat pencarian tidak menemukan apa pun. Beberapa sumber digabungkan.",
+    "add_button": "Tambah sumber DNS",
+    "type": "Jenis pencarian",
+    "name_srv": "Nama SRV",
+    "name_a": "Nama host",
+    "refresh": "Interval penyegaran",
+    "resolvers": "Resolver DNS",
+    "dial_fallback_delay": "Jeda koneksi cadangan",
+    "grace_period": "Masa tenggang",
+    "versions": "Keluarga alamat",
+    "versions_both": "IPv4 dan IPv6",
+    "validation_name": "Sumber dengan pengaturan memerlukan nama.",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

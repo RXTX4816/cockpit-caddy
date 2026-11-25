@@ -295,7 +295,20 @@
     "section_title": "업스트림 시간 제한(선택)",
     "dial_timeout": "연결 시간 제한",
     "response_header_timeout": "응답 헤더 시간 제한",
-    "defaults_help": "필드를 비워 두면 회색으로 표시된 Caddy 기본값이 사용됩니다. 응답 헤더 타임아웃은 롱 폴링과 느린 응답을 끊습니다."
+    "defaults_help": "필드를 비워 두면 회색으로 표시된 Caddy 기본값이 사용됩니다. 응답 헤더 타임아웃은 롱 폴링과 느린 응답을 끊습니다.",
+    "streaming_help": "스트리밍(웹소켓, 이벤트 스트림): 비워 두면 Caddy 기본값을 사용합니다.",
+    "flush_interval": "플러시 간격",
+    "flush_interval_placeholder": "-1은 쓰기마다 즉시 전송",
+    "stream_timeout": "스트림 타임아웃",
+    "stream_close_delay": "스트림 종료 지연",
+    "connection_title": "업스트림 연결",
+    "tls_server_name": "TLS 서버 이름",
+    "versions": "HTTP 버전",
+    "read_timeout": "읽기 타임아웃",
+    "write_timeout": "쓰기 타임아웃",
+    "keepalive": "Keep-alive",
+    "keepalive_idle_conns": "유지할 유휴 연결 수",
+    "keepalive_idle_conns_per_host": "호스트당 유지할 유휴 연결 수"
   },
   "server_timeouts": {
     "heading": "서버 시간 제한 및 한도",
@@ -437,7 +450,9 @@
     "validation_max_fails": "최대 실패 횟수는 1 이상이어야 합니다",
     "validation_needs_health_uri": "간격, 타임아웃, 예상 상태에는 상태 확인 경로가 필요합니다",
     "validation_health_uri": "상태 확인 경로는 /로 시작해야 합니다",
-    "validation_health_status": "200 같은 코드나 2xx 같은 클래스를 입력하세요"
+    "validation_health_status": "200 같은 코드나 2xx 같은 클래스를 입력하세요",
+    "retry_methods": "이 메서드만 재시도",
+    "validation_methods": "메서드는 GET, HEAD 같은 단어이며 공백으로 구분합니다."
   },
   "response_headers": {
     "heading": "응답 헤더",
@@ -464,7 +479,12 @@
     "field_name": "헤더 이름",
     "field_value": "값",
     "add_button": "추가",
-    "presets_label": "프리셋"
+    "presets_label": "프리셋",
+    "down_heading": "업스트림 응답 헤더",
+    "down_section_title": "업스트림 응답 헤더 (선택 사항)",
+    "op_replace": "바꾸기",
+    "field_search": "찾을 헤더 값 (정규식)",
+    "field_replacement": "대체 값"
   },
   "edit_redirect": {
     "title": "리디렉션 편집 — :{{port}}",
@@ -1162,5 +1182,25 @@
     "match_headers": "다음 응답 헤더만",
     "match_headers_help": "한 줄에 하나: 헤더 이름, 그다음 값. text/* 같은 와일드카드를 쓸 수 있습니다.",
     "invalid_header": "각 줄에는 헤더 이름과 값이 필요합니다."
+  },
+  "dynamic_upstreams": {
+    "heading": "동적 업스트림",
+    "section_title": "동적 업스트림 (고급, 선택 사항)",
+    "help": "업스트림을 DNS에서 조회합니다. 조회 결과가 없으면 위의 대상이 대체로 사용됩니다. 여러 소스는 합쳐집니다.",
+    "add_button": "DNS 소스 추가",
+    "type": "조회 유형",
+    "name_srv": "SRV 이름",
+    "name_a": "호스트 이름",
+    "refresh": "갱신 간격",
+    "resolvers": "DNS 리졸버",
+    "dial_fallback_delay": "대체 연결 지연",
+    "grace_period": "유예 기간",
+    "versions": "주소 체계",
+    "versions_both": "IPv4 및 IPv6",
+    "validation_name": "설정이 있는 소스에는 이름이 필요합니다.",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

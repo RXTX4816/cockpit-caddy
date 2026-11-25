@@ -295,7 +295,20 @@
     "section_title": "Upstream zaman aşımları (isteğe bağlı)",
     "dial_timeout": "Bağlantı zaman aşımı",
     "response_header_timeout": "Yanıt başlığı zaman aşımı",
-    "defaults_help": "Caddy'nin varsayılanını kullanmak için alanı boş bırakın; varsayılan gri gösterilir. Yanıt başlığı zaman aşımı, long polling'i ve yavaş yanıtları keser."
+    "defaults_help": "Caddy'nin varsayılanını kullanmak için alanı boş bırakın; varsayılan gri gösterilir. Yanıt başlığı zaman aşımı, long polling'i ve yavaş yanıtları keser.",
+    "streaming_help": "Akış (websocket, olay akışları): Caddy varsayılanları için boş bırakın.",
+    "flush_interval": "Boşaltma aralığı",
+    "flush_interval_placeholder": "-1 her yazmayı hemen gönderir",
+    "stream_timeout": "Akış zaman aşımı",
+    "stream_close_delay": "Akış kapatma gecikmesi",
+    "connection_title": "Upstream bağlantısı",
+    "tls_server_name": "TLS sunucu adı",
+    "versions": "HTTP sürümleri",
+    "read_timeout": "Okuma zaman aşımı",
+    "write_timeout": "Yazma zaman aşımı",
+    "keepalive": "Keep-alive",
+    "keepalive_idle_conns": "Tutulan boştaki bağlantılar",
+    "keepalive_idle_conns_per_host": "Ana makine başına tutulan boştaki bağlantılar"
   },
   "server_timeouts": {
     "heading": "Sunucu zaman aşımları ve sınırları",
@@ -437,7 +450,9 @@
     "validation_max_fails": "En fazla hata en az 1 olmalı",
     "validation_needs_health_uri": "Aralık, zaman aşımı ve beklenen durum için bir sağlık kontrolü yolu gerekir",
     "validation_health_uri": "Sağlık kontrolü yolu / ile başlamalı",
-    "validation_health_status": "200 gibi bir kod ya da 2xx gibi bir sınıf girin"
+    "validation_health_status": "200 gibi bir kod ya da 2xx gibi bir sınıf girin",
+    "retry_methods": "Yalnızca bu yöntemleri yeniden dene",
+    "validation_methods": "Yöntemler GET veya HEAD gibi sözcüklerdir, boşlukla ayrılır."
   },
   "response_headers": {
     "heading": "Yanıt başlıkları",
@@ -464,7 +479,12 @@
     "field_name": "Başlık adı",
     "field_value": "Değer",
     "add_button": "Ekle",
-    "presets_label": "Hazır ayarlar"
+    "presets_label": "Hazır ayarlar",
+    "down_heading": "Upstream'den gelen yanıt başlıkları",
+    "down_section_title": "Upstream'den gelen yanıt başlıkları (isteğe bağlı)",
+    "op_replace": "Değiştir",
+    "field_search": "Aranacak başlık değeri (düzenli ifade)",
+    "field_replacement": "Yerine konacak değer"
   },
   "edit_redirect": {
     "title": "Yönlendirmeyi düzenle — :{{port}}",
@@ -1162,5 +1182,25 @@
     "match_headers": "Yalnızca bu yanıt başlıkları",
     "match_headers_help": "Satır başına bir tane: başlık adı, sonra değeri. text/* gibi joker karakterler çalışır.",
     "invalid_header": "Her satırda bir başlık adı ve bir değer olmalıdır."
+  },
+  "dynamic_upstreams": {
+    "heading": "Dinamik upstream'ler",
+    "section_title": "Dinamik upstream'ler (gelişmiş, isteğe bağlı)",
+    "help": "Upstream'leri DNS'te arar. Arama bir şey bulamazsa yukarıdaki hedef yedek olarak kullanılır. Birden fazla kaynak birleştirilir.",
+    "add_button": "DNS kaynağı ekle",
+    "type": "Sorgu türü",
+    "name_srv": "SRV adı",
+    "name_a": "Ana makine adı",
+    "refresh": "Yenileme aralığı",
+    "resolvers": "DNS çözücüleri",
+    "dial_fallback_delay": "Yedek bağlantı gecikmesi",
+    "grace_period": "Ek süre",
+    "versions": "Adres aileleri",
+    "versions_both": "IPv4 ve IPv6",
+    "validation_name": "Ayarları olan bir kaynağın adı olmalı.",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

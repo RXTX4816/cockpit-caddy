@@ -208,7 +208,7 @@ export function buildForwardAuthHandler(fa: import("./types").ForwardAuthConfig)
       match: [{ not: [{ vars: { [placeholder]: [""] } }] }],
     });
   }
-  const userHeaders = (buildRequestHeadersJson(fa.headerUp)?.request ?? {}) as Record<string, unknown>;
+  const userHeaders = (buildReverseProxyHeadersJson(fa.headerUp, undefined)?.request ?? {}) as Record<string, unknown>;
   const request: Record<string, unknown> = {
     ...userHeaders,
     set: {
@@ -481,13 +481,28 @@ export function parseRewriteFromHandle(h: AnyHandler): import("./types").Rewrite
 
 export function buildTransport(p: TransportProps): import("./types").CaddyHttpTransport | undefined {
   const hasTls = p.targetScheme === "https";
-  const hasTimeouts = !!(p.dialTimeout || p.responseHeaderTimeout);
-  if (!hasTls && !hasTimeouts) return undefined;
+  const hasKeepalive = !!p.keepalive || p.keepaliveIdleConns != null || p.keepaliveIdleConnsPerHost != null;
+  const hasOptions = !!(p.dialTimeout || p.responseHeaderTimeout || p.readTimeout || p.writeTimeout || p.httpVersions?.length || hasKeepalive);
+  if (!hasTls && !hasOptions) return undefined;
 
   const t: import("./types").CaddyHttpTransport = { protocol: "http" };
-  if (hasTls) t.tls = p.tlsSkipVerify ? { insecure_skip_verify: true } : {};
+  if (hasTls) {
+    t.tls = {};
+    if (p.tlsSkipVerify) t.tls.insecure_skip_verify = true;
+    if (p.tlsServerName) t.tls.server_name = p.tlsServerName;
+  }
   if (p.dialTimeout) t.dial_timeout = p.dialTimeout;
   if (p.responseHeaderTimeout) t.response_header_timeout = p.responseHeaderTimeout;
+  if (p.readTimeout) t.read_timeout = p.readTimeout;
+  if (p.writeTimeout) t.write_timeout = p.writeTimeout;
+  if (p.httpVersions?.length) t.versions = p.httpVersions;
+  if (hasKeepalive) {
+    t.keep_alive = p.keepalive === "off" ? { enabled: false } : {
+      ...(p.keepalive ? { idle_timeout: p.keepalive } : {}),
+      ...(p.keepaliveIdleConns != null ? { max_idle_conns: p.keepaliveIdleConns } : {}),
+      ...(p.keepaliveIdleConnsPerHost != null ? { max_idle_conns_per_host: p.keepaliveIdleConnsPerHost } : {}),
+    };
+  }
   return t;
 }
 
@@ -683,7 +698,8 @@ export function buildHealthChecksJson(lbRetry: import("./types").LbRetryConfig |
 
 
 export function parseLbRetry(rp: CaddyReverseProxyHandler): import("./types").LbRetryConfig | undefined {
-  const lb = rp.load_balancing as { retries?: number; try_duration?: number | string; try_interval?: number | string } | undefined;
+  const lb = rp.load_balancing as { retries?: number; try_duration?: number | string; try_interval?: number | string; retry_match?: Array<{ method?: string[] }> } | undefined;
+  const retryMethods = lb?.retry_match?.length === 1 ? lb.retry_match[0].method : undefined;
   type Passive = { fail_duration?: number | string; max_fails?: number; unhealthy_status?: number[] };
   type Active = { uri?: string; interval?: number | string; timeout?: number | string; expect_status?: number };
   const hc = rp.health_checks as { passive?: Passive; active?: Active } | undefined;
@@ -691,6 +707,7 @@ export function parseLbRetry(rp: CaddyReverseProxyHandler): import("./types").Lb
   const expect = hc?.active?.expect_status;
   const cfg: import("./types").LbRetryConfig = {
     retries: lb?.retries,
+    retryMethods: retryMethods?.length ? retryMethods : undefined,
     tryDuration: parseDuration(lb?.try_duration) || undefined,
     tryInterval: parseDuration(lb?.try_interval) || undefined,
     failDuration: parseDuration(hc?.passive?.fail_duration) || undefined,
@@ -971,6 +988,15 @@ export function parseRouteToEntry(
   const tlsSkipVerify = rp.transport?.tls?.insecure_skip_verify ?? false;
   const dialTimeout = parseDuration(rp.transport?.dial_timeout);
   const responseHeaderTimeout = parseDuration(rp.transport?.response_header_timeout);
+  const tr = rp.transport;
+  const keepAlive = tr?.keep_alive;
+  const tlsServerName = typeof tr?.tls?.server_name === "string" ? tr.tls.server_name : undefined;
+  const keepalive = keepAlive?.enabled === false ? "off" : parseDuration(keepAlive?.idle_timeout);
+  const readTimeout = parseDuration(tr?.read_timeout);
+  const writeTimeout = parseDuration(tr?.write_timeout);
+  const flushInterval = rp.flush_interval === -1 || rp.flush_interval === "-1" ? "-1" : parseDuration(rp.flush_interval);
+  const streamTimeout = parseDuration(rp.stream_timeout);
+  const streamCloseDelay = parseDuration(rp.stream_close_delay);
 
   const tls = serverHasTls(server, automationPolicies, externalHost);
   const tlsPolicy = Array.isArray(server.tls_connection_policies) ? server.tls_connection_policies[0] : undefined;
@@ -985,6 +1011,7 @@ export function parseRouteToEntry(
   const rewrite = rewriteHandle ? parseRewriteFromHandle(rewriteHandle) : undefined;
   const responseHeadersParsed = effectiveHandles.flatMap(parseResponseHeadersJson);
   const requestHeaders = parseRequestHeadersJson(rp.headers as Record<string, unknown> | undefined);
+  const upstreamResponseHeaders = parseUpstreamResponseHeadersJson(rp.headers as Record<string, unknown> | undefined);
 
   // Detect handle_path pattern: a strip_prefix rewrite whose value matches the path matcher prefix
   let handlePath: true | undefined;
@@ -1019,8 +1046,20 @@ export function parseRouteToEntry(
     basicAuthOptions: basicAuth?.length ? basicAuthOptions : undefined,
     dialTimeout: dialTimeout || undefined,
     responseHeaderTimeout: responseHeaderTimeout || undefined,
+    tlsServerName: tlsServerName || undefined,
+    keepalive: keepalive || undefined,
+    keepaliveIdleConns: keepAlive?.max_idle_conns,
+    keepaliveIdleConnsPerHost: keepAlive?.max_idle_conns_per_host,
+    httpVersions: tr?.versions?.length ? tr.versions : undefined,
+    readTimeout: readTimeout || undefined,
+    writeTimeout: writeTimeout || undefined,
+    dynamicUpstreams: parseDynamicUpstreamsJson(rp.dynamic_upstreams as Record<string, unknown> | undefined),
+    flushInterval: flushInterval || undefined,
+    streamTimeout: streamTimeout || undefined,
+    streamCloseDelay: streamCloseDelay || undefined,
     rewrite: finalRewrite,
     requestHeaders: requestHeaders.length ? requestHeaders : undefined,
+    upstreamResponseHeaders: upstreamResponseHeaders.length ? upstreamResponseHeaders : undefined,
     responseHeaders: responseHeadersParsed.length ? responseHeadersParsed : undefined,
     extraUpstreams: extraUpstreams.length ? extraUpstreams : undefined,
     lbPolicy,
@@ -1213,42 +1252,109 @@ export function parseProxies(config: CaddyConfig, serverDefs?: import("./types")
 // Building / patching server entries
 // ---------------------------------------------------------------------------
 
-export function buildRequestHeadersJson(ops: import("./types").HeaderOperation[] | undefined): Record<string, unknown> | undefined {
-  if (!ops?.length) return undefined;
-  const set: Record<string, string[]> = {};
-  const add: Record<string, string[]> = {};
-  const del: string[] = [];
-  for (const h of ops) {
-    if (h.op === "delete") { del.push(h.name); continue; }
-    const val = [caddyPlaceholderToJson(h.value ?? "")];
-    if (h.op === "add") add[h.name] = val;
-    else set[h.name] = val;
-  }
-  const req: Record<string, unknown> = {};
-  if (Object.keys(set).length) req["set"] = set;
-  if (Object.keys(add).length) req["add"] = add;
-  if (del.length) req["delete"] = del;
-  return Object.keys(req).length ? { request: req } : undefined;
+function dynamicSourceJson(s: import("./types").DynamicUpstreamSource): Record<string, unknown> {
+  return {
+    source: s.type,
+    name: s.name,
+    ...(s.type === "a" && s.port ? { port: s.port } : {}),
+    ...(s.refresh ? { refresh: s.refresh } : {}),
+    ...(s.resolvers?.length ? { resolver: { addresses: s.resolvers } } : {}),
+    ...(s.dialTimeout ? { dial_timeout: s.dialTimeout } : {}),
+    ...(s.dialFallbackDelay ? { dial_fallback_delay: s.dialFallbackDelay } : {}),
+    ...(s.gracePeriod ? { grace_period: s.gracePeriod } : {}),
+    ...(s.type === "a" && s.versions ? { versions: { [s.versions]: true } } : {}),
+  };
 }
 
+function buildDynamicUpstreamsJson(sources: import("./types").DynamicUpstreamSource[] | undefined): Record<string, unknown> | undefined {
+  const list = (sources ?? []).filter(s => s.name.trim());
+  if (!list.length) return undefined;
+  return list.length === 1 ? dynamicSourceJson(list[0]) : { source: "multi", sources: list.map(dynamicSourceJson) };
+}
 
-export function parseRequestHeadersJson(headers: Record<string, unknown> | undefined): import("./types").HeaderOperation[] {
-  if (!headers) return [];
-  const req = headers["request"] as Record<string, unknown> | undefined;
-  if (!req) return [];
+function parseDynamicSourceJson(j: Record<string, unknown>): import("./types").DynamicUpstreamSource | undefined {
+  if ((j.source !== "srv" && j.source !== "a") || typeof j.name !== "string") return undefined;
+  const addresses = (j.resolver as { addresses?: string[] } | undefined)?.addresses;
+  const versions = j.versions as { ipv4?: boolean; ipv6?: boolean } | undefined;
+  const out: import("./types").DynamicUpstreamSource = { type: j.source, name: j.name };
+  if (j.source === "a" && j.port != null) out.port = String(j.port);
+  const refresh = parseDuration(j.refresh); if (refresh) out.refresh = refresh;
+  if (addresses?.length) out.resolvers = addresses;
+  const dialTimeout = parseDuration(j.dial_timeout); if (dialTimeout) out.dialTimeout = dialTimeout;
+  const fallback = parseDuration(j.dial_fallback_delay); if (fallback) out.dialFallbackDelay = fallback;
+  const grace = parseDuration(j.grace_period); if (grace) out.gracePeriod = grace;
+  if (j.source === "a" && versions?.ipv4 && !versions.ipv6) out.versions = "ipv4";
+  if (j.source === "a" && versions?.ipv6 && !versions.ipv4) out.versions = "ipv6";
+  return out;
+}
+
+function parseDynamicUpstreamsJson(j: Record<string, unknown> | undefined): import("./types").DynamicUpstreamSource[] | undefined {
+  if (!j) return undefined;
+  const list = j.source === "multi" && Array.isArray(j.sources) ? (j.sources as Record<string, unknown>[]) : [j];
+  const sources = list.map(parseDynamicSourceJson).filter((s): s is import("./types").DynamicUpstreamSource => !!s);
+  return sources.length ? sources : undefined;
+}
+
+/** The reverse_proxy `headers` object: `request` is header_up, `response` is header_down (#324). */
+export function buildReverseProxyHeadersJson(
+  up: import("./types").HeaderOperation[] | undefined,
+  down: import("./types").HeaderOperation[] | undefined,
+): Record<string, unknown> | undefined {
+  const side = (ops: import("./types").HeaderOperation[] | undefined): Record<string, unknown> | undefined => {
+    if (!ops?.length) return undefined;
+    const set: Record<string, string[]> = {};
+    const add: Record<string, string[]> = {};
+    const replace: Record<string, Array<{ search_regexp: string; replace: string }>> = {};
+    const del: string[] = [];
+    for (const h of ops) {
+      if (h.op === "delete") { del.push(h.name); continue; }
+      if (h.op === "replace") {
+        (replace[h.name] ??= []).push({ search_regexp: h.value ?? "", replace: caddyPlaceholderToJson(h.replacement ?? "") });
+        continue;
+      }
+      const val = [caddyPlaceholderToJson(h.value ?? "")];
+      if (h.op === "add") add[h.name] = val;
+      else set[h.name] = val;
+    }
+    const out: Record<string, unknown> = {};
+    if (Object.keys(set).length) out["set"] = set;
+    if (Object.keys(add).length) out["add"] = add;
+    if (del.length) out["delete"] = del;
+    if (Object.keys(replace).length) out["replace"] = replace;
+    return Object.keys(out).length ? out : undefined;
+  };
+  const request = side(up);
+  const response = side(down);
+  if (!request && !response) return undefined;
+  return { ...(request ? { request } : {}), ...(response ? { response } : {}) };
+}
+
+function parseHeaderOpsJson(side: Record<string, unknown> | undefined): import("./types").HeaderOperation[] {
+  if (!side) return [];
   const ops: import("./types").HeaderOperation[] = [];
-  const set = req["set"] as Record<string, string[]> | undefined;
-  const add = req["add"] as Record<string, string[]> | undefined;
-  const del = req["delete"] as string[] | undefined;
+  const set = side["set"] as Record<string, string[]> | undefined;
+  const add = side["add"] as Record<string, string[]> | undefined;
+  const del = side["delete"] as string[] | undefined;
+  const replace = side["replace"] as Record<string, Array<{ search?: string; search_regexp?: string; replace?: string }>> | undefined;
   for (const [name, vals] of Object.entries(set ?? {}))
     ops.push({ op: "set", name, value: jsonPlaceholderToCaddy(vals[0] ?? "") });
   for (const [name, vals] of Object.entries(add ?? {}))
     ops.push({ op: "add", name, value: jsonPlaceholderToCaddy(vals[0] ?? "") });
   for (const name of del ?? [])
     ops.push({ op: "delete", name });
+  for (const [name, reps] of Object.entries(replace ?? {}))
+    for (const r of reps)
+      ops.push({ op: "replace", name, value: r.search_regexp ?? r.search ?? "", replacement: jsonPlaceholderToCaddy(r.replace ?? "") });
   return ops;
 }
 
+export function parseRequestHeadersJson(headers: Record<string, unknown> | undefined): import("./types").HeaderOperation[] {
+  return parseHeaderOpsJson(headers?.["request"] as Record<string, unknown> | undefined);
+}
+
+function parseUpstreamResponseHeadersJson(headers: Record<string, unknown> | undefined): import("./types").HeaderOperation[] {
+  return parseHeaderOpsJson(headers?.["response"] as Record<string, unknown> | undefined);
+}
 
 export function buildResponseHeadersHandler(ops: import("./types").HeaderOperation[]): CaddyHandler {
   const set: Record<string, string[]> = {};
@@ -1288,9 +1394,8 @@ export function parseResponseHeadersJson(h: AnyHandler): import("./types").Heade
   return ops;
 }
 
-
 export function buildReverseProxyHandler(
-  proxy: Pick<ProxyEntry, "targetHost" | "targetPort" | "targetScheme" | "tlsSkipVerify" | "requestHeaders" | "dialTimeout" | "responseHeaderTimeout" | "extraUpstreams" | "lbPolicy" | "lbPolicyArgs" | "lbRetry" | "replaceUpstreamErrors">,
+  proxy: Pick<ProxyEntry, "targetHost" | "targetPort" | "targetScheme" | "tlsSkipVerify" | "requestHeaders" | "upstreamResponseHeaders" | "dynamicUpstreams" | "dialTimeout" | "responseHeaderTimeout" | "tlsServerName" | "keepalive" | "keepaliveIdleConns" | "keepaliveIdleConnsPerHost" | "httpVersions" | "readTimeout" | "writeTimeout" | "flushInterval" | "streamTimeout" | "streamCloseDelay" | "extraUpstreams" | "lbPolicy" | "lbPolicyArgs" | "lbRetry" | "replaceUpstreamErrors">,
   errorHandlers?: import("./types").ErrorHandlerConfig[],
 ): CaddyReverseProxyHandler {
   const primaryDial = `${proxy.targetHost}:${proxy.targetPort}`;
@@ -1301,15 +1406,21 @@ export function buildReverseProxyHandler(
   };
   const transport = buildTransport(proxy);
   if (transport) rp.transport = transport;
-  const hdrs = buildRequestHeadersJson(proxy.requestHeaders);
+  const dynamic = buildDynamicUpstreamsJson(proxy.dynamicUpstreams);
+  if (dynamic) rp.dynamic_upstreams = dynamic;
+  if (proxy.flushInterval) rp.flush_interval = proxy.flushInterval === "-1" ? -1 : proxy.flushInterval;
+  if (proxy.streamTimeout) rp.stream_timeout = proxy.streamTimeout;
+  if (proxy.streamCloseDelay) rp.stream_close_delay = proxy.streamCloseDelay;
+  const hdrs = buildReverseProxyHeadersJson(proxy.requestHeaders, proxy.upstreamResponseHeaders);
   if (hdrs) rp.headers = hdrs;
   if (proxy.lbPolicy && (proxy.extraUpstreams?.length ?? 0) > 0 && LB_POLICIES.has(proxy.lbPolicy)) {
     rp.load_balancing = { selection_policy: lbSelectionPolicyJson(proxy) };
   }
   const lbRetry = proxy.lbRetry;
-  if (lbRetry?.retries != null || lbRetry?.tryDuration || lbRetry?.tryInterval) {
+  if (lbRetry?.retries != null || lbRetry?.tryDuration || lbRetry?.tryInterval || lbRetry?.retryMethods?.length) {
     rp.load_balancing = {
       ...(rp.load_balancing as Record<string, unknown> | undefined),
+      ...(lbRetry.retryMethods?.length ? { retry_match: [{ method: lbRetry.retryMethods }] } : {}),
       ...(lbRetry.retries != null ? { retries: lbRetry.retries } : {}),
       ...(lbRetry.tryDuration ? { try_duration: lbRetry.tryDuration } : {}),
       ...(lbRetry.tryInterval ? { try_interval: lbRetry.tryInterval } : {}),

@@ -41,6 +41,7 @@ export function caddyQuote(value: string, opts: { always?: boolean } = {}): stri
  */
 export function headerOpLine(prefix: string, h: import("./types").HeaderOperation, opts: { quoteSet?: boolean; defer?: boolean } = {}): string {
   if (h.op === "delete") return `${prefix} -${h.name}`;
+  if (h.op === "replace") return `${prefix} ${h.name} ${caddyQuote(h.value ?? "")} ${caddyQuote(h.replacement ?? "")}`;
   if (h.op === "add") return `${prefix} +${h.name} ${caddyQuote(h.value ?? "")}`;
   return `${prefix} ${opts.defer ? ">" : ""}${h.name} ${caddyQuote(h.value ?? "", { always: opts.quoteSet })}`;
 }
@@ -322,18 +323,25 @@ export function buildRewriteCaddyLines(rewrite: import("./types").RewriteConfig,
 }
 
 
-export type TransportProps = Pick<ProxyEntry, "targetScheme" | "tlsSkipVerify" | "dialTimeout" | "responseHeaderTimeout">;
+export type TransportProps = Pick<ProxyEntry, "targetScheme" | "tlsSkipVerify" | "dialTimeout" | "responseHeaderTimeout" | "tlsServerName" | "keepalive" | "keepaliveIdleConns" | "keepaliveIdleConnsPerHost" | "httpVersions" | "readTimeout" | "writeTimeout">;
 
 
 export function buildTransportLines(p: TransportProps): string[] {
   const needsSkipVerify = p.targetScheme === "https" && p.tlsSkipVerify;
-  const hasTimeouts = !!(p.dialTimeout || p.responseHeaderTimeout);
-  if (!needsSkipVerify && !hasTimeouts) return [];
+  const serverName = p.targetScheme === "https" ? p.tlsServerName : undefined;
 
   const inner: string[] = [];
   if (needsSkipVerify) inner.push("\t\t\ttls_insecure_skip_verify");
+  if (serverName) inner.push(`\t\t\ttls_server_name ${caddyQuote(serverName)}`);
   if (p.dialTimeout) inner.push(`\t\t\tdial_timeout ${p.dialTimeout}`);
   if (p.responseHeaderTimeout) inner.push(`\t\t\tresponse_header_timeout ${p.responseHeaderTimeout}`);
+  if (p.readTimeout) inner.push(`\t\t\tread_timeout ${p.readTimeout}`);
+  if (p.writeTimeout) inner.push(`\t\t\twrite_timeout ${p.writeTimeout}`);
+  if (p.keepalive) inner.push(`\t\t\tkeepalive ${p.keepalive}`);
+  if (p.keepaliveIdleConns != null) inner.push(`\t\t\tkeepalive_idle_conns ${p.keepaliveIdleConns}`);
+  if (p.keepaliveIdleConnsPerHost != null) inner.push(`\t\t\tkeepalive_idle_conns_per_host ${p.keepaliveIdleConnsPerHost}`);
+  if (p.httpVersions?.length) inner.push(`\t\t\tversions ${p.httpVersions.join(" ")}`);
+  if (!inner.length) return [];
   return ["\t\ttransport http {", ...inner, "\t\t}"];
 }
 
@@ -377,6 +385,7 @@ export function buildLbRetryLines(lbRetry: import("./types").LbRetryConfig | und
   if (lbRetry.retries != null) lines.push(`\t\tlb_retries ${lbRetry.retries}`);
   if (lbRetry.tryDuration) lines.push(`\t\tlb_try_duration ${lbRetry.tryDuration}`);
   if (lbRetry.tryInterval) lines.push(`\t\tlb_try_interval ${lbRetry.tryInterval}`);
+  if (lbRetry.retryMethods?.length) lines.push("\t\tlb_retry_match {", `\t\t\tmethod ${lbRetry.retryMethods.join(" ")}`, "\t\t}");
   // Passive checks are off in Caddy without fail_duration (#252), so the options that only
   // feed them are written only alongside it.
   if (lbRetry.failDuration) {
@@ -394,17 +403,47 @@ export function buildLbRetryLines(lbRetry: import("./types").LbRetryConfig | und
 }
 
 
+function dynamicSourceLines(s: import("./types").DynamicUpstreamSource, indent: string): string[] {
+  const head = `${s.type} ${caddyQuote(s.name)}${s.type === "a" && s.port ? ` ${s.port}` : ""}`;
+  const inner = [
+    s.refresh ? `refresh ${s.refresh}` : "",
+    s.resolvers?.length ? `resolvers ${s.resolvers.join(" ")}` : "",
+    s.dialTimeout ? `dial_timeout ${s.dialTimeout}` : "",
+    s.dialFallbackDelay ? `dial_fallback_delay ${s.dialFallbackDelay}` : "",
+    s.gracePeriod ? `grace_period ${s.gracePeriod}` : "",
+    s.type === "a" && s.versions ? `versions ${s.versions}` : "",
+  ].filter(Boolean);
+  return inner.length ? [`${indent}${head} {`, ...inner.map(l => `${indent}\t${l}`), `${indent}}`] : [`${indent}${head}`];
+}
+
+/** `dynamic srv|a` for one source, `dynamic multi` for several (#326). */
+export function buildDynamicUpstreamLines(sources: import("./types").DynamicUpstreamSource[] | undefined): string[] {
+  const list = (sources ?? []).filter(s => s.name.trim());
+  if (!list.length) return [];
+  if (list.length === 1) {
+    const [first, ...rest] = dynamicSourceLines(list[0], "\t\t");
+    return [first.replace(/^(\t+)/, "$1dynamic "), ...rest];
+  }
+  return ["\t\tdynamic multi {", ...list.flatMap(s => dynamicSourceLines(s, "\t\t\t")), "\t\t}"];
+}
+
 export function buildReverseProxyLines(
-  p: Pick<ProxyEntry, "targetScheme" | "targetHost" | "targetPort" | "tlsSkipVerify" | "requestHeaders" | "dialTimeout" | "responseHeaderTimeout" | "extraUpstreams" | "lbPolicy" | "lbPolicyArgs" | "lbRetry" | "replaceUpstreamErrors">,
+  p: Pick<ProxyEntry, "targetScheme" | "targetHost" | "targetPort" | "tlsSkipVerify" | "requestHeaders" | "upstreamResponseHeaders" | "dynamicUpstreams" | "dialTimeout" | "responseHeaderTimeout" | "tlsServerName" | "keepalive" | "keepaliveIdleConns" | "keepaliveIdleConnsPerHost" | "httpVersions" | "readTimeout" | "writeTimeout" | "flushInterval" | "streamTimeout" | "streamCloseDelay" | "extraUpstreams" | "lbPolicy" | "lbPolicyArgs" | "lbRetry" | "replaceUpstreamErrors">,
   errorHandlers?: import("./types").ErrorHandlerConfig[],
 ): string[] {
   const upstreams = buildUpstreamList(p);
 
   const headerLines = (p.requestHeaders ?? []).map(h => {
     return headerOpLine("\t\theader_up", h);
-  });
+  }).concat((p.upstreamResponseHeaders ?? []).map(h => headerOpLine("\t\theader_down", h)));
 
   const transportLines = buildTransportLines(p);
+  const dynamicLines = buildDynamicUpstreamLines(p.dynamicUpstreams);
+  const streamingLines = [
+    p.flushInterval ? `\t\tflush_interval ${p.flushInterval}` : "",
+    p.streamTimeout ? `\t\tstream_timeout ${p.streamTimeout}` : "",
+    p.streamCloseDelay ? `\t\tstream_close_delay ${p.streamCloseDelay}` : "",
+  ].filter(Boolean);
   const lbLines = (p.lbPolicy && upstreams.length > 1 && LB_POLICIES.has(p.lbPolicy))
     ? [[`\t\tlb_policy`, p.lbPolicy, ...lbPolicyTokens(p)].join(" ")]
     : [];
@@ -432,10 +471,10 @@ export function buildReverseProxyLines(
     });
   }
 
-  const needsBlock = transportLines.length > 0 || headerLines.length > 0 || lbLines.length > 0 || lbRetryLines.length > 0 || errorPassthroughLines.length > 0;
+  const needsBlock = transportLines.length > 0 || dynamicLines.length > 0 || streamingLines.length > 0 || headerLines.length > 0 || lbLines.length > 0 || lbRetryLines.length > 0 || errorPassthroughLines.length > 0;
   if (!needsBlock) return [`\treverse_proxy ${upstreams.join(" ")}`];
 
-  return [`\treverse_proxy ${upstreams.join(" ")} {`, ...lbLines, ...lbRetryLines, ...transportLines, ...headerLines, ...errorPassthroughLines, "\t}"];
+  return [`\treverse_proxy ${upstreams.join(" ")} {`, ...lbLines, ...lbRetryLines, ...dynamicLines, ...streamingLines, ...transportLines, ...headerLines, ...errorPassthroughLines, "\t}"];
 }
 
 

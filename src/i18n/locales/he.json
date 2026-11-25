@@ -295,7 +295,20 @@
     "section_title": "מגבלות זמן ל-upstream (אופציונלי)",
     "dial_timeout": "מגבלת זמן להתחברות",
     "response_header_timeout": "מגבלת זמן לכותרות התגובה",
-    "defaults_help": "השאירו שדה ריק כדי להשתמש בברירת המחדל של Caddy, המוצגת באפור. מגבלת זמן לכותרות התגובה קוטעת long polling ותגובות איטיות."
+    "defaults_help": "השאירו שדה ריק כדי להשתמש בברירת המחדל של Caddy, המוצגת באפור. מגבלת זמן לכותרות התגובה קוטעת long polling ותגובות איטיות.",
+    "streaming_help": "סטרימינג (websockets, זרמי אירועים): השאירו ריק לשימוש בברירות המחדל של Caddy.",
+    "flush_interval": "מרווח שטיפה",
+    "flush_interval_placeholder": "‎-1 שולח כל כתיבה מיד",
+    "stream_timeout": "פסק זמן של זרם",
+    "stream_close_delay": "השהיית סגירת זרם",
+    "connection_title": "חיבור לשרת האחורי",
+    "tls_server_name": "שם שרת TLS",
+    "versions": "גרסאות HTTP",
+    "read_timeout": "פסק זמן קריאה",
+    "write_timeout": "פסק זמן כתיבה",
+    "keepalive": "Keep-alive",
+    "keepalive_idle_conns": "חיבורים סרק שנשמרים",
+    "keepalive_idle_conns_per_host": "חיבורים סרק שנשמרים לכל מארח"
   },
   "server_timeouts": {
     "heading": "מגבלות זמן ומגבלות שרת",
@@ -437,7 +450,9 @@
     "validation_max_fails": "מקסימום כשלים חייב להיות 1 או יותר",
     "validation_needs_health_uri": "מרווח, מגבלת זמן וסטטוס צפוי דורשים נתיב בדיקת תקינות",
     "validation_health_uri": "נתיב בדיקת התקינות חייב להתחיל ב-/",
-    "validation_health_status": "השתמשו בקוד כמו 200 או במחלקה כמו 2xx"
+    "validation_health_status": "השתמשו בקוד כמו 200 או במחלקה כמו 2xx",
+    "retry_methods": "נסה שוב רק את השיטות האלה",
+    "validation_methods": "שיטות הן מילים כמו GET או HEAD, מופרדות ברווחים."
   },
   "response_headers": {
     "heading": "כותרות תגובה",
@@ -464,7 +479,12 @@
     "field_name": "שם הכותרת",
     "field_value": "ערך",
     "add_button": "הוספה",
-    "presets_label": "הגדרות מוכנות"
+    "presets_label": "הגדרות מוכנות",
+    "down_heading": "כותרות תגובה מהשרת האחורי",
+    "down_section_title": "כותרות תגובה מהשרת האחורי (אופציונלי)",
+    "op_replace": "החלף",
+    "field_search": "ערך כותרת לחיפוש (ביטוי רגולרי)",
+    "field_replacement": "תחליף"
   },
   "edit_redirect": {
     "title": "עריכת הפניה — :{{port}}",
@@ -1162,5 +1182,25 @@
     "match_headers": "רק כותרות תגובה אלה",
     "match_headers_help": "אחת בכל שורה: שם הכותרת ואחריו הערך. תווים כלליים כמו text/* עובדים.",
     "invalid_header": "כל שורה צריכה שם כותרת וערך."
+  },
+  "dynamic_upstreams": {
+    "heading": "שרתים אחוריים דינמיים",
+    "section_title": "שרתים אחוריים דינמיים (מתקדם, אופציונלי)",
+    "help": "חיפוש השרתים האחוריים ב-DNS. היעד שלמעלה הוא ברירת המחדל כשהחיפוש לא מוצא דבר. כמה מקורות משולבים.",
+    "add_button": "הוספת מקור DNS",
+    "type": "סוג חיפוש",
+    "name_srv": "שם SRV",
+    "name_a": "שם מארח",
+    "refresh": "מרווח רענון",
+    "resolvers": "פותרי DNS",
+    "dial_fallback_delay": "השהיית חיבור חלופי",
+    "grace_period": "תקופת חסד",
+    "versions": "משפחות כתובות",
+    "versions_both": "IPv4 ו-IPv6",
+    "validation_name": "מקור עם הגדרות זקוק לשם.",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

@@ -295,7 +295,20 @@
     "section_title": "مهل الخادم الأعلى (اختياري)",
     "dial_timeout": "مهلة الاتصال",
     "response_header_timeout": "مهلة ترويسات الاستجابة",
-    "defaults_help": "اترك الحقل فارغًا لاستخدام القيمة الافتراضية في Caddy، وهي معروضة باللون الرمادي. مهلة ترويسات الاستجابة تقطع الاستطلاع الطويل والاستجابات البطيئة."
+    "defaults_help": "اترك الحقل فارغًا لاستخدام القيمة الافتراضية في Caddy، وهي معروضة باللون الرمادي. مهلة ترويسات الاستجابة تقطع الاستطلاع الطويل والاستجابات البطيئة.",
+    "streaming_help": "البث (WebSocket وتدفقات الأحداث): اتركه فارغًا لاستخدام القيم الافتراضية لـ Caddy.",
+    "flush_interval": "فترة التفريغ",
+    "flush_interval_placeholder": "-1 يرسل كل كتابة فورًا",
+    "stream_timeout": "مهلة التدفق",
+    "stream_close_delay": "تأخير إغلاق التدفق",
+    "connection_title": "الاتصال بالخادم الخلفي",
+    "tls_server_name": "اسم خادم TLS",
+    "versions": "إصدارات HTTP",
+    "read_timeout": "مهلة القراءة",
+    "write_timeout": "مهلة الكتابة",
+    "keepalive": "الإبقاء على الاتصال",
+    "keepalive_idle_conns": "الاتصالات الخاملة المحتفظ بها",
+    "keepalive_idle_conns_per_host": "الاتصالات الخاملة لكل مضيف"
   },
   "server_timeouts": {
     "heading": "مهل الخادم وحدوده",
@@ -437,7 +450,9 @@
     "validation_max_fails": "يجب أن يكون أقصى عدد للإخفاقات 1 أو أكثر",
     "validation_needs_health_uri": "يحتاج الفاصل والمهلة والحالة المتوقعة إلى مسار فحص الصحة",
     "validation_health_uri": "يجب أن يبدأ مسار فحص الصحة بـ /",
-    "validation_health_status": "استخدم رمزًا مثل 200 أو فئة مثل 2xx"
+    "validation_health_status": "استخدم رمزًا مثل 200 أو فئة مثل 2xx",
+    "retry_methods": "إعادة المحاولة لهذه الطرق فقط",
+    "validation_methods": "الطرق كلمات مثل GET أو HEAD، تفصل بينها مسافات."
   },
   "response_headers": {
     "heading": "ترويسات الاستجابة",
@@ -464,7 +479,12 @@
     "field_name": "اسم الترويسة",
     "field_value": "القيمة",
     "add_button": "إضافة",
-    "presets_label": "إعدادات مسبقة"
+    "presets_label": "إعدادات مسبقة",
+    "down_heading": "ترويسات الاستجابة من الخادم الخلفي",
+    "down_section_title": "ترويسات الاستجابة من الخادم الخلفي (اختياري)",
+    "op_replace": "استبدال",
+    "field_search": "قيمة الترويسة المراد البحث عنها (تعبير نمطي)",
+    "field_replacement": "البديل"
   },
   "edit_redirect": {
     "title": "تعديل إعادة التوجيه — :{{port}}",
@@ -1162,5 +1182,25 @@
     "match_headers": "ترويسات الاستجابة هذه فقط",
     "match_headers_help": "واحدة في كل سطر: اسم الترويسة ثم قيمتها. تعمل الأحرف البديلة مثل text/*.",
     "invalid_header": "يحتاج كل سطر إلى اسم ترويسة وقيمة."
+  },
+  "dynamic_upstreams": {
+    "heading": "الخوادم الخلفية الديناميكية",
+    "section_title": "الخوادم الخلفية الديناميكية (متقدم، اختياري)",
+    "help": "ابحث عن الخوادم الخلفية في DNS. الهدف أعلاه هو البديل عندما لا يجد البحث شيئًا. يتم دمج عدة مصادر.",
+    "add_button": "إضافة مصدر DNS",
+    "type": "نوع البحث",
+    "name_srv": "اسم SRV",
+    "name_a": "اسم المضيف",
+    "refresh": "فترة التحديث",
+    "resolvers": "خوادم DNS",
+    "dial_fallback_delay": "تأخير الاتصال الاحتياطي",
+    "grace_period": "فترة السماح",
+    "versions": "عائلات العناوين",
+    "versions_both": "IPv4 وIPv6",
+    "validation_name": "المصدر الذي له إعدادات يحتاج إلى اسم.",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

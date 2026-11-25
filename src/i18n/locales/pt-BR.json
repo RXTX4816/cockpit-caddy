@@ -295,7 +295,20 @@
     "section_title": "Timeouts do upstream (opcional)",
     "dial_timeout": "Timeout de conexão",
     "response_header_timeout": "Timeout dos cabeçalhos de resposta",
-    "defaults_help": "Deixe um campo vazio para usar o padrão do Caddy, mostrado em cinza. Um tempo limite de cabeçalhos de resposta interrompe long polling e respostas lentas."
+    "defaults_help": "Deixe um campo vazio para usar o padrão do Caddy, mostrado em cinza. Um tempo limite de cabeçalhos de resposta interrompe long polling e respostas lentas.",
+    "streaming_help": "Streaming (websockets, fluxos de eventos): deixe vazio para manter os padrões do Caddy.",
+    "flush_interval": "Intervalo de flush",
+    "flush_interval_placeholder": "-1 envia cada gravação imediatamente",
+    "stream_timeout": "Tempo limite do stream",
+    "stream_close_delay": "Atraso para fechar o stream",
+    "connection_title": "Conexão com o upstream",
+    "tls_server_name": "Nome do servidor TLS",
+    "versions": "Versões do HTTP",
+    "read_timeout": "Tempo limite de leitura",
+    "write_timeout": "Tempo limite de escrita",
+    "keepalive": "Keep-alive",
+    "keepalive_idle_conns": "Conexões ociosas mantidas",
+    "keepalive_idle_conns_per_host": "Conexões ociosas mantidas por host"
   },
   "server_timeouts": {
     "heading": "Timeouts e limites do servidor",
@@ -437,7 +450,9 @@
     "validation_max_fails": "Falhas máx. deve ser 1 ou mais",
     "validation_needs_health_uri": "Intervalo, tempo limite e status esperado precisam de um caminho de verificação",
     "validation_health_uri": "O caminho da verificação deve começar com /",
-    "validation_health_status": "Use um código como 200 ou uma classe como 2xx"
+    "validation_health_status": "Use um código como 200 ou uma classe como 2xx",
+    "retry_methods": "Repetir apenas estes métodos",
+    "validation_methods": "Métodos são palavras como GET ou HEAD, separadas por espaços."
   },
   "response_headers": {
     "heading": "Cabeçalhos de resposta",
@@ -464,7 +479,12 @@
     "field_name": "Nome do cabeçalho",
     "field_value": "Valor",
     "add_button": "Adicionar",
-    "presets_label": "Predefinições"
+    "presets_label": "Predefinições",
+    "down_heading": "Cabeçalhos de resposta do upstream",
+    "down_section_title": "Cabeçalhos de resposta do upstream (opcional)",
+    "op_replace": "Substituir",
+    "field_search": "Valor do cabeçalho a procurar (expressão regular)",
+    "field_replacement": "Substituição"
   },
   "edit_redirect": {
     "title": "Editar redirecionamento — :{{port}}",
@@ -1162,5 +1182,25 @@
     "match_headers": "Somente estes cabeçalhos de resposta",
     "match_headers_help": "Um por linha: o nome do cabeçalho e depois o valor. Curingas como text/* funcionam.",
     "invalid_header": "Cada linha precisa de um nome de cabeçalho e um valor."
+  },
+  "dynamic_upstreams": {
+    "heading": "Upstreams dinâmicos",
+    "section_title": "Upstreams dinâmicos (avançado, opcional)",
+    "help": "Procura os upstreams no DNS. O destino acima é o reserva quando a consulta não encontra nada. Várias fontes são combinadas.",
+    "add_button": "Adicionar fonte DNS",
+    "type": "Tipo de consulta",
+    "name_srv": "Nome SRV",
+    "name_a": "Nome do host",
+    "refresh": "Intervalo de atualização",
+    "resolvers": "Resolvedores DNS",
+    "dial_fallback_delay": "Atraso da conexão alternativa",
+    "grace_period": "Período de tolerância",
+    "versions": "Famílias de endereços",
+    "versions_both": "IPv4 e IPv6",
+    "validation_name": "Uma fonte com configurações precisa de um nome.",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }
