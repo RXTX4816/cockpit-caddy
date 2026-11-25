@@ -6,6 +6,7 @@ import {
   CardTitle,
   Label,
 } from "@patternfly/react-core";
+import { RawBlocksBadge } from "./RawBlocksBadge";
 import { useTranslation } from "react-i18next";
 import { RowActions } from "./RowActions";
 import type { ProxyEntry } from "../api";
@@ -113,6 +114,7 @@ export function ProxyCard({ proxy, onEdit, onDelete, onDuplicate, probeStatuses 
                 {proxy.forwardAuth && <Label isCompact color="purple" variant="outline">{t("forward_auth.indicator")}</Label>}
                 {(proxy.serverReadTimeout ?? proxy.serverReadHeaderTimeout ?? proxy.serverWriteTimeout ?? proxy.serverIdleTimeout ?? proxy.maxHeaderBytes) && <Label isCompact color="grey" variant="outline">{t("proxies.indicator_limits")}</Label>}
                 {proxy.extraUpstreams?.length ? <Label isCompact color="blue" variant="outline">{t("proxies.indicator_lb")}</Label> : null}
+                <RawBlocksBadge proxy={proxy} />
               </div>
             </>
           )}

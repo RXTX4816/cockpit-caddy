@@ -59,6 +59,7 @@ export function proxyTabFlags(v: ProxyTabValues, generalHasError: boolean): TabF
   return {
     configured: {
       general: false,
+      tree: false,
       security: v.basicAuth.length > 0 || !!v.forwardAuth || tls,
       routing: hasAnyMatcher(v.matchers) || !!v.rewrite || !!v.requestHeaders?.length || !!v.responseHeaders?.length || !!v.upstreamResponseHeaders?.length || v.isNamedRoute
         || !!(v.encode && (v.encode.algorithms || v.encode.minimumLength || v.encode.matchStatus || v.encode.matchHeaders)),
@@ -69,6 +70,7 @@ export function proxyTabFlags(v: ProxyTabValues, generalHasError: boolean): TabF
     },
     hasError: {
       general: generalHasError,
+      tree: false,
       security: !!v.forwardAuthError || !!v.basicAuthError || tlsValuesHaveErrors(v.tlsValues),
       routing: !!v.encodeError || validateRewrite(v.rewrite) || validateRouteMatch(v.matchers),
       upstreams: !!validateUpstreams(v.extraUpstreams) || !!validateDynamicUpstreams(v.dynamicUpstreams) || !!validateLbRetry(v.lbRetry)

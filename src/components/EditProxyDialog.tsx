@@ -14,6 +14,7 @@ import {
   ModalHeader,
   TextInput,
 } from "@patternfly/react-core";
+import { hasNestedBlocks } from "../api/siteTree";
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
@@ -35,12 +36,14 @@ interface Props {
   /** See AddProxyDialog's existingRoutes: a conflict requires both a port and a host match (#139). */
   existingRoutes: Pick<ProxyEntry, "externalPort" | "externalHost" | "matchers">[];
   onSave: (entry: ProxyEntry) => Promise<void>;
+  /** Saves the text of the site's block as the Tree tab edited it (#350). */
+  onSaveSiteText?: (text: string) => Promise<void>;
   onClose: () => void;
   onApiError?: (message: string) => void;
   servers?: ServerDef[];
 }
 
-export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiError, servers }: Props) {
+export function EditProxyDialog({ proxy, onSaveSiteText, existingRoutes, onSave, onClose, onApiError, servers }: Props) {
   const namedServer = proxy.namedServerKey ? servers?.find(s => s.key === proxy.namedServerKey) : undefined;
   const { t } = useTranslation();
   const toast = useToast();
@@ -161,6 +164,10 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
           <Label isCompact color="grey">{targetUrl}</Label>
         </div>
 
+        {!!proxy.siteText && hasNestedBlocks(proxy.siteText) && (
+          <Notice variant="info" title={t("proxies.raw_blocks_notice")} />
+        )}
+
         <ProxyTabs
           state={tabState}
           onChange={updateTabState}
@@ -168,6 +175,8 @@ export function EditProxyDialog({ proxy, existingRoutes, onSave, onClose, onApiE
           onSelect={setActiveTab}
           isDisabled={isConfirming}
           idPrefix="edit-proxy"
+          siteText={proxy.siteText}
+          onSaveSiteText={onSaveSiteText && (async text => { await onSaveSiteText(text); toast.success(t("tree.saved")); onClose(); })}
           showTls={!proxy.namedServerKey}
           hostless={!externalHost.trim()}
           generalHasError={generalHasError}

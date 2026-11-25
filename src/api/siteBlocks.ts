@@ -4,6 +4,7 @@
 
 import { type ProxyEntry } from "./types";
 import { externalHostList } from "./externalHosts";
+import { hasNestedBlocks } from "./siteTree";
 import { dnsProviderLines, buildLogCaddyLines } from "./globalOptions";
 import { caddyQuote, parseSiteAddresses, isIpAddress, findMatchingBlock, findBlockPositions, CONF_HEADER, sameHostSet, hostsConflict, surgicallyRemoveBlock, isCaddyInternalSubject, findServerBlock, surgicallyRemoveServerBlock } from "./caddyfileDocument";
 export { caddyQuote };
@@ -892,10 +893,13 @@ export function patchRawBlock(raw: string, proxy: ProxyEntry): string {
   const isDirective = (trimmed: string, name: string) =>
     trimmed === name || trimmed.startsWith(`${name} `) || trimmed.startsWith(`${name}\t`) || trimmed === `${name}{`;
 
+  // A site with `route` or nested `handle` blocks (#348) is edited in its Tree tab or the raw editor:
+  // what the form owns here is the site's address, binds, imports and TLS, and the blocks stay as written.
+  const nested = hasNestedBlocks(raw);
   // The directives the plugin writes again below are dropped here, each with its whole block.
-  const rewritten = ["tls", "encode", "root", "templates", "file_server", "header", "basic_auth", "forward_auth", "reverse_proxy", "php_fastcgi"];
+  const rewritten = nested ? ["tls"] : ["tls", "encode", "root", "templates", "file_server", "header", "basic_auth", "forward_auth", "reverse_proxy", "php_fastcgi"];
   // try_files belongs to the static and PHP forms (#262); on any other site it's the user's.
-  if (proxy.fileServer || proxy.phpFastcgi) rewritten.push("try_files");
+  if ((proxy.fileServer || proxy.phpFastcgi) && !nested) rewritten.push("try_files");
 
   while (i < closingIdx) {
     const line = lines[i];
@@ -928,6 +932,10 @@ export function patchRawBlock(raw: string, proxy: ProxyEntry): string {
   kept.splice(1, 0, ...buildImportLines(proxy));
   // Re-add updated directives before closing brace
   kept.push(...buildTlsCaddyLines(proxy, !tlsSubjectHosts(proxy.externalHost).length));
+  if (nested) {
+    kept.push(lines[closingIdx]);
+    return kept.join("\n");
+  }
   if (proxy.fileServer) {
     if (proxy.compress) kept.push(...buildEncodeLines("\t", proxy.encodeOptions));
     if (proxy.basicAuth?.length) kept.push(...buildBasicAuthCaddyLines(proxy.basicAuth, proxy.basicAuthOptions));
@@ -980,7 +988,9 @@ export function surgicallyWriteProxy(content: string, proxy: ProxyEntry): string
   // clear the hostname/scheme again; otherwise it looked like a hand-edited block
   // and was preserved verbatim).
   const headerAddresses = parseSiteAddresses(headerLine.replace(/\{$/, "").trim());
-  const isPluginFormat = !!headerAddresses?.every(a => a.port === proxy.externalPort && !a.path);
+  const isPluginFormat = !!headerAddresses?.every(a => a.port === proxy.externalPort && !a.path)
+    // A block with route or nested handle blocks (#348) is never written afresh, whoever wrote it.
+    && !hasNestedBlocks(lines.slice(pos.headerLine, pos.closingLine + 1).join("\n"));
 
   let body: string;
   if (isPluginFormat) {
@@ -1021,6 +1031,18 @@ export function surgicallyEditProxy(
   const originalHosts = original ? routeHosts(original) : undefined;
   let updated = content;
   if (originalPort !== entry.externalPort || !hostsConflict(originalHosts, routeHosts(entry))) {
+    // A site with route or nested handle blocks (#348) moves to its new address with its blocks.
+    const lines = content.split("\n");
+    const pos = findMatchingBlock(findBlockPositions(lines), originalPort, originalHosts?.join(", "));
+    const raw = pos ? lines.slice(pos.headerLine, pos.closingLine + 1).join("\n") : undefined;
+    if (pos && raw && hasNestedBlocks(raw)) {
+      const patched = patchRawBlock(raw, entry);
+      const nl = patched.indexOf("\n");
+      const moved = `${buildExternalAddress(entry)} {` + (nl === -1 ? "" : patched.slice(nl));
+      const body = entry.label ? `# label: ${entry.label}\n${moved}` : moved;
+      const start = pos.labelLine ?? pos.headerLine;
+      return [...lines.slice(0, start), body, ...lines.slice(pos.closingLine + 1)].join("\n");
+    }
     updated = surgicallyRemoveBlock(updated, originalPort, originalHosts?.join(", "));
   }
   return surgicallyWriteProxy(updated, entry);

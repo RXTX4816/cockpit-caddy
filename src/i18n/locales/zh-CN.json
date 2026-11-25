@@ -113,7 +113,11 @@
     "menu_static": "静态文件",
     "menu_respond": "固定响应",
     "menu_php": "PHP 站点",
-    "more_actions": "更多操作"
+    "more_actions": "更多操作",
+    "indicator_raw_blocks": "原始块",
+    "raw_blocks_help": "此站点有 route 块或嵌套的 handle 块。“树”标签页可编辑它们;其中显示为原始的内容请在原始编辑器中编辑。",
+    "raw_blocks_notice": "此站点有 route 块或嵌套的 handle 块。表单会保持它们原样,只更改站点的地址、bind、导入和 TLS。请在“树”标签页中编辑这些块;其中显示为原始的内容请在原始编辑器中编辑。",
+    "raw_blocks_names": "仅限原始编辑器:{{blocks}}"
   },
   "add_proxy": {
     "title": "添加反向代理",
@@ -1177,7 +1181,8 @@
     "routing": "路由",
     "upstreams": "上游",
     "logging": "日志与错误",
-    "limits": "限制"
+    "limits": "限制",
+    "tree": "树"
   },
   "dns": {
     "global_title": "DNS 质询",
@@ -1210,23 +1215,33 @@
     "site_override_help": "此站点使用自己的 DNS 提供商和凭据。保存新凭据会重启 Caddy，因为它只在启动时读取凭据。",
     "site_wildcard_warning": "通配符证书需要 DNS 质询。请为此站点设置 DNS 提供商，或在“设置 → DNS 质询”中设置。"
   },
-  "modules": {
-    "title": "Caddy 模块",
-    "loading": "正在读取模块…",
-    "unknown": "无法读取此 Caddy 的模块(caddy 命令可用吗?)。",
-    "help": "已安装的 Caddy 在标准构建之外还能做什么。需要缺失模块的功能会在 Caddy 加载配置时失败,所以请先在这里确认。",
-    "cap_dns": "DNS 验证提供商",
-    "cap_layer4": "第 4 层(TCP 和 UDP 代理)",
-    "cap_rate_limit": "速率限制",
-    "cap_security": "caddy-security(认证门户)",
-    "installed": "已安装",
-    "missing": "未安装",
-    "how_to_get": "如何获取",
-    "dns_providers": "提供商:{{count}}",
-    "all": "所有模块({{count}})",
-    "filter": "筛选模块",
-    "no_match": "没有匹配的模块。",
-    "non_standard": "不属于 Caddy 本身的模块:{{count}}"
+  "tree": {
+    "aria_label": "站点的 route 和 handle 块",
+    "site": "站点",
+    "kind_opaque": "块",
+    "no_matcher": "所有请求",
+    "handlers": "指令",
+    "unreadable": "无法把此站点的块读成树。请在原始编辑器中编辑。",
+    "read_only_help": "此站点的 route 和 handle 块,按原样显示。目前只读:请在原始编辑器中编辑。",
+    "select": "编辑",
+    "matcher_label": "匹配器",
+    "matcher_help": "路径如 /app/*、@名称,或留空表示所有请求。handle_path 需要路径。",
+    "handler_label": "指令",
+    "save": "保存块",
+    "discard": "放弃更改",
+    "saved": "站点的块已保存。",
+    "block_not_found": "在 Caddyfile 中找不到该站点的块。请刷新页面后重试。",
+    "edit_help": "选择一个块来更改其匹配器或指令,或添加、移动和移除块。只会重写你更改的部分;表单不认识的块按原样显示、保持只读,但可以移动或移除。",
+    "move_up": "上移",
+    "move_down": "下移",
+    "remove": "移除",
+    "remove_confirm": "移除此块及其中的 {{count}} 个块?",
+    "remove_yes": "移除",
+    "remove_no": "保留",
+    "add_kind": "类型",
+    "add_inside": "添加到所选块内",
+    "add_top": "添加到顶层",
+    "add_matcher": "新块的匹配器"
   },
   "encode": {
     "heading": "压缩",
@@ -1271,5 +1286,23 @@
     "label": "绑定地址",
     "help": "此站点监听的地址,以空格分隔,例如 127.0.0.1 ::1。留空表示监听所有地址。主机若是单个 IP 地址,则已经绑定到该地址。",
     "invalid": "请输入 IP 地址或主机名,不带端口。"
+  },
+  "modules": {
+    "title": "Caddy 模块",
+    "loading": "正在读取模块…",
+    "unknown": "无法读取此 Caddy 的模块(caddy 命令可用吗?)。",
+    "help": "已安装的 Caddy 在标准构建之外还能做什么。需要缺失模块的功能会在 Caddy 加载配置时失败,所以请先在这里确认。",
+    "cap_dns": "DNS 验证提供商",
+    "cap_layer4": "第 4 层(TCP 和 UDP 代理)",
+    "cap_rate_limit": "速率限制",
+    "cap_security": "caddy-security(认证门户)",
+    "installed": "已安装",
+    "missing": "未安装",
+    "how_to_get": "如何获取",
+    "dns_providers": "提供商:{{count}}",
+    "all": "所有模块({{count}})",
+    "filter": "筛选模块",
+    "no_match": "没有匹配的模块。",
+    "non_standard": "不属于 Caddy 本身的模块:{{count}}"
   }
 }

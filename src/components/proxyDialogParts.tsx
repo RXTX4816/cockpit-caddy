@@ -22,8 +22,8 @@ import { ExclamationCircleIcon } from "@patternfly/react-icons";
 import { useTranslation } from "react-i18next";
 import { FlatSectionsContext } from "./sectionLayout";
 
-export type ProxyTabKey = "general" | "security" | "routing" | "upstreams" | "logging" | "limits";
-export const PROXY_TAB_ORDER: ProxyTabKey[] = ["general", "security", "routing", "upstreams", "logging", "limits"];
+export type ProxyTabKey = "general" | "security" | "routing" | "upstreams" | "logging" | "limits" | "tree";
+export const PROXY_TAB_ORDER: ProxyTabKey[] = ["general", "security", "routing", "upstreams", "logging", "limits", "tree"];
 
 export interface ProxyTab<K extends string = ProxyTabKey> {
   key: K;

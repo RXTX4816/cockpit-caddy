@@ -113,7 +113,11 @@
     "menu_static": "Statické soubory",
     "menu_respond": "Pevná odpověď",
     "menu_php": "Web v PHP",
-    "more_actions": "Další akce"
+    "more_actions": "Další akce",
+    "indicator_raw_blocks": "Surové bloky",
+    "raw_blocks_help": "Tento web má bloky route nebo vnořené bloky handle. Upravuje je karta Strom; co zobrazí jako surové, se upravuje v surovém editoru.",
+    "raw_blocks_notice": "Tento web má bloky route nebo vnořené bloky handle. Formulář je ponechá, jak jsou napsané, a mění jen adresu webu, bind, importy a TLS. Bloky upravujte na kartě Strom; co zobrazí jako surové, upravujte v surovém editoru.",
+    "raw_blocks_names": "Jen surový editor: {{blocks}}"
   },
   "add_proxy": {
     "title": "Přidat reverse proxy",
@@ -1177,7 +1181,8 @@
     "routing": "Směrování",
     "upstreams": "Upstreamy",
     "logging": "Logování a chyby",
-    "limits": "Limity"
+    "limits": "Limity",
+    "tree": "Strom"
   },
   "dns": {
     "global_title": "Ověření přes DNS",
@@ -1210,23 +1215,33 @@
     "site_override_help": "Tento web používá vlastního poskytovatele DNS a přihlašovací údaje. Uložení nových údajů restartuje Caddy, protože je načítá jen při startu.",
     "site_wildcard_warning": "Certifikáty se zástupným znakem vyžadují výzvu DNS. Nastavte poskytovatele DNS pro tento web, nebo v Nastavení → Výzva DNS."
   },
-  "modules": {
-    "title": "Moduly Caddy",
-    "loading": "Načítání modulů…",
-    "unknown": "Moduly tohoto Caddy se nepodařilo přečíst (je dostupný příkaz caddy?).",
-    "help": "Co nainstalovaný Caddy umí nad rámec standardního sestavení. Funkce, která potřebuje chybějící modul, selže při načtení konfigurace, proto zkontrolujte nejdřív zde.",
-    "cap_dns": "Poskytovatelé DNS challenge",
-    "cap_layer4": "Vrstva 4 (proxy TCP a UDP)",
-    "cap_rate_limit": "Omezení rychlosti",
-    "cap_security": "caddy-security (autentizační portál)",
-    "installed": "Nainstalováno",
-    "missing": "Nenainstalováno",
-    "how_to_get": "Jak ho získat",
-    "dns_providers": "Poskytovatelé: {{count}}",
-    "all": "Všechny moduly ({{count}})",
-    "filter": "Filtrovat moduly",
-    "no_match": "Žádný modul neodpovídá.",
-    "non_standard": "Moduly, které nejsou součástí samotného Caddy: {{count}}"
+  "tree": {
+    "aria_label": "Bloky route a handle webu",
+    "site": "Web",
+    "kind_opaque": "Blok",
+    "no_matcher": "všechny požadavky",
+    "handlers": "Direktivy",
+    "unreadable": "Bloky tohoto webu nešlo přečíst jako strom. Upravte je v surovém editoru.",
+    "read_only_help": "Bloky route a handle tohoto webu tak, jak jsou napsané. Zatím jen pro čtení: upravujte je v surovém editoru.",
+    "select": "Upravit",
+    "matcher_label": "Matcher",
+    "matcher_help": "Cesta jako /app/*, @název, nebo prázdné pro všechny požadavky. handle_path potřebuje cestu.",
+    "handler_label": "Direktiva",
+    "save": "Uložit bloky",
+    "discard": "Zahodit změny",
+    "saved": "Bloky webu byly uloženy.",
+    "block_not_found": "Blok webu nebyl v Caddyfile nalezen. Znovu načtěte stránku a zkuste to znovu.",
+    "edit_help": "Vyberte blok a změňte jeho matcher nebo direktivy, nebo bloky přidávejte, přesouvejte a odebírejte. Přepíše se jen to, co změníte; bloky, které formulář nezná, se zobrazí tak, jak jsou, zůstanou jen pro čtení a lze je přesunout nebo odebrat.",
+    "move_up": "Posunout nahoru",
+    "move_down": "Posunout dolů",
+    "remove": "Odebrat",
+    "remove_confirm": "Odebrat tento blok i {{count}} bloků v něm?",
+    "remove_yes": "Odebrat",
+    "remove_no": "Ponechat",
+    "add_kind": "Druh",
+    "add_inside": "Přidat do vybraného bloku",
+    "add_top": "Přidat na nejvyšší úroveň",
+    "add_matcher": "Matcher nového bloku"
   },
   "encode": {
     "heading": "Komprese",
@@ -1271,5 +1286,23 @@
     "label": "Adresy pro bind",
     "help": "Adresy, na kterých tento web poslouchá, oddělené mezerami, například 127.0.0.1 ::1. Prázdné znamená všechny adresy. Hostitel, který je jedinou IP adresou, se na ni už váže.",
     "invalid": "Zadejte IP adresy nebo názvy hostitelů bez portu."
+  },
+  "modules": {
+    "title": "Moduly Caddy",
+    "loading": "Načítání modulů…",
+    "unknown": "Moduly tohoto Caddy se nepodařilo přečíst (je dostupný příkaz caddy?).",
+    "help": "Co nainstalovaný Caddy umí nad rámec standardního sestavení. Funkce, která potřebuje chybějící modul, selže při načtení konfigurace, proto zkontrolujte nejdřív zde.",
+    "cap_dns": "Poskytovatelé DNS challenge",
+    "cap_layer4": "Vrstva 4 (proxy TCP a UDP)",
+    "cap_rate_limit": "Omezení rychlosti",
+    "cap_security": "caddy-security (autentizační portál)",
+    "installed": "Nainstalováno",
+    "missing": "Nenainstalováno",
+    "how_to_get": "Jak ho získat",
+    "dns_providers": "Poskytovatelé: {{count}}",
+    "all": "Všechny moduly ({{count}})",
+    "filter": "Filtrovat moduly",
+    "no_match": "Žádný modul neodpovídá.",
+    "non_standard": "Moduly, které nejsou součástí samotného Caddy: {{count}}"
   }
 }

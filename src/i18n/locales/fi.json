@@ -113,7 +113,11 @@
     "menu_static": "Staattiset tiedostot",
     "menu_respond": "Kiinteä vastaus",
     "menu_php": "PHP-sivusto",
-    "more_actions": "Lisää toimintoja"
+    "more_actions": "Lisää toimintoja",
+    "indicator_raw_blocks": "Raakalohkot",
+    "raw_blocks_help": "Tällä sivustolla on route- tai sisäkkäisiä handle-lohkoja. Puu-välilehti muokkaa niitä; mitä se näyttää raakana, muokataan raakaeditorissa.",
+    "raw_blocks_notice": "Tällä sivustolla on route- tai sisäkkäisiä handle-lohkoja. Lomake jättää ne sellaisiksi kuin ne on kirjoitettu ja muuttaa vain sivuston osoitetta, bindiä, tuonteja ja TLS:ää. Muokkaa lohkoja Puu-välilehdellä; mitä se näyttää raakana, muokataan raakaeditorissa.",
+    "raw_blocks_names": "Vain raakaeditorissa: {{blocks}}"
   },
   "add_proxy": {
     "title": "Lisää reverse proxy",
@@ -1177,7 +1181,8 @@
     "routing": "Reititys",
     "upstreams": "Upstreamit",
     "logging": "Lokit ja virheet",
-    "limits": "Rajat"
+    "limits": "Rajat",
+    "tree": "Puu"
   },
   "dns": {
     "global_title": "DNS-haaste",
@@ -1210,23 +1215,33 @@
     "site_override_help": "Tämä sivusto käyttää omaa DNS-palveluntarjoajaa ja tunnuksia. Uusien tunnusten tallentaminen käynnistää Caddyn uudelleen, koska se lukee ne vain käynnistyessään.",
     "site_wildcard_warning": "Jokerimerkkivarmenteet tarvitsevat DNS-haasteen. Aseta DNS-palveluntarjoaja tälle sivustolle tai kohdassa Asetukset → DNS-haaste."
   },
-  "modules": {
-    "title": "Caddyn moduulit",
-    "loading": "Luetaan moduuleja…",
-    "unknown": "Tämän Caddyn moduuleja ei voitu lukea (onko caddy-komento käytettävissä?).",
-    "help": "Mitä asennettu Caddy osaa vakiorakennetta enemmän. Ominaisuus, joka tarvitsee puuttuvan moduulin, epäonnistuu kun Caddy lataa asetukset, joten tarkista ensin täältä.",
-    "cap_dns": "DNS-haasteen tarjoajat",
-    "cap_layer4": "Taso 4 (TCP- ja UDP-välitys)",
-    "cap_rate_limit": "Nopeusrajoitus",
-    "cap_security": "caddy-security (todennusportaali)",
-    "installed": "Asennettu",
-    "missing": "Ei asennettu",
-    "how_to_get": "Miten sen saa",
-    "dns_providers": "Tarjoajia: {{count}}",
-    "all": "Kaikki moduulit ({{count}})",
-    "filter": "Suodata moduuleja",
-    "no_match": "Mikään moduuli ei täsmää.",
-    "non_standard": "Moduulit, jotka eivät kuulu Caddyyn itseensä: {{count}}"
+  "tree": {
+    "aria_label": "Sivuston route- ja handle-lohkot",
+    "site": "Sivusto",
+    "kind_opaque": "Lohko",
+    "no_matcher": "kaikki pyynnöt",
+    "handlers": "Direktiivit",
+    "unreadable": "Tämän sivuston lohkoja ei voitu lukea puuna. Muokkaa niitä raakaeditorissa.",
+    "read_only_help": "Tämän sivuston route- ja handle-lohkot sellaisina kuin ne on kirjoitettu. Toistaiseksi vain luku: muokkaa niitä raakaeditorissa.",
+    "select": "Muokkaa",
+    "matcher_label": "Täsmääjä",
+    "matcher_help": "Polku kuten /app/*, @nimi, tai tyhjä kaikille pyynnöille. handle_path tarvitsee polun.",
+    "handler_label": "Direktiivi",
+    "save": "Tallenna lohkot",
+    "discard": "Hylkää muutokset",
+    "saved": "Sivuston lohkot tallennettiin.",
+    "block_not_found": "Sivuston lohkoa ei löytynyt Caddyfilesta. Lataa sivu uudelleen ja yritä uudestaan.",
+    "edit_help": "Valitse lohko muuttaaksesi sen täsmääjää tai direktiivejä, tai lisää, siirrä ja poista lohkoja. Vain muuttamasi kirjoitetaan uudelleen; lohkot, joita lomake ei tunne, näytetään sellaisinaan, ne pysyvät vain luettavina ja niitä voi siirtää tai poistaa.",
+    "move_up": "Siirrä ylös",
+    "move_down": "Siirrä alas",
+    "remove": "Poista",
+    "remove_confirm": "Poistetaanko tämä lohko ja sen sisällä olevat {{count}} lohkoa?",
+    "remove_yes": "Poista",
+    "remove_no": "Säilytä",
+    "add_kind": "Laji",
+    "add_inside": "Lisää valitun lohkon sisään",
+    "add_top": "Lisää ylimmälle tasolle",
+    "add_matcher": "Uuden lohkon täsmääjä"
   },
   "encode": {
     "heading": "Pakkaus",
@@ -1271,5 +1286,23 @@
     "label": "Bind-osoitteet",
     "help": "Osoitteet, joissa tämä sivusto kuuntelee, välilyönnein erotettuina, esimerkiksi 127.0.0.1 ::1. Tyhjä kuuntelee kaikissa osoitteissa. Isäntä, joka on yksi IP-osoite, sitoutuu jo siihen.",
     "invalid": "Anna IP-osoitteita tai isäntänimiä ilman porttia."
+  },
+  "modules": {
+    "title": "Caddyn moduulit",
+    "loading": "Luetaan moduuleja…",
+    "unknown": "Tämän Caddyn moduuleja ei voitu lukea (onko caddy-komento käytettävissä?).",
+    "help": "Mitä asennettu Caddy osaa vakiorakennetta enemmän. Ominaisuus, joka tarvitsee puuttuvan moduulin, epäonnistuu kun Caddy lataa asetukset, joten tarkista ensin täältä.",
+    "cap_dns": "DNS-haasteen tarjoajat",
+    "cap_layer4": "Taso 4 (TCP- ja UDP-välitys)",
+    "cap_rate_limit": "Nopeusrajoitus",
+    "cap_security": "caddy-security (todennusportaali)",
+    "installed": "Asennettu",
+    "missing": "Ei asennettu",
+    "how_to_get": "Miten sen saa",
+    "dns_providers": "Tarjoajia: {{count}}",
+    "all": "Kaikki moduulit ({{count}})",
+    "filter": "Suodata moduuleja",
+    "no_match": "Mikään moduuli ei täsmää.",
+    "non_standard": "Moduulit, jotka eivät kuulu Caddyyn itseensä: {{count}}"
   }
 }

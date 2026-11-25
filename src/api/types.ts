@@ -668,6 +668,8 @@ export interface ProxyEntry {
   namedServerKey?: string;
   /** Snippets imported at the top of the site block (#288), read from the conf.d text. */
   imports?: string[];
+  /** The site block as written in conf.d, read-only: what the tree of #333 is made from. */
+  siteText?: string;
   /** Snippets that supplied settings the dialog doesn't show as the site's own (#288). Read-only. */
   snippetSettings?: string[];
 }

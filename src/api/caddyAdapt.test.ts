@@ -15,6 +15,7 @@ import { snippetsToConf, parseSnippets, parseConfSiteImports, parseConfSiteBlock
 import { buildEncodeHandler, buildFilterEncoder, buildRedirectHandler, buildRewriteHandler, parseServerExtras } from "./caddyJsonModel";
 import { buildGlobalOptionsPatch, buildServerExtrasLines } from "./globalOptions";
 import { buildMatcherJson } from "./siteBlocks";
+import { addNode, editNode, moveNode, parseSiteTree, removeNode, serializeSiteTree } from "./siteTree";
 import type { CaddyConfig, CaddyServer, ProxyEntry } from "./types";
 
 function hasCaddy(): boolean {
@@ -835,6 +836,37 @@ describe.runIf(available || required)("client_ip matcher (#286)", () => {
   it("works in an exclude group too", () => {
     const matchers = { path: ["/x/*"], not: { client_ip: { ranges: ["10.0.0.0/8"] } } };
     expect(readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, matchers })]))[0].matchers).toEqual(matchers);
+  });
+});
+
+describe.runIf(available || required)("an edited tree is a config Caddy takes (#350)", () => {
+  it("adapts after a matcher and a directive are changed, and keeps the route structure", () => {
+    const site = "example.com:8443 {\n\troute {\n\t\theader X-A 1\n\t\thandle /a/* {\n\t\t\trespond ok\n\t\t}\n\t\thandle_path /static/* {\n\t\t\trespond static\n\t\t}\n\t}\n}\n";
+    const tree = parseSiteTree(site.trimEnd())!;
+    const edited = serializeSiteTree(editNode(editNode(tree, [0, 0], { matcher: "/b/*", handlers: { 0: "respond changed" } }), [0], { handlers: { 0: "header X-A 2" } }));
+    const json = JSON.stringify(adapt(edited + "\n"));
+    expect(json).toContain("/b/*");
+    expect(json).toContain("changed");
+    expect(json).toContain("/static/*");
+    expect(json).not.toContain('"/a/*"');
+  });
+});
+
+
+describe.runIf(available || required)("added, moved and removed nodes are a config Caddy takes (#351)", () => {
+  const site = "example.com:8443 {\n\troute {\n\t\thandle /a/* {\n\t\t\trespond a\n\t\t}\n\t\thandle {\n\t\t\trespond rest\n\t\t}\n\t}\n}";
+
+  it("adapts after an add, a move and a remove, and the order is the order of the tree", () => {
+    let tree = parseSiteTree(site)!;
+    tree = addNode(tree, [0], { kind: "handle_path", matcher: "/extra/*" })!.tree;
+    tree = moveNode(tree, [0, 2], -1)!.tree;
+    tree = moveNode(tree, [0, 1], -1)!.tree;
+    tree = removeNode(tree, [0, 2]);
+    const json = JSON.stringify(adapt(serializeSiteTree(tree) + "\n"));
+    expect(json).toContain("/extra/*");
+    expect(json).toContain("/a/*");
+    expect(json).not.toContain("rest");
+    expect(json.indexOf("/extra/*")).toBeLessThan(json.indexOf("/a/*"));
   });
 });
 

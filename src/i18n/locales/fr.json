@@ -113,7 +113,11 @@
     "menu_static": "Fichiers statiques",
     "menu_respond": "Réponse fixe",
     "menu_php": "Site PHP",
-    "more_actions": "Plus d’actions"
+    "more_actions": "Plus d’actions",
+    "indicator_raw_blocks": "Blocs bruts",
+    "raw_blocks_help": "Ce site a des blocs route ou des blocs handle imbriqués. L'onglet Arbre les modifie ; ce qu'il montre comme brut se modifie dans l'éditeur brut.",
+    "raw_blocks_notice": "Ce site a des blocs route ou des blocs handle imbriqués. Le formulaire les laisse tels qu'écrits et ne change que l'adresse, le bind, les imports et le TLS du site. Modifiez les blocs dans l'onglet Arbre ; ce qu'il montre comme brut se modifie dans l'éditeur brut.",
+    "raw_blocks_names": "Éditeur brut seulement : {{blocks}}"
   },
   "add_proxy": {
     "title": "Ajouter un reverse proxy",
@@ -1177,7 +1181,8 @@
     "routing": "Routage",
     "upstreams": "Upstreams",
     "logging": "Journaux et erreurs",
-    "limits": "Limites"
+    "limits": "Limites",
+    "tree": "Arbre"
   },
   "dns": {
     "global_title": "Défi DNS",
@@ -1210,23 +1215,33 @@
     "site_override_help": "Ce site utilise son propre fournisseur DNS et ses propres identifiants. Enregistrer de nouveaux identifiants redémarre Caddy, qui ne les lit qu'au démarrage.",
     "site_wildcard_warning": "Les certificats génériques nécessitent le défi DNS. Définissez un fournisseur DNS pour ce site, ou dans Paramètres → Défi DNS."
   },
-  "modules": {
-    "title": "Modules de Caddy",
-    "loading": "Lecture des modules…",
-    "unknown": "Les modules de ce Caddy n'ont pas pu être lus (la commande caddy est-elle disponible ?).",
-    "help": "Ce que le Caddy installé sait faire au-delà d'une version standard. Une fonction qui exige un module absent échoue au chargement de la configuration : vérifiez donc ici d'abord.",
-    "cap_dns": "Fournisseurs du défi DNS",
-    "cap_layer4": "Couche 4 (proxy TCP et UDP)",
-    "cap_rate_limit": "Limitation de débit",
-    "cap_security": "caddy-security (portail d'authentification)",
-    "installed": "Installé",
-    "missing": "Non installé",
-    "how_to_get": "Comment l'obtenir",
-    "dns_providers": "Fournisseurs : {{count}}",
-    "all": "Tous les modules ({{count}})",
-    "filter": "Filtrer les modules",
-    "no_match": "Aucun module ne correspond.",
-    "non_standard": "Modules ne faisant pas partie de Caddy lui-même : {{count}}"
+  "tree": {
+    "aria_label": "Blocs route et handle du site",
+    "site": "Site",
+    "kind_opaque": "Bloc",
+    "no_matcher": "toutes les requêtes",
+    "handlers": "Directives",
+    "unreadable": "Les blocs de ce site n'ont pas pu être lus comme un arbre. Modifiez-les dans l'éditeur brut.",
+    "read_only_help": "Les blocs route et handle de ce site, tels qu'écrits. En lecture seule pour l'instant : modifiez-les dans l'éditeur brut.",
+    "select": "Modifier",
+    "matcher_label": "Matcher",
+    "matcher_help": "Un chemin comme /app/*, un @nom, ou vide pour toutes les requêtes. Un handle_path exige un chemin.",
+    "handler_label": "Directive",
+    "save": "Enregistrer les blocs",
+    "discard": "Annuler les modifications",
+    "saved": "Les blocs du site ont été enregistrés.",
+    "block_not_found": "Le bloc du site est introuvable dans le Caddyfile. Rechargez la page et réessayez.",
+    "edit_help": "Sélectionnez un bloc pour changer son matcher ou ses directives, ou ajoutez, déplacez et supprimez des blocs. Seul ce que vous changez est réécrit ; les blocs que le formulaire ne connaît pas sont affichés tels qu'écrits, restent en lecture seule et peuvent être déplacés ou supprimés.",
+    "move_up": "Monter",
+    "move_down": "Descendre",
+    "remove": "Supprimer",
+    "remove_confirm": "Supprimer ce bloc et les {{count}} blocs qu'il contient ?",
+    "remove_yes": "Supprimer",
+    "remove_no": "Conserver",
+    "add_kind": "Type",
+    "add_inside": "Ajouter dans le bloc sélectionné",
+    "add_top": "Ajouter au niveau supérieur",
+    "add_matcher": "Matcher du nouveau bloc"
   },
   "encode": {
     "heading": "Compression",
@@ -1271,5 +1286,23 @@
     "label": "Adresses de liaison",
     "help": "Les adresses sur lesquelles ce site écoute, séparées par des espaces, par exemple 127.0.0.1 ::1. Vide écoute sur toutes les adresses. Un hôte qui est une seule adresse IP s'y lie déjà.",
     "invalid": "Saisissez des adresses IP ou des noms d'hôte, sans port."
+  },
+  "modules": {
+    "title": "Modules de Caddy",
+    "loading": "Lecture des modules…",
+    "unknown": "Les modules de ce Caddy n'ont pas pu être lus (la commande caddy est-elle disponible ?).",
+    "help": "Ce que le Caddy installé sait faire au-delà d'une version standard. Une fonction qui exige un module absent échoue au chargement de la configuration : vérifiez donc ici d'abord.",
+    "cap_dns": "Fournisseurs du défi DNS",
+    "cap_layer4": "Couche 4 (proxy TCP et UDP)",
+    "cap_rate_limit": "Limitation de débit",
+    "cap_security": "caddy-security (portail d'authentification)",
+    "installed": "Installé",
+    "missing": "Non installé",
+    "how_to_get": "Comment l'obtenir",
+    "dns_providers": "Fournisseurs : {{count}}",
+    "all": "Tous les modules ({{count}})",
+    "filter": "Filtrer les modules",
+    "no_match": "Aucun module ne correspond.",
+    "non_standard": "Modules ne faisant pas partie de Caddy lui-même : {{count}}"
   }
 }

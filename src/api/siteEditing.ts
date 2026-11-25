@@ -12,6 +12,7 @@ import {
   writeRawProxyConfValidated,
 } from "./caddy";
 import { applyDnsSecrets, isSiteDnsVar } from "./dnsChallenge";
+import { findBlockPositions, findMatchingBlock } from "./caddyfileDocument";
 import type { CaddyConfig, DnsChallengeConfig, ProxyEntry, ServerDef } from "./types";
 
 /** What an edit needs to know about the current state: the live config, the sites and the named servers. */
@@ -262,6 +263,23 @@ export async function editSite(ctx: SiteEditContext, entry: ProxyEntry): Promise
     return { live: { kind: "reload" }, written, site };
   }
   return { live: liveChangeFor(proxies, mergeProxy(config, entry)), written, site };
+}
+
+/**
+ * Writes a new text for a site's block (#350), the one the Tree tab edited. The block is found by
+ * the site's address and replaced as it is, so what the form owns (label, header comments around
+ * it) and every other site stay as they were. The config is checked before it is kept: throws
+ * CaddyfileError, leaving the file as it was, when Caddy would not take it.
+ */
+export async function replaceSiteText(proxy: ProxyEntry, newText: string): Promise<SiteEditResult> {
+  await ensureConfDImported();
+  const current = await readProxyConf();
+  const lines = current.split("\n");
+  const pos = findMatchingBlock(findBlockPositions(lines), proxy.externalPort, proxy.externalHost);
+  if (!pos) throw new CaddyfileError(i18n.t("tree.block_not_found"));
+  const written = [...lines.slice(0, pos.headerLine), newText, ...lines.slice(pos.closingLine + 1)].join("\n");
+  await writeRawProxyConfValidated(written);
+  return { live: { kind: "reload" }, written };
 }
 
 /** Removes a site; resolves to `undefined` when there is no such site. */

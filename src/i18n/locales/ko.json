@@ -113,7 +113,11 @@
     "menu_static": "정적 파일",
     "menu_respond": "고정 응답",
     "menu_php": "PHP 사이트",
-    "more_actions": "추가 작업"
+    "more_actions": "추가 작업",
+    "indicator_raw_blocks": "원시 블록",
+    "raw_blocks_help": "이 사이트에는 route 블록이나 중첩된 handle 블록이 있습니다. 트리 탭에서 편집하며, 원시로 표시되는 것은 원시 편집기에서 편집합니다.",
+    "raw_blocks_notice": "이 사이트에는 route 블록이나 중첩된 handle 블록이 있습니다. 양식은 이를 쓰인 그대로 두고 사이트의 주소, bind, import, TLS만 바꿉니다. 블록은 트리 탭에서 편집하고, 원시로 표시되는 것은 원시 편집기에서 편집하세요.",
+    "raw_blocks_names": "원시 편집기에서만: {{blocks}}"
   },
   "add_proxy": {
     "title": "리버스 프록시 추가",
@@ -1177,7 +1181,8 @@
     "routing": "라우팅",
     "upstreams": "업스트림",
     "logging": "로그 및 오류",
-    "limits": "한도"
+    "limits": "한도",
+    "tree": "트리"
   },
   "dns": {
     "global_title": "DNS 챌린지",
@@ -1210,23 +1215,33 @@
     "site_override_help": "이 사이트는 자체 DNS 공급자와 자격 증명을 사용합니다. 새 자격 증명을 저장하면 Caddy가 다시 시작됩니다. Caddy는 시작할 때만 이를 읽기 때문입니다.",
     "site_wildcard_warning": "와일드카드 인증서에는 DNS 챌린지가 필요합니다. 이 사이트용 DNS 공급자를 지정하거나 설정 → DNS 챌린지에서 지정하세요."
   },
-  "modules": {
-    "title": "Caddy 모듈",
-    "loading": "모듈을 읽는 중…",
-    "unknown": "이 Caddy의 모듈을 읽을 수 없습니다(caddy 명령을 쓸 수 있나요?).",
-    "help": "설치된 Caddy가 표준 빌드 이상으로 할 수 있는 것입니다. 없는 모듈이 필요한 기능은 Caddy가 구성을 불러올 때 실패하므로 먼저 여기서 확인하세요.",
-    "cap_dns": "DNS 챌린지 제공자",
-    "cap_layer4": "레이어 4(TCP 및 UDP 프록시)",
-    "cap_rate_limit": "요청 속도 제한",
-    "cap_security": "caddy-security(인증 포털)",
-    "installed": "설치됨",
-    "missing": "설치되지 않음",
-    "how_to_get": "얻는 방법",
-    "dns_providers": "제공자: {{count}}",
-    "all": "모든 모듈({{count}})",
-    "filter": "모듈 필터",
-    "no_match": "일치하는 모듈이 없습니다.",
-    "non_standard": "Caddy 자체에 포함되지 않은 모듈: {{count}}"
+  "tree": {
+    "aria_label": "사이트의 route 및 handle 블록",
+    "site": "사이트",
+    "kind_opaque": "블록",
+    "no_matcher": "모든 요청",
+    "handlers": "지시문",
+    "unreadable": "이 사이트의 블록을 트리로 읽을 수 없습니다. 원시 편집기에서 편집하세요.",
+    "read_only_help": "이 사이트의 route 및 handle 블록을 쓰인 그대로 보여줍니다. 지금은 읽기 전용이며 원시 편집기에서 편집하세요.",
+    "select": "편집",
+    "matcher_label": "매처",
+    "matcher_help": "/app/* 같은 경로, @이름, 또는 모든 요청을 뜻하는 빈 값. handle_path에는 경로가 필요합니다.",
+    "handler_label": "지시문",
+    "save": "블록 저장",
+    "discard": "변경 취소",
+    "saved": "사이트의 블록을 저장했습니다.",
+    "block_not_found": "Caddyfile에서 사이트의 블록을 찾지 못했습니다. 페이지를 새로 고치고 다시 시도하세요.",
+    "edit_help": "블록을 선택해 매처나 지시문을 바꾸거나, 블록을 추가·이동·제거합니다. 바꾼 부분만 다시 쓰이며, 양식이 모르는 블록은 쓰인 그대로 표시되고 읽기 전용으로 남지만 이동하거나 제거할 수 있습니다.",
+    "move_up": "위로 이동",
+    "move_down": "아래로 이동",
+    "remove": "제거",
+    "remove_confirm": "이 블록과 그 안의 블록 {{count}}개를 제거할까요?",
+    "remove_yes": "제거",
+    "remove_no": "유지",
+    "add_kind": "종류",
+    "add_inside": "선택한 블록 안에 추가",
+    "add_top": "최상위에 추가",
+    "add_matcher": "새 블록의 매처"
   },
   "encode": {
     "heading": "압축",
@@ -1271,5 +1286,23 @@
     "label": "바인드 주소",
     "help": "이 사이트가 수신하는 주소(공백으로 구분)입니다. 예: 127.0.0.1 ::1. 비워 두면 모든 주소에서 수신합니다. 호스트가 IP 주소 하나이면 이미 그 주소에 바인드됩니다.",
     "invalid": "포트 없이 IP 주소나 호스트 이름을 입력하세요."
+  },
+  "modules": {
+    "title": "Caddy 모듈",
+    "loading": "모듈을 읽는 중…",
+    "unknown": "이 Caddy의 모듈을 읽을 수 없습니다(caddy 명령을 쓸 수 있나요?).",
+    "help": "설치된 Caddy가 표준 빌드 이상으로 할 수 있는 것입니다. 없는 모듈이 필요한 기능은 Caddy가 구성을 불러올 때 실패하므로 먼저 여기서 확인하세요.",
+    "cap_dns": "DNS 챌린지 제공자",
+    "cap_layer4": "레이어 4(TCP 및 UDP 프록시)",
+    "cap_rate_limit": "요청 속도 제한",
+    "cap_security": "caddy-security(인증 포털)",
+    "installed": "설치됨",
+    "missing": "설치되지 않음",
+    "how_to_get": "얻는 방법",
+    "dns_providers": "제공자: {{count}}",
+    "all": "모든 모듈({{count}})",
+    "filter": "모듈 필터",
+    "no_match": "일치하는 모듈이 없습니다.",
+    "non_standard": "Caddy 자체에 포함되지 않은 모듈: {{count}}"
   }
 }

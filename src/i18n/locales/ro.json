@@ -113,7 +113,11 @@
     "menu_static": "Fișiere statice",
     "menu_respond": "Răspuns fix",
     "menu_php": "Site PHP",
-    "more_actions": "Mai multe acțiuni"
+    "more_actions": "Mai multe acțiuni",
+    "indicator_raw_blocks": "Blocuri brute",
+    "raw_blocks_help": "Acest site are blocuri route sau handle imbricate. Fila Arbore le editează; ce afișează ca brut se editează în editorul brut.",
+    "raw_blocks_notice": "Acest site are blocuri route sau handle imbricate. Formularul le lasă așa cum sunt scrise și schimbă doar adresa, bind-ul, importurile și TLS-ul site-ului. Editează blocurile în fila Arbore; ce afișează ca brut se editează în editorul brut.",
+    "raw_blocks_names": "Doar în editorul brut: {{blocks}}"
   },
   "add_proxy": {
     "title": "Adaugă reverse proxy",
@@ -1177,7 +1181,8 @@
     "routing": "Rutare",
     "upstreams": "Upstream-uri",
     "logging": "Jurnale și erori",
-    "limits": "Limite"
+    "limits": "Limite",
+    "tree": "Arbore"
   },
   "dns": {
     "global_title": "Provocarea DNS",
@@ -1210,23 +1215,33 @@
     "site_override_help": "Acest site folosește propriul furnizor DNS și propriile date de acces. Salvarea unor date noi repornește Caddy, care le citește doar la pornire.",
     "site_wildcard_warning": "Certificatele wildcard au nevoie de provocarea DNS. Setează un furnizor DNS pentru acest site sau în Setări → Provocare DNS."
   },
-  "modules": {
-    "title": "Modulele Caddy",
-    "loading": "Se citesc modulele…",
-    "unknown": "Modulele acestui Caddy nu au putut fi citite (este disponibilă comanda caddy?).",
-    "help": "Ce poate face Caddy instalat peste o versiune standard. O funcție care are nevoie de un modul lipsă eșuează când Caddy încarcă configurația, așa că verifică mai întâi aici.",
-    "cap_dns": "Furnizori pentru provocarea DNS",
-    "cap_layer4": "Nivelul 4 (proxy TCP și UDP)",
-    "cap_rate_limit": "Limitarea ratei",
-    "cap_security": "caddy-security (portal de autentificare)",
-    "installed": "Instalat",
-    "missing": "Neinstalat",
-    "how_to_get": "Cum îl obții",
-    "dns_providers": "Furnizori: {{count}}",
-    "all": "Toate modulele ({{count}})",
-    "filter": "Filtrează modulele",
-    "no_match": "Niciun modul nu se potrivește.",
-    "non_standard": "Module care nu fac parte din Caddy însuși: {{count}}"
+  "tree": {
+    "aria_label": "Blocurile route și handle ale site-ului",
+    "site": "Site",
+    "kind_opaque": "Bloc",
+    "no_matcher": "toate cererile",
+    "handlers": "Directive",
+    "unreadable": "Blocurile acestui site nu au putut fi citite ca arbore. Editează-le în editorul brut.",
+    "read_only_help": "Blocurile route și handle ale acestui site, așa cum sunt scrise. Doar citire deocamdată: editează-le în editorul brut.",
+    "select": "Editează",
+    "matcher_label": "Matcher",
+    "matcher_help": "O cale precum /app/*, un @nume, sau gol pentru toate cererile. Un handle_path are nevoie de o cale.",
+    "handler_label": "Directivă",
+    "save": "Salvează blocurile",
+    "discard": "Renunță la modificări",
+    "saved": "Blocurile site-ului au fost salvate.",
+    "block_not_found": "Blocul site-ului nu a fost găsit în Caddyfile. Reîncarcă pagina și încearcă din nou.",
+    "edit_help": "Selectează un bloc pentru a-i schimba matcherul sau directivele, sau adaugă, mută și elimină blocuri. Doar ce schimbi este rescris; blocurile pe care formularul nu le cunoaște sunt afișate așa cum sunt scrise, rămân doar în citire și pot fi mutate sau eliminate.",
+    "move_up": "Mută în sus",
+    "move_down": "Mută în jos",
+    "remove": "Elimină",
+    "remove_confirm": "Elimini acest bloc și cele {{count}} blocuri din interiorul lui?",
+    "remove_yes": "Elimină",
+    "remove_no": "Păstrează",
+    "add_kind": "Tip",
+    "add_inside": "Adaugă în blocul selectat",
+    "add_top": "Adaugă la nivelul superior",
+    "add_matcher": "Matcherul noului bloc"
   },
   "encode": {
     "heading": "Compresie",
@@ -1271,5 +1286,23 @@
     "label": "Adrese de bind",
     "help": "Adresele pe care ascultă acest site, separate prin spații, de exemplu 127.0.0.1 ::1. Gol ascultă pe toate adresele. O gazdă care este o singură adresă IP se leagă deja la ea.",
     "invalid": "Introdu adrese IP sau nume de gazdă, fără port."
+  },
+  "modules": {
+    "title": "Modulele Caddy",
+    "loading": "Se citesc modulele…",
+    "unknown": "Modulele acestui Caddy nu au putut fi citite (este disponibilă comanda caddy?).",
+    "help": "Ce poate face Caddy instalat peste o versiune standard. O funcție care are nevoie de un modul lipsă eșuează când Caddy încarcă configurația, așa că verifică mai întâi aici.",
+    "cap_dns": "Furnizori pentru provocarea DNS",
+    "cap_layer4": "Nivelul 4 (proxy TCP și UDP)",
+    "cap_rate_limit": "Limitarea ratei",
+    "cap_security": "caddy-security (portal de autentificare)",
+    "installed": "Instalat",
+    "missing": "Neinstalat",
+    "how_to_get": "Cum îl obții",
+    "dns_providers": "Furnizori: {{count}}",
+    "all": "Toate modulele ({{count}})",
+    "filter": "Filtrează modulele",
+    "no_match": "Niciun modul nu se potrivește.",
+    "non_standard": "Module care nu fac parte din Caddy însuși: {{count}}"
   }
 }

@@ -113,7 +113,11 @@
     "menu_static": "File statici",
     "menu_respond": "Risposta fissa",
     "menu_php": "Sito PHP",
-    "more_actions": "Altre azioni"
+    "more_actions": "Altre azioni",
+    "indicator_raw_blocks": "Blocchi grezzi",
+    "raw_blocks_help": "Questo sito ha blocchi route o handle annidati. La scheda Albero li modifica; ciò che mostra come grezzo si modifica nell'editor grezzo.",
+    "raw_blocks_notice": "Questo sito ha blocchi route o handle annidati. Il modulo li lascia come scritti e cambia solo indirizzo, bind, import e TLS del sito. Modifica i blocchi nella scheda Albero; ciò che mostra come grezzo si modifica nell'editor grezzo.",
+    "raw_blocks_names": "Solo nell'editor grezzo: {{blocks}}"
   },
   "add_proxy": {
     "title": "Aggiungi reverse proxy",
@@ -1177,7 +1181,8 @@
     "routing": "Routing",
     "upstreams": "Upstream",
     "logging": "Log ed errori",
-    "limits": "Limiti"
+    "limits": "Limiti",
+    "tree": "Albero"
   },
   "dns": {
     "global_title": "Sfida DNS",
@@ -1210,23 +1215,33 @@
     "site_override_help": "Questo sito usa un proprio provider DNS e credenziali proprie. Salvare nuove credenziali riavvia Caddy, che le legge solo all'avvio.",
     "site_wildcard_warning": "I certificati wildcard richiedono la sfida DNS. Imposta un provider DNS per questo sito o in Impostazioni → Sfida DNS."
   },
-  "modules": {
-    "title": "Moduli di Caddy",
-    "loading": "Lettura dei moduli…",
-    "unknown": "Non è stato possibile leggere i moduli di questo Caddy (il comando caddy è disponibile?).",
-    "help": "Cosa sa fare il Caddy installato oltre a una build standard. Una funzione che richiede un modulo mancante fallisce quando Caddy carica la configurazione, quindi controlla prima qui.",
-    "cap_dns": "Provider della sfida DNS",
-    "cap_layer4": "Livello 4 (proxy TCP e UDP)",
-    "cap_rate_limit": "Limitazione della frequenza",
-    "cap_security": "caddy-security (portale di autenticazione)",
-    "installed": "Installato",
-    "missing": "Non installato",
-    "how_to_get": "Come ottenerlo",
-    "dns_providers": "Provider: {{count}}",
-    "all": "Tutti i moduli ({{count}})",
-    "filter": "Filtra i moduli",
-    "no_match": "Nessun modulo corrisponde.",
-    "non_standard": "Moduli che non fanno parte di Caddy stesso: {{count}}"
+  "tree": {
+    "aria_label": "Blocchi route e handle del sito",
+    "site": "Sito",
+    "kind_opaque": "Blocco",
+    "no_matcher": "tutte le richieste",
+    "handlers": "Direttive",
+    "unreadable": "Non è stato possibile leggere i blocchi di questo sito come albero. Modificali nell'editor grezzo.",
+    "read_only_help": "I blocchi route e handle di questo sito, come scritti. Per ora in sola lettura: modificali nell'editor grezzo.",
+    "select": "Modifica",
+    "matcher_label": "Matcher",
+    "matcher_help": "Un percorso come /app/*, un @nome, o vuoto per tutte le richieste. Un handle_path richiede un percorso.",
+    "handler_label": "Direttiva",
+    "save": "Salva i blocchi",
+    "discard": "Scarta le modifiche",
+    "saved": "I blocchi del sito sono stati salvati.",
+    "block_not_found": "Il blocco del sito non è stato trovato nel Caddyfile. Ricarica la pagina e riprova.",
+    "edit_help": "Seleziona un blocco per cambiarne il matcher o le direttive, oppure aggiungi, sposta e rimuovi blocchi. Viene riscritto solo ciò che cambi; i blocchi che il modulo non conosce sono mostrati come scritti, restano in sola lettura e si possono spostare o rimuovere.",
+    "move_up": "Sposta su",
+    "move_down": "Sposta giù",
+    "remove": "Rimuovi",
+    "remove_confirm": "Rimuovere questo blocco e i {{count}} blocchi al suo interno?",
+    "remove_yes": "Rimuovi",
+    "remove_no": "Mantieni",
+    "add_kind": "Tipo",
+    "add_inside": "Aggiungi dentro il blocco selezionato",
+    "add_top": "Aggiungi al livello superiore",
+    "add_matcher": "Matcher del nuovo blocco"
   },
   "encode": {
     "heading": "Compressione",
@@ -1271,5 +1286,23 @@
     "label": "Indirizzi di bind",
     "help": "Gli indirizzi su cui questo sito ascolta, separati da spazi, ad esempio 127.0.0.1 ::1. Vuoto ascolta su ogni indirizzo. Un host che è un solo indirizzo IP vi è già legato.",
     "invalid": "Inserisci indirizzi IP o nomi host, senza porta."
+  },
+  "modules": {
+    "title": "Moduli di Caddy",
+    "loading": "Lettura dei moduli…",
+    "unknown": "Non è stato possibile leggere i moduli di questo Caddy (il comando caddy è disponibile?).",
+    "help": "Cosa sa fare il Caddy installato oltre a una build standard. Una funzione che richiede un modulo mancante fallisce quando Caddy carica la configurazione, quindi controlla prima qui.",
+    "cap_dns": "Provider della sfida DNS",
+    "cap_layer4": "Livello 4 (proxy TCP e UDP)",
+    "cap_rate_limit": "Limitazione della frequenza",
+    "cap_security": "caddy-security (portale di autenticazione)",
+    "installed": "Installato",
+    "missing": "Non installato",
+    "how_to_get": "Come ottenerlo",
+    "dns_providers": "Provider: {{count}}",
+    "all": "Tutti i moduli ({{count}})",
+    "filter": "Filtra i moduli",
+    "no_match": "Nessun modulo corrisponde.",
+    "non_standard": "Moduli che non fanno parte di Caddy stesso: {{count}}"
   }
 }

@@ -113,7 +113,11 @@
     "menu_static": "Arquivos estáticos",
     "menu_respond": "Resposta fixa",
     "menu_php": "Site PHP",
-    "more_actions": "Mais ações"
+    "more_actions": "Mais ações",
+    "indicator_raw_blocks": "Blocos brutos",
+    "raw_blocks_help": "Este site tem blocos route ou handle aninhados. A aba Árvore os edita; o que ela mostra como bruto é editado no editor bruto.",
+    "raw_blocks_notice": "Este site tem blocos route ou handle aninhados. O formulário os deixa como escritos e só muda o endereço, o bind, as importações e o TLS do site. Edite os blocos na aba Árvore; o que ela mostra como bruto é editado no editor bruto.",
+    "raw_blocks_names": "Somente no editor bruto: {{blocks}}"
   },
   "add_proxy": {
     "title": "Adicionar reverse proxy",
@@ -1177,7 +1181,8 @@
     "routing": "Roteamento",
     "upstreams": "Upstreams",
     "logging": "Logs e erros",
-    "limits": "Limites"
+    "limits": "Limites",
+    "tree": "Árvore"
   },
   "dns": {
     "global_title": "Desafio DNS",
@@ -1210,23 +1215,33 @@
     "site_override_help": "Este site usa seu próprio provedor DNS e credenciais. Salvar novas credenciais reinicia o Caddy, que só as lê ao iniciar.",
     "site_wildcard_warning": "Certificados curinga precisam do desafio DNS. Defina um provedor DNS para este site ou em Configurações → Desafio DNS."
   },
-  "modules": {
-    "title": "Módulos do Caddy",
-    "loading": "Lendo os módulos…",
-    "unknown": "Não foi possível ler os módulos deste Caddy (o comando caddy está disponível?).",
-    "help": "O que o Caddy instalado faz além de uma compilação padrão. Um recurso que precisa de um módulo ausente falha quando o Caddy carrega a configuração, então confira aqui primeiro.",
-    "cap_dns": "Provedores do desafio DNS",
-    "cap_layer4": "Camada 4 (proxy TCP e UDP)",
-    "cap_rate_limit": "Limitação de taxa",
-    "cap_security": "caddy-security (portal de autenticação)",
-    "installed": "Instalado",
-    "missing": "Não instalado",
-    "how_to_get": "Como obter",
-    "dns_providers": "Provedores: {{count}}",
-    "all": "Todos os módulos ({{count}})",
-    "filter": "Filtrar módulos",
-    "no_match": "Nenhum módulo corresponde.",
-    "non_standard": "Módulos que não fazem parte do próprio Caddy: {{count}}"
+  "tree": {
+    "aria_label": "Blocos route e handle do site",
+    "site": "Site",
+    "kind_opaque": "Bloco",
+    "no_matcher": "todas as requisições",
+    "handlers": "Diretivas",
+    "unreadable": "Não foi possível ler os blocos deste site como árvore. Edite-os no editor bruto.",
+    "read_only_help": "Os blocos route e handle deste site, como escritos. Somente leitura por enquanto: edite-os no editor bruto.",
+    "select": "Editar",
+    "matcher_label": "Matcher",
+    "matcher_help": "Um caminho como /app/*, um @nome, ou vazio para todas as requisições. Um handle_path precisa de um caminho.",
+    "handler_label": "Diretiva",
+    "save": "Salvar blocos",
+    "discard": "Descartar alterações",
+    "saved": "Os blocos do site foram salvos.",
+    "block_not_found": "O bloco do site não foi encontrado no Caddyfile. Recarregue a página e tente de novo.",
+    "edit_help": "Selecione um bloco para mudar seu matcher ou suas diretivas, ou adicione, mova e remova blocos. Só o que você muda é reescrito; blocos que o formulário não conhece são mostrados como escritos, ficam somente leitura e podem ser movidos ou removidos.",
+    "move_up": "Mover para cima",
+    "move_down": "Mover para baixo",
+    "remove": "Remover",
+    "remove_confirm": "Remover este bloco e os {{count}} blocos dentro dele?",
+    "remove_yes": "Remover",
+    "remove_no": "Manter",
+    "add_kind": "Tipo",
+    "add_inside": "Adicionar dentro do bloco selecionado",
+    "add_top": "Adicionar no nível superior",
+    "add_matcher": "Matcher do novo bloco"
   },
   "encode": {
     "heading": "Compressão",
@@ -1271,5 +1286,23 @@
     "label": "Endereços de bind",
     "help": "Os endereços em que este site escuta, separados por espaços, por exemplo 127.0.0.1 ::1. Vazio escuta em todos. Um host que é um único endereço IP já se liga a ele.",
     "invalid": "Informe endereços IP ou nomes de host, sem porta."
+  },
+  "modules": {
+    "title": "Módulos do Caddy",
+    "loading": "Lendo os módulos…",
+    "unknown": "Não foi possível ler os módulos deste Caddy (o comando caddy está disponível?).",
+    "help": "O que o Caddy instalado faz além de uma compilação padrão. Um recurso que precisa de um módulo ausente falha quando o Caddy carrega a configuração, então confira aqui primeiro.",
+    "cap_dns": "Provedores do desafio DNS",
+    "cap_layer4": "Camada 4 (proxy TCP e UDP)",
+    "cap_rate_limit": "Limitação de taxa",
+    "cap_security": "caddy-security (portal de autenticação)",
+    "installed": "Instalado",
+    "missing": "Não instalado",
+    "how_to_get": "Como obter",
+    "dns_providers": "Provedores: {{count}}",
+    "all": "Todos os módulos ({{count}})",
+    "filter": "Filtrar módulos",
+    "no_match": "Nenhum módulo corresponde.",
+    "non_standard": "Módulos que não fazem parte do próprio Caddy: {{count}}"
   }
 }

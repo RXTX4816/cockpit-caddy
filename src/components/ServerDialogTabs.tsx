@@ -21,6 +21,7 @@ export function serverTabFlags(v: ServerTabValues, generalHasError: boolean): Ta
   return {
     configured: {
       general: false,
+      tree: false,
       security: !!(tlsValuesToAdvanced(v.tlsValues) || tlsValuesToMtls(v.tlsValues)),
       routing: false,
       upstreams: false,
@@ -29,6 +30,7 @@ export function serverTabFlags(v: ServerTabValues, generalHasError: boolean): Ta
     },
     hasError: {
       general: generalHasError,
+      tree: false,
       security: tlsValuesHaveErrors(v.tlsValues),
       routing: false,
       upstreams: false,

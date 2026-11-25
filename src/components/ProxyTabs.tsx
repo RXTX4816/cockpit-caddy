@@ -19,6 +19,8 @@ import { ServerTimeoutsSection } from "./ServerTimeoutsSection";
 import { TlsSection } from "./TlsSection";
 import { TransportSection } from "./TransportSection";
 import { UpstreamsSection } from "./UpstreamsSection";
+import { SiteTreeTab } from "./SiteTreeView";
+import { hasNestedBlocks } from "../api/siteTree";
 import { NamedRouteField, ProxyDialogTabs, type ProxyTab, type ProxyTabKey } from "./proxyDialogParts";
 import { proxyTabStateFlags, type ProxyTabState, type ProxyTabStateUpdate, type ProxyTabsLayout } from "./proxyTabState";
 
@@ -38,10 +40,14 @@ interface Props {
   showTls?: boolean;
   /** The site address has no host, so TLS Policy explains that its settings reach other hostless sites too. */
   hostless?: boolean;
+  /** The site's block as written in conf.d. With route or nested handle blocks in it, a Tree tab shows them (#349). */
+  siteText?: string;
+  /** Saves the text the Tree tab made (#350); without it the tab is read-only. */
+  onSaveSiteText?: (text: string) => Promise<void>;
 }
 
 /** The site dialogs' tabs (#260), shared by Add, Edit and Duplicate (#290) of every site type (#293). */
-export function ProxyTabs({ state: s, onChange, general, generalHasError, active, onSelect, isDisabled, idPrefix, layout = "proxy", showTls = false, hostless = false }: Props) {
+export function ProxyTabs({ state: s, onChange, general, generalHasError, active, onSelect, isDisabled, idPrefix, layout = "proxy", showTls = false, hostless = false, siteText, onSaveSiteText }: Props) {
   const { t } = useTranslation();
   const flags = proxyTabStateFlags(s, generalHasError, layout);
   const forwardAuthErr = validateForwardAuth(s.forwardAuth);
@@ -158,6 +164,8 @@ export function ProxyTabs({ state: s, onChange, general, generalHasError, active
       },
     );
   }
+
+  if (siteText && hasNestedBlocks(siteText)) tabs.push({ key: "tree", content: <SiteTreeTab siteText={siteText} onSave={onSaveSiteText} /> });
 
   return <ProxyDialogTabs active={active} onSelect={onSelect} tabs={tabs} />;
 }

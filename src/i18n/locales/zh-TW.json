@@ -113,7 +113,11 @@
     "menu_static": "靜態檔案",
     "menu_respond": "固定回應",
     "menu_php": "PHP 網站",
-    "more_actions": "更多動作"
+    "more_actions": "更多動作",
+    "indicator_raw_blocks": "原始區塊",
+    "raw_blocks_help": "此網站有 route 區塊或巢狀的 handle 區塊。「樹狀」分頁可編輯它們;其中顯示為原始的內容請在原始編輯器中編輯。",
+    "raw_blocks_notice": "此網站有 route 區塊或巢狀的 handle 區塊。表單會保持它們原樣,只變更網站的位址、bind、匯入和 TLS。請在「樹狀」分頁中編輯這些區塊;其中顯示為原始的內容請在原始編輯器中編輯。",
+    "raw_blocks_names": "僅限原始編輯器:{{blocks}}"
   },
   "add_proxy": {
     "title": "新增反向代理",
@@ -1177,7 +1181,8 @@
     "routing": "路由",
     "upstreams": "上游",
     "logging": "日誌與錯誤",
-    "limits": "限制"
+    "limits": "限制",
+    "tree": "樹狀"
   },
   "dns": {
     "global_title": "DNS 挑戰",
@@ -1210,23 +1215,33 @@
     "site_override_help": "此網站使用自己的 DNS 供應商和憑證。儲存新憑證會重新啟動 Caddy，因為它只在啟動時讀取憑證。",
     "site_wildcard_warning": "萬用字元憑證需要 DNS 驗證。請為此網站設定 DNS 供應商，或在「設定 → DNS 驗證」中設定。"
   },
-  "modules": {
-    "title": "Caddy 模組",
-    "loading": "正在讀取模組…",
-    "unknown": "無法讀取此 Caddy 的模組(caddy 指令可用嗎?)。",
-    "help": "已安裝的 Caddy 在標準建置之外還能做什麼。需要缺少模組的功能會在 Caddy 載入設定時失敗,所以請先在這裡確認。",
-    "cap_dns": "DNS 驗證提供者",
-    "cap_layer4": "第 4 層(TCP 和 UDP 代理)",
-    "cap_rate_limit": "速率限制",
-    "cap_security": "caddy-security(驗證入口)",
-    "installed": "已安裝",
-    "missing": "未安裝",
-    "how_to_get": "如何取得",
-    "dns_providers": "提供者:{{count}}",
-    "all": "所有模組({{count}})",
-    "filter": "篩選模組",
-    "no_match": "沒有符合的模組。",
-    "non_standard": "不屬於 Caddy 本身的模組:{{count}}"
+  "tree": {
+    "aria_label": "網站的 route 和 handle 區塊",
+    "site": "網站",
+    "kind_opaque": "區塊",
+    "no_matcher": "所有請求",
+    "handlers": "指令",
+    "unreadable": "無法把此網站的區塊讀成樹狀。請在原始編輯器中編輯。",
+    "read_only_help": "此網站的 route 和 handle 區塊,依原樣顯示。目前唯讀:請在原始編輯器中編輯。",
+    "select": "編輯",
+    "matcher_label": "比對器",
+    "matcher_help": "路徑如 /app/*、@名稱,或留空表示所有請求。handle_path 需要路徑。",
+    "handler_label": "指令",
+    "save": "儲存區塊",
+    "discard": "捨棄變更",
+    "saved": "網站的區塊已儲存。",
+    "block_not_found": "在 Caddyfile 中找不到該網站的區塊。請重新整理頁面後再試。",
+    "edit_help": "選擇一個區塊來變更其比對器或指令,或新增、移動和移除區塊。只會重寫你變更的部分;表單不認識的區塊會依原樣顯示、維持唯讀,但可以移動或移除。",
+    "move_up": "上移",
+    "move_down": "下移",
+    "remove": "移除",
+    "remove_confirm": "移除此區塊及其中的 {{count}} 個區塊?",
+    "remove_yes": "移除",
+    "remove_no": "保留",
+    "add_kind": "類型",
+    "add_inside": "加入所選區塊內",
+    "add_top": "加入最上層",
+    "add_matcher": "新區塊的比對器"
   },
   "encode": {
     "heading": "壓縮",
@@ -1271,5 +1286,23 @@
     "label": "綁定位址",
     "help": "此網站監聽的位址,以空格分隔,例如 127.0.0.1 ::1。留空表示監聽所有位址。主機若是單一 IP 位址,則已經綁定到該位址。",
     "invalid": "請輸入 IP 位址或主機名稱,不含連接埠。"
+  },
+  "modules": {
+    "title": "Caddy 模組",
+    "loading": "正在讀取模組…",
+    "unknown": "無法讀取此 Caddy 的模組(caddy 指令可用嗎?)。",
+    "help": "已安裝的 Caddy 在標準建置之外還能做什麼。需要缺少模組的功能會在 Caddy 載入設定時失敗,所以請先在這裡確認。",
+    "cap_dns": "DNS 驗證提供者",
+    "cap_layer4": "第 4 層(TCP 和 UDP 代理)",
+    "cap_rate_limit": "速率限制",
+    "cap_security": "caddy-security(驗證入口)",
+    "installed": "已安裝",
+    "missing": "未安裝",
+    "how_to_get": "如何取得",
+    "dns_providers": "提供者:{{count}}",
+    "all": "所有模組({{count}})",
+    "filter": "篩選模組",
+    "no_match": "沒有符合的模組。",
+    "non_standard": "不屬於 Caddy 本身的模組:{{count}}"
   }
 }

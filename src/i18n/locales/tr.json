@@ -113,7 +113,11 @@
     "menu_static": "Statik dosyalar",
     "menu_respond": "Sabit yanıt",
     "menu_php": "PHP sitesi",
-    "more_actions": "Diğer işlemler"
+    "more_actions": "Diğer işlemler",
+    "indicator_raw_blocks": "Ham bloklar",
+    "raw_blocks_help": "Bu sitede route veya iç içe handle blokları var. Ağaç sekmesi onları düzenler; ham olarak gösterdiğini ham düzenleyicide düzenleyin.",
+    "raw_blocks_notice": "Bu sitede route veya iç içe handle blokları var. Form onları yazıldığı gibi bırakır ve yalnızca sitenin adresini, bind'ını, içe aktarmalarını ve TLS'ini değiştirir. Blokları Ağaç sekmesinde düzenleyin; ham olarak gösterdiğini ham düzenleyicide düzenleyin.",
+    "raw_blocks_names": "Yalnızca ham düzenleyicide: {{blocks}}"
   },
   "add_proxy": {
     "title": "Reverse proxy ekle",
@@ -1177,7 +1181,8 @@
     "routing": "Yönlendirme",
     "upstreams": "Upstream'ler",
     "logging": "Günlükler ve hatalar",
-    "limits": "Sınırlar"
+    "limits": "Sınırlar",
+    "tree": "Ağaç"
   },
   "dns": {
     "global_title": "DNS doğrulaması",
@@ -1210,23 +1215,33 @@
     "site_override_help": "Bu site kendi DNS sağlayıcısını ve kimlik bilgilerini kullanır. Yeni kimlik bilgilerini kaydetmek Caddy'yi yeniden başlatır, çünkü bunları yalnızca başlarken okur.",
     "site_wildcard_warning": "Joker karakterli sertifikalar DNS doğrulaması gerektirir. Bu site için ya da Ayarlar → DNS doğrulaması altında bir DNS sağlayıcısı ayarlayın."
   },
-  "modules": {
-    "title": "Caddy modülleri",
-    "loading": "Modüller okunuyor…",
-    "unknown": "Bu Caddy'nin modülleri okunamadı (caddy komutu kullanılabilir mi?).",
-    "help": "Kurulu Caddy'nin standart yapının ötesinde neler yapabildiği. Eksik bir modül gerektiren özellik, Caddy yapılandırmayı yüklerken başarısız olur, bu yüzden önce buraya bakın.",
-    "cap_dns": "DNS doğrulama sağlayıcıları",
-    "cap_layer4": "Katman 4 (TCP ve UDP vekili)",
-    "cap_rate_limit": "Hız sınırlama",
-    "cap_security": "caddy-security (kimlik doğrulama portalı)",
-    "installed": "Kurulu",
-    "missing": "Kurulu değil",
-    "how_to_get": "Nasıl edinilir",
-    "dns_providers": "Sağlayıcılar: {{count}}",
-    "all": "Tüm modüller ({{count}})",
-    "filter": "Modülleri filtrele",
-    "no_match": "Eşleşen modül yok.",
-    "non_standard": "Caddy'nin kendisine ait olmayan modüller: {{count}}"
+  "tree": {
+    "aria_label": "Sitenin route ve handle blokları",
+    "site": "Site",
+    "kind_opaque": "Blok",
+    "no_matcher": "tüm istekler",
+    "handlers": "Yönergeler",
+    "unreadable": "Bu sitenin blokları ağaç olarak okunamadı. Ham düzenleyicide düzenleyin.",
+    "read_only_help": "Bu sitenin route ve handle blokları, yazıldığı gibi. Şimdilik salt okunur: ham düzenleyicide düzenleyin.",
+    "select": "Düzenle",
+    "matcher_label": "Eşleştirici",
+    "matcher_help": "/app/* gibi bir yol, bir @ad, ya da tüm istekler için boş. handle_path bir yol gerektirir.",
+    "handler_label": "Yönerge",
+    "save": "Blokları kaydet",
+    "discard": "Değişiklikleri at",
+    "saved": "Sitenin blokları kaydedildi.",
+    "block_not_found": "Sitenin bloğu Caddyfile'da bulunamadı. Sayfayı yenileyip tekrar deneyin.",
+    "edit_help": "Eşleştiricisini veya yönergelerini değiştirmek için bir blok seçin, ya da blok ekleyin, taşıyın ve kaldırın. Yalnızca değiştirdiğiniz kısım yeniden yazılır; formun tanımadığı bloklar yazıldığı gibi gösterilir, salt okunur kalır ve taşınabilir veya kaldırılabilir.",
+    "move_up": "Yukarı taşı",
+    "move_down": "Aşağı taşı",
+    "remove": "Kaldır",
+    "remove_confirm": "Bu blok ve içindeki {{count}} blok kaldırılsın mı?",
+    "remove_yes": "Kaldır",
+    "remove_no": "Koru",
+    "add_kind": "Tür",
+    "add_inside": "Seçili bloğun içine ekle",
+    "add_top": "Üst düzeye ekle",
+    "add_matcher": "Yeni bloğun eşleştiricisi"
   },
   "encode": {
     "heading": "Sıkıştırma",
@@ -1271,5 +1286,23 @@
     "label": "Bind adresleri",
     "help": "Bu sitenin dinlediği adresler, boşlukla ayrılmış, örneğin 127.0.0.1 ::1. Boş, tüm adreslerde dinler. Tek bir IP adresi olan ana makine zaten ona bağlanır.",
     "invalid": "Port olmadan IP adresleri veya ana makine adları girin."
+  },
+  "modules": {
+    "title": "Caddy modülleri",
+    "loading": "Modüller okunuyor…",
+    "unknown": "Bu Caddy'nin modülleri okunamadı (caddy komutu kullanılabilir mi?).",
+    "help": "Kurulu Caddy'nin standart yapının ötesinde neler yapabildiği. Eksik bir modül gerektiren özellik, Caddy yapılandırmayı yüklerken başarısız olur, bu yüzden önce buraya bakın.",
+    "cap_dns": "DNS doğrulama sağlayıcıları",
+    "cap_layer4": "Katman 4 (TCP ve UDP vekili)",
+    "cap_rate_limit": "Hız sınırlama",
+    "cap_security": "caddy-security (kimlik doğrulama portalı)",
+    "installed": "Kurulu",
+    "missing": "Kurulu değil",
+    "how_to_get": "Nasıl edinilir",
+    "dns_providers": "Sağlayıcılar: {{count}}",
+    "all": "Tüm modüller ({{count}})",
+    "filter": "Modülleri filtrele",
+    "no_match": "Eşleşen modül yok.",
+    "non_standard": "Caddy'nin kendisine ait olmayan modüller: {{count}}"
   }
 }

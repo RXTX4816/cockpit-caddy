@@ -113,7 +113,11 @@
     "menu_static": "静的ファイル",
     "menu_respond": "固定レスポンス",
     "menu_php": "PHP サイト",
-    "more_actions": "その他の操作"
+    "more_actions": "その他の操作",
+    "indicator_raw_blocks": "生ブロック",
+    "raw_blocks_help": "このサイトには route ブロックまたは入れ子の handle ブロックがあります。ツリータブで編集できます。生と表示されるものは生のエディターで編集します。",
+    "raw_blocks_notice": "このサイトには route ブロックまたは入れ子の handle ブロックがあります。フォームはそれらをそのまま残し、サイトのアドレス、bind、インポート、TLS だけを変更します。ブロックはツリータブで編集してください。生と表示されるものは生のエディターで編集します。",
+    "raw_blocks_names": "生のエディターのみ: {{blocks}}"
   },
   "add_proxy": {
     "title": "リバースプロキシを追加",
@@ -1177,7 +1181,8 @@
     "routing": "ルーティング",
     "upstreams": "アップストリーム",
     "logging": "ログとエラー",
-    "limits": "制限"
+    "limits": "制限",
+    "tree": "ツリー"
   },
   "dns": {
     "global_title": "DNS チャレンジ",
@@ -1210,23 +1215,33 @@
     "site_override_help": "このサイトは専用の DNS プロバイダーと認証情報を使います。新しい認証情報を保存すると Caddy が再起動します（起動時にのみ読み込むため）。",
     "site_wildcard_warning": "ワイルドカード証明書には DNS チャレンジが必要です。このサイト用、または 設定 → DNS チャレンジ で DNS プロバイダーを設定してください。"
   },
-  "modules": {
-    "title": "Caddy のモジュール",
-    "loading": "モジュールを読み取り中…",
-    "unknown": "この Caddy のモジュールを読み取れませんでした(caddy コマンドは使えますか?)。",
-    "help": "インストール済みの Caddy が標準ビルド以外にできること。足りないモジュールが必要な機能は、Caddy が設定を読み込むときに失敗するので、先にここで確認してください。",
-    "cap_dns": "DNS チャレンジのプロバイダー",
-    "cap_layer4": "レイヤー 4(TCP と UDP のプロキシ)",
-    "cap_rate_limit": "レート制限",
-    "cap_security": "caddy-security(認証ポータル)",
-    "installed": "インストール済み",
-    "missing": "未インストール",
-    "how_to_get": "入手方法",
-    "dns_providers": "プロバイダー: {{count}}",
-    "all": "すべてのモジュール({{count}})",
-    "filter": "モジュールを絞り込む",
-    "no_match": "一致するモジュールはありません。",
-    "non_standard": "Caddy 本体に含まれないモジュール: {{count}}"
+  "tree": {
+    "aria_label": "サイトの route・handle ブロック",
+    "site": "サイト",
+    "kind_opaque": "ブロック",
+    "no_matcher": "すべてのリクエスト",
+    "handlers": "ディレクティブ",
+    "unreadable": "このサイトのブロックをツリーとして読み取れませんでした。生のエディターで編集してください。",
+    "read_only_help": "このサイトの route と handle のブロックを、書かれたとおりに表示します。今のところ読み取り専用です。生のエディターで編集してください。",
+    "select": "編集",
+    "matcher_label": "マッチャー",
+    "matcher_help": "/app/* のようなパス、@名前、またはすべてのリクエストを表す空欄。handle_path にはパスが必要です。",
+    "handler_label": "ディレクティブ",
+    "save": "ブロックを保存",
+    "discard": "変更を破棄",
+    "saved": "サイトのブロックを保存しました。",
+    "block_not_found": "サイトのブロックが Caddyfile に見つかりません。ページを再読み込みして、もう一度お試しください。",
+    "edit_help": "ブロックを選んでマッチャーやディレクティブを変更するか、ブロックを追加・移動・削除します。書き換えるのは変更した部分だけです。フォームが知らないブロックは書かれたとおりに表示され、読み取り専用のままですが、移動や削除はできます。",
+    "move_up": "上へ移動",
+    "move_down": "下へ移動",
+    "remove": "削除",
+    "remove_confirm": "このブロックと、その中の {{count}} 個のブロックを削除しますか?",
+    "remove_yes": "削除",
+    "remove_no": "残す",
+    "add_kind": "種類",
+    "add_inside": "選択したブロックの中に追加",
+    "add_top": "最上位に追加",
+    "add_matcher": "新しいブロックのマッチャー"
   },
   "encode": {
     "heading": "圧縮",
@@ -1271,5 +1286,23 @@
     "label": "バインドアドレス",
     "help": "このサイトが待ち受けるアドレス(スペース区切り)。例: 127.0.0.1 ::1。空欄はすべてのアドレスで待ち受けます。1 つの IP アドレスであるホストは、すでにそのアドレスにバインドされます。",
     "invalid": "ポートを付けずに、IP アドレスまたはホスト名を入力してください。"
+  },
+  "modules": {
+    "title": "Caddy のモジュール",
+    "loading": "モジュールを読み取り中…",
+    "unknown": "この Caddy のモジュールを読み取れませんでした(caddy コマンドは使えますか?)。",
+    "help": "インストール済みの Caddy が標準ビルド以外にできること。足りないモジュールが必要な機能は、Caddy が設定を読み込むときに失敗するので、先にここで確認してください。",
+    "cap_dns": "DNS チャレンジのプロバイダー",
+    "cap_layer4": "レイヤー 4(TCP と UDP のプロキシ)",
+    "cap_rate_limit": "レート制限",
+    "cap_security": "caddy-security(認証ポータル)",
+    "installed": "インストール済み",
+    "missing": "未インストール",
+    "how_to_get": "入手方法",
+    "dns_providers": "プロバイダー: {{count}}",
+    "all": "すべてのモジュール({{count}})",
+    "filter": "モジュールを絞り込む",
+    "no_match": "一致するモジュールはありません。",
+    "non_standard": "Caddy 本体に含まれないモジュール: {{count}}"
   }
 }

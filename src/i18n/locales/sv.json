@@ -113,7 +113,11 @@
     "menu_static": "Statiska filer",
     "menu_respond": "Fast svar",
     "menu_php": "PHP-webbplats",
-    "more_actions": "Fler åtgärder"
+    "more_actions": "Fler åtgärder",
+    "indicator_raw_blocks": "Råa block",
+    "raw_blocks_help": "Den här webbplatsen har route- eller nästlade handle-block. Fliken Träd redigerar dem; det den visar som rått redigeras i den råa redigeraren.",
+    "raw_blocks_notice": "Den här webbplatsen har route- eller nästlade handle-block. Formuläret lämnar dem som de är skrivna och ändrar bara webbplatsens adress, bind, importer och TLS. Redigera blocken på fliken Träd; det den visar som rått redigerar du i den råa redigeraren.",
+    "raw_blocks_names": "Bara i den råa redigeraren: {{blocks}}"
   },
   "add_proxy": {
     "title": "Lägg till reverse proxy",
@@ -1177,7 +1181,8 @@
     "routing": "Routing",
     "upstreams": "Upstreams",
     "logging": "Loggning och fel",
-    "limits": "Gränser"
+    "limits": "Gränser",
+    "tree": "Träd"
   },
   "dns": {
     "global_title": "DNS-utmaning",
@@ -1210,23 +1215,33 @@
     "site_override_help": "Den här webbplatsen använder en egen DNS-leverantör och egna inloggningsuppgifter. Att spara nya uppgifter startar om Caddy, eftersom Caddy bara läser dem vid start.",
     "site_wildcard_warning": "Jokerteckencertifikat kräver DNS-utmaningen. Ange en DNS-leverantör för den här webbplatsen, eller under Inställningar → DNS-utmaning."
   },
-  "modules": {
-    "title": "Caddy-moduler",
-    "loading": "Läser modulerna…",
-    "unknown": "Modulerna i den här Caddy kunde inte läsas (finns kommandot caddy?).",
-    "help": "Vad den installerade Caddy kan utöver ett standardbygge. En funktion som kräver en saknad modul misslyckas när Caddy läser in konfigurationen, så kontrollera här först.",
-    "cap_dns": "Leverantörer för DNS-utmaning",
-    "cap_layer4": "Lager 4 (TCP- och UDP-proxy)",
-    "cap_rate_limit": "Hastighetsbegränsning",
-    "cap_security": "caddy-security (inloggningsportal)",
-    "installed": "Installerad",
-    "missing": "Inte installerad",
-    "how_to_get": "Så skaffar du den",
-    "dns_providers": "Leverantörer: {{count}}",
-    "all": "Alla moduler ({{count}})",
-    "filter": "Filtrera moduler",
-    "no_match": "Ingen modul matchar.",
-    "non_standard": "Moduler som inte ingår i själva Caddy: {{count}}"
+  "tree": {
+    "aria_label": "Webbplatsens route- och handle-block",
+    "site": "Webbplats",
+    "kind_opaque": "Block",
+    "no_matcher": "alla förfrågningar",
+    "handlers": "Direktiv",
+    "unreadable": "Den här webbplatsens block kunde inte läsas som ett träd. Redigera dem i den råa redigeraren.",
+    "read_only_help": "Den här webbplatsens route- och handle-block, som de är skrivna. Skrivskyddat för tillfället: redigera dem i den råa redigeraren.",
+    "select": "Redigera",
+    "matcher_label": "Matchare",
+    "matcher_help": "En sökväg som /app/*, ett @namn, eller tomt för alla förfrågningar. En handle_path behöver en sökväg.",
+    "handler_label": "Direktiv",
+    "save": "Spara block",
+    "discard": "Förkasta ändringar",
+    "saved": "Webbplatsens block sparades.",
+    "block_not_found": "Webbplatsens block hittades inte i Caddyfile. Ladda om sidan och försök igen.",
+    "edit_help": "Välj ett block för att ändra dess matchare eller direktiv, eller lägg till, flytta och ta bort block. Bara det du ändrar skrivs om; block som formuläret inte känner till visas som de är skrivna, förblir skrivskyddade och kan flyttas eller tas bort.",
+    "move_up": "Flytta upp",
+    "move_down": "Flytta ned",
+    "remove": "Ta bort",
+    "remove_confirm": "Ta bort det här blocket och de {{count}} blocken i det?",
+    "remove_yes": "Ta bort",
+    "remove_no": "Behåll",
+    "add_kind": "Slag",
+    "add_inside": "Lägg till i det valda blocket",
+    "add_top": "Lägg till på översta nivån",
+    "add_matcher": "Matchare för det nya blocket"
   },
   "encode": {
     "heading": "Komprimering",
@@ -1271,5 +1286,23 @@
     "label": "Bind-adresser",
     "help": "Adresserna som den här webbplatsen lyssnar på, avgränsade med mellanslag, till exempel 127.0.0.1 ::1. Tomt lyssnar på alla adresser. En värd som är en enda IP-adress binder redan till den.",
     "invalid": "Ange IP-adresser eller värdnamn, utan port."
+  },
+  "modules": {
+    "title": "Caddy-moduler",
+    "loading": "Läser modulerna…",
+    "unknown": "Modulerna i den här Caddy kunde inte läsas (finns kommandot caddy?).",
+    "help": "Vad den installerade Caddy kan utöver ett standardbygge. En funktion som kräver en saknad modul misslyckas när Caddy läser in konfigurationen, så kontrollera här först.",
+    "cap_dns": "Leverantörer för DNS-utmaning",
+    "cap_layer4": "Lager 4 (TCP- och UDP-proxy)",
+    "cap_rate_limit": "Hastighetsbegränsning",
+    "cap_security": "caddy-security (inloggningsportal)",
+    "installed": "Installerad",
+    "missing": "Inte installerad",
+    "how_to_get": "Så skaffar du den",
+    "dns_providers": "Leverantörer: {{count}}",
+    "all": "Alla moduler ({{count}})",
+    "filter": "Filtrera moduler",
+    "no_match": "Ingen modul matchar.",
+    "non_standard": "Moduler som inte ingår i själva Caddy: {{count}}"
   }
 }
