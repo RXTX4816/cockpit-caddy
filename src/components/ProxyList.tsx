@@ -630,7 +630,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
           initialValues={{
             port: duplicating.namedServerKey ? "" : String(duplicating.externalPort),
             to: duplicating.redirect.to,
-            code: duplicating.redirect.code,
+            code: duplicating.redirect.html ? "html" : duplicating.redirect.code,
             label: duplicating.label ? t("proxies.copy_label", { label: duplicating.label }) : "",
           }}
           initialTabState={proxyTabStateFromEntry(duplicating)}

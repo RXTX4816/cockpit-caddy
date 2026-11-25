@@ -251,7 +251,11 @@
     "validation_port_range": "Le port doit être compris entre 1 et 65535",
     "validation_port_duplicate": "Le port {{port}} est déjà utilisé",
     "validation_to_required": "La cible de redirection est obligatoire",
-    "confirm_body": "Une redirection :{{port}} → {{to}} ({{code}}) va être créée et la configuration de Caddy rechargée."
+    "confirm_body": "Une redirection :{{port}} → {{to}} ({{code}}) va être créée et la configuration de Caddy rechargée.",
+    "code_html": "Page HTML",
+    "code_html_help": "Répond par une page qui redirige dans le navigateur au lieu d'un code d'état. Contrairement à une redirection par code d'état, elle conserve le #fragment de l'URL.",
+    "keep_path": "Conserver le chemin et la requête",
+    "keep_path_help": "Ajoute {uri} à la cible : /a?b=1 sur ce site mène à /a?b=1 sur la cible."
   },
   "basic_auth": {
     "heading": "Authentification HTTP Basic",

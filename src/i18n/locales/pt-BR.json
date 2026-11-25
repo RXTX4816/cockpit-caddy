@@ -251,7 +251,11 @@
     "validation_port_range": "A porta deve estar entre 1 e 65535",
     "validation_port_duplicate": "A porta {{port}} já está em uso",
     "validation_to_required": "O destino do redirecionamento é obrigatório",
-    "confirm_body": "Será criado um redirecionamento em :{{port}} → {{to}} ({{code}}) e a configuração do Caddy será recarregada."
+    "confirm_body": "Será criado um redirecionamento em :{{port}} → {{to}} ({{code}}) e a configuração do Caddy será recarregada.",
+    "code_html": "Página HTML",
+    "code_html_help": "Responde com uma página que redireciona no navegador, em vez de um código de status. Ao contrário de um redirecionamento por código de status, mantém o #fragmento da URL.",
+    "keep_path": "Manter o caminho e a consulta",
+    "keep_path_help": "Acrescenta {uri} ao destino, de modo que /a?b=1 neste site vá para /a?b=1 no destino."
   },
   "basic_auth": {
     "heading": "Autenticação HTTP Basic",

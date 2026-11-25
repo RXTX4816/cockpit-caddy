@@ -12,6 +12,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { CONF_HEADER, buildServerEntry, proxiesToCaddyfile, parseProxies, parseConfExternalAddresses, proxyAddressKeys, resolveInternalIssuerSettings, surgicallyWriteProxy, buildMigratedConfContent, migrateCaddyfile, parseConfTlsIssuerMap, parseConfTlsOnDemandMap, parseConfTlsMap, expandPlaceholderShorthands } from "./caddy";
 import { snippetsToConf, parseSnippets, parseConfSiteImports, parseConfSiteBlocks, separateSnippetSettings } from "./snippets";
+import { buildRedirectHandler } from "./caddyJsonModel";
 import type { CaddyConfig, CaddyServer, ProxyEntry } from "./types";
 
 function hasCaddy(): boolean {
@@ -839,6 +840,20 @@ describe.runIf(available || required)("caddy adapt accepts the basic_auth realm 
   it("reads no options from a plain basic_auth", () => {
     const bcrypt = [{ username: "bob", passwordHash: "$2a$14$HfqUPi8ecmhKr2br56YonenjapN.9FYZm5cv78bUrYuhZWGotTGWC" }];
     expect(readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, basicAuth: bcrypt })]))[0].basicAuthOptions).toBeUndefined();
+  });
+});
+
+describe.runIf(available || required)("caddy adapt accepts redir html (#338)", () => {
+  it("reads the html redirect back from a real adapt", () => {
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, targetPort: 0, redirect: { to: "https://example.com{uri}", code: 302, html: true } })]);
+    expect(readBack(conf)[0].redirect).toEqual({ to: "https://example.com{uri}", code: 302, html: true });
+  });
+
+  it("builds the very page Caddy builds", () => {
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, targetPort: 0, redirect: { to: "https://example.com{uri}", code: 302, html: true } })]);
+    const server = Object.values(adapt(conf).apps?.http?.servers ?? {})[0] as CaddyServer;
+    const caddys = (server.routes?.[0]?.handle?.[0]) as unknown as { body: string };
+    expect((buildRedirectHandler({ to: "https://example.com{uri}", code: 302, html: true }) as unknown as { body: string }).body).toBe(caddys.body);
   });
 });
 

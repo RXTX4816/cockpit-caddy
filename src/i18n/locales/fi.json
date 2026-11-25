@@ -251,7 +251,11 @@
     "validation_port_range": "Portin on oltava välillä 1–65535",
     "validation_port_duplicate": "Portti {{port}} on jo käytössä",
     "validation_to_required": "Uudelleenohjauksen kohde on pakollinen",
-    "confirm_body": "Luodaan uudelleenohjaus :{{port}} → {{to}} ({{code}}) ja Caddyn asetukset ladataan uudelleen."
+    "confirm_body": "Luodaan uudelleenohjaus :{{port}} → {{to}} ({{code}}) ja Caddyn asetukset ladataan uudelleen.",
+    "code_html": "HTML-sivu",
+    "code_html_help": "Vastaa sivulla, joka ohjaa selaimessa tilakoodin sijaan. Toisin kuin tilakoodiohjaus, se säilyttää URL-osoitteen #fragmentin.",
+    "keep_path": "Säilytä polku ja kysely",
+    "keep_path_help": "Lisää kohteeseen {uri}, joten /a?b=1 tällä sivustolla johtaa osoitteeseen /a?b=1 kohteessa."
   },
   "basic_auth": {
     "heading": "HTTP Basic -todennus",

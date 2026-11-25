@@ -251,7 +251,11 @@
     "validation_port_range": "端口必须在 1 到 65535 之间",
     "validation_port_duplicate": "端口 {{port}} 已被占用",
     "validation_to_required": "必须填写重定向目标",
-    "confirm_body": "将创建重定向 :{{port}} → {{to}}（{{code}}），并重新加载 Caddy 配置。"
+    "confirm_body": "将创建重定向 :{{port}} → {{to}}（{{code}}），并重新加载 Caddy 配置。",
+    "code_html": "HTML 页面",
+    "code_html_help": "返回一个在浏览器中跳转的页面,而不是状态码。与状态码重定向不同,它会保留 URL 的 #片段。",
+    "keep_path": "保留路径和查询",
+    "keep_path_help": "在目标后追加 {uri},因此本站的 /a?b=1 会跳转到目标的 /a?b=1。"
   },
   "basic_auth": {
     "heading": "HTTP Basic 认证",

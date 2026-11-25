@@ -272,6 +272,33 @@ export function buildRequestBodyHandler(maxSize: number): CaddyHandler {
 }
 
 
+/**
+ * What Caddy's `redir <to> html` becomes: a page with a script and a meta refresh, so the
+ * browser keeps the URL fragment. The body is Caddy's own, byte for byte, to match what a
+ * reload from the Caddyfile gives (checked with `caddy adapt` on 2.11.7).
+ */
+export function buildRedirectHandler(redirect: import("./types").RedirectConfig): CaddyHandler {
+  const to = caddyPlaceholderToJson(redirect.to);
+  if (redirect.html) {
+    const body = `<!DOCTYPE html>\n<html>\n\t<head>\n\t\t<title>Redirecting...</title>\n\t\t<script>window.location.replace(${JSON.stringify(to)});</script>\n`
+      + `\t\t<meta http-equiv="refresh" content="0; URL='${to}'">\n\t</head>\n\t<body>Redirecting to <a href="${to}">${to}</a>...</body>\n</html>\n`;
+    return { handler: "static_response", body, headers: { "Content-Type": ["text/html; charset=utf-8"] }, status_code: 200 } as CaddyHandler;
+  }
+  return { handler: "static_response", headers: { Location: [to] }, status_code: redirect.code } as CaddyHandler;
+}
+
+
+/** The target of an html-mode redirect handler, or undefined for any other handler. */
+export function parseHtmlRedirect(h: AnyHandler): string | undefined {
+  if (h.handler !== "static_response") return undefined;
+  const sr = h as { body?: string; headers?: Record<string, string[]> };
+  if (!sr.body?.includes("<title>Redirecting...</title>") || sr.headers?.["Location"]) return undefined;
+  const m = sr.body.match(/window\.location\.replace\(("(?:[^"\\]|\\.)*")\);/);
+  if (!m) return undefined;
+  try { return JSON.parse(m[1]) as string; } catch { return undefined; }
+}
+
+
 export function buildBasicAuthHandler(accounts: { username: string; passwordHash: string }[], options?: import("./types").BasicAuthOptions): CaddyHandler {
   return {
     handler: "authentication",
@@ -644,6 +671,27 @@ export function parseRouteToEntry(
       errorHandlers: parseErrorHandlers(server),
       tlsAdvanced: phpTlsPolicy ? parseTlsAdvanced(phpTlsPolicy, automationPolicies, tlsSubjectHosts(externalHost)[0]) : undefined,
       mtls: phpTlsPolicy ? parseMtls(phpTlsPolicy) : undefined,
+    };
+  }
+
+  // Detect the `redir ... html` form (#338): a page, not a Location header.
+  const htmlRedirect = effectiveHandles.map(parseHtmlRedirect).find(Boolean);
+  if (htmlRedirect) {
+    return {
+      id: routeId,
+      externalPort,
+      externalHost,
+      targetHost: "localhost",
+      targetPort: 0,
+      targetScheme: "http",
+      tls: false,
+      tlsSkipVerify: false,
+      serverKey: key,
+      namedServerKey,
+      redirect: { to: jsonPlaceholderToCaddy(htmlRedirect), code: 302, html: true },
+      matchers,
+      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, accessLog,
+      errorHandlers: parseErrorHandlers(server),
     };
   }
 
@@ -1564,11 +1612,7 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
   }
   if (proxy.redirect) {
     const route: CaddyRoute = {
-      handle: [{
-        handler: "static_response",
-        headers: { Location: [caddyPlaceholderToJson(proxy.redirect.to)] },
-        status_code: proxy.redirect.code,
-      }],
+      handle: [buildRedirectHandler(proxy.redirect)],
       terminal: isTerminal,
     };
     if (matchArr) route.match = matchArr;
@@ -2062,11 +2106,7 @@ export function buildRouteHandlesForEntry(proxy: ProxyEntry): CaddyHandler[] {
   if (proxy.redirect) {
     const result: CaddyHandler[] = [];
     if (handlePathRw) result.push(handlePathRw);
-    result.push({
-      handler: "static_response",
-      headers: { Location: [caddyPlaceholderToJson(proxy.redirect.to)] },
-      status_code: proxy.redirect.code,
-    });
+    result.push(buildRedirectHandler(proxy.redirect));
     return result;
   }
   if (proxy.fileServer) {

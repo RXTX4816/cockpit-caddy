@@ -251,7 +251,11 @@
     "validation_port_range": "連接埠必須介於 1 到 65535 之間",
     "validation_port_duplicate": "連接埠 {{port}} 已被使用",
     "validation_to_required": "必須填寫重新導向目標",
-    "confirm_body": "將建立重新導向 :{{port}} → {{to}}（{{code}}），並重新載入 Caddy 設定。"
+    "confirm_body": "將建立重新導向 :{{port}} → {{to}}（{{code}}），並重新載入 Caddy 設定。",
+    "code_html": "HTML 頁面",
+    "code_html_help": "回應一個在瀏覽器中跳轉的頁面,而不是狀態碼。與狀態碼重新導向不同,它會保留 URL 的 #片段。",
+    "keep_path": "保留路徑和查詢",
+    "keep_path_help": "在目標後附加 {uri},因此本站的 /a?b=1 會跳轉到目標的 /a?b=1。"
   },
   "basic_auth": {
     "heading": "HTTP Basic 驗證",

@@ -251,7 +251,11 @@
     "validation_port_range": "Port musi mieścić się w zakresie 1–65535",
     "validation_port_duplicate": "Port {{port}} jest już używany",
     "validation_to_required": "Cel przekierowania jest wymagany",
-    "confirm_body": "Zostanie utworzone przekierowanie :{{port}} → {{to}} ({{code}}), a konfiguracja Caddy zostanie przeładowana."
+    "confirm_body": "Zostanie utworzone przekierowanie :{{port}} → {{to}} ({{code}}), a konfiguracja Caddy zostanie przeładowana.",
+    "code_html": "Strona HTML",
+    "code_html_help": "Odpowiada stroną, która przekierowuje w przeglądarce, zamiast kodem stanu. W odróżnieniu od przekierowania kodem stanu zachowuje #fragment adresu URL.",
+    "keep_path": "Zachowaj ścieżkę i zapytanie",
+    "keep_path_help": "Dodaje {uri} do celu, więc /a?b=1 w tej witrynie prowadzi do /a?b=1 w celu."
   },
   "basic_auth": {
     "heading": "Uwierzytelnianie HTTP Basic",

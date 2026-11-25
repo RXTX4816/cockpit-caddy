@@ -251,7 +251,11 @@
     "validation_port_range": "Bağlantı noktası 1 ile 65535 arasında olmalıdır",
     "validation_port_duplicate": "{{port}} bağlantı noktası zaten kullanılıyor",
     "validation_to_required": "Yönlendirme hedefi zorunludur",
-    "confirm_body": ":{{port}} → {{to}} ({{code}}) yönlendirmesi oluşturulacak ve Caddy yapılandırması yeniden yüklenecek."
+    "confirm_body": ":{{port}} → {{to}} ({{code}}) yönlendirmesi oluşturulacak ve Caddy yapılandırması yeniden yüklenecek.",
+    "code_html": "HTML sayfası",
+    "code_html_help": "Durum kodu yerine tarayıcıda yönlendiren bir sayfayla yanıt verir. Durum koduyla yönlendirmenin aksine URL'nin #parçasını korur.",
+    "keep_path": "Yolu ve sorguyu koru",
+    "keep_path_help": "Hedefe {uri} ekler; böylece bu sitedeki /a?b=1, hedefteki /a?b=1 adresine gider."
   },
   "basic_auth": {
     "heading": "HTTP Basic Auth",

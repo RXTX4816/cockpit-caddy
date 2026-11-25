@@ -251,7 +251,11 @@
     "validation_port_range": "Port must be between 1 and 65535",
     "validation_port_duplicate": "Port {{port}} is already in use",
     "validation_to_required": "Redirect target is required",
-    "confirm_body": "This will create a redirect on :{{port}} → {{to}} ({{code}}) and reload Caddy's configuration."
+    "confirm_body": "This will create a redirect on :{{port}} → {{to}} ({{code}}) and reload Caddy's configuration.",
+    "code_html": "HTML page",
+    "code_html_help": "Answers with a page that redirects in the browser instead of a status code. Unlike a status code redirect, it keeps the #fragment of the URL.",
+    "keep_path": "Keep the path and query",
+    "keep_path_help": "Adds {uri} to the target, so /a?b=1 on this site goes to /a?b=1 on the target."
   },
   "basic_auth": {
     "heading": "HTTP Basic Auth",

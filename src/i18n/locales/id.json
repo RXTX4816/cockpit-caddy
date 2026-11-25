@@ -251,7 +251,11 @@
     "validation_port_range": "Port harus antara 1 dan 65535",
     "validation_port_duplicate": "Port {{port}} sudah digunakan",
     "validation_to_required": "Tujuan pengalihan wajib diisi",
-    "confirm_body": "Pengalihan :{{port}} → {{to}} ({{code}}) akan dibuat dan konfigurasi Caddy dimuat ulang."
+    "confirm_body": "Pengalihan :{{port}} → {{to}} ({{code}}) akan dibuat dan konfigurasi Caddy dimuat ulang.",
+    "code_html": "Halaman HTML",
+    "code_html_help": "Menjawab dengan halaman yang mengalihkan di browser, bukan kode status. Berbeda dengan pengalihan kode status, #fragment URL tetap dipertahankan.",
+    "keep_path": "Pertahankan path dan query",
+    "keep_path_help": "Menambahkan {uri} ke tujuan, sehingga /a?b=1 di situs ini menuju /a?b=1 di tujuan."
   },
   "basic_auth": {
     "heading": "HTTP Basic Auth",

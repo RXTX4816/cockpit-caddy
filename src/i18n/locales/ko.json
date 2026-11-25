@@ -251,7 +251,11 @@
     "validation_port_range": "포트는 1~65535 사이여야 합니다",
     "validation_port_duplicate": "포트 {{port}}은(는) 이미 사용 중입니다",
     "validation_to_required": "리디렉션 대상을 입력하세요",
-    "confirm_body": "리디렉션 :{{port}} → {{to}}({{code}})을(를) 만들고 Caddy 설정을 다시 불러옵니다."
+    "confirm_body": "리디렉션 :{{port}} → {{to}}({{code}})을(를) 만들고 Caddy 설정을 다시 불러옵니다.",
+    "code_html": "HTML 페이지",
+    "code_html_help": "상태 코드 대신 브라우저에서 리디렉션하는 페이지로 응답합니다. 상태 코드 리디렉션과 달리 URL의 #프래그먼트가 유지됩니다.",
+    "keep_path": "경로와 쿼리 유지",
+    "keep_path_help": "대상에 {uri}를 덧붙여, 이 사이트의 /a?b=1이 대상의 /a?b=1로 이동합니다."
   },
   "basic_auth": {
     "heading": "HTTP Basic 인증",

@@ -251,7 +251,11 @@
     "validation_port_range": "Port musí být v rozsahu 1–65535",
     "validation_port_duplicate": "Port {{port}} se už používá",
     "validation_to_required": "Cíl přesměrování je povinný",
-    "confirm_body": "Vytvoří se přesměrování :{{port}} → {{to}} ({{code}}) a konfigurace Caddy se znovu načte."
+    "confirm_body": "Vytvoří se přesměrování :{{port}} → {{to}} ({{code}}) a konfigurace Caddy se znovu načte.",
+    "code_html": "Stránka HTML",
+    "code_html_help": "Odpoví stránkou, která přesměruje v prohlížeči, místo stavového kódu. Na rozdíl od přesměrování stavovým kódem zachová #fragment adresy.",
+    "keep_path": "Zachovat cestu a dotaz",
+    "keep_path_help": "Připojí {uri} k cíli, takže /a?b=1 na tomto webu vede na /a?b=1 na cíli."
   },
   "basic_auth": {
     "heading": "HTTP Basic Auth",

@@ -251,7 +251,11 @@
     "validation_port_range": "يجب أن يكون المنفذ بين 1 و65535",
     "validation_port_duplicate": "المنفذ {{port}} مستخدم بالفعل",
     "validation_to_required": "هدف إعادة التوجيه مطلوب",
-    "confirm_body": "سيتم إنشاء إعادة توجيه :{{port}} → {{to}} ({{code}}) وإعادة تحميل إعدادات Caddy."
+    "confirm_body": "سيتم إنشاء إعادة توجيه :{{port}} → {{to}} ({{code}}) وإعادة تحميل إعدادات Caddy.",
+    "code_html": "صفحة HTML",
+    "code_html_help": "يردّ بصفحة تعيد التوجيه داخل المتصفح بدل رمز حالة. وعلى عكس إعادة التوجيه برمز حالة، يحتفظ بـ #fragment من العنوان.",
+    "keep_path": "الاحتفاظ بالمسار والاستعلام",
+    "keep_path_help": "يضيف {uri} إلى الهدف، فيذهب /a?b=1 على هذا الموقع إلى /a?b=1 على الهدف."
   },
   "basic_auth": {
     "heading": "مصادقة HTTP Basic",

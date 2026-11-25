@@ -251,7 +251,11 @@
     "validation_port_range": "Porten måste vara mellan 1 och 65535",
     "validation_port_duplicate": "Port {{port}} används redan",
     "validation_to_required": "Omdirigeringsmål krävs",
-    "confirm_body": "En omdirigering på :{{port}} → {{to}} ({{code}}) skapas och Caddys konfiguration läses in igen."
+    "confirm_body": "En omdirigering på :{{port}} → {{to}} ({{code}}) skapas och Caddys konfiguration läses in igen.",
+    "code_html": "HTML-sida",
+    "code_html_help": "Svarar med en sida som omdirigerar i webbläsaren i stället för en statuskod. Till skillnad från en omdirigering med statuskod behålls URL:ens #fragment.",
+    "keep_path": "Behåll sökväg och fråga",
+    "keep_path_help": "Lägger till {uri} på målet, så /a?b=1 på den här webbplatsen går till /a?b=1 på målet."
   },
   "basic_auth": {
     "heading": "HTTP Basic Auth",

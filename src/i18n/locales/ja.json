@@ -251,7 +251,11 @@
     "validation_port_range": "ポートは 1〜65535 の範囲で指定してください",
     "validation_port_duplicate": "ポート {{port}} はすでに使用されています",
     "validation_to_required": "リダイレクト先は必須です",
-    "confirm_body": "リダイレクト :{{port}} → {{to}}（{{code}}）を作成し、Caddy の設定を再読み込みします。"
+    "confirm_body": "リダイレクト :{{port}} → {{to}}（{{code}}）を作成し、Caddy の設定を再読み込みします。",
+    "code_html": "HTML ページ",
+    "code_html_help": "ステータスコードの代わりに、ブラウザー内でリダイレクトするページを返します。ステータスコードによるリダイレクトと違い、URL の #フラグメントが保持されます。",
+    "keep_path": "パスとクエリを維持",
+    "keep_path_help": "転送先に {uri} を付けます。このサイトの /a?b=1 は転送先の /a?b=1 に移動します。"
   },
   "basic_auth": {
     "heading": "HTTP Basic 認証",

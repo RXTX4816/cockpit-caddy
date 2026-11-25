@@ -251,7 +251,11 @@
     "validation_port_range": "הפורט חייב להיות בין 1 ל-65535",
     "validation_port_duplicate": "פורט {{port}} כבר בשימוש",
     "validation_to_required": "נדרש יעד הפניה",
-    "confirm_body": "תיווצר הפניה :{{port}} → {{to}} ‏({{code}}) ותצורת Caddy תיטען מחדש."
+    "confirm_body": "תיווצר הפניה :{{port}} → {{to}} ‏({{code}}) ותצורת Caddy תיטען מחדש.",
+    "code_html": "דף HTML",
+    "code_html_help": "משיב בדף שמפנה בתוך הדפדפן במקום בקוד סטטוס. בניגוד להפניה בקוד סטטוס, הוא שומר על ה-#fragment של הכתובת.",
+    "keep_path": "שמור את הנתיב והשאילתה",
+    "keep_path_help": "מוסיף את {uri} ליעד, כך ש-/a?b=1 באתר הזה מוביל ל-/a?b=1 ביעד."
   },
   "basic_auth": {
     "heading": "אימות HTTP Basic",

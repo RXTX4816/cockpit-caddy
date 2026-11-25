@@ -667,7 +667,7 @@ export function buildRouteHandlerLines(p: ProxyEntry, indent: string): string[] 
       lines.push(`${indent}respond ${statusCode}`);
     }
   } else if (p.redirect) {
-    lines.push(`${indent}redir ${p.redirect.to} ${p.redirect.code}`);
+    lines.push(`${indent}redir ${p.redirect.to} ${p.redirect.html ? "html" : p.redirect.code}`);
   } else if (p.fileServer) {
     if (p.compress) lines.push(`${indent}encode gzip zstd`);
     if (p.basicAuth?.length) {

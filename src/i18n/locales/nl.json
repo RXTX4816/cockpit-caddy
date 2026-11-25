@@ -251,7 +251,11 @@
     "validation_port_range": "De poort moet tussen 1 en 65535 liggen",
     "validation_port_duplicate": "Poort {{port}} is al in gebruik",
     "validation_to_required": "Omleidingsdoel is verplicht",
-    "confirm_body": "Er wordt een omleiding op :{{port}} → {{to}} ({{code}}) aangemaakt en de Caddy-configuratie wordt herladen."
+    "confirm_body": "Er wordt een omleiding op :{{port}} → {{to}} ({{code}}) aangemaakt en de Caddy-configuratie wordt herladen.",
+    "code_html": "HTML-pagina",
+    "code_html_help": "Antwoordt met een pagina die in de browser doorstuurt in plaats van met een statuscode. Anders dan een doorverwijzing met statuscode blijft het #fragment van de URL behouden.",
+    "keep_path": "Pad en query behouden",
+    "keep_path_help": "Voegt {uri} toe aan het doel, zodat /a?b=1 op deze site naar /a?b=1 op het doel gaat."
   },
   "basic_auth": {
     "heading": "HTTP Basic Auth",

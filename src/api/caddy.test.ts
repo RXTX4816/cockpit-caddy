@@ -52,7 +52,7 @@ import {
   CONF_D_IMPORT_LINE,
   parseConfTlsIssuerMap,
 } from "./caddy";
-import { buildBasicAuthHandler, parseBasicAuthOptionsJson } from "./caddyJsonModel";
+import { buildBasicAuthHandler, buildRedirectHandler, parseBasicAuthOptionsJson, parseHtmlRedirect } from "./caddyJsonModel";
 import { proxiesToCaddyfile } from "./caddy";
 import type { CaddyConfig, CaddyServer, ProxyEntry, RouteMatch, ServerDef } from "./types";
 
@@ -4668,6 +4668,35 @@ describe("basic_auth options in the generated config (#337)", () => {
     expect(proxiesToCaddyfile([{ ...base, basicAuthOptions: { algorithm: "argon2id", realm: "My area" } }])).toContain('basic_auth argon2id "My area" {');
     expect(proxiesToCaddyfile([{ ...base, basicAuthOptions: { realm: "My area" } }])).toContain('basic_auth bcrypt "My area" {');
     expect(proxiesToCaddyfile([base])).toMatch(/basic_auth \{/);
+  });
+});
+
+describe("redirect html mode (#338)", () => {
+  const htmlRedirect = proxy({ tls: false, redirect: { to: "https://example.com{uri}", code: 302, html: true } });
+
+  it("writes html instead of a status code", () => {
+    expect(proxyToBlock(htmlRedirect)).toContain("redir https://example.com{uri} html");
+    expect(proxyToBlock(proxy({ tls: false, redirect: { to: "https://example.com", code: 308 } }))).toContain("redir https://example.com 308");
+  });
+
+  it("builds the page Caddy builds and reads the target back", () => {
+    const h = buildRedirectHandler(htmlRedirect.redirect!) as unknown as { body: string; status_code: number; headers: Record<string, string[]> };
+    expect(h.status_code).toBe(200);
+    expect(h.headers["Content-Type"]).toEqual(["text/html; charset=utf-8"]);
+    expect(h.body).toContain('window.location.replace("https://example.com{http.request.uri}")');
+    expect(parseHtmlRedirect(h as never)).toBe("https://example.com{http.request.uri}");
+  });
+
+  it("does not take another static response for a redirect page", () => {
+    expect(parseHtmlRedirect({ handler: "static_response", body: "hello", status_code: 200 } as never)).toBeUndefined();
+    expect(parseHtmlRedirect({ handler: "static_response", headers: { Location: ["/x"] }, status_code: 302 } as never)).toBeUndefined();
+  });
+
+  it("round-trips through the JSON the plugin pushes", () => {
+    const server = buildServerEntry(htmlRedirect);
+    const config = { apps: { http: { servers: { srv0: server } } } } as unknown as CaddyConfig;
+    const [back] = parseProxies(config);
+    expect(back.redirect).toEqual({ to: "https://example.com{uri}", code: 302, html: true });
   });
 });
 

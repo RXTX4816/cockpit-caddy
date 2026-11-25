@@ -251,7 +251,11 @@
     "validation_port_range": "Portul trebuie să fie între 1 și 65535",
     "validation_port_duplicate": "Portul {{port}} este deja folosit",
     "validation_to_required": "Ținta redirecționării este obligatorie",
-    "confirm_body": "Va fi creată o redirecționare :{{port}} → {{to}} ({{code}}) și configurația Caddy va fi reîncărcată."
+    "confirm_body": "Va fi creată o redirecționare :{{port}} → {{to}} ({{code}}) și configurația Caddy va fi reîncărcată.",
+    "code_html": "Pagină HTML",
+    "code_html_help": "Răspunde cu o pagină care redirecționează în browser, în loc de un cod de stare. Spre deosebire de o redirecționare cu cod de stare, păstrează #fragmentul URL-ului.",
+    "keep_path": "Păstrează calea și interogarea",
+    "keep_path_help": "Adaugă {uri} la destinație, astfel încât /a?b=1 de pe acest site duce la /a?b=1 de pe destinație."
   },
   "basic_auth": {
     "heading": "Autentificare HTTP Basic",

@@ -284,6 +284,8 @@ export type RewriteConfig =
 export interface RedirectConfig {
   to: string;
   code: 301 | 302 | 307 | 308;
+  /** `redir <to> html`: answer with a page that redirects in the browser instead of a status code (#338). */
+  html?: boolean;
 }
 
 export interface FileServerConfig {

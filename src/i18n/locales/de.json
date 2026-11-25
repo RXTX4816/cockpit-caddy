@@ -251,7 +251,11 @@
     "validation_port_range": "Der Port muss zwischen 1 und 65535 liegen",
     "validation_port_duplicate": "Port {{port}} wird bereits verwendet",
     "validation_to_required": "Weiterleitungsziel ist erforderlich",
-    "confirm_body": "Damit wird eine Weiterleitung auf :{{port}} → {{to}} ({{code}}) angelegt und die Caddy-Konfiguration neu geladen."
+    "confirm_body": "Damit wird eine Weiterleitung auf :{{port}} → {{to}} ({{code}}) angelegt und die Caddy-Konfiguration neu geladen.",
+    "code_html": "HTML-Seite",
+    "code_html_help": "Antwortet mit einer Seite, die im Browser weiterleitet, statt mit einem Statuscode. Anders als eine Weiterleitung per Statuscode bleibt das #Fragment der URL erhalten.",
+    "keep_path": "Pfad und Query beibehalten",
+    "keep_path_help": "Hängt {uri} an das Ziel an, sodass /a?b=1 auf dieser Site zu /a?b=1 beim Ziel führt."
   },
   "basic_auth": {
     "heading": "HTTP Basic Auth",
