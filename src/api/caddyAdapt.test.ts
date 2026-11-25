@@ -818,3 +818,57 @@ describe.runIf(available || required)("client_ip matcher (#286)", () => {
     expect(readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, matchers })]))[0].matchers).toEqual(matchers);
   });
 });
+
+describe.runIf(available || required)("caddy adapt accepts header_down (#324)", () => {
+  it("reads back set, add, delete and replace from a real adapt", () => {
+    const ops = [
+      { op: "set" as const, name: "X-A", value: "1" },
+      { op: "add" as const, name: "X-B", value: "2" },
+      { op: "delete" as const, name: "Server" },
+      { op: "replace" as const, name: "Location", value: "http://backend", replacement: "https://front" },
+    ];
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, upstreamResponseHeaders: ops })]);
+    expect(readBack(conf)[0].upstreamResponseHeaders).toEqual(expect.arrayContaining(ops));
+    expect(readBack(conf)[0].upstreamResponseHeaders).toHaveLength(4);
+  });
+});
+
+describe.runIf(available || required)("caddy adapt accepts the streaming options (#325)", () => {
+  it("reads them back from a real adapt", () => {
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, flushInterval: "-1", streamTimeout: "24h", streamCloseDelay: "5m" })]);
+    const [p] = readBack(conf);
+    expect(p.flushInterval).toBe("-1");
+    expect(p.streamTimeout).toBe("24h");
+    expect(p.streamCloseDelay).toBe("5m");
+  });
+});
+
+describe.runIf(available || required)("caddy adapt accepts the remaining transport options (#327)", () => {
+  it("reads them back from a real adapt", () => {
+    const conf = proxiesToCaddyfile([entry({
+      tls: false, externalPort: 8080, targetScheme: "https", tlsServerName: "backend.internal", keepalive: "2m",
+      keepaliveIdleConns: 20, keepaliveIdleConnsPerHost: 4, httpVersions: ["h2c", "2"], readTimeout: "30s", writeTimeout: "10s",
+      extraUpstreams: [{ host: "b", port: 1 }], lbRetry: { retries: 2, retryMethods: ["GET", "HEAD"] },
+    })]);
+    const [p] = readBack(conf);
+    expect(p).toMatchObject({
+      tlsServerName: "backend.internal", keepalive: "2m", keepaliveIdleConns: 20, keepaliveIdleConnsPerHost: 4,
+      httpVersions: ["h2c", "2"], readTimeout: "30s", writeTimeout: "10s",
+    });
+    expect(p.lbRetry?.retryMethods).toEqual(["GET", "HEAD"]);
+  });
+
+  it("keepalive off", () => {
+    expect(readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, keepalive: "off" })]))[0].keepalive).toBe("off");
+  });
+});
+
+describe.runIf(available || required)("caddy adapt accepts dynamic upstreams (#326)", () => {
+  const srv = { type: "srv" as const, name: "_http._tcp.example.com", refresh: "1m", resolvers: ["1.1.1.1"], dialTimeout: "2s", dialFallbackDelay: "1s", gracePeriod: "5s" };
+  const a = { type: "a" as const, name: "backend.example.com", port: "8080", refresh: "30s", versions: "ipv6" as const };
+
+  it.each([[[srv]], [[a]], [[srv, a]], [[{ type: "srv" as const, name: "_x._tcp.example.com" }]]])("reads %j back from a real adapt", sources => {
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, dynamicUpstreams: sources })]);
+    expect(readBack(conf)[0].dynamicUpstreams).toEqual(sources);
+  });
+});

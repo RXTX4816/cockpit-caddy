@@ -10,6 +10,10 @@ export interface CaddyHttpTransport {
   };
   dial_timeout?: string;
   response_header_timeout?: string;
+  read_timeout?: string;
+  write_timeout?: string;
+  versions?: string[];
+  keep_alive?: { enabled?: boolean; idle_timeout?: string; max_idle_conns?: number; max_idle_conns_per_host?: number };
   [key: string]: unknown;
 }
 
@@ -264,10 +268,28 @@ export interface ProxyProtocolConfig {
   allow?: string[];
 }
 
+/** One `dynamic srv|a` source of a reverse_proxy (#326). Several sources are written as `dynamic multi`. */
+export interface DynamicUpstreamSource {
+  type: "srv" | "a";
+  /** The DNS name to look up: the SRV name, or the host of an A/AAAA lookup. */
+  name: string;
+  /** The port of an `a` lookup. */
+  port?: string;
+  refresh?: string;
+  resolvers?: string[];
+  dialTimeout?: string;
+  dialFallbackDelay?: string;
+  gracePeriod?: string;
+  /** Which address families an `a` lookup returns. */
+  versions?: "ipv4" | "ipv6";
+}
+
 export interface HeaderOperation {
-  op: "set" | "add" | "delete";
+  /** `replace` only exists for header_down: `value` is the regexp to find, `replacement` what it becomes. */
+  op: "set" | "add" | "delete" | "replace";
   name: string;
   value?: string;
+  replacement?: string;
 }
 
 export type RewriteConfig =
@@ -338,6 +360,8 @@ export interface LbPolicyArgs {
  *  health checks (#252) that take failing upstreams out of rotation. Retries apply even with
  *  a single upstream (they just re-dial it) — not gated on multiple upstreams like lb_policy. */
 export interface LbRetryConfig {
+  /** `lb_retry_match { method ... }`: retry only requests with these methods (#327). */
+  retryMethods?: string[];
   /** Max number of retries across all upstreams. */
   retries?: number;
   /** Total time budget across all retries (Go duration, e.g. "5s"). */
@@ -429,9 +453,29 @@ export interface ProxyEntry {
   rewrite?: RewriteConfig;
   requestHeaders?: HeaderOperation[];
   responseHeaders?: HeaderOperation[];
+  /** `header_down` of the reverse_proxy: changes the upstream's response headers before Caddy sends them on (#324). */
+  upstreamResponseHeaders?: HeaderOperation[];
   compress?: boolean;
   dialTimeout?: string;
   responseHeaderTimeout?: string;
+  /** transport http `tls_server_name`: the name to check the upstream's certificate for (#327). Only for https upstreams. */
+  tlsServerName?: string;
+  /** transport http `keepalive`: how long idle upstream connections are kept, or `off` (#327). */
+  keepalive?: string;
+  keepaliveIdleConns?: number;
+  keepaliveIdleConnsPerHost?: number;
+  /** transport http `versions`, e.g. `["h2c", "2"]` (#327). */
+  httpVersions?: string[];
+  readTimeout?: string;
+  writeTimeout?: string;
+  /** Upstreams found by DNS lookups, next to the static target, which Caddy falls back to when a lookup finds nothing (#326). */
+  dynamicUpstreams?: DynamicUpstreamSource[];
+  /** reverse_proxy `flush_interval`: a duration, or `-1` to flush after every write (#325). */
+  flushInterval?: string;
+  /** reverse_proxy `stream_timeout`: how long a websocket or other upgraded stream may live (#325). */
+  streamTimeout?: string;
+  /** reverse_proxy `stream_close_delay`: how long streams stay open after a config reload (#325). */
+  streamCloseDelay?: string;
   basicAuth?: { username: string; passwordHash: string }[];
   /** Additional upstreams beyond the primary targetHost:targetPort */
   extraUpstreams?: Array<{ host: string; port: number }>;

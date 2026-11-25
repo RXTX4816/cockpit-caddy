@@ -1636,6 +1636,197 @@ describe("proxyToBlock — requestHeaders", () => {
 // Request headers — JSON API (buildServerEntry + parseProxies round-trip)
 // ---------------------------------------------------------------------------
 
+describe("proxyToBlock — upstreamResponseHeaders (header_down, #324)", () => {
+  it("emits header_down set, add and delete inside the reverse_proxy block", () => {
+    const result = proxyToBlock(proxy({ upstreamResponseHeaders: [
+      { op: "set", name: "X-A", value: "1" },
+      { op: "add", name: "X-B", value: "2" },
+      { op: "delete", name: "Server" },
+    ] }));
+    expect(result).toContain("\t\theader_down X-A 1");
+    expect(result).toContain("\t\theader_down +X-B 2");
+    expect(result).toContain("\t\theader_down -Server");
+  });
+
+  it("emits the replace form with the search first and the replacement second", () => {
+    const result = proxyToBlock(proxy({ upstreamResponseHeaders: [{ op: "replace", name: "Location", value: "http://backend", replacement: "https://front" }] }));
+    expect(result).toContain("\t\theader_down Location http://backend https://front");
+  });
+});
+
+describe("buildServerEntry — upstreamResponseHeaders (#324)", () => {
+  it("emits headers.response with set, add, delete and replace", () => {
+    const server = buildServerEntry(proxy({ upstreamResponseHeaders: [
+      { op: "set", name: "X-A", value: "1" },
+      { op: "add", name: "X-B", value: "2" },
+      { op: "delete", name: "Server" },
+      { op: "replace", name: "Location", value: "http://backend", replacement: "https://front" },
+    ] }));
+    const rp = server.routes[0].handle[0] as { headers?: { response?: Record<string, unknown> } };
+    expect(rp.headers?.response).toEqual({
+      set: { "X-A": ["1"] },
+      add: { "X-B": ["2"] },
+      delete: ["Server"],
+      replace: { Location: [{ search_regexp: "http://backend", replace: "https://front" }] },
+    });
+  });
+
+  it("round-trips through parseProxies", () => {
+    const ops = [
+      { op: "set" as const, name: "X-A", value: "1" },
+      { op: "delete" as const, name: "Server" },
+      { op: "replace" as const, name: "Location", value: "http://backend", replacement: "https://front" },
+    ];
+    const [p] = parseProxies({ apps: { http: { servers: { srv0: buildServerEntry(proxy({ upstreamResponseHeaders: ops })) } } } });
+    expect(p.upstreamResponseHeaders).toEqual(expect.arrayContaining(ops));
+    expect(p.upstreamResponseHeaders).toHaveLength(3);
+  });
+});
+
+describe("streaming options (#325)", () => {
+  const streaming = { flushInterval: "-1", streamTimeout: "24h", streamCloseDelay: "5m" };
+
+  it("proxyToBlock emits flush_interval, stream_timeout and stream_close_delay in the reverse_proxy block", () => {
+    const result = proxyToBlock(proxy(streaming));
+    expect(result).toContain("\t\tflush_interval -1");
+    expect(result).toContain("\t\tstream_timeout 24h");
+    expect(result).toContain("\t\tstream_close_delay 5m");
+  });
+
+  it("emits nothing when none is set", () => {
+    expect(proxyToBlock(proxy())).not.toMatch(/flush_interval|stream_timeout|stream_close_delay/);
+  });
+
+  it("buildServerEntry puts them on the reverse_proxy handler, -1 as a number", () => {
+    const rp = buildServerEntry(proxy(streaming)).routes[0].handle[0] as Record<string, unknown>;
+    expect(rp.flush_interval).toBe(-1);
+    expect(rp.stream_timeout).toBe("24h");
+    expect(rp.stream_close_delay).toBe("5m");
+    const rp2 = buildServerEntry(proxy({ flushInterval: "100ms" })).routes[0].handle[0] as Record<string, unknown>;
+    expect(rp2.flush_interval).toBe("100ms");
+  });
+
+  it("parseProxies reads them back from Caddy's nanosecond numbers", () => {
+    const server = buildServerEntry(proxy());
+    Object.assign(server.routes[0].handle[0], { flush_interval: -1, stream_timeout: 86_400_000_000_000, stream_close_delay: 300_000_000_000 });
+    const [p] = parseProxies({ apps: { http: { servers: { srv0: server } } } });
+    expect(p.flushInterval).toBe("-1");
+    expect(p.streamTimeout).toBe("24h");
+    expect(p.streamCloseDelay).toBe("5m");
+  });
+});
+
+describe("remaining transport options (#327)", () => {
+  const t = {
+    targetScheme: "https" as const, tlsServerName: "backend.internal", keepalive: "2m", keepaliveIdleConns: 20, keepaliveIdleConnsPerHost: 4,
+    httpVersions: ["h2c", "2"], readTimeout: "30s", writeTimeout: "10s",
+  };
+
+  it("proxyToBlock writes them into the transport block", () => {
+    const result = proxyToBlock(proxy(t));
+    for (const line of [
+      "tls_server_name backend.internal", "keepalive 2m", "keepalive_idle_conns 20", "keepalive_idle_conns_per_host 4",
+      "versions h2c 2", "read_timeout 30s", "write_timeout 10s",
+    ]) expect(result).toContain(`\t\t\t${line}`);
+  });
+
+  it("keepalive off turns keep-alive off", () => {
+    expect(proxyToBlock(proxy({ keepalive: "off" }))).toContain("\t\t\tkeepalive off");
+  });
+
+  it("lb_retry_match writes the methods to retry", () => {
+    const result = proxyToBlock(proxy({ extraUpstreams: [{ host: "b", port: 1 }], lbRetry: { retries: 2, retryMethods: ["GET", "HEAD"] } }));
+    expect(result).toContain("\t\tlb_retry_match {\n\t\t\tmethod GET HEAD\n\t\t}");
+  });
+
+  it("buildServerEntry puts them into the transport and load_balancing", () => {
+    const rp = buildServerEntry(proxy({ ...t, extraUpstreams: [{ host: "b", port: 1 }], lbRetry: { retryMethods: ["GET"] } })).routes[0].handle[0] as unknown as {
+      transport: Record<string, unknown>; load_balancing: Record<string, unknown>;
+    };
+    expect(rp.transport).toMatchObject({
+      tls: { server_name: "backend.internal" },
+      keep_alive: { idle_timeout: "2m", max_idle_conns: 20, max_idle_conns_per_host: 4 },
+      versions: ["h2c", "2"], read_timeout: "30s", write_timeout: "10s",
+    });
+    expect(rp.load_balancing.retry_match).toEqual([{ method: ["GET"] }]);
+  });
+
+  it("keepalive off is keep_alive.enabled false", () => {
+    const rp = buildServerEntry(proxy({ keepalive: "off" })).routes[0].handle[0] as { transport: Record<string, unknown> };
+    expect(rp.transport.keep_alive).toEqual({ enabled: false });
+  });
+
+  it("parseProxies reads them back from Caddy's nanosecond numbers", () => {
+    const server = buildServerEntry(proxy({ targetScheme: "https", extraUpstreams: [{ host: "b", port: 1 }] }));
+    const rp = server.routes[0].handle[0] as Record<string, unknown>;
+    rp.transport = {
+      protocol: "http", tls: { server_name: "backend.internal" },
+      keep_alive: { idle_timeout: 120_000_000_000, max_idle_conns: 20, max_idle_conns_per_host: 4 },
+      versions: ["h2c", "2"], read_timeout: 30_000_000_000, write_timeout: 10_000_000_000,
+    };
+    rp.load_balancing = { retry_match: [{ method: ["GET", "HEAD"] }] };
+    const [p] = parseProxies({ apps: { http: { servers: { srv0: server } } } });
+    expect(p).toMatchObject({
+      tlsServerName: "backend.internal", keepalive: "2m", keepaliveIdleConns: 20, keepaliveIdleConnsPerHost: 4,
+      httpVersions: ["h2c", "2"], readTimeout: "30s", writeTimeout: "10s",
+    });
+    expect(p.lbRetry?.retryMethods).toEqual(["GET", "HEAD"]);
+  });
+
+  it("parseProxies reads keep_alive.enabled false as off", () => {
+    const server = buildServerEntry(proxy());
+    (server.routes[0].handle[0] as Record<string, unknown>).transport = { protocol: "http", keep_alive: { enabled: false } };
+    expect(parseProxies({ apps: { http: { servers: { srv0: server } } } })[0].keepalive).toBe("off");
+  });
+});
+
+describe("dynamic upstreams (#326)", () => {
+  const srv = { type: "srv" as const, name: "_http._tcp.example.com", refresh: "1m", resolvers: ["1.1.1.1"], dialTimeout: "2s", dialFallbackDelay: "1s", gracePeriod: "5s" };
+  const a = { type: "a" as const, name: "backend.example.com", port: "8080", refresh: "30s", versions: "ipv4" as const };
+
+  it("a single srv source is written as dynamic srv with its options", () => {
+    const result = proxyToBlock(proxy({ dynamicUpstreams: [srv] }));
+    expect(result).toContain("\t\tdynamic srv _http._tcp.example.com {");
+    for (const line of ["refresh 1m", "resolvers 1.1.1.1", "dial_timeout 2s", "dial_fallback_delay 1s", "grace_period 5s"])
+      expect(result).toContain(`\t\t\t${line}`);
+  });
+
+  it("an a source takes the port and a version", () => {
+    const result = proxyToBlock(proxy({ dynamicUpstreams: [a] }));
+    expect(result).toContain("\t\tdynamic a backend.example.com 8080 {");
+    expect(result).toContain("\t\t\tversions ipv4");
+  });
+
+  it("a source without options has no braces", () => {
+    expect(proxyToBlock(proxy({ dynamicUpstreams: [{ type: "srv", name: "_x._tcp.example.com" }] }))).toContain("\t\tdynamic srv _x._tcp.example.com\n");
+  });
+
+  it("several sources are written as dynamic multi", () => {
+    const result = proxyToBlock(proxy({ dynamicUpstreams: [srv, a] }));
+    expect(result).toContain("\t\tdynamic multi {");
+    expect(result).toContain("\t\t\tsrv _http._tcp.example.com {");
+    expect(result).toContain("\t\t\ta backend.example.com 8080 {");
+  });
+
+  it("buildServerEntry writes dynamic_upstreams for one source and multi for several", () => {
+    const one = buildServerEntry(proxy({ dynamicUpstreams: [srv] })).routes[0].handle[0] as Record<string, unknown>;
+    expect(one.dynamic_upstreams).toEqual({
+      source: "srv", name: "_http._tcp.example.com", refresh: "1m", resolver: { addresses: ["1.1.1.1"] },
+      dial_timeout: "2s", dial_fallback_delay: "1s", grace_period: "5s",
+    });
+    const many = buildServerEntry(proxy({ dynamicUpstreams: [srv, a] })).routes[0].handle[0] as Record<string, unknown>;
+    expect((many.dynamic_upstreams as { source: string; sources: unknown[] }).source).toBe("multi");
+    expect((many.dynamic_upstreams as { sources: unknown[] }).sources).toHaveLength(2);
+  });
+
+  it("parseProxies reads one source and multi back", () => {
+    for (const sources of [[srv], [srv, a]]) {
+      const [p] = parseProxies({ apps: { http: { servers: { srv0: buildServerEntry(proxy({ dynamicUpstreams: sources })) } } } });
+      expect(p.dynamicUpstreams).toEqual(sources);
+    }
+  });
+});
+
 describe("buildServerEntry — requestHeaders", () => {
   it("emits headers.request.set in reverse_proxy handler", () => {
     const server = buildServerEntry(proxy({ requestHeaders: [{ op: "set", name: "X-Real-IP", value: "{remote_host}" }] }));

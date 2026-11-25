@@ -4,11 +4,12 @@ import { accessLogConfigToValues } from "./AccessLogSection";
 import { lbRetryConfigToValues } from "./LbRetrySection";
 import { tlsConfigToValues } from "./TlsSection";
 import { emptyLbArgs } from "./UpstreamsSection";
+import { TRANSPORT_EMPTY } from "./TransportSection";
 
 const base: ProxyTabValues = {
   basicAuth: [], forwardAuth: undefined, forwardAuthError: null, tlsValues: tlsConfigToValues(undefined, undefined),
-  matchers: undefined, rewrite: undefined, requestHeaders: undefined, responseHeaders: undefined, isNamedRoute: false,
-  extraUpstreams: [], lbPolicy: "", lbArgs: emptyLbArgs(), lbRetry: lbRetryConfigToValues(undefined), transport: { dialTimeout: "", responseHeaderTimeout: "" },
+  matchers: undefined, rewrite: undefined, requestHeaders: undefined, responseHeaders: undefined, upstreamResponseHeaders: undefined, isNamedRoute: false,
+  extraUpstreams: [], dynamicUpstreams: [], lbPolicy: "", lbArgs: emptyLbArgs(), lbRetry: lbRetryConfigToValues(undefined), transport: TRANSPORT_EMPTY,
   accessLog: accessLogConfigToValues(undefined), errorHandlers: [],
   serverTimeouts: { readTimeout: "", readHeaderTimeout: "", writeTimeout: "", idleTimeout: "", maxHeaderBytes: "", disableHttp3: false },
   requestBodyMaxSize: "",
@@ -25,7 +26,9 @@ describe("proxyTabFlags", () => {
   it("each setting marks only its own tab", () => {
     expect(dots({ basicAuth: [{ username: "a", password: "b" }] })).toEqual(["security"]);
     expect(dots({ matchers: { not: { path: ["/x"] } } })).toEqual(["routing"]);
-    expect(dots({ transport: { dialTimeout: "5s", responseHeaderTimeout: "" } })).toEqual(["upstreams"]);
+    expect(dots({ upstreamResponseHeaders: [{ op: "delete", name: "Server" }] })).toEqual(["routing"]);
+    expect(dots({ transport: { ...TRANSPORT_EMPTY, dialTimeout: "5s" } })).toEqual(["upstreams"]);
+    expect(dots({ transport: { ...TRANSPORT_EMPTY, flushInterval: "-1" } })).toEqual(["upstreams"]);
     expect(dots({ errorHandlers: [{ matchType: "all", type: "respond", body: "x" }] })).toEqual(["logging"]);
   });
 

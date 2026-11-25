@@ -267,7 +267,20 @@
     "section_title": "Limity czasu upstreamu (opcjonalnie)",
     "dial_timeout": "Limit czasu połączenia",
     "response_header_timeout": "Limit czasu nagłówków odpowiedzi",
-    "defaults_help": "Zostaw pole puste, aby użyć domyślnej wartości Caddy (pokazanej na szaro). Limit czasu nagłówków odpowiedzi przerywa long polling i wolne odpowiedzi."
+    "defaults_help": "Zostaw pole puste, aby użyć domyślnej wartości Caddy (pokazanej na szaro). Limit czasu nagłówków odpowiedzi przerywa long polling i wolne odpowiedzi.",
+    "streaming_help": "Streaming (websockety, strumienie zdarzeń): zostaw puste, aby użyć domyślnych ustawień Caddy.",
+    "flush_interval": "Interwał opróżniania",
+    "flush_interval_placeholder": "-1 wysyła każdy zapis od razu",
+    "stream_timeout": "Limit czasu strumienia",
+    "stream_close_delay": "Opóźnienie zamknięcia strumienia",
+    "connection_title": "Połączenie z upstreamem",
+    "tls_server_name": "Nazwa serwera TLS",
+    "versions": "Wersje HTTP",
+    "read_timeout": "Limit czasu odczytu",
+    "write_timeout": "Limit czasu zapisu",
+    "keepalive": "Keep-alive",
+    "keepalive_idle_conns": "Zachowywane nieaktywne połączenia",
+    "keepalive_idle_conns_per_host": "Zachowywane nieaktywne połączenia na hosta"
   },
   "server_timeouts": {
     "heading": "Limity czasu i ograniczenia serwera",
@@ -386,7 +399,9 @@
     "validation_max_fails": "Maks. błędów musi wynosić co najmniej 1",
     "validation_needs_health_uri": "Interwał, limit czasu i oczekiwany status wymagają ścieżki kontroli",
     "validation_health_uri": "Ścieżka kontroli stanu musi zaczynać się od /",
-    "validation_health_status": "Podaj kod jak 200 lub klasę jak 2xx"
+    "validation_health_status": "Podaj kod jak 200 lub klasę jak 2xx",
+    "retry_methods": "Ponawiaj tylko te metody",
+    "validation_methods": "Metody to słowa takie jak GET lub HEAD, oddzielone spacjami."
   },
   "response_headers": {
     "heading": "Nagłówki odpowiedzi",
@@ -413,7 +428,12 @@
     "field_name": "Nazwa nagłówka",
     "field_value": "Wartość",
     "add_button": "Dodaj",
-    "presets_label": "Gotowe ustawienia"
+    "presets_label": "Gotowe ustawienia",
+    "down_heading": "Nagłówki odpowiedzi z upstreamu",
+    "down_section_title": "Nagłówki odpowiedzi z upstreamu (opcjonalne)",
+    "op_replace": "Zamień",
+    "field_search": "Szukana wartość nagłówka (wyrażenie regularne)",
+    "field_replacement": "Zamiennik"
   },
   "edit_redirect": {
     "title": "Edytuj przekierowanie — :{{port}}",
@@ -1054,5 +1074,25 @@
     "site_inherit_help": "Używa dostawcy DNS ustawionego w Ustawienia → Wyzwanie DNS albo wyzwania HTTP, jeśli żaden nie jest ustawiony.",
     "site_override_help": "Ta witryna używa własnego dostawcy DNS i danych logowania. Zapisanie nowych danych uruchamia ponownie Caddy, bo odczytuje je tylko przy starcie.",
     "site_wildcard_warning": "Certyfikaty wieloznaczne wymagają wyzwania DNS. Ustaw dostawcę DNS dla tej witryny albo w Ustawienia → Wyzwanie DNS."
+  },
+  "dynamic_upstreams": {
+    "heading": "Dynamiczne upstreamy",
+    "section_title": "Dynamiczne upstreamy (zaawansowane, opcjonalne)",
+    "help": "Upstreamy są wyszukiwane w DNS. Cel powyżej to zapasowy wariant, gdy wyszukiwanie nic nie znajdzie. Wiele źródeł jest łączonych.",
+    "add_button": "Dodaj źródło DNS",
+    "type": "Typ wyszukiwania",
+    "name_srv": "Nazwa SRV",
+    "name_a": "Nazwa hosta",
+    "refresh": "Interwał odświeżania",
+    "resolvers": "Resolwery DNS",
+    "dial_fallback_delay": "Opóźnienie połączenia zapasowego",
+    "grace_period": "Okres karencji",
+    "versions": "Rodziny adresów",
+    "versions_both": "IPv4 i IPv6",
+    "validation_name": "Źródło z ustawieniami wymaga nazwy.",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

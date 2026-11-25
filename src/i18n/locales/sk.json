@@ -267,7 +267,20 @@
     "section_title": "Časové limity upstreamu (voliteľné)",
     "dial_timeout": "Časový limit pripojenia",
     "response_header_timeout": "Časový limit hlavičiek odpovede",
-    "defaults_help": "Nechajte pole prázdne a použije sa predvolená hodnota Caddy (zobrazená sivo). Časový limit hlavičiek odpovede preruší long polling a pomalé odpovede."
+    "defaults_help": "Nechajte pole prázdne a použije sa predvolená hodnota Caddy (zobrazená sivo). Časový limit hlavičiek odpovede preruší long polling a pomalé odpovede.",
+    "streaming_help": "Streamovanie (websockety, prúdy udalostí): nechajte prázdne pre predvolené hodnoty Caddy.",
+    "flush_interval": "Interval vyprázdnenia",
+    "flush_interval_placeholder": "-1 odošle každý zápis hneď",
+    "stream_timeout": "Časový limit streamu",
+    "stream_close_delay": "Oneskorenie zatvorenia streamu",
+    "connection_title": "Spojenie s upstreamom",
+    "tls_server_name": "Názov servera TLS",
+    "versions": "Verzie HTTP",
+    "read_timeout": "Časový limit čítania",
+    "write_timeout": "Časový limit zápisu",
+    "keepalive": "Keep-alive",
+    "keepalive_idle_conns": "Uchovávané nečinné spojenia",
+    "keepalive_idle_conns_per_host": "Uchovávané nečinné spojenia na hostiteľa"
   },
   "server_timeouts": {
     "heading": "Časové limity a obmedzenia servera",
@@ -386,7 +399,9 @@
     "validation_max_fails": "Max. zlyhaní musí byť 1 alebo viac",
     "validation_needs_health_uri": "Interval, časový limit a očakávaný stav vyžadujú cestu kontroly stavu",
     "validation_health_uri": "Cesta kontroly stavu musí začínať znakom /",
-    "validation_health_status": "Zadajte kód ako 200 alebo triedu ako 2xx"
+    "validation_health_status": "Zadajte kód ako 200 alebo triedu ako 2xx",
+    "retry_methods": "Opakovať len tieto metódy",
+    "validation_methods": "Metódy sú slová ako GET alebo HEAD oddelené medzerami."
   },
   "response_headers": {
     "heading": "Hlavičky odpovede",
@@ -413,7 +428,12 @@
     "field_name": "Názov hlavičky",
     "field_value": "Hodnota",
     "add_button": "Pridať",
-    "presets_label": "Predvoľby"
+    "presets_label": "Predvoľby",
+    "down_heading": "Hlavičky odpovede z upstreamu",
+    "down_section_title": "Hlavičky odpovede z upstreamu (voliteľné)",
+    "op_replace": "Nahradiť",
+    "field_search": "Hľadaná hodnota hlavičky (regulárny výraz)",
+    "field_replacement": "Náhrada"
   },
   "edit_redirect": {
     "title": "Upraviť presmerovanie — :{{port}}",
@@ -1054,5 +1074,25 @@
     "site_inherit_help": "Použije poskytovateľa DNS nastaveného v Nastavenia → Výzva DNS, alebo výzvu HTTP, ak nie je nastavený žiadny.",
     "site_override_help": "Táto stránka používa vlastného poskytovateľa DNS a prihlasovacie údaje. Uloženie nových údajov reštartuje Caddy, pretože ich načíta len pri štarte.",
     "site_wildcard_warning": "Certifikáty so zástupným znakom vyžadujú výzvu DNS. Nastavte poskytovateľa DNS pre túto stránku alebo v Nastavenia → Výzva DNS."
+  },
+  "dynamic_upstreams": {
+    "heading": "Dynamické upstreamy",
+    "section_title": "Dynamické upstreamy (pokročilé, voliteľné)",
+    "help": "Upstreamy sa zisťujú cez DNS. Cieľ vyššie je záloha, keď dotaz nič nenájde. Viac zdrojov sa spojí.",
+    "add_button": "Pridať zdroj DNS",
+    "type": "Typ dopytu",
+    "name_srv": "Názov SRV",
+    "name_a": "Názov hostiteľa",
+    "refresh": "Interval obnovenia",
+    "resolvers": "DNS resolvery",
+    "dial_fallback_delay": "Oneskorenie záložného pripojenia",
+    "grace_period": "Odkladová lehota",
+    "versions": "Rodiny adries",
+    "versions_both": "IPv4 a IPv6",
+    "validation_name": "Zdroj s nastaveniami potrebuje názov.",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }
