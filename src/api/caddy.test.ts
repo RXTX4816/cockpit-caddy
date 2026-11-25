@@ -54,7 +54,7 @@ import {
 } from "./caddy";
 import { parseSiteAcmeSettings, applyServerExtras, parseServerExtras, parseMatcherJson, isHostOnlyMatcher, buildRewriteHandler, parseRewriteFromHandle, patchServer, buildFilterEncoder, parseLogEncoder, PRIVATE_RANGES, buildForwardAuthHandler, extractForwardAuthFromProxy, forwardAuthResponseRoutes, buildBasicAuthHandler, buildEncodeHandler, buildFileServerHandlers, buildFileServerJson, parseFileServerOptions, parseTemplatesJson, buildRedirectHandler, parseEncodeOptionsJson, parseBasicAuthOptionsJson, parseHtmlRedirect } from "./caddyJsonModel";
 import { proxiesToCaddyfile } from "./caddy";
-import { buildForwardAuthCaddyLines, buildMatcherCaddyLines, buildPhpFastcgiLines, buildRewriteCaddyLines, buildMatcherJson, hasAnyMatcher, siteBindAddresses } from "./siteBlocks";
+import { buildForwardAuthCaddyLines, buildMatcherCaddyLines, buildPhpFastcgiLines, buildRewriteCaddyLines, buildMatcherJson, hasAnyMatcher, patchRawBlock, siteBindAddresses } from "./siteBlocks";
 import { buildLogCaddyLines } from "./globalOptions";
 import type { CaddyConfig, CaddyReverseProxyHandler, CaddyServer, ProxyEntry, RouteMatch, ServerDef } from "./types";
 
@@ -4907,6 +4907,12 @@ describe("bind next to a host name (#323)", () => {
   it("keeps one host name with a bind through the JSON push (#360)", () => {
     const [back] = parseProxies({ apps: { http: { servers: { srv0: buildServerEntry(site({ bind: ["10.0.0.5"] })) } } } } as unknown as CaddyConfig);
     expect(back).toMatchObject({ externalHost: "example.com", bind: ["10.0.0.5"] });
+  });
+
+  it("removes the bind line when the field is cleared (#360)", () => {
+    const raw = "example.com {\n\tbind 10.0.0.5\n\treverse_proxy localhost:9000\n}";
+    expect(patchRawBlock(raw, site({ bind: undefined }))).not.toMatch(/\bbind\b/);
+    expect(patchRawBlock(raw, site({ bind: ["10.0.0.6"] }))).toContain("example.com {\n\tbind 10.0.0.6\n");
   });
 
   it("keeps an IP host as a host, and several binds without a name as binds", () => {

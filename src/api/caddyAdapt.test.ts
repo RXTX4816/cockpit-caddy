@@ -10,7 +10,7 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync, writeFileSync, rmSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { CONF_HEADER, parseConfAccessLogMap, mergeProxy, buildServerEntry, proxiesToCaddyfile, parseProxies, parseConfExternalAddresses, proxyAddressKeys, resolveInternalIssuerSettings, surgicallyWriteProxy, buildMigratedConfContent, migrateCaddyfile, parseConfTlsIssuerMap, parseConfTlsOnDemandMap, parseConfTlsMap, expandPlaceholderShorthands } from "./caddy";
+import { CONF_HEADER, parseConfAccessLogMap, mergeProxy, buildServerEntry, proxiesToCaddyfile, parseProxies, parseConfExternalAddresses, proxyAddressKeys, resolveInternalIssuerSettings, surgicallyWriteProxy, surgicallyEditProxy, buildMigratedConfContent, migrateCaddyfile, parseConfTlsIssuerMap, parseConfTlsOnDemandMap, parseConfTlsMap, expandPlaceholderShorthands } from "./caddy";
 import { snippetsToConf, parseSnippets, parseConfSiteImports, parseConfSiteBlocks, separateSnippetSettings } from "./snippets";
 import { buildEncodeHandler, buildFilterEncoder, buildRedirectHandler, buildRewriteHandler, parseServerExtras } from "./caddyJsonModel";
 import { buildGlobalOptionsPatch, buildServerExtrasLines } from "./globalOptions";
@@ -905,6 +905,36 @@ describe.runIf(available || required)("caddy adapt accepts bind, several hosts a
     const fromPush = parseProxies({ apps: { http: { servers: { srv0: buildServerEntry(e) } } } } as CaddyConfig)[0];
     expect(fromPush.externalHost).toBe(fields.externalHost);
     expect(fromPush.bind).toEqual(fields.bind);
+  });
+
+  it("drops a hand-written bind when the field is cleared (#360)", () => {
+    const conf = `${CONF_HEADER}\n\nhttp://app.example.com:8443 {\n\tbind 10.0.0.9\n\treverse_proxy localhost:8000\n}\n`;
+    const p = readBack(conf)[0];
+    expect(p.bind).toEqual(["10.0.0.9"]);
+    const cleared = surgicallyWriteProxy(conf, { ...p, bind: undefined });
+    expect(cleared).not.toMatch(/\bbind\b/);
+    expect((Object.values(adapt(cleared).apps?.http?.servers ?? {})[0] as CaddyServer).listen).toEqual([":8443"]);
+  });
+
+  it("saving a nested site without changes leaves its text byte-identical (#349)", () => {
+    const site = [
+      "app.example.com {",
+      "\t# the API first",
+      "\troute {",
+      "\t\theader X-A 1",
+      "\t\treverse_proxy localhost:9001",
+      "\t}",
+      "\ttls internal",
+      "\tbind 10.0.0.5",
+      "\thandle /api/* {",
+      "\t\treverse_proxy localhost:9002",
+      "\t}",
+      "}",
+    ].join("\n");
+    const conf = `${CONF_HEADER}\n\n${site}\n`;
+    const [p] = readBack(conf);
+    expect(p).toMatchObject({ externalHost: "app.example.com", bind: ["10.0.0.5"], tlsIssuer: "internal" });
+    expect(surgicallyEditProxy(conf, p, p)).toBe(conf);
   });
 
   it("keeps a wildcard host and several hosts as they are", () => {

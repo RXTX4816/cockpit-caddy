@@ -896,21 +896,43 @@ export function patchRawBlock(raw: string, proxy: ProxyEntry): string {
   // A site with `route` or nested `handle` blocks (#348) is edited in its Tree tab or the raw editor:
   // what the form owns here is the site's address, binds, imports and TLS, and the blocks stay as written.
   const nested = hasNestedBlocks(raw);
-  // The directives the plugin writes again below are dropped here, each with its whole block.
-  const rewritten = nested ? ["tls"] : ["tls", "encode", "root", "templates", "file_server", "header", "basic_auth", "forward_auth", "reverse_proxy", "php_fastcgi"];
+  // The directives the plugin writes again below are dropped here, each with its whole block
+  // (tls, bind and snippet imports on every site, and these).
+  const rewritten = nested ? [] : ["encode", "root", "templates", "file_server", "header", "basic_auth", "forward_auth", "reverse_proxy", "php_fastcgi"];
   // try_files belongs to the static and PHP forms (#262); on any other site it's the user's.
   if ((proxy.fileServer || proxy.phpFastcgi) && !nested) rewritten.push("try_files");
 
+  // Where the block had its snippet imports, binds and tls: they are written again in that place,
+  // so a save that changes none of them leaves the text as it was (#349).
+  // Each place is [index in kept, how many places were found before it], which orders two at one index.
+  let importSlot: [number, number] | undefined;
+  let bindSlot: [number, number] | undefined;
+  let tlsSlot: [number, number] | undefined;
+  let found = 0;
+  const here = (): [number, number] => [kept.length, found++];
   while (i < closingIdx) {
     const line = lines[i];
     const trimmed = line.trim();
 
+    if (nestDepth === 0 && isDirective(trimmed, "tls")) {
+      tlsSlot ??= here();
+      skipDirective();
+      continue;
+    }
     if (nestDepth === 0 && rewritten.some(name => isDirective(trimmed, name))) {
       skipDirective();
       continue;
     }
     // Snippet imports (#288) follow proxy.imports; file and glob imports are the user's and stay.
     if (nestDepth === 0 && isSnippetImportLine(trimmed)) {
+      importSlot ??= here();
+      i++;
+      continue;
+    }
+    // The form shows every bind the site has (#323), its own and hand-written ones, so it owns the
+    // bind line: a cleared field removes it.
+    if (nestDepth === 0 && isDirective(trimmed, "bind")) {
+      bindSlot ??= here();
       i++;
       continue;
     }
@@ -920,18 +942,17 @@ export function patchRawBlock(raw: string, proxy: ProxyEntry): string {
     i++;
   }
 
-  // An IP host binds that IP (#254). A `bind` that only repeats the block's old IP header is the
-  // one the plugin wrote, so it follows the host field; any other bind is the user's and stays.
-  const oldHeader = parseSiteAddresses(lines[0].trim().replace(/\{$/, "").trim());
-  const oldIp = oldHeader?.length === 1 && oldHeader[0].host && isIpAddress(oldHeader[0].host) ? oldHeader[0].host : undefined;
-  const isOwnBind = (l: string) => !!oldIp && l.trim() === `bind ${oldIp}`;
-  for (let k = kept.length - 1; k >= 1; k--) if (isOwnBind(kept[k])) kept.splice(k, 1);
-  // A bind chosen in the form (#323) replaces the block's own; without one a hand-written bind stays.
-  if (proxy.bind?.length) for (let k = kept.length - 1; k >= 1; k--) if (/^\s*bind(\s|$)/.test(kept[k])) kept.splice(k, 1);
-  if (!kept.slice(1).some(l => /^\s*bind(\s|$)/.test(l))) kept.splice(1, 0, ...buildBindLines(proxy));
-  kept.splice(1, 0, ...buildImportLines(proxy));
-  // Re-add updated directives before closing brace
-  kept.push(...buildTlsCaddyLines(proxy, !tlsSubjectHosts(proxy.externalHost).length));
+  const tlsLines = buildTlsCaddyLines(proxy, !tlsSubjectHosts(proxy.externalHost).length);
+  // Inserted from the last place to the first, so the earlier places keep their index.
+  // New imports and a new bind line go first in the block, imports before the bind.
+  const inserts = [
+    { at: importSlot ?? [1, -2], add: buildImportLines(proxy) },
+    { at: bindSlot ?? [1, -1], add: buildBindLines(proxy) },
+    ...(tlsSlot ? [{ at: tlsSlot, add: tlsLines }] : []),
+  ].sort((a, b) => b.at[0] - a.at[0] || b.at[1] - a.at[1]);
+  for (const { at, add } of inserts) kept.splice(at[0], 0, ...add);
+  // A block without a tls directive gets it before the handlers the form writes.
+  if (tlsSlot === undefined) kept.push(...tlsLines);
   if (nested) {
     kept.push(lines[closingIdx]);
     return kept.join("\n");
