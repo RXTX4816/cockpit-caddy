@@ -5043,7 +5043,7 @@ describe("a site's own ACME email, CA and key type (#341)", () => {
     const entry = site({ acmeEmail: "me@example.com", acmeCa: staging, keyType: "p256" }, { serverKey: "srv0" });
     const config = mergeProxy({ apps: { http: { servers: {} } } } as CaddyConfig, entry);
     const policies = config.apps?.tls?.automation?.policies ?? [];
-    expect(policies.find(p => p.subjects?.includes("example.com"))).toEqual({
+    expect(policies.find(p => p.subjects?.some(s => s === "example.com"))).toEqual({
       subjects: ["example.com"], issuers: [{ module: "acme", ca: staging, email: "me@example.com" }], key_type: "p256",
     });
     // The host is the Caddyfile's, so the policy is read by it, as useProxies does with the host it has.
@@ -5054,7 +5054,7 @@ describe("a site's own ACME email, CA and key type (#341)", () => {
   it("keeps the internal CA in a policy that only sets a key type", () => {
     const entry = proxy({ tls: true, tlsIssuer: "internal", externalHost: "example.com", externalScheme: "https", tlsAdvanced: { keyType: "ed25519" } });
     const config = mergeProxy({ apps: { http: { servers: {} } } } as CaddyConfig, entry);
-    const policy = (config.apps?.tls?.automation?.policies ?? []).find(p => p.subjects?.includes("example.com"));
+    const policy = (config.apps?.tls?.automation?.policies ?? []).find(p => p.subjects?.some(s => s === "example.com"));
     expect(policy).toEqual({ subjects: ["example.com"], issuers: [{ module: "internal" }], key_type: "ed25519" });
   });
 });

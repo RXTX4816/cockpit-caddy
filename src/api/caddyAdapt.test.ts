@@ -1058,8 +1058,8 @@ describe.runIf(available || required)("caddy adapt accepts the site's own ACME s
 
   it("builds the policy Caddy builds for a CA, email and key type", () => {
     const tlsAdvanced = { acmeEmail: "me@example.com", acmeCa: staging, keyType: "p256" };
-    const real = adapt(proxiesToCaddyfile([acmeSite(tlsAdvanced)])).apps?.tls?.automation?.policies?.find(p => p.subjects?.includes("example.com"));
-    const pushed = mergeProxy({ apps: { http: { servers: {} } } } as CaddyConfig, acmeSite(tlsAdvanced)).apps?.tls?.automation?.policies?.find(p => p.subjects?.includes("example.com"));
+    const real = adapt(proxiesToCaddyfile([acmeSite(tlsAdvanced)])).apps?.tls?.automation?.policies?.find(p => p.subjects?.some(s => s === "example.com"));
+    const pushed = mergeProxy({ apps: { http: { servers: {} } } } as CaddyConfig, acmeSite(tlsAdvanced)).apps?.tls?.automation?.policies?.find(p => p.subjects?.some(s => s === "example.com"));
     expect(pushed).toEqual(real);
   });
 
