@@ -2,7 +2,6 @@ import { ProxyDialogTabs, type ProxyTab } from "./proxyDialogParts";
 import { useState, useEffect, useCallback } from "react";
 import {
   ActionGroup,
-  Alert,
   Button,
   Checkbox,
   DescriptionList,
@@ -21,11 +20,13 @@ import {
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
+import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { readGlobalOptions, syncGlobalOptions, reloadCaddy, fetchStorageInfo, checkStoragePathWritable, listDnsProviders, readDnsEnvNames, restartService, notifyConfigChanged } from "../api";
 import type { DnsChallengeConfig, GlobalOptions, StorageInfo } from "../api";
 import { DnsChallengeFields, dnsDraftFromConfig, dnsDraftToConfig, validateDnsDraft, type DnsDraft } from "./DnsChallengeFields";
 import { CertLifetimeSelect } from "./CertLifetimeSelect";
 import { AccessLogSection, type AccessLogValues, accessLogConfigToValues, accessLogValuesToConfig } from "./AccessLogSection";
+import { Notice } from "./Notice";
 
 type SettingsTabKey = "core" | "tls" | "logging" | "proxy";
 const SETTINGS_TAB_ORDER: SettingsTabKey[] = ["core", "tls", "logging", "proxy"];
@@ -61,14 +62,13 @@ function metricsLinkUrl(listenAddress: string, path: string): string | null {
 
 export function GlobalOptionsTab() {
   const { t } = useTranslation();
+  const toast = useToast();
   const confirm = useConfirmAction();
   const [loading, setLoading] = useState(true);
   const [reloading, setReloading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [needsReload, setNeedsReload] = useState(false);
-  const [reloadOk, setReloadOk] = useState(false);
   const [reloadError, setReloadError] = useState<string | null>(null);
-  const [saveOk, setSaveOk] = useState(false);
   const [hasAnyOption, setHasAnyOption] = useState(true);
 
   const [httpPort, setHttpPort] = useState("");
@@ -222,8 +222,7 @@ export function GlobalOptionsTab() {
     try {
       await reloadCaddy();
       setNeedsReload(false);
-      setReloadOk(true);
-      setTimeout(() => setReloadOk(false), 4000);
+      toast.success(t("caddyfile.reloaded"));
     } catch (e) {
       setReloadError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -312,14 +311,14 @@ export function GlobalOptionsTab() {
 
         <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
 
-        <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+        <Title headingLevel="h4" size="md">
           {t("global_opts.storage_title")}
         </Title>
 
         {storageInfoError && (
-          <Alert variant="danger" isInline title={t("global_opts.storage_info_error")} style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+          <Notice variant="danger" title={t("global_opts.storage_info_error")}>
             {storageInfoError}
-          </Alert>
+          </Notice>
         )}
         {!storageInfo && !storageInfoError && (
           <div style={{ display: "flex", justifyContent: "center", padding: "1rem" }}>
@@ -327,7 +326,7 @@ export function GlobalOptionsTab() {
           </div>
         )}
         {storageInfo && (
-          <DescriptionList isHorizontal isCompact style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+          <DescriptionList isHorizontal isCompact>
             <DescriptionListGroup>
               <DescriptionListTerm>{t("global_opts.storage_path")}</DescriptionListTerm>
               <DescriptionListDescription>
@@ -363,10 +362,10 @@ export function GlobalOptionsTab() {
 
     </>) },
     { key: "tls", label: t("global_opts.tab_tls"), configured: configured.tls, hasError: hasError.tls, content: (<>
-        <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+        <Title headingLevel="h4" size="md">
           {t("global_opts.acme_title")}
         </Title>
-        <Alert variant="info" isInline title={t("global_opts.acme_note")} style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }} />
+        <Notice variant="info" title={t("global_opts.acme_note")} />
 
         <FormGroup label={t("global_opts.acme_email")} fieldId="go-email">
           <TextInput
@@ -451,7 +450,7 @@ export function GlobalOptionsTab() {
 
         <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
 
-        <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+        <Title headingLevel="h4" size="md">
           {t("dns.global_title")}
         </Title>
         {dnsProviders && !dnsProviders.length && !dnsEnabled ? (
@@ -476,7 +475,7 @@ export function GlobalOptionsTab() {
 
         <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
 
-        <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+        <Title headingLevel="h4" size="md">
           {t("global_opts.on_demand_title")}
         </Title>
 
@@ -494,7 +493,7 @@ export function GlobalOptionsTab() {
         {onDemandEnabled && (
           <>
             {!onDemandAsk.trim() && (
-              <Alert variant="warning" isInline title={t("global_opts.on_demand_no_ask_warning")} style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }} />
+              <Notice variant="warning" title={t("global_opts.on_demand_no_ask_warning")} />
             )}
             <FormGroup label={t("global_opts.on_demand_ask")} fieldId="go-on-demand-ask">
               <TextInput
@@ -512,7 +511,7 @@ export function GlobalOptionsTab() {
                 existing config can be cleared, and never invite new ones. */}
             {(onDemandInterval || onDemandBurst) && (
               <>
-                <Alert variant="warning" isInline title={t("global_opts.on_demand_rate_deprecated")} style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }} />
+                <Notice variant="warning" title={t("global_opts.on_demand_rate_deprecated")} />
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
                   <FormGroup label={t("global_opts.on_demand_interval")} fieldId="go-on-demand-interval" style={{ flex: "1 1 12rem" }}>
                     <TextInput
@@ -552,10 +551,10 @@ export function GlobalOptionsTab() {
 
         <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
 
-        <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+        <Title headingLevel="h4" size="md">
           {t("global_opts.internal_tls_title")}
         </Title>
-        <Alert variant="info" isInline title={t("global_opts.internal_tls_note")} style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }} />
+        <Notice variant="info" title={t("global_opts.internal_tls_note")} />
 
         <FormGroup label={t("global_opts.internal_cert_lifetime")} fieldId="go-internal-cert-lifetime">
           <CertLifetimeSelect
@@ -605,7 +604,7 @@ export function GlobalOptionsTab() {
 
     </>) },
     { key: "logging", label: t("global_opts.tab_logging"), configured: configured.logging, hasError: hasError.logging, content: (<>
-        <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+        <Title headingLevel="h4" size="md">
           {t("global_opts.metrics_title")}
         </Title>
 
@@ -688,10 +687,10 @@ export function GlobalOptionsTab() {
 
         <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
 
-        <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+        <Title headingLevel="h4" size="md">
           {t("global_opts.runtime_log_title")}
         </Title>
-        <Alert variant="info" isInline title={t("global_opts.runtime_log_note")} style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }} />
+        <Notice variant="info" title={t("global_opts.runtime_log_note")} />
 
         <AccessLogSection
           idPrefix="rl"
@@ -705,10 +704,10 @@ export function GlobalOptionsTab() {
 
     </>) },
     { key: "proxy", label: t("global_opts.tab_proxy"), configured: configured.proxy, hasError: hasError.proxy, content: (<>
-        <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+        <Title headingLevel="h4" size="md">
           {t("global_opts.trusted_proxies_title")}
         </Title>
-        <Alert variant="info" isInline title={t("global_opts.trusted_proxies_note")} style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }} />
+        <Notice variant="info" title={t("global_opts.trusted_proxies_note")} />
 
         <FormGroup fieldId="go-trusted-proxies-enabled">
           <Checkbox
@@ -780,10 +779,10 @@ export function GlobalOptionsTab() {
 
         <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
 
-        <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+        <Title headingLevel="h4" size="md">
           {t("global_opts.proxy_protocol_title")}
         </Title>
-        <Alert variant="info" isInline title={t("global_opts.proxy_protocol_note")} style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }} />
+        <Notice variant="info" title={t("global_opts.proxy_protocol_note")} />
 
         <FormGroup fieldId="go-proxy-protocol-enabled">
           <Checkbox
@@ -833,12 +832,9 @@ export function GlobalOptionsTab() {
         )}
 
         {confirm.error != null && (
-          <Alert variant="danger" isInline title={t("global_opts.save_error")}>
+          <Notice variant="danger" title={t("global_opts.save_error")}>
             {confirm.error || t("global_opts.save_error_unknown")}
-          </Alert>
-        )}
-        {saveOk && (
-          <Alert variant="success" isInline title={t("global_opts.save_ok")} />
+          </Notice>
         )}
 
     </>) },
@@ -855,28 +851,24 @@ export function GlobalOptionsTab() {
 
   if (loadError) {
     return (
-      <Alert variant="danger" isInline title={t("global_opts.load_error")}>
+      <Notice variant="danger" title={t("global_opts.load_error")}>
         {loadError}
-        <Button variant="link" isInline onClick={load} style={{ marginLeft: "0.5rem" }}>{t("common.retry")}</Button>
-      </Alert>
+        <Button variant="link" onClick={load} style={{ marginLeft: "0.5rem" }}>{t("common.retry")}</Button>
+      </Notice>
     );
   }
 
   return (
     <div style={{ maxWidth: "56rem" }}>
-      <Title headingLevel="h3" style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}>
+      <Title headingLevel="h3">
         {t("global_opts.title")}
       </Title>
 
-      {reloadOk && (
-        <Alert variant="success" isInline title={t("caddyfile.reloaded")} style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }} />
-      )}
       {restartNeeded && (
-        <Alert
+        <Notice
           variant="warning"
           title={t("dns.restart_needed")}
           data-testid="dns-restart-needed"
-          style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}
           actionLinks={
             <Button variant="warning" size="sm" isLoading={restarting} isDisabled={restarting} onClick={() => {
               setRestarting(true);
@@ -891,11 +883,10 @@ export function GlobalOptionsTab() {
           }
         />
       )}
-      {needsReload && !reloadOk && !restartNeeded && (
-        <Alert
+      {needsReload && !restartNeeded && (
+        <Notice
           variant="warning"
           title={t("global_opts.needs_reload")}
-          style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}
           actionLinks={
             <Button variant="warning" size="sm" isLoading={reloading} isDisabled={reloading} onClick={() => void handleReload()}>
               {t("service.reload")}
@@ -904,27 +895,25 @@ export function GlobalOptionsTab() {
         />
       )}
       {reloadError && (
-        <Alert variant="danger" isInline title={reloadError} style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }} />
+        <Notice variant="danger" title={reloadError} />
       )}
 
-      <Alert variant="info" isInline title={t("global_opts.caddyfile_note")} style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }} />
+      <Notice variant="info" title={t("global_opts.caddyfile_note")} />
 
       {!hasAnyOption && (
-        <Alert
+        <Notice
           variant="info"
-          isInline
+         
           title={t("global_opts.unmanaged_hint")}
-          style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}
         />
       )}
 
       <Form>
         {isConfirming && (
-          <Alert
+          <Notice
             variant="warning"
-            isInline
+           
             title={t("global_opts.confirm_body")}
-            style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}
           />
         )}
 
@@ -991,8 +980,7 @@ export function GlobalOptionsTab() {
                   loadDns();
                   setHasAnyOption(Object.values(opts).some(v => v !== undefined));
                   setNeedsReload(true);
-                  setSaveOk(true);
-                  setTimeout(() => setSaveOk(false), 4000);
+                  toast.success(t("global_opts.save_ok"));
                   loadStorageInfo(opts.storagePath);
                 })}
               >

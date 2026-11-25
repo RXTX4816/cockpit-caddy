@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import {
-  Alert,
   Button,
   Label,
   Spinner,
@@ -18,6 +17,7 @@ import { CodeEditor } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { useCaddyfile } from "../hooks/useCaddyfile";
 import { caddyfile } from "./caddyfileLanguage";
 import { listConfDFiles, validateCaddyfile, reloadCaddy, applyCurrentCaddyfileViaApi, isCaddyManaged } from "../api";
+import { Notice } from "./Notice";
 
 const MAIN_PATH = "/etc/caddy/Caddyfile";
 
@@ -176,27 +176,27 @@ export function CaddyfileEditor({ unmanaged = false }: Props) {
     <Stack hasGutter>
       {error && (
         <StackItem>
-          <Alert variant="danger" title={t("caddyfile.load_failed")}>{error}</Alert>
+          <Notice variant="danger" title={t("caddyfile.load_failed")}>{error}</Notice>
         </StackItem>
       )}
       {saveErr && (
         <StackItem>
-          <Alert variant="danger" title={t("caddyfile.save_failed")}>{saveErr}</Alert>
+          <Notice variant="danger" title={t("caddyfile.save_failed")}>{saveErr}</Notice>
         </StackItem>
       )}
       {reloadError && (
         <StackItem>
-          <Alert variant="danger" title={t("service.reload_failed")}>{reloadError}</Alert>
+          <Notice variant="danger" title={t("service.reload_failed")}>{reloadError}</Notice>
         </StackItem>
       )}
       {reloadOk && (
         <StackItem>
-          <Alert variant="success" isInline title={t("caddyfile.reloaded")} />
+          <Notice variant="success" title={t("caddyfile.reloaded")} />
         </StackItem>
       )}
       {needsReload && !reloadOk && (
         <StackItem>
-          <Alert
+          <Notice
             variant="warning"
             title={t("caddyfile.saved_needs_reload")}
             actionLinks={
@@ -209,12 +209,12 @@ export function CaddyfileEditor({ unmanaged = false }: Props) {
       )}
       {isManagedByPlugin && (
         <StackItem>
-          <Alert variant="info" isInline title={t("caddyfile.managed_file")} />
+          <Notice variant="info" title={t("caddyfile.managed_file")} />
         </StackItem>
       )}
       {unmanaged && (
         <StackItem>
-          <Alert variant="info" isInline title={t("caddyfile.unmanaged_note")} />
+          <Notice variant="info" title={t("caddyfile.unmanaged_note")} />
         </StackItem>
       )}
 

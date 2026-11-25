@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import {
-  Alert,
   Button,
   Checkbox,
   CodeBlock,
@@ -17,6 +16,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { readCaddyfile, readProxyConf, scanConfigIssues, runConfigFixes, reloadCaddy, CaddyfileError } from "../api";
 import type { ConfigFinding } from "../api";
+import { Notice } from "./Notice";
 
 interface Props {
   onClose: () => void;
@@ -98,13 +98,13 @@ export function ConfigCheckModal({ onClose }: Props) {
     <Modal isOpen onClose={onClose} aria-label={t("config_check.title")} variant="large">
       <ModalHeader title={t("config_check.title")} />
       <ModalBody>
-        <Alert variant="info" isInline title={t("config_check.intro")} style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }} />
+        <Notice variant="info" title={t("config_check.intro")} />
 
         {reloadOk && (
-          <Alert variant="success" isInline title={t("caddyfile.reloaded")} style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }} />
+          <Notice variant="success" title={t("caddyfile.reloaded")} />
         )}
         {reloadError && (
-          <Alert variant="danger" isInline title={reloadError} style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }} />
+          <Notice variant="danger" title={reloadError} />
         )}
 
         {loading && (
@@ -114,29 +114,28 @@ export function ConfigCheckModal({ onClose }: Props) {
         )}
 
         {loadError && (
-          <Alert variant="danger" isInline title={t("config_check.load_error")}>
+          <Notice variant="danger" title={t("config_check.load_error")}>
             {loadError}
-            <Button variant="link" isInline onClick={scan} style={{ marginLeft: "0.5rem" }}>{t("common.retry")}</Button>
-          </Alert>
+            <Button variant="link" onClick={scan} style={{ marginLeft: "0.5rem" }}>{t("common.retry")}</Button>
+          </Notice>
         )}
 
         {!loading && !loadError && findings.length === 0 && (
-          <Alert variant="success" isInline title={t("config_check.no_issues")} />
+          <Notice variant="success" title={t("config_check.no_issues")} />
         )}
 
         {!loading && !loadError && findings.length > 0 && (
           <>
             {applyError && (
-              <Alert variant="danger" isInline title={t("config_check.apply_error")} style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}>
+              <Notice variant="danger" title={t("config_check.apply_error")}>
                 {applyError}
-              </Alert>
+              </Notice>
             )}
             {applied && (
-              <Alert
+              <Notice
                 variant="success"
-                isInline
+               
                 title={t("config_check.apply_ok")}
-                style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}
                 actionLinks={
                   <Button variant="warning" size="sm" isLoading={reloading} isDisabled={reloading} onClick={() => void handleReload()}>
                     {t("service.reload")}

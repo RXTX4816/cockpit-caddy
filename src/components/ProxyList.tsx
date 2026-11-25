@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  Alert,
   AlertActionCloseButton,
   Button,
   Content,
@@ -63,6 +62,7 @@ import { SnippetsContext } from "./SnippetImportsField";
 import { useUpstreamProbe } from "../hooks/useUpstreamProbe";
 import type { ProxyEntry, ServerDef } from "../api";
 import { proxyTabStateFromEntry } from "./proxyTabState";
+import { Notice } from "./Notice";
 
 type ProxyLayout = "list" | "card";
 /** `label` holds the i18n key; it's translated where the selector is rendered. */
@@ -289,9 +289,9 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
       <Stack hasGutter>
         {needsMigration && (
           <StackItem>
-            <Alert
+            <Notice
               variant="warning"
-              isInline
+             
               title={t("migration.banner_title")}
               actionLinks={
                 <>
@@ -299,7 +299,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
                     {t("migration.button")}
                   </Button>
                   {onOpenBackup && (
-                    <Button variant="link" size="sm" isInline onClick={onOpenBackup}>
+                    <Button variant="link" size="sm" onClick={onOpenBackup}>
                       {t("backup.button")}
                     </Button>
                   )}
@@ -310,20 +310,20 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
               <ExpandableSection toggleText={t("migration.banner_details_toggle")} data-testid="migration-details">
                 <Content component="p">{t("migration.banner_details")}</Content>
               </ExpandableSection>
-            </Alert>
+            </Notice>
           </StackItem>
         )}
 
         {apiError && (
           <StackItem>
-            <Alert
+            <Notice
               variant="warning"
               title={apiError.action === "add" ? t("proxies.api_error_add_title") : t("proxies.api_error_edit_title")}
               actionClose={<AlertActionCloseButton onClose={() => setApiError(null)} />}
               actionLinks={
                 <Button
                   variant="link"
-                  isInline
+                 
                   icon={<ExternalLinkAltIcon />}
                   iconPosition="end"
                   onClick={() => { onViewLogs?.(apiError.search); setApiError(null); }}
@@ -333,37 +333,36 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
               }
             >
               {apiError.message}
-            </Alert>
+            </Notice>
           </StackItem>
         )}
 
         {error && (
           <StackItem>
-            <Alert
+            <Notice
               variant="danger"
               title={t("proxies.load_failed")}
               actionLinks={<Button variant="link" onClick={refresh}>{t("common.retry")}</Button>}
             >
               {error}
-            </Alert>
+            </Notice>
           </StackItem>
         )}
 
         {probeConfirming && (
           <StackItem>
-            <Alert
+            <Notice
               variant="info"
-              isInline
+             
               title={t("probe.confirm_title")}
               actionClose={<AlertActionCloseButton onClose={() => setProbeConfirming(false)} />}
-              style={{ marginBottom: 0 }}
             >
               <p style={{ marginBottom: "0.75rem" }}>{t("probe.confirm_body")}</p>
               <div style={{ display: "flex", gap: "0.5rem" }}>
                 <Button variant="primary" size="sm" onClick={confirmProbeEnable}>{t("probe.confirm_enable")}</Button>
                 <Button variant="link" size="sm" onClick={() => setProbeConfirming(false)}>{t("probe.confirm_cancel")}</Button>
               </div>
-            </Alert>
+            </Notice>
           </StackItem>
         )}
 
@@ -548,7 +547,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
               <Content>{t("migration.gate_body")}</Content>
             </StackItem>
             <StackItem>
-              <Alert variant="warning" isInline title={t("migration.gate_continue_warning")} />
+              <Notice variant="warning" title={t("migration.gate_continue_warning")} />
             </StackItem>
           </Stack>
         </ModalBody>
@@ -575,23 +574,22 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
         <ModalHeader title={t("migration.confirm_title")} labelId="migrate-confirm-title" />
         <ModalBody>
           <Content>{t("migration.confirm_body")}</Content>
-          <Alert
+          <Notice
             variant="warning"
-            isInline
+           
             title={t("migration.backup_warning_title")}
-            style={{ marginTop: "var(--pf-v6-global--spacer--md)" }}
             actionLinks={onOpenBackup && (
-              <Button variant="link" isInline onClick={onOpenBackup}>
+              <Button variant="link" onClick={onOpenBackup}>
                 {t("backup.button")}
               </Button>
             )}
           >
             {t("migration.backup_warning_body")}
-          </Alert>
+          </Notice>
           {migrateError && (
-            <Alert variant="danger" isInline title={t("migration.error")} style={{ marginTop: "var(--pf-v6-global--spacer--md)" }}>
+            <Notice variant="danger" title={t("migration.error")}>
               {migrateError}
-            </Alert>
+            </Notice>
           )}
         </ModalBody>
         <ModalFooter>
@@ -817,7 +815,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
             })}
           </Content>
           {deleteError && (
-            <Alert variant="danger" isInline title={deleteError} style={{ marginTop: "var(--pf-v6-global--spacer--md)" }} />
+            <Notice variant="danger" title={deleteError} />
           )}
         </ModalBody>
         <ModalFooter>
@@ -867,7 +865,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
         <ModalBody>
           <Content>{t("servers.delete_confirm_body")}</Content>
           {deleteServerError && (
-            <Alert variant="danger" isInline title={deleteServerError} style={{ marginTop: "var(--pf-v6-global--spacer--md)" }} />
+            <Notice variant="danger" title={deleteServerError} />
           )}
         </ModalBody>
         <ModalFooter>

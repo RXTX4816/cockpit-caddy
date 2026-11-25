@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import {
-  Alert,
   Button,
   ClipboardCopy,
   Content,
@@ -19,6 +18,7 @@ import { useTranslation } from "react-i18next";
 import { fetchPkiCa, parseCertDetails, fetchCaddyConfig } from "../api";
 import type { PkiCaInfo, CertDetails } from "../api";
 import { PemBlock, useCertDownload } from "./CertificateView";
+import { Notice } from "./Notice";
 
 interface Props {
   onClose: () => void;
@@ -68,16 +68,15 @@ export function InternalCaModal({ onClose }: Props) {
     <Modal isOpen onClose={onClose} aria-label={t("ca.title")} variant="medium">
       <ModalHeader title={t("ca.title")} />
       <ModalBody>
-        {error && <Alert variant="danger" isInline title={t("ca.load_error")}>{error}</Alert>}
+        {error && <Notice variant="danger" title={t("ca.load_error")}>{error}</Notice>}
         {ca && !usesInternalCa && (
-          <Alert
+          <Notice
             variant="warning"
-            isInline
+           
             title={t("ca.not_in_use_title")}
-            style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}
           >
             {t("ca.not_in_use_body")}
-          </Alert>
+          </Notice>
         )}
         {!ca && !error && (
           <div style={{ display: "flex", justifyContent: "center", padding: "2rem" }}>
@@ -86,7 +85,7 @@ export function InternalCaModal({ onClose }: Props) {
         )}
         {ca && (
           <>
-            <DescriptionList isHorizontal isCompact style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}>
+            <DescriptionList isHorizontal isCompact>
               <DescriptionListGroup>
                 <DescriptionListTerm>{t("ca.root_cn")}</DescriptionListTerm>
                 <DescriptionListDescription>{ca.rootCommonName}</DescriptionListDescription>
@@ -117,7 +116,7 @@ export function InternalCaModal({ onClose }: Props) {
 
             <PemBlock pem={ca.rootPem} copyLabel={t("ca.copy_tip")} />
 
-            <ExpandableSection toggleText={t("ca.intermediate_cn")} isIndented style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}>
+            <ExpandableSection toggleText={t("ca.intermediate_cn")} isIndented>
               <PemBlock
                 pem={ca.intermediatePem}
                 copyLabel={t("ca.copy_intermediate_tip")}

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  Alert,
   Button,
   Checkbox,
   Form,
@@ -32,6 +31,7 @@ import { proxyTabStateFlags, proxyTabStateToEntry, useProxyTabState, type ProxyT
 
 import type { ServerContext } from "./AddRedirectDialog";
 import { parseListenPort } from "./AddServerDialog";
+import { Notice } from "./Notice";
 
 interface Props {
   existingPorts: number[];
@@ -109,11 +109,10 @@ export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues, 
       <ModalHeader title={t("add_static.title")} />
       <ModalBody>
         {isLocked && (
-          <Alert
+          <Notice
             variant="warning"
-            isInline
+           
             title={t("add_static.confirm_body", { port: serverCtx ? serverCtx.port : port, root: root.trim() })}
-            style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}
           />
         )}
 
@@ -229,7 +228,7 @@ export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues, 
         />
 
         {confirmAction.error && (
-          <Alert variant="danger" isInline title={confirmAction.error} style={{ marginTop: "var(--pf-v6-global--spacer--md)" }} />
+          <Notice variant="danger" title={confirmAction.error} />
         )}
       </ModalBody>
       <ModalFooter>

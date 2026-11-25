@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Alert, Button } from "@patternfly/react-core";
+import { Button } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import { useFlatSections } from "./sectionLayout";
+import { Notice } from "./Notice";
 
 type PendingAction = "clear" | "defaults";
 
@@ -27,17 +28,16 @@ export function SectionActions({ onClear, onDefaults, isDisabled }: Props) {
 
   if (pending) {
     return (
-      <Alert
+      <Notice
         variant="warning"
-        isInline
+       
         title={pending === "clear" ? t("common.confirm_clear") : t("common.confirm_defaults")}
-        style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}
         actionLinks={
           <>
-            <Button variant="link" isInline onClick={confirm} style={{ marginRight: "0.75rem" }}>
+            <Button variant="link" onClick={confirm} style={{ marginRight: "0.75rem" }}>
               {t("common.confirm_apply")}
             </Button>
-            <Button variant="link" isInline onClick={() => setPending(null)}>
+            <Button variant="link" onClick={() => setPending(null)}>
               {t("common.cancel")}
             </Button>
           </>

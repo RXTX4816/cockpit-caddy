@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Alert,
   Button,
   Dropdown,
   DropdownItem,
@@ -44,6 +43,7 @@ import { useCaddyStatus } from "../hooks/useCaddyStatus";
 import { applyStoredAdminAddress } from "../hooks/useAdminAddress";
 import { useCaddyVersion } from "../hooks/useCaddyVersion";
 import { useIsNarrow } from "./useIsNarrow";
+import { Notice } from "./Notice";
 
 function AppInner() {
   const { t } = useTranslation();
@@ -145,40 +145,40 @@ function AppInner() {
 
         {showAdminWarning && (
           <StackItem>
-            <Alert
+            <Notice
               variant="warning"
-              isInline
+             
               title={t("admin.warning_title")}
               actionLinks={
-                <Button variant="link" isInline onClick={() => setAdminBypass(true)}>
+                <Button variant="link" onClick={() => setAdminBypass(true)}>
                   {t("admin.continue_button")}
                 </Button>
               }
             >
               <Content component="p">{t("admin.warning_body")}</Content>
-            </Alert>
+            </Notice>
           </StackItem>
         )}
 
         {status === "not-installed" && !adminApiOk && (
           <StackItem>
-            <Alert variant="warning" title={t("service.not_installed")}>
+            <Notice variant="warning" title={t("service.not_installed")}>
               <Content component="p">{t("service.not_installed_body")}</Content>
-            </Alert>
+            </Notice>
           </StackItem>
         )}
 
         {unmanaged && (
           <StackItem>
-            <Alert variant="info" title={t("service.unmanaged")}>
+            <Notice variant="info" title={t("service.unmanaged")}>
               <Content component="p">{t("service.unmanaged_body")}</Content>
-            </Alert>
+            </Notice>
           </StackItem>
         )}
 
         {showUnitFailedAlert && (
           <StackItem>
-            <Alert variant="danger" isInline title={t("service.unit_failed")}>
+            <Notice variant="danger" title={t("service.unit_failed")}>
               <Content component="p">{t("service.unit_failed_body")}</Content>
               {failureDetail && (
                 <ExpandableSection toggleText={t("service.unit_failed_details_toggle")} isIndented style={{ marginTop: "0.5rem" }}>
@@ -187,15 +187,15 @@ function AppInner() {
                   </Content>
                 </ExpandableSection>
               )}
-            </Alert>
+            </Notice>
           </StackItem>
         )}
 
         {apiUnreachable && (
           <StackItem>
-            <Alert variant="warning" title={t("service.api_unreachable")}>
+            <Notice variant="warning" title={t("service.api_unreachable")}>
               <Content component="p">{t("service.api_unreachable_body")}</Content>
-            </Alert>
+            </Notice>
           </StackItem>
         )}
 

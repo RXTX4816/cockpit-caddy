@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  Alert,
   Button,
   Form,
   FormGroup,
@@ -13,6 +12,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { formatArchiveTimestamp } from "@rxtx4816/cockpit-plugin-base-react/lib/timestamp";
 import { createTarArchive } from "@rxtx4816/cockpit-plugin-base-react/lib/tar";
+import { Notice } from "./Notice";
 
 interface Props {
   onClose: () => void;
@@ -54,13 +54,13 @@ export function BackupDialog({ onClose }: Props) {
       <ModalBody>
         {savedPath ? (
           <>
-            <Alert variant="success" isInline title={t("backup.success_title")}>
+            <Notice variant="success" title={t("backup.success_title")}>
               {t("backup.success_body", { path: savedPath })}
-            </Alert>
+            </Notice>
             {warning && (
-              <Alert variant="warning" isInline title={t("backup.warning_partial")} style={{ marginTop: "0.5rem" }}>
+              <Notice variant="warning" title={t("backup.warning_partial")} style={{ marginTop: "0.5rem" }}>
                 {warning}
-              </Alert>
+              </Notice>
             )}
           </>
         ) : (
@@ -76,7 +76,7 @@ export function BackupDialog({ onClose }: Props) {
             <FormGroup label={t("backup.archive_preview_label")} fieldId="bd-preview">
               <TextInput id="bd-preview" value={destPath} isDisabled readOnly />
             </FormGroup>
-            {error && <Alert variant="danger" isInline title={error} />}
+            {error && <Notice variant="danger" title={error} />}
           </Form>
         )}
       </ModalBody>

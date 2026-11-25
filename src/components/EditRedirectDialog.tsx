@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  Alert,
   Button,
   Form,
   FormGroup,
@@ -22,6 +21,7 @@ import { SnippetImportsField } from "./SnippetImportsField";
 import { ProxyTabs } from "./ProxyTabs";
 import { firstTabWithError, type ProxyTabKey } from "./proxyDialogParts";
 import { proxyTabStateFlags, proxyTabStateFromEntry, useProxyTabState } from "./proxyTabState";
+import { Notice } from "./Notice";
 
 const REDIRECT_CODES = [301, 302, 307, 308] as const;
 
@@ -70,11 +70,10 @@ export function EditRedirectDialog({ proxy, existingPorts, onSave, onClose }: Pr
       <ModalHeader title={t("edit_redirect.title", { port: proxy.externalPort })} />
       <ModalBody>
         {isLocked && (
-          <Alert
+          <Notice
             variant="warning"
-            isInline
+           
             title={t("edit_redirect.confirm_body", { port: proxy.externalPort })}
-            style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}
           />
         )}
 
@@ -140,7 +139,7 @@ export function EditRedirectDialog({ proxy, existingPorts, onSave, onClose }: Pr
         />
 
         {confirmAction.error && (
-          <Alert variant="danger" isInline title={confirmAction.error} style={{ marginTop: "var(--pf-v6-global--spacer--md)" }} />
+          <Notice variant="danger" title={confirmAction.error} />
         )}
       </ModalBody>
       <ModalFooter>

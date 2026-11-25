@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  Alert,
   Button,
   Checkbox,
   Form,
@@ -27,6 +26,7 @@ import { type ServerTimeoutValues } from "./ServerTimeoutsSection";
 import { type AccessLogValues, accessLogValuesToConfig, accessLogConfigToValues } from "./AccessLogSection";
 import { ServerDialogTabs, serverTabFlags } from "./ServerDialogTabs";
 import { firstTabWithError, type ProxyTabKey } from "./proxyDialogParts";
+import { Notice } from "./Notice";
 
 interface Props {
   existingKeys: string[];
@@ -230,11 +230,10 @@ export function AddServerDialog({ existingKeys, onAdd, onClose }: Props) {
       <ModalHeader title={t("servers.add_server")} />
       <ModalBody>
         {isLocked && (
-          <Alert
+          <Notice
             variant="warning"
-            isInline
+           
             title={t("servers.confirm_add")}
-            style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}
           />
         )}
 
@@ -258,11 +257,10 @@ export function AddServerDialog({ existingKeys, onAdd, onClose }: Props) {
         />
 
         {confirmAction.error && (
-          <Alert
+          <Notice
             variant="danger"
-            isInline
+           
             title={confirmAction.error}
-            style={{ marginTop: "var(--pf-v6-global--spacer--md)" }}
           />
         )}
       </ModalBody>

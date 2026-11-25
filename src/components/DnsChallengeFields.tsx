@@ -1,9 +1,10 @@
 import {
-  Alert, Button, FormGroup, FormHelperText, FormSelect, FormSelectOption, HelperText, HelperTextItem, Label, TextInput,
+  Button, FormGroup, FormHelperText, FormSelect, FormSelectOption, HelperText, HelperTextItem, Label, TextInput,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import { DNS_MODULES_DOCS, DNS_PROVIDER_PRESETS, dnsEnvVarName, isSiteDnsVar } from "../api";
 import type { DnsChallengeConfig } from "../api";
+import { Notice } from "./Notice";
 
 /** One credential as edited: the provider option, a new value (empty = keep), the variable it lives in. */
 export interface DnsCredentialRow {
@@ -101,10 +102,10 @@ export function DnsChallengeFields({ idPrefix, providers, envNames, value, onCha
   const { t } = useTranslation();
   if (providers && !providers.length && !value.provider) {
     return (
-      <Alert variant="info" isInline isPlain title={t("dns.no_modules_title")} data-testid={`${idPrefix}-no-modules`}>
+      <Notice variant="info" isPlain title={t("dns.no_modules_title")} data-testid={`${idPrefix}-no-modules`}>
         <p>{t("dns.no_modules_body")}</p>
         <a href={DNS_MODULES_DOCS} target="_blank" rel="noopener noreferrer">{t("dns.no_modules_link")}</a>
-      </Alert>
+      </Notice>
     );
   }
   const list = providers ?? [];
@@ -160,7 +161,7 @@ export function DnsChallengeFields({ idPrefix, providers, envNames, value, onCha
               </div>
             );
           })}
-          <Button variant="link" isInline size="sm" isDisabled={isDisabled}
+          <Button variant="link" size="sm" isDisabled={isDisabled}
             onClick={() => onChange({ ...value, rows: [...value.rows, { key: "", value: "" }] })}>
             {t("dns.add_option")}
           </Button>

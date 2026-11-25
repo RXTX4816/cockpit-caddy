@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import {
-  Alert,
   Button,
   Checkbox,
   FormGroup,
@@ -15,6 +14,7 @@ import { ResettableTextInput, SectionShell } from "./sectionLayout";
 import type { MtlsMode, TlsProtocolVersion } from "../api";
 import { readFile, parseCertDetails, type CertDetails } from "../api";
 import { SectionActions } from "./SectionActions";
+import { Notice } from "./Notice";
 
 export interface TlsValues {
   protocolMin: TlsProtocolVersion | "";
@@ -210,7 +210,7 @@ export function TlsSection({ value, onChange, isDisabled, hostless, isExpanded: 
       />
 
       {/* Custom certificate (#152) — bring-your-own PEM files instead of Caddy issuing one */}
-      <FormGroup label={t("tls_policy.custom_cert_file")} fieldId="tls-custom-cert" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+      <FormGroup label={t("tls_policy.custom_cert_file")} fieldId="tls-custom-cert">
         <FormHelperText style={{ marginBottom: "0.25rem" }}>
           <HelperText><HelperTextItem>{t("tls_policy.custom_cert_help")}</HelperTextItem></HelperText>
         </FormHelperText>
@@ -224,7 +224,7 @@ export function TlsSection({ value, onChange, isDisabled, hostless, isExpanded: 
         <FileCheckStatus state={certCheck} />
       </FormGroup>
 
-      <FormGroup label={t("tls_policy.custom_key_file")} fieldId="tls-custom-key" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+      <FormGroup label={t("tls_policy.custom_key_file")} fieldId="tls-custom-key">
         <TextInput
           id="tls-custom-key"
           value={value.customKeyFile}
@@ -235,7 +235,7 @@ export function TlsSection({ value, onChange, isDisabled, hostless, isExpanded: 
         <FileCheckStatus state={keyCheck} />
       </FormGroup>
 
-      <FormGroup label={t("tls_policy.custom_ca_file")} fieldId="tls-custom-ca" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+      <FormGroup label={t("tls_policy.custom_ca_file")} fieldId="tls-custom-ca">
         <FormHelperText style={{ marginBottom: "0.25rem" }}>
           <HelperText><HelperTextItem>{t("tls_policy.custom_ca_help")}</HelperTextItem></HelperText>
         </FormHelperText>
@@ -250,7 +250,7 @@ export function TlsSection({ value, onChange, isDisabled, hostless, isExpanded: 
       </FormGroup>
 
       {/* Protocol versions */}
-      <FormGroup label={t("tls_policy.protocol_min")} fieldId="tls-proto-min" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+      <FormGroup label={t("tls_policy.protocol_min")} fieldId="tls-proto-min">
         <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap" }}>
           {PROTOCOL_VERSIONS.map(v => (
             <Button
@@ -266,7 +266,7 @@ export function TlsSection({ value, onChange, isDisabled, hostless, isExpanded: 
         </div>
       </FormGroup>
 
-      <FormGroup label={t("tls_policy.protocol_max")} fieldId="tls-proto-max" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+      <FormGroup label={t("tls_policy.protocol_max")} fieldId="tls-proto-max">
         <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap" }}>
           {PROTOCOL_VERSIONS.map(v => (
             <Button
@@ -283,7 +283,7 @@ export function TlsSection({ value, onChange, isDisabled, hostless, isExpanded: 
       </FormGroup>
 
       {/* Cipher suites */}
-      <FormGroup label={t("tls_policy.cipher_suites")} fieldId="tls-ciphers" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+      <FormGroup label={t("tls_policy.cipher_suites")} fieldId="tls-ciphers">
         <FormHelperText style={{ marginBottom: "0.25rem" }}>
           <HelperText><HelperTextItem>{t("tls_policy.cipher_suites_help")}</HelperTextItem></HelperText>
         </FormHelperText>
@@ -302,7 +302,7 @@ export function TlsSection({ value, onChange, isDisabled, hostless, isExpanded: 
       </FormGroup>
 
       {/* Curves */}
-      <FormGroup label={t("tls_policy.curves")} fieldId="tls-curves" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+      <FormGroup label={t("tls_policy.curves")} fieldId="tls-curves">
         <FormHelperText style={{ marginBottom: "0.25rem" }}>
           <HelperText><HelperTextItem>{t("tls_policy.curves_help")}</HelperTextItem></HelperText>
         </FormHelperText>
@@ -326,22 +326,20 @@ export function TlsSection({ value, onChange, isDisabled, hostless, isExpanded: 
           only one policy without a hostname), so this only works for proxies with a real
           hostname; hostless ones set it once, globally, from the Global Options tab instead. */}
       {customCert ? (
-        <Alert
+        <Notice
           variant="info"
-          isInline
+         
           title={t("tls_policy.custom_cert_lifetime_note")}
-          style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}
         />
       ) : hostless ? (
-        <Alert
+        <Notice
           variant="info"
-          isInline
+         
           title={t("tls_policy.hostless_global_only_note")}
-          style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}
         />
       ) : (
         <>
-          <FormGroup label={t("tls_policy.cert_lifetime")} fieldId="tls-cert-lifetime" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+          <FormGroup label={t("tls_policy.cert_lifetime")} fieldId="tls-cert-lifetime">
             <FormHelperText style={{ marginBottom: "0.25rem" }}>
               <HelperText><HelperTextItem>{t("tls_policy.cert_lifetime_help")}</HelperTextItem></HelperText>
             </FormHelperText>
@@ -360,7 +358,7 @@ export function TlsSection({ value, onChange, isDisabled, hostless, isExpanded: 
             )}
           </FormGroup>
 
-          <FormGroup label={t("tls_policy.renewal_window_ratio")} fieldId="tls-renewal-ratio" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+          <FormGroup label={t("tls_policy.renewal_window_ratio")} fieldId="tls-renewal-ratio">
             <FormHelperText style={{ marginBottom: "0.25rem" }}>
               <HelperText><HelperTextItem>{t("tls_policy.renewal_window_ratio_help")}</HelperTextItem></HelperText>
             </FormHelperText>
@@ -382,7 +380,7 @@ export function TlsSection({ value, onChange, isDisabled, hostless, isExpanded: 
       )}
 
       {/* mTLS */}
-      <FormGroup label={t("tls_policy.client_auth_mode")} fieldId="tls-mtls-mode" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+      <FormGroup label={t("tls_policy.client_auth_mode")} fieldId="tls-mtls-mode">
         <FormHelperText style={{ marginBottom: "0.25rem" }}>
           <HelperText><HelperTextItem>{t("tls_policy.client_auth_mode_help")}</HelperTextItem></HelperText>
         </FormHelperText>

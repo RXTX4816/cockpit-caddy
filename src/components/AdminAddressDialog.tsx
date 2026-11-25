@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import {
-  Alert,
   Button,
   Form,
   FormGroup,
@@ -20,6 +19,7 @@ import { useLogContainer } from "../hooks/useLogContainer";
 import { ADMIN_TCP_DEFAULT, ADMIN_SOCKET_DEFAULT } from "../api/caddy";
 import { testTcpConnection, testUnixSocket, testDockerContainer } from "../api";
 import type { DockerTestResult } from "../api";
+import { Notice } from "./Notice";
 
 interface Props {
   onClose: () => void;
@@ -102,7 +102,7 @@ export function AdminAddressDialog({ onClose }: Props) {
     <Modal isOpen onClose={onClose} variant="small" aria-label={t("admin_address.title")}>
       <ModalHeader title={t("admin_address.title")} />
       <ModalBody>
-        <Alert variant="info" isInline title={t("admin_address.storage_note")} style={{ marginBottom: "1rem" }} />
+        <Notice variant="info" title={t("admin_address.storage_note")} style={{ marginBottom: "1rem" }} />
         <Form isHorizontal>
           <FormGroup label={t("admin_address.tcp_label")} fieldId="aa-tcp">
             <TextInput
@@ -129,10 +129,10 @@ export function AdminAddressDialog({ onClose }: Props) {
               {t("admin_address.test_tcp_button")}
             </Button>
             {tcpResult === "ok" && (
-              <Alert variant="success" isInline title={t("admin_address.test_ok")} style={{ marginTop: "0.5rem" }} />
+              <Notice variant="success" title={t("admin_address.test_ok")} style={{ marginTop: "0.5rem" }} />
             )}
             {tcpResult === "fail" && (
-              <Alert variant="danger" isInline title={t("admin_address.test_tcp_fail")} style={{ marginTop: "0.5rem" }} />
+              <Notice variant="danger" title={t("admin_address.test_tcp_fail")} style={{ marginTop: "0.5rem" }} />
             )}
           </FormGroup>
           <FormGroup label={t("admin_address.socket_label")} fieldId="aa-socket">
@@ -160,10 +160,10 @@ export function AdminAddressDialog({ onClose }: Props) {
               {t("admin_address.test_socket_button")}
             </Button>
             {socketResult === "ok" && (
-              <Alert variant="success" isInline title={t("admin_address.test_ok")} style={{ marginTop: "0.5rem" }} />
+              <Notice variant="success" title={t("admin_address.test_ok")} style={{ marginTop: "0.5rem" }} />
             )}
             {socketResult === "fail" && (
-              <Alert variant="danger" isInline title={t("admin_address.test_socket_fail")} style={{ marginTop: "0.5rem" }} />
+              <Notice variant="danger" title={t("admin_address.test_socket_fail")} style={{ marginTop: "0.5rem" }} />
             )}
           </FormGroup>
           <FormGroup label={t("admin_address.container_label")} fieldId="aa-container">
@@ -204,16 +204,16 @@ export function AdminAddressDialog({ onClose }: Props) {
               {t("admin_address.test_container_button")}
             </Button>
             {containerResult === "ok" && (
-              <Alert variant="success" isInline title={t("admin_address.test_ok")} style={{ marginTop: "0.5rem" }} />
+              <Notice variant="success" title={t("admin_address.test_ok")} style={{ marginTop: "0.5rem" }} />
             )}
             {containerResult === "not-running" && (
-              <Alert variant="danger" isInline title={t("admin_address.test_container_fail")} style={{ marginTop: "0.5rem" }} />
+              <Notice variant="danger" title={t("admin_address.test_container_fail")} style={{ marginTop: "0.5rem" }} />
             )}
             {containerResult === "socket-missing" && (
-              <Alert variant="danger" isInline title={t("admin_address.test_docker_socket_missing")} style={{ marginTop: "0.5rem" }} />
+              <Notice variant="danger" title={t("admin_address.test_docker_socket_missing")} style={{ marginTop: "0.5rem" }} />
             )}
             {containerResult === "socket-unreadable" && (
-              <Alert variant="danger" isInline title={t("admin_address.test_docker_socket_unreadable")} style={{ marginTop: "0.5rem" }} />
+              <Notice variant="danger" title={t("admin_address.test_docker_socket_unreadable")} style={{ marginTop: "0.5rem" }} />
             )}
           </FormGroup>
         </Form>

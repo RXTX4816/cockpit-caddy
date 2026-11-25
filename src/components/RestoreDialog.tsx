@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import {
-  Alert,
   Button,
   Form,
   FormGroup,
@@ -15,6 +14,7 @@ import { useTranslation } from "react-i18next";
 import { ConfirmDialog } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { listTarArchives, extractTarArchive } from "@rxtx4816/cockpit-plugin-base-react/lib/tar";
 import { reloadCaddy } from "../api";
+import { Notice } from "./Notice";
 
 interface Props {
   onClose: () => void;
@@ -108,13 +108,13 @@ export function RestoreDialog({ onClose }: Props) {
       <ModalBody>
         {success ? (
           <>
-            <Alert variant="success" isInline title={t("restore.success_title")}>
+            <Notice variant="success" title={t("restore.success_title")}>
               {t("restore.success_body")}
-            </Alert>
+            </Notice>
             {reloadOk ? (
-              <Alert variant="success" isInline title={t("caddyfile.reloaded")} style={{ marginTop: "0.5rem" }} />
+              <Notice variant="success" title={t("caddyfile.reloaded")} style={{ marginTop: "0.5rem" }} />
             ) : (
-              <Alert
+              <Notice
                 variant="warning"
                 title={t("restore.needs_reload_title")}
                 style={{ marginTop: "0.5rem" }}
@@ -125,10 +125,10 @@ export function RestoreDialog({ onClose }: Props) {
                 }
               >
                 {t("restore.needs_reload_body")}
-              </Alert>
+              </Notice>
             )}
             {reloadError && (
-              <Alert variant="danger" isInline title={reloadError} style={{ marginTop: "0.5rem" }} />
+              <Notice variant="danger" title={reloadError} style={{ marginTop: "0.5rem" }} />
             )}
           </>
         ) : (
@@ -153,7 +153,7 @@ export function RestoreDialog({ onClose }: Props) {
               </div>
             </FormGroup>
 
-            {scanError && <Alert variant="danger" isInline title={scanError} />}
+            {scanError && <Notice variant="danger" title={scanError} />}
 
             {archives.length > 0 && (
               <FormGroup label={t("restore.select_label")} fieldId="rd-select">
@@ -189,10 +189,10 @@ export function RestoreDialog({ onClose }: Props) {
             )}
 
             {archives.length === 0 && !scanning && !scanError && scanDir && (
-              <Alert variant="info" isInline title={t("restore.no_archives")} />
+              <Notice variant="info" title={t("restore.no_archives")} />
             )}
 
-            {restoreError && <Alert variant="danger" isInline title={restoreError} />}
+            {restoreError && <Notice variant="danger" title={restoreError} />}
           </Form>
         )}
       </ModalBody>

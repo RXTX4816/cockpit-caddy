@@ -1,7 +1,6 @@
 import { saveTextToDownloads } from "@rxtx4816/cockpit-plugin-base-react/lib/saveText";
 import { Fragment, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import {
-  Alert,
   AlertActionCloseButton,
   Button,
   Label,
@@ -18,6 +17,7 @@ import { useTranslation } from "react-i18next";
 import { colorizeJson } from "@rxtx4816/cockpit-plugin-base-react/lib/logParser";
 import "@rxtx4816/cockpit-plugin-base-react/log-tokens.css";
 import { matchesSearch, type ParsedLogLine } from "./caddyLog";
+import { Notice } from "./Notice";
 
 interface Props {
   /** Lines after the level filter and logger tab; the search is applied here. */
@@ -123,19 +123,19 @@ export function LogTable({ lines, loading, error, onRefresh, paused, onPause, on
     <Stack hasGutter>
       {error && (
         <StackItem>
-          <Alert variant="danger" title={t("logs.load_failed")} actionLinks={<Button variant="link" onClick={onRefresh}>{t("common.retry")}</Button>}>
+          <Notice variant="danger" title={t("logs.load_failed")} actionLinks={<Button variant="link" onClick={onRefresh}>{t("common.retry")}</Button>}>
             {error}
-          </Alert>
+          </Notice>
         </StackItem>
       )}
       {savedTo && (
         <StackItem>
-          <Alert variant="info" isInline title={t("logs.saved_to", { path: savedTo })} actionClose={<AlertActionCloseButton onClose={() => setSavedTo(null)} />} />
+          <Notice variant="info" title={t("logs.saved_to", { path: savedTo })} actionClose={<AlertActionCloseButton onClose={() => setSavedTo(null)} />} />
         </StackItem>
       )}
       {saveError && (
         <StackItem>
-          <Alert variant="danger" isInline title={saveError} actionClose={<AlertActionCloseButton onClose={() => setSaveError(null)} />} />
+          <Notice variant="danger" title={saveError} actionClose={<AlertActionCloseButton onClose={() => setSaveError(null)} />} />
         </StackItem>
       )}
       <StackItem>
