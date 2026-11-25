@@ -304,7 +304,8 @@
     "log_credentials": "Catat kredensial",
     "log_credentials_help": "Tulis header Authorization dan Cookie ke log akses.",
     "enable_full_duplex": "Full duplex untuk HTTP/1",
-    "enable_full_duplex_help": "Izinkan handler membaca isi permintaan sambil menulis respons."
+    "enable_full_duplex_help": "Izinkan handler membaca isi permintaan sambil menulis respons.",
+    "read_body_idle": "Batas waktu diam isi permintaan"
   },
   "request_body": {
     "field_label": "Ukuran maksimum body permintaan",

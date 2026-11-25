@@ -304,7 +304,8 @@
     "log_credentials": "Kirjaa tunnistetiedot",
     "log_credentials_help": "Kirjoittaa Authorization- ja Cookie-otsakkeet käyttölokiin.",
     "enable_full_duplex": "Kaksisuuntainen HTTP/1",
-    "enable_full_duplex_help": "Käsittelijä voi lukea pyynnön rungon samalla kun se kirjoittaa vastausta."
+    "enable_full_duplex_help": "Käsittelijä voi lukea pyynnön rungon samalla kun se kirjoittaa vastausta.",
+    "read_body_idle": "Pyynnön rungon joutoaikakatkaisu"
   },
   "request_body": {
     "field_label": "Pyynnön rungon enimmäiskoko",

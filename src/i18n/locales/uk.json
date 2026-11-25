@@ -304,7 +304,8 @@
     "log_credentials": "Записувати облікові дані",
     "log_credentials_help": "Записує заголовки Authorization і Cookie в журнал доступу.",
     "enable_full_duplex": "Повний дуплекс для HTTP/1",
-    "enable_full_duplex_help": "Дозволяє обробнику читати тіло запиту під час запису відповіді."
+    "enable_full_duplex_help": "Дозволяє обробнику читати тіло запиту під час запису відповіді.",
+    "read_body_idle": "Тайм-аут простою тіла запиту"
   },
   "request_body": {
     "field_label": "Максимальний розмір тіла запиту",

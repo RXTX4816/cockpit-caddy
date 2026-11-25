@@ -23,16 +23,19 @@ export interface ServerTimeoutValues {
   /** TCP keep-alive probe interval and idle time before the first probe (#328). */
   keepaliveInterval: string;
   keepaliveIdle: string;
+  /** `read_body_idle` (#328): idle time allowed between request body reads. */
+  readBodyIdle: string;
   strictSniHost: boolean;
   logCredentials: boolean;
   enableFullDuplex: boolean;
 }
 
 /** The #328 fields of the form, from a stored ServerExtras. */
-export function serverExtrasToValues(e: import("../api/types").ServerExtras | undefined): Pick<ServerTimeoutValues, "keepaliveInterval" | "keepaliveIdle" | "strictSniHost" | "logCredentials" | "enableFullDuplex"> {
+export function serverExtrasToValues(e: import("../api/types").ServerExtras | undefined): Pick<ServerTimeoutValues, "keepaliveInterval" | "keepaliveIdle" | "readBodyIdle" | "strictSniHost" | "logCredentials" | "enableFullDuplex"> {
   return {
     keepaliveInterval: e?.keepaliveInterval ?? "",
     keepaliveIdle: e?.keepaliveIdle ?? "",
+    readBodyIdle: e?.readBodyIdle ?? "",
     strictSniHost: e?.strictSniHost ?? false,
     logCredentials: e?.logCredentials ?? false,
     enableFullDuplex: e?.enableFullDuplex ?? false,
@@ -44,6 +47,7 @@ export function serverExtrasFromValues(v: ServerTimeoutValues): import("../api/t
   const e: import("../api/types").ServerExtras = {
     keepaliveInterval: v.keepaliveInterval.trim() || undefined,
     keepaliveIdle: v.keepaliveIdle.trim() || undefined,
+    readBodyIdle: v.readBodyIdle.trim() || undefined,
     strictSniHost: v.strictSniHost || undefined,
     logCredentials: v.logCredentials || undefined,
     enableFullDuplex: v.enableFullDuplex || undefined,
@@ -77,7 +81,7 @@ interface Props {
 
 export function ServerTimeoutsSection({ value, onChange, isDisabled, isExpanded: isExpandedProp, onToggleExpanded }: Props) {
   const { t } = useTranslation();
-  const hasValues = !!(value.readTimeout || value.readHeaderTimeout || value.writeTimeout || value.idleTimeout || value.maxHeaderBytes || value.disableHttp3 || value.keepaliveInterval || value.keepaliveIdle || value.strictSniHost || value.logCredentials || value.enableFullDuplex);
+  const hasValues = !!(value.readTimeout || value.readHeaderTimeout || value.writeTimeout || value.idleTimeout || value.maxHeaderBytes || value.disableHttp3 || value.keepaliveInterval || value.keepaliveIdle || value.readBodyIdle || value.strictSniHost || value.logCredentials || value.enableFullDuplex);
   const [internalExpanded, setInternalExpanded] = useState(hasValues);
   const expanded = isExpandedProp ?? internalExpanded;
   const setExpanded = onToggleExpanded ?? setInternalExpanded;
@@ -174,6 +178,15 @@ export function ServerTimeoutsSection({ value, onChange, isDisabled, isExpanded:
             value={value.keepaliveIdle}
             onChange={(_e, v) => set("keepaliveIdle", v)}
             placeholder={t("common.default_value", { value: "15s" })}
+            isDisabled={isDisabled}
+          />
+        </FormGroup>
+        <FormGroup label={t("server_timeouts.read_body_idle")} fieldId="st-read-body-idle" style={{ flex: "1 1 10rem" }}>
+          <ResettableTextInput
+            id="st-read-body-idle"
+            value={value.readBodyIdle}
+            onChange={(_e, v) => set("readBodyIdle", v)}
+            placeholder={t("server_timeouts.no_timeout")}
             isDisabled={isDisabled}
           />
         </FormGroup>

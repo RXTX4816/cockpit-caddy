@@ -304,7 +304,8 @@
     "log_credentials": "認証情報をログに記録",
     "log_credentials_help": "Authorization ヘッダーと Cookie ヘッダーをアクセスログに書き込みます。",
     "enable_full_duplex": "HTTP/1 の全二重通信",
-    "enable_full_duplex_help": "ハンドラーがレスポンスを書き込みながらリクエストボディを読めるようにします。"
+    "enable_full_duplex_help": "ハンドラーがレスポンスを書き込みながらリクエストボディを読めるようにします。",
+    "read_body_idle": "リクエストボディのアイドルタイムアウト"
   },
   "request_body": {
     "field_label": "リクエスト本文の最大サイズ",

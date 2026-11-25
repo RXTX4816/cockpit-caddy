@@ -304,7 +304,8 @@
     "log_credentials": "记录凭据",
     "log_credentials_help": "将 Authorization 和 Cookie 请求头写入访问日志。",
     "enable_full_duplex": "HTTP/1 全双工",
-    "enable_full_duplex_help": "允许处理程序在写入响应的同时读取请求体。"
+    "enable_full_duplex_help": "允许处理程序在写入响应的同时读取请求体。",
+    "read_body_idle": "请求体空闲超时"
   },
   "request_body": {
     "field_label": "请求体最大大小",

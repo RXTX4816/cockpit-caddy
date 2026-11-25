@@ -92,6 +92,8 @@ export interface ServerExtras {
   keepaliveInterval?: string;
   /** `keepalive_idle`: how long a connection is idle before the first probe (Go duration). */
   keepaliveIdle?: string;
+  /** `timeouts { read_body_idle }`: how long a request body may sit without new bytes (Go duration). */
+  readBodyIdle?: string;
   /** `strict_sni_host`: reject requests whose Host header differs from the TLS SNI name. */
   strictSniHost?: boolean;
   /** `log_credentials`: write the Authorization and Cookie headers to the access log. */

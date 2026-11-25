@@ -1236,6 +1236,7 @@ export function parseServerExtras(server: CaddyServer): import("./types").Server
   const extras: import("./types").ServerExtras = {
     keepaliveInterval: parseDuration(s.keepalive_interval) || undefined,
     keepaliveIdle: parseDuration(s.keepalive_idle) || undefined,
+    readBodyIdle: parseDuration(s.read_idle_timeout) || undefined,
     strictSniHost: s.strict_sni_host === true || undefined,
     logCredentials: logs?.should_log_credentials === true || undefined,
     enableFullDuplex: s.enable_full_duplex === true || undefined,
@@ -1252,6 +1253,8 @@ export function applyServerExtras(server: CaddyServer, extras: import("./types")
   else delete s.keepalive_interval;
   if (extras?.keepaliveIdle) s.keepalive_idle = extras.keepaliveIdle;
   else delete s.keepalive_idle;
+  if (extras?.readBodyIdle) s.read_idle_timeout = extras.readBodyIdle;
+  else delete s.read_idle_timeout;
   if (extras?.strictSniHost) s.strict_sni_host = true;
   else delete s.strict_sni_host;
   if (extras?.enableFullDuplex) s.enable_full_duplex = true;

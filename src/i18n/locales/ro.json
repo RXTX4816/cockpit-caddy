@@ -304,7 +304,8 @@
     "log_credentials": "Înregistrează credențialele",
     "log_credentials_help": "Scrie antetele Authorization și Cookie în jurnalul de acces.",
     "enable_full_duplex": "Full duplex pentru HTTP/1",
-    "enable_full_duplex_help": "Permite unui handler să citească corpul cererii în timp ce scrie răspunsul."
+    "enable_full_duplex_help": "Permite unui handler să citească corpul cererii în timp ce scrie răspunsul.",
+    "read_body_idle": "Timp de inactivitate pentru corpul cererii"
   },
   "request_body": {
     "field_label": "Dimensiunea maximă a corpului cererii",

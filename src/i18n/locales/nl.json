@@ -304,7 +304,8 @@
     "log_credentials": "Inloggegevens loggen",
     "log_credentials_help": "Schrijft de Authorization- en Cookie-headers naar het toegangslogboek.",
     "enable_full_duplex": "Full duplex voor HTTP/1",
-    "enable_full_duplex_help": "Laat een handler de request-body lezen terwijl hij het antwoord schrijft."
+    "enable_full_duplex_help": "Laat een handler de request-body lezen terwijl hij het antwoord schrijft.",
+    "read_body_idle": "Inactiviteitstime-out voor de request-body"
   },
   "request_body": {
     "field_label": "Maximale grootte van de request-body",
