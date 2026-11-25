@@ -922,6 +922,8 @@ export function patchRawBlock(raw: string, proxy: ProxyEntry): string {
   const oldIp = oldHeader?.length === 1 && oldHeader[0].host && isIpAddress(oldHeader[0].host) ? oldHeader[0].host : undefined;
   const isOwnBind = (l: string) => !!oldIp && l.trim() === `bind ${oldIp}`;
   for (let k = kept.length - 1; k >= 1; k--) if (isOwnBind(kept[k])) kept.splice(k, 1);
+  // A bind chosen in the form (#323) replaces the block's own; without one a hand-written bind stays.
+  if (proxy.bind?.length) for (let k = kept.length - 1; k >= 1; k--) if (/^\s*bind(\s|$)/.test(kept[k])) kept.splice(k, 1);
   if (!kept.slice(1).some(l => /^\s*bind(\s|$)/.test(l))) kept.splice(1, 0, ...buildBindLines(proxy));
   kept.splice(1, 0, ...buildImportLines(proxy));
   // Re-add updated directives before closing brace
@@ -1046,8 +1048,9 @@ export function bindsToIp(proxy: { externalHost?: string }): boolean {
  * interface; `bind` is what restricts the listener, as the instant-apply JSON's `IP:port`
  * listen address does (#254).
  */
-export function buildBindLines(proxy: { externalHost?: string }): string[] {
-  return bindsToIp(proxy) ? [`\tbind ${proxy.externalHost}`] : [];
+export function buildBindLines(proxy: { externalHost?: string; bind?: string[] }): string[] {
+  const addresses = [...new Set([...(bindsToIp(proxy) ? [proxy.externalHost!] : []), ...(proxy.bind ?? [])])];
+  return addresses.length ? [`\tbind ${addresses.join(" ")}`] : [];
 }
 
 

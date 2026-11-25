@@ -1205,6 +1205,11 @@
     "site_override_help": "Den här webbplatsen använder en egen DNS-leverantör och egna inloggningsuppgifter. Att spara nya uppgifter startar om Caddy, eftersom Caddy bara läser dem vid start.",
     "site_wildcard_warning": "Jokerteckencertifikat kräver DNS-utmaningen. Ange en DNS-leverantör för den här webbplatsen, eller under Inställningar → DNS-utmaning."
   },
+  "bind": {
+    "label": "Bind-adresser",
+    "help": "Adresserna som den här webbplatsen lyssnar på, avgränsade med mellanslag, till exempel 127.0.0.1 ::1. Tomt lyssnar på alla adresser. En värd som är en enda IP-adress binder redan till den.",
+    "invalid": "Ange IP-adresser eller värdnamn, utan port."
+  },
   "encode": {
     "heading": "Komprimering",
     "section_title": "Komprimeringsinställningar (valfritt)",

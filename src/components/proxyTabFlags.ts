@@ -1,5 +1,6 @@
 import { hasAnyMatcher } from "../api";
 import type { ErrorHandlerConfig, ForwardAuthConfig, LbPolicy, HeaderOperation, RewriteConfig, RouteMatch } from "../api";
+import { bindHasErrors } from "./BindSection";
 import type { EncodeValues } from "./EncodeSection";
 import { validateRewrite } from "./RewriteSection";
 import { validateRouteMatch } from "./RouteMatchersSection";
@@ -42,6 +43,8 @@ export interface ProxyTabValues {
   errorHandlers: ErrorHandlerConfig[];
   serverTimeouts: ServerTimeoutValues;
   requestBodyMaxSize: string;
+  /** The addresses the site binds to, as typed (#323). */
+  bind?: string;
 }
 
 export interface TabFlags {
@@ -61,7 +64,7 @@ export function proxyTabFlags(v: ProxyTabValues, generalHasError: boolean): TabF
         || !!(v.encode && (v.encode.algorithms || v.encode.minimumLength || v.encode.matchStatus || v.encode.matchHeaders)),
       upstreams: v.extraUpstreams.length > 0 || v.dynamicUpstreams.length > 0 || !!v.lbPolicy || !!lbRetryValuesToConfig(v.lbRetry) || Object.values(v.transport).some(Boolean),
       logging: !!accessLogValuesToConfig(v.accessLog) || v.errorHandlers.length > 0,
-      limits: !!v.requestBodyMaxSize
+      limits: !!v.requestBodyMaxSize || !!v.bind?.trim()
         || !!(st.readTimeout || st.readHeaderTimeout || st.writeTimeout || st.idleTimeout || st.maxHeaderBytes || st.disableHttp3 || st.keepaliveInterval || st.keepaliveIdle || st.readBodyIdle || st.strictSniHost || st.logCredentials || st.enableFullDuplex),
     },
     hasError: {
@@ -71,7 +74,7 @@ export function proxyTabFlags(v: ProxyTabValues, generalHasError: boolean): TabF
       upstreams: !!validateUpstreams(v.extraUpstreams) || !!validateDynamicUpstreams(v.dynamicUpstreams) || !!validateLbRetry(v.lbRetry)
         || (v.extraUpstreams.length > 0 && !!validateLbArgs(v.lbPolicy as LbPolicy | "", v.lbArgs, v.extraUpstreams.length + 1)),
       logging: v.accessLog.enabled && validateFieldFilters(v.accessLog.fieldFilters),
-      limits: false,
+      limits: bindHasErrors(v.bind ?? ""),
     },
   };
 }

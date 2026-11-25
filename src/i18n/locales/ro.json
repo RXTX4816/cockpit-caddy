@@ -1205,6 +1205,11 @@
     "site_override_help": "Acest site folosește propriul furnizor DNS și propriile date de acces. Salvarea unor date noi repornește Caddy, care le citește doar la pornire.",
     "site_wildcard_warning": "Certificatele wildcard au nevoie de provocarea DNS. Setează un furnizor DNS pentru acest site sau în Setări → Provocare DNS."
   },
+  "bind": {
+    "label": "Adrese de bind",
+    "help": "Adresele pe care ascultă acest site, separate prin spații, de exemplu 127.0.0.1 ::1. Gol ascultă pe toate adresele. O gazdă care este o singură adresă IP se leagă deja la ea.",
+    "invalid": "Introdu adrese IP sau nume de gazdă, fără port."
+  },
   "encode": {
     "heading": "Compresie",
     "section_title": "Compresie (opțional)",

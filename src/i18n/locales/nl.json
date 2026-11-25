@@ -1205,6 +1205,11 @@
     "site_override_help": "Deze site gebruikt een eigen DNS-provider en eigen inloggegevens. Nieuwe gegevens opslaan herstart Caddy, omdat Caddy ze alleen bij het starten leest.",
     "site_wildcard_warning": "Wildcardcertificaten hebben de DNS-challenge nodig. Stel een DNS-provider in voor deze site, of onder Instellingen → DNS-challenge."
   },
+  "bind": {
+    "label": "Bind-adressen",
+    "help": "De adressen waarop deze site luistert, gescheiden door spaties, bijvoorbeeld 127.0.0.1 ::1. Leeg luistert op elk adres. Een host die één IP-adres is, bindt er al aan.",
+    "invalid": "Voer IP-adressen of hostnamen in, zonder poort."
+  },
   "encode": {
     "heading": "Compressie",
     "section_title": "Compressie-instellingen (optioneel)",

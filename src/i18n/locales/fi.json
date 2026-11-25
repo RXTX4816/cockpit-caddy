@@ -1205,6 +1205,11 @@
     "site_override_help": "Tämä sivusto käyttää omaa DNS-palveluntarjoajaa ja tunnuksia. Uusien tunnusten tallentaminen käynnistää Caddyn uudelleen, koska se lukee ne vain käynnistyessään.",
     "site_wildcard_warning": "Jokerimerkkivarmenteet tarvitsevat DNS-haasteen. Aseta DNS-palveluntarjoaja tälle sivustolle tai kohdassa Asetukset → DNS-haaste."
   },
+  "bind": {
+    "label": "Bind-osoitteet",
+    "help": "Osoitteet, joissa tämä sivusto kuuntelee, välilyönnein erotettuina, esimerkiksi 127.0.0.1 ::1. Tyhjä kuuntelee kaikissa osoitteissa. Isäntä, joka on yksi IP-osoite, sitoutuu jo siihen.",
+    "invalid": "Anna IP-osoitteita tai isäntänimiä ilman porttia."
+  },
   "encode": {
     "heading": "Pakkaus",
     "section_title": "Pakkausasetukset (valinnainen)",

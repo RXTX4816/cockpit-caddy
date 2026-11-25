@@ -1205,6 +1205,11 @@
     "site_override_help": "Este sitio usa su propio proveedor DNS y credenciales. Guardar credenciales nuevas reinicia Caddy, porque solo las lee al arrancar.",
     "site_wildcard_warning": "Los certificados comodín necesitan el desafío DNS. Define un proveedor DNS para este sitio o en Ajustes → Desafío DNS."
   },
+  "bind": {
+    "label": "Direcciones de enlace",
+    "help": "Las direcciones en las que escucha este sitio, separadas por espacios, por ejemplo 127.0.0.1 ::1. Vacío escucha en todas. Un host que es una sola dirección IP ya se enlaza a ella.",
+    "invalid": "Introduzca direcciones IP o nombres de host, sin puerto."
+  },
   "encode": {
     "heading": "Compresión",
     "section_title": "Compresión (opcional)",

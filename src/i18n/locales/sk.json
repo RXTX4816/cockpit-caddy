@@ -1205,6 +1205,11 @@
     "site_override_help": "Táto stránka používa vlastného poskytovateľa DNS a prihlasovacie údaje. Uloženie nových údajov reštartuje Caddy, pretože ich načíta len pri štarte.",
     "site_wildcard_warning": "Certifikáty so zástupným znakom vyžadujú výzvu DNS. Nastavte poskytovateľa DNS pre túto stránku alebo v Nastavenia → Výzva DNS."
   },
+  "bind": {
+    "label": "Adresy pre bind",
+    "help": "Adresy, na ktorých tento web počúva, oddelené medzerami, napríklad 127.0.0.1 ::1. Prázdne znamená všetky adresy. Hostiteľ, ktorý je jedinou IP adresou, sa na ňu už viaže.",
+    "invalid": "Zadajte IP adresy alebo názvy hostiteľov bez portu."
+  },
   "encode": {
     "heading": "Kompresia",
     "section_title": "Nastavenia kompresie (voliteľné)",

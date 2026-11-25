@@ -605,6 +605,8 @@ export interface ProxyEntry {
   /** reverse_proxy `stream_close_delay`: how long streams stay open after a config reload (#325). */
   streamCloseDelay?: string;
   basicAuth?: { username: string; passwordHash: string }[];
+  /** `bind`: the addresses this site listens on, next to its host name (#323). A host that is one IP address is its own bind. */
+  bind?: string[];
   /** The realm and hash algorithm of `basic_auth` (#337). */
   basicAuthOptions?: BasicAuthOptions;
   /** Additional upstreams beyond the primary targetHost:targetPort */

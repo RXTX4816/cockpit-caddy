@@ -1205,6 +1205,11 @@
     "site_override_help": "Ce site utilise son propre fournisseur DNS et ses propres identifiants. Enregistrer de nouveaux identifiants redémarre Caddy, qui ne les lit qu'au démarrage.",
     "site_wildcard_warning": "Les certificats génériques nécessitent le défi DNS. Définissez un fournisseur DNS pour ce site, ou dans Paramètres → Défi DNS."
   },
+  "bind": {
+    "label": "Adresses de liaison",
+    "help": "Les adresses sur lesquelles ce site écoute, séparées par des espaces, par exemple 127.0.0.1 ::1. Vide écoute sur toutes les adresses. Un hôte qui est une seule adresse IP s'y lie déjà.",
+    "invalid": "Saisissez des adresses IP ou des noms d'hôte, sans port."
+  },
   "encode": {
     "heading": "Compression",
     "section_title": "Compression (facultatif)",
