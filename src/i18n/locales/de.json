@@ -1063,5 +1063,24 @@
     "site_inherit_help": "Nutzt den DNS-Anbieter aus Einstellungen → DNS-Challenge, oder die HTTP-Challenge, wenn keiner gesetzt ist.",
     "site_override_help": "Diese Site nutzt einen eigenen DNS-Anbieter mit eigenen Zugangsdaten. Neue Zugangsdaten zu speichern startet Caddy neu, weil Caddy sie nur beim Start liest.",
     "site_wildcard_warning": "Wildcard-Zertifikate brauchen die DNS-Challenge. Setze einen DNS-Anbieter für diese Site oder unter Einstellungen → DNS-Challenge."
+  },
+  "encode": {
+    "heading": "Komprimierung",
+    "section_title": "Komprimierung (optional)",
+    "help": "Gilt, solange die Komprimierung unter Allgemein aktiv ist. Ohne Auswahl komprimiert Caddy mit gzip und zstd.",
+    "algorithms": "Algorithmen und Reihenfolge",
+    "algorithms_default": "gzip, zstd (Standard)",
+    "algorithms_zstd_gzip": "zstd, dann gzip",
+    "algorithms_gzip": "nur gzip",
+    "algorithms_zstd": "nur zstd",
+    "minimum_length": "Mindestgröße",
+    "minimum_length_help": "Antworten mit weniger Bytes werden unverändert gesendet. Caddys Standard ist 512.",
+    "invalid_number": "Geben Sie eine ganze Zahl von Bytes ein.",
+    "match_status": "Nur diese Statuscodes",
+    "match_status_help": "Durch Leerzeichen getrennte Codes oder Klassen wie 2xx 404. Leer heißt jeder Status.",
+    "invalid_status": "Geben Sie Statuscodes wie 200 oder Klassen wie 2xx ein.",
+    "match_headers": "Nur diese Antwort-Header",
+    "match_headers_help": "Einer pro Zeile: Headername, dann Wert. Platzhalter wie text/* funktionieren.",
+    "invalid_header": "Jede Zeile braucht einen Headernamen und einen Wert."
   }
 }

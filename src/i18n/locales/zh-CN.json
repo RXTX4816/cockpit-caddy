@@ -1063,5 +1063,24 @@
     "site_inherit_help": "使用“设置 → DNS 质询”中设置的 DNS 提供商；未设置时使用 HTTP 质询。",
     "site_override_help": "此站点使用自己的 DNS 提供商和凭据。保存新凭据会重启 Caddy，因为它只在启动时读取凭据。",
     "site_wildcard_warning": "通配符证书需要 DNS 质询。请为此站点设置 DNS 提供商，或在“设置 → DNS 质询”中设置。"
+  },
+  "encode": {
+    "heading": "压缩",
+    "section_title": "压缩设置(可选)",
+    "help": "在“常规”中开启压缩时生效。不作选择时,Caddy 使用 gzip 和 zstd 压缩。",
+    "algorithms": "算法及顺序",
+    "algorithms_default": "gzip、zstd(默认)",
+    "algorithms_zstd_gzip": "先 zstd,后 gzip",
+    "algorithms_gzip": "仅 gzip",
+    "algorithms_zstd": "仅 zstd",
+    "minimum_length": "最小大小",
+    "minimum_length_help": "小于此字节数的响应将原样发送。Caddy 的默认值为 512。",
+    "invalid_number": "请输入整数字节数。",
+    "match_status": "仅这些状态码",
+    "match_status_help": "以空格分隔的状态码或 2xx 404 之类的类别。留空表示所有状态。",
+    "invalid_status": "请输入 200 之类的状态码或 2xx 之类的类别。",
+    "match_headers": "仅这些响应头",
+    "match_headers_help": "每行一个:先写响应头名称,再写值。支持 text/* 之类的通配符。",
+    "invalid_header": "每一行都需要响应头名称和值。"
   }
 }

@@ -1063,5 +1063,24 @@
     "site_inherit_help": "Ayarlar → DNS doğrulaması altındaki DNS sağlayıcısını, ayarlanmamışsa HTTP doğrulamasını kullanır.",
     "site_override_help": "Bu site kendi DNS sağlayıcısını ve kimlik bilgilerini kullanır. Yeni kimlik bilgilerini kaydetmek Caddy'yi yeniden başlatır, çünkü bunları yalnızca başlarken okur.",
     "site_wildcard_warning": "Joker karakterli sertifikalar DNS doğrulaması gerektirir. Bu site için ya da Ayarlar → DNS doğrulaması altında bir DNS sağlayıcısı ayarlayın."
+  },
+  "encode": {
+    "heading": "Sıkıştırma",
+    "section_title": "Sıkıştırma ayarları (isteğe bağlı)",
+    "help": "Genel sekmesinde sıkıştırma açıkken kullanılır. Seçim yapılmazsa Caddy gzip ve zstd ile sıkıştırır.",
+    "algorithms": "Algoritmalar ve sıra",
+    "algorithms_default": "gzip, zstd (varsayılan)",
+    "algorithms_zstd_gzip": "önce zstd, sonra gzip",
+    "algorithms_gzip": "yalnızca gzip",
+    "algorithms_zstd": "yalnızca zstd",
+    "minimum_length": "En küçük boyut",
+    "minimum_length_help": "Bu bayt sayısından küçük yanıtlar olduğu gibi gönderilir. Caddy'nin varsayılanı 512'dir.",
+    "invalid_number": "Bayt sayısını tam sayı olarak girin.",
+    "match_status": "Yalnızca bu durum kodları",
+    "match_status_help": "Boşlukla ayrılmış kodlar veya 2xx 404 gibi sınıflar. Boş, her durum anlamına gelir.",
+    "invalid_status": "200 gibi durum kodları veya 2xx gibi sınıflar girin.",
+    "match_headers": "Yalnızca bu yanıt başlıkları",
+    "match_headers_help": "Satır başına bir tane: başlık adı, sonra değeri. text/* gibi joker karakterler çalışır.",
+    "invalid_header": "Her satırda bir başlık adı ve bir değer olmalıdır."
   }
 }

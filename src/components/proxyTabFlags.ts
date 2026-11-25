@@ -1,5 +1,6 @@
 import { hasAnyMatcher } from "../api";
 import type { ErrorHandlerConfig, ForwardAuthConfig, LbPolicy, HeaderOperation, RewriteConfig, RouteMatch } from "../api";
+import type { EncodeValues } from "./EncodeSection";
 import type { AccessLogValues } from "./AccessLogSection";
 import { accessLogValuesToConfig } from "./AccessLogSection";
 import type { AuthEntry, BasicAuthOptionValues } from "./BasicAuthSection";
@@ -16,6 +17,9 @@ export interface ProxyTabValues {
   basicAuthOptions?: BasicAuthOptionValues;
   /** A kept account's hash was made with another algorithm than the one chosen (#337). */
   basicAuthError?: boolean;
+  encode?: EncodeValues;
+  /** The compression section holds a value Caddy would reject (#335). */
+  encodeError?: boolean;
   forwardAuth: ForwardAuthConfig | undefined;
   forwardAuthError: string | null;
   tlsValues: TlsValues;
@@ -48,7 +52,8 @@ export function proxyTabFlags(v: ProxyTabValues, generalHasError: boolean): TabF
     configured: {
       general: false,
       security: v.basicAuth.length > 0 || !!v.forwardAuth || tls,
-      routing: hasAnyMatcher(v.matchers) || !!v.rewrite || !!v.requestHeaders?.length || !!v.responseHeaders?.length || v.isNamedRoute,
+      routing: hasAnyMatcher(v.matchers) || !!v.rewrite || !!v.requestHeaders?.length || !!v.responseHeaders?.length || v.isNamedRoute
+        || !!(v.encode && (v.encode.algorithms || v.encode.minimumLength || v.encode.matchStatus || v.encode.matchHeaders)),
       upstreams: v.extraUpstreams.length > 0 || !!v.lbPolicy || !!lbRetryValuesToConfig(v.lbRetry) || !!(v.transport.dialTimeout || v.transport.responseHeaderTimeout),
       logging: !!accessLogValuesToConfig(v.accessLog) || v.errorHandlers.length > 0,
       limits: !!v.requestBodyMaxSize
@@ -57,7 +62,7 @@ export function proxyTabFlags(v: ProxyTabValues, generalHasError: boolean): TabF
     hasError: {
       general: generalHasError,
       security: !!v.forwardAuthError || !!v.basicAuthError || tlsValuesHaveErrors(v.tlsValues),
-      routing: false,
+      routing: !!v.encodeError,
       upstreams: !!validateUpstreams(v.extraUpstreams) || !!validateLbRetry(v.lbRetry)
         || (v.extraUpstreams.length > 0 && !!validateLbArgs(v.lbPolicy as LbPolicy | "", v.lbArgs, v.extraUpstreams.length + 1)),
       logging: false,

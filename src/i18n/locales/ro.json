@@ -1063,5 +1063,24 @@
     "site_inherit_help": "Folosește furnizorul DNS setat în Setări → Provocare DNS sau provocarea HTTP dacă nu e setat niciunul.",
     "site_override_help": "Acest site folosește propriul furnizor DNS și propriile date de acces. Salvarea unor date noi repornește Caddy, care le citește doar la pornire.",
     "site_wildcard_warning": "Certificatele wildcard au nevoie de provocarea DNS. Setează un furnizor DNS pentru acest site sau în Setări → Provocare DNS."
+  },
+  "encode": {
+    "heading": "Compresie",
+    "section_title": "Compresie (opțional)",
+    "help": "Se aplică cât timp compresia este activată la General. Fără alegeri, Caddy comprimă cu gzip și zstd.",
+    "algorithms": "Algoritmi și ordine",
+    "algorithms_default": "gzip, zstd (implicit)",
+    "algorithms_zstd_gzip": "zstd, apoi gzip",
+    "algorithms_gzip": "doar gzip",
+    "algorithms_zstd": "doar zstd",
+    "minimum_length": "Dimensiune minimă",
+    "minimum_length_help": "Răspunsurile cu mai puțini octeți decât atât sunt trimise ca atare. Valoarea implicită Caddy este 512.",
+    "invalid_number": "Introdu un număr întreg de octeți.",
+    "match_status": "Doar aceste coduri de stare",
+    "match_status_help": "Coduri sau clase separate prin spații, ca 2xx 404. Gol înseamnă orice stare.",
+    "invalid_status": "Introdu coduri ca 200 sau clase ca 2xx.",
+    "match_headers": "Doar aceste anteturi de răspuns",
+    "match_headers_help": "Unul pe linie: numele antetului, apoi valoarea. Funcționează metacaractere precum text/*.",
+    "invalid_header": "Fiecare linie are nevoie de un nume de antet și o valoare."
   }
 }

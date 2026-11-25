@@ -3,6 +3,7 @@ import { Checkbox } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import { isPathOnlyMatcher } from "../api";
 import { AccessLogSection } from "./AccessLogSection";
+import { EncodeSection } from "./EncodeSection";
 import { BasicAuthSection } from "./BasicAuthSection";
 import { ErrorHandlersSection } from "./ErrorHandlersSection";
 import { ForwardAuthSection, validateForwardAuth } from "./ForwardAuthSection";
@@ -87,12 +88,14 @@ export function ProxyTabs({ state: s, onChange, general, generalHasError, active
       {
         key: "routing",
         configured: flags.configured.routing,
+        hasError: flags.hasError.routing,
         content: (
           <>
             {routeMatchers}
             {isProxy && <RewriteSection value={s.rewrite} onChange={v => onChange({ rewrite: v })} isDisabled={isDisabled} />}
             <RequestHeadersSection value={s.requestHeaders} onChange={v => onChange({ requestHeaders: v })} isDisabled={isDisabled} />
             <ResponseHeadersSection value={s.responseHeaders} onChange={v => onChange({ responseHeaders: v })} isDisabled={isDisabled} />
+            <EncodeSection value={s.encode} onChange={v => onChange({ encode: v })} isDisabled={isDisabled} />
             {isProxy && (
               <NamedRouteField
                 idPrefix={`${idPrefix}-`}

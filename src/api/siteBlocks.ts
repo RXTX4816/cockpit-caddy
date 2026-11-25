@@ -247,6 +247,22 @@ export function buildForwardAuthCaddyLines(fa: import("./types").ForwardAuthConf
 }
 
 
+/**
+ * `encode <algorithms>`, with its options in a block (#335). Caddy's `status 2xx` is a class and
+ * `header Name value` takes one value, so a header with several values is written as several lines.
+ */
+export function buildEncodeLines(indent: string, options?: import("./types").EncodeOptions): string[] {
+  const head = `${indent}encode ${(options?.algorithms?.length ? options.algorithms : ["gzip", "zstd"]).join(" ")}`;
+  const inner: string[] = [];
+  if (options?.minimumLength != null) inner.push(`${indent}\tminimum_length ${options.minimumLength}`);
+  const match: string[] = [];
+  if (options?.matchStatus?.length) match.push(`${indent}\t\tstatus ${options.matchStatus.join(" ")}`);
+  for (const h of options?.matchHeaders ?? []) match.push(`${indent}\t\theader ${h.name} ${caddyQuote(h.value)}`);
+  if (match.length) inner.push(`${indent}\tmatch {`, ...match, `${indent}\t}`);
+  return inner.length ? [`${head} {`, ...inner, `${indent}}`] : [head];
+}
+
+
 /** `basic_auth [<algorithm> [<realm>]] {`: a realm needs the algorithm before it, so bcrypt is spelled out then. */
 export function basicAuthOpenLine(indent: string, options?: import("./types").BasicAuthOptions): string {
   const algorithm = options?.algorithm ?? (options?.realm ? "bcrypt" : undefined);
@@ -669,7 +685,7 @@ export function buildRouteHandlerLines(p: ProxyEntry, indent: string): string[] 
   } else if (p.redirect) {
     lines.push(`${indent}redir ${p.redirect.to} ${p.redirect.html ? "html" : p.redirect.code}`);
   } else if (p.fileServer) {
-    if (p.compress) lines.push(`${indent}encode gzip zstd`);
+    if (p.compress) lines.push(...buildEncodeLines(indent, p.encodeOptions));
     if (p.basicAuth?.length) {
       lines.push(basicAuthOpenLine(indent, p.basicAuthOptions));
       for (const a of p.basicAuth) lines.push(`${indent}\t${a.username} ${a.passwordHash}`);
@@ -680,7 +696,7 @@ export function buildRouteHandlerLines(p: ProxyEntry, indent: string): string[] 
     }
     lines.push(...buildFileServerLines(p.fileServer, indent));
   } else if (p.phpFastcgi) {
-    if (p.compress) lines.push(`${indent}encode gzip zstd`);
+    if (p.compress) lines.push(...buildEncodeLines(indent, p.encodeOptions));
     if (p.basicAuth?.length) {
       lines.push(basicAuthOpenLine(indent, p.basicAuthOptions));
       for (const a of p.basicAuth) lines.push(`${indent}\t${a.username} ${a.passwordHash}`);
@@ -691,7 +707,7 @@ export function buildRouteHandlerLines(p: ProxyEntry, indent: string): string[] 
     }
     lines.push(...buildPhpFastcgiLines(p.phpFastcgi, indent));
   } else {
-    if (p.compress) lines.push(`${indent}encode gzip zstd`);
+    if (p.compress) lines.push(...buildEncodeLines(indent, p.encodeOptions));
     if (p.basicAuth?.length) {
       lines.push(basicAuthOpenLine(indent, p.basicAuthOptions));
       for (const a of p.basicAuth) lines.push(`${indent}\t${a.username} ${a.passwordHash}`);
@@ -825,7 +841,7 @@ export function patchRawBlock(raw: string, proxy: ProxyEntry): string {
   // Re-add updated directives before closing brace
   kept.push(...buildTlsCaddyLines(proxy, !tlsSubjectHosts(proxy.externalHost).length));
   if (proxy.fileServer) {
-    if (proxy.compress) kept.push("\tencode gzip zstd");
+    if (proxy.compress) kept.push(...buildEncodeLines("\t", proxy.encodeOptions));
     if (proxy.basicAuth?.length) kept.push(...buildBasicAuthCaddyLines(proxy.basicAuth, proxy.basicAuthOptions));
     for (const h of proxy.responseHeaders ?? []) {
       kept.push(headerOpLine(`\theader`, h, { quoteSet: true }));
@@ -833,12 +849,12 @@ export function patchRawBlock(raw: string, proxy: ProxyEntry): string {
     kept.push(...buildFileServerLines(proxy.fileServer, "\t"));
   } else if (proxy.phpFastcgi) {
     // A hand-written PHP site (#247): its root/php_fastcgi/file_server were skipped above.
-    if (proxy.compress) kept.push("\tencode gzip zstd");
+    if (proxy.compress) kept.push(...buildEncodeLines("\t", proxy.encodeOptions));
     if (proxy.basicAuth?.length) kept.push(...buildBasicAuthCaddyLines(proxy.basicAuth, proxy.basicAuthOptions));
     for (const h of proxy.responseHeaders ?? []) kept.push(headerOpLine("\theader", h, { quoteSet: true }));
     kept.push(...buildPhpFastcgiLines(proxy.phpFastcgi, "\t"));
   } else {
-    if (proxy.compress) kept.push("\tencode gzip zstd");
+    if (proxy.compress) kept.push(...buildEncodeLines("\t", proxy.encodeOptions));
     if (proxy.basicAuth?.length) kept.push(...buildBasicAuthCaddyLines(proxy.basicAuth, proxy.basicAuthOptions));
     // `header` lines were dropped above with the other rewritten directives.
     for (const h of proxy.responseHeaders ?? []) kept.push(headerOpLine("\theader", h, { quoteSet: true, defer: true }));

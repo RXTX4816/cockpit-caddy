@@ -52,7 +52,7 @@ import {
   CONF_D_IMPORT_LINE,
   parseConfTlsIssuerMap,
 } from "./caddy";
-import { buildBasicAuthHandler, buildRedirectHandler, parseBasicAuthOptionsJson, parseHtmlRedirect } from "./caddyJsonModel";
+import { buildBasicAuthHandler, buildEncodeHandler, buildRedirectHandler, parseEncodeOptionsJson, parseBasicAuthOptionsJson, parseHtmlRedirect } from "./caddyJsonModel";
 import { proxiesToCaddyfile } from "./caddy";
 import type { CaddyConfig, CaddyServer, ProxyEntry, RouteMatch, ServerDef } from "./types";
 
@@ -4697,6 +4697,41 @@ describe("redirect html mode (#338)", () => {
     const config = { apps: { http: { servers: { srv0: server } } } } as unknown as CaddyConfig;
     const [back] = parseProxies(config);
     expect(back.redirect).toEqual({ to: "https://example.com{uri}", code: 302, html: true });
+  });
+});
+
+describe("encode options (#335)", () => {
+  const site = (encodeOptions?: import("./types").EncodeOptions) => proxy({ tls: false, compress: true, encodeOptions });
+
+  it("keeps writing plain gzip and zstd without options", () => {
+    expect(proxyToBlock(site())).toContain("\tencode gzip zstd\n");
+    expect(buildEncodeHandler()).toEqual({ handler: "encode", encodings: { gzip: {}, zstd: {} } });
+  });
+
+  it("writes the algorithms in order, the minimum length and the match", () => {
+    const block = proxyToBlock(site({
+      algorithms: ["zstd", "gzip"], minimumLength: 1024, matchStatus: ["2xx", "404"], matchHeaders: [{ name: "Content-Type", value: "text/*" }],
+    }));
+    expect(block).toContain("encode zstd gzip {");
+    expect(block).toContain("minimum_length 1024");
+    expect(block).toContain("status 2xx 404");
+    expect(block).toContain("header Content-Type text/*");
+  });
+
+  it("builds the JSON Caddy builds from the same Caddyfile and reads it back", () => {
+    const options = { algorithms: ["gzip" as const], minimumLength: 256, matchStatus: ["2xx", "404"], matchHeaders: [{ name: "Content-Type", value: "text/*" }] };
+    const h = buildEncodeHandler(options) as unknown as Record<string, unknown>;
+    expect(h).toEqual({
+      handler: "encode", encodings: { gzip: {} }, prefer: ["gzip"], minimum_length: 256,
+      match: { status_code: [2, 404], headers: { "Content-Type": ["text/*"] } },
+    });
+    expect(parseEncodeOptionsJson(h as never)).toEqual(options);
+  });
+
+  it("reads gzip then zstd, in either spelling, as no options", () => {
+    expect(parseEncodeOptionsJson({ handler: "encode", encodings: { gzip: {}, zstd: {} } } as never)).toBeUndefined();
+    expect(parseEncodeOptionsJson({ handler: "encode", encodings: { gzip: {}, zstd: {} }, prefer: ["gzip", "zstd"] } as never)).toBeUndefined();
+    expect(parseEncodeOptionsJson({ handler: "encode", encodings: { gzip: {}, zstd: {} }, prefer: ["zstd", "gzip"] } as never)).toEqual({ algorithms: ["zstd", "gzip"] });
   });
 });
 

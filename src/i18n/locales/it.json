@@ -1063,5 +1063,24 @@
     "site_inherit_help": "Usa il provider DNS impostato in Impostazioni → Sfida DNS, oppure la sfida HTTP se non ce n'è uno.",
     "site_override_help": "Questo sito usa un proprio provider DNS e credenziali proprie. Salvare nuove credenziali riavvia Caddy, che le legge solo all'avvio.",
     "site_wildcard_warning": "I certificati wildcard richiedono la sfida DNS. Imposta un provider DNS per questo sito o in Impostazioni → Sfida DNS."
+  },
+  "encode": {
+    "heading": "Compressione",
+    "section_title": "Compressione (facoltativo)",
+    "help": "Vale quando la compressione è attiva in Generale. Senza scelte Caddy comprime con gzip e zstd.",
+    "algorithms": "Algoritmi e ordine",
+    "algorithms_default": "gzip, zstd (predefinito)",
+    "algorithms_zstd_gzip": "zstd, poi gzip",
+    "algorithms_gzip": "solo gzip",
+    "algorithms_zstd": "solo zstd",
+    "minimum_length": "Dimensione minima",
+    "minimum_length_help": "Le risposte con meno byte di questo valore vengono inviate così come sono. Il valore predefinito di Caddy è 512.",
+    "invalid_number": "Inserisci un numero intero di byte.",
+    "match_status": "Solo questi codici di stato",
+    "match_status_help": "Codici o classi separati da spazi, come 2xx 404. Vuoto significa tutti gli stati.",
+    "invalid_status": "Inserisci codici come 200 o classi come 2xx.",
+    "match_headers": "Solo queste intestazioni di risposta",
+    "match_headers_help": "Una per riga: il nome dell'intestazione e il suo valore. Funzionano i caratteri jolly come text/*.",
+    "invalid_header": "Ogni riga richiede un nome di intestazione e un valore."
   }
 }

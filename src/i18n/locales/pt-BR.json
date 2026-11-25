@@ -1063,5 +1063,24 @@
     "site_inherit_help": "Usa o provedor DNS definido em Configurações → Desafio DNS, ou o desafio HTTP se nenhum estiver definido.",
     "site_override_help": "Este site usa seu próprio provedor DNS e credenciais. Salvar novas credenciais reinicia o Caddy, que só as lê ao iniciar.",
     "site_wildcard_warning": "Certificados curinga precisam do desafio DNS. Defina um provedor DNS para este site ou em Configurações → Desafio DNS."
+  },
+  "encode": {
+    "heading": "Compressão",
+    "section_title": "Compressão (opcional)",
+    "help": "Vale enquanto a compressão está ligada em Geral. Sem escolhas, o Caddy comprime com gzip e zstd.",
+    "algorithms": "Algoritmos e ordem",
+    "algorithms_default": "gzip, zstd (padrão)",
+    "algorithms_zstd_gzip": "zstd, depois gzip",
+    "algorithms_gzip": "somente gzip",
+    "algorithms_zstd": "somente zstd",
+    "minimum_length": "Tamanho mínimo",
+    "minimum_length_help": "Respostas com menos bytes que isso são enviadas como estão. O padrão do Caddy é 512.",
+    "invalid_number": "Digite um número inteiro de bytes.",
+    "match_status": "Somente estes códigos de status",
+    "match_status_help": "Códigos ou classes separados por espaços, como 2xx 404. Vazio significa todos os status.",
+    "invalid_status": "Digite códigos como 200 ou classes como 2xx.",
+    "match_headers": "Somente estes cabeçalhos de resposta",
+    "match_headers_help": "Um por linha: o nome do cabeçalho e depois o valor. Curingas como text/* funcionam.",
+    "invalid_header": "Cada linha precisa de um nome de cabeçalho e um valor."
   }
 }

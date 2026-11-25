@@ -1063,5 +1063,24 @@
     "site_inherit_help": "משתמש בספק ה-DNS שהוגדר בהגדרות ← אתגר DNS, או באתגר HTTP אם לא הוגדר ספק.",
     "site_override_help": "אתר זה משתמש בספק DNS ובפרטי גישה משלו. שמירת פרטי גישה חדשים מפעילה מחדש את Caddy, כי הוא קורא אותם רק בעת ההפעלה.",
     "site_wildcard_warning": "תעודות עם תו כללי דורשות אתגר DNS. הגדר ספק DNS לאתר זה, או בהגדרות ← אתגר DNS."
+  },
+  "encode": {
+    "heading": "דחיסה",
+    "section_title": "הגדרות דחיסה (אופציונלי)",
+    "help": "בשימוש כשהדחיסה פעילה בלשונית כללי. ללא בחירה Caddy דוחס ב-gzip וב-zstd.",
+    "algorithms": "אלגוריתמים וסדר",
+    "algorithms_default": "gzip, zstd (ברירת מחדל)",
+    "algorithms_zstd_gzip": "zstd ואז gzip",
+    "algorithms_gzip": "gzip בלבד",
+    "algorithms_zstd": "zstd בלבד",
+    "minimum_length": "גודל מינימלי",
+    "minimum_length_help": "תגובות קטנות ממספר הבתים הזה נשלחות כמות שהן. ברירת המחדל של Caddy היא 512.",
+    "invalid_number": "הזינו מספר שלם של בתים.",
+    "match_status": "רק קודי סטטוס אלה",
+    "match_status_help": "קודים או מחלקות מופרדים ברווחים, כמו 2xx 404. ריק פירושו כל סטטוס.",
+    "invalid_status": "הזינו קודי סטטוס כמו 200 או מחלקות כמו 2xx.",
+    "match_headers": "רק כותרות תגובה אלה",
+    "match_headers_help": "אחת בכל שורה: שם הכותרת ואחריו הערך. תווים כלליים כמו text/* עובדים.",
+    "invalid_header": "כל שורה צריכה שם כותרת וערך."
   }
 }

@@ -12,7 +12,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { CONF_HEADER, buildServerEntry, proxiesToCaddyfile, parseProxies, parseConfExternalAddresses, proxyAddressKeys, resolveInternalIssuerSettings, surgicallyWriteProxy, buildMigratedConfContent, migrateCaddyfile, parseConfTlsIssuerMap, parseConfTlsOnDemandMap, parseConfTlsMap, expandPlaceholderShorthands } from "./caddy";
 import { snippetsToConf, parseSnippets, parseConfSiteImports, parseConfSiteBlocks, separateSnippetSettings } from "./snippets";
-import { buildRedirectHandler } from "./caddyJsonModel";
+import { buildEncodeHandler, buildRedirectHandler } from "./caddyJsonModel";
 import type { CaddyConfig, CaddyServer, ProxyEntry } from "./types";
 
 function hasCaddy(): boolean {
@@ -854,6 +854,29 @@ describe.runIf(available || required)("caddy adapt accepts redir html (#338)", (
     const server = Object.values(adapt(conf).apps?.http?.servers ?? {})[0] as CaddyServer;
     const caddys = (server.routes?.[0]?.handle?.[0]) as unknown as { body: string };
     expect((buildRedirectHandler({ to: "https://example.com{uri}", code: 302, html: true }) as unknown as { body: string }).body).toBe(caddys.body);
+  });
+});
+
+describe.runIf(available || required)("caddy adapt accepts the encode options (#335)", () => {
+  const options = { algorithms: ["zstd" as const, "gzip" as const], minimumLength: 1024, matchStatus: ["2xx", "404"], matchHeaders: [{ name: "Content-Type", value: "text/*" }] };
+
+  it("reads them back from a real adapt", () => {
+    const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, compress: true, encodeOptions: options })]));
+    expect(p.compress).toBe(true);
+    expect(p.encodeOptions).toEqual(options);
+  });
+
+  it("builds the handler Caddy builds", () => {
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, compress: true, encodeOptions: options })]);
+    const server = Object.values(adapt(conf).apps?.http?.servers ?? {})[0] as CaddyServer;
+    const real = server.routes?.[0]?.handle?.find(h => h.handler === "encode") as unknown as Record<string, unknown>;
+    expect(buildEncodeHandler(options)).toMatchObject({ prefer: real.prefer, minimum_length: real.minimum_length, match: real.match });
+  });
+
+  it("reads plain compression back as no options", () => {
+    const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, compress: true })]));
+    expect(p.compress).toBe(true);
+    expect(p.encodeOptions).toBeUndefined();
   });
 });
 

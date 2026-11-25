@@ -1063,5 +1063,24 @@
     "site_inherit_help": "Utilise le fournisseur DNS défini dans Paramètres → Défi DNS, ou le défi HTTP s'il n'y en a pas.",
     "site_override_help": "Ce site utilise son propre fournisseur DNS et ses propres identifiants. Enregistrer de nouveaux identifiants redémarre Caddy, qui ne les lit qu'au démarrage.",
     "site_wildcard_warning": "Les certificats génériques nécessitent le défi DNS. Définissez un fournisseur DNS pour ce site, ou dans Paramètres → Défi DNS."
+  },
+  "encode": {
+    "heading": "Compression",
+    "section_title": "Compression (facultatif)",
+    "help": "S'applique quand la compression est activée dans Général. Sans choix, Caddy compresse en gzip et zstd.",
+    "algorithms": "Algorithmes et ordre",
+    "algorithms_default": "gzip, zstd (par défaut)",
+    "algorithms_zstd_gzip": "zstd, puis gzip",
+    "algorithms_gzip": "gzip seulement",
+    "algorithms_zstd": "zstd seulement",
+    "minimum_length": "Taille minimale",
+    "minimum_length_help": "Les réponses de moins d'octets que cela sont envoyées telles quelles. Par défaut, Caddy utilise 512.",
+    "invalid_number": "Saisissez un nombre entier d'octets.",
+    "match_status": "Seulement ces codes d'état",
+    "match_status_help": "Codes ou classes séparés par des espaces, comme 2xx 404. Vide signifie tous les états.",
+    "invalid_status": "Saisissez des codes comme 200 ou des classes comme 2xx.",
+    "match_headers": "Seulement ces en-têtes de réponse",
+    "match_headers_help": "Un par ligne : le nom de l'en-tête, puis sa valeur. Les jokers comme text/* fonctionnent.",
+    "invalid_header": "Chaque ligne doit contenir un nom d'en-tête et une valeur."
   }
 }

@@ -1063,5 +1063,24 @@
     "site_inherit_help": "Använder DNS-leverantören under Inställningar → DNS-utmaning, eller HTTP-utmaningen om ingen är angiven.",
     "site_override_help": "Den här webbplatsen använder en egen DNS-leverantör och egna inloggningsuppgifter. Att spara nya uppgifter startar om Caddy, eftersom Caddy bara läser dem vid start.",
     "site_wildcard_warning": "Jokerteckencertifikat kräver DNS-utmaningen. Ange en DNS-leverantör för den här webbplatsen, eller under Inställningar → DNS-utmaning."
+  },
+  "encode": {
+    "heading": "Komprimering",
+    "section_title": "Komprimeringsinställningar (valfritt)",
+    "help": "Gäller så länge komprimering är på under Allmänt. Utan val komprimerar Caddy med gzip och zstd.",
+    "algorithms": "Algoritmer och ordning",
+    "algorithms_default": "gzip, zstd (standard)",
+    "algorithms_zstd_gzip": "zstd, sedan gzip",
+    "algorithms_gzip": "endast gzip",
+    "algorithms_zstd": "endast zstd",
+    "minimum_length": "Minsta storlek",
+    "minimum_length_help": "Svar med färre byte än så skickas som de är. Caddys standard är 512.",
+    "invalid_number": "Ange ett heltal för antal byte.",
+    "match_status": "Endast dessa statuskoder",
+    "match_status_help": "Mellanslagsavgränsade koder eller klasser som 2xx 404. Tomt betyder alla statusar.",
+    "invalid_status": "Ange statuskoder som 200 eller klasser som 2xx.",
+    "match_headers": "Endast dessa svarshuvuden",
+    "match_headers_help": "Ett per rad: huvudets namn och sedan värdet. Jokertecken som text/* fungerar.",
+    "invalid_header": "Varje rad behöver ett huvudnamn och ett värde."
   }
 }

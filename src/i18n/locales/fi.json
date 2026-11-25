@@ -1063,5 +1063,24 @@
     "site_inherit_help": "Käyttää kohdassa Asetukset → DNS-haaste asetettua DNS-palveluntarjoajaa tai HTTP-haastetta, jos sitä ei ole asetettu.",
     "site_override_help": "Tämä sivusto käyttää omaa DNS-palveluntarjoajaa ja tunnuksia. Uusien tunnusten tallentaminen käynnistää Caddyn uudelleen, koska se lukee ne vain käynnistyessään.",
     "site_wildcard_warning": "Jokerimerkkivarmenteet tarvitsevat DNS-haasteen. Aseta DNS-palveluntarjoaja tälle sivustolle tai kohdassa Asetukset → DNS-haaste."
+  },
+  "encode": {
+    "heading": "Pakkaus",
+    "section_title": "Pakkausasetukset (valinnainen)",
+    "help": "Käytössä, kun pakkaus on päällä Yleiset-välilehdellä. Ilman valintoja Caddy pakkaa gzipillä ja zstd:llä.",
+    "algorithms": "Algoritmit ja järjestys",
+    "algorithms_default": "gzip, zstd (oletus)",
+    "algorithms_zstd_gzip": "zstd, sitten gzip",
+    "algorithms_gzip": "vain gzip",
+    "algorithms_zstd": "vain zstd",
+    "minimum_length": "Vähimmäiskoko",
+    "minimum_length_help": "Tätä pienemmät vastaukset lähetetään sellaisinaan. Caddyn oletus on 512.",
+    "invalid_number": "Anna tavujen määrä kokonaislukuna.",
+    "match_status": "Vain nämä tilakoodit",
+    "match_status_help": "Välilyönnein erotetut koodit tai luokat, kuten 2xx 404. Tyhjä tarkoittaa kaikkia tiloja.",
+    "invalid_status": "Anna tilakoodeja kuten 200 tai luokkia kuten 2xx.",
+    "match_headers": "Vain nämä vastausotsakkeet",
+    "match_headers_help": "Yksi riviä kohti: otsakkeen nimi ja arvo. Jokerimerkit kuten text/* toimivat.",
+    "invalid_header": "Jokaisella rivillä on oltava otsakkeen nimi ja arvo."
   }
 }

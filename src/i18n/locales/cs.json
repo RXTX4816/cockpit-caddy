@@ -1063,5 +1063,24 @@
     "site_inherit_help": "Použije poskytovatele DNS nastaveného v Nastavení → Výzva DNS, nebo výzvu HTTP, pokud žádný není nastaven.",
     "site_override_help": "Tento web používá vlastního poskytovatele DNS a přihlašovací údaje. Uložení nových údajů restartuje Caddy, protože je načítá jen při startu.",
     "site_wildcard_warning": "Certifikáty se zástupným znakem vyžadují výzvu DNS. Nastavte poskytovatele DNS pro tento web, nebo v Nastavení → Výzva DNS."
+  },
+  "encode": {
+    "heading": "Komprese",
+    "section_title": "Nastavení komprese (volitelné)",
+    "help": "Platí, když je v Obecném zapnutá komprese. Bez voleb Caddy komprimuje gzip a zstd.",
+    "algorithms": "Algoritmy a pořadí",
+    "algorithms_default": "gzip, zstd (výchozí)",
+    "algorithms_zstd_gzip": "zstd, poté gzip",
+    "algorithms_gzip": "pouze gzip",
+    "algorithms_zstd": "pouze zstd",
+    "minimum_length": "Minimální velikost",
+    "minimum_length_help": "Odpovědi menší než tento počet bajtů se odešlou beze změny. Výchozí hodnota Caddy je 512.",
+    "invalid_number": "Zadejte celé číslo bajtů.",
+    "match_status": "Jen tyto stavové kódy",
+    "match_status_help": "Kódy nebo třídy oddělené mezerami, např. 2xx 404. Prázdné znamená všechny stavy.",
+    "invalid_status": "Zadejte stavové kódy jako 200 nebo třídy jako 2xx.",
+    "match_headers": "Jen tyto hlavičky odpovědi",
+    "match_headers_help": "Jedna na řádek: název hlavičky a její hodnota. Fungují zástupné znaky jako text/*.",
+    "invalid_header": "Každý řádek potřebuje název hlavičky a hodnotu."
   }
 }

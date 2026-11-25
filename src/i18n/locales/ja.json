@@ -1063,5 +1063,24 @@
     "site_inherit_help": "設定 → DNS チャレンジで設定した DNS プロバイダーを使います。未設定なら HTTP チャレンジを使います。",
     "site_override_help": "このサイトは専用の DNS プロバイダーと認証情報を使います。新しい認証情報を保存すると Caddy が再起動します（起動時にのみ読み込むため）。",
     "site_wildcard_warning": "ワイルドカード証明書には DNS チャレンジが必要です。このサイト用、または 設定 → DNS チャレンジ で DNS プロバイダーを設定してください。"
+  },
+  "encode": {
+    "heading": "圧縮",
+    "section_title": "圧縮の設定(任意)",
+    "help": "「一般」で圧縮がオンのときに使われます。選択しない場合、Caddy は gzip と zstd で圧縮します。",
+    "algorithms": "アルゴリズムと順序",
+    "algorithms_default": "gzip、zstd(既定)",
+    "algorithms_zstd_gzip": "zstd、次に gzip",
+    "algorithms_gzip": "gzip のみ",
+    "algorithms_zstd": "zstd のみ",
+    "minimum_length": "最小サイズ",
+    "minimum_length_help": "このバイト数より小さいレスポンスはそのまま送られます。Caddy の既定値は 512 です。",
+    "invalid_number": "バイト数を整数で入力してください。",
+    "match_status": "次のステータスコードのみ",
+    "match_status_help": "スペース区切りのコードまたは 2xx 404 のようなクラス。空欄はすべてのステータスを意味します。",
+    "invalid_status": "200 のようなコード、または 2xx のようなクラスを入力してください。",
+    "match_headers": "次のレスポンスヘッダーのみ",
+    "match_headers_help": "1 行に 1 つ:ヘッダー名、続けて値。text/* のようなワイルドカードが使えます。",
+    "invalid_header": "各行にヘッダー名と値が必要です。"
   }
 }

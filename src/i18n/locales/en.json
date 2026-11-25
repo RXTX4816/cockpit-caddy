@@ -1063,5 +1063,24 @@
     "site_inherit_help": "Uses the DNS provider set under Settings → DNS challenge, or the HTTP challenge when none is set.",
     "site_override_help": "This site uses its own DNS provider and credentials. Saving new credentials restarts Caddy, because it reads them only when it starts.",
     "site_wildcard_warning": "Wildcard certificates need the DNS challenge. Set a DNS provider for this site, or one under Settings → DNS challenge."
+  },
+  "encode": {
+    "heading": "Compression",
+    "section_title": "Compression settings (optional)",
+    "help": "Used while compression is on in General. Without choices Caddy compresses with gzip and zstd.",
+    "algorithms": "Algorithms and order",
+    "algorithms_default": "gzip, zstd (default)",
+    "algorithms_zstd_gzip": "zstd, then gzip",
+    "algorithms_gzip": "gzip only",
+    "algorithms_zstd": "zstd only",
+    "minimum_length": "Minimum size",
+    "minimum_length_help": "Responses with fewer bytes than this are sent as they are. Caddy's default is 512.",
+    "invalid_number": "Enter a whole number of bytes.",
+    "match_status": "Only these status codes",
+    "match_status_help": "Space-separated codes or classes such as 2xx 404. Empty means every status.",
+    "invalid_status": "Enter status codes like 200 or classes like 2xx.",
+    "match_headers": "Only these response headers",
+    "match_headers_help": "One per line: the header name, then its value. Wildcards such as text/* work.",
+    "invalid_header": "Each line needs a header name and a value."
   }
 }

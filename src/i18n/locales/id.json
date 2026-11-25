@@ -1063,5 +1063,24 @@
     "site_inherit_help": "Memakai penyedia DNS yang diatur di Pengaturan → Tantangan DNS, atau tantangan HTTP bila belum diatur.",
     "site_override_help": "Situs ini memakai penyedia DNS dan kredensialnya sendiri. Menyimpan kredensial baru akan memulai ulang Caddy, karena Caddy hanya membacanya saat mulai.",
     "site_wildcard_warning": "Sertifikat wildcard memerlukan tantangan DNS. Atur penyedia DNS untuk situs ini, atau di Pengaturan → Tantangan DNS."
+  },
+  "encode": {
+    "heading": "Kompresi",
+    "section_title": "Pengaturan kompresi (opsional)",
+    "help": "Dipakai saat kompresi aktif di Umum. Tanpa pilihan, Caddy mengompres dengan gzip dan zstd.",
+    "algorithms": "Algoritma dan urutan",
+    "algorithms_default": "gzip, zstd (bawaan)",
+    "algorithms_zstd_gzip": "zstd, lalu gzip",
+    "algorithms_gzip": "hanya gzip",
+    "algorithms_zstd": "hanya zstd",
+    "minimum_length": "Ukuran minimum",
+    "minimum_length_help": "Respons dengan byte lebih sedikit dari ini dikirim apa adanya. Bawaan Caddy adalah 512.",
+    "invalid_number": "Masukkan bilangan bulat byte.",
+    "match_status": "Hanya kode status ini",
+    "match_status_help": "Kode atau kelas dipisahkan spasi, misalnya 2xx 404. Kosong berarti semua status.",
+    "invalid_status": "Masukkan kode status seperti 200 atau kelas seperti 2xx.",
+    "match_headers": "Hanya header respons ini",
+    "match_headers_help": "Satu per baris: nama header, lalu nilainya. Wildcard seperti text/* berfungsi.",
+    "invalid_header": "Setiap baris memerlukan nama header dan nilai."
   }
 }

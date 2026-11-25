@@ -89,6 +89,18 @@ export interface BasicAuthOptions {
   algorithm?: "bcrypt" | "argon2id";
 }
 
+/** What `encode` is told besides turning compression on (#335). Unset is `encode gzip zstd`. */
+export interface EncodeOptions {
+  /** The algorithms in order of preference. */
+  algorithms?: Array<"gzip" | "zstd">;
+  /** `minimum_length`: responses with fewer bytes are sent as they are. */
+  minimumLength?: number;
+  /** `match { status }`: status codes or classes such as `2xx`. */
+  matchStatus?: string[];
+  /** `match { header }`: a response header and a value that may use wildcards. */
+  matchHeaders?: Array<{ name: string; value: string }>;
+}
+
 export interface ServerDef {
   key: string;
   name: string;
@@ -438,6 +450,8 @@ export interface ProxyEntry {
   requestHeaders?: HeaderOperation[];
   responseHeaders?: HeaderOperation[];
   compress?: boolean;
+  /** How `compress` encodes (#335); only used while `compress` is on. */
+  encodeOptions?: EncodeOptions;
   dialTimeout?: string;
   responseHeaderTimeout?: string;
   basicAuth?: { username: string; passwordHash: string }[];

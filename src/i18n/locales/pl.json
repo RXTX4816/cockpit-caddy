@@ -1063,5 +1063,24 @@
     "site_inherit_help": "Używa dostawcy DNS ustawionego w Ustawienia → Wyzwanie DNS albo wyzwania HTTP, jeśli żaden nie jest ustawiony.",
     "site_override_help": "Ta witryna używa własnego dostawcy DNS i danych logowania. Zapisanie nowych danych uruchamia ponownie Caddy, bo odczytuje je tylko przy starcie.",
     "site_wildcard_warning": "Certyfikaty wieloznaczne wymagają wyzwania DNS. Ustaw dostawcę DNS dla tej witryny albo w Ustawienia → Wyzwanie DNS."
+  },
+  "encode": {
+    "heading": "Kompresja",
+    "section_title": "Ustawienia kompresji (opcjonalne)",
+    "help": "Działa, gdy kompresja jest włączona w Ogólnych. Bez wyborów Caddy kompresuje gzip i zstd.",
+    "algorithms": "Algorytmy i kolejność",
+    "algorithms_default": "gzip, zstd (domyślnie)",
+    "algorithms_zstd_gzip": "zstd, potem gzip",
+    "algorithms_gzip": "tylko gzip",
+    "algorithms_zstd": "tylko zstd",
+    "minimum_length": "Minimalny rozmiar",
+    "minimum_length_help": "Odpowiedzi mniejsze niż ta liczba bajtów są wysyłane bez zmian. Domyślnie Caddy używa 512.",
+    "invalid_number": "Podaj liczbę całkowitą bajtów.",
+    "match_status": "Tylko te kody stanu",
+    "match_status_help": "Kody lub klasy oddzielone spacjami, np. 2xx 404. Puste oznacza każdy stan.",
+    "invalid_status": "Podaj kody stanu, np. 200, lub klasy, np. 2xx.",
+    "match_headers": "Tylko te nagłówki odpowiedzi",
+    "match_headers_help": "Po jednym w wierszu: nazwa nagłówka, potem wartość. Działają symbole wieloznaczne, np. text/*.",
+    "invalid_header": "Każdy wiersz wymaga nazwy nagłówka i wartości."
   }
 }

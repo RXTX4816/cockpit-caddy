@@ -1063,5 +1063,24 @@
     "site_inherit_help": "Gebruikt de DNS-provider uit Instellingen → DNS-challenge, of de HTTP-challenge als er geen is ingesteld.",
     "site_override_help": "Deze site gebruikt een eigen DNS-provider en eigen inloggegevens. Nieuwe gegevens opslaan herstart Caddy, omdat Caddy ze alleen bij het starten leest.",
     "site_wildcard_warning": "Wildcardcertificaten hebben de DNS-challenge nodig. Stel een DNS-provider in voor deze site, of onder Instellingen → DNS-challenge."
+  },
+  "encode": {
+    "heading": "Compressie",
+    "section_title": "Compressie-instellingen (optioneel)",
+    "help": "Geldt zolang compressie aan staat bij Algemeen. Zonder keuzes comprimeert Caddy met gzip en zstd.",
+    "algorithms": "Algoritmen en volgorde",
+    "algorithms_default": "gzip, zstd (standaard)",
+    "algorithms_zstd_gzip": "zstd, dan gzip",
+    "algorithms_gzip": "alleen gzip",
+    "algorithms_zstd": "alleen zstd",
+    "minimum_length": "Minimale grootte",
+    "minimum_length_help": "Antwoorden met minder bytes dan dit worden ongewijzigd verstuurd. De standaard van Caddy is 512.",
+    "invalid_number": "Voer een geheel aantal bytes in.",
+    "match_status": "Alleen deze statuscodes",
+    "match_status_help": "Door spaties gescheiden codes of klassen zoals 2xx 404. Leeg betekent elke status.",
+    "invalid_status": "Voer statuscodes in zoals 200 of klassen zoals 2xx.",
+    "match_headers": "Alleen deze antwoordheaders",
+    "match_headers_help": "Eén per regel: de headernaam, dan de waarde. Jokertekens zoals text/* werken.",
+    "invalid_header": "Elke regel heeft een headernaam en een waarde nodig."
   }
 }
