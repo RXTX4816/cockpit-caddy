@@ -413,7 +413,12 @@
     "field_name": "Otsakkeen nimi",
     "field_value": "Arvo",
     "add_button": "Lisää",
-    "presets_label": "Esiasetukset"
+    "presets_label": "Esiasetukset",
+    "down_heading": "Upstreamin vastausotsikot",
+    "down_section_title": "Upstreamin vastausotsikot (valinnainen)",
+    "op_replace": "Korvaa",
+    "field_search": "Etsittävä otsikon arvo (säännöllinen lauseke)",
+    "field_replacement": "Korvaus"
   },
   "edit_redirect": {
     "title": "Muokkaa uudelleenohjausta — :{{port}}",

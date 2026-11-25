@@ -413,7 +413,12 @@
     "field_name": "Názov hlavičky",
     "field_value": "Hodnota",
     "add_button": "Pridať",
-    "presets_label": "Predvoľby"
+    "presets_label": "Predvoľby",
+    "down_heading": "Hlavičky odpovede z upstreamu",
+    "down_section_title": "Hlavičky odpovede z upstreamu (voliteľné)",
+    "op_replace": "Nahradiť",
+    "field_search": "Hľadaná hodnota hlavičky (regulárny výraz)",
+    "field_replacement": "Náhrada"
   },
   "edit_redirect": {
     "title": "Upraviť presmerovanie — :{{port}}",

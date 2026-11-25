@@ -413,7 +413,12 @@
     "field_name": "Headernaam",
     "field_value": "Waarde",
     "add_button": "Toevoegen",
-    "presets_label": "Voorinstellingen"
+    "presets_label": "Voorinstellingen",
+    "down_heading": "Antwoordheaders van de upstream",
+    "down_section_title": "Antwoordheaders van de upstream (optioneel)",
+    "op_replace": "Vervangen",
+    "field_search": "Te zoeken headerwaarde (reguliere expressie)",
+    "field_replacement": "Vervanging"
   },
   "edit_redirect": {
     "title": "Omleiding bewerken — :{{port}}",

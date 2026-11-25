@@ -413,7 +413,12 @@
     "field_name": "Header name",
     "field_value": "Value",
     "add_button": "Add",
-    "presets_label": "Presets"
+    "presets_label": "Presets",
+    "down_heading": "Response headers from the upstream",
+    "down_section_title": "Response headers from the upstream (optional)",
+    "op_replace": "Replace",
+    "field_search": "Header value to find (regular expression)",
+    "field_replacement": "Replacement"
   },
   "edit_redirect": {
     "title": "Edit Redirect — :{{port}}",

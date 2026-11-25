@@ -23,6 +23,7 @@ export interface ProxyTabState {
   rewrite: RewriteConfig | undefined;
   requestHeaders: HeaderOperation[] | undefined;
   responseHeaders: HeaderOperation[] | undefined;
+  upstreamResponseHeaders: HeaderOperation[] | undefined;
   isNamedRoute: boolean;
   namedRouteName: string;
   extraUpstreams: ExtraUpstream[];
@@ -49,6 +50,7 @@ export function emptyProxyTabState(): ProxyTabState {
     rewrite: undefined,
     requestHeaders: undefined,
     responseHeaders: undefined,
+    upstreamResponseHeaders: undefined,
     isNamedRoute: false,
     namedRouteName: "",
     extraUpstreams: [],
@@ -75,6 +77,7 @@ export function proxyTabStateFromEntry(p: ProxyEntry): ProxyTabState {
     rewrite: p.rewrite,
     requestHeaders: p.requestHeaders,
     responseHeaders: p.responseHeaders,
+    upstreamResponseHeaders: p.upstreamResponseHeaders,
     isNamedRoute: p.isNamedRoute ?? false,
     namedRouteName: p.namedRouteName ?? "",
     extraUpstreams: (p.extraUpstreams ?? []).map(u => ({ host: u.host, port: String(u.port) })),
@@ -99,7 +102,7 @@ export function proxyTabStateFromEntry(p: ProxyEntry): ProxyTabState {
 
 export type ProxyTabEntryFields = Pick<ProxyEntry,
   | "basicAuth" | "forwardAuth" | "tlsAdvanced" | "mtls" | "customTls"
-  | "matchers" | "handlePath" | "rewrite" | "requestHeaders" | "responseHeaders" | "isNamedRoute" | "namedRouteName"
+  | "matchers" | "handlePath" | "rewrite" | "requestHeaders" | "responseHeaders" | "upstreamResponseHeaders" | "isNamedRoute" | "namedRouteName"
   | "extraUpstreams" | "lbPolicy" | "lbPolicyArgs" | "lbRetry" | "dialTimeout" | "responseHeaderTimeout"
   | "accessLog" | "errorHandlers" | "replaceUpstreamErrors"
   | "serverReadTimeout" | "serverReadHeaderTimeout" | "serverWriteTimeout" | "serverIdleTimeout" | "maxHeaderBytes" | "disableHttp3"
@@ -119,6 +122,7 @@ export async function proxyTabStateToEntry(s: ProxyTabState): Promise<ProxyTabEn
     rewrite: s.rewrite ?? undefined,
     requestHeaders: s.requestHeaders ?? undefined,
     responseHeaders: s.responseHeaders ?? undefined,
+    upstreamResponseHeaders: s.upstreamResponseHeaders ?? undefined,
     isNamedRoute: s.isNamedRoute || undefined,
     namedRouteName: (s.isNamedRoute && s.namedRouteName.trim()) ? s.namedRouteName.trim() : undefined,
     extraUpstreams: s.extraUpstreams.length

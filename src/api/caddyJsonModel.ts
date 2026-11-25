@@ -781,6 +781,7 @@ export function parseRouteToEntry(
   const rewrite = rewriteHandle ? parseRewriteFromHandle(rewriteHandle) : undefined;
   const responseHeadersParsed = effectiveHandles.flatMap(parseResponseHeadersJson);
   const requestHeaders = parseRequestHeadersJson(rp.headers as Record<string, unknown> | undefined);
+  const upstreamResponseHeaders = parseUpstreamResponseHeadersJson(rp.headers as Record<string, unknown> | undefined);
 
   // Detect handle_path pattern: a strip_prefix rewrite whose value matches the path matcher prefix
   let handlePath: true | undefined;
@@ -815,6 +816,7 @@ export function parseRouteToEntry(
     responseHeaderTimeout: responseHeaderTimeout || undefined,
     rewrite: finalRewrite,
     requestHeaders: requestHeaders.length ? requestHeaders : undefined,
+    upstreamResponseHeaders: upstreamResponseHeaders.length ? upstreamResponseHeaders : undefined,
     responseHeaders: responseHeadersParsed.length ? responseHeadersParsed : undefined,
     extraUpstreams: extraUpstreams.length ? extraUpstreams : undefined,
     lbPolicy,
@@ -993,42 +995,66 @@ export function parseProxies(config: CaddyConfig, serverDefs?: import("./types")
 // Building / patching server entries
 // ---------------------------------------------------------------------------
 
-export function buildRequestHeadersJson(ops: import("./types").HeaderOperation[] | undefined): Record<string, unknown> | undefined {
-  if (!ops?.length) return undefined;
-  const set: Record<string, string[]> = {};
-  const add: Record<string, string[]> = {};
-  const del: string[] = [];
-  for (const h of ops) {
-    if (h.op === "delete") { del.push(h.name); continue; }
-    const val = [caddyPlaceholderToJson(h.value ?? "")];
-    if (h.op === "add") add[h.name] = val;
-    else set[h.name] = val;
-  }
-  const req: Record<string, unknown> = {};
-  if (Object.keys(set).length) req["set"] = set;
-  if (Object.keys(add).length) req["add"] = add;
-  if (del.length) req["delete"] = del;
-  return Object.keys(req).length ? { request: req } : undefined;
+/** The reverse_proxy `headers` object: `request` is header_up, `response` is header_down (#324). */
+export function buildReverseProxyHeadersJson(
+  up: import("./types").HeaderOperation[] | undefined,
+  down: import("./types").HeaderOperation[] | undefined,
+): Record<string, unknown> | undefined {
+  const side = (ops: import("./types").HeaderOperation[] | undefined): Record<string, unknown> | undefined => {
+    if (!ops?.length) return undefined;
+    const set: Record<string, string[]> = {};
+    const add: Record<string, string[]> = {};
+    const replace: Record<string, Array<{ search_regexp: string; replace: string }>> = {};
+    const del: string[] = [];
+    for (const h of ops) {
+      if (h.op === "delete") { del.push(h.name); continue; }
+      if (h.op === "replace") {
+        (replace[h.name] ??= []).push({ search_regexp: h.value ?? "", replace: caddyPlaceholderToJson(h.replacement ?? "") });
+        continue;
+      }
+      const val = [caddyPlaceholderToJson(h.value ?? "")];
+      if (h.op === "add") add[h.name] = val;
+      else set[h.name] = val;
+    }
+    const out: Record<string, unknown> = {};
+    if (Object.keys(set).length) out["set"] = set;
+    if (Object.keys(add).length) out["add"] = add;
+    if (del.length) out["delete"] = del;
+    if (Object.keys(replace).length) out["replace"] = replace;
+    return Object.keys(out).length ? out : undefined;
+  };
+  const request = side(up);
+  const response = side(down);
+  if (!request && !response) return undefined;
+  return { ...(request ? { request } : {}), ...(response ? { response } : {}) };
 }
 
-
-export function parseRequestHeadersJson(headers: Record<string, unknown> | undefined): import("./types").HeaderOperation[] {
-  if (!headers) return [];
-  const req = headers["request"] as Record<string, unknown> | undefined;
-  if (!req) return [];
+function parseHeaderOpsJson(side: Record<string, unknown> | undefined): import("./types").HeaderOperation[] {
+  if (!side) return [];
   const ops: import("./types").HeaderOperation[] = [];
-  const set = req["set"] as Record<string, string[]> | undefined;
-  const add = req["add"] as Record<string, string[]> | undefined;
-  const del = req["delete"] as string[] | undefined;
+  const set = side["set"] as Record<string, string[]> | undefined;
+  const add = side["add"] as Record<string, string[]> | undefined;
+  const del = side["delete"] as string[] | undefined;
+  const replace = side["replace"] as Record<string, Array<{ search?: string; search_regexp?: string; replace?: string }>> | undefined;
   for (const [name, vals] of Object.entries(set ?? {}))
     ops.push({ op: "set", name, value: jsonPlaceholderToCaddy(vals[0] ?? "") });
   for (const [name, vals] of Object.entries(add ?? {}))
     ops.push({ op: "add", name, value: jsonPlaceholderToCaddy(vals[0] ?? "") });
   for (const name of del ?? [])
     ops.push({ op: "delete", name });
+  for (const [name, reps] of Object.entries(replace ?? {}))
+    for (const r of reps)
+      ops.push({ op: "replace", name, value: r.search_regexp ?? r.search ?? "", replacement: jsonPlaceholderToCaddy(r.replace ?? "") });
   return ops;
 }
 
+export function parseRequestHeadersJson(headers: Record<string, unknown> | undefined): import("./types").HeaderOperation[] {
+  return parseHeaderOpsJson(headers?.["request"] as Record<string, unknown> | undefined);
+}
+
+function parseUpstreamResponseHeadersJson(headers: Record<string, unknown> | undefined): import("./types").HeaderOperation[] {
+  return parseHeaderOpsJson(headers?.["response"] as Record<string, unknown> | undefined);
+}
 
 export function buildResponseHeadersHandler(ops: import("./types").HeaderOperation[]): CaddyHandler {
   const set: Record<string, string[]> = {};
@@ -1068,9 +1094,8 @@ export function parseResponseHeadersJson(h: AnyHandler): import("./types").Heade
   return ops;
 }
 
-
 export function buildReverseProxyHandler(
-  proxy: Pick<ProxyEntry, "targetHost" | "targetPort" | "targetScheme" | "tlsSkipVerify" | "requestHeaders" | "dialTimeout" | "responseHeaderTimeout" | "extraUpstreams" | "lbPolicy" | "lbPolicyArgs" | "lbRetry" | "replaceUpstreamErrors">,
+  proxy: Pick<ProxyEntry, "targetHost" | "targetPort" | "targetScheme" | "tlsSkipVerify" | "requestHeaders" | "upstreamResponseHeaders" | "dialTimeout" | "responseHeaderTimeout" | "extraUpstreams" | "lbPolicy" | "lbPolicyArgs" | "lbRetry" | "replaceUpstreamErrors">,
   errorHandlers?: import("./types").ErrorHandlerConfig[],
 ): CaddyReverseProxyHandler {
   const primaryDial = `${proxy.targetHost}:${proxy.targetPort}`;
@@ -1081,7 +1106,7 @@ export function buildReverseProxyHandler(
   };
   const transport = buildTransport(proxy);
   if (transport) rp.transport = transport;
-  const hdrs = buildRequestHeadersJson(proxy.requestHeaders);
+  const hdrs = buildReverseProxyHeadersJson(proxy.requestHeaders, proxy.upstreamResponseHeaders);
   if (hdrs) rp.headers = hdrs;
   if (proxy.lbPolicy && (proxy.extraUpstreams?.length ?? 0) > 0 && LB_POLICIES.has(proxy.lbPolicy)) {
     rp.load_balancing = { selection_policy: lbSelectionPolicyJson(proxy) };

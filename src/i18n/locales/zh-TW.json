@@ -413,7 +413,12 @@
     "field_name": "標頭名稱",
     "field_value": "值",
     "add_button": "新增",
-    "presets_label": "預設"
+    "presets_label": "預設",
+    "down_heading": "上游回應標頭",
+    "down_section_title": "上游回應標頭(選填)",
+    "op_replace": "取代",
+    "field_search": "要尋找的標頭值(正規表示式)",
+    "field_replacement": "取代為"
   },
   "edit_redirect": {
     "title": "編輯重新導向 — :{{port}}",

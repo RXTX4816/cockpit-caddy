@@ -413,7 +413,12 @@
     "field_name": "שם הכותרת",
     "field_value": "ערך",
     "add_button": "הוספה",
-    "presets_label": "הגדרות מוכנות"
+    "presets_label": "הגדרות מוכנות",
+    "down_heading": "כותרות תגובה מהשרת האחורי",
+    "down_section_title": "כותרות תגובה מהשרת האחורי (אופציונלי)",
+    "op_replace": "החלף",
+    "field_search": "ערך כותרת לחיפוש (ביטוי רגולרי)",
+    "field_replacement": "תחליף"
   },
   "edit_redirect": {
     "title": "עריכת הפניה — :{{port}}",

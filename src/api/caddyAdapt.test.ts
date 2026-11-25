@@ -818,3 +818,17 @@ describe.runIf(available || required)("client_ip matcher (#286)", () => {
     expect(readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, matchers })]))[0].matchers).toEqual(matchers);
   });
 });
+
+describe.runIf(available || required)("caddy adapt accepts header_down (#324)", () => {
+  it("reads back set, add, delete and replace from a real adapt", () => {
+    const ops = [
+      { op: "set" as const, name: "X-A", value: "1" },
+      { op: "add" as const, name: "X-B", value: "2" },
+      { op: "delete" as const, name: "Server" },
+      { op: "replace" as const, name: "Location", value: "http://backend", replacement: "https://front" },
+    ];
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, upstreamResponseHeaders: ops })]);
+    expect(readBack(conf)[0].upstreamResponseHeaders).toEqual(expect.arrayContaining(ops));
+    expect(readBack(conf)[0].upstreamResponseHeaders).toHaveLength(4);
+  });
+});

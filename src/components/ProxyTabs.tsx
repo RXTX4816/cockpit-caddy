@@ -92,6 +92,7 @@ export function ProxyTabs({ state: s, onChange, general, generalHasError, active
             {routeMatchers}
             {isProxy && <RewriteSection value={s.rewrite} onChange={v => onChange({ rewrite: v })} isDisabled={isDisabled} />}
             <RequestHeadersSection value={s.requestHeaders} onChange={v => onChange({ requestHeaders: v })} isDisabled={isDisabled} />
+            {isProxy && <RequestHeadersSection variant="down" value={s.upstreamResponseHeaders} onChange={v => onChange({ upstreamResponseHeaders: v })} isDisabled={isDisabled} />}
             <ResponseHeadersSection value={s.responseHeaders} onChange={v => onChange({ responseHeaders: v })} isDisabled={isDisabled} />
             {isProxy && (
               <NamedRouteField

@@ -41,6 +41,7 @@ export function caddyQuote(value: string, opts: { always?: boolean } = {}): stri
  */
 export function headerOpLine(prefix: string, h: import("./types").HeaderOperation, opts: { quoteSet?: boolean; defer?: boolean } = {}): string {
   if (h.op === "delete") return `${prefix} -${h.name}`;
+  if (h.op === "replace") return `${prefix} ${h.name} ${caddyQuote(h.value ?? "")} ${caddyQuote(h.replacement ?? "")}`;
   if (h.op === "add") return `${prefix} +${h.name} ${caddyQuote(h.value ?? "")}`;
   return `${prefix} ${opts.defer ? ">" : ""}${h.name} ${caddyQuote(h.value ?? "", { always: opts.quoteSet })}`;
 }
@@ -335,14 +336,14 @@ export function buildLbRetryLines(lbRetry: import("./types").LbRetryConfig | und
 
 
 export function buildReverseProxyLines(
-  p: Pick<ProxyEntry, "targetScheme" | "targetHost" | "targetPort" | "tlsSkipVerify" | "requestHeaders" | "dialTimeout" | "responseHeaderTimeout" | "extraUpstreams" | "lbPolicy" | "lbPolicyArgs" | "lbRetry" | "replaceUpstreamErrors">,
+  p: Pick<ProxyEntry, "targetScheme" | "targetHost" | "targetPort" | "tlsSkipVerify" | "requestHeaders" | "upstreamResponseHeaders" | "dialTimeout" | "responseHeaderTimeout" | "extraUpstreams" | "lbPolicy" | "lbPolicyArgs" | "lbRetry" | "replaceUpstreamErrors">,
   errorHandlers?: import("./types").ErrorHandlerConfig[],
 ): string[] {
   const upstreams = buildUpstreamList(p);
 
   const headerLines = (p.requestHeaders ?? []).map(h => {
     return headerOpLine("\t\theader_up", h);
-  });
+  }).concat((p.upstreamResponseHeaders ?? []).map(h => headerOpLine("\t\theader_down", h)));
 
   const transportLines = buildTransportLines(p);
   const lbLines = (p.lbPolicy && upstreams.length > 1 && LB_POLICIES.has(p.lbPolicy))

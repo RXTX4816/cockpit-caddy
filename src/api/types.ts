@@ -265,9 +265,11 @@ export interface ProxyProtocolConfig {
 }
 
 export interface HeaderOperation {
-  op: "set" | "add" | "delete";
+  /** `replace` only exists for header_down: `value` is the regexp to find, `replacement` what it becomes. */
+  op: "set" | "add" | "delete" | "replace";
   name: string;
   value?: string;
+  replacement?: string;
 }
 
 export type RewriteConfig =
@@ -429,6 +431,8 @@ export interface ProxyEntry {
   rewrite?: RewriteConfig;
   requestHeaders?: HeaderOperation[];
   responseHeaders?: HeaderOperation[];
+  /** `header_down` of the reverse_proxy: changes the upstream's response headers before Caddy sends them on (#324). */
+  upstreamResponseHeaders?: HeaderOperation[];
   compress?: boolean;
   dialTimeout?: string;
   responseHeaderTimeout?: string;

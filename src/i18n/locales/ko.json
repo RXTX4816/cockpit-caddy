@@ -413,7 +413,12 @@
     "field_name": "헤더 이름",
     "field_value": "값",
     "add_button": "추가",
-    "presets_label": "프리셋"
+    "presets_label": "프리셋",
+    "down_heading": "업스트림 응답 헤더",
+    "down_section_title": "업스트림 응답 헤더 (선택 사항)",
+    "op_replace": "바꾸기",
+    "field_search": "찾을 헤더 값 (정규식)",
+    "field_replacement": "대체 값"
   },
   "edit_redirect": {
     "title": "리디렉션 편집 — :{{port}}",
