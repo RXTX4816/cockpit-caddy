@@ -17,7 +17,9 @@ The pure parts moved into four modules, each importing only the ones before it:
 3. `siteBlocks`: a `ProxyEntry` rendered as a Caddyfile site, and written, edited or removed in a conf.d file.
 4. `caddyJsonModel`: reading proxies out of a `CaddyConfig`, and merging or removing one.
 
-None of them touches the Host or the disk. `caddy.ts` keeps the admin API calls, the file I/O and the orchestration (`saveSiteConfig`, the global option sync, the config scan), and re-exports the modules so callers keep one import path.
+`siteEditing` sits on top of them: `addSite`, `editSite` and `removeSite` write a site to conf.d (through `caddy.ts`, so a rejected config leaves every file as it was), decide whether Caddy is reloaded or pushed JSON, and return what changed. `useProxies` only applies that result to the lists the page shows.
+
+None of the four modules touches the Host or the disk. `caddy.ts` keeps the admin API calls, the file I/O and the orchestration (`saveSiteConfig`, the global option sync, the config scan), and re-exports the modules so callers keep one import path.
 
 ## Consequences
 
