@@ -267,7 +267,20 @@
     "section_title": "上游逾時（選填）",
     "dial_timeout": "連線逾時",
     "response_header_timeout": "回應標頭逾時",
-    "defaults_help": "留空即使用 Caddy 的預設值（以灰色顯示）。回應標頭逾時會中斷長輪詢和較慢的回應。"
+    "defaults_help": "留空即使用 Caddy 的預設值（以灰色顯示）。回應標頭逾時會中斷長輪詢和較慢的回應。",
+    "streaming_help": "串流(WebSocket、事件串流):留空則使用 Caddy 預設值。",
+    "flush_interval": "清空間隔",
+    "flush_interval_placeholder": "-1 表示每次寫入立即傳送",
+    "stream_timeout": "串流逾時",
+    "stream_close_delay": "串流關閉延遲",
+    "connection_title": "上游連線",
+    "tls_server_name": "TLS 伺服器名稱",
+    "versions": "HTTP 版本",
+    "read_timeout": "讀取逾時",
+    "write_timeout": "寫入逾時",
+    "keepalive": "Keep-alive",
+    "keepalive_idle_conns": "保留的閒置連線數",
+    "keepalive_idle_conns_per_host": "每個主機保留的閒置連線數"
   },
   "server_timeouts": {
     "heading": "伺服器逾時與限制",
@@ -395,7 +408,9 @@
     "validation_max_fails": "最大失敗次數必須至少為 1",
     "validation_needs_health_uri": "間隔、逾時與預期狀態需要健康檢查路徑",
     "validation_health_uri": "健康檢查路徑必須以 / 開頭",
-    "validation_health_status": "請填寫 200 這樣的狀態碼或 2xx 這樣的類別"
+    "validation_health_status": "請填寫 200 這樣的狀態碼或 2xx 這樣的類別",
+    "retry_methods": "僅重試這些方法",
+    "validation_methods": "方法是 GET、HEAD 之類的單字,以空格分隔。"
   },
   "response_headers": {
     "heading": "回應標頭",
@@ -422,7 +437,12 @@
     "field_name": "標頭名稱",
     "field_value": "值",
     "add_button": "新增",
-    "presets_label": "預設"
+    "presets_label": "預設",
+    "down_heading": "上游回應標頭",
+    "down_section_title": "上游回應標頭(選填)",
+    "op_replace": "取代",
+    "field_search": "要尋找的標頭值(正規表示式)",
+    "field_replacement": "取代為"
   },
   "edit_redirect": {
     "title": "編輯重新導向 — :{{port}}",
@@ -731,7 +751,8 @@
     "admin_origins_help": "可從瀏覽器呼叫管理 API 的主機,以空格分隔。",
     "admin_enforce_origin": "強制檢查來源",
     "metrics_per_host": "依主機為指標加上標籤",
-    "metrics_per_host_help": "在每個請求指標上加入所請求的主機,以便區分網站。每個不同的主機都會成為獨立的時間序列。"
+    "metrics_per_host_help": "在每個請求指標上加入所請求的主機,以便區分網站。每個不同的主機都會成為獨立的時間序列。",
+    "auto_https_disable_certs": "不管理憑證"
   },
   "ca": {
     "title": "內部憑證授權單位",
@@ -1094,5 +1115,25 @@
     "site_inherit_help": "使用「設定 → DNS 驗證」中設定的 DNS 供應商；未設定時使用 HTTP 驗證。",
     "site_override_help": "此網站使用自己的 DNS 供應商和憑證。儲存新憑證會重新啟動 Caddy，因為它只在啟動時讀取憑證。",
     "site_wildcard_warning": "萬用字元憑證需要 DNS 驗證。請為此網站設定 DNS 供應商，或在「設定 → DNS 驗證」中設定。"
+  },
+  "dynamic_upstreams": {
+    "heading": "動態上游",
+    "section_title": "動態上游(進階,選填)",
+    "help": "透過 DNS 查詢上游。查詢無結果時使用上方的目標作為備援。多個來源會合併。",
+    "add_button": "新增 DNS 來源",
+    "type": "查詢類型",
+    "name_srv": "SRV 名稱",
+    "name_a": "主機名稱",
+    "refresh": "重新整理間隔",
+    "resolvers": "DNS 解析器",
+    "dial_fallback_delay": "備用連線延遲",
+    "grace_period": "寬限期",
+    "versions": "位址族",
+    "versions_both": "IPv4 與 IPv6",
+    "validation_name": "含設定的來源需要名稱。",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

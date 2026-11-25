@@ -267,7 +267,20 @@
     "section_title": "Timeout dell'upstream (facoltativi)",
     "dial_timeout": "Timeout di connessione",
     "response_header_timeout": "Timeout degli header di risposta",
-    "defaults_help": "Lascia un campo vuoto per usare il valore predefinito di Caddy, mostrato in grigio. Un timeout delle intestazioni di risposta interrompe il long polling e le risposte lente."
+    "defaults_help": "Lascia un campo vuoto per usare il valore predefinito di Caddy, mostrato in grigio. Un timeout delle intestazioni di risposta interrompe il long polling e le risposte lente.",
+    "streaming_help": "Streaming (websocket, flussi di eventi): lascia vuoto per usare i valori predefiniti di Caddy.",
+    "flush_interval": "Intervallo di flush",
+    "flush_interval_placeholder": "-1 invia ogni scrittura subito",
+    "stream_timeout": "Timeout dello stream",
+    "stream_close_delay": "Ritardo di chiusura dello stream",
+    "connection_title": "Connessione all'upstream",
+    "tls_server_name": "Nome server TLS",
+    "versions": "Versioni HTTP",
+    "read_timeout": "Timeout di lettura",
+    "write_timeout": "Timeout di scrittura",
+    "keepalive": "Keep-alive",
+    "keepalive_idle_conns": "Connessioni inattive mantenute",
+    "keepalive_idle_conns_per_host": "Connessioni inattive mantenute per host"
   },
   "server_timeouts": {
     "heading": "Timeout e limiti del server",
@@ -395,7 +408,9 @@
     "validation_max_fails": "I guasti max devono essere almeno 1",
     "validation_needs_health_uri": "Intervallo, timeout e stato atteso richiedono un percorso di controllo",
     "validation_health_uri": "Il percorso del controllo deve iniziare con /",
-    "validation_health_status": "Usa un codice come 200 o una classe come 2xx"
+    "validation_health_status": "Usa un codice come 200 o una classe come 2xx",
+    "retry_methods": "Riprova solo questi metodi",
+    "validation_methods": "I metodi sono parole come GET o HEAD, separate da spazi."
   },
   "response_headers": {
     "heading": "Header di risposta",
@@ -422,7 +437,12 @@
     "field_name": "Nome dell'header",
     "field_value": "Valore",
     "add_button": "Aggiungi",
-    "presets_label": "Preimpostazioni"
+    "presets_label": "Preimpostazioni",
+    "down_heading": "Intestazioni di risposta dell'upstream",
+    "down_section_title": "Intestazioni di risposta dell'upstream (facoltativo)",
+    "op_replace": "Sostituisci",
+    "field_search": "Valore dell'intestazione da cercare (espressione regolare)",
+    "field_replacement": "Sostituzione"
   },
   "edit_redirect": {
     "title": "Modifica reindirizzamento — :{{port}}",
@@ -731,7 +751,8 @@
     "admin_origins_help": "Host separati da spazi che possono chiamare l'API di amministrazione da un browser.",
     "admin_enforce_origin": "Imponi le origini",
     "metrics_per_host": "Etichetta le metriche per host",
-    "metrics_per_host_help": "Aggiunge l'host richiesto a ogni metrica di richiesta, così i siti si distinguono. Ogni host diverso diventa una serie a sé."
+    "metrics_per_host_help": "Aggiunge l'host richiesto a ogni metrica di richiesta, così i siti si distinguono. Ogni host diverso diventa una serie a sé.",
+    "auto_https_disable_certs": "Nessuna gestione dei certificati"
   },
   "ca": {
     "title": "Autorità di certificazione interna",
@@ -1094,5 +1115,25 @@
     "site_inherit_help": "Usa il provider DNS impostato in Impostazioni → Sfida DNS, oppure la sfida HTTP se non ce n'è uno.",
     "site_override_help": "Questo sito usa un proprio provider DNS e credenziali proprie. Salvare nuove credenziali riavvia Caddy, che le legge solo all'avvio.",
     "site_wildcard_warning": "I certificati wildcard richiedono la sfida DNS. Imposta un provider DNS per questo sito o in Impostazioni → Sfida DNS."
+  },
+  "dynamic_upstreams": {
+    "heading": "Upstream dinamici",
+    "section_title": "Upstream dinamici (avanzato, facoltativo)",
+    "help": "Cerca gli upstream nel DNS. La destinazione qui sopra è il ripiego quando la ricerca non trova nulla. Più sorgenti vengono combinate.",
+    "add_button": "Aggiungi sorgente DNS",
+    "type": "Tipo di ricerca",
+    "name_srv": "Nome SRV",
+    "name_a": "Nome host",
+    "refresh": "Intervallo di aggiornamento",
+    "resolvers": "Resolver DNS",
+    "dial_fallback_delay": "Ritardo della connessione di ripiego",
+    "grace_period": "Periodo di tolleranza",
+    "versions": "Famiglie di indirizzi",
+    "versions_both": "IPv4 e IPv6",
+    "validation_name": "Una sorgente con impostazioni richiede un nome.",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

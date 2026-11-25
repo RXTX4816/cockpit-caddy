@@ -14,6 +14,8 @@ export interface LbRetryValues {
   retries: string;
   tryDuration: string;
   tryInterval: string;
+  /** Space-separated HTTP methods for lb_retry_match (#327). */
+  retryMethods: string;
   failDuration: string;
   maxFails: string;
   unhealthyStatus: string;
@@ -24,7 +26,7 @@ export interface LbRetryValues {
 }
 
 const LB_RETRY_EMPTY: LbRetryValues = {
-  retries: "", tryDuration: "", tryInterval: "",
+  retries: "", tryDuration: "", tryInterval: "", retryMethods: "",
   failDuration: "", maxFails: "", unhealthyStatus: "",
   healthUri: "", healthInterval: "", healthTimeout: "", healthStatus: "",
 };
@@ -40,6 +42,7 @@ export function lbRetryConfigToValues(cfg: LbRetryConfig | undefined): LbRetryVa
     retries: cfg.retries != null ? String(cfg.retries) : "",
     tryDuration: cfg.tryDuration ?? "",
     tryInterval: cfg.tryInterval ?? "",
+    retryMethods: (cfg.retryMethods ?? []).join(" "),
     failDuration: cfg.failDuration ?? "",
     maxFails: cfg.maxFails != null ? String(cfg.maxFails) : "",
     unhealthyStatus: cfg.unhealthyStatus?.length ? cfg.unhealthyStatus.join(" ") : "",
@@ -63,6 +66,7 @@ export function lbRetryValuesToConfig(v: LbRetryValues): LbRetryConfig | undefin
     retries: parseIntOrUndefined(v.retries),
     tryDuration: v.tryDuration.trim() || undefined,
     tryInterval: v.tryInterval.trim() || undefined,
+    retryMethods: v.retryMethods.trim() ? v.retryMethods.trim().toUpperCase().split(/\s+/) : undefined,
     failDuration: v.failDuration.trim() || undefined,
     maxFails: parseIntOrUndefined(v.maxFails),
     unhealthyStatus: unhealthyStatus?.length ? unhealthyStatus : undefined,
@@ -77,6 +81,10 @@ export function lbRetryValuesToConfig(v: LbRetryValues): LbRetryConfig | undefin
 
 function isDuration(v: string): boolean {
   return !v || /^\d+(\.\d+)?(ns|us|ms|s|m|h)$/.test(v.trim());
+}
+
+function isMethodList(v: string): boolean {
+  return !v.trim() || v.trim().split(/\s+/).every(m => /^[A-Za-z]+$/.test(m));
 }
 
 function isStatusList(v: string): boolean {
@@ -107,6 +115,7 @@ export function validateLbRetry(v: LbRetryValues): string | null {
   for (const d of [v.tryDuration, v.tryInterval, v.failDuration, v.healthInterval, v.healthTimeout]) {
     if (!isDuration(d)) return "lb_retry.validation_duration";
   }
+  if (!isMethodList(v.retryMethods)) return "lb_retry.validation_methods";
   if (!isStatusList(v.unhealthyStatus)) return "lb_retry.validation_status";
   if (!isPositiveInt(v.maxFails)) return "lb_retry.validation_max_fails";
   if (v.healthUri.trim() && !v.healthUri.trim().startsWith("/")) return "lb_retry.validation_health_uri";
@@ -156,7 +165,8 @@ export function LbRetrySection({ value, onChange, isDisabled, isExpanded: isExpa
   const retriesErr = !!value.retries.trim() && (isNaN(parseInt(value.retries, 10)) || parseInt(value.retries, 10) < 0);
   // Each group shows only its own problems.
   const retryErr = retriesErr ? "lb_retry.validation_retries"
-    : !isDuration(value.tryDuration) || !isDuration(value.tryInterval) ? "lb_retry.validation_duration" : null;
+    : !isDuration(value.tryDuration) || !isDuration(value.tryInterval) ? "lb_retry.validation_duration"
+    : !isMethodList(value.retryMethods) ? "lb_retry.validation_methods" : null;
   const passiveErr = !isDuration(value.failDuration) ? "lb_retry.validation_duration"
     : !isStatusList(value.unhealthyStatus) ? "lb_retry.validation_status"
     : !isPositiveInt(value.maxFails) ? "lb_retry.validation_max_fails" : null;
@@ -187,6 +197,7 @@ export function LbRetrySection({ value, onChange, isDisabled, isExpanded: isExpa
         {field("retries", "lbr-retries", t("lb_retry.retries"), t("common.example_value", { value: "3" }), retriesErr, { type: "number", flex: "1 1 8rem" })}
         {field("tryDuration", "lbr-try-duration", t("lb_retry.try_duration"), t("common.example_value", { value: "5s" }), !isDuration(value.tryDuration))}
         {field("tryInterval", "lbr-try-interval", t("lb_retry.try_interval"), t("common.default_value", { value: "250ms" }), !isDuration(value.tryInterval))}
+        {field("retryMethods", "lbr-retry-methods", t("lb_retry.retry_methods"), t("common.example_value", { value: "GET HEAD" }), !isMethodList(value.retryMethods))}
       </div>
       <HelperText data-testid="lbr-retry-help" style={{ marginTop: "0.3rem" }}>
         {retryErr && <HelperTextItem variant="error">{t(retryErr)}</HelperTextItem>}

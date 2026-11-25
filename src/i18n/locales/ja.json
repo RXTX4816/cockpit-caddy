@@ -267,7 +267,20 @@
     "section_title": "アップストリームのタイムアウト（任意）",
     "dial_timeout": "接続タイムアウト",
     "response_header_timeout": "レスポンスヘッダーのタイムアウト",
-    "defaults_help": "空欄にすると Caddy の既定値（灰色で表示）が使われます。レスポンスヘッダーのタイムアウトは、ロングポーリングや遅い応答を切断します。"
+    "defaults_help": "空欄にすると Caddy の既定値（灰色で表示）が使われます。レスポンスヘッダーのタイムアウトは、ロングポーリングや遅い応答を切断します。",
+    "streaming_help": "ストリーミング(WebSocket、イベントストリーム):空欄なら Caddy の既定値を使います。",
+    "flush_interval": "フラッシュ間隔",
+    "flush_interval_placeholder": "-1 は書き込みごとに即時送信",
+    "stream_timeout": "ストリームのタイムアウト",
+    "stream_close_delay": "ストリーム終了の遅延",
+    "connection_title": "アップストリームへの接続",
+    "tls_server_name": "TLS サーバー名",
+    "versions": "HTTP バージョン",
+    "read_timeout": "読み取りタイムアウト",
+    "write_timeout": "書き込みタイムアウト",
+    "keepalive": "キープアライブ",
+    "keepalive_idle_conns": "保持するアイドル接続数",
+    "keepalive_idle_conns_per_host": "ホストごとに保持するアイドル接続数"
   },
   "server_timeouts": {
     "heading": "サーバーのタイムアウトと制限",
@@ -395,7 +408,9 @@
     "validation_max_fails": "最大失敗回数は 1 以上にしてください",
     "validation_needs_health_uri": "間隔・タイムアウト・期待するステータスにはヘルスチェックのパスが必要です",
     "validation_health_uri": "ヘルスチェックのパスは / で始めてください",
-    "validation_health_status": "200 のようなコードか 2xx のようなクラスを指定してください"
+    "validation_health_status": "200 のようなコードか 2xx のようなクラスを指定してください",
+    "retry_methods": "このメソッドのみ再試行",
+    "validation_methods": "メソッドは GET や HEAD のような単語で、スペースで区切ります。"
   },
   "response_headers": {
     "heading": "レスポンスヘッダー",
@@ -422,7 +437,12 @@
     "field_name": "ヘッダー名",
     "field_value": "値",
     "add_button": "追加",
-    "presets_label": "プリセット"
+    "presets_label": "プリセット",
+    "down_heading": "アップストリームからの応答ヘッダー",
+    "down_section_title": "アップストリームからの応答ヘッダー(任意)",
+    "op_replace": "置換",
+    "field_search": "検索するヘッダー値(正規表現)",
+    "field_replacement": "置換後の値"
   },
   "edit_redirect": {
     "title": "リダイレクトを編集 — :{{port}}",
@@ -731,7 +751,8 @@
     "admin_origins_help": "ブラウザーから管理 API を呼び出せるホスト(スペース区切り)。",
     "admin_enforce_origin": "オリジンを強制",
     "metrics_per_host": "メトリクスにホストのラベルを付ける",
-    "metrics_per_host_help": "リクエストごとのメトリクスに要求されたホストを追加し、サイトを区別できるようにします。ホストごとに別の系列になります。"
+    "metrics_per_host_help": "リクエストごとのメトリクスに要求されたホストを追加し、サイトを区別できるようにします。ホストごとに別の系列になります。",
+    "auto_https_disable_certs": "証明書を管理しない"
   },
   "ca": {
     "title": "内部認証局",
@@ -1094,5 +1115,25 @@
     "site_inherit_help": "設定 → DNS チャレンジで設定した DNS プロバイダーを使います。未設定なら HTTP チャレンジを使います。",
     "site_override_help": "このサイトは専用の DNS プロバイダーと認証情報を使います。新しい認証情報を保存すると Caddy が再起動します（起動時にのみ読み込むため）。",
     "site_wildcard_warning": "ワイルドカード証明書には DNS チャレンジが必要です。このサイト用、または 設定 → DNS チャレンジ で DNS プロバイダーを設定してください。"
+  },
+  "dynamic_upstreams": {
+    "heading": "動的アップストリーム",
+    "section_title": "動的アップストリーム(上級、任意)",
+    "help": "アップストリームを DNS で検索します。検索で何も見つからない場合は、上のターゲットが使われます。複数のソースは結合されます。",
+    "add_button": "DNS ソースを追加",
+    "type": "検索の種類",
+    "name_srv": "SRV 名",
+    "name_a": "ホスト名",
+    "refresh": "更新間隔",
+    "resolvers": "DNS リゾルバー",
+    "dial_fallback_delay": "フォールバック接続の遅延",
+    "grace_period": "猶予期間",
+    "versions": "アドレスファミリー",
+    "versions_both": "IPv4 と IPv6",
+    "validation_name": "設定のあるソースには名前が必要です。",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

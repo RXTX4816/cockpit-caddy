@@ -267,7 +267,20 @@
     "section_title": "Upstream-time-outs (optioneel)",
     "dial_timeout": "Verbindingstime-out",
     "response_header_timeout": "Time-out voor antwoordheaders",
-    "defaults_help": "Laat een veld leeg om de standaardwaarde van Caddy te gebruiken (grijs weergegeven). Een time-out voor response-headers breekt long polling en trage antwoorden af."
+    "defaults_help": "Laat een veld leeg om de standaardwaarde van Caddy te gebruiken (grijs weergegeven). Een time-out voor response-headers breekt long polling en trage antwoorden af.",
+    "streaming_help": "Streaming (websockets, eventstreams): laat leeg voor de standaardwaarden van Caddy.",
+    "flush_interval": "Flush-interval",
+    "flush_interval_placeholder": "-1 verstuurt elke schrijfactie direct",
+    "stream_timeout": "Stream-timeout",
+    "stream_close_delay": "Vertraging bij sluiten van stream",
+    "connection_title": "Verbinding met de upstream",
+    "tls_server_name": "TLS-servernaam",
+    "versions": "HTTP-versies",
+    "read_timeout": "Lees-timeout",
+    "write_timeout": "Schrijf-timeout",
+    "keepalive": "Keep-alive",
+    "keepalive_idle_conns": "Bewaarde inactieve verbindingen",
+    "keepalive_idle_conns_per_host": "Bewaarde inactieve verbindingen per host"
   },
   "server_timeouts": {
     "heading": "Servertime-outs & -limieten",
@@ -395,7 +408,9 @@
     "validation_max_fails": "Max. fouten moet 1 of meer zijn",
     "validation_needs_health_uri": "Interval, time-out en verwachte status hebben een health-check-pad nodig",
     "validation_health_uri": "Het health-check-pad moet met / beginnen",
-    "validation_health_status": "Gebruik een statuscode zoals 200 of een klasse zoals 2xx"
+    "validation_health_status": "Gebruik een statuscode zoals 200 of een klasse zoals 2xx",
+    "retry_methods": "Alleen deze methoden opnieuw proberen",
+    "validation_methods": "Methoden zijn woorden zoals GET of HEAD, gescheiden door spaties."
   },
   "response_headers": {
     "heading": "Antwoordheaders",
@@ -422,7 +437,12 @@
     "field_name": "Headernaam",
     "field_value": "Waarde",
     "add_button": "Toevoegen",
-    "presets_label": "Voorinstellingen"
+    "presets_label": "Voorinstellingen",
+    "down_heading": "Antwoordheaders van de upstream",
+    "down_section_title": "Antwoordheaders van de upstream (optioneel)",
+    "op_replace": "Vervangen",
+    "field_search": "Te zoeken headerwaarde (reguliere expressie)",
+    "field_replacement": "Vervanging"
   },
   "edit_redirect": {
     "title": "Omleiding bewerken — :{{port}}",
@@ -731,7 +751,8 @@
     "admin_origins_help": "Hosts gescheiden door spaties die de beheer-API vanuit een browser mogen aanroepen.",
     "admin_enforce_origin": "Origins afdwingen",
     "metrics_per_host": "Metrics labelen per host",
-    "metrics_per_host_help": "Voegt de gevraagde host toe aan elke aanvraagmetric, zodat sites te onderscheiden zijn. Elke andere host wordt een eigen reeks."
+    "metrics_per_host_help": "Voegt de gevraagde host toe aan elke aanvraagmetric, zodat sites te onderscheiden zijn. Elke andere host wordt een eigen reeks.",
+    "auto_https_disable_certs": "Geen certificaatbeheer"
   },
   "ca": {
     "title": "Interne certificeringsinstantie",
@@ -1094,5 +1115,25 @@
     "site_inherit_help": "Gebruikt de DNS-provider uit Instellingen → DNS-challenge, of de HTTP-challenge als er geen is ingesteld.",
     "site_override_help": "Deze site gebruikt een eigen DNS-provider en eigen inloggegevens. Nieuwe gegevens opslaan herstart Caddy, omdat Caddy ze alleen bij het starten leest.",
     "site_wildcard_warning": "Wildcardcertificaten hebben de DNS-challenge nodig. Stel een DNS-provider in voor deze site, of onder Instellingen → DNS-challenge."
+  },
+  "dynamic_upstreams": {
+    "heading": "Dynamische upstreams",
+    "section_title": "Dynamische upstreams (geavanceerd, optioneel)",
+    "help": "Zoek de upstreams op via DNS. Het doel hierboven is de terugval als de opzoeking niets vindt. Meerdere bronnen worden gecombineerd.",
+    "add_button": "DNS-bron toevoegen",
+    "type": "Type opzoeking",
+    "name_srv": "SRV-naam",
+    "name_a": "Hostnaam",
+    "refresh": "Vernieuwingsinterval",
+    "resolvers": "DNS-resolvers",
+    "dial_fallback_delay": "Vertraging van de terugvalverbinding",
+    "grace_period": "Uitstelperiode",
+    "versions": "Adresfamilies",
+    "versions_both": "IPv4 en IPv6",
+    "validation_name": "Een bron met instellingen heeft een naam nodig.",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

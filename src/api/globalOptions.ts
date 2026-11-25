@@ -2,7 +2,7 @@
 // parsing it into GlobalOptions, patching changed options back in, the metrics site block and the
 // DNS-challenge provider lines. Pure: no Host, no I/O. Builds on caddyfileDocument.
 
-import { findGlobalBlock, parseDnsProviderDirective } from "./caddyfileDocument";
+import { caddyQuote, findGlobalBlock, parseDnsProviderDirective } from "./caddyfileDocument";
 
 /** Generates the Caddyfile block for a single proxy (label comment + block body). */
 /**
@@ -21,12 +21,6 @@ export function buildLogRollLines(log: import("./types").AccessLogConfig, indent
 
 
 /**
- * Trusted proxy config lines for a `servers { }` block (#153) — used both for the global
- * (portless) block and merged into each per-port managed servers block, since Caddy's
- * per-port `servers :PORT { }` fully replaces (doesn't merge with) the global block's
- * settings for that port, verified against a live instance.
- */
-/**
  * `servers` lines for the per-listener options of #328. Written in every `servers` block
  * that covers the listener, like the other options there.
  */
@@ -41,6 +35,12 @@ export function buildServerExtrasLines(extras: import("./types").ServerExtras | 
 }
 
 
+/**
+ * Trusted proxy config lines for a `servers { }` block (#153) — used both for the global
+ * (portless) block and merged into each per-port managed servers block, since Caddy's
+ * per-port `servers :PORT { }` fully replaces (doesn't merge with) the global block's
+ * settings for that port, verified against a live instance.
+ */
 export function buildTrustedProxiesLines(tp: import("./types").TrustedProxiesConfig, indent: string): string[] {
   const lines: string[] = [];
   if (tp.ranges.length) lines.push(`${indent}trusted_proxies static ${tp.ranges.join(" ")}`);
@@ -301,10 +301,6 @@ function splitTokens(text: string): string[] {
   return [...text.matchAll(/"([^"]*)"|(\S+)/g)].map(m => m[1] ?? m[2]);
 }
 
-function quoteToken(v: string): string {
-  return /[\s"]/.test(v) ? `"${v.replace(/"/g, '\\"')}"` : v;
-}
-
 
 /** Parse the recognized global option directives out of a block of Caddyfile lines. */
 export function parseOptionLines(lines: string[]): GlobalOptions {
@@ -549,7 +545,9 @@ export function parseGlobalOptions(content: string): GlobalOptions {
   if (bi !== -1 && ei !== -1) {
     const section = content.slice(bi + GLOBAL_OPTS_BEGIN.length, ei);
     const opts = parseOptionLines(section.split("\n"));
-    const outside = parseOptionLines(globalLinesOutsideSection(content).split("\n"));
+    const outsideText = globalLinesOutsideSection(content);
+    const keep = absorbableKeys(outsideText);
+    const outside = parseOptionLines(stripKnownGlobalOptionLines(outsideText, new Set([...ABSORBED_GLOBAL_OPTION_KEYS].filter(k => !keep.has(k)))).split("\n"));
     for (const k of Object.keys(outside) as Array<keyof GlobalOptions>) {
       if (opts[k] === undefined && isAbsorbedField(k)) (opts as Record<string, unknown>)[k] = outside[k];
     }
@@ -569,6 +567,35 @@ export function parseGlobalOptions(content: string): GlobalOptions {
 export const ABSORBED_GLOBAL_OPTION_KEYS = new Set([
   "auto_https", "local_certs", "default_sni", "key_type", "ocsp_stapling", "preferred_chains", "cert_issuer", "default_bind", "admin",
 ]);
+
+
+/**
+ * The absorbed keys a hand-written block outside the section can be moved into it without
+ * losing anything: an `admin` block with only `origins` / `enforce_origin`, one `cert_issuer`
+ * line, a `preferred_chains` with one line. Others stay where they are, untouched.
+ */
+function absorbableKeys(outside: string): ReadonlySet<string> {
+  const keys = new Set(ABSORBED_GLOBAL_OPTION_KEYS);
+  const lines = outside.split("\n").map(l => l.trim());
+  const seen = new Map<string, number>();
+  for (let i = 0; i < lines.length; i++) {
+    const key = lines[i].split(/\s+/)[0];
+    if (!keys.has(key)) continue;
+    seen.set(key, (seen.get(key) ?? 0) + 1);
+    if (!lines[i].endsWith("{")) continue;
+    const body: string[] = [];
+    let depth = 1;
+    for (i++; i < lines.length; i++) {
+      depth += (lines[i].match(/\{/g) ?? []).length - (lines[i].match(/\}/g) ?? []).length;
+      if (depth <= 0) break;
+      body.push(lines[i]);
+    }
+    if (key === "admin" && body.some(b => !/^(origins\s|enforce_origin$)/.test(b))) keys.delete(key);
+    if (key === "preferred_chains" && body.length > 1) keys.delete(key);
+  }
+  for (const [k, n] of seen) if (n > 1) keys.delete(k);
+  return keys;
+}
 
 
 /** The global block's lines outside the managed opts section, or "" without one. */
@@ -659,7 +686,7 @@ export function buildGlobalOptionsLines(opts: GlobalOptions): string {
   if (opts.ocspStaplingOff) lines.push("\tocsp_stapling off");
   if (opts.preferredChains?.mode === "smallest") lines.push("\tpreferred_chains smallest");
   else if (opts.preferredChains?.names.length) {
-    lines.push("\tpreferred_chains {", `\t\t${opts.preferredChains.mode} ${opts.preferredChains.names.map(quoteToken).join(" ")}`, "\t}");
+    lines.push("\tpreferred_chains {", `\t\t${opts.preferredChains.mode} ${opts.preferredChains.names.map(v => caddyQuote(v)).join(" ")}`, "\t}");
   }
   if (opts.certIssuer) {
     if (opts.certIssuerBody?.length) lines.push(`\tcert_issuer ${opts.certIssuer} {`, ...opts.certIssuerBody.map(l => `\t\t${l}`), "\t}");
@@ -713,14 +740,16 @@ export function buildGlobalOptionsPatch(diskContent: string, opts: GlobalOptions
   const hasMarkers = diskContent.includes(GLOBAL_OPTS_BEGIN) && diskContent.includes(GLOBAL_OPTS_END);
   if (hasMarkers) {
     const gb = findGlobalBlock(diskContent);
-    if (gb) {
+    const inner = gb ? diskContent.slice(gb.open + 1, gb.close) : "";
+    const bi = inner.indexOf(GLOBAL_OPTS_BEGIN);
+    const end = inner.indexOf(GLOBAL_OPTS_END);
+    if (gb && bi !== -1 && end !== -1) {
       // The section is rewritten from what parseGlobalOptions read, which included these.
-      const inner = diskContent.slice(gb.open + 1, gb.close);
-      const bi = inner.indexOf(GLOBAL_OPTS_BEGIN);
-      const ei = inner.indexOf(GLOBAL_OPTS_END) + GLOBAL_OPTS_END.length;
-      const stripped = stripKnownGlobalOptionLines(inner.slice(0, bi), ABSORBED_GLOBAL_OPTION_KEYS)
+      const ei = end + GLOBAL_OPTS_END.length;
+      const keys = absorbableKeys(inner.slice(0, bi) + inner.slice(ei));
+      const stripped = stripKnownGlobalOptionLines(inner.slice(0, bi), keys)
         + inner.slice(bi, ei)
-        + stripKnownGlobalOptionLines(inner.slice(ei), ABSORBED_GLOBAL_OPTION_KEYS);
+        + stripKnownGlobalOptionLines(inner.slice(ei), keys);
       base = diskContent.slice(0, gb.open + 1) + stripped + diskContent.slice(gb.close);
     }
   } else {

@@ -267,7 +267,20 @@
     "section_title": "Tidsgränser för upstream (valfritt)",
     "dial_timeout": "Tidsgräns för anslutning",
     "response_header_timeout": "Tidsgräns för svarshuvuden",
-    "defaults_help": "Lämna ett fält tomt för att använda Caddys standardvärde, som visas i grått. En tidsgräns för svarets headers avbryter long polling och långsamma svar."
+    "defaults_help": "Lämna ett fält tomt för att använda Caddys standardvärde, som visas i grått. En tidsgräns för svarets headers avbryter long polling och långsamma svar.",
+    "streaming_help": "Strömning (websockets, händelseströmmar): lämna tomt för Caddys standardvärden.",
+    "flush_interval": "Flush-intervall",
+    "flush_interval_placeholder": "-1 skickar varje skrivning direkt",
+    "stream_timeout": "Timeout för ström",
+    "stream_close_delay": "Fördröjning vid stängning av ström",
+    "connection_title": "Anslutning till upstream",
+    "tls_server_name": "TLS-servernamn",
+    "versions": "HTTP-versioner",
+    "read_timeout": "Timeout för läsning",
+    "write_timeout": "Timeout för skrivning",
+    "keepalive": "Keep-alive",
+    "keepalive_idle_conns": "Sparade inaktiva anslutningar",
+    "keepalive_idle_conns_per_host": "Sparade inaktiva anslutningar per värd"
   },
   "server_timeouts": {
     "heading": "Servertidsgränser och gränser",
@@ -395,7 +408,9 @@
     "validation_max_fails": "Max antal fel måste vara 1 eller mer",
     "validation_needs_health_uri": "Intervall, tidsgräns och förväntad status kräver en sökväg för hälsokontroll",
     "validation_health_uri": "Sökvägen för hälsokontroll måste börja med /",
-    "validation_health_status": "Ange en statuskod som 200 eller en klass som 2xx"
+    "validation_health_status": "Ange en statuskod som 200 eller en klass som 2xx",
+    "retry_methods": "Försök bara om för dessa metoder",
+    "validation_methods": "Metoder är ord som GET eller HEAD, åtskilda av mellanslag."
   },
   "response_headers": {
     "heading": "Svarshuvuden",
@@ -422,7 +437,12 @@
     "field_name": "Huvudets namn",
     "field_value": "Värde",
     "add_button": "Lägg till",
-    "presets_label": "Förval"
+    "presets_label": "Förval",
+    "down_heading": "Svarshuvuden från upstream",
+    "down_section_title": "Svarshuvuden från upstream (valfritt)",
+    "op_replace": "Ersätt",
+    "field_search": "Huvudvärde att söka efter (reguljärt uttryck)",
+    "field_replacement": "Ersättning"
   },
   "edit_redirect": {
     "title": "Redigera omdirigering — :{{port}}",
@@ -731,7 +751,8 @@
     "admin_origins_help": "Mellanslagsavgränsade värdar som får anropa admin-API:et från en webbläsare.",
     "admin_enforce_origin": "Tvinga origins",
     "metrics_per_host": "Märk mätvärden per värd",
-    "metrics_per_host_help": "Lägger till den begärda värden på varje förfrågningsmått så att webbplatser kan särskiljas. Varje olik värd blir en egen serie."
+    "metrics_per_host_help": "Lägger till den begärda värden på varje förfrågningsmått så att webbplatser kan särskiljas. Varje olik värd blir en egen serie.",
+    "auto_https_disable_certs": "Ingen certifikathantering"
   },
   "ca": {
     "title": "Intern certifikatutfärdare",
@@ -1094,5 +1115,25 @@
     "site_inherit_help": "Använder DNS-leverantören under Inställningar → DNS-utmaning, eller HTTP-utmaningen om ingen är angiven.",
     "site_override_help": "Den här webbplatsen använder en egen DNS-leverantör och egna inloggningsuppgifter. Att spara nya uppgifter startar om Caddy, eftersom Caddy bara läser dem vid start.",
     "site_wildcard_warning": "Jokerteckencertifikat kräver DNS-utmaningen. Ange en DNS-leverantör för den här webbplatsen, eller under Inställningar → DNS-utmaning."
+  },
+  "dynamic_upstreams": {
+    "heading": "Dynamiska upstreams",
+    "section_title": "Dynamiska upstreams (avancerat, valfritt)",
+    "help": "Slå upp upstreams i DNS. Målet ovan är reserv när uppslagningen inte hittar något. Flera källor slås ihop.",
+    "add_button": "Lägg till DNS-källa",
+    "type": "Typ av uppslagning",
+    "name_srv": "SRV-namn",
+    "name_a": "Värdnamn",
+    "refresh": "Uppdateringsintervall",
+    "resolvers": "DNS-resolvers",
+    "dial_fallback_delay": "Fördröjning för reservanslutning",
+    "grace_period": "Respitperiod",
+    "versions": "Adressfamiljer",
+    "versions_both": "IPv4 och IPv6",
+    "validation_name": "En källa med inställningar behöver ett namn.",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

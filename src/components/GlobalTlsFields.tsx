@@ -17,7 +17,7 @@ export interface GlobalTlsValues {
   chainsNames: string;
 }
 
-export const AUTO_HTTPS_MODES = ["off", "disable_redirects", "ignore_loaded_certs"] as const;
+export const AUTO_HTTPS_MODES = ["off", "disable_redirects", "disable_certs", "ignore_loaded_certs"] as const;
 export const KEY_TYPES = ["ed25519", "p256", "p384", "rsa2048", "rsa4096"] as const;
 const SIMPLE_ISSUERS = ["internal", "acme"];
 

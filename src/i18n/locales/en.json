@@ -267,7 +267,20 @@
     "section_title": "Upstream Timeouts (optional)",
     "dial_timeout": "Connect timeout",
     "response_header_timeout": "Response header timeout",
-    "defaults_help": "Leave a field empty to use Caddy's default, shown greyed out. A response header timeout cuts off long polling and slow responses."
+    "defaults_help": "Leave a field empty to use Caddy's default, shown greyed out. A response header timeout cuts off long polling and slow responses.",
+    "streaming_help": "Streaming (websockets, event streams): leave empty to keep Caddy's defaults.",
+    "flush_interval": "Flush interval",
+    "flush_interval_placeholder": "-1 sends every write at once",
+    "stream_timeout": "Stream timeout",
+    "stream_close_delay": "Stream close delay",
+    "connection_title": "Upstream connection",
+    "tls_server_name": "TLS server name",
+    "versions": "HTTP versions",
+    "read_timeout": "Read timeout",
+    "write_timeout": "Write timeout",
+    "keepalive": "Keep-alive",
+    "keepalive_idle_conns": "Idle connections kept",
+    "keepalive_idle_conns_per_host": "Idle connections kept per host"
   },
   "server_timeouts": {
     "heading": "Server Timeouts & Limits",
@@ -395,7 +408,9 @@
     "validation_max_fails": "Max fails must be 1 or greater",
     "validation_needs_health_uri": "Interval, timeout and expected status need a health check path",
     "validation_health_uri": "The health check path must start with /",
-    "validation_health_status": "Use a status code like 200 or a class like 2xx"
+    "validation_health_status": "Use a status code like 200 or a class like 2xx",
+    "retry_methods": "Retry only these methods",
+    "validation_methods": "Methods are words like GET or HEAD, separated by spaces."
   },
   "response_headers": {
     "heading": "Response Headers",
@@ -422,7 +437,12 @@
     "field_name": "Header name",
     "field_value": "Value",
     "add_button": "Add",
-    "presets_label": "Presets"
+    "presets_label": "Presets",
+    "down_heading": "Response headers from the upstream",
+    "down_section_title": "Response headers from the upstream (optional)",
+    "op_replace": "Replace",
+    "field_search": "Header value to find (regular expression)",
+    "field_replacement": "Replacement"
   },
   "edit_redirect": {
     "title": "Edit Redirect — :{{port}}",
@@ -731,7 +751,8 @@
     "admin_origins_help": "Space-separated hosts that may call the admin API from a browser.",
     "admin_enforce_origin": "Enforce origins",
     "metrics_per_host": "Label metrics by host",
-    "metrics_per_host_help": "Adds the requested host to each request metric, so sites can be told apart. Every distinct host becomes its own series."
+    "metrics_per_host_help": "Adds the requested host to each request metric, so sites can be told apart. Every distinct host becomes its own series.",
+    "auto_https_disable_certs": "No certificate management"
   },
   "ca": {
     "title": "Internal Certificate Authority",
@@ -1094,5 +1115,25 @@
     "site_inherit_help": "Uses the DNS provider set under Settings → DNS challenge, or the HTTP challenge when none is set.",
     "site_override_help": "This site uses its own DNS provider and credentials. Saving new credentials restarts Caddy, because it reads them only when it starts.",
     "site_wildcard_warning": "Wildcard certificates need the DNS challenge. Set a DNS provider for this site, or one under Settings → DNS challenge."
+  },
+  "dynamic_upstreams": {
+    "heading": "Dynamic Upstreams",
+    "section_title": "Dynamic Upstreams (advanced, optional)",
+    "help": "Look the upstreams up in DNS. The target above is the fallback when a lookup finds nothing. Several sources are combined.",
+    "add_button": "Add DNS source",
+    "type": "Lookup type",
+    "name_srv": "SRV name",
+    "name_a": "Host name",
+    "refresh": "Refresh interval",
+    "resolvers": "DNS resolvers",
+    "dial_fallback_delay": "Dial fallback delay",
+    "grace_period": "Grace period",
+    "versions": "Address families",
+    "versions_both": "IPv4 and IPv6",
+    "validation_name": "A source with settings needs a name.",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

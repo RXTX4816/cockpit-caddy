@@ -267,7 +267,20 @@
     "section_title": "Časové limity upstreamu (volitelné)",
     "dial_timeout": "Časový limit připojení",
     "response_header_timeout": "Časový limit hlaviček odpovědi",
-    "defaults_help": "Ponechte pole prázdné a použije se výchozí hodnota Caddy (zobrazená šedě). Časový limit hlaviček odpovědi přeruší long polling a pomalé odpovědi."
+    "defaults_help": "Ponechte pole prázdné a použije se výchozí hodnota Caddy (zobrazená šedě). Časový limit hlaviček odpovědi přeruší long polling a pomalé odpovědi.",
+    "streaming_help": "Streamování (websockety, proudy událostí): nechte prázdné pro výchozí hodnoty Caddy.",
+    "flush_interval": "Interval vyprázdnění",
+    "flush_interval_placeholder": "-1 odešle každý zápis hned",
+    "stream_timeout": "Časový limit streamu",
+    "stream_close_delay": "Zpoždění uzavření streamu",
+    "connection_title": "Spojení s upstreamem",
+    "tls_server_name": "Název serveru TLS",
+    "versions": "Verze HTTP",
+    "read_timeout": "Časový limit čtení",
+    "write_timeout": "Časový limit zápisu",
+    "keepalive": "Keep-alive",
+    "keepalive_idle_conns": "Uchovávaná nečinná spojení",
+    "keepalive_idle_conns_per_host": "Uchovávaná nečinná spojení na hostitele"
   },
   "server_timeouts": {
     "heading": "Časové limity a omezení serveru",
@@ -395,7 +408,9 @@
     "validation_max_fails": "Max. selhání musí být 1 nebo více",
     "validation_needs_health_uri": "Interval, časový limit a očekávaný stav vyžadují cestu kontroly stavu",
     "validation_health_uri": "Cesta kontroly stavu musí začínat znakem /",
-    "validation_health_status": "Zadejte kód jako 200 nebo třídu jako 2xx"
+    "validation_health_status": "Zadejte kód jako 200 nebo třídu jako 2xx",
+    "retry_methods": "Opakovat jen tyto metody",
+    "validation_methods": "Metody jsou slova jako GET nebo HEAD oddělená mezerami."
   },
   "response_headers": {
     "heading": "Hlavičky odpovědi",
@@ -422,7 +437,12 @@
     "field_name": "Název hlavičky",
     "field_value": "Hodnota",
     "add_button": "Přidat",
-    "presets_label": "Předvolby"
+    "presets_label": "Předvolby",
+    "down_heading": "Hlavičky odpovědi z upstreamu",
+    "down_section_title": "Hlavičky odpovědi z upstreamu (volitelné)",
+    "op_replace": "Nahradit",
+    "field_search": "Hledaná hodnota hlavičky (regulární výraz)",
+    "field_replacement": "Náhrada"
   },
   "edit_redirect": {
     "title": "Upravit přesměrování — :{{port}}",
@@ -731,7 +751,8 @@
     "admin_origins_help": "Hostitelé oddělení mezerami, kteří smí volat administrační API z prohlížeče.",
     "admin_enforce_origin": "Vynutit originy",
     "metrics_per_host": "Označit metriky hostitelem",
-    "metrics_per_host_help": "Přidá požadovaného hostitele ke každé metrice požadavku, aby šly weby rozlišit. Každý jiný hostitel tvoří vlastní řadu."
+    "metrics_per_host_help": "Přidá požadovaného hostitele ke každé metrice požadavku, aby šly weby rozlišit. Každý jiný hostitel tvoří vlastní řadu.",
+    "auto_https_disable_certs": "Bez správy certifikátů"
   },
   "ca": {
     "title": "Interní certifikační autorita",
@@ -1094,5 +1115,25 @@
     "site_inherit_help": "Použije poskytovatele DNS nastaveného v Nastavení → Výzva DNS, nebo výzvu HTTP, pokud žádný není nastaven.",
     "site_override_help": "Tento web používá vlastního poskytovatele DNS a přihlašovací údaje. Uložení nových údajů restartuje Caddy, protože je načítá jen při startu.",
     "site_wildcard_warning": "Certifikáty se zástupným znakem vyžadují výzvu DNS. Nastavte poskytovatele DNS pro tento web, nebo v Nastavení → Výzva DNS."
+  },
+  "dynamic_upstreams": {
+    "heading": "Dynamické upstreamy",
+    "section_title": "Dynamické upstreamy (pokročilé, volitelné)",
+    "help": "Upstreamy se zjišťují přes DNS. Cíl výše je záloha, když dotaz nic nenajde. Více zdrojů se spojí.",
+    "add_button": "Přidat zdroj DNS",
+    "type": "Typ dotazu",
+    "name_srv": "Název SRV",
+    "name_a": "Název hostitele",
+    "refresh": "Interval obnovení",
+    "resolvers": "DNS resolvery",
+    "dial_fallback_delay": "Zpoždění záložního připojení",
+    "grace_period": "Odkladová lhůta",
+    "versions": "Rodiny adres",
+    "versions_both": "IPv4 a IPv6",
+    "validation_name": "Zdroj s nastavením potřebuje název.",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

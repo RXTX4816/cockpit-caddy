@@ -267,7 +267,20 @@
     "section_title": "Timeout-uri upstream (opțional)",
     "dial_timeout": "Timeout de conectare",
     "response_header_timeout": "Timeout pentru antetele răspunsului",
-    "defaults_help": "Lăsați un câmp gol pentru a folosi valoarea implicită Caddy, afișată cu gri. O limită de timp pentru antetele răspunsului întrerupe long polling-ul și răspunsurile lente."
+    "defaults_help": "Lăsați un câmp gol pentru a folosi valoarea implicită Caddy, afișată cu gri. O limită de timp pentru antetele răspunsului întrerupe long polling-ul și răspunsurile lente.",
+    "streaming_help": "Streaming (websocket-uri, fluxuri de evenimente): lăsați gol pentru valorile implicite Caddy.",
+    "flush_interval": "Interval de golire",
+    "flush_interval_placeholder": "-1 trimite fiecare scriere imediat",
+    "stream_timeout": "Timp limită al fluxului",
+    "stream_close_delay": "Întârziere la închiderea fluxului",
+    "connection_title": "Conexiunea la upstream",
+    "tls_server_name": "Numele serverului TLS",
+    "versions": "Versiuni HTTP",
+    "read_timeout": "Timp limită de citire",
+    "write_timeout": "Timp limită de scriere",
+    "keepalive": "Keep-alive",
+    "keepalive_idle_conns": "Conexiuni inactive păstrate",
+    "keepalive_idle_conns_per_host": "Conexiuni inactive păstrate per gazdă"
   },
   "server_timeouts": {
     "heading": "Timeout-uri și limite ale serverului",
@@ -395,7 +408,9 @@
     "validation_max_fails": "Eșecurile max. trebuie să fie cel puțin 1",
     "validation_needs_health_uri": "Intervalul, limita de timp și starea așteptată necesită o cale de verificare",
     "validation_health_uri": "Calea verificării trebuie să înceapă cu /",
-    "validation_health_status": "Folosiți un cod ca 200 sau o clasă ca 2xx"
+    "validation_health_status": "Folosiți un cod ca 200 sau o clasă ca 2xx",
+    "retry_methods": "Reîncearcă doar aceste metode",
+    "validation_methods": "Metodele sunt cuvinte precum GET sau HEAD, separate prin spații."
   },
   "response_headers": {
     "heading": "Antete de răspuns",
@@ -422,7 +437,12 @@
     "field_name": "Numele antetului",
     "field_value": "Valoare",
     "add_button": "Adaugă",
-    "presets_label": "Presetări"
+    "presets_label": "Presetări",
+    "down_heading": "Anteturi de răspuns de la upstream",
+    "down_section_title": "Anteturi de răspuns de la upstream (opțional)",
+    "op_replace": "Înlocuiește",
+    "field_search": "Valoarea antetului de căutat (expresie regulată)",
+    "field_replacement": "Înlocuire"
   },
   "edit_redirect": {
     "title": "Editează redirecționarea — :{{port}}",
@@ -731,7 +751,8 @@
     "admin_origins_help": "Gazde separate prin spații care pot apela API-ul de administrare dintr-un browser.",
     "admin_enforce_origin": "Impune originile",
     "metrics_per_host": "Etichetează metricile după gazdă",
-    "metrics_per_host_help": "Adaugă gazda cerută la fiecare metrică de cerere, ca site-urile să poată fi deosebite. Fiecare gazdă diferită devine o serie proprie."
+    "metrics_per_host_help": "Adaugă gazda cerută la fiecare metrică de cerere, ca site-urile să poată fi deosebite. Fiecare gazdă diferită devine o serie proprie.",
+    "auto_https_disable_certs": "Fără gestionarea certificatelor"
   },
   "ca": {
     "title": "Autoritate de certificare internă",
@@ -1094,5 +1115,25 @@
     "site_inherit_help": "Folosește furnizorul DNS setat în Setări → Provocare DNS sau provocarea HTTP dacă nu e setat niciunul.",
     "site_override_help": "Acest site folosește propriul furnizor DNS și propriile date de acces. Salvarea unor date noi repornește Caddy, care le citește doar la pornire.",
     "site_wildcard_warning": "Certificatele wildcard au nevoie de provocarea DNS. Setează un furnizor DNS pentru acest site sau în Setări → Provocare DNS."
+  },
+  "dynamic_upstreams": {
+    "heading": "Upstream-uri dinamice",
+    "section_title": "Upstream-uri dinamice (avansat, opțional)",
+    "help": "Caută upstream-urile în DNS. Ținta de mai sus este varianta de rezervă când căutarea nu găsește nimic. Mai multe surse sunt combinate.",
+    "add_button": "Adaugă sursă DNS",
+    "type": "Tipul căutării",
+    "name_srv": "Nume SRV",
+    "name_a": "Nume de gazdă",
+    "refresh": "Interval de reîmprospătare",
+    "resolvers": "Rezolvatoare DNS",
+    "dial_fallback_delay": "Întârzierea conexiunii de rezervă",
+    "grace_period": "Perioadă de grație",
+    "versions": "Familii de adrese",
+    "versions_both": "IPv4 și IPv6",
+    "validation_name": "O sursă cu setări are nevoie de un nume.",
+    "type_srv": "SRV",
+    "type_a": "A / AAAA",
+    "ipv4": "IPv4",
+    "ipv6": "IPv6"
   }
 }

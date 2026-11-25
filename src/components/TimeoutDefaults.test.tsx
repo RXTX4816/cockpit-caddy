@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { ServerTimeoutsSection, serverExtrasToValues, type ServerTimeoutValues } from "./ServerTimeoutsSection";
-import { TransportSection } from "./TransportSection";
+import { TRANSPORT_EMPTY, TransportSection } from "./TransportSection";
 
 function applyDefaults() {
   fireEvent.click(screen.getByRole("button", { name: "Defaults" }));
@@ -31,11 +31,11 @@ describe("timeout Defaults mean Caddy's defaults (#249)", () => {
     expect(screen.getByLabelText("Max header size").getAttribute("placeholder")).toBe("Default: 16 KB");
   });
 
-  it("upstream timeouts: Defaults clears both fields and shows Caddy's values as placeholders", () => {
+  it("upstream timeouts: Defaults clears every field and shows Caddy's values as placeholders", () => {
     const onChange = vi.fn();
-    render(<TransportSection value={{ dialTimeout: "10s", responseHeaderTimeout: "30s" }} onChange={onChange} isExpanded />);
+    render(<TransportSection value={{ ...TRANSPORT_EMPTY, dialTimeout: "10s", responseHeaderTimeout: "30s", flushInterval: "-1" }} onChange={onChange} isExpanded />);
     applyDefaults();
-    expect(onChange).toHaveBeenCalledWith({ dialTimeout: "", responseHeaderTimeout: "" });
+    expect(onChange).toHaveBeenCalledWith(TRANSPORT_EMPTY);
     expect(screen.getByLabelText("Connect timeout").getAttribute("placeholder")).toBe("Default: 3s");
     expect(screen.getByLabelText("Response header timeout").getAttribute("placeholder")).toBe("none");
   });
