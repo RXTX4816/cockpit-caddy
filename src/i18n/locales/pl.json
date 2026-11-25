@@ -115,8 +115,9 @@
     "menu_php": "Witryna PHP",
     "more_actions": "Więcej działań",
     "indicator_raw_blocks": "Surowe bloki",
-    "raw_blocks_help": "Ta witryna ma bloki route lub zagnieżdżone bloki handle. Edytuj je w surowym edytorze; formularz zostawia je bez zmian.",
-    "raw_blocks_notice": "Ta witryna ma bloki route lub zagnieżdżone bloki handle. Formularz zostawia je tak, jak napisano, i zmienia tylko adres, bind, importy i TLS witryny. Edytuj bloki w surowym edytorze."
+    "raw_blocks_help": "Ta witryna ma bloki route lub zagnieżdżone bloki handle. Karta Drzewo je edytuje; to, co pokazuje jako surowe, edytuje się w surowym edytorze.",
+    "raw_blocks_notice": "Ta witryna ma bloki route lub zagnieżdżone bloki handle. Formularz zostawia je tak, jak napisano, i zmienia tylko adres, bind, importy i TLS witryny. Edytuj bloki na karcie Drzewo; to, co pokazuje jako surowe, edytuj w surowym edytorze.",
+    "raw_blocks_names": "Tylko w surowym edytorze: {{blocks}}"
   },
   "add_proxy": {
     "title": "Dodaj reverse proxy",
@@ -1075,6 +1076,16 @@
     "discard": "Odrzuć zmiany",
     "saved": "Bloki witryny zostały zapisane.",
     "block_not_found": "Nie znaleziono bloku witryny w Caddyfile. Odśwież stronę i spróbuj ponownie.",
-    "edit_help": "Wybierz blok, aby zmienić jego matcher lub dyrektywy. Przepisywane są tylko linie, które edytujesz; bloki nieznane formularzowi są pokazywane tak, jak napisano, i pozostają tylko do odczytu."
+    "edit_help": "Wybierz blok, aby zmienić jego matcher lub dyrektywy, albo dodawaj, przenoś i usuwaj bloki. Przepisywane jest tylko to, co zmienisz; bloki nieznane formularzowi są pokazywane tak, jak napisano, pozostają tylko do odczytu i można je przenieść lub usunąć.",
+    "move_up": "Przesuń w górę",
+    "move_down": "Przesuń w dół",
+    "remove": "Usuń",
+    "remove_confirm": "Usunąć ten blok i {{count}} bloków w nim?",
+    "remove_yes": "Usuń",
+    "remove_no": "Zachowaj",
+    "add_kind": "Rodzaj",
+    "add_inside": "Dodaj wewnątrz zaznaczonego bloku",
+    "add_top": "Dodaj na najwyższym poziomie",
+    "add_matcher": "Matcher nowego bloku"
   }
 }

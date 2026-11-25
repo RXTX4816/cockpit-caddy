@@ -12,7 +12,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { CONF_HEADER, buildServerEntry, proxiesToCaddyfile, parseProxies, parseConfExternalAddresses, proxyAddressKeys, resolveInternalIssuerSettings, surgicallyWriteProxy, buildMigratedConfContent, migrateCaddyfile, parseConfTlsIssuerMap, parseConfTlsOnDemandMap, parseConfTlsMap, expandPlaceholderShorthands } from "./caddy";
 import { snippetsToConf, parseSnippets, parseConfSiteImports, parseConfSiteBlocks, separateSnippetSettings } from "./snippets";
-import { editNode, parseSiteTree, serializeSiteTree } from "./siteTree";
+import { addNode, editNode, moveNode, parseSiteTree, removeNode, serializeSiteTree } from "./siteTree";
 import type { CaddyConfig, CaddyServer, ProxyEntry } from "./types";
 
 function hasCaddy(): boolean {
@@ -830,5 +830,23 @@ describe.runIf(available || required)("an edited tree is a config Caddy takes (#
     expect(json).toContain("changed");
     expect(json).toContain("/static/*");
     expect(json).not.toContain('"/a/*"');
+  });
+});
+
+
+describe.runIf(available || required)("added, moved and removed nodes are a config Caddy takes (#351)", () => {
+  const site = "example.com:8443 {\n\troute {\n\t\thandle /a/* {\n\t\t\trespond a\n\t\t}\n\t\thandle {\n\t\t\trespond rest\n\t\t}\n\t}\n}";
+
+  it("adapts after an add, a move and a remove, and the order is the order of the tree", () => {
+    let tree = parseSiteTree(site)!;
+    tree = addNode(tree, [0], { kind: "handle_path", matcher: "/extra/*" })!.tree;
+    tree = moveNode(tree, [0, 2], -1)!.tree;
+    tree = moveNode(tree, [0, 1], -1)!.tree;
+    tree = removeNode(tree, [0, 2]);
+    const json = JSON.stringify(adapt(serializeSiteTree(tree) + "\n"));
+    expect(json).toContain("/extra/*");
+    expect(json).toContain("/a/*");
+    expect(json).not.toContain("rest");
+    expect(json.indexOf("/extra/*")).toBeLessThan(json.indexOf("/a/*"));
   });
 });

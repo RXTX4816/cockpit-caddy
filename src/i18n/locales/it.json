@@ -115,8 +115,9 @@
     "menu_php": "Sito PHP",
     "more_actions": "Altre azioni",
     "indicator_raw_blocks": "Blocchi grezzi",
-    "raw_blocks_help": "Questo sito ha blocchi route o handle annidati. Modificali nell'editor grezzo; il modulo li lascia come sono.",
-    "raw_blocks_notice": "Questo sito ha blocchi route o handle annidati. Il modulo li lascia come scritti e cambia solo indirizzo, bind, import e TLS del sito. Modifica i blocchi nell'editor grezzo."
+    "raw_blocks_help": "Questo sito ha blocchi route o handle annidati. La scheda Albero li modifica; ciò che mostra come grezzo si modifica nell'editor grezzo.",
+    "raw_blocks_notice": "Questo sito ha blocchi route o handle annidati. Il modulo li lascia come scritti e cambia solo indirizzo, bind, import e TLS del sito. Modifica i blocchi nella scheda Albero; ciò che mostra come grezzo si modifica nell'editor grezzo.",
+    "raw_blocks_names": "Solo nell'editor grezzo: {{blocks}}"
   },
   "add_proxy": {
     "title": "Aggiungi reverse proxy",
@@ -1075,6 +1076,16 @@
     "discard": "Scarta le modifiche",
     "saved": "I blocchi del sito sono stati salvati.",
     "block_not_found": "Il blocco del sito non è stato trovato nel Caddyfile. Ricarica la pagina e riprova.",
-    "edit_help": "Seleziona un blocco per cambiarne il matcher o le direttive. Vengono riscritte solo le righe che modifichi; i blocchi che il modulo non conosce sono mostrati come scritti e restano in sola lettura."
+    "edit_help": "Seleziona un blocco per cambiarne il matcher o le direttive, oppure aggiungi, sposta e rimuovi blocchi. Viene riscritto solo ciò che cambi; i blocchi che il modulo non conosce sono mostrati come scritti, restano in sola lettura e si possono spostare o rimuovere.",
+    "move_up": "Sposta su",
+    "move_down": "Sposta giù",
+    "remove": "Rimuovi",
+    "remove_confirm": "Rimuovere questo blocco e i {{count}} blocchi al suo interno?",
+    "remove_yes": "Rimuovi",
+    "remove_no": "Mantieni",
+    "add_kind": "Tipo",
+    "add_inside": "Aggiungi dentro il blocco selezionato",
+    "add_top": "Aggiungi al livello superiore",
+    "add_matcher": "Matcher del nuovo blocco"
   }
 }

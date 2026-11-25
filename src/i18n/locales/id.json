@@ -115,8 +115,9 @@
     "menu_php": "Situs PHP",
     "more_actions": "Tindakan lain",
     "indicator_raw_blocks": "Blok mentah",
-    "raw_blocks_help": "Situs ini punya blok route atau handle bersarang. Edit di editor mentah; formulir membiarkannya apa adanya.",
-    "raw_blocks_notice": "Situs ini punya blok route atau handle bersarang. Formulir membiarkannya seperti tertulis dan hanya mengubah alamat, bind, impor, dan TLS situs. Edit blok di editor mentah."
+    "raw_blocks_help": "Situs ini punya blok route atau handle bersarang. Tab Pohon mengeditnya; yang ditampilkan sebagai mentah diedit di editor mentah.",
+    "raw_blocks_notice": "Situs ini punya blok route atau handle bersarang. Formulir membiarkannya seperti tertulis dan hanya mengubah alamat, bind, impor, dan TLS situs. Edit blok di tab Pohon; yang ditampilkan sebagai mentah diedit di editor mentah.",
+    "raw_blocks_names": "Hanya di editor mentah: {{blocks}}"
   },
   "add_proxy": {
     "title": "Tambah reverse proxy",
@@ -1075,6 +1076,16 @@
     "discard": "Buang perubahan",
     "saved": "Blok situs telah disimpan.",
     "block_not_found": "Blok situs tidak ditemukan di Caddyfile. Muat ulang halaman dan coba lagi.",
-    "edit_help": "Pilih blok untuk mengubah matcher atau direktifnya. Hanya baris yang Anda edit yang ditulis ulang; blok yang tidak dikenal formulir ditampilkan apa adanya dan tetap hanya baca."
+    "edit_help": "Pilih blok untuk mengubah matcher atau direktifnya, atau tambah, pindahkan, dan hapus blok. Hanya yang Anda ubah yang ditulis ulang; blok yang tidak dikenal formulir ditampilkan apa adanya, tetap hanya baca, dan dapat dipindah atau dihapus.",
+    "move_up": "Pindah ke atas",
+    "move_down": "Pindah ke bawah",
+    "remove": "Hapus",
+    "remove_confirm": "Hapus blok ini dan {{count}} blok di dalamnya?",
+    "remove_yes": "Hapus",
+    "remove_no": "Simpan",
+    "add_kind": "Jenis",
+    "add_inside": "Tambah di dalam blok yang dipilih",
+    "add_top": "Tambah di tingkat atas",
+    "add_matcher": "Matcher blok baru"
   }
 }

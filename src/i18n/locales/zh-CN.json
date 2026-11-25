@@ -115,8 +115,9 @@
     "menu_php": "PHP 站点",
     "more_actions": "更多操作",
     "indicator_raw_blocks": "原始块",
-    "raw_blocks_help": "此站点有 route 块或嵌套的 handle 块。请在原始编辑器中编辑;表单会保持它们不变。",
-    "raw_blocks_notice": "此站点有 route 块或嵌套的 handle 块。表单会保持它们原样,只更改站点的地址、bind、导入和 TLS。请在原始编辑器中编辑这些块。"
+    "raw_blocks_help": "此站点有 route 块或嵌套的 handle 块。“树”标签页可编辑它们;其中显示为原始的内容请在原始编辑器中编辑。",
+    "raw_blocks_notice": "此站点有 route 块或嵌套的 handle 块。表单会保持它们原样,只更改站点的地址、bind、导入和 TLS。请在“树”标签页中编辑这些块;其中显示为原始的内容请在原始编辑器中编辑。",
+    "raw_blocks_names": "仅限原始编辑器:{{blocks}}"
   },
   "add_proxy": {
     "title": "添加反向代理",
@@ -1075,6 +1076,16 @@
     "discard": "放弃更改",
     "saved": "站点的块已保存。",
     "block_not_found": "在 Caddyfile 中找不到该站点的块。请刷新页面后重试。",
-    "edit_help": "选择一个块来更改其匹配器或指令。只会重写你编辑的行;表单不认识的块按原样显示,并保持只读。"
+    "edit_help": "选择一个块来更改其匹配器或指令,或添加、移动和移除块。只会重写你更改的部分;表单不认识的块按原样显示、保持只读,但可以移动或移除。",
+    "move_up": "上移",
+    "move_down": "下移",
+    "remove": "移除",
+    "remove_confirm": "移除此块及其中的 {{count}} 个块?",
+    "remove_yes": "移除",
+    "remove_no": "保留",
+    "add_kind": "类型",
+    "add_inside": "添加到所选块内",
+    "add_top": "添加到顶层",
+    "add_matcher": "新块的匹配器"
   }
 }

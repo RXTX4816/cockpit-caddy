@@ -115,8 +115,9 @@
     "menu_php": "Sitio PHP",
     "more_actions": "Más acciones",
     "indicator_raw_blocks": "Bloques sin procesar",
-    "raw_blocks_help": "Este sitio tiene bloques route o handle anidados. Edítelos en el editor en bruto; el formulario los deja como están.",
-    "raw_blocks_notice": "Este sitio tiene bloques route o handle anidados. El formulario los deja como están escritos y solo cambia la dirección, el bind, las importaciones y el TLS del sitio. Edite los bloques en el editor en bruto."
+    "raw_blocks_help": "Este sitio tiene bloques route o handle anidados. La pestaña Árbol los edita; lo que muestra como en bruto se edita en el editor en bruto.",
+    "raw_blocks_notice": "Este sitio tiene bloques route o handle anidados. El formulario los deja como están escritos y solo cambia la dirección, el bind, las importaciones y el TLS del sitio. Edite los bloques en la pestaña Árbol; lo que muestra como en bruto se edita en el editor en bruto.",
+    "raw_blocks_names": "Solo en el editor en bruto: {{blocks}}"
   },
   "add_proxy": {
     "title": "Añadir reverse proxy",
@@ -1075,6 +1076,16 @@
     "discard": "Descartar cambios",
     "saved": "Se guardaron los bloques del sitio.",
     "block_not_found": "No se encontró el bloque del sitio en el Caddyfile. Recargue la página e inténtelo de nuevo.",
-    "edit_help": "Seleccione un bloque para cambiar su matcher o sus directivas. Solo se reescriben las líneas que edita; los bloques que el formulario no conoce se muestran tal como están y siguen siendo de solo lectura."
+    "edit_help": "Seleccione un bloque para cambiar su matcher o sus directivas, o añada, mueva y quite bloques. Solo se reescribe lo que cambia; los bloques que el formulario no conoce se muestran tal como están, siguen siendo de solo lectura y se pueden mover o quitar.",
+    "move_up": "Subir",
+    "move_down": "Bajar",
+    "remove": "Quitar",
+    "remove_confirm": "¿Quitar este bloque y los {{count}} bloques que contiene?",
+    "remove_yes": "Quitar",
+    "remove_no": "Conservar",
+    "add_kind": "Tipo",
+    "add_inside": "Añadir dentro del bloque seleccionado",
+    "add_top": "Añadir en el nivel superior",
+    "add_matcher": "Matcher del bloque nuevo"
   }
 }

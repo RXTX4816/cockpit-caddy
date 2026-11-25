@@ -115,8 +115,9 @@
     "menu_php": "PHP-Site",
     "more_actions": "Weitere Aktionen",
     "indicator_raw_blocks": "Rohe Blöcke",
-    "raw_blocks_help": "Diese Site hat route- oder verschachtelte handle-Blöcke. Bearbeiten Sie sie im Rohtext-Editor; das Formular lässt sie, wie sie sind.",
-    "raw_blocks_notice": "Diese Site hat route- oder verschachtelte handle-Blöcke. Das Formular lässt sie, wie sie geschrieben sind, und ändert nur Adresse, Bind, Importe und TLS der Site. Bearbeiten Sie die Blöcke im Rohtext-Editor."
+    "raw_blocks_help": "Diese Site hat route- oder verschachtelte handle-Blöcke. Der Tab Baum bearbeitet sie; was er als roh zeigt, wird im Rohtext-Editor bearbeitet.",
+    "raw_blocks_notice": "Diese Site hat route- oder verschachtelte handle-Blöcke. Das Formular lässt sie, wie geschrieben, und ändert nur Adresse, Bind, Importe und TLS der Site. Bearbeiten Sie die Blöcke im Tab Baum; was er als roh zeigt, bearbeiten Sie im Rohtext-Editor.",
+    "raw_blocks_names": "Nur im Rohtext-Editor: {{blocks}}"
   },
   "add_proxy": {
     "title": "Reverse Proxy hinzufügen",
@@ -1075,6 +1076,16 @@
     "discard": "Änderungen verwerfen",
     "saved": "Die Blöcke der Site wurden gespeichert.",
     "block_not_found": "Der Block der Site wurde im Caddyfile nicht gefunden. Laden Sie die Seite neu und versuchen Sie es erneut.",
-    "edit_help": "Wählen Sie einen Block, um seinen Matcher oder seine Direktiven zu ändern. Nur die Zeilen, die Sie bearbeiten, werden neu geschrieben; Blöcke, die das Formular nicht kennt, werden wie geschrieben angezeigt und bleiben schreibgeschützt."
+    "edit_help": "Wählen Sie einen Block, um Matcher oder Direktiven zu ändern, oder fügen Sie Blöcke hinzu, verschieben und entfernen Sie sie. Nur das Geänderte wird neu geschrieben; Blöcke, die das Formular nicht kennt, werden wie geschrieben angezeigt, bleiben schreibgeschützt und lassen sich verschieben oder entfernen.",
+    "move_up": "Nach oben",
+    "move_down": "Nach unten",
+    "remove": "Entfernen",
+    "remove_confirm": "Diesen Block und die {{count}} Blöcke darin entfernen?",
+    "remove_yes": "Entfernen",
+    "remove_no": "Behalten",
+    "add_kind": "Art",
+    "add_inside": "Im gewählten Block hinzufügen",
+    "add_top": "Auf oberster Ebene hinzufügen",
+    "add_matcher": "Matcher des neuen Blocks"
   }
 }

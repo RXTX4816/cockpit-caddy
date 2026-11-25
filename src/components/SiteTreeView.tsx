@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Alert, Button, FormGroup, Label, TextInput } from "@patternfly/react-core";
+import { Alert, Button, FormGroup, FormSelect, FormSelectOption, Label, TextInput } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import {
-  childNodes, editNode, nodeAt, nodeHandlers, parseSiteTree, serializeSiteTree, validateNodeEdit,
-  type NodePath, type SiteTree, type TreeItem, type TreeNode,
+  TREE_KINDS, addNode, childNodes, countDescendants, editNode, moveNode, nodeAt, nodeHandlers, parseSiteTree, removeNode,
+  serializeSiteTree, validateNodeEdit,
+  type NodePath, type SiteTree, type TreeItem, type TreeKind, type TreeNode,
 } from "../api/siteTree";
 
 const KIND_COLORS = { route: "purple", handle: "blue", handle_path: "teal", opaque: "grey" } as const;
@@ -36,11 +37,14 @@ const listStyle = { listStyle: "none", margin: 0, paddingLeft: "1.25rem" } as co
 interface Select {
   selected?: NodePath;
   onSelect?: (p: NodePath) => void;
+  /** Move (-1 up, 1 down) and delete buttons next to every node (#351). */
+  onMove?: (p: NodePath, direction: -1 | 1) => void;
+  onRemove?: (p: NodePath) => void;
 }
 
 const samePath = (a: NodePath | undefined, b: NodePath) => !!a && a.length === b.length && a.every((v, i) => v === b[i]);
 
-function NodeView({ node, scopes, path, selected, onSelect }: { node: TreeNode; scopes: Array<Record<string, string>>; path: NodePath } & Select) {
+function NodeView({ node, scopes, path, selected, onSelect, onMove, onRemove, siblings }: { node: TreeNode; scopes: Array<Record<string, string>>; path: NodePath; siblings: number } & Select) {
   const { t } = useTranslation();
   const own = [matcherDefinitions(node.items), ...scopes];
   const handlers = node.kind === "opaque" ? node.items.flatMap(it => "line" in it ? [it.line.trim()] : []).filter(Boolean) : nodeHandlers(node);
@@ -63,6 +67,13 @@ function NodeView({ node, scopes, path, selected, onSelect }: { node: TreeNode; 
         ) : (
           <code>{summary}</code>
         )}
+        {onMove && onRemove && (
+          <span style={{ display: "inline-flex", gap: "0.1rem" }}>
+            <Button variant="plain" size="sm" aria-label={`${t("tree.move_up")}: ${kindLabel} ${summary}`} isDisabled={path[path.length - 1] === 0} onClick={() => onMove(path, -1)}>↑</Button>
+            <Button variant="plain" size="sm" aria-label={`${t("tree.move_down")}: ${kindLabel} ${summary}`} isDisabled={path[path.length - 1] === siblings - 1} onClick={() => onMove(path, 1)}>↓</Button>
+            <Button variant="plain" size="sm" isDanger aria-label={`${t("tree.remove")}: ${kindLabel} ${summary}`} onClick={() => onRemove(path)}>✕</Button>
+          </span>
+        )}
       </div>
       {handlers.length > 0 && (
         <ul style={{ ...listStyle, color: "var(--pf-t--global--text--color--subtle)" }} aria-label={t("tree.handlers")}>
@@ -71,7 +82,7 @@ function NodeView({ node, scopes, path, selected, onSelect }: { node: TreeNode; 
       )}
       {children.length > 0 && (
         <ul role="group" style={listStyle}>
-          {children.map((c, i) => <NodeView key={i} node={c} scopes={own} path={[...path, i]} selected={selected} onSelect={onSelect} />)}
+          {children.map((c, i) => <NodeView key={i} node={c} scopes={own} path={[...path, i]} siblings={children.length} selected={selected} onSelect={onSelect} onMove={onMove} onRemove={onRemove} />)}
         </ul>
       )}
     </li>
@@ -79,7 +90,7 @@ function NodeView({ node, scopes, path, selected, onSelect }: { node: TreeNode; 
 }
 
 /** The route and handle blocks of a site, read-only (#349). */
-export function SiteTreeView({ tree, selected, onSelect }: { tree: SiteTree } & Select) {
+export function SiteTreeView({ tree, selected, onSelect, onMove, onRemove }: { tree: SiteTree } & Select) {
   const { t } = useTranslation();
   const scopes = [matcherDefinitions(tree.items)];
   const roots = childNodes(tree.items);
@@ -91,7 +102,7 @@ export function SiteTreeView({ tree, selected, onSelect }: { tree: SiteTree } & 
           <code>{tree.header.trim().replace(/\s*\{\s*$/, "")}</code>
         </div>
         <ul role="group" style={listStyle}>
-          {roots.map((n, i) => <NodeView key={i} node={n} scopes={scopes} path={[i]} selected={selected} onSelect={onSelect} />)}
+          {roots.map((n, i) => <NodeView key={i} node={n} scopes={scopes} path={[i]} siblings={roots.length} selected={selected} onSelect={onSelect} onMove={onMove} onRemove={onRemove} />)}
         </ul>
       </li>
     </ul>
@@ -138,8 +149,9 @@ function NodeFields({ node, edit, onChange, isDisabled }: {
 
 /**
  * The Tree tab: the tree of a site's text, with the matchers and directives of its nodes
- * editable when `onSave` is given (#350). The edits are applied to the text on Save; nodes the
- * form does not know stay read-only and every line not edited stays as written.
+ * editable, and nodes added, removed and moved, when `onSave` is given (#350, #351). The edits
+ * are applied to the text on Save; nodes the form does not know stay read-only (they can be
+ * moved or deleted) and every line not edited stays as written.
  */
 export function SiteTreeTab({ siteText, onSave }: { siteText: string; onSave?: (text: string) => Promise<void> }) {
   const { t } = useTranslation();
@@ -149,11 +161,15 @@ export function SiteTreeTab({ siteText, onSave }: { siteText: string; onSave?: (
   const [edit, setEdit] = useState<{ matcher?: string; handlers: Record<number, string> }>({ handlers: {} });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<NodePath | undefined>();
+  const [addKind, setAddKind] = useState<TreeKind>("handle");
+  const [addMatcher, setAddMatcher] = useState("");
 
   if (!original || !tree) return <p>{t("tree.unreadable")}</p>;
   const node = selected ? nodeAt(tree, selected) : undefined;
   const invalid = !!validateNodeEdit(edit);
 
+  /** The tree with what is typed for the selected node applied to it. */
   function apply(): SiteTree {
     return selected && node && !invalid ? editNode(tree!, selected, edit) : tree!;
   }
@@ -163,6 +179,40 @@ export function SiteTreeTab({ siteText, onSave }: { siteText: string; onSave?: (
     setTree(apply());
     setEdit({ handlers: {} });
     setSelected(p);
+  }
+
+  function move(p: NodePath, direction: -1 | 1) {
+    const moved = moveNode(apply(), p, direction);
+    if (!moved) return;
+    setTree(moved.tree);
+    setEdit({ handlers: {} });
+    setSelected(moved.path);
+    setPendingDelete(undefined);
+  }
+
+  function remove(p: NodePath) {
+    const target = nodeAt(apply(), p);
+    if (target && target.kind !== "opaque" && countDescendants(target) > 0) setPendingDelete(p);
+    else doRemove(p);
+  }
+
+  function doRemove(p: NodePath) {
+    setTree(removeNode(apply(), p));
+    setEdit({ handlers: {} });
+    setSelected(undefined);
+    setPendingDelete(undefined);
+  }
+
+  const addTarget = node && node.kind !== "opaque" ? selected! : [];
+  const addMatcherInvalid = !!validateNodeEdit({ matcher: addMatcher }) || (addKind === "handle_path" && !addMatcher.trim());
+
+  function add() {
+    const added = addNode(apply(), addTarget, { kind: addKind, matcher: addMatcher });
+    if (!added) return;
+    setTree(added.tree);
+    setEdit({ handlers: {} });
+    setSelected(added.path);
+    setAddMatcher("");
   }
 
   async function save() {
@@ -181,19 +231,62 @@ export function SiteTreeTab({ siteText, onSave }: { siteText: string; onSave?: (
   }
 
   const changed = serializeSiteTree(apply()) !== siteText;
+  const doomed = pendingDelete ? nodeAt(tree, pendingDelete) : undefined;
 
   return (
     <>
       <p style={{ margin: 0, color: "var(--pf-t--global--text--color--subtle)" }}>{t(onSave ? "tree.edit_help" : "tree.read_only_help")}</p>
-      <SiteTreeView tree={tree} selected={selected} onSelect={onSave ? choose : undefined} />
+      <SiteTreeView
+        tree={tree}
+        selected={selected}
+        onSelect={onSave ? choose : undefined}
+        onMove={onSave ? move : undefined}
+        onRemove={onSave ? remove : undefined}
+      />
+      {doomed && pendingDelete && (
+        <Alert
+          variant="warning"
+          isInline
+          role="alertdialog"
+          title={t("tree.remove_confirm", { count: countDescendants(doomed) })}
+          actionClose={null}
+        >
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <Button variant="danger" size="sm" onClick={() => doRemove(pendingDelete)}>{t("tree.remove_yes")}</Button>
+            <Button variant="link" size="sm" onClick={() => setPendingDelete(undefined)}>{t("tree.remove_no")}</Button>
+          </div>
+        </Alert>
+      )}
       {onSave && node && node.kind !== "opaque" && (
         <NodeFields key={selected?.join(".")} node={node} edit={edit} onChange={setEdit} isDisabled={saving} />
+      )}
+      {onSave && (
+        <div style={{ display: "flex", gap: "0.5rem", alignItems: "flex-end", flexWrap: "wrap" }}>
+          <FormGroup label={t("tree.add_kind")} fieldId="tree-add-kind">
+            <FormSelect id="tree-add-kind" value={addKind} onChange={(_e, v) => setAddKind(v as TreeKind)} isDisabled={saving} style={{ maxWidth: "11rem" }}>
+              {TREE_KINDS.map(k => <FormSelectOption key={k} value={k} label={k} />)}
+            </FormSelect>
+          </FormGroup>
+          <FormGroup label={t("tree.add_matcher")} fieldId="tree-add-matcher">
+            <TextInput
+              id="tree-add-matcher"
+              value={addMatcher}
+              onChange={(_e, v) => setAddMatcher(v)}
+              placeholder={addKind === "handle_path" ? "/app/*" : "@name"}
+              validated={validateNodeEdit({ matcher: addMatcher }) ? "error" : "default"}
+              isDisabled={saving}
+            />
+          </FormGroup>
+          <Button variant="secondary" isDisabled={addMatcherInvalid || saving} onClick={add}>
+            {node && node.kind !== "opaque" ? t("tree.add_inside") : t("tree.add_top")}
+          </Button>
+        </div>
       )}
       {error && <Alert variant="danger" isInline title={error} />}
       {onSave && (
         <div style={{ display: "flex", gap: "0.5rem" }}>
           <Button variant="primary" isDisabled={!changed || invalid || saving} isLoading={saving} onClick={() => void save()}>{t("tree.save")}</Button>
-          <Button variant="link" isDisabled={!changed || saving} onClick={() => { setTree(original); setEdit({ handlers: {} }); setError(null); }}>{t("tree.discard")}</Button>
+          <Button variant="link" isDisabled={!changed || saving} onClick={() => { setTree(original); setEdit({ handlers: {} }); setSelected(undefined); setPendingDelete(undefined); setError(null); }}>{t("tree.discard")}</Button>
         </div>
       )}
     </>

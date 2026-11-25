@@ -115,8 +115,9 @@
     "menu_php": "PHP-site",
     "more_actions": "Meer acties",
     "indicator_raw_blocks": "Ruwe blokken",
-    "raw_blocks_help": "Deze site heeft route- of geneste handle-blokken. Bewerk ze in de ruwe editor; het formulier laat ze zoals ze zijn.",
-    "raw_blocks_notice": "Deze site heeft route- of geneste handle-blokken. Het formulier laat ze zoals geschreven en wijzigt alleen het adres, de bind, de imports en de TLS van de site. Bewerk de blokken in de ruwe editor."
+    "raw_blocks_help": "Deze site heeft route- of geneste handle-blokken. Het tabblad Boom bewerkt ze; wat het als ruw toont, bewerkt u in de ruwe editor.",
+    "raw_blocks_notice": "Deze site heeft route- of geneste handle-blokken. Het formulier laat ze zoals geschreven en wijzigt alleen het adres, de bind, de imports en de TLS van de site. Bewerk de blokken op het tabblad Boom; wat het als ruw toont, bewerkt u in de ruwe editor.",
+    "raw_blocks_names": "Alleen in de ruwe editor: {{blocks}}"
   },
   "add_proxy": {
     "title": "Reverse proxy toevoegen",
@@ -1075,6 +1076,16 @@
     "discard": "Wijzigingen negeren",
     "saved": "De blokken van de site zijn opgeslagen.",
     "block_not_found": "Het blok van de site is niet gevonden in de Caddyfile. Laad de pagina opnieuw en probeer het nog eens.",
-    "edit_help": "Selecteer een blok om zijn matcher of directieven te wijzigen. Alleen de regels die u bewerkt worden herschreven; blokken die het formulier niet kent, worden getoond zoals geschreven en blijven alleen-lezen."
+    "edit_help": "Selecteer een blok om zijn matcher of directieven te wijzigen, of voeg blokken toe, verplaats ze en verwijder ze. Alleen wat u wijzigt wordt herschreven; blokken die het formulier niet kent, worden getoond zoals geschreven, blijven alleen-lezen en kunnen worden verplaatst of verwijderd.",
+    "move_up": "Omhoog",
+    "move_down": "Omlaag",
+    "remove": "Verwijderen",
+    "remove_confirm": "Dit blok en de {{count}} blokken erin verwijderen?",
+    "remove_yes": "Verwijderen",
+    "remove_no": "Behouden",
+    "add_kind": "Soort",
+    "add_inside": "Toevoegen in het geselecteerde blok",
+    "add_top": "Toevoegen op het hoogste niveau",
+    "add_matcher": "Matcher van het nieuwe blok"
   }
 }

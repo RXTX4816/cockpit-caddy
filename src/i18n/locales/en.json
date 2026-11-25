@@ -115,8 +115,9 @@
     "menu_php": "PHP site",
     "more_actions": "More actions",
     "indicator_raw_blocks": "Raw blocks",
-    "raw_blocks_help": "This site has route or nested handle blocks. Edit them in the raw editor; the form leaves them as written.",
-    "raw_blocks_notice": "This site has route or nested handle blocks. The form leaves them as written and only changes the site's address, bind, imports and TLS. Edit the blocks in the raw editor."
+    "raw_blocks_help": "This site has route or nested handle blocks. The Tree tab edits them; what it shows as raw is edited in the raw editor.",
+    "raw_blocks_notice": "This site has route or nested handle blocks. The form leaves them as written and only changes the site's address, bind, imports and TLS. Edit the blocks in the Tree tab; what it shows as raw is edited in the raw editor.",
+    "raw_blocks_names": "Raw editor only: {{blocks}}"
   },
   "add_proxy": {
     "title": "Add Reverse Proxy",
@@ -1075,6 +1076,16 @@
     "discard": "Discard changes",
     "saved": "The blocks of the site were saved.",
     "block_not_found": "The site's block was not found in the Caddyfile. Reload the page and try again.",
-    "edit_help": "Select a block to change its matcher or its directives. Only the lines you edit are rewritten; blocks the form does not know are shown as written and stay read-only."
+    "edit_help": "Select a block to change its matcher or its directives, or add, move and remove blocks. Only what you change is rewritten; blocks the form does not know are shown as written, stay read-only and can be moved or removed.",
+    "move_up": "Move up",
+    "move_down": "Move down",
+    "remove": "Remove",
+    "remove_confirm": "Remove this block and the {{count}} blocks inside it?",
+    "remove_yes": "Remove",
+    "remove_no": "Keep",
+    "add_kind": "Kind",
+    "add_inside": "Add inside the selected block",
+    "add_top": "Add at the top level",
+    "add_matcher": "Matcher of the new block"
   }
 }

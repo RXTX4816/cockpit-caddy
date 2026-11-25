@@ -115,8 +115,9 @@
     "menu_php": "Site PHP",
     "more_actions": "Mais ações",
     "indicator_raw_blocks": "Blocos brutos",
-    "raw_blocks_help": "Este site tem blocos route ou handle aninhados. Edite-os no editor bruto; o formulário os deixa como estão.",
-    "raw_blocks_notice": "Este site tem blocos route ou handle aninhados. O formulário os deixa como escritos e só muda o endereço, o bind, as importações e o TLS do site. Edite os blocos no editor bruto."
+    "raw_blocks_help": "Este site tem blocos route ou handle aninhados. A aba Árvore os edita; o que ela mostra como bruto é editado no editor bruto.",
+    "raw_blocks_notice": "Este site tem blocos route ou handle aninhados. O formulário os deixa como escritos e só muda o endereço, o bind, as importações e o TLS do site. Edite os blocos na aba Árvore; o que ela mostra como bruto é editado no editor bruto.",
+    "raw_blocks_names": "Somente no editor bruto: {{blocks}}"
   },
   "add_proxy": {
     "title": "Adicionar reverse proxy",
@@ -1075,6 +1076,16 @@
     "discard": "Descartar alterações",
     "saved": "Os blocos do site foram salvos.",
     "block_not_found": "O bloco do site não foi encontrado no Caddyfile. Recarregue a página e tente de novo.",
-    "edit_help": "Selecione um bloco para mudar seu matcher ou suas diretivas. Só as linhas que você edita são reescritas; blocos que o formulário não conhece são mostrados como escritos e ficam somente leitura."
+    "edit_help": "Selecione um bloco para mudar seu matcher ou suas diretivas, ou adicione, mova e remova blocos. Só o que você muda é reescrito; blocos que o formulário não conhece são mostrados como escritos, ficam somente leitura e podem ser movidos ou removidos.",
+    "move_up": "Mover para cima",
+    "move_down": "Mover para baixo",
+    "remove": "Remover",
+    "remove_confirm": "Remover este bloco e os {{count}} blocos dentro dele?",
+    "remove_yes": "Remover",
+    "remove_no": "Manter",
+    "add_kind": "Tipo",
+    "add_inside": "Adicionar dentro do bloco selecionado",
+    "add_top": "Adicionar no nível superior",
+    "add_matcher": "Matcher do novo bloco"
   }
 }

@@ -97,3 +97,65 @@ describe("editing in the Tree tab (#350)", () => {
     expect(screen.queryByRole("button", { name: "Save blocks" })).toBeNull();
   });
 });
+
+describe("adding, moving and removing blocks in the Tree tab (#351)", () => {
+  const TWO = "example.com {\n\troute {\n\t\thandle /a/* {\n\t\t\trespond a\n\t\t}\n\t\thandle {\n\t\t\trespond b\n\t\t}\n\t}\n}";
+
+  it("moves a block with the keyboard-reachable buttons and saves the new order", async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    render(<SiteTreeTab siteText={TWO} onSave={onSave} />);
+    expect((screen.getByRole("button", { name: /Move up: handle \/a\/\*/ }) as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: /Move down: handle \/a\/\*/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Save blocks" }));
+    await waitFor(() => expect(onSave).toHaveBeenCalled());
+    const text = onSave.mock.calls[0][0] as string;
+    expect(text.indexOf("respond b")).toBeLessThan(text.indexOf("respond a"));
+  });
+
+  it("asks before removing a block that has blocks inside, and not for one that has none", async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    render(<SiteTreeTab siteText={TWO} onSave={onSave} />);
+    fireEvent.click(screen.getByRole("button", { name: /Remove: route all requests/ }));
+    expect(screen.getByRole("alertdialog").textContent).toContain("Remove this block and the 2 blocks inside it?");
+    fireEvent.click(screen.getByRole("button", { name: "Keep" }));
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /Remove: handle \/a\/\*/ }));
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Save blocks" }));
+    await waitFor(() => expect(onSave).toHaveBeenCalled());
+    expect(onSave.mock.calls[0][0]).not.toContain("respond a");
+    expect(onSave.mock.calls[0][0]).toContain("respond b");
+  });
+
+  it("removes a block with its children after the confirmation", async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    render(<SiteTreeTab siteText={TWO} onSave={onSave} />);
+    fireEvent.click(screen.getByRole("button", { name: /Remove: route all requests/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Remove" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save blocks" }));
+    await waitFor(() => expect(onSave).toHaveBeenCalled());
+    expect(onSave.mock.calls[0][0]).toBe("example.com {\n}");
+  });
+
+  it("adds a block inside the selected one, or at the top level when none is selected", async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    render(<SiteTreeTab siteText={TWO} onSave={onSave} />);
+    fireEvent.change(screen.getByLabelText("Matcher of the new block"), { target: { value: "/new/*" } });
+    fireEvent.click(screen.getByRole("button", { name: "Add at the top level" }));
+    fireEvent.click(screen.getByRole("button", { name: /Edit: route all requests/ }));
+    fireEvent.change(screen.getByLabelText("Kind"), { target: { value: "handle_path" } });
+    fireEvent.change(screen.getByLabelText("Matcher of the new block"), { target: { value: "/in/*" } });
+    fireEvent.click(screen.getByRole("button", { name: "Add inside the selected block" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save blocks" }));
+    await waitFor(() => expect(onSave).toHaveBeenCalled());
+    const text = onSave.mock.calls[0][0] as string;
+    expect(text).toContain("\n\thandle /new/* {\n\t}\n");
+    expect(text).toContain("\t\thandle_path /in/* {\n\t\t}\n\t}");
+  });
+
+  it("does not add a handle_path without a path", () => {
+    render(<SiteTreeTab siteText={TWO} onSave={vi.fn()} />);
+    fireEvent.change(screen.getByLabelText("Kind"), { target: { value: "handle_path" } });
+    expect((screen.getByRole("button", { name: "Add at the top level" }) as HTMLButtonElement).disabled).toBe(true);
+  });
+});

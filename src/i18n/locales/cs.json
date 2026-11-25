@@ -115,8 +115,9 @@
     "menu_php": "Web v PHP",
     "more_actions": "Další akce",
     "indicator_raw_blocks": "Surové bloky",
-    "raw_blocks_help": "Tento web má bloky route nebo vnořené bloky handle. Upravujte je v surovém editoru; formulář je ponechá, jak jsou.",
-    "raw_blocks_notice": "Tento web má bloky route nebo vnořené bloky handle. Formulář je ponechá, jak jsou napsané, a mění jen adresu webu, bind, importy a TLS. Bloky upravujte v surovém editoru."
+    "raw_blocks_help": "Tento web má bloky route nebo vnořené bloky handle. Upravuje je karta Strom; co zobrazí jako surové, se upravuje v surovém editoru.",
+    "raw_blocks_notice": "Tento web má bloky route nebo vnořené bloky handle. Formulář je ponechá, jak jsou napsané, a mění jen adresu webu, bind, importy a TLS. Bloky upravujte na kartě Strom; co zobrazí jako surové, upravujte v surovém editoru.",
+    "raw_blocks_names": "Jen surový editor: {{blocks}}"
   },
   "add_proxy": {
     "title": "Přidat reverse proxy",
@@ -1075,6 +1076,16 @@
     "discard": "Zahodit změny",
     "saved": "Bloky webu byly uloženy.",
     "block_not_found": "Blok webu nebyl v Caddyfile nalezen. Znovu načtěte stránku a zkuste to znovu.",
-    "edit_help": "Vyberte blok a změňte jeho matcher nebo direktivy. Přepíší se jen řádky, které upravíte; bloky, které formulář nezná, se zobrazí tak, jak jsou, a zůstanou jen pro čtení."
+    "edit_help": "Vyberte blok a změňte jeho matcher nebo direktivy, nebo bloky přidávejte, přesouvejte a odebírejte. Přepíše se jen to, co změníte; bloky, které formulář nezná, se zobrazí tak, jak jsou, zůstanou jen pro čtení a lze je přesunout nebo odebrat.",
+    "move_up": "Posunout nahoru",
+    "move_down": "Posunout dolů",
+    "remove": "Odebrat",
+    "remove_confirm": "Odebrat tento blok i {{count}} bloků v něm?",
+    "remove_yes": "Odebrat",
+    "remove_no": "Ponechat",
+    "add_kind": "Druh",
+    "add_inside": "Přidat do vybraného bloku",
+    "add_top": "Přidat na nejvyšší úroveň",
+    "add_matcher": "Matcher nového bloku"
   }
 }

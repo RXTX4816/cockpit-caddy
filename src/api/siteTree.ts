@@ -258,3 +258,99 @@ export function editNode(tree: SiteTree, path: NodePath, edit: NodeEdit): SiteTr
     }),
   };
 }
+
+
+// ---------------------------------------------------------------------------
+// Adding, removing and moving nodes (#351)
+// ---------------------------------------------------------------------------
+
+/** The indent one level adds: what the site's own lines use, a tab when there is no evidence. */
+function indentUnit(tree: SiteTree): string {
+  const first = itemLines(tree.items).find(l => /^\s+\S/.test(l));
+  const lead = first?.match(/^\s*/)?.[0] ?? "";
+  const rootIndent = tree.header.match(/^\s*/)![0];
+  const unit = lead.slice(rootIndent.length);
+  return unit.startsWith("\t") ? "\t" : unit.length ? unit : "\t";
+}
+
+function replaceItems(tree: SiteTree, parent: NodePath, change: (items: TreeItem[]) => TreeItem[]): SiteTree {
+  if (!parent.length) return { ...tree, items: change(tree.items) };
+  return {
+    ...tree,
+    items: replaceNode(tree.items, parent, n => n.kind === "opaque" ? n : { ...n, items: change(n.items) }),
+  };
+}
+
+/** A new, empty node of the given kind at the end of `parent` (the site when it is empty); its path comes back with the tree. */
+export function addNode(tree: SiteTree, parent: NodePath, spec: { kind: TreeKind; matcher: string }): { tree: SiteTree; path: NodePath } | undefined {
+  if (validateNodeEdit({ matcher: spec.matcher })) return undefined;
+  const parentNode = parent.length ? nodeAt(tree, parent) : undefined;
+  if (parent.length && (!parentNode || parentNode.kind === "opaque")) return undefined;
+  const baseIndent = (parentNode ? parentNode.header : tree.header).match(/^\s*/)![0];
+  const indent = baseIndent + indentUnit(tree);
+  const node: TreeNode = {
+    kind: spec.kind,
+    header: `${indent}${spec.kind}${spec.matcher.trim() ? ` ${spec.matcher.trim()}` : ""} {`,
+    matcher: spec.matcher.trim(),
+    items: [],
+    close: `${indent}}`,
+  };
+  const next = replaceItems(tree, parent, items => [...items, { node }]);
+  const siblings = childNodes((parentNode ? nodeAt(next, parent)! : { items: next.items }).items);
+  return { tree: next, path: [...parent, siblings.length - 1] };
+}
+
+/** How many nodes are inside `node`, at any depth. */
+export function countDescendants(node: Pick<TreeNode, "items">): number {
+  return childNodes(node.items).reduce((n, c) => n + 1 + (c.kind === "opaque" ? 0 : countDescendants(c)), 0);
+}
+
+/** The tree without a node and everything inside it. Lines around it, comments included, stay. */
+export function removeNode(tree: SiteTree, path: NodePath): SiteTree {
+  if (!path.length || !nodeAt(tree, path)) return tree;
+  const parent = path.slice(0, -1);
+  const index = path[path.length - 1];
+  return replaceItems(tree, parent, items => {
+    let seen = -1;
+    return items.filter(it => !("node" in it) || ++seen !== index);
+  });
+}
+
+/**
+ * Moves a node one place up (`-1`) or down (`1`) among its sibling nodes by swapping the two.
+ * Lines between them stay where they are. Nothing happens at either end.
+ */
+export function moveNode(tree: SiteTree, path: NodePath, direction: -1 | 1): { tree: SiteTree; path: NodePath } | undefined {
+  if (!path.length || !nodeAt(tree, path)) return undefined;
+  const parent = path.slice(0, -1);
+  const index = path[path.length - 1];
+  const target = index + direction;
+  const siblings = childNodes((parent.length ? nodeAt(tree, parent)! : { items: tree.items }).items);
+  if (target < 0 || target >= siblings.length) return undefined;
+  const next = replaceItems(tree, parent, items => {
+    const at = items.reduce<number[]>((acc, it, i) => "node" in it ? [...acc, i] : acc, []);
+    const out = [...items];
+    [out[at[index]], out[at[target]]] = [out[at[target]], out[at[index]]];
+    return out;
+  });
+  return { tree: next, path: [...parent, target] };
+}
+
+/**
+ * The blocks of a site with route or nested handle blocks that the tree cannot edit (#351): blocks of
+ * other directives inside its route and handle blocks, by their opening line. Empty when every nested
+ * block can be edited in the Tree tab.
+ */
+export function rawOnlyBlocks(siteText: string): string[] {
+  const tree = parseSiteTree(siteText);
+  if (!tree) return [siteText.split("\n")[0].trim()];
+  const out: string[] = [];
+  const walk = (items: TreeItem[], inside: boolean) => {
+    for (const n of childNodes(items)) {
+      if (n.kind === "opaque") { if (inside) out.push(n.header.trim().replace(/\s*\{\s*$/, " {")); }
+      else walk(n.items, true);
+    }
+  };
+  walk(tree.items, false);
+  return out;
+}

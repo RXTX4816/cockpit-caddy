@@ -115,8 +115,9 @@
     "menu_php": "Site PHP",
     "more_actions": "Mai multe acțiuni",
     "indicator_raw_blocks": "Blocuri brute",
-    "raw_blocks_help": "Acest site are blocuri route sau handle imbricate. Editează-le în editorul brut; formularul le lasă așa cum sunt.",
-    "raw_blocks_notice": "Acest site are blocuri route sau handle imbricate. Formularul le lasă așa cum sunt scrise și schimbă doar adresa, bind-ul, importurile și TLS-ul site-ului. Editează blocurile în editorul brut."
+    "raw_blocks_help": "Acest site are blocuri route sau handle imbricate. Fila Arbore le editează; ce afișează ca brut se editează în editorul brut.",
+    "raw_blocks_notice": "Acest site are blocuri route sau handle imbricate. Formularul le lasă așa cum sunt scrise și schimbă doar adresa, bind-ul, importurile și TLS-ul site-ului. Editează blocurile în fila Arbore; ce afișează ca brut se editează în editorul brut.",
+    "raw_blocks_names": "Doar în editorul brut: {{blocks}}"
   },
   "add_proxy": {
     "title": "Adaugă reverse proxy",
@@ -1075,6 +1076,16 @@
     "discard": "Renunță la modificări",
     "saved": "Blocurile site-ului au fost salvate.",
     "block_not_found": "Blocul site-ului nu a fost găsit în Caddyfile. Reîncarcă pagina și încearcă din nou.",
-    "edit_help": "Selectează un bloc pentru a-i schimba matcherul sau directivele. Doar liniile pe care le editezi sunt rescrise; blocurile pe care formularul nu le cunoaște sunt afișate așa cum sunt scrise și rămân doar în citire."
+    "edit_help": "Selectează un bloc pentru a-i schimba matcherul sau directivele, sau adaugă, mută și elimină blocuri. Doar ce schimbi este rescris; blocurile pe care formularul nu le cunoaște sunt afișate așa cum sunt scrise, rămân doar în citire și pot fi mutate sau eliminate.",
+    "move_up": "Mută în sus",
+    "move_down": "Mută în jos",
+    "remove": "Elimină",
+    "remove_confirm": "Elimini acest bloc și cele {{count}} blocuri din interiorul lui?",
+    "remove_yes": "Elimină",
+    "remove_no": "Păstrează",
+    "add_kind": "Tip",
+    "add_inside": "Adaugă în blocul selectat",
+    "add_top": "Adaugă la nivelul superior",
+    "add_matcher": "Matcherul noului bloc"
   }
 }

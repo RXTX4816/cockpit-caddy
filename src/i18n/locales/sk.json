@@ -115,8 +115,9 @@
     "menu_php": "Web v PHP",
     "more_actions": "Ďalšie akcie",
     "indicator_raw_blocks": "Surové bloky",
-    "raw_blocks_help": "Tento web má bloky route alebo vnorené bloky handle. Upravujte ich v surovom editore; formulár ich ponechá, ako sú.",
-    "raw_blocks_notice": "Tento web má bloky route alebo vnorené bloky handle. Formulár ich ponechá, ako sú napísané, a mení len adresu webu, bind, importy a TLS. Bloky upravujte v surovom editore."
+    "raw_blocks_help": "Tento web má bloky route alebo vnorené bloky handle. Karta Strom ich upravuje; čo zobrazí ako surové, sa upravuje v surovom editore.",
+    "raw_blocks_notice": "Tento web má bloky route alebo vnorené bloky handle. Formulár ich ponechá, ako sú napísané, a mení len adresu webu, bind, importy a TLS. Bloky upravujte na karte Strom; čo zobrazí ako surové, upravujte v surovom editore.",
+    "raw_blocks_names": "Len surový editor: {{blocks}}"
   },
   "add_proxy": {
     "title": "Pridať reverse proxy",
@@ -1075,6 +1076,16 @@
     "discard": "Zahodiť zmeny",
     "saved": "Bloky webu boli uložené.",
     "block_not_found": "Blok webu sa v Caddyfile nenašiel. Znova načítajte stránku a skúste to znova.",
-    "edit_help": "Vyberte blok a zmeňte jeho matcher alebo direktívy. Prepíšu sa len riadky, ktoré upravíte; bloky, ktoré formulár nepozná, sa zobrazia tak, ako sú, a zostanú len na čítanie."
+    "edit_help": "Vyberte blok a zmeňte jeho matcher alebo direktívy, alebo bloky pridávajte, presúvajte a odstraňujte. Prepíše sa len to, čo zmeníte; bloky, ktoré formulár nepozná, sa zobrazia tak, ako sú, zostanú len na čítanie a dajú sa presunúť alebo odstrániť.",
+    "move_up": "Posunúť hore",
+    "move_down": "Posunúť dole",
+    "remove": "Odstrániť",
+    "remove_confirm": "Odstrániť tento blok aj {{count}} blokov v ňom?",
+    "remove_yes": "Odstrániť",
+    "remove_no": "Ponechať",
+    "add_kind": "Druh",
+    "add_inside": "Pridať do vybraného bloku",
+    "add_top": "Pridať na najvyššiu úroveň",
+    "add_matcher": "Matcher nového bloku"
   }
 }

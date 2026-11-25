@@ -115,8 +115,9 @@
     "menu_php": "PHP-sivusto",
     "more_actions": "Lisää toimintoja",
     "indicator_raw_blocks": "Raakalohkot",
-    "raw_blocks_help": "Tällä sivustolla on route- tai sisäkkäisiä handle-lohkoja. Muokkaa niitä raakaeditorissa; lomake jättää ne ennalleen.",
-    "raw_blocks_notice": "Tällä sivustolla on route- tai sisäkkäisiä handle-lohkoja. Lomake jättää ne sellaisiksi kuin ne on kirjoitettu ja muuttaa vain sivuston osoitetta, bindiä, tuonteja ja TLS:ää. Muokkaa lohkoja raakaeditorissa."
+    "raw_blocks_help": "Tällä sivustolla on route- tai sisäkkäisiä handle-lohkoja. Puu-välilehti muokkaa niitä; mitä se näyttää raakana, muokataan raakaeditorissa.",
+    "raw_blocks_notice": "Tällä sivustolla on route- tai sisäkkäisiä handle-lohkoja. Lomake jättää ne sellaisiksi kuin ne on kirjoitettu ja muuttaa vain sivuston osoitetta, bindiä, tuonteja ja TLS:ää. Muokkaa lohkoja Puu-välilehdellä; mitä se näyttää raakana, muokataan raakaeditorissa.",
+    "raw_blocks_names": "Vain raakaeditorissa: {{blocks}}"
   },
   "add_proxy": {
     "title": "Lisää reverse proxy",
@@ -1075,6 +1076,16 @@
     "discard": "Hylkää muutokset",
     "saved": "Sivuston lohkot tallennettiin.",
     "block_not_found": "Sivuston lohkoa ei löytynyt Caddyfilesta. Lataa sivu uudelleen ja yritä uudestaan.",
-    "edit_help": "Valitse lohko muuttaaksesi sen täsmääjää tai direktiivejä. Vain muokkaamasi rivit kirjoitetaan uudelleen; lohkot, joita lomake ei tunne, näytetään sellaisinaan ja pysyvät vain luettavina."
+    "edit_help": "Valitse lohko muuttaaksesi sen täsmääjää tai direktiivejä, tai lisää, siirrä ja poista lohkoja. Vain muuttamasi kirjoitetaan uudelleen; lohkot, joita lomake ei tunne, näytetään sellaisinaan, ne pysyvät vain luettavina ja niitä voi siirtää tai poistaa.",
+    "move_up": "Siirrä ylös",
+    "move_down": "Siirrä alas",
+    "remove": "Poista",
+    "remove_confirm": "Poistetaanko tämä lohko ja sen sisällä olevat {{count}} lohkoa?",
+    "remove_yes": "Poista",
+    "remove_no": "Säilytä",
+    "add_kind": "Laji",
+    "add_inside": "Lisää valitun lohkon sisään",
+    "add_top": "Lisää ylimmälle tasolle",
+    "add_matcher": "Uuden lohkon täsmääjä"
   }
 }

@@ -115,8 +115,9 @@
     "menu_php": "PHP-webbplats",
     "more_actions": "Fler åtgärder",
     "indicator_raw_blocks": "Råa block",
-    "raw_blocks_help": "Den här webbplatsen har route- eller nästlade handle-block. Redigera dem i den råa redigeraren; formuläret lämnar dem som de är.",
-    "raw_blocks_notice": "Den här webbplatsen har route- eller nästlade handle-block. Formuläret lämnar dem som de är skrivna och ändrar bara webbplatsens adress, bind, importer och TLS. Redigera blocken i den råa redigeraren."
+    "raw_blocks_help": "Den här webbplatsen har route- eller nästlade handle-block. Fliken Träd redigerar dem; det den visar som rått redigeras i den råa redigeraren.",
+    "raw_blocks_notice": "Den här webbplatsen har route- eller nästlade handle-block. Formuläret lämnar dem som de är skrivna och ändrar bara webbplatsens adress, bind, importer och TLS. Redigera blocken på fliken Träd; det den visar som rått redigerar du i den råa redigeraren.",
+    "raw_blocks_names": "Bara i den råa redigeraren: {{blocks}}"
   },
   "add_proxy": {
     "title": "Lägg till reverse proxy",
@@ -1075,6 +1076,16 @@
     "discard": "Förkasta ändringar",
     "saved": "Webbplatsens block sparades.",
     "block_not_found": "Webbplatsens block hittades inte i Caddyfile. Ladda om sidan och försök igen.",
-    "edit_help": "Välj ett block för att ändra dess matchare eller direktiv. Bara de rader du redigerar skrivs om; block som formuläret inte känner till visas som de är skrivna och förblir skrivskyddade."
+    "edit_help": "Välj ett block för att ändra dess matchare eller direktiv, eller lägg till, flytta och ta bort block. Bara det du ändrar skrivs om; block som formuläret inte känner till visas som de är skrivna, förblir skrivskyddade och kan flyttas eller tas bort.",
+    "move_up": "Flytta upp",
+    "move_down": "Flytta ned",
+    "remove": "Ta bort",
+    "remove_confirm": "Ta bort det här blocket och de {{count}} blocken i det?",
+    "remove_yes": "Ta bort",
+    "remove_no": "Behåll",
+    "add_kind": "Slag",
+    "add_inside": "Lägg till i det valda blocket",
+    "add_top": "Lägg till på översta nivån",
+    "add_matcher": "Matchare för det nya blocket"
   }
 }

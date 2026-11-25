@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { surgicallyEditProxy, surgicallyWriteProxy } from "./caddy";
-import { braceDelta, childNodes, editNode, hasNestedBlocks, nodeAt, nodeHandlers, parseSiteTree, rewriteHeader, serializeSiteTree, validateNodeEdit } from "./siteTree";
+import { addNode, braceDelta, childNodes, countDescendants, editNode, hasNestedBlocks, moveNode, nodeAt, nodeHandlers, parseSiteTree, rawOnlyBlocks, removeNode, rewriteHeader, serializeSiteTree, validateNodeEdit } from "./siteTree";
 import type { ProxyEntry } from "./types";
 
 const FLAT = `example.com {
@@ -228,5 +228,89 @@ describe("editing the nodes of a tree (#350)", () => {
       expect(serializeSiteTree(parseSiteTree(text)!)).toBe(text);
       expect(nodeAt(parseSiteTree(text)!, [...path])!.matcher).toBe(edit.matcher);
     }
+  });
+});
+
+
+describe("adding, removing and moving nodes (#351)", () => {
+  const SITE = `example.com {
+\t# first the api
+\thandle /api/* {
+\t\t# api comment
+\t\treverse_proxy localhost:9000 {
+\t\t\theader_up X-B 2
+\t\t}
+\t\thandle /api/v2/* {
+\t\t\trespond v2
+\t\t}
+\t}
+\t# then the rest
+\thandle {
+\t\trespond rest
+\t}
+\thandle_errors {
+\t\trespond "oops"
+\t}
+}`;
+
+  it("adds a node at the end of the site and of a node, indented like its neighbours", () => {
+    const tree = parseSiteTree(SITE)!;
+    const top = addNode(tree, [], { kind: "handle", matcher: "/new/*" })!;
+    const topText = serializeSiteTree(top.tree);
+    expect(topText.endsWith("\thandle_errors {\n\t\trespond \"oops\"\n\t}\n\thandle /new/* {\n\t}\n}")).toBe(true);
+    expect(top.path).toEqual([3]);
+    expect(nodeAt(top.tree, top.path)!.matcher).toBe("/new/*");
+    const nested = addNode(tree, [0], { kind: "route", matcher: "" })!;
+    expect(serializeSiteTree(nested.tree)).toContain("\t\thandle /api/v2/* {\n\t\t\trespond v2\n\t\t}\n\t\troute {\n\t\t}\n\t}");
+    expect(nested.path).toEqual([0, 2]);
+    expect(addNode(tree, [2], { kind: "handle", matcher: "" })).toBeUndefined();
+    expect(addNode(tree, [9], { kind: "handle", matcher: "" })).toBeUndefined();
+    expect(addNode(tree, [], { kind: "handle", matcher: "@a {" })).toBeUndefined();
+  });
+
+  it("uses the indent of a site written with spaces", () => {
+    const spaces = "example.com {\n  handle /a {\n    respond ok\n  }\n}";
+    const added = addNode(parseSiteTree(spaces)!, [0], { kind: "handle", matcher: "/b" })!;
+    expect(serializeSiteTree(added.tree)).toBe("example.com {\n  handle /a {\n    respond ok\n    handle /b {\n    }\n  }\n}");
+  });
+
+  it("removes a node with what is inside it and leaves the lines around it", () => {
+    const tree = parseSiteTree(SITE)!;
+    const text = serializeSiteTree(removeNode(tree, [0]));
+    expect(text).not.toContain("/api/*");
+    expect(text).not.toContain("api comment");
+    expect(text).toContain("\t# first the api\n\t# then the rest\n\thandle {");
+    expect(countDescendants(nodeAt(tree, [0])!)).toBe(2);
+    expect(countDescendants(nodeAt(tree, [1])!)).toBe(0);
+    expect(serializeSiteTree(removeNode(tree, [7]))).toBe(SITE);
+    expect(serializeSiteTree(removeNode(tree, []))).toBe(SITE);
+    expect(serializeSiteTree(removeNode(tree, [0, 0]))).not.toContain("header_up");
+  });
+
+  it("moves a node up and down among its siblings, comments staying where they are", () => {
+    const tree = parseSiteTree(SITE)!;
+    const down = moveNode(tree, [0], 1)!;
+    expect(down.path).toEqual([1]);
+    const text = serializeSiteTree(down.tree);
+    expect(text.indexOf("handle {")).toBeLessThan(text.indexOf("handle /api/*"));
+    expect(text.indexOf("# first the api")).toBeLessThan(text.indexOf("# then the rest"));
+    expect(text.split("\n")).toHaveLength(SITE.split("\n").length);
+    const back = moveNode(down.tree, down.path, -1)!;
+    expect(serializeSiteTree(back.tree)).toBe(SITE);
+    expect(moveNode(tree, [0], -1)).toBeUndefined();
+    expect(moveNode(tree, [2], 1)).toBeUndefined();
+    // an opaque node moves like any other
+    const errors = moveNode(tree, [2], -1)!;
+    expect(childNodes(errors.tree.items).map(n => n.kind)).toEqual(["handle", "opaque", "handle"]);
+    // and inside a node, where the reverse_proxy block is the first sibling
+    const inner = moveNode(tree, [0, 0], 1)!;
+    expect(inner.path).toEqual([0, 1]);
+    expect(serializeSiteTree(inner.tree).indexOf("handle /api/v2/*")).toBeLessThan(serializeSiteTree(inner.tree).indexOf("reverse_proxy localhost:9000"));
+  });
+
+  it("names the blocks the tree only shows as written", () => {
+    expect(rawOnlyBlocks(SITE)).toEqual(["reverse_proxy localhost:9000 {"]);
+    expect(rawOnlyBlocks("example.com {\n\troute {\n\t\trespond ok\n\t}\n\tlog {\n\t\toutput stderr\n\t}\n}")).toEqual([]);
+    expect(rawOnlyBlocks("example.com {\n\troute {\n}")).toEqual(["example.com {"]);
   });
 });

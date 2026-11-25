@@ -115,8 +115,9 @@
     "menu_php": "PHP sitesi",
     "more_actions": "Diğer işlemler",
     "indicator_raw_blocks": "Ham bloklar",
-    "raw_blocks_help": "Bu sitede route veya iç içe handle blokları var. Bunları ham düzenleyicide düzenleyin; form onları olduğu gibi bırakır.",
-    "raw_blocks_notice": "Bu sitede route veya iç içe handle blokları var. Form onları yazıldığı gibi bırakır ve yalnızca sitenin adresini, bind'ını, içe aktarmalarını ve TLS'ini değiştirir. Blokları ham düzenleyicide düzenleyin."
+    "raw_blocks_help": "Bu sitede route veya iç içe handle blokları var. Ağaç sekmesi onları düzenler; ham olarak gösterdiğini ham düzenleyicide düzenleyin.",
+    "raw_blocks_notice": "Bu sitede route veya iç içe handle blokları var. Form onları yazıldığı gibi bırakır ve yalnızca sitenin adresini, bind'ını, içe aktarmalarını ve TLS'ini değiştirir. Blokları Ağaç sekmesinde düzenleyin; ham olarak gösterdiğini ham düzenleyicide düzenleyin.",
+    "raw_blocks_names": "Yalnızca ham düzenleyicide: {{blocks}}"
   },
   "add_proxy": {
     "title": "Reverse proxy ekle",
@@ -1075,6 +1076,16 @@
     "discard": "Değişiklikleri at",
     "saved": "Sitenin blokları kaydedildi.",
     "block_not_found": "Sitenin bloğu Caddyfile'da bulunamadı. Sayfayı yenileyip tekrar deneyin.",
-    "edit_help": "Eşleştiricisini veya yönergelerini değiştirmek için bir blok seçin. Yalnızca düzenlediğiniz satırlar yeniden yazılır; formun tanımadığı bloklar yazıldığı gibi gösterilir ve salt okunur kalır."
+    "edit_help": "Eşleştiricisini veya yönergelerini değiştirmek için bir blok seçin, ya da blok ekleyin, taşıyın ve kaldırın. Yalnızca değiştirdiğiniz kısım yeniden yazılır; formun tanımadığı bloklar yazıldığı gibi gösterilir, salt okunur kalır ve taşınabilir veya kaldırılabilir.",
+    "move_up": "Yukarı taşı",
+    "move_down": "Aşağı taşı",
+    "remove": "Kaldır",
+    "remove_confirm": "Bu blok ve içindeki {{count}} blok kaldırılsın mı?",
+    "remove_yes": "Kaldır",
+    "remove_no": "Koru",
+    "add_kind": "Tür",
+    "add_inside": "Seçili bloğun içine ekle",
+    "add_top": "Üst düzeye ekle",
+    "add_matcher": "Yeni bloğun eşleştiricisi"
   }
 }

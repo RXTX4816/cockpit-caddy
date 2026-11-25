@@ -115,8 +115,9 @@
     "menu_php": "PHP 사이트",
     "more_actions": "추가 작업",
     "indicator_raw_blocks": "원시 블록",
-    "raw_blocks_help": "이 사이트에는 route 블록이나 중첩된 handle 블록이 있습니다. 원시 편집기에서 편집하세요. 양식은 그대로 둡니다.",
-    "raw_blocks_notice": "이 사이트에는 route 블록이나 중첩된 handle 블록이 있습니다. 양식은 이를 쓰인 그대로 두고 사이트의 주소, bind, import, TLS만 바꿉니다. 블록은 원시 편집기에서 편집하세요."
+    "raw_blocks_help": "이 사이트에는 route 블록이나 중첩된 handle 블록이 있습니다. 트리 탭에서 편집하며, 원시로 표시되는 것은 원시 편집기에서 편집합니다.",
+    "raw_blocks_notice": "이 사이트에는 route 블록이나 중첩된 handle 블록이 있습니다. 양식은 이를 쓰인 그대로 두고 사이트의 주소, bind, import, TLS만 바꿉니다. 블록은 트리 탭에서 편집하고, 원시로 표시되는 것은 원시 편집기에서 편집하세요.",
+    "raw_blocks_names": "원시 편집기에서만: {{blocks}}"
   },
   "add_proxy": {
     "title": "리버스 프록시 추가",
@@ -1075,6 +1076,16 @@
     "discard": "변경 취소",
     "saved": "사이트의 블록을 저장했습니다.",
     "block_not_found": "Caddyfile에서 사이트의 블록을 찾지 못했습니다. 페이지를 새로 고치고 다시 시도하세요.",
-    "edit_help": "블록을 선택해 매처나 지시문을 바꿉니다. 편집한 줄만 다시 쓰이며, 양식이 모르는 블록은 쓰인 그대로 표시되고 읽기 전용으로 남습니다."
+    "edit_help": "블록을 선택해 매처나 지시문을 바꾸거나, 블록을 추가·이동·제거합니다. 바꾼 부분만 다시 쓰이며, 양식이 모르는 블록은 쓰인 그대로 표시되고 읽기 전용으로 남지만 이동하거나 제거할 수 있습니다.",
+    "move_up": "위로 이동",
+    "move_down": "아래로 이동",
+    "remove": "제거",
+    "remove_confirm": "이 블록과 그 안의 블록 {{count}}개를 제거할까요?",
+    "remove_yes": "제거",
+    "remove_no": "유지",
+    "add_kind": "종류",
+    "add_inside": "선택한 블록 안에 추가",
+    "add_top": "최상위에 추가",
+    "add_matcher": "새 블록의 매처"
   }
 }
