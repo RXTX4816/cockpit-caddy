@@ -1286,5 +1286,23 @@
     "label": "Alamat bind",
     "help": "Alamat yang didengarkan situs ini, dipisahkan spasi, misalnya 127.0.0.1 ::1. Kosong mendengarkan di semua alamat. Host yang berupa satu alamat IP sudah terikat padanya.",
     "invalid": "Masukkan alamat IP atau nama host, tanpa port."
+  },
+  "modules": {
+    "title": "Modul Caddy",
+    "loading": "Membaca modul…",
+    "unknown": "Modul Caddy ini tidak dapat dibaca (apakah perintah caddy tersedia?).",
+    "help": "Apa yang bisa dilakukan Caddy terpasang di luar build standar. Fitur yang membutuhkan modul yang hilang gagal saat Caddy memuat konfigurasi, jadi periksa di sini dulu.",
+    "cap_dns": "Penyedia tantangan DNS",
+    "cap_layer4": "Layer 4 (proksi TCP dan UDP)",
+    "cap_rate_limit": "Pembatasan laju",
+    "cap_security": "caddy-security (portal autentikasi)",
+    "installed": "Terpasang",
+    "missing": "Tidak terpasang",
+    "how_to_get": "Cara mendapatkannya",
+    "dns_providers": "Penyedia: {{count}}",
+    "all": "Semua modul ({{count}})",
+    "filter": "Saring modul",
+    "no_match": "Tidak ada modul yang cocok.",
+    "non_standard": "Modul yang bukan bagian dari Caddy sendiri: {{count}}"
   }
 }

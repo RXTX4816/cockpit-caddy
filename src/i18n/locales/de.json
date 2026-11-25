@@ -1286,5 +1286,23 @@
     "label": "Bind-Adressen",
     "help": "Die Adressen, auf denen diese Site lauscht, durch Leerzeichen getrennt, zum Beispiel 127.0.0.1 ::1. Leer lauscht auf jeder Adresse. Ein Host, der eine einzelne IP-Adresse ist, bindet bereits daran.",
     "invalid": "Geben Sie IP-Adressen oder Hostnamen ohne Port ein."
+  },
+  "modules": {
+    "title": "Caddy-Module",
+    "loading": "Module werden gelesen…",
+    "unknown": "Die Module dieses Caddy konnten nicht gelesen werden (ist der Befehl caddy verfügbar?).",
+    "help": "Was das installierte Caddy über einen Standard-Build hinaus kann. Ein Feature, das ein fehlendes Modul braucht, schlägt beim Laden der Konfiguration fehl, prüfen Sie es also zuerst hier.",
+    "cap_dns": "DNS-Challenge-Anbieter",
+    "cap_layer4": "Layer 4 (TCP- und UDP-Proxy)",
+    "cap_rate_limit": "Ratenbegrenzung",
+    "cap_security": "caddy-security (Anmeldeportal)",
+    "installed": "Installiert",
+    "missing": "Nicht installiert",
+    "how_to_get": "So bekommen Sie es",
+    "dns_providers": "Anbieter: {{count}}",
+    "all": "Alle Module ({{count}})",
+    "filter": "Module filtern",
+    "no_match": "Kein Modul passt.",
+    "non_standard": "Module, die nicht zu Caddy selbst gehören: {{count}}"
   }
 }

@@ -1286,5 +1286,23 @@
     "label": "Adresy pro bind",
     "help": "Adresy, na kterých tento web poslouchá, oddělené mezerami, například 127.0.0.1 ::1. Prázdné znamená všechny adresy. Hostitel, který je jedinou IP adresou, se na ni už váže.",
     "invalid": "Zadejte IP adresy nebo názvy hostitelů bez portu."
+  },
+  "modules": {
+    "title": "Moduly Caddy",
+    "loading": "Načítání modulů…",
+    "unknown": "Moduly tohoto Caddy se nepodařilo přečíst (je dostupný příkaz caddy?).",
+    "help": "Co nainstalovaný Caddy umí nad rámec standardního sestavení. Funkce, která potřebuje chybějící modul, selže při načtení konfigurace, proto zkontrolujte nejdřív zde.",
+    "cap_dns": "Poskytovatelé DNS challenge",
+    "cap_layer4": "Vrstva 4 (proxy TCP a UDP)",
+    "cap_rate_limit": "Omezení rychlosti",
+    "cap_security": "caddy-security (autentizační portál)",
+    "installed": "Nainstalováno",
+    "missing": "Nenainstalováno",
+    "how_to_get": "Jak ho získat",
+    "dns_providers": "Poskytovatelé: {{count}}",
+    "all": "Všechny moduly ({{count}})",
+    "filter": "Filtrovat moduly",
+    "no_match": "Žádný modul neodpovídá.",
+    "non_standard": "Moduly, které nejsou součástí samotného Caddy: {{count}}"
   }
 }

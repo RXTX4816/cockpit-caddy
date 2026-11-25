@@ -1286,5 +1286,23 @@
     "label": "Adresy bind",
     "help": "Adresy, na których ta witryna nasłuchuje, oddzielone spacjami, np. 127.0.0.1 ::1. Puste oznacza nasłuch na wszystkich adresach. Host będący jednym adresem IP jest już z nim powiązany.",
     "invalid": "Podaj adresy IP lub nazwy hostów, bez portu."
+  },
+  "modules": {
+    "title": "Moduły Caddy",
+    "loading": "Odczytywanie modułów…",
+    "unknown": "Nie udało się odczytać modułów tego Caddy (czy polecenie caddy jest dostępne?).",
+    "help": "Co zainstalowany Caddy potrafi ponad standardową kompilację. Funkcja wymagająca brakującego modułu zawodzi przy ładowaniu konfiguracji, więc sprawdź to najpierw tutaj.",
+    "cap_dns": "Dostawcy wyzwania DNS",
+    "cap_layer4": "Warstwa 4 (proxy TCP i UDP)",
+    "cap_rate_limit": "Ograniczanie szybkości",
+    "cap_security": "caddy-security (portal uwierzytelniania)",
+    "installed": "Zainstalowany",
+    "missing": "Niezainstalowany",
+    "how_to_get": "Jak go zdobyć",
+    "dns_providers": "Dostawcy: {{count}}",
+    "all": "Wszystkie moduły ({{count}})",
+    "filter": "Filtruj moduły",
+    "no_match": "Żaden moduł nie pasuje.",
+    "non_standard": "Moduły, które nie są częścią samego Caddy: {{count}}"
   }
 }

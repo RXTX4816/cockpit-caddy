@@ -1286,5 +1286,23 @@
     "label": "Direcciones de enlace",
     "help": "Las direcciones en las que escucha este sitio, separadas por espacios, por ejemplo 127.0.0.1 ::1. Vacío escucha en todas. Un host que es una sola dirección IP ya se enlaza a ella.",
     "invalid": "Introduzca direcciones IP o nombres de host, sin puerto."
+  },
+  "modules": {
+    "title": "Módulos de Caddy",
+    "loading": "Leyendo los módulos…",
+    "unknown": "No se pudieron leer los módulos de este Caddy (¿está disponible el comando caddy?).",
+    "help": "Lo que el Caddy instalado puede hacer además de una compilación estándar. Una función que necesita un módulo ausente falla cuando Caddy carga la configuración, así que compruébelo aquí primero.",
+    "cap_dns": "Proveedores del desafío DNS",
+    "cap_layer4": "Capa 4 (proxy TCP y UDP)",
+    "cap_rate_limit": "Limitación de tasa",
+    "cap_security": "caddy-security (portal de autenticación)",
+    "installed": "Instalado",
+    "missing": "No instalado",
+    "how_to_get": "Cómo obtenerlo",
+    "dns_providers": "Proveedores: {{count}}",
+    "all": "Todos los módulos ({{count}})",
+    "filter": "Filtrar módulos",
+    "no_match": "Ningún módulo coincide.",
+    "non_standard": "Módulos que no forman parte del propio Caddy: {{count}}"
   }
 }

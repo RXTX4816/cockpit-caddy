@@ -1286,5 +1286,23 @@
     "label": "Bind-adressen",
     "help": "De adressen waarop deze site luistert, gescheiden door spaties, bijvoorbeeld 127.0.0.1 ::1. Leeg luistert op elk adres. Een host die één IP-adres is, bindt er al aan.",
     "invalid": "Voer IP-adressen of hostnamen in, zonder poort."
+  },
+  "modules": {
+    "title": "Caddy-modules",
+    "loading": "Modules lezen…",
+    "unknown": "De modules van deze Caddy konden niet worden gelezen (is de opdracht caddy beschikbaar?).",
+    "help": "Wat de geïnstalleerde Caddy kan boven op een standaardbuild. Een functie die een ontbrekende module nodig heeft, mislukt wanneer Caddy de configuratie laadt, controleer dus eerst hier.",
+    "cap_dns": "DNS-challenge-providers",
+    "cap_layer4": "Laag 4 (TCP- en UDP-proxy)",
+    "cap_rate_limit": "Snelheidsbeperking",
+    "cap_security": "caddy-security (authenticatieportaal)",
+    "installed": "Geïnstalleerd",
+    "missing": "Niet geïnstalleerd",
+    "how_to_get": "Hoe te verkrijgen",
+    "dns_providers": "Providers: {{count}}",
+    "all": "Alle modules ({{count}})",
+    "filter": "Modules filteren",
+    "no_match": "Geen module komt overeen.",
+    "non_standard": "Modules die geen deel van Caddy zelf zijn: {{count}}"
   }
 }

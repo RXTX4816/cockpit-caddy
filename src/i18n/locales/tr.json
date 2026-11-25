@@ -1286,5 +1286,23 @@
     "label": "Bind adresleri",
     "help": "Bu sitenin dinlediği adresler, boşlukla ayrılmış, örneğin 127.0.0.1 ::1. Boş, tüm adreslerde dinler. Tek bir IP adresi olan ana makine zaten ona bağlanır.",
     "invalid": "Port olmadan IP adresleri veya ana makine adları girin."
+  },
+  "modules": {
+    "title": "Caddy modülleri",
+    "loading": "Modüller okunuyor…",
+    "unknown": "Bu Caddy'nin modülleri okunamadı (caddy komutu kullanılabilir mi?).",
+    "help": "Kurulu Caddy'nin standart yapının ötesinde neler yapabildiği. Eksik bir modül gerektiren özellik, Caddy yapılandırmayı yüklerken başarısız olur, bu yüzden önce buraya bakın.",
+    "cap_dns": "DNS doğrulama sağlayıcıları",
+    "cap_layer4": "Katman 4 (TCP ve UDP vekili)",
+    "cap_rate_limit": "Hız sınırlama",
+    "cap_security": "caddy-security (kimlik doğrulama portalı)",
+    "installed": "Kurulu",
+    "missing": "Kurulu değil",
+    "how_to_get": "Nasıl edinilir",
+    "dns_providers": "Sağlayıcılar: {{count}}",
+    "all": "Tüm modüller ({{count}})",
+    "filter": "Modülleri filtrele",
+    "no_match": "Eşleşen modül yok.",
+    "non_standard": "Caddy'nin kendisine ait olmayan modüller: {{count}}"
   }
 }

@@ -1286,5 +1286,23 @@
     "label": "Adrese de bind",
     "help": "Adresele pe care ascultă acest site, separate prin spații, de exemplu 127.0.0.1 ::1. Gol ascultă pe toate adresele. O gazdă care este o singură adresă IP se leagă deja la ea.",
     "invalid": "Introdu adrese IP sau nume de gazdă, fără port."
+  },
+  "modules": {
+    "title": "Modulele Caddy",
+    "loading": "Se citesc modulele…",
+    "unknown": "Modulele acestui Caddy nu au putut fi citite (este disponibilă comanda caddy?).",
+    "help": "Ce poate face Caddy instalat peste o versiune standard. O funcție care are nevoie de un modul lipsă eșuează când Caddy încarcă configurația, așa că verifică mai întâi aici.",
+    "cap_dns": "Furnizori pentru provocarea DNS",
+    "cap_layer4": "Nivelul 4 (proxy TCP și UDP)",
+    "cap_rate_limit": "Limitarea ratei",
+    "cap_security": "caddy-security (portal de autentificare)",
+    "installed": "Instalat",
+    "missing": "Neinstalat",
+    "how_to_get": "Cum îl obții",
+    "dns_providers": "Furnizori: {{count}}",
+    "all": "Toate modulele ({{count}})",
+    "filter": "Filtrează modulele",
+    "no_match": "Niciun modul nu se potrivește.",
+    "non_standard": "Module care nu fac parte din Caddy însuși: {{count}}"
   }
 }

@@ -1286,5 +1286,23 @@
     "label": "Bind addresses",
     "help": "The addresses this site listens on, separated by spaces, for example 127.0.0.1 ::1. Empty listens on every address. A host that is one IP address already binds to it.",
     "invalid": "Enter IP addresses or host names, without a port."
+  },
+  "modules": {
+    "title": "Caddy modules",
+    "loading": "Reading the modules…",
+    "unknown": "The modules of this Caddy could not be read (is the caddy command available?).",
+    "help": "What the installed Caddy can do beyond a stock build. A feature that needs a missing module fails when Caddy loads the config, so check here first.",
+    "cap_dns": "DNS challenge providers",
+    "cap_layer4": "Layer 4 (TCP and UDP proxying)",
+    "cap_rate_limit": "Rate limiting",
+    "cap_security": "caddy-security (authentication portal)",
+    "installed": "Installed",
+    "missing": "Not installed",
+    "how_to_get": "How to get it",
+    "dns_providers": "Providers: {{count}}",
+    "all": "All modules ({{count}})",
+    "filter": "Filter modules",
+    "no_match": "No module matches.",
+    "non_standard": "Modules that are not part of Caddy itself: {{count}}"
   }
 }

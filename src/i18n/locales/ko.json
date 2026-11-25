@@ -1286,5 +1286,23 @@
     "label": "바인드 주소",
     "help": "이 사이트가 수신하는 주소(공백으로 구분)입니다. 예: 127.0.0.1 ::1. 비워 두면 모든 주소에서 수신합니다. 호스트가 IP 주소 하나이면 이미 그 주소에 바인드됩니다.",
     "invalid": "포트 없이 IP 주소나 호스트 이름을 입력하세요."
+  },
+  "modules": {
+    "title": "Caddy 모듈",
+    "loading": "모듈을 읽는 중…",
+    "unknown": "이 Caddy의 모듈을 읽을 수 없습니다(caddy 명령을 쓸 수 있나요?).",
+    "help": "설치된 Caddy가 표준 빌드 이상으로 할 수 있는 것입니다. 없는 모듈이 필요한 기능은 Caddy가 구성을 불러올 때 실패하므로 먼저 여기서 확인하세요.",
+    "cap_dns": "DNS 챌린지 제공자",
+    "cap_layer4": "레이어 4(TCP 및 UDP 프록시)",
+    "cap_rate_limit": "요청 속도 제한",
+    "cap_security": "caddy-security(인증 포털)",
+    "installed": "설치됨",
+    "missing": "설치되지 않음",
+    "how_to_get": "얻는 방법",
+    "dns_providers": "제공자: {{count}}",
+    "all": "모든 모듈({{count}})",
+    "filter": "모듈 필터",
+    "no_match": "일치하는 모듈이 없습니다.",
+    "non_standard": "Caddy 자체에 포함되지 않은 모듈: {{count}}"
   }
 }
