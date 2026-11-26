@@ -24,7 +24,8 @@
     "unit_kb": "KB",
     "unit_mb": "MB",
     "unit_gb": "GB",
-    "example_value": "t.ex. {{value}}"
+    "example_value": "t.ex. {{value}}",
+    "more_about": "Om {{topic}}"
   },
   "app": {
     "title": "Caddy",
@@ -95,8 +96,8 @@
     "delete_confirm_title": "Ta bort proxy :{{port}}?",
     "delete_confirm_body": "Reverse proxyn för port {{port}} → {{target}} tas bort.",
     "delete_confirm_button": "Ta bort",
-    "api_error_add_title": "Proxyn skapades på disk — Caddy avvisade direktuppdateringen",
-    "api_error_edit_title": "Etiketten sparades — Caddy avvisade konfigurationsuppdateringen (övriga ändringar tillämpades inte)",
+    "api_error_add_title": "Sparat, men Caddy avvisade det",
+    "api_error_edit_title": "Bara etiketten sparades",
     "caddyfile_error_title": "Valideringen av Caddyfile misslyckades — ändringarna sparades inte",
     "view_logs": "Visa loggar",
     "indicator_browse": "kataloglistning",
@@ -585,7 +586,8 @@
     "backup_warning_title": "Säkerhetskopiera konfigurationen först",
     "backup_warning_body": "Migreringen säkerhetskopierar bara själva Caddyfile. Skapa en fullständig säkerhetskopia av konfigurationen så att du kan återställa allt om något går fel.",
     "banner_details_toggle": "Detaljer",
-    "banner_details": "Webbplatsblocken flyttas oförändrade från /etc/caddy/Caddyfile till /etc/caddy/conf.d/cockpit-caddy.conf, och Caddyfile får en import-rad för conf.d. Den ursprungliga Caddyfile säkerhetskopieras till /etc/caddy/Caddyfile.bak. Till dess kan insticksprogrammets ändringar krocka med webbplatserna i Caddyfile."
+    "banner_details": "Webbplatsblocken flyttas oförändrade från /etc/caddy/Caddyfile till /etc/caddy/conf.d/cockpit-caddy.conf, och Caddyfile får en import-rad för conf.d. Den ursprungliga Caddyfile säkerhetskopieras till /etc/caddy/Caddyfile.bak. Till dess kan insticksprogrammets ändringar krocka med webbplatserna i Caddyfile.",
+    "gate_continue_title": "Möjliga dubblettwebbplatser"
   },
   "backup": {
     "button": "Säkerhetskopiera",
@@ -702,7 +704,7 @@
   },
   "global_opts": {
     "title": "Globala Caddy-alternativ",
-    "caddyfile_note": "De här inställningarna skrivs till blocket med globala alternativ i /etc/caddy/Caddyfile. Caddy läses in igen automatiskt när du sparar.",
+    "caddyfile_note": "De här inställningarna finns i blocket med globala alternativ i /etc/caddy/Caddyfile. Spara skriver och kontrollerar dem; Ladda om tillämpar dem.",
     "unmanaged_hint": "Inga uttryckliga globala alternativ är angivna — Caddy använder sina standardinställningar för automatisk HTTPS (inklusive Let's Encrypt när en proxy har ett publikt värdnamn). Fälten nedan är tomma för att inget behöver konfigureras, inte för att något är trasigt.",
     "http_port": "HTTP-port",
     "https_port": "HTTPS-port",

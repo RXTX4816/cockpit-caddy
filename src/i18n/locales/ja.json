@@ -24,7 +24,8 @@
     "unit_kb": "KB",
     "unit_mb": "MB",
     "unit_gb": "GB",
-    "example_value": "例: {{value}}"
+    "example_value": "例: {{value}}",
+    "more_about": "{{topic}} について"
   },
   "app": {
     "title": "Caddy",
@@ -95,8 +96,8 @@
     "delete_confirm_title": "プロキシ :{{port}} を削除しますか？",
     "delete_confirm_body": "ポート {{port}} → {{target}} のリバースプロキシを削除します。",
     "delete_confirm_button": "削除",
-    "api_error_add_title": "プロキシはディスクに作成されました — Caddy がライブ反映を拒否しました",
-    "api_error_edit_title": "ラベルは保存されました — Caddy が設定の更新を拒否しました（ほかの変更は適用されていません）",
+    "api_error_add_title": "保存しましたが、Caddy が拒否しました",
+    "api_error_edit_title": "ラベルだけが保存されました",
     "caddyfile_error_title": "Caddyfile の検証に失敗しました — 変更は保存されていません",
     "view_logs": "ログを表示",
     "indicator_browse": "一覧表示",
@@ -585,7 +586,8 @@
     "backup_warning_title": "先に設定をバックアップしてください",
     "backup_warning_body": "移行でバックアップされるのは Caddyfile 本体だけです。問題が起きたときにすべてを復元できるよう、設定全体のバックアップを作成してください。",
     "banner_details_toggle": "詳細",
-    "banner_details": "サイトブロックは /etc/caddy/Caddyfile から /etc/caddy/conf.d/cockpit-caddy.conf へそのまま移動され、Caddyfile には conf.d の import 行が追加されます。元の Caddyfile は /etc/caddy/Caddyfile.bak にバックアップされます。それまでは、プラグインの変更が Caddyfile 内のサイトと衝突することがあります。"
+    "banner_details": "サイトブロックは /etc/caddy/Caddyfile から /etc/caddy/conf.d/cockpit-caddy.conf へそのまま移動され、Caddyfile には conf.d の import 行が追加されます。元の Caddyfile は /etc/caddy/Caddyfile.bak にバックアップされます。それまでは、プラグインの変更が Caddyfile 内のサイトと衝突することがあります。",
+    "gate_continue_title": "サイトが重複する可能性"
   },
   "backup": {
     "button": "バックアップ",
@@ -702,7 +704,7 @@
   },
   "global_opts": {
     "title": "Caddy のグローバルオプション",
-    "caddyfile_note": "これらの設定は /etc/caddy/Caddyfile のグローバルオプションブロックに書き込まれます。保存時に Caddy は自動的に再読み込みされます。",
+    "caddyfile_note": "これらの設定は /etc/caddy/Caddyfile のグローバルオプションブロックにあります。保存で書き込んで検証し、再読み込みで適用します。",
     "unmanaged_hint": "明示的なグローバルオプションは設定されていません。Caddy は自動 HTTPS の既定設定を使用しています（プロキシに公開ホスト名がある場合の Let's Encrypt を含む）。下のフィールドが空なのは設定が不要だからで、何かが壊れているわけではありません。",
     "http_port": "HTTP ポート",
     "https_port": "HTTPS ポート",

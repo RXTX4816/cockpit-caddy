@@ -24,7 +24,8 @@
     "unit_kb": "KB",
     "unit_mb": "MB",
     "unit_gb": "GB",
-    "example_value": "esim. {{value}}"
+    "example_value": "esim. {{value}}",
+    "more_about": "Tietoa: {{topic}}"
   },
   "app": {
     "title": "Caddy",
@@ -95,8 +96,8 @@
     "delete_confirm_title": "Poistetaanko proxy :{{port}}?",
     "delete_confirm_body": "Portin {{port}} → {{target}} reverse proxy poistetaan.",
     "delete_confirm_button": "Poista",
-    "api_error_add_title": "Proxy luotiin levylle — Caddy hylkäsi muutoksen käyttöönoton",
-    "api_error_edit_title": "Nimiö tallennettiin — Caddy hylkäsi asetusten päivityksen (muita muutoksia ei otettu käyttöön)",
+    "api_error_add_title": "Tallennettu, mutta Caddy hylkäsi sen",
+    "api_error_edit_title": "Vain nimi tallennettiin",
     "caddyfile_error_title": "Caddyfilen validointi epäonnistui — muutoksia ei tallennettu",
     "view_logs": "Näytä lokit",
     "indicator_browse": "hakemistolistaus",
@@ -585,7 +586,8 @@
     "backup_warning_title": "Varmuuskopioi asetukset ensin",
     "backup_warning_body": "Siirto varmuuskopioi vain itse Caddyfilen. Tee asetuksista täydellinen varmuuskopio, jotta voit palauttaa kaiken, jos jokin menee pieleen.",
     "banner_details_toggle": "Tiedot",
-    "banner_details": "Sivustolohkot siirretään muuttamattomina tiedostosta /etc/caddy/Caddyfile tiedostoon /etc/caddy/conf.d/cockpit-caddy.conf, ja Caddyfileen lisätään conf.d:n import-rivi. Alkuperäinen Caddyfile varmuuskopioidaan tiedostoon /etc/caddy/Caddyfile.bak. Siihen asti liitännäisen muutokset voivat törmätä Caddyfilen sivustoihin."
+    "banner_details": "Sivustolohkot siirretään muuttamattomina tiedostosta /etc/caddy/Caddyfile tiedostoon /etc/caddy/conf.d/cockpit-caddy.conf, ja Caddyfileen lisätään conf.d:n import-rivi. Alkuperäinen Caddyfile varmuuskopioidaan tiedostoon /etc/caddy/Caddyfile.bak. Siihen asti liitännäisen muutokset voivat törmätä Caddyfilen sivustoihin.",
+    "gate_continue_title": "Päällekkäisiä sivustoja mahdollisesti"
   },
   "backup": {
     "button": "Varmuuskopio",
@@ -702,7 +704,7 @@
   },
   "global_opts": {
     "title": "Caddyn yleiset asetukset",
-    "caddyfile_note": "Nämä asetukset kirjoitetaan tiedoston /etc/caddy/Caddyfile yleisten asetusten lohkoon. Caddy ladataan uudelleen automaattisesti tallennettaessa.",
+    "caddyfile_note": "Nämä asetukset ovat tiedoston /etc/caddy/Caddyfile yleisten asetusten lohkossa. Tallennus kirjoittaa ja tarkistaa ne; uudelleenlataus ottaa ne käyttöön.",
     "unmanaged_hint": "Nimenomaisia yleisiä asetuksia ei ole määritetty — Caddy käyttää automaattisen HTTPS:n oletuksiaan (mukaan lukien Let's Encrypt, kun proxylla on julkinen isäntänimi). Alla olevat kentät ovat tyhjiä, koska mitään ei tarvitse määrittää, eivät siksi, että jokin olisi rikki.",
     "http_port": "HTTP-portti",
     "https_port": "HTTPS-portti",

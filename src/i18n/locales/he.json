@@ -24,7 +24,8 @@
     "unit_kb": "KB",
     "unit_mb": "MB",
     "unit_gb": "GB",
-    "example_value": "לדוגמה {{value}}"
+    "example_value": "לדוגמה {{value}}",
+    "more_about": "אודות {{topic}}"
   },
   "app": {
     "title": "Caddy",
@@ -95,8 +96,8 @@
     "delete_confirm_title": "למחוק את הפרוקסי :{{port}}?",
     "delete_confirm_body": "ה-reverse proxy של פורט {{port}} → {{target}} יוסר.",
     "delete_confirm_button": "מחיקה",
-    "api_error_add_title": "הפרוקסי נוצר בדיסק — Caddy דחה את ההחלה החיה",
-    "api_error_edit_title": "התווית נשמרה — Caddy דחה את עדכון התצורה (שאר השינויים לא הוחלו)",
+    "api_error_add_title": "נשמר, אבל Caddy דחה",
+    "api_error_edit_title": "רק התווית נשמרה",
     "caddyfile_error_title": "אימות ה-Caddyfile נכשל — השינויים לא נשמרו",
     "view_logs": "הצגת יומנים",
     "indicator_browse": "רשימת תיקיות",
@@ -585,7 +586,8 @@
     "backup_warning_title": "קודם כדאי לגבות את התצורה",
     "backup_warning_body": "ההעברה מגבה רק את ה-Caddyfile עצמו. כדאי ליצור גיבוי מלא של התצורה כדי שאפשר יהיה לשחזר הכול אם משהו ישתבש.",
     "banner_details_toggle": "פרטים",
-    "banner_details": "בלוקי האתרים מועברים ללא שינוי מ-/etc/caddy/Caddyfile אל /etc/caddy/conf.d/cockpit-caddy.conf, ו-Caddyfile מקבל שורת import עבור conf.d. עותק גיבוי של Caddyfile המקורי נשמר ב-/etc/caddy/Caddyfile.bak. עד אז, שינויי התוסף עלולים להתנגש עם האתרים ב-Caddyfile."
+    "banner_details": "בלוקי האתרים מועברים ללא שינוי מ-/etc/caddy/Caddyfile אל /etc/caddy/conf.d/cockpit-caddy.conf, ו-Caddyfile מקבל שורת import עבור conf.d. עותק גיבוי של Caddyfile המקורי נשמר ב-/etc/caddy/Caddyfile.bak. עד אז, שינויי התוסף עלולים להתנגש עם האתרים ב-Caddyfile.",
+    "gate_continue_title": "ייתכנו אתרים כפולים"
   },
   "backup": {
     "button": "גיבוי",
@@ -702,7 +704,7 @@
   },
   "global_opts": {
     "title": "אפשרויות גלובליות של Caddy",
-    "caddyfile_note": "ההגדרות האלה נכתבות לבלוק האפשרויות הגלובליות ב-/etc/caddy/Caddyfile. ‏Caddy נטען מחדש אוטומטית בשמירה.",
+    "caddyfile_note": "הגדרות אלה נמצאות בבלוק האפשרויות הגלובליות של /etc/caddy/Caddyfile. שמירה כותבת ובודקת אותן; טעינה מחדש מחילה אותן.",
     "unmanaged_hint": "לא הוגדרו אפשרויות גלובליות מפורשות — Caddy משתמש בברירות המחדל של HTTPS אוטומטי (כולל Let's Encrypt כשלפרוקסי יש שם מארח ציבורי). השדות למטה ריקים כי אין מה להגדיר, ולא כי משהו שבור.",
     "http_port": "פורט HTTP",
     "https_port": "פורט HTTPS",

@@ -24,7 +24,8 @@
     "unit_kb": "KB",
     "unit_mb": "MB",
     "unit_gb": "GB",
-    "example_value": "ör. {{value}}"
+    "example_value": "ör. {{value}}",
+    "more_about": "{{topic}} hakkında"
   },
   "app": {
     "title": "Caddy",
@@ -95,8 +96,8 @@
     "delete_confirm_title": ":{{port}} proxy'si silinsin mi?",
     "delete_confirm_body": "{{port}} → {{target}} bağlantı noktası için reverse proxy kaldırılacak.",
     "delete_confirm_button": "Sil",
-    "api_error_add_title": "Proxy diskte oluşturuldu — Caddy canlı uygulamayı reddetti",
-    "api_error_edit_title": "Etiket kaydedildi — Caddy yapılandırma güncellemesini reddetti (diğer değişiklikler uygulanmadı)",
+    "api_error_add_title": "Kaydedildi ama Caddy reddetti",
+    "api_error_edit_title": "Yalnızca etiket kaydedildi",
     "caddyfile_error_title": "Caddyfile doğrulaması başarısız — değişiklikler kaydedilmedi",
     "view_logs": "Günlükleri görüntüle",
     "indicator_browse": "dizin listeleme",
@@ -585,7 +586,8 @@
     "backup_warning_title": "Önce yapılandırmanızı yedekleyin",
     "backup_warning_body": "Taşıma yalnızca Caddyfile'ın kendisini yedekler. Bir sorun olursa her şeyi geri yükleyebilmek için yapılandırmanın tam yedeğini oluşturun.",
     "banner_details_toggle": "Ayrıntılar",
-    "banner_details": "Site blokları /etc/caddy/Caddyfile dosyasından /etc/caddy/conf.d/cockpit-caddy.conf dosyasına değiştirilmeden taşınır ve Caddyfile'a conf.d için bir import satırı eklenir. Özgün Caddyfile /etc/caddy/Caddyfile.bak olarak yedeklenir. O zamana kadar eklentinin değişiklikleri Caddyfile'daki sitelerle çakışabilir."
+    "banner_details": "Site blokları /etc/caddy/Caddyfile dosyasından /etc/caddy/conf.d/cockpit-caddy.conf dosyasına değiştirilmeden taşınır ve Caddyfile'a conf.d için bir import satırı eklenir. Özgün Caddyfile /etc/caddy/Caddyfile.bak olarak yedeklenir. O zamana kadar eklentinin değişiklikleri Caddyfile'daki sitelerle çakışabilir.",
+    "gate_continue_title": "Yinelenen siteler olabilir"
   },
   "backup": {
     "button": "Yedekle",
@@ -702,7 +704,7 @@
   },
   "global_opts": {
     "title": "Genel Caddy seçenekleri",
-    "caddyfile_note": "Bu ayarlar /etc/caddy/Caddyfile içindeki genel seçenekler bloğuna yazılır. Kaydedince Caddy otomatik olarak yeniden yüklenir.",
+    "caddyfile_note": "Bu ayarlar /etc/caddy/Caddyfile dosyasının genel seçenekler bloğundadır. Kaydet onları yazar ve denetler; Yeniden yükle uygular.",
     "unmanaged_hint": "Açık genel seçenek ayarlanmamış — Caddy otomatik HTTPS varsayılanlarını kullanıyor (bir proxy'nin genel ana bilgisayar adı varsa Let's Encrypt dahil). Aşağıdaki alanlar bir şey bozuk olduğu için değil, yapılandırılacak bir şey olmadığı için boş.",
     "http_port": "HTTP bağlantı noktası",
     "https_port": "HTTPS bağlantı noktası",

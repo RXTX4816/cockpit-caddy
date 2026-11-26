@@ -24,7 +24,8 @@
     "unit_kb": "KB",
     "unit_mb": "MB",
     "unit_gb": "GB",
-    "example_value": "مثال: {{value}}"
+    "example_value": "مثال: {{value}}",
+    "more_about": "حول {{topic}}"
   },
   "app": {
     "title": "Caddy",
@@ -95,8 +96,8 @@
     "delete_confirm_title": "حذف الوكيل :{{port}}؟",
     "delete_confirm_body": "ستتم إزالة الوكيل العكسي للمنفذ {{port}} → {{target}}.",
     "delete_confirm_button": "حذف",
-    "api_error_add_title": "أُنشئ الوكيل على القرص — رفض Caddy التطبيق المباشر",
-    "api_error_edit_title": "حُفظت التسمية — رفض Caddy تحديث الإعدادات (لم تُطبَّق التغييرات الأخرى)",
+    "api_error_add_title": "حُفظ، لكن Caddy رفضه",
+    "api_error_edit_title": "حُفظ الوسم فقط",
     "caddyfile_error_title": "فشل التحقق من Caddyfile — لم تُحفظ التغييرات",
     "view_logs": "عرض السجلات",
     "indicator_browse": "استعراض المجلدات",
@@ -585,7 +586,8 @@
     "backup_warning_title": "انسخ إعداداتك احتياطيًا أولًا",
     "backup_warning_body": "لا ينسخ الترحيل احتياطيًا إلا ملف Caddyfile نفسه. أنشئ نسخة احتياطية كاملة من الإعدادات لتتمكن من استعادة كل شيء إذا حدث خطأ.",
     "banner_details_toggle": "التفاصيل",
-    "banner_details": "تُنقل كتل المواقع دون تغيير من /etc/caddy/Caddyfile إلى /etc/caddy/conf.d/cockpit-caddy.conf، ويُضاف إلى Caddyfile سطر import لـ conf.d. تُحفظ نسخة احتياطية من Caddyfile الأصلي في /etc/caddy/Caddyfile.bak. وحتى ذلك الحين قد تتعارض تغييرات الإضافة مع المواقع الموجودة في Caddyfile."
+    "banner_details": "تُنقل كتل المواقع دون تغيير من /etc/caddy/Caddyfile إلى /etc/caddy/conf.d/cockpit-caddy.conf، ويُضاف إلى Caddyfile سطر import لـ conf.d. تُحفظ نسخة احتياطية من Caddyfile الأصلي في /etc/caddy/Caddyfile.bak. وحتى ذلك الحين قد تتعارض تغييرات الإضافة مع المواقع الموجودة في Caddyfile.",
+    "gate_continue_title": "قد تتكرر المواقع"
   },
   "backup": {
     "button": "نسخ احتياطي",
@@ -702,7 +704,7 @@
   },
   "global_opts": {
     "title": "خيارات Caddy العامة",
-    "caddyfile_note": "تُكتب هذه الإعدادات في كتلة الخيارات العامة في /etc/caddy/Caddyfile. يُعاد تحميل Caddy تلقائيًا عند الحفظ.",
+    "caddyfile_note": "توجد هذه الإعدادات في كتلة الخيارات العامة في /etc/caddy/Caddyfile. الحفظ يكتبها ويتحقق منها؛ وإعادة التحميل تطبّقها.",
     "unmanaged_hint": "لا توجد خيارات عامة صريحة — يستخدم Caddy إعدادات HTTPS التلقائية الافتراضية (بما فيها Let's Encrypt عندما يكون للوكيل اسم مضيف عام). الحقول أدناه فارغة لأنه لا يلزم إعداد شيء، وليس لأن شيئًا معطوب.",
     "http_port": "منفذ HTTP",
     "https_port": "منفذ HTTPS",

@@ -24,7 +24,8 @@
     "unit_kb": "KB",
     "unit_mb": "MB",
     "unit_gb": "GB",
-    "example_value": "例如 {{value}}"
+    "example_value": "例如 {{value}}",
+    "more_about": "關於{{topic}}"
   },
   "app": {
     "title": "Caddy",
@@ -95,8 +96,8 @@
     "delete_confirm_title": "要刪除代理 :{{port}} 嗎？",
     "delete_confirm_body": "將移除連接埠 {{port}} → {{target}} 的反向代理。",
     "delete_confirm_button": "刪除",
-    "api_error_add_title": "代理已寫入磁碟——Caddy 拒絕即時推送",
-    "api_error_edit_title": "標籤已儲存——Caddy 拒絕設定更新（其他變更未套用）",
+    "api_error_add_title": "已儲存,但 Caddy 拒絕了",
+    "api_error_edit_title": "僅儲存了標籤",
     "caddyfile_error_title": "Caddyfile 驗證失敗——變更未儲存",
     "view_logs": "檢視記錄",
     "indicator_browse": "目錄瀏覽",
@@ -585,7 +586,8 @@
     "backup_warning_title": "請先備份設定",
     "backup_warning_body": "移轉只會備份 Caddyfile 本身。請建立完整的設定備份，以便出問題時能還原所有內容。",
     "banner_details_toggle": "詳細資訊",
-    "banner_details": "站台區塊會原封不動地從 /etc/caddy/Caddyfile 移到 /etc/caddy/conf.d/cockpit-caddy.conf，Caddyfile 會加上一行匯入 conf.d 的 import。原始 Caddyfile 備份為 /etc/caddy/Caddyfile.bak。在此之前，外掛的變更可能與 Caddyfile 中的站台衝突。"
+    "banner_details": "站台區塊會原封不動地從 /etc/caddy/Caddyfile 移到 /etc/caddy/conf.d/cockpit-caddy.conf，Caddyfile 會加上一行匯入 conf.d 的 import。原始 Caddyfile 備份為 /etc/caddy/Caddyfile.bak。在此之前，外掛的變更可能與 Caddyfile 中的站台衝突。",
+    "gate_continue_title": "可能出現重複網站"
   },
   "backup": {
     "button": "備份",
@@ -702,7 +704,7 @@
   },
   "global_opts": {
     "title": "Caddy 全域選項",
-    "caddyfile_note": "這些設定會寫入 /etc/caddy/Caddyfile 的全域選項區塊。儲存時 Caddy 會自動重新載入。",
+    "caddyfile_note": "這些設定位於 /etc/caddy/Caddyfile 的全域選項區塊中。儲存會寫入並檢查它們;重新載入會套用它們。",
     "unmanaged_hint": "未設定明確的全域選項——Caddy 正在使用其自動 HTTPS 預設值（包括代理有公開主機名稱時的 Let's Encrypt）。下方欄位是空的，是因為不需要設定，而不是有東西壞了。",
     "http_port": "HTTP 連接埠",
     "https_port": "HTTPS 連接埠",

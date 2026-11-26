@@ -7,6 +7,7 @@ import {
   DescriptionListDescription,
   DescriptionListGroup,
   DescriptionListTerm,
+  Content,
   Divider,
   Form,
   FormGroup,
@@ -32,6 +33,7 @@ import { loadAdminAddress, storeAdminAddress } from "../hooks/useAdminAddress";
 const adminTargetLabel = (target: AdminTarget) => target.transport === "unix" ? target.socket : target.tcp;
 import { AccessLogSection, type AccessLogValues, accessLogConfigToValues, accessLogHasError, accessLogValuesToConfig } from "./AccessLogSection";
 import { Notice } from "./Notice";
+import { HelpPopover } from "./HelpPopover";
 import { ProxyDialogTabs, type ProxyTab } from "./proxyDialogParts";
 
 /** True when any of the options a section writes is set. */
@@ -425,9 +427,9 @@ export function GlobalOptionsTab({ unmanaged = false }: { unmanaged?: boolean } 
     </>) },
     { key: "tls", label: t("global_opts.tab_tls"), configured: configured.tls, hasError: hasError.tls, content: (<>
         <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
-          {t("global_opts.acme_title")}
+          {t("global_opts.acme_title")}{" "}
+          <HelpPopover topic={t("global_opts.acme_title")}>{t("global_opts.acme_note")}</HelpPopover>
         </Title>
-        <Notice variant="info" title={t("global_opts.acme_note")} />
 
         <FormGroup label={t("global_opts.acme_email")} fieldId="go-email">
           <TextInput
@@ -608,9 +610,9 @@ export function GlobalOptionsTab({ unmanaged = false }: { unmanaged?: boolean } 
         <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
 
         <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
-          {t("global_opts.internal_tls_title")}
+          {t("global_opts.internal_tls_title")}{" "}
+          <HelpPopover topic={t("global_opts.internal_tls_title")}>{t("global_opts.internal_tls_note")}</HelpPopover>
         </Title>
-        <Notice variant="info" title={t("global_opts.internal_tls_note")} />
 
         <FormGroup label={t("global_opts.internal_cert_lifetime")} fieldId="go-internal-cert-lifetime">
           <CertLifetimeSelect
@@ -762,9 +764,9 @@ export function GlobalOptionsTab({ unmanaged = false }: { unmanaged?: boolean } 
         <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
 
         <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
-          {t("global_opts.runtime_log_title")}
+          {t("global_opts.runtime_log_title")}{" "}
+          <HelpPopover topic={t("global_opts.runtime_log_title")}>{t("global_opts.runtime_log_note")}</HelpPopover>
         </Title>
-        <Notice variant="info" title={t("global_opts.runtime_log_note")} />
 
         <AccessLogSection
           idPrefix="rl"
@@ -780,9 +782,9 @@ export function GlobalOptionsTab({ unmanaged = false }: { unmanaged?: boolean } 
     </>) },
     { key: "proxy", label: t("global_opts.tab_proxy"), configured: configured.proxy, hasError: hasError.proxy, content: (<>
         <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
-          {t("global_opts.trusted_proxies_title")}
+          {t("global_opts.trusted_proxies_title")}{" "}
+          <HelpPopover topic={t("global_opts.trusted_proxies_title")}>{t("global_opts.trusted_proxies_note")}</HelpPopover>
         </Title>
-        <Notice variant="info" title={t("global_opts.trusted_proxies_note")} />
 
         <FormGroup fieldId="go-trusted-proxies-enabled">
           <Checkbox
@@ -855,9 +857,9 @@ export function GlobalOptionsTab({ unmanaged = false }: { unmanaged?: boolean } 
         <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
 
         <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
-          {t("global_opts.proxy_protocol_title")}
+          {t("global_opts.proxy_protocol_title")}{" "}
+          <HelpPopover topic={t("global_opts.proxy_protocol_title")}>{t("global_opts.proxy_protocol_note")}</HelpPopover>
         </Title>
-        <Notice variant="info" title={t("global_opts.proxy_protocol_note")} />
 
         <FormGroup fieldId="go-proxy-protocol-enabled">
           <Checkbox
@@ -930,7 +932,8 @@ export function GlobalOptionsTab({ unmanaged = false }: { unmanaged?: boolean } 
   return (
     <div style={{ maxWidth: "56rem" }}>
       <Title headingLevel="h3" style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}>
-        {t("global_opts.title")}
+        {t("global_opts.title")}{" "}
+        <HelpPopover topic={t("global_opts.title")}>{t("global_opts.caddyfile_note")}</HelpPopover>
       </Title>
 
       {restartNeeded && (
@@ -967,13 +970,8 @@ export function GlobalOptionsTab({ unmanaged = false }: { unmanaged?: boolean } 
         <Notice variant="danger" title={reloadError} />
       )}
 
-      <Notice variant="info" title={t("global_opts.caddyfile_note")} />
-
       {!hasAnyOption && (
-        <Notice
-          variant="info"
-          title={t("global_opts.unmanaged_hint")}
-        />
+        <Content component="p" style={{ color: "var(--pf-t--global--text--color--subtle)" }}>{t("global_opts.unmanaged_hint")}</Content>
       )}
 
       <Form>

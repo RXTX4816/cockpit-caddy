@@ -24,7 +24,8 @@
     "unit_kb": "KB",
     "unit_mb": "MB",
     "unit_gb": "GB",
-    "example_value": "p. ej. {{value}}"
+    "example_value": "p. ej. {{value}}",
+    "more_about": "Acerca de {{topic}}"
   },
   "app": {
     "title": "Caddy",
@@ -95,8 +96,8 @@
     "delete_confirm_title": "¿Eliminar el proxy :{{port}}?",
     "delete_confirm_body": "Se eliminará el reverse proxy del puerto {{port}} → {{target}}.",
     "delete_confirm_button": "Eliminar",
-    "api_error_add_title": "Proxy creado en disco: Caddy rechazó la aplicación en vivo",
-    "api_error_edit_title": "Etiqueta guardada: Caddy rechazó la actualización de la configuración (los demás cambios no se aplicaron)",
+    "api_error_add_title": "Guardado, pero Caddy lo rechazó",
+    "api_error_edit_title": "Solo se guardó la etiqueta",
     "caddyfile_error_title": "Falló la validación del Caddyfile: los cambios no se guardaron",
     "view_logs": "Ver registros",
     "indicator_browse": "listado",
@@ -585,7 +586,8 @@
     "backup_warning_title": "Haga primero una copia de seguridad de su configuración",
     "backup_warning_body": "La migración solo guarda una copia del propio Caddyfile. Cree una copia de seguridad completa de la configuración para poder restaurarlo todo si algo sale mal.",
     "banner_details_toggle": "Detalles",
-    "banner_details": "Los bloques de sitio se mueven sin cambios de /etc/caddy/Caddyfile a /etc/caddy/conf.d/cockpit-caddy.conf, y el Caddyfile recibe una línea import para conf.d. El Caddyfile original se respalda en /etc/caddy/Caddyfile.bak. Hasta entonces, los cambios del complemento pueden chocar con los sitios del Caddyfile."
+    "banner_details": "Los bloques de sitio se mueven sin cambios de /etc/caddy/Caddyfile a /etc/caddy/conf.d/cockpit-caddy.conf, y el Caddyfile recibe una línea import para conf.d. El Caddyfile original se respalda en /etc/caddy/Caddyfile.bak. Hasta entonces, los cambios del complemento pueden chocar con los sitios del Caddyfile.",
+    "gate_continue_title": "Posibles sitios duplicados"
   },
   "backup": {
     "button": "Copia de seguridad",
@@ -702,7 +704,7 @@
   },
   "global_opts": {
     "title": "Opciones globales de Caddy",
-    "caddyfile_note": "Estos ajustes se escriben en el bloque de opciones globales de /etc/caddy/Caddyfile. Caddy se recarga automáticamente al guardar.",
+    "caddyfile_note": "Estos ajustes están en el bloque de opciones globales de /etc/caddy/Caddyfile. Guardar los escribe y comprueba; Recargar los aplica.",
     "unmanaged_hint": "No hay opciones globales explícitas: Caddy usa sus valores predeterminados de HTTPS automático (incluido Let's Encrypt cuando un proxy tiene un nombre de host público). Los campos de abajo están vacíos porque no hace falta configurar nada, no porque algo esté roto.",
     "http_port": "Puerto HTTP",
     "https_port": "Puerto HTTPS",

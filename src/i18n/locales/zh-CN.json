@@ -24,7 +24,8 @@
     "unit_kb": "KB",
     "unit_mb": "MB",
     "unit_gb": "GB",
-    "example_value": "例如 {{value}}"
+    "example_value": "例如 {{value}}",
+    "more_about": "关于{{topic}}"
   },
   "app": {
     "title": "Caddy",
@@ -95,8 +96,8 @@
     "delete_confirm_title": "删除代理 :{{port}}？",
     "delete_confirm_body": "将移除端口 {{port}} → {{target}} 的反向代理。",
     "delete_confirm_button": "删除",
-    "api_error_add_title": "代理已写入磁盘——Caddy 拒绝了实时推送",
-    "api_error_edit_title": "标签已保存——Caddy 拒绝了配置更新（其他更改未应用）",
+    "api_error_add_title": "已保存,但 Caddy 拒绝了",
+    "api_error_edit_title": "仅保存了标签",
     "caddyfile_error_title": "Caddyfile 校验失败——更改未保存",
     "view_logs": "查看日志",
     "indicator_browse": "目录浏览",
@@ -585,7 +586,8 @@
     "backup_warning_title": "请先备份配置",
     "backup_warning_body": "迁移只备份 Caddyfile 本身。请创建完整的配置备份，以便出问题时可以恢复全部内容。",
     "banner_details_toggle": "详细信息",
-    "banner_details": "站点块会原样从 /etc/caddy/Caddyfile 移到 /etc/caddy/conf.d/cockpit-caddy.conf，Caddyfile 会添加一行导入 conf.d 的 import。原始 Caddyfile 备份为 /etc/caddy/Caddyfile.bak。在此之前，插件的更改可能与 Caddyfile 中的站点冲突。"
+    "banner_details": "站点块会原样从 /etc/caddy/Caddyfile 移到 /etc/caddy/conf.d/cockpit-caddy.conf，Caddyfile 会添加一行导入 conf.d 的 import。原始 Caddyfile 备份为 /etc/caddy/Caddyfile.bak。在此之前，插件的更改可能与 Caddyfile 中的站点冲突。",
+    "gate_continue_title": "可能出现重复站点"
   },
   "backup": {
     "button": "备份",
@@ -702,7 +704,7 @@
   },
   "global_opts": {
     "title": "Caddy 全局选项",
-    "caddyfile_note": "这些设置会写入 /etc/caddy/Caddyfile 的全局选项块。保存时 Caddy 会自动重新加载。",
+    "caddyfile_note": "这些设置位于 /etc/caddy/Caddyfile 的全局选项块中。保存会写入并检查它们;重新加载会应用它们。",
     "unmanaged_hint": "未设置显式全局选项——Caddy 正在使用其自动 HTTPS 默认设置（包括代理有公共主机名时的 Let's Encrypt）。下面的字段为空，是因为无需配置，而不是有东西坏了。",
     "http_port": "HTTP 端口",
     "https_port": "HTTPS 端口",

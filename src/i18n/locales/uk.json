@@ -24,7 +24,8 @@
     "unit_kb": "КБ",
     "unit_mb": "МБ",
     "unit_gb": "ГБ",
-    "example_value": "напр. {{value}}"
+    "example_value": "напр. {{value}}",
+    "more_about": "Про {{topic}}"
   },
   "app": {
     "title": "Caddy",
@@ -95,8 +96,8 @@
     "delete_confirm_title": "Видалити проксі :{{port}}?",
     "delete_confirm_body": "Буде видалено reverse proxy для порту {{port}} → {{target}}.",
     "delete_confirm_button": "Видалити",
-    "api_error_add_title": "Проксі створено на диску — Caddy відхилив застосування на льоту",
-    "api_error_edit_title": "Мітку збережено — Caddy відхилив оновлення конфігурації (інші зміни не застосовано)",
+    "api_error_add_title": "Збережено, але Caddy відхилив",
+    "api_error_edit_title": "Збережено лише мітку",
     "caddyfile_error_title": "Перевірка Caddyfile не пройдена — зміни не збережено",
     "view_logs": "Журнали",
     "indicator_browse": "перелік",
@@ -585,7 +586,8 @@
     "backup_warning_title": "Спочатку створіть резервну копію конфігурації",
     "backup_warning_body": "Перенесення зберігає копію лише самого Caddyfile. Створіть повну резервну копію конфігурації, щоб можна було все відновити, якщо щось піде не так.",
     "banner_details_toggle": "Подробиці",
-    "banner_details": "Блоки сайтів переносяться без змін з /etc/caddy/Caddyfile до /etc/caddy/conf.d/cockpit-caddy.conf, а до Caddyfile додається рядок import для conf.d. Початковий Caddyfile зберігається в /etc/caddy/Caddyfile.bak. До того зміни плагіна можуть конфліктувати із сайтами в Caddyfile."
+    "banner_details": "Блоки сайтів переносяться без змін з /etc/caddy/Caddyfile до /etc/caddy/conf.d/cockpit-caddy.conf, а до Caddyfile додається рядок import для conf.d. Початковий Caddyfile зберігається в /etc/caddy/Caddyfile.bak. До того зміни плагіна можуть конфліктувати із сайтами в Caddyfile.",
+    "gate_continue_title": "Можливі дублікати сайтів"
   },
   "backup": {
     "button": "Резервна копія",
@@ -702,7 +704,7 @@
   },
   "global_opts": {
     "title": "Глобальні параметри Caddy",
-    "caddyfile_note": "Ці параметри записуються в блок глобальних параметрів у /etc/caddy/Caddyfile. Caddy автоматично перезавантажується під час збереження.",
+    "caddyfile_note": "Ці налаштування містяться в блоці глобальних параметрів /etc/caddy/Caddyfile. Збереження записує й перевіряє їх; перезавантаження застосовує.",
     "unmanaged_hint": "Явні глобальні параметри не задано — Caddy використовує типові налаштування автоматичного HTTPS (зокрема Let's Encrypt, якщо проксі має публічне ім'я хоста). Поля нижче порожні, бо нічого налаштовувати не потрібно, а не тому, що щось зламано.",
     "http_port": "Порт HTTP",
     "https_port": "Порт HTTPS",

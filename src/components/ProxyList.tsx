@@ -545,7 +545,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
               <Content>{t("migration.gate_body")}</Content>
             </StackItem>
             <StackItem>
-              <Notice variant="warning" title={t("migration.gate_continue_warning")} />
+              <Notice variant="warning" title={t("migration.gate_continue_title")}>{t("migration.gate_continue_warning")}</Notice>
             </StackItem>
           </Stack>
         </ModalBody>

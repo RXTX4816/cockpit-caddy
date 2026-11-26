@@ -24,7 +24,8 @@
     "unit_kb": "KB",
     "unit_mb": "MB",
     "unit_gb": "GB",
-    "example_value": "de ex. {{value}}"
+    "example_value": "de ex. {{value}}",
+    "more_about": "Despre {{topic}}"
   },
   "app": {
     "title": "Caddy",
@@ -95,8 +96,8 @@
     "delete_confirm_title": "Ștergi proxy-ul :{{port}}?",
     "delete_confirm_body": "Va fi eliminat reverse proxy-ul pentru portul {{port}} → {{target}}.",
     "delete_confirm_button": "Șterge",
-    "api_error_add_title": "Proxy creat pe disc — Caddy a respins aplicarea în timp real",
-    "api_error_edit_title": "Eticheta a fost salvată — Caddy a respins actualizarea configurației (celelalte modificări nu au fost aplicate)",
+    "api_error_add_title": "Salvat, dar Caddy l-a respins",
+    "api_error_edit_title": "S-a salvat doar eticheta",
     "caddyfile_error_title": "Validarea Caddyfile a eșuat — modificările nu au fost salvate",
     "view_logs": "Vezi jurnalele",
     "indicator_browse": "listare",
@@ -585,7 +586,8 @@
     "backup_warning_title": "Fă mai întâi o copie de siguranță a configurației",
     "backup_warning_body": "Migrarea salvează doar Caddyfile-ul în sine. Creează o copie de siguranță completă a configurației, ca să poți restaura totul dacă ceva nu merge bine.",
     "banner_details_toggle": "Detalii",
-    "banner_details": "Blocurile de site sunt mutate neschimbate din /etc/caddy/Caddyfile în /etc/caddy/conf.d/cockpit-caddy.conf, iar Caddyfile primește o linie import pentru conf.d. Caddyfile-ul original este salvat în /etc/caddy/Caddyfile.bak. Până atunci, modificările pluginului pot intra în conflict cu site-urile din Caddyfile."
+    "banner_details": "Blocurile de site sunt mutate neschimbate din /etc/caddy/Caddyfile în /etc/caddy/conf.d/cockpit-caddy.conf, iar Caddyfile primește o linie import pentru conf.d. Caddyfile-ul original este salvat în /etc/caddy/Caddyfile.bak. Până atunci, modificările pluginului pot intra în conflict cu site-urile din Caddyfile.",
+    "gate_continue_title": "Posibile site-uri duplicate"
   },
   "backup": {
     "button": "Copie de siguranță",
@@ -702,7 +704,7 @@
   },
   "global_opts": {
     "title": "Opțiuni globale Caddy",
-    "caddyfile_note": "Aceste setări sunt scrise în blocul de opțiuni globale din /etc/caddy/Caddyfile. Caddy este reîncărcat automat la salvare.",
+    "caddyfile_note": "Aceste setări se află în blocul de opțiuni globale din /etc/caddy/Caddyfile. Salvarea le scrie și le verifică; Reîncărcarea le aplică.",
     "unmanaged_hint": "Nu sunt setate opțiuni globale explicite — Caddy folosește valorile implicite de HTTPS automat (inclusiv Let's Encrypt când un proxy are un nume de gazdă public). Câmpurile de mai jos sunt goale pentru că nu e nimic de configurat, nu pentru că ceva ar fi stricat.",
     "http_port": "Port HTTP",
     "https_port": "Port HTTPS",

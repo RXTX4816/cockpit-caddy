@@ -24,7 +24,8 @@
     "unit_kb": "KB",
     "unit_mb": "MB",
     "unit_gb": "GB",
-    "example_value": "mis. {{value}}"
+    "example_value": "mis. {{value}}",
+    "more_about": "Tentang {{topic}}"
   },
   "app": {
     "title": "Caddy",
@@ -95,8 +96,8 @@
     "delete_confirm_title": "Hapus proxy :{{port}}?",
     "delete_confirm_body": "Reverse proxy untuk port {{port}} → {{target}} akan dihapus.",
     "delete_confirm_button": "Hapus",
-    "api_error_add_title": "Proxy dibuat di disk — Caddy menolak penerapan langsung",
-    "api_error_edit_title": "Label disimpan — Caddy menolak pembaruan konfigurasi (perubahan lain tidak diterapkan)",
+    "api_error_add_title": "Tersimpan, tetapi Caddy menolaknya",
+    "api_error_edit_title": "Hanya label yang tersimpan",
     "caddyfile_error_title": "Validasi Caddyfile gagal — perubahan tidak disimpan",
     "view_logs": "Lihat log",
     "indicator_browse": "daftar direktori",
@@ -585,7 +586,8 @@
     "backup_warning_title": "Cadangkan konfigurasi Anda terlebih dahulu",
     "backup_warning_body": "Migrasi hanya mencadangkan Caddyfile itu sendiri. Buat cadangan konfigurasi lengkap agar Anda dapat memulihkan semuanya jika terjadi masalah.",
     "banner_details_toggle": "Detail",
-    "banner_details": "Blok situs dipindahkan tanpa perubahan dari /etc/caddy/Caddyfile ke /etc/caddy/conf.d/cockpit-caddy.conf, dan Caddyfile mendapat baris import untuk conf.d. Caddyfile asli dicadangkan ke /etc/caddy/Caddyfile.bak. Sampai saat itu, perubahan plugin dapat berbenturan dengan situs di Caddyfile."
+    "banner_details": "Blok situs dipindahkan tanpa perubahan dari /etc/caddy/Caddyfile ke /etc/caddy/conf.d/cockpit-caddy.conf, dan Caddyfile mendapat baris import untuk conf.d. Caddyfile asli dicadangkan ke /etc/caddy/Caddyfile.bak. Sampai saat itu, perubahan plugin dapat berbenturan dengan situs di Caddyfile.",
+    "gate_continue_title": "Mungkin ada situs ganda"
   },
   "backup": {
     "button": "Cadangkan",
@@ -702,7 +704,7 @@
   },
   "global_opts": {
     "title": "Opsi global Caddy",
-    "caddyfile_note": "Pengaturan ini ditulis ke blok opsi global di /etc/caddy/Caddyfile. Caddy dimuat ulang otomatis saat disimpan.",
+    "caddyfile_note": "Pengaturan ini ada di blok opsi global /etc/caddy/Caddyfile. Simpan menulis dan memeriksanya; Muat ulang menerapkannya.",
     "unmanaged_hint": "Tidak ada opsi global eksplisit — Caddy memakai bawaan HTTPS otomatisnya (termasuk Let's Encrypt jika proxy memiliki nama host publik). Kolom di bawah kosong karena memang tidak ada yang perlu dikonfigurasi, bukan karena ada yang rusak.",
     "http_port": "Port HTTP",
     "https_port": "Port HTTPS",

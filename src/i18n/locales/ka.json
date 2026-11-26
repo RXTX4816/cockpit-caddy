@@ -24,7 +24,8 @@
     "unit_kb": "KB",
     "unit_mb": "MB",
     "unit_gb": "GB",
-    "example_value": "მაგ. {{value}}"
+    "example_value": "მაგ. {{value}}",
+    "more_about": "{{topic}}-ის შესახებ"
   },
   "app": {
     "title": "Caddy",
@@ -95,8 +96,8 @@
     "delete_confirm_title": "წაიშალოს პროქსი :{{port}}?",
     "delete_confirm_body": "წაიშლება reverse proxy პორტისთვის {{port}} → {{target}}.",
     "delete_confirm_button": "წაშლა",
-    "api_error_add_title": "პროქსი დისკზე შეიქმნა — Caddy-მ უარყო ცოცხალი გამოყენება",
-    "api_error_edit_title": "იარლიყი შენახულია — Caddy-მ უარყო კონფიგურაციის განახლება (სხვა ცვლილებები არ გამოყენებულა)",
+    "api_error_add_title": "შენახულია, მაგრამ Caddy-მ უარყო",
+    "api_error_edit_title": "შენახულია მხოლოდ ჭდე",
     "caddyfile_error_title": "Caddyfile-ის ვალიდაცია ვერ შესრულდა — ცვლილებები არ შეინახა",
     "view_logs": "ჟურნალების ნახვა",
     "indicator_browse": "საქაღალდის სია",
@@ -585,7 +586,8 @@
     "backup_warning_title": "ჯერ შექმენით კონფიგურაციის სარეზერვო ასლი",
     "backup_warning_body": "გადატანა მხოლოდ თავად Caddyfile-ის სარეზერვო ასლს ქმნის. შექმენით კონფიგურაციის სრული სარეზერვო ასლი, რომ რამე რომ არასწორად წავიდეს, ყველაფრის აღდგენა შეძლოთ.",
     "banner_details_toggle": "დეტალები",
-    "banner_details": "საიტის ბლოკები უცვლელად გადადის /etc/caddy/Caddyfile-დან /etc/caddy/conf.d/cockpit-caddy.conf-ში, ხოლო Caddyfile იღებს conf.d-ის import ხაზს. ორიგინალი Caddyfile-ის სარეზერვო ასლი ინახება /etc/caddy/Caddyfile.bak-ში. მანამდე დამატების ცვლილებები შეიძლება შეეჯახოს Caddyfile-ის საიტებს."
+    "banner_details": "საიტის ბლოკები უცვლელად გადადის /etc/caddy/Caddyfile-დან /etc/caddy/conf.d/cockpit-caddy.conf-ში, ხოლო Caddyfile იღებს conf.d-ის import ხაზს. ორიგინალი Caddyfile-ის სარეზერვო ასლი ინახება /etc/caddy/Caddyfile.bak-ში. მანამდე დამატების ცვლილებები შეიძლება შეეჯახოს Caddyfile-ის საიტებს.",
+    "gate_continue_title": "შესაძლოა საიტები გაორდეს"
   },
   "backup": {
     "button": "სარეზერვო ასლი",
@@ -702,7 +704,7 @@
   },
   "global_opts": {
     "title": "Caddy-ის გლობალური პარამეტრები",
-    "caddyfile_note": "ეს პარამეტრები იწერება /etc/caddy/Caddyfile-ის გლობალური პარამეტრების ბლოკში. შენახვისას Caddy ავტომატურად ჩაიტვირთება ხელახლა.",
+    "caddyfile_note": "ეს პარამეტრები /etc/caddy/Caddyfile-ის გლობალური პარამეტრების ბლოკშია. შენახვა წერს და ამოწმებს მათ; გადატვირთვა იყენებს მათ.",
     "unmanaged_hint": "ცხადი გლობალური პარამეტრები მითითებული არ არის — Caddy ავტომატური HTTPS-ის ნაგულისხმევ პარამეტრებს იყენებს (მათ შორის Let's Encrypt-ს, როცა პროქსის საჯარო ჰოსტის სახელი აქვს). ქვემოთ ველები ცარიელია, რადგან არაფრის მორგება არ არის საჭირო, და არა იმიტომ, რომ რამე გაფუჭებულია.",
     "http_port": "HTTP პორტი",
     "https_port": "HTTPS პორტი",

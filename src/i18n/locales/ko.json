@@ -24,7 +24,8 @@
     "unit_kb": "KB",
     "unit_mb": "MB",
     "unit_gb": "GB",
-    "example_value": "예: {{value}}"
+    "example_value": "예: {{value}}",
+    "more_about": "{{topic}} 정보"
   },
   "app": {
     "title": "Caddy",
@@ -95,8 +96,8 @@
     "delete_confirm_title": "프록시 :{{port}}을(를) 삭제할까요?",
     "delete_confirm_body": "포트 {{port}} → {{target}}의 리버스 프록시가 제거됩니다.",
     "delete_confirm_button": "삭제",
-    "api_error_add_title": "프록시가 디스크에 생성됨 — Caddy가 실시간 적용을 거부했습니다",
-    "api_error_edit_title": "레이블 저장됨 — Caddy가 설정 업데이트를 거부했습니다(다른 변경 사항은 적용되지 않음)",
+    "api_error_add_title": "저장했지만 Caddy가 거부했습니다",
+    "api_error_edit_title": "레이블만 저장되었습니다",
     "caddyfile_error_title": "Caddyfile 검증 실패 — 변경 사항이 저장되지 않았습니다",
     "view_logs": "로그 보기",
     "indicator_browse": "디렉터리 목록",
@@ -585,7 +586,8 @@
     "backup_warning_title": "먼저 설정을 백업하세요",
     "backup_warning_body": "마이그레이션은 Caddyfile 자체만 백업합니다. 문제가 생겨도 모두 복원할 수 있도록 전체 설정 백업을 만드세요.",
     "banner_details_toggle": "세부 정보",
-    "banner_details": "사이트 블록은 /etc/caddy/Caddyfile에서 /etc/caddy/conf.d/cockpit-caddy.conf로 그대로 이동되며, Caddyfile에는 conf.d용 import 줄이 추가됩니다. 원래 Caddyfile은 /etc/caddy/Caddyfile.bak에 백업됩니다. 그 전까지는 플러그인의 변경 사항이 Caddyfile의 사이트와 충돌할 수 있습니다."
+    "banner_details": "사이트 블록은 /etc/caddy/Caddyfile에서 /etc/caddy/conf.d/cockpit-caddy.conf로 그대로 이동되며, Caddyfile에는 conf.d용 import 줄이 추가됩니다. 원래 Caddyfile은 /etc/caddy/Caddyfile.bak에 백업됩니다. 그 전까지는 플러그인의 변경 사항이 Caddyfile의 사이트와 충돌할 수 있습니다.",
+    "gate_continue_title": "사이트가 중복될 수 있음"
   },
   "backup": {
     "button": "백업",
@@ -702,7 +704,7 @@
   },
   "global_opts": {
     "title": "Caddy 전역 옵션",
-    "caddyfile_note": "이 설정은 /etc/caddy/Caddyfile의 전역 옵션 블록에 기록됩니다. 저장하면 Caddy가 자동으로 다시 불러옵니다.",
+    "caddyfile_note": "이 설정은 /etc/caddy/Caddyfile의 전역 옵션 블록에 있습니다. 저장하면 쓰고 검사하며, 다시 불러오면 적용됩니다.",
     "unmanaged_hint": "명시적인 전역 옵션이 없습니다. Caddy는 자동 HTTPS 기본값을 사용 중입니다(프록시에 공개 호스트 이름이 있으면 Let's Encrypt 포함). 아래 필드가 비어 있는 것은 설정할 것이 없기 때문이지 무언가 고장 났기 때문이 아닙니다.",
     "http_port": "HTTP 포트",
     "https_port": "HTTPS 포트",

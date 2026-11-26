@@ -24,7 +24,8 @@
     "unit_kb": "KB",
     "unit_mb": "MB",
     "unit_gb": "GB",
-    "example_value": "bijv. {{value}}"
+    "example_value": "bijv. {{value}}",
+    "more_about": "Over {{topic}}"
   },
   "app": {
     "title": "Caddy",
@@ -95,8 +96,8 @@
     "delete_confirm_title": "Proxy :{{port}} verwijderen?",
     "delete_confirm_body": "De reverse proxy voor poort {{port}} → {{target}} wordt verwijderd.",
     "delete_confirm_button": "Verwijderen",
-    "api_error_add_title": "Proxy op schijf aangemaakt — Caddy weigerde de live-update",
-    "api_error_edit_title": "Label opgeslagen — Caddy weigerde de configuratie-update (andere wijzigingen niet toegepast)",
+    "api_error_add_title": "Opgeslagen, maar Caddy weigerde het",
+    "api_error_edit_title": "Alleen het label is opgeslagen",
     "caddyfile_error_title": "Validatie van de Caddyfile mislukt — wijzigingen niet opgeslagen",
     "view_logs": "Logs bekijken",
     "indicator_browse": "mapweergave",
@@ -585,7 +586,8 @@
     "backup_warning_title": "Maak eerst een back-up van je configuratie",
     "backup_warning_body": "De migratie maakt alleen een back-up van de Caddyfile zelf. Maak een volledige back-up van de configuratie zodat je alles kunt herstellen als er iets misgaat.",
     "banner_details_toggle": "Details",
-    "banner_details": "Siteblokken worden ongewijzigd verplaatst van /etc/caddy/Caddyfile naar /etc/caddy/conf.d/cockpit-caddy.conf, en de Caddyfile krijgt een import-regel voor conf.d. De oorspronkelijke Caddyfile wordt bewaard als /etc/caddy/Caddyfile.bak. Tot die tijd kunnen wijzigingen van de plug-in botsen met de sites in de Caddyfile."
+    "banner_details": "Siteblokken worden ongewijzigd verplaatst van /etc/caddy/Caddyfile naar /etc/caddy/conf.d/cockpit-caddy.conf, en de Caddyfile krijgt een import-regel voor conf.d. De oorspronkelijke Caddyfile wordt bewaard als /etc/caddy/Caddyfile.bak. Tot die tijd kunnen wijzigingen van de plug-in botsen met de sites in de Caddyfile.",
+    "gate_continue_title": "Mogelijk dubbele sites"
   },
   "backup": {
     "button": "Back-up",
@@ -702,7 +704,7 @@
   },
   "global_opts": {
     "title": "Globale Caddy-opties",
-    "caddyfile_note": "Deze instellingen worden geschreven naar het blok met globale opties in /etc/caddy/Caddyfile. Caddy wordt bij opslaan automatisch herladen.",
+    "caddyfile_note": "Deze instellingen staan in het blok met globale opties van /etc/caddy/Caddyfile. Opslaan schrijft en controleert ze; Herladen past ze toe.",
     "unmanaged_hint": "Er zijn geen expliciete globale opties ingesteld — Caddy gebruikt zijn standaardinstellingen voor automatische HTTPS (inclusief Let's Encrypt als een proxy een publieke hostnaam heeft). De velden hieronder zijn leeg omdat er niets geconfigureerd hoeft te worden, niet omdat er iets stuk is.",
     "http_port": "HTTP-poort",
     "https_port": "HTTPS-poort",

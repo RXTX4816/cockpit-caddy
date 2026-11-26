@@ -141,7 +141,7 @@ Choose **Add Proxy ▾ → Static files**.
 | Field | Description |
 |---|---|
 | Label | Human-readable name |
-| Browse | Enable directory listing |
+| Browse | Enable directory listing. While it is on, the advanced options add the listing's order (`sort`), the most entries it shows (`file_limit`), whether symlink targets are shown (`reveal_symlinks`), and a listing template |
 | SPA mode | `try_files {path} /index.html`: existing files are served as they are, every other path gets `index.html`, so a single-page app's deep links work |
 | File server options | Index file names, hidden files or patterns, and precompressed formats (zstd, br, gzip) for `file.zst` / `file.br` / `file.gz` sidecar files |
 | HTTPS certificate | Caddy's internal CA (default) or Off; a site with a public hostname can also use Automatic (Let's Encrypt / ACME) |

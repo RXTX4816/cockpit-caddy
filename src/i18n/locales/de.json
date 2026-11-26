@@ -24,7 +24,8 @@
     "unit_kb": "KB",
     "unit_mb": "MB",
     "unit_gb": "GB",
-    "example_value": "z. B. {{value}}"
+    "example_value": "z. B. {{value}}",
+    "more_about": "Über {{topic}}"
   },
   "app": {
     "title": "Caddy",
@@ -95,8 +96,8 @@
     "delete_confirm_title": "Proxy :{{port}} löschen?",
     "delete_confirm_body": "Damit wird der Reverse Proxy für Port {{port}} → {{target}} entfernt.",
     "delete_confirm_button": "Löschen",
-    "api_error_add_title": "Proxy auf der Festplatte angelegt – Caddy hat die Live-Übernahme abgelehnt",
-    "api_error_edit_title": "Bezeichnung gespeichert – Caddy hat die Konfigurationsänderung abgelehnt (andere Änderungen nicht übernommen)",
+    "api_error_add_title": "Gespeichert, aber Caddy hat abgelehnt",
+    "api_error_edit_title": "Nur die Bezeichnung wurde gespeichert",
     "caddyfile_error_title": "Caddyfile-Validierung fehlgeschlagen – Änderungen nicht gespeichert",
     "view_logs": "Logs anzeigen",
     "indicator_browse": "Verzeichnisliste",
@@ -585,7 +586,8 @@
     "backup_warning_title": "Sichern Sie zuerst Ihre Konfiguration",
     "backup_warning_body": "Die Migration sichert nur die Caddyfile selbst. Erstellen Sie eine vollständige Sicherung der Konfiguration, damit Sie alles wiederherstellen können, falls etwas schiefgeht.",
     "banner_details_toggle": "Details",
-    "banner_details": "Site-Blöcke werden unverändert von /etc/caddy/Caddyfile nach /etc/caddy/conf.d/cockpit-caddy.conf verschoben, und die Caddyfile erhält eine import-Zeile für conf.d. Die ursprüngliche Caddyfile wird unter /etc/caddy/Caddyfile.bak gesichert. Bis dahin können die Änderungen des Plugins mit den Sites in der Caddyfile kollidieren."
+    "banner_details": "Site-Blöcke werden unverändert von /etc/caddy/Caddyfile nach /etc/caddy/conf.d/cockpit-caddy.conf verschoben, und die Caddyfile erhält eine import-Zeile für conf.d. Die ursprüngliche Caddyfile wird unter /etc/caddy/Caddyfile.bak gesichert. Bis dahin können die Änderungen des Plugins mit den Sites in der Caddyfile kollidieren.",
+    "gate_continue_title": "Doppelte Sites möglich"
   },
   "backup": {
     "button": "Sicherung",
@@ -702,7 +704,7 @@
   },
   "global_opts": {
     "title": "Globale Caddy-Optionen",
-    "caddyfile_note": "Diese Einstellungen werden in den globalen Optionsblock von /etc/caddy/Caddyfile geschrieben. Caddy wird beim Speichern automatisch neu geladen.",
+    "caddyfile_note": "Diese Einstellungen stehen im globalen Optionsblock von /etc/caddy/Caddyfile. Speichern schreibt und prüft sie; Neu laden wendet sie an.",
     "unmanaged_hint": "Es sind keine expliziten globalen Optionen gesetzt – Caddy nutzt seine Automatic-HTTPS-Standards (einschließlich Let's Encrypt, wenn ein Proxy einen öffentlichen Hostnamen hat). Die Felder unten sind leer, weil nichts konfiguriert werden muss, nicht weil etwas defekt ist.",
     "http_port": "HTTP-Port",
     "https_port": "HTTPS-Port",

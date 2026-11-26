@@ -24,7 +24,8 @@
     "unit_kb": "KB",
     "unit_mb": "MB",
     "unit_gb": "GB",
-    "example_value": "napr. {{value}}"
+    "example_value": "napr. {{value}}",
+    "more_about": "O téme {{topic}}"
   },
   "app": {
     "title": "Caddy",
@@ -95,8 +96,8 @@
     "delete_confirm_title": "Odstrániť proxy :{{port}}?",
     "delete_confirm_body": "Odstráni sa reverse proxy pre port {{port}} → {{target}}.",
     "delete_confirm_button": "Odstrániť",
-    "api_error_add_title": "Proxy vytvorená na disku — Caddy odmietol živé nasadenie",
-    "api_error_edit_title": "Označenie uložené — Caddy odmietol aktualizáciu konfigurácie (ostatné zmeny neboli použité)",
+    "api_error_add_title": "Uložené, ale Caddy to odmietol",
+    "api_error_edit_title": "Uložený bol len štítok",
     "caddyfile_error_title": "Overenie Caddyfile zlyhalo — zmeny neboli uložené",
     "view_logs": "Zobraziť logy",
     "indicator_browse": "výpis adresárov",
@@ -585,7 +586,8 @@
     "backup_warning_title": "Najprv zálohujte konfiguráciu",
     "backup_warning_body": "Migrácia zálohuje len samotný Caddyfile. Vytvorte úplnú zálohu konfigurácie, aby ste mohli všetko obnoviť, ak sa niečo pokazí.",
     "banner_details_toggle": "Podrobnosti",
-    "banner_details": "Bloky webov sa bez zmeny presunú z /etc/caddy/Caddyfile do /etc/caddy/conf.d/cockpit-caddy.conf a Caddyfile dostane riadok import pre conf.d. Pôvodný Caddyfile sa zálohuje do /etc/caddy/Caddyfile.bak. Dovtedy sa zmeny doplnku môžu stretávať s webmi v Caddyfile."
+    "banner_details": "Bloky webov sa bez zmeny presunú z /etc/caddy/Caddyfile do /etc/caddy/conf.d/cockpit-caddy.conf a Caddyfile dostane riadok import pre conf.d. Pôvodný Caddyfile sa zálohuje do /etc/caddy/Caddyfile.bak. Dovtedy sa zmeny doplnku môžu stretávať s webmi v Caddyfile.",
+    "gate_continue_title": "Možné duplicitné weby"
   },
   "backup": {
     "button": "Záloha",
@@ -702,7 +704,7 @@
   },
   "global_opts": {
     "title": "Globálne voľby Caddy",
-    "caddyfile_note": "Tieto nastavenia sa zapisujú do bloku globálnych volieb v /etc/caddy/Caddyfile. Caddy sa po uložení automaticky znova načíta.",
+    "caddyfile_note": "Tieto nastavenia sú v bloku globálnych volieb súboru /etc/caddy/Caddyfile. Uloženie ich zapíše a skontroluje; Znova načítať ich použije.",
     "unmanaged_hint": "Nie sú nastavené žiadne explicitné globálne voľby — Caddy používa predvolené nastavenia automatického HTTPS (vrátane Let's Encrypt, keď má proxy verejný názov hostiteľa). Polia nižšie sú prázdne, pretože nie je čo nastavovať, nie preto, že by niečo bolo pokazené.",
     "http_port": "Port HTTP",
     "https_port": "Port HTTPS",
