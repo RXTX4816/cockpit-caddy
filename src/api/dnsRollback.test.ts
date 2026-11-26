@@ -98,3 +98,33 @@ describe("saveWithDnsSecrets: per-site credentials around a site save (#289)", (
     expect(argvs()).toEqual([]);
   });
 });
+
+describe("a Settings save leaves sites with a host name as they are", () => {
+  const ACME = { module: "acme", email: "g@example.com" };
+  function run(siteConf: string, running: unknown) {
+    host.files.set("/etc/caddy/Caddyfile", "{\n\temail g@example.com\n}\n\nimport /etc/caddy/conf.d/*\n");
+    host.files.set("/etc/caddy/conf.d/cockpit-caddy.conf", siteConf);
+    host.onRun(["caddy", "validate"], "Valid configuration");
+    mockSpawn.mockImplementation((argv: string[]) => argv.some(a => a.endsWith("/config/")) ? Promise.resolve(JSON.stringify(running)) : Promise.reject(new Error("no")));
+    return syncGlobalOptions({ email: "g@example.com", internalCertLifetime: "7d" });
+  }
+  const server = (host: string, port = 443) => ({ listen: [`:${port}`], routes: [{ ...(host ? { match: [{ host: [host] }] } : {}), handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:8080" }] }] }], tls_connection_policies: [{}] });
+
+  it("does not turn an automatic-HTTPS site into tls internal, nor copy the global email into it (#341)", async () => {
+    const conf = "# cockpit-caddy managed file\n\nb.example.com {\n\treverse_proxy localhost:8080\n}\n\nc.example.com {\n\ttls {\n\t\tkey_type p256\n\t}\n\treverse_proxy localhost:8080\n}\n";
+    // What Caddy runs for those: c's key type gives it a policy with the global email copied in.
+    await run(conf, { apps: {
+      http: { servers: { srv0: { ...server("b.example.com"), routes: [...server("b.example.com").routes, ...server("c.example.com").routes] } } },
+      tls: { automation: { policies: [{ subjects: ["c.example.com"], key_type: "p256", issuers: [ACME, { ...ACME, ca: "https://acme.zerossl.com/v2/DV90" }] }] } },
+    } });
+    expect(host.files.get("/etc/caddy/conf.d/cockpit-caddy.conf")).toBe(conf);
+  });
+
+  it("still gives a hostless internal site the shared lifetime", async () => {
+    await run("# cockpit-caddy managed file\n\n:8443 {\n\ttls internal\n\treverse_proxy localhost:8080\n}\n", { apps: {
+      http: { servers: { srv0: server("", 8443) } },
+      tls: { automation: { policies: [{ issuers: [{ module: "internal" }] }] } },
+    } });
+    expect(host.files.get("/etc/caddy/conf.d/cockpit-caddy.conf")).toContain("lifetime 7d");
+  });
+});

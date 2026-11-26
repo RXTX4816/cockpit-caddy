@@ -7,10 +7,12 @@ import { applyConfigChange, type FileChange } from "./configChange";
 import { listConfDFiles, readCaddyfile, writeCaddyfile } from "./systemd";
 import { externalHostList } from "./externalHosts";
 import { AdminRejectedError, switchAdminEndpoint, type AdminTarget } from "./adminSwitch";
-import { withConfDImport, type RawBlock, extractRawBlocksFromCaddyfile, migrateCaddyfile, extractLogFilePaths, parseConfExternalAddresses, parseLabelsFromCaddyfile, CONF_HEADER, findGlobalBlock } from "./caddyfileDocument";
+import { confSites, confSiteMaps } from "./confSites";
+import { mergeSnippetLists, parseSnippets } from "./snippets";
+import { withConfDImport, type RawBlock, extractRawBlocksFromCaddyfile, migrateCaddyfile, extractLogFilePaths, parseConfExternalAddresses, CONF_HEADER, findGlobalBlock } from "./caddyfileDocument";
 import { buildTrustedProxiesLines, buildProxyProtocolLines, buildServerExtrasLines, patchMainCaddyfile, type GlobalOptions, INTERNAL_LIFETIME_MARKER, parseGlobalOptions, buildGlobalOptionsPatch, METRICS_SITE_BEGIN, METRICS_SITE_END, buildMetricsSiteBlock, parseMetricsSiteBlock } from "./globalOptions";
 import { buildExternalAddress, surgicallyWriteProxy, proxiesToCaddyfile, tlsSubjectHost, tlsSubjectHosts, namedServerIsHostless, parseServerDefsFromConf, surgicallyWriteServerBlock } from "./siteBlocks";
-import { parseCertLifetimeDuration, parseProxies, subjectsInclude, findAutomationPolicy } from "./caddyJsonModel";
+import { parseCertLifetimeDuration, parseProxies, subjectsInclude, findAutomationPolicy, acmeAccountOf, type AcmeAccount } from "./caddyJsonModel";
 
 // Re-exported from the modules the Caddyfile and JSON logic now lives in.
 export { CONF_D_IMPORT_LINE, withConfDImport, setBlockResult, extractRawBlocksFromCaddyfile, migrateCaddyfile, extractLogFilePaths, parseLegacyLabelsFromCaddyfile, parseConfExternalAddresses, parseConfTlsMap, parseConfTlsIssuerMap, parseConfTlsOnDemandMap, parseConfTlsDnsMap, parseConfCustomTlsCaMap, parseConfAccessLogMap, parseLabelsFromCaddyfile, CONF_HEADER, parseConfForwardAuthMap, surgicallyReplaceBlock, surgicallyRemoveBlock, hostsConflict, findServerBlock, deduplicateServerBlocks, surgicallyRemoveServerBlock, findGlobalBlock, parseDnsProviderDirective } from "./caddyfileDocument";
@@ -1220,7 +1222,11 @@ export async function checkLogFileWritable(filePath: string): Promise<string | n
  * skips propagation entirely — existing hostless proxies keep their previous
  * lifetime until their next individual edit re-applies the current shared value.
  */
-async function applyInternalLifetimeToProxyConf(content: string, internalCertLifetime: string | undefined): Promise<string> {
+/**
+ * `acmeAccount` is the global ACME account the running config was built with (#341), so a site's
+ * ACME settings read from that config aren't taken for the global ones copied into its issuers.
+ */
+async function applyInternalLifetimeToProxyConf(content: string, internalCertLifetime: string | undefined, acmeAccount: AcmeAccount): Promise<string> {
   let config: CaddyConfig;
   try {
     config = await fetchCaddyConfig();
@@ -1229,20 +1235,19 @@ async function applyInternalLifetimeToProxyConf(content: string, internalCertLif
   }
 
   const serverDefs = parseServerDefsFromConf(content);
-  const proxies = parseProxies(config, serverDefs);
-  // parseProxies never populates .label (that's a UI-layer merge over `# label:` comments,
-  // done in useProxies) — without re-attaching it here, rewriting a standalone proxy's
-  // block below would silently drop its label comment.
-  const labels = parseLabelsFromCaddyfile(content);
+  // The sites as the plugin shows them, with what only conf.d holds (issuer, imports, label, the
+  // site's text): the JSON alone wrote an automatic-HTTPS site back as `tls internal`.
+  const snippets = mergeSnippetLists(parseSnippets(await readSnippetsConf(), "plugin"), parseSnippets(await readMainCaddyfile(), "caddyfile"));
+  const proxies = confSites(config, serverDefs, confSiteMaps(content), snippets, acmeAccount);
 
+  // The shared lifetime only applies to sites without a host name, so no other block is touched.
   let updated = content;
   for (const p of proxies) {
-    if (!p.tls || p.namedServerKey) continue;
-    const label = proxyAddressKeys(p).map(k => labels[k]).find(Boolean);
-    updated = surgicallyWriteProxy(updated, { ...p, label, tlsAdvanced: applyGlobalInternalLifetimeToProxy(p, internalCertLifetime) });
+    if (!p.tls || p.namedServerKey || tlsSubjectHosts(p.externalHost).length) continue;
+    updated = surgicallyWriteProxy(updated, { ...p, tlsAdvanced: applyGlobalInternalLifetimeToProxy(p, internalCertLifetime) });
   }
   for (const def of serverDefs) {
-    if (!def.tls) continue;
+    if (!def.tls || !namedServerIsHostless(def.listenAddresses)) continue;
     const routes = proxies.filter(p => p.namedServerKey === def.key);
     updated = surgicallyWriteServerBlock(updated, { ...def, tlsAdvanced: applyGlobalInternalLifetimeToServer(def, internalCertLifetime) }, routes);
   }
@@ -1316,6 +1321,8 @@ export async function syncGlobalOptions(
 async function writeGlobalOptions(opts: GlobalOptions): Promise<void> {
   const diskContent = (await getHost().readFile(MAIN_CADDYFILE, { superuser: "try" })) ?? "";
   let patched = buildGlobalOptionsPatch(diskContent, opts);
+  // The running config was built from the options on disk, not the ones being saved.
+  const runningAccount = acmeAccountOf(parseGlobalOptions(diskContent));
 
   // #153 — trusted_proxies must also be re-merged into every per-port managed servers
   // block (see buildManagedServersBlocks' comment), not just the global servers{} block
@@ -1324,7 +1331,7 @@ async function writeGlobalOptions(opts: GlobalOptions): Promise<void> {
   try {
     const config = await fetchCaddyConfig();
     const serverDefs = parseServerDefsFromConf((await getHost().readFile(PROXY_CONF_PATH, { superuser: "try" })) ?? "");
-    const proxies = parseProxies(config, serverDefs);
+    const proxies = parseProxies(config, serverDefs, runningAccount);
     patched = patchMainCaddyfile(patched, buildManagedServersBlocks(proxies, opts.trustedProxies, opts.proxyProtocol));
   } catch {
     // Admin API unreachable — existing per-port blocks (if any) keep whatever
@@ -1332,7 +1339,7 @@ async function writeGlobalOptions(opts: GlobalOptions): Promise<void> {
   }
 
   const proxyConfDisk = (await getHost().readFile(PROXY_CONF_PATH, { superuser: "try" })) ?? "";
-  let proxyConfPatched = await applyInternalLifetimeToProxyConf(proxyConfDisk, opts.internalCertLifetime);
+  let proxyConfPatched = await applyInternalLifetimeToProxyConf(proxyConfDisk, opts.internalCertLifetime, runningAccount);
   proxyConfPatched = patchTopLevelMarkedSection(proxyConfPatched, METRICS_SITE_BEGIN, METRICS_SITE_END, buildMetricsSiteBlock(opts));
 
   if (patched === diskContent && proxyConfPatched === proxyConfDisk) return;
