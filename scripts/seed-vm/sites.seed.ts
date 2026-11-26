@@ -86,11 +86,35 @@ const routes: ProxyEntry[] = [
   site("internal_tools:1", 8020, { namedServerKey: "internal_tools", targetPort: 9002, matchers: { path: ["/wiki/*"] }, handlePath: true }),
 ];
 
+// The Tree tab (#349, #350) only shows for a site with a route block or nested handles, which the
+// plugin's writers never produce, so this one is written as text.
+const treeSite = `# label: Nested routes (Tree tab)
+http://:8015 {
+	@api path /api/*
+	route {
+		header X-Seed-Route tree
+		handle @api {
+			handle_path /api/v1/* {
+				reverse_proxy http://localhost:9002
+			}
+			respond "unknown api version" 404
+		}
+		handle_path /static/* {
+			root * /srv/seed/files
+			file_server browse
+		}
+		handle {
+			reverse_proxy http://localhost:9001
+		}
+	}
+}
+`;
+
 it("writes the seed config", () => {
   const out = process.env.SEED_OUT;
   if (!out) throw new Error("SEED_OUT is not set; run scripts/seed-vm/apply.sh");
   mkdirSync(out, { recursive: true });
-  writeFileSync(`${out}/cockpit-caddy.conf`, surgicallyWriteServerBlock(proxiesToCaddyfile(sites), server, routes));
+  writeFileSync(`${out}/cockpit-caddy.conf`, surgicallyWriteServerBlock(`${proxiesToCaddyfile(sites)}\n${treeSite}`, server, routes));
   writeFileSync(`${out}/cockpit-caddy-snippets.conf`, snippetsToConf([
     { name: "security-headers", body: "header {\n\tX-Content-Type-Options nosniff\n\tReferrer-Policy strict-origin-when-cross-origin\n\t-Server\n}" },
     { name: "cache-static", body: 'header Cache-Control "public, max-age=3600"' },

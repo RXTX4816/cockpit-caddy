@@ -40,6 +40,7 @@ Use `127.0.0.1`, not `localhost`: `localhost` resolves to `::1`, which isn't a t
 | 8012 | Maintenance response | 503 "Down for maintenance" |
 | 8013 | On-demand TLS | internal issuer with `on_demand` |
 | 8014 | Snippet, error page, limits | `import security-headers`, 5xx error page, 1 MiB body limit, timeouts, strip prefix |
+| 8015 | Nested routes (Tree tab) | `route` with nested `handle` / `handle_path` blocks and a named matcher `@api` |
 | 8020 | Named server "Internal tools" | `/grafana/*` → 9001, `/wiki/*` → 9002 |
 
 Settings: email `admin@example.test`, trusted proxies `127.0.0.1/32`, on-demand ask URL. Snippets: `security-headers`, `cache-static`.
@@ -81,6 +82,7 @@ Settings: email `admin@example.test`, trusted proxies `127.0.0.1/32`, on-demand 
 - [ ] **Logs table (#257):** the Logs tab shows a table; a row opens its JSON; Raw switches back. More traffic: `for i in $(seq 20); do curl -sk https://127.0.0.1:8001/x$i >/dev/null; done`.
 - [ ] **Highlighting (#283):** the Caddyfile tab and the editor colour directives and placeholders, including ones inside words (`https://caddyserver.com{uri}`).
 - [ ] **Snippets (#288, #267):** Settings → Snippets lists `security-headers` and `cache-static`. Add `cache-static` to a site (General → snippet imports), save, reopen.
+- [ ] **Tree tab (#349, #350):** Edit on "Nested routes (Tree tab)" shows a Tree tab with the `route` and its nested handles. Change a matcher, Save blocks, reopen. `curl -s 127.0.0.1:8015/api/v1/x` → 404 from backend 9002, `/api/v2/x` → "unknown api version", `/static/` lists files, `/` → "Backend 9001".
 - [ ] **Error page:** `curl -s 127.0.0.1:8014/app/x` → "Upstream is down (502)".
 - [ ] **Settings read back:** email, trusted proxies and the on-demand ask URL show the seeded values.
 - [ ] **Global DNS challenge (#261):** Settings → DNS challenge shows "No DNS provider module installed" with the modules link.
