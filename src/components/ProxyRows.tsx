@@ -57,7 +57,7 @@ export function SiteBadges({ proxy }: { proxy: ProxyEntry }) {
   const showTls = proxy.tls && !proxy.redirect;
   if (!showTls && chips.length === 0 && !hasRawBlocks(proxy)) return null;
   return (
-    <span style={{ display: "inline-flex", gap: "0.2rem", flexWrap: "nowrap", verticalAlign: "middle" }}>
+    <span style={{ display: "inline-flex", flexShrink: 0, gap: "0.2rem", flexWrap: "nowrap", verticalAlign: "middle" }}>
       {showTls && <TlsBadge proxy={proxy} />}
       {chips.map(c => (
         <Label key={c.label} isCompact color={c.color} variant="outline">{c.label}</Label>
@@ -69,6 +69,18 @@ export function SiteBadges({ proxy }: { proxy: ProxyEntry }) {
 
 /** Cells stay one line high (#259); long content is cut with an ellipsis. */
 const ONE_LINE = { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } as const;
+
+/**
+ * The address cell: a long address is the part that gets cut (its full text in the link's
+ * title), never the badges after it.
+ */
+const ADDRESS_CELL = { display: "flex", alignItems: "center", gap: "0.35rem", minWidth: 0, overflow: "hidden" } as const;
+
+/** What the list shows as a site's address: host(s) and port, plus the first path matcher. */
+function siteAddress(proxy: ProxyEntry): string {
+  const path = proxy.matchers?.path?.[0];
+  return formatExternalHostPort(proxy) + (path ? path.replace(/\*$/, "…") : "");
+}
 
 function HeaderRow() {
   const { t } = useTranslation();
@@ -103,6 +115,7 @@ function ProxyRow({ proxy, onEdit, onDelete, onDuplicate, probeStatuses, servers
   const serverName = proxy.namedServerKey
     ? (servers.find(s => s.key === proxy.namedServerKey)?.name ?? proxy.namedServerKey)
     : null;
+  const address = siteAddress(proxy);
 
   return (
     <DataListItem aria-labelledby={`proxy-${proxy.id}`}>
@@ -117,28 +130,27 @@ function ProxyRow({ proxy, onEdit, onDelete, onDuplicate, probeStatuses, servers
             <DataListCell key="type" width={1}>
               {(() => { const et = entryType(proxy, t); return <Label color={et.color} isCompact>{et.label}</Label>; })()}
             </DataListCell>,
-            <DataListCell key="port" width={4} style={ONE_LINE}>
+            <DataListCell key="port" width={4} style={ADDRESS_CELL}>
               <a
                 href={url}
                 target="_blank"
                 rel="noopener noreferrer"
                 id={`proxy-${proxy.id}`}
-                style={{ fontFamily: "monospace", fontWeight: "bold" }}
+                title={address}
+                style={{ ...ONE_LINE, flex: "0 1 auto", minWidth: "8ch", fontFamily: "monospace", fontWeight: "bold" }}
               >
-                {formatExternalHostPort(proxy)}
-                {proxy.matchers?.path?.[0] ? proxy.matchers.path[0].replace(/\*$/, "…") : ""}
+                {address}
               </a>
               {serverName && (
                 <Label
                   isCompact
                   color="green"
                   variant="outline"
-                  style={{ marginLeft: "0.35rem", fontSize: "0.75em", verticalAlign: "middle" }}
+                  style={{ flexShrink: 0, fontSize: "0.75em" }}
                 >
                   {serverName}
                 </Label>
               )}
-              {" "}
               <SiteBadges proxy={proxy} />
             </DataListCell>,
             <DataListCell key="target" width={3} style={ONE_LINE}>
@@ -211,6 +223,7 @@ function CompactProxyRow({ proxy, onEdit, onDelete, onDuplicate, probeStatuses, 
   const serverName = proxy.namedServerKey
     ? (servers.find(s => s.key === proxy.namedServerKey)?.name ?? proxy.namedServerKey)
     : null;
+  const address = siteAddress(proxy);
   const et = entryType(proxy, t);
   const isProxy = !proxy.redirect && !proxy.staticResponse && !proxy.fileServer && !proxy.phpFastcgi;
   const status = isProxy ? probeStatuses.get(`${proxy.targetHost}:${proxy.targetPort}`) : undefined;
@@ -234,9 +247,8 @@ function CompactProxyRow({ proxy, onEdit, onDelete, onDuplicate, probeStatuses, 
                     {status !== undefined && (
                       <UpstreamStatusDot status={status} address={`${proxy.targetScheme}://${proxy.targetHost}:${proxy.targetPort}`} />
                     )}
-                    <a href={url} target="_blank" rel="noopener noreferrer" id={`proxy-${proxy.id}`} style={{ ...ONE_LINE, fontFamily: "monospace", fontWeight: "bold" }}>
-                      {formatExternalHostPort(proxy)}
-                      {proxy.matchers?.path?.[0] ? proxy.matchers.path[0].replace(/\*$/, "…") : ""}
+                    <a href={url} target="_blank" rel="noopener noreferrer" id={`proxy-${proxy.id}`} title={address} style={{ ...ONE_LINE, fontFamily: "monospace", fontWeight: "bold" }}>
+                      {address}
                     </a>
                   </div>
                 </div>
