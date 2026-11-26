@@ -521,8 +521,17 @@ export interface LbRetryConfig {
   maxFails?: number;
   /** Passive: upstream response codes that count as a failure (only with failDuration). */
   unhealthyStatus?: number[];
-  /** Active health checks (#252): path Caddy requests on each upstream; empty = off. */
+  /** Active health checks (#252): path Caddy requests on each upstream. Active checks are off
+   *  unless this or healthPort is set. */
   healthUri?: string;
+  /** Active: the port checked instead of the upstream's own. */
+  healthPort?: number;
+  /** Active: headers on the check request, e.g. `Host`; a name may have several values. */
+  healthHeaders?: Record<string, string[]>;
+  /** Active: consecutive passing checks before an upstream counts as healthy again (Caddy: 1). */
+  healthPasses?: number;
+  /** Active: consecutive failing checks before an upstream counts as down (Caddy: 1). */
+  healthFails?: number;
   /** Active: time between checks (Caddy: 30s). */
   healthInterval?: string;
   /** Active: how long to wait for a check's reply (Caddy: 5s). */

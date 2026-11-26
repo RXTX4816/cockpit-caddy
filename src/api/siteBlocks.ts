@@ -391,11 +391,17 @@ export function buildLbRetryLines(lbRetry: import("./types").LbRetryConfig | und
     if (lbRetry.maxFails != null) lines.push(`\t\tmax_fails ${lbRetry.maxFails}`);
     if (lbRetry.unhealthyStatus?.length) lines.push(`\t\tunhealthy_status ${lbRetry.unhealthyStatus.join(" ")}`);
   }
-  if (lbRetry.healthUri) {
-    lines.push(`\t\thealth_uri ${lbRetry.healthUri}`);
+  // Caddy runs active checks once a path or a port is set; the other options only tune them.
+  if (lbRetry.healthUri || lbRetry.healthPort) {
+    if (lbRetry.healthUri) lines.push(`\t\thealth_uri ${lbRetry.healthUri}`);
+    if (lbRetry.healthPort) lines.push(`\t\thealth_port ${lbRetry.healthPort}`);
     if (lbRetry.healthInterval) lines.push(`\t\thealth_interval ${lbRetry.healthInterval}`);
     if (lbRetry.healthTimeout) lines.push(`\t\thealth_timeout ${lbRetry.healthTimeout}`);
     if (lbRetry.healthStatus) lines.push(`\t\thealth_status ${lbRetry.healthStatus}`);
+    const headers = Object.entries(lbRetry.healthHeaders ?? {}).flatMap(([name, vals]) => vals.map(v => `\t\t\t${name} ${caddyQuote(v)}`));
+    if (headers.length) lines.push("\t\thealth_headers {", ...headers, "\t\t}");
+    if (lbRetry.healthPasses != null) lines.push(`\t\thealth_passes ${lbRetry.healthPasses}`);
+    if (lbRetry.healthFails != null) lines.push(`\t\thealth_fails ${lbRetry.healthFails}`);
   }
   return lines;
 }

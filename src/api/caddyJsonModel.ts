@@ -708,13 +708,17 @@ export function buildHealthChecksJson(lbRetry: import("./types").LbRetryConfig |
       ...(lbRetry.unhealthyStatus?.length ? { unhealthy_status: lbRetry.unhealthyStatus } : {}),
     };
   }
-  if (lbRetry.healthUri) {
+  if (lbRetry.healthUri || lbRetry.healthPort) {
     const cls = lbRetry.healthStatus?.match(/^([1-5])xx$/i);
     out.active = {
-      uri: lbRetry.healthUri,
+      ...(lbRetry.healthUri ? { uri: lbRetry.healthUri } : {}),
+      ...(lbRetry.healthPort ? { port: lbRetry.healthPort } : {}),
       ...(lbRetry.healthInterval ? { interval: lbRetry.healthInterval } : {}),
       ...(lbRetry.healthTimeout ? { timeout: lbRetry.healthTimeout } : {}),
       ...(lbRetry.healthStatus ? { expect_status: cls ? parseInt(cls[1], 10) : parseInt(lbRetry.healthStatus, 10) } : {}),
+      ...(Object.keys(lbRetry.healthHeaders ?? {}).length ? { headers: lbRetry.healthHeaders } : {}),
+      ...(lbRetry.healthPasses != null ? { passes: lbRetry.healthPasses } : {}),
+      ...(lbRetry.healthFails != null ? { fails: lbRetry.healthFails } : {}),
     };
   }
   return Object.keys(out).length ? out : undefined;
@@ -725,7 +729,10 @@ export function parseLbRetry(rp: CaddyReverseProxyHandler): import("./types").Lb
   const lb = rp.load_balancing as { retries?: number; try_duration?: number | string; try_interval?: number | string; retry_match?: Array<{ method?: string[] }> } | undefined;
   const retryMethods = lb?.retry_match?.length === 1 ? lb.retry_match[0].method : undefined;
   type Passive = { fail_duration?: number | string; max_fails?: number; unhealthy_status?: number[] };
-  type Active = { uri?: string; interval?: number | string; timeout?: number | string; expect_status?: number };
+  type Active = {
+    uri?: string; port?: number; interval?: number | string; timeout?: number | string; expect_status?: number;
+    headers?: Record<string, string[]>; passes?: number; fails?: number;
+  };
   const hc = rp.health_checks as { passive?: Passive; active?: Active } | undefined;
   const unhealthyStatus = hc?.passive?.unhealthy_status;
   const expect = hc?.active?.expect_status;
@@ -738,6 +745,10 @@ export function parseLbRetry(rp: CaddyReverseProxyHandler): import("./types").Lb
     maxFails: hc?.passive?.max_fails,
     unhealthyStatus: unhealthyStatus?.length ? unhealthyStatus : undefined,
     healthUri: hc?.active?.uri || undefined,
+    healthPort: hc?.active?.port || undefined,
+    healthHeaders: Object.keys(hc?.active?.headers ?? {}).length ? hc?.active?.headers : undefined,
+    healthPasses: hc?.active?.passes,
+    healthFails: hc?.active?.fails,
     healthInterval: parseDuration(hc?.active?.interval) || undefined,
     healthTimeout: parseDuration(hc?.active?.timeout) || undefined,
     // Caddy stores a status class ("2xx") as its first digit.

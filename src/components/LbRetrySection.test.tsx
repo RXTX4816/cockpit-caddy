@@ -32,9 +32,12 @@ describe("LbRetrySection health checks (#252)", () => {
     expect(validateLbRetry(v({ failDuration: "30s", maxFails: "0" }))).toBe("lb_retry.validation_max_fails");
   });
 
-  it("active check options need a path", () => {
-    expect(validateLbRetry(v({ healthInterval: "10s" }))).toBe("lb_retry.validation_needs_health_uri");
+  it("active check options need a path or a port", () => {
+    expect(validateLbRetry(v({ healthInterval: "10s" }))).toBe("lb_retry.validation_needs_health_target");
+    expect(validateLbRetry(v({ healthPasses: "2" }))).toBe("lb_retry.validation_needs_health_target");
+    expect(validateLbRetry(v({ healthHeaders: "Host a" }))).toBe("lb_retry.validation_needs_health_target");
     expect(validateLbRetry(v({ healthUri: "/h", healthInterval: "10s" }))).toBeNull();
+    expect(validateLbRetry(v({ healthPort: "8081", healthInterval: "10s" }))).toBeNull();
   });
 
   it("checks durations and the expected status", () => {
@@ -78,5 +81,41 @@ describe("LbRetrySection placeholders (#301)", () => {
     expect(ph("lbr-health-interval")).toBe("Default: 30s");
     expect(ph("lbr-health-timeout")).toBe("Default: 5s");
     expect(ph("lbr-health-status")).toBe("Default: 2xx");
+  });
+});
+
+// Active check port, request headers and the pass/fail counts.
+describe("LbRetrySection active check port, headers, passes and fails", () => {
+  it("round-trips them through values and config, headers one per line", () => {
+    const cfg = {
+      healthUri: "/healthz", healthPort: 8081, healthPasses: 2, healthFails: 3,
+      healthHeaders: { Host: ["app.internal"], "X-Token": ["a b", "c"] },
+    };
+    const values = lbRetryConfigToValues(cfg);
+    expect(values.healthHeaders).toBe("Host app.internal\nX-Token a b\nX-Token c");
+    expect(lbRetryValuesToConfig(values)).toEqual(cfg);
+  });
+
+  it("skips blank header lines and trims around the value", () => {
+    expect(lbRetryValuesToConfig(v({ healthUri: "/h", healthHeaders: "\n  Host   app.internal  \n\n" }))?.healthHeaders).toEqual({ Host: ["app.internal"] });
+  });
+
+  it("checks the port, the counts and the header lines", () => {
+    expect(validateLbRetry(v({ healthPort: "0" }))).toBe("lb_retry.validation_health_port");
+    expect(validateLbRetry(v({ healthPort: "70000" }))).toBe("lb_retry.validation_health_port");
+    expect(validateLbRetry(v({ healthUri: "/h", healthPasses: "0" }))).toBe("lb_retry.validation_health_count");
+    expect(validateLbRetry(v({ healthUri: "/h", healthFails: "x" }))).toBe("lb_retry.validation_health_count");
+    expect(validateLbRetry(v({ healthUri: "/h", healthHeaders: "Host" }))).toBe("lb_retry.validation_health_headers");
+    expect(validateLbRetry(v({ healthUri: "/h", healthHeaders: "Bad:Name x" }))).toBe("lb_retry.validation_health_headers");
+    expect(validateLbRetry(v({ healthUri: "/h", healthPort: "8081", healthPasses: "2", healthFails: "3", healthHeaders: "Host a" }))).toBeNull();
+  });
+
+  it("marks Caddy's defaults in the placeholders", () => {
+    render(<LbRetrySection value={empty} onChange={() => {}} isExpanded />);
+    const ph = (id: string) => document.getElementById(id)!.getAttribute("placeholder");
+    expect(ph("lbr-health-port")).toBe("Default: the upstream's port");
+    expect(ph("lbr-health-passes")).toBe("Default: 1");
+    expect(ph("lbr-health-fails")).toBe("Default: 1");
+    expect(ph("lbr-health-headers")).toBe("e.g. Host app.internal");
   });
 });

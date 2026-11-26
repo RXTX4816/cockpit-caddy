@@ -544,6 +544,32 @@ describe.runIf(available || required)("passive and active health checks (#252)",
     expect({ ...pushed.active, interval: ns(pushed.active.interval), timeout: ns(pushed.active.timeout) }).toEqual(fromCaddy.active);
   });
 
+  it("reads the check port, request headers, passes and fails back", () => {
+    const cfg = {
+      healthUri: "/healthz", healthPort: 8081, healthPasses: 2, healthFails: 3,
+      healthHeaders: { Host: ["app.internal"], "X-Token": ["a b", "c"] },
+    };
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, lbRetry: cfg })]);
+    expect(conf).toContain('\t\thealth_headers {\n\t\t\tHost app.internal\n\t\t\tX-Token "a b"\n\t\t\tX-Token c\n\t\t}\n');
+    const [p] = readBack(conf);
+    expect(p.lbRetry).toEqual(cfg);
+  });
+
+  it("a port without a path still runs active checks, as in Caddy", () => {
+    const cfg = { healthPort: 8081, healthInterval: "10s" };
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, lbRetry: cfg })]);
+    expect(adaptedRp(conf).health_checks).toEqual({ active: { port: 8081, interval: 10e9 } });
+    expect(readBack(conf)[0].lbRetry).toEqual(cfg);
+  });
+
+  it("the instant-apply JSON carries the same port, headers, passes and fails", () => {
+    const cfg = { healthUri: "/h", healthPort: 8081, healthPasses: 2, healthFails: 3, healthHeaders: { Host: ["app.internal"] } };
+    const p = entry({ tls: false, externalPort: 8080, lbRetry: cfg });
+    const fromCaddy = adaptedRp(proxiesToCaddyfile([p])).health_checks;
+    const pushed = (buildServerEntry(p).routes?.[0]?.handle?.find(h => h.handler === "reverse_proxy") as Record<string, unknown>).health_checks;
+    expect(pushed).toEqual(fromCaddy);
+  });
+
   it("unhealthy_status is not written without fail_duration, where Caddy would ignore it", () => {
     const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, lbRetry: { unhealthyStatus: [500] } })]);
     expect(conf).not.toContain("unhealthy_status");
