@@ -207,7 +207,9 @@
     "browse_file_limit_none": "Ei rajaa",
     "browse_file_limit_invalid": "Anna kokonaisluku, joka on vähintään 1.",
     "field_browse_reveal_symlinks": "Näytä symbolisten linkkien kohteet",
-    "field_browse_reveal_symlinks_help": "Listaus näyttää, mihin kukin symbolinen linkki osoittaa. Se voi paljastaa polkuja sivuston juuren ulkopuolelta."
+    "field_browse_reveal_symlinks_help": "Listaus näyttää, mihin kukin symbolinen linkki osoittaa. Se voi paljastaa polkuja sivuston juuren ulkopuolelta.",
+    "field_try_files_help": "Valinnainen. Ehdokkaat, joita kokeillaan järjestyksessä ennen tiedostopalvelinta, esim. {path} {path}/ /index.html?{query}. SPA-tila on rivi {path} /index.html.",
+    "field_try_files_spa_help": "SPA-tilan asettama. Poista SPA-tila käytöstä kirjoittaaksesi oman rivin."
   },
   "edit_static": {
     "title": "Muokkaa staattista palvelinta — :{{port}}",

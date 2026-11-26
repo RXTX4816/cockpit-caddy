@@ -207,7 +207,9 @@
     "browse_file_limit_none": "Geen limiet",
     "browse_file_limit_invalid": "Voer een geheel getal van 1 of meer in.",
     "field_browse_reveal_symlinks": "Doelen van symlinks tonen",
-    "field_browse_reveal_symlinks_help": "De lijst toont waar elke symlink naar wijst. Dat kan paden buiten de hoofdmap van de site prijsgeven."
+    "field_browse_reveal_symlinks_help": "De lijst toont waar elke symlink naar wijst. Dat kan paden buiten de hoofdmap van de site prijsgeven.",
+    "field_try_files_help": "Optioneel. Kandidaten die op volgorde worden geprobeerd vóór de bestandsserver, bijv. {path} {path}/ /index.html?{query}. SPA-modus is de regel {path} /index.html.",
+    "field_try_files_spa_help": "Ingesteld door SPA-modus. Zet SPA-modus uit om een eigen regel te schrijven."
   },
   "edit_static": {
     "title": "Statische server bewerken — :{{port}}",

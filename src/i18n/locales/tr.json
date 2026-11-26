@@ -207,7 +207,9 @@
     "browse_file_limit_none": "Sınır yok",
     "browse_file_limit_invalid": "1 veya daha büyük bir tam sayı girin.",
     "field_browse_reveal_symlinks": "Sembolik bağlantı hedeflerini göster",
-    "field_browse_reveal_symlinks_help": "Liste, her sembolik bağlantının nereyi gösterdiğini gösterir. Bu, site kökü dışındaki yolları açığa çıkarabilir."
+    "field_browse_reveal_symlinks_help": "Liste, her sembolik bağlantının nereyi gösterdiğini gösterir. Bu, site kökü dışındaki yolları açığa çıkarabilir.",
+    "field_try_files_help": "İsteğe bağlı. Dosya sunucusundan önce sırayla denenen adaylar, ör. {path} {path}/ /index.html?{query}. SPA modu {path} /index.html satırıdır.",
+    "field_try_files_spa_help": "SPA modu tarafından ayarlandı. Kendi satırınızı yazmak için SPA modunu kapatın."
   },
   "edit_static": {
     "title": "Statik sunucuyu düzenle — :{{port}}",

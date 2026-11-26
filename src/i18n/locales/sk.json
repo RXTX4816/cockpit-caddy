@@ -207,7 +207,9 @@
     "browse_file_limit_none": "Bez obmedzenia",
     "browse_file_limit_invalid": "Zadajte celé číslo 1 alebo väčšie.",
     "field_browse_reveal_symlinks": "Zobraziť ciele symbolických odkazov",
-    "field_browse_reveal_symlinks_help": "Výpis ukazuje, kam vedie každý symbolický odkaz. To môže prezradiť cesty mimo koreňa webu."
+    "field_browse_reveal_symlinks_help": "Výpis ukazuje, kam vedie každý symbolický odkaz. To môže prezradiť cesty mimo koreňa webu.",
+    "field_try_files_help": "Voliteľné. Kandidáti skúšaní postupne pred súborovým serverom, napr. {path} {path}/ /index.html?{query}. Režim SPA je riadok {path} /index.html.",
+    "field_try_files_spa_help": "Nastavené režimom SPA. Vypnite režim SPA, ak chcete napísať vlastný riadok."
   },
   "edit_static": {
     "title": "Upraviť statický server — :{{port}}",

@@ -207,7 +207,9 @@
     "browse_file_limit_none": "ללא הגבלה",
     "browse_file_limit_invalid": "הזן מספר שלם 1 ומעלה.",
     "field_browse_reveal_symlinks": "הצג יעדים של קישורים סמליים",
-    "field_browse_reveal_symlinks_help": "הרשימה מציגה לאן כל קישור סמלי מפנה. זה עלול לחשוף נתיבים מחוץ לשורש האתר."
+    "field_browse_reveal_symlinks_help": "הרשימה מציגה לאן כל קישור סמלי מפנה. זה עלול לחשוף נתיבים מחוץ לשורש האתר.",
+    "field_try_files_help": "אופציונלי. מועמדים שנבדקים לפי הסדר לפני שרת הקבצים, למשל {path} {path}/ /index.html?{query}. מצב SPA הוא השורה {path} /index.html.",
+    "field_try_files_spa_help": "נקבע על ידי מצב SPA. כבו את מצב SPA כדי לכתוב שורה משלכם."
   },
   "edit_static": {
     "title": "עריכת שרת סטטי — :{{port}}",

@@ -207,7 +207,9 @@
     "browse_file_limit_none": "No limit",
     "browse_file_limit_invalid": "Enter a whole number of 1 or more.",
     "field_browse_reveal_symlinks": "Show symlink targets",
-    "field_browse_reveal_symlinks_help": "The listing shows where each symlink points. This can reveal paths outside the site root."
+    "field_browse_reveal_symlinks_help": "The listing shows where each symlink points. This can reveal paths outside the site root.",
+    "field_try_files_help": "Optional. Candidates tried in order before the file server, e.g. {path} {path}/ /index.html?{query}. SPA mode is the line {path} /index.html.",
+    "field_try_files_spa_help": "Set by SPA mode. Turn SPA mode off to write your own line."
   },
   "edit_static": {
     "title": "Edit Static Server — :{{port}}",

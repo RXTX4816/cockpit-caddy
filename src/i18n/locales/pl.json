@@ -207,7 +207,9 @@
     "browse_file_limit_none": "Bez limitu",
     "browse_file_limit_invalid": "Wpisz liczbę całkowitą równą 1 lub większą.",
     "field_browse_reveal_symlinks": "Pokaż cele dowiązań symbolicznych",
-    "field_browse_reveal_symlinks_help": "Lista pokazuje, dokąd prowadzi każde dowiązanie. Może to ujawnić ścieżki poza katalogiem głównym witryny."
+    "field_browse_reveal_symlinks_help": "Lista pokazuje, dokąd prowadzi każde dowiązanie. Może to ujawnić ścieżki poza katalogiem głównym witryny.",
+    "field_try_files_help": "Opcjonalne. Kandydaci sprawdzani po kolei przed serwerem plików, np. {path} {path}/ /index.html?{query}. Tryb SPA to wiersz {path} /index.html.",
+    "field_try_files_spa_help": "Ustawione przez tryb SPA. Wyłącz tryb SPA, aby wpisać własny wiersz."
   },
   "edit_static": {
     "title": "Edytuj serwer statyczny — :{{port}}",

@@ -2,7 +2,7 @@
 // error pages) and surgically writing, editing or removing that block in a conf.d file, plus the
 // named-server (listener) blocks. Pure: no Host, no I/O. Builds on caddyfileDocument and globalOptions.
 
-import { type ProxyEntry } from "./types";
+import { type ProxyEntry, SPA_TRY_FILES } from "./types";
 import { externalHostList } from "./externalHosts";
 import { hasNestedBlocks } from "./siteTree";
 import { dnsProviderLines, buildLogCaddyLines } from "./globalOptions";
@@ -695,7 +695,8 @@ function hasBrowseOptions(fs: import("./types").FileServerConfig): boolean {
  */
 export function buildFileServerLines(fs: import("./types").FileServerConfig, indent: string): string[] {
   const lines = [`${indent}root * ${caddyQuote(fs.root)}`];
-  if (fs.spa) lines.push(`${indent}try_files {path} /index.html`);
+  if (fs.spa) lines.push(`${indent}try_files ${SPA_TRY_FILES}`);
+  else if (fs.tryFiles?.trim()) lines.push(`${indent}try_files ${fs.tryFiles.trim()}`);
   // A listing template or listing options go on the block's own `browse`, so then the head has none.
   const template = fs.browse ? fs.browseTemplate : undefined;
   const browseBlock = !!fs.browse && hasBrowseOptions(fs);

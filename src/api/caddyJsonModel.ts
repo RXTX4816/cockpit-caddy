@@ -1,7 +1,7 @@
 // A site as Caddy's JSON config: reading ProxyEntry values out of a CaddyConfig and merging or
 // removing a proxy or named server in one. Pure: no Host, no I/O. Builds on siteBlocks.
 
-import { type CaddyHandler, type CaddyReverseProxyHandler, type CaddyRoute, type CaddyServer, type ProxyEntry, type CaddyConfig, type CaddyTLSConnectionPolicy, type CaddyTLSClientAuthentication, type BrowseSort, BROWSE_SORT_KEYS } from "./types";
+import { type CaddyHandler, type CaddyReverseProxyHandler, type CaddyRoute, type CaddyServer, type ProxyEntry, type CaddyConfig, type CaddyTLSConnectionPolicy, type CaddyTLSClientAuthentication, type BrowseSort, BROWSE_SORT_KEYS, SPA_TRY_FILES } from "./types";
 import { externalHostList } from "./externalHosts";
 import { isIpAddress } from "./caddyfileDocument";
 import { mapPlaceholders, PLACEHOLDER_SHORTHANDS, PLACEHOLDER_PREFIXES, isPathOnlyMatcher, handlePathPrefix, multiPathStripRegex, type TransportProps, type LbFields, LB_POLICIES, tlsSubjectHosts, errorHandlerResponseCodes, UPSTREAM_ERROR_MESSAGE, siteBindAddresses, canonicalBindHost, routeHosts, buildMatcherJson, hasAnyMatcher, namedServerSubjectHost, quoteRegexp } from "./siteBlocks";
@@ -609,8 +609,8 @@ export function isConfigSourcePath(p: string): boolean {
 /** The `file_server` options (#262) of a static site, from its JSON handler and routes. */
 export function parseFileServerOptions(
   fsHandle: Record<string, unknown>, routes: JsonRoute[],
-): Pick<import("./types").FileServerConfig, "spa" | "index" | "hide" | "precompressed" | "disableCanonicalUris" | "status" | "browseTemplate" | "browseRevealSymlinks" | "browseSort" | "browseFileLimit"> {
-  const out: Pick<import("./types").FileServerConfig, "spa" | "index" | "hide" | "precompressed" | "disableCanonicalUris" | "status" | "browseTemplate" | "browseRevealSymlinks" | "browseSort" | "browseFileLimit"> = {};
+): Pick<import("./types").FileServerConfig, "spa" | "tryFiles" | "index" | "hide" | "precompressed" | "disableCanonicalUris" | "status" | "browseTemplate" | "browseRevealSymlinks" | "browseSort" | "browseFileLimit"> {
+  const out: Pick<import("./types").FileServerConfig, "spa" | "tryFiles" | "index" | "hide" | "precompressed" | "disableCanonicalUris" | "status" | "browseTemplate" | "browseRevealSymlinks" | "browseSort" | "browseFileLimit"> = {};
   if (fsHandle.canonical_uris === false) out.disableCanonicalUris = true;
   const status = typeof fsHandle.status_code === "string" ? parseInt(fsHandle.status_code, 10) : fsHandle.status_code;
   if (typeof status === "number" && status > 0) out.status = status;
@@ -622,7 +622,10 @@ export function parseFileServerOptions(
     out.browseSort = { by: sortBy as BrowseSort["by"], ...(sortOrder === "asc" || sortOrder === "desc" ? { order: sortOrder } : {}) };
   }
   if (typeof browse?.file_limit === "number" && browse.file_limit > 0) out.browseFileLimit = browse.file_limit;
-  if (findTryFiles(routes) === "{path} /index.html") out.spa = true;
+  // The SPA line is SPA mode; any other try_files is the site's own, kept in its field.
+  const tryFiles = findTryFiles(routes);
+  if (tryFiles === SPA_TRY_FILES) out.spa = true;
+  else if (tryFiles) out.tryFiles = tryFiles;
   const index = fsHandle.index_names;
   if (Array.isArray(index) && index.length) out.index = index as string[];
   const hide = Array.isArray(fsHandle.hide) ? (fsHandle.hide as string[]).filter(h => !isConfigSourcePath(h)) : [];

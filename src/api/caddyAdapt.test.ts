@@ -826,6 +826,30 @@ describe.runIf(available || required)("static and PHP site options round-trip th
     expect(p.phpFastcgi).toEqual(phpFastcgi);
   });
 
+  it.each(sites)("a static site's own try_files (%s)", (_, site) => {
+    const fileServer = { root: "/srv/app", browse: false, tryFiles: "{path} {path}/ /index.html?{query}" };
+    const conf = proxiesToCaddyfile([entry({ ...site, fileServer })]);
+    expect(conf).toContain("\ttry_files {path} {path}/ /index.html?{query}\n");
+    const [p] = readBack(conf);
+    expect(p.fileServer).toEqual(fileServer);
+  });
+
+  it("SPA mode wins over a try_files line, which then isn't written", () => {
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, fileServer: { root: "/srv/app", spa: true, tryFiles: "{path} /other.html" } })]);
+    expect(conf.match(/try_files/g)).toHaveLength(1);
+    expect(readBack(conf)[0].fileServer).toEqual({ root: "/srv/app", browse: false, spa: true });
+  });
+
+  it("a hand-written try_files on a static site is read into the field and kept on save", () => {
+    const conf = `${CONF_HEADER}\n\nstatic.example.com {\n\troot * /srv/app\n\ttry_files {path} {path}.html /fallback.html\n\tfile_server\n}\n\nother.example.com {\n\treverse_proxy localhost:9000\n}\n`;
+    const p = readBack(conf).find(x => x.fileServer)!;
+    expect(p.fileServer?.tryFiles).toBe("{path} {path}.html /fallback.html");
+    const edited = surgicallyWriteProxy(conf, { ...p, fileServer: { ...p.fileServer!, hide: [".git"] } });
+    expect(edited.match(/try_files/g)).toHaveLength(1);
+    const again = readBack(edited).find(x => x.fileServer)!;
+    expect(again.fileServer).toMatchObject({ tryFiles: "{path} {path}.html /fallback.html", hide: [".git"] });
+  });
+
   it("PHP try_files keeps a custom index", () => {
     const phpFastcgi = { upstream: "localhost:9000", root: "/srv/php", index: "app.php", tryFiles: "{path} /app.php" };
     const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, phpFastcgi })]));

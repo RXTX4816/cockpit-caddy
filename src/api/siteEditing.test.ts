@@ -124,3 +124,11 @@ describe("needsCaddyfileReload for a site with nested blocks (#348)", () => {
     expect(needsCaddyfileReload({ ...base, siteText: "example.com {\n\treverse_proxy web:3000\n}" })).toBe(false);
   });
 });
+
+describe("needsCaddyfileReload for a static site's own try_files", () => {
+  it("reloads, since only Caddy's adapter groups the candidates and their query parts", () => {
+    const base = { id: "x", serverKey: "x", externalPort: 8080, targetHost: "", targetPort: 0, targetScheme: "http", tls: false, tlsSkipVerify: false } as ProxyEntry;
+    expect(needsCaddyfileReload({ ...base, fileServer: { root: "/srv", tryFiles: "{path} /index.html?{query}" } })).toBe(true);
+    expect(needsCaddyfileReload({ ...base, fileServer: { root: "/srv", spa: true } })).toBe(false);
+  });
+});

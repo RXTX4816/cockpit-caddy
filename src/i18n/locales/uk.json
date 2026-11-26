@@ -207,7 +207,9 @@
     "browse_file_limit_none": "Без обмеження",
     "browse_file_limit_invalid": "Введіть ціле число від 1.",
     "field_browse_reveal_symlinks": "Показувати цілі символьних посилань",
-    "field_browse_reveal_symlinks_help": "Список показує, куди веде кожне символьне посилання. Це може розкрити шляхи поза коренем сайту."
+    "field_browse_reveal_symlinks_help": "Список показує, куди веде кожне символьне посилання. Це може розкрити шляхи поза коренем сайту.",
+    "field_try_files_help": "Необов'язково. Кандидати, які пробуються по черзі перед файловим сервером, наприклад {path} {path}/ /index.html?{query}. Режим SPA — це рядок {path} /index.html.",
+    "field_try_files_spa_help": "Задано режимом SPA. Вимкніть режим SPA, щоб написати власний рядок."
   },
   "edit_static": {
     "title": "Змінити статичний сервер — :{{port}}",

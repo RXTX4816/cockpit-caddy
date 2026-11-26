@@ -207,7 +207,9 @@
     "browse_file_limit_none": "Aucune limite",
     "browse_file_limit_invalid": "Saisissez un nombre entier supérieur ou égal à 1.",
     "field_browse_reveal_symlinks": "Afficher la cible des liens symboliques",
-    "field_browse_reveal_symlinks_help": "La liste indique la cible de chaque lien symbolique, ce qui peut révéler des chemins hors de la racine du site."
+    "field_browse_reveal_symlinks_help": "La liste indique la cible de chaque lien symbolique, ce qui peut révéler des chemins hors de la racine du site.",
+    "field_try_files_help": "Facultatif. Candidats essayés dans l'ordre avant le serveur de fichiers, p. ex. {path} {path}/ /index.html?{query}. Le mode SPA correspond à la ligne {path} /index.html.",
+    "field_try_files_spa_help": "Défini par le mode SPA. Désactivez le mode SPA pour écrire votre propre ligne."
   },
   "edit_static": {
     "title": "Modifier le serveur statique — :{{port}}",

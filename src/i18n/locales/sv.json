@@ -207,7 +207,9 @@
     "browse_file_limit_none": "Ingen gräns",
     "browse_file_limit_invalid": "Ange ett heltal som är 1 eller större.",
     "field_browse_reveal_symlinks": "Visa mål för symboliska länkar",
-    "field_browse_reveal_symlinks_help": "Listan visar vart varje symbolisk länk pekar. Det kan avslöja sökvägar utanför webbplatsens rot."
+    "field_browse_reveal_symlinks_help": "Listan visar vart varje symbolisk länk pekar. Det kan avslöja sökvägar utanför webbplatsens rot.",
+    "field_try_files_help": "Valfritt. Kandidater som provas i ordning före filservern, t.ex. {path} {path}/ /index.html?{query}. SPA-läget är raden {path} /index.html.",
+    "field_try_files_spa_help": "Satt av SPA-läget. Stäng av SPA-läget för att skriva en egen rad."
   },
   "edit_static": {
     "title": "Redigera statisk server — :{{port}}",

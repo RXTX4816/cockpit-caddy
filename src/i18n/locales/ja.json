@@ -207,7 +207,9 @@
     "browse_file_limit_none": "制限なし",
     "browse_file_limit_invalid": "1 以上の整数を入力してください。",
     "field_browse_reveal_symlinks": "シンボリックリンクの参照先を表示",
-    "field_browse_reveal_symlinks_help": "一覧に各シンボリックリンクの参照先が表示されます。サイトのルート外のパスが見える場合があります。"
+    "field_browse_reveal_symlinks_help": "一覧に各シンボリックリンクの参照先が表示されます。サイトのルート外のパスが見える場合があります。",
+    "field_try_files_help": "任意。ファイルサーバーの前に順に試す候補です。例: {path} {path}/ /index.html?{query}。SPA モードは {path} /index.html の行です。",
+    "field_try_files_spa_help": "SPA モードで設定されています。独自の行を書くには SPA モードをオフにしてください。"
   },
   "edit_static": {
     "title": "静的サーバーを編集 — :{{port}}",

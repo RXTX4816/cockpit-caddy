@@ -209,7 +209,8 @@ Choose **Add Proxy ▾ → Static files**.
 |---|---|
 | Label | Human-readable name |
 | Browse | Enable directory listing. While it is on, the advanced options add the listing's order (`sort`), the most entries it shows (`file_limit`), whether symlink targets are shown (`reveal_symlinks`), and a listing template |
-| SPA mode | `try_files {path} /index.html`: existing files are served as they are, every other path gets `index.html`, so a single-page app's deep links work |
+| SPA mode | `try_files {path} /index.html`: existing files are served as they are, every other path gets `index.html`, so a single-page app's deep links work. While it is on, the **Try files** field shows that line locked |
+| Try files | In the advanced options: your own `try_files` line, e.g. `{path} {path}/ /index.html?{query}`. A hand-written `try_files` in the site block shows up here; typing the SPA line turns SPA mode on. A site with its own line is applied with a reload |
 | File server options | Index file names, hidden files or patterns, precompressed formats (zstd, br, gzip) for `file.zst` / `file.br` / `file.gz` sidecar files, a status code for every file (e.g. `404` for a custom error page), **Run files through templates** (`templates`), and **Keep trailing slashes as they are** (`disable_canonical_uris`) |
 | HTTPS certificate | Caddy's internal CA (default) or Off; a site with a public hostname can also use Automatic (Let's Encrypt / ACME) |
 | Compression | Enable gzip/zstd compression |

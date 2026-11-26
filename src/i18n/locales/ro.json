@@ -207,7 +207,9 @@
     "browse_file_limit_none": "Fără limită",
     "browse_file_limit_invalid": "Introduceți un număr întreg de cel puțin 1.",
     "field_browse_reveal_symlinks": "Afișează țintele legăturilor simbolice",
-    "field_browse_reveal_symlinks_help": "Lista arată unde duce fiecare legătură simbolică. Poate dezvălui căi din afara rădăcinii site-ului."
+    "field_browse_reveal_symlinks_help": "Lista arată unde duce fiecare legătură simbolică. Poate dezvălui căi din afara rădăcinii site-ului.",
+    "field_try_files_help": "Opțional. Candidați încercați în ordine înaintea serverului de fișiere, de ex. {path} {path}/ /index.html?{query}. Modul SPA este linia {path} /index.html.",
+    "field_try_files_spa_help": "Setat de modul SPA. Dezactivează modul SPA pentru a scrie propria linie."
   },
   "edit_static": {
     "title": "Editează serverul static — :{{port}}",

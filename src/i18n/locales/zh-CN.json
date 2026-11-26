@@ -207,7 +207,9 @@
     "browse_file_limit_none": "无限制",
     "browse_file_limit_invalid": "请输入大于或等于 1 的整数。",
     "field_browse_reveal_symlinks": "显示符号链接目标",
-    "field_browse_reveal_symlinks_help": "列表会显示每个符号链接指向的位置,可能暴露站点根目录之外的路径。"
+    "field_browse_reveal_symlinks_help": "列表会显示每个符号链接指向的位置,可能暴露站点根目录之外的路径。",
+    "field_try_files_help": "可选。在文件服务器之前依次尝试的候选项，例如 {path} {path}/ /index.html?{query}。SPA 模式就是 {path} /index.html 这一行。",
+    "field_try_files_spa_help": "由 SPA 模式设置。关闭 SPA 模式即可编写自己的行。"
   },
   "edit_static": {
     "title": "编辑静态服务器 — :{{port}}",

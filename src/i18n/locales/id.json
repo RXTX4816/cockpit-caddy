@@ -207,7 +207,9 @@
     "browse_file_limit_none": "Tanpa batas",
     "browse_file_limit_invalid": "Masukkan bilangan bulat 1 atau lebih.",
     "field_browse_reveal_symlinks": "Tampilkan tujuan symlink",
-    "field_browse_reveal_symlinks_help": "Daftar menampilkan tujuan setiap symlink. Ini dapat mengungkap jalur di luar root situs."
+    "field_browse_reveal_symlinks_help": "Daftar menampilkan tujuan setiap symlink. Ini dapat mengungkap jalur di luar root situs.",
+    "field_try_files_help": "Opsional. Kandidat yang dicoba berurutan sebelum server berkas, mis. {path} {path}/ /index.html?{query}. Mode SPA adalah baris {path} /index.html.",
+    "field_try_files_spa_help": "Diatur oleh mode SPA. Matikan mode SPA untuk menulis baris sendiri."
   },
   "edit_static": {
     "title": "Edit server statis — :{{port}}",

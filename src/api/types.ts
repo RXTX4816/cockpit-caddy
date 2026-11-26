@@ -405,11 +405,17 @@ export interface RedirectConfig {
   html?: boolean;
 }
 
+/** The `try_files` candidates of SPA mode (#262). */
+export const SPA_TRY_FILES = "{path} /index.html";
+
 export interface FileServerConfig {
   root: string;
   browse?: boolean;
   /** SPA mode (#262): `try_files {path} /index.html`, so deep links get the app's index.html. */
   spa?: boolean;
+  /** The site's own `try_files` candidates, e.g. `{path} {path}/ /index.html?{query}`. Not
+   *  written while `spa` is on, which is that one line; never the SPA line itself. */
+  tryFiles?: string;
   /** `file_server { index … }`: index file names. Omit for Caddy's default (index.html, index.txt). */
   index?: string[];
   /** `file_server { hide … }`: files or patterns never served. */

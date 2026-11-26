@@ -207,7 +207,9 @@
     "browse_file_limit_none": "Sem limite",
     "browse_file_limit_invalid": "Insira um número inteiro igual ou maior que 1.",
     "field_browse_reveal_symlinks": "Mostrar destinos de links simbólicos",
-    "field_browse_reveal_symlinks_help": "A listagem mostra para onde cada link simbólico aponta. Isso pode revelar caminhos fora da raiz do site."
+    "field_browse_reveal_symlinks_help": "A listagem mostra para onde cada link simbólico aponta. Isso pode revelar caminhos fora da raiz do site.",
+    "field_try_files_help": "Opcional. Candidatos tentados em ordem antes do servidor de arquivos, p. ex. {path} {path}/ /index.html?{query}. O modo SPA é a linha {path} /index.html.",
+    "field_try_files_spa_help": "Definido pelo modo SPA. Desative o modo SPA para escrever sua própria linha."
   },
   "edit_static": {
     "title": "Editar servidor estático — :{{port}}",

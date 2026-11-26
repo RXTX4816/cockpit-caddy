@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { browseFileLimitInvalid, fileServerOptionsDraft, fileServerOptionsFromDraft } from "./FileServerOptionsFields";
+import { render, screen } from "@testing-library/react";
+import { FileServerOptionsFields, browseFileLimitInvalid, fileServerOptionsDraft, fileServerOptionsFromDraft } from "./FileServerOptionsFields";
 
 describe("file server options draft (#262)", () => {
   it("keeps the precompressed order a site already has", () => {
@@ -33,5 +34,35 @@ describe("listing options draft (#340)", () => {
     expect(browseFileLimitInvalid(d(""))).toBe(false);
     expect(browseFileLimitInvalid(d("10"))).toBe(false);
     for (const bad of ["0", "-1", "1.5", "x"]) expect(browseFileLimitInvalid(d(bad))).toBe(true);
+  });
+});
+
+describe("static try_files next to SPA mode", () => {
+  it("round-trips a site's own try_files through the draft", () => {
+    const d = fileServerOptionsDraft({ root: "/srv", tryFiles: "{path} {path}/ /index.html?{query}" });
+    expect(d.tryFiles).toBe("{path} {path}/ /index.html?{query}");
+    expect(fileServerOptionsFromDraft(d)).toEqual({ tryFiles: "{path} {path}/ /index.html?{query}" });
+  });
+
+  it("SPA mode replaces the line, and typing the SPA line turns SPA mode on", () => {
+    expect(fileServerOptionsFromDraft({ ...fileServerOptionsDraft(undefined), spa: true, tryFiles: "{path} /x" })).toEqual({ spa: true });
+    expect(fileServerOptionsFromDraft({ ...fileServerOptionsDraft(undefined), tryFiles: " {path}   /index.html " })).toEqual({ spa: true });
+  });
+
+  it("shows the SPA line locked while SPA mode is on, and the site's own line after", () => {
+    const d = { ...fileServerOptionsDraft(undefined), tryFiles: "{path} /a.html" };
+    const { rerender } = render(<FileServerOptionsFields idPrefix="s" value={{ ...d, spa: true }} onChange={() => {}} />);
+    const field = () => document.getElementById("s-try-files") as HTMLInputElement;
+    expect(field().value).toBe("{path} /index.html");
+    expect(field().disabled).toBe(true);
+    rerender(<FileServerOptionsFields idPrefix="s" value={d} onChange={() => {}} />);
+    expect(field().value).toBe("{path} /a.html");
+    expect(field().disabled).toBe(false);
+  });
+
+  it("opens the advanced options when the site has a try_files line", () => {
+    render(<FileServerOptionsFields idPrefix="t" value={{ ...fileServerOptionsDraft(undefined), tryFiles: "{path} /a.html" }} onChange={() => {}} />);
+    expect(screen.getByText("Try files")).toBeTruthy();
+    expect(screen.getByTestId("t-advanced").querySelector("#t-try-files")).toBeTruthy();
   });
 });
