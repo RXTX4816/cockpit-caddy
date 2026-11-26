@@ -1364,3 +1364,102 @@ describe.runIf(available || required)("a named matcher edited in the Tree tab (#
     expect(matches).toContainEqual(buildMatcherJson(match));
   });
 });
+
+describe.runIf(available || required)("saving a hand-written site from its dialog (C18, C19)", () => {
+  /** The conf.d text of the block for `host`. */
+  const blockOf = (conf: string, host: string) => {
+    const start = conf.indexOf(`${host} {`);
+    return conf.slice(start, conf.indexOf("\n}", start) + 2);
+  };
+  /** Saves `p` twice: Caddy accepts the result, and the second save changes nothing. */
+  const save = (conf: string, p: ProxyEntry) => {
+    const once = surgicallyWriteProxy(conf, p);
+    expect(() => adapt(once)).not.toThrow();
+    expect(surgicallyWriteProxy(once, p)).toBe(once);
+    return once;
+  };
+  const other = "\n\nother.example.com {\n\treverse_proxy localhost:9000\n}\n";
+
+  it("a redirect keeps being a redirect, to the new target", () => {
+    const conf = `${CONF_HEADER}\n\nold.example.com {\n\tredir https://new.example.com{uri} 301\n}${other}`;
+    const p = readBack(conf).find(x => x.externalHost === "old.example.com")!;
+    expect(p.redirect).toEqual({ to: "https://new.example.com{uri}", code: 301 });
+    const saved = save(conf, { ...p, redirect: { to: "https://newer.example.com{uri}", code: 308 } });
+    expect(blockOf(saved, "old.example.com")).not.toContain("reverse_proxy");
+    const back = readBack(saved);
+    expect(back.find(x => x.externalHost === "old.example.com")?.redirect).toEqual({ to: "https://newer.example.com{uri}", code: 308 });
+    expect(back.find(x => x.externalHost === "other.example.com")?.targetPort).toBe(9000);
+  });
+
+  it("a static response keeps being one, with the new body", () => {
+    const conf = `${CONF_HEADER}\n\ngone.example.com {\n\trespond "Gone" 410\n}${other}`;
+    const p = readBack(conf).find(x => x.externalHost === "gone.example.com")!;
+    const saved = save(conf, { ...p, staticResponse: { statusCode: 404, body: "Not here" } });
+    expect(blockOf(saved, "gone.example.com")).not.toContain("reverse_proxy");
+    expect(readBack(saved).find(x => x.externalHost === "gone.example.com")?.staticResponse).toEqual({ statusCode: 404, body: "Not here" });
+  });
+
+  const proxySite = [
+    "app.example.com {",
+    "\turi strip_prefix /app",
+    "\trequest_body {",
+    "\t\tmax_size 10MB",
+    "\t}",
+    "\tlog {",
+    "\t\toutput stdout",
+    "\t}",
+    "\treverse_proxy localhost:8000",
+    "\thandle_errors 5xx {",
+    '\t\trespond "down" 503',
+    "\t}",
+    "}",
+  ].join("\n");
+
+  it("a reverse_proxy site reads its error handler back as written, and only for itself", () => {
+    const conf = `${CONF_HEADER}\n\n${proxySite}${other}`;
+    const back = readBack(conf);
+    expect(back.find(x => x.externalHost === "app.example.com")?.errorHandlers).toEqual([{ matchType: "5xx", type: "respond", body: "down", statusCode: 503 }]);
+    expect(back.find(x => x.externalHost === "other.example.com")?.errorHandlers).toBeUndefined();
+  });
+
+  it("a reverse_proxy site saved unchanged keeps one of each section, and the other site gets none", () => {
+    const conf = `${CONF_HEADER}\n\n${proxySite}${other}`;
+    let saved = conf;
+    for (const p of readBack(conf)) saved = save(saved, { ...p, accessLog: parseConfAccessLogMap(conf)[p.externalHost!] });
+    const block = blockOf(saved, "app.example.com");
+    for (const d of ["uri", "request_body", "log", "handle_errors", "reverse_proxy"]) expect(block.match(new RegExp(`^\\t${d}\\b`, "gm"))).toHaveLength(1);
+    expect(blockOf(saved, "other.example.com")).not.toContain("handle_errors");
+    expect(readBack(saved)).toEqual(readBack(conf));
+  });
+
+  it("a reverse_proxy site writes the changed rewrite, body limit, access log and error handler", () => {
+    const conf = `${CONF_HEADER}\n\n${proxySite}${other}`;
+    const p = readBack(conf).find(x => x.externalHost === "app.example.com")!;
+    const errorHandlers = [{ matchType: "5xx" as const, type: "respond" as const, body: "maintenance", statusCode: 503 }];
+    const saved = save(conf, {
+      ...p, rewrite: { type: "strip_prefix", value: "/v2" }, requestBodyMaxSize: 20_000_000,
+      accessLog: { output: "file", filePath: "/var/log/caddy/app.log" }, errorHandlers,
+    });
+    const back = readBack(saved).find(x => x.externalHost === "app.example.com")!;
+    expect(back).toMatchObject({ rewrite: { type: "strip_prefix", value: "/v2" }, requestBodyMaxSize: 20_000_000, errorHandlers });
+    expect(parseConfAccessLogMap(saved)["app.example.com"]).toMatchObject({ output: "file", filePath: "/var/log/caddy/app.log" });
+  });
+
+  const matcherSite = "api.example.com {\n\t@api {\n\t\tpath /api/*\n\t}\n\thandle @api {\n\t\treverse_proxy localhost:8000\n\t}\n}";
+
+  it("a site with a route matcher reads it back", () => {
+    const p = readBack(`${CONF_HEADER}\n\n${matcherSite}${other}`).find(x => x.externalHost === "api.example.com")!;
+    expect(p.matchers).toEqual({ path: ["/api/*"] });
+    expect(p.targetPort).toBe(8000);
+  });
+
+  it("a site with a route matcher writes the changed matcher, with one handler", () => {
+    const conf = `${CONF_HEADER}\n\n${matcherSite}${other}`;
+    const p = readBack(conf).find(x => x.externalHost === "api.example.com")!;
+    const unchanged = save(conf, p);
+    expect(readBack(unchanged).find(x => x.externalHost === "api.example.com")).toMatchObject({ matchers: { path: ["/api/*"] }, targetPort: 8000 });
+    const saved = save(conf, { ...p, matchers: { path: ["/v2/*"] }, targetPort: 8001 });
+    expect(blockOf(saved, "api.example.com").match(/reverse_proxy/g)).toHaveLength(1);
+    expect(readBack(saved).find(x => x.externalHost === "api.example.com")).toMatchObject({ matchers: { path: ["/v2/*"] }, targetPort: 8001 });
+  });
+});
