@@ -6,7 +6,7 @@ import { type ProxyEntry } from "./types";
 import { externalHostList } from "./externalHosts";
 import { braceDelta, hasNestedBlocks } from "./siteTree";
 import { dnsProviderLines, buildLogCaddyLines } from "./globalOptions";
-import { caddyQuote, parseSiteAddresses, findMatchingBlock, findBlockPositions, CONF_HEADER, sameHostSet, hostsConflict, surgicallyRemoveBlock, isCaddyInternalSubject, findServerBlock, surgicallyRemoveServerBlock } from "./caddyfileDocument";
+import { caddyQuote, parseConfAccessLogMap, parseSiteAddresses, findMatchingBlock, findBlockPositions, CONF_HEADER, sameHostSet, hostsConflict, surgicallyRemoveBlock, isCaddyInternalSubject, findServerBlock, surgicallyRemoveServerBlock } from "./caddyfileDocument";
 export { caddyQuote };
 
 // ---------------------------------------------------------------------------
@@ -827,14 +827,20 @@ export function buildRouteHandlerLines(p: ProxyEntry, indent: string): string[] 
 
 /**
  * What follows a site's address, imports and binds: its matcher and `handle`, the given tls lines,
- * the access log, the handler and the error handlers, as `proxyToBlock` writes them. `extra` are
- * lines at the site's top level (one tab) that go in front of the handler, inside the `handle`
- * when the site has a matcher: what a hand-written `handle` held besides the form's own lines.
+ * the access log, the handler and the error handlers, as `proxyToBlock` writes them. For a
+ * hand-written site, `patchRawBlock` passes what it keeps of the user's text:
+ * - `extra`: lines at the site's top level (one tab) that go in front of the handler, inside the
+ *   `handle` when the site has a matcher: what a hand-written `handle` held besides the form's lines.
+ * - `matcherName`: the name of the site's own matcher, in place of `m<port>`.
+ * - `logLines`: the access log lines, in place of the ones built from `p.accessLog`.
  */
-function siteHandlerSection(p: ProxyEntry, tlsLines: string[], extra: string[] = []): string[] {
+function siteHandlerSection(
+  p: ProxyEntry, tlsLines: string[],
+  { extra = [], matcherName = `m${p.externalPort}`, logLines = p.accessLog ? buildLogCaddyLines(p.accessLog) : [] }:
+    { extra?: string[]; matcherName?: string; logLines?: string[] } = {},
+): string[] {
   const lines: string[] = [];
   if (hasAnyMatcher(p.matchers)) {
-    const matcherName = `m${p.externalPort}`;
     const useHandlePath = p.handlePath && isPathOnlyMatcher(p.matchers) && !!(p.matchers.path?.length);
     // handle_path takes one path only (#255); several get a named matcher + a regex strip.
     const stripRegex = useHandlePath ? multiPathStripRegex(p.matchers) : undefined;
@@ -842,17 +848,14 @@ function siteHandlerSection(p: ProxyEntry, tlsLines: string[], extra: string[] =
 
     // handle_path strips the matched prefix itself and needs no named matcher.
     if (!singleHandlePath) lines.push(...buildMatcherCaddyLines(p.matchers, matcherName, "\t"));
-    lines.push(...tlsLines);
-    if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
+    lines.push(...tlsLines, ...logLines);
     lines.push(singleHandlePath ? `\thandle_path ${p.matchers.path!.join(" ")} {` : `\thandle @${matcherName} {`);
     if (stripRegex) lines.push(`\t\turi path_regexp ${caddyQuote(stripRegex)} /`);
     lines.push(...extra.map(l => `\t${l}`));
     lines.push(...buildRouteHandlerLines(p, "\t\t"));
     lines.push("\t}");
   } else {
-    lines.push(...tlsLines);
-    if (p.accessLog) lines.push(...buildLogCaddyLines(p.accessLog));
-    lines.push(...extra);
+    lines.push(...tlsLines, ...logLines, ...extra);
     lines.push(...buildRouteHandlerLines(p, "\t"));
   }
   if (p.errorHandlers?.length) lines.push(...buildErrorHandlerCaddyLines(p.errorHandlers));
@@ -919,7 +922,10 @@ const isDirective = (trimmed: string, name: string) =>
  * section the site's dialog edits is dropped and written again from `proxy`, once: the handler, its
  * rewrite, request body limit, access log, route matcher and `handle`, and error handlers (C18, C19).
  * A redir, respond, rewrite, uri, method or request_body with a matcher of its own isn't the site's
- * and stays. Saving the same `proxy` twice gives the same text.
+ * and stays. The log block stays as written while the form's log settings are the ones read from it,
+ * and keeps its name and the subdirectives the form doesn't model when they change. The site's own
+ * matcher keeps its name. The form's lines go where the first of them was. Saving the same `proxy`
+ * twice gives the same text.
  */
 export function patchRawBlock(raw: string, proxy: ProxyEntry): string {
   const lines = raw.split("\n");
@@ -938,11 +944,16 @@ export function patchRawBlock(raw: string, proxy: ProxyEntry): string {
   const rewritten = ownsHandler ? ["encode", "root", "templates", "file_server", "header", "basic_auth", "forward_auth", "reverse_proxy", "php_fastcgi"] : [];
   // try_files belongs to the static and PHP forms (#262); on any other site it's the user's.
   if ((proxy.fileServer || proxy.phpFastcgi) && ownsHandler) rewritten.push("try_files");
+  // The access log is the form's only when its settings changed: a log block the form reads the
+  // same settings from (or none, like a bare `log`) stays as written.
+  const logText = (log: import("./types").AccessLogConfig | undefined) => log ? buildLogCaddyLines(log).join("\n") : "";
+  const ownsLog = ownsHandler && logText(proxy.accessLog) !== logText(Object.values(parseConfAccessLogMap(raw))[0]);
+  const isLogLine = (t: string) => isDirective(t, "log") || isDirective(t, "@cockpit-log-skip")
+    || /^log_skip(\s+(\/\S*|@cockpit-log-skip))?$/.test(t);
   const owned = (t: string) => ownsHandler && (
     rewritten.some(name => isDirective(t, name))
     || (["redir", "respond", "rewrite", "uri", "method", "request_body"].some(name => isDirective(t, name)) && !hasOwnMatcher(t))
-    || isDirective(t, "log") || isDirective(t, "handle_errors") || isDirective(t, "@cockpit-log-skip")
-    || /^log_skip(\s+(\/\S*|@cockpit-log-skip))?$/.test(t));
+    || isDirective(t, "handle_errors") || (ownsLog && isLogLine(t)));
 
   // The site's one `handle` (what the plugin writes for a matcher) is the form's too, and so is its
   // named matcher when nothing else uses it. What else the handle held stays, in front of the handler.
@@ -951,6 +962,7 @@ export function patchRawBlock(raw: string, proxy: ProxyEntry): string {
   const isMatcherDef = (t: string) => !!handleMatcher && (t.startsWith(`${handleMatcher} `) || t.startsWith(`${handleMatcher}\t`) || t === `${handleMatcher}{`);
   const matcherUsedElsewhere = !!handleMatcher && spans.some(sp => sp !== handle && !isMatcherDef(trimmedAt(sp))
     && lines.slice(sp[0], sp[1]).some(l => l.split(/\s+/).includes(handleMatcher)));
+  const matcherName = handleMatcher && !matcherUsedElsewhere ? handleMatcher.slice(1) : undefined;
   const extra: string[] = [];
   if (handle) {
     for (const [start, end] of directiveSpans(lines, handle[0] + 1, handle[1] - 1)) {
@@ -965,15 +977,28 @@ export function patchRawBlock(raw: string, proxy: ProxyEntry): string {
   let importSlot: [number, number] | undefined;
   let bindSlot: [number, number] | undefined;
   let tlsSlot: [number, number] | undefined;
+  let sectionSlot: [number, number] | undefined;
   let found = 0;
   const here = (): [number, number] => [kept.length, found++];
+  // A changed log keeps its logger name and what the form doesn't model in it.
+  let logName = "";
+  const logExtra: string[] = [];
   for (const span of spans) {
     const trimmed = trimmedAt(span);
     if (isDirective(trimmed, "tls")) {
       tlsSlot ??= here();
       continue;
     }
-    if (span === handle || owned(trimmed) || (isMatcherDef(trimmed) && !matcherUsedElsewhere)) continue;
+    if (ownsLog && isDirective(trimmed, "log")) {
+      logName ||= /^log\s+([^\s{]+)/.exec(trimmed)?.[1] ?? "";
+      for (const [start, end] of directiveSpans(lines, span[0] + 1, span[1] - 1)) {
+        if (!["output", "format", "level", "include", "exclude"].some(name => isDirective(lines[start].trim(), name))) logExtra.push(...lines.slice(start, end));
+      }
+    }
+    if (span === handle || owned(trimmed) || (isMatcherDef(trimmed) && !matcherUsedElsewhere)) {
+      sectionSlot ??= here();
+      continue;
+    }
     // Snippet imports (#288) follow proxy.imports; file and glob imports are the user's and stay.
     if (isSnippetImportLine(trimmed)) {
       importSlot ??= here();
@@ -989,21 +1014,30 @@ export function patchRawBlock(raw: string, proxy: ProxyEntry): string {
   }
 
   const tlsLines = buildTlsCaddyLines(proxy, !tlsSubjectHosts(proxy.externalHost).length);
+  // A block without a tls directive gets it before the handlers the form writes.
+  const newTls = tlsSlot === undefined ? tlsLines : [];
+  let section: string[] = [];
+  if (ownsHandler) {
+    let logLines: string[] | undefined;
+    if (ownsLog && proxy.accessLog) {
+      logLines = buildLogCaddyLines(proxy.accessLog);
+      if (logName) logLines[0] = `\tlog ${logName} {`;
+      logLines.splice(logLines.indexOf("\t}"), 0, ...logExtra);
+    } else if (!ownsLog) {
+      logLines = [];
+    }
+    section = [...newTls, ...siteHandlerSection(proxy, [], { extra, matcherName, logLines })];
+  }
   // Inserted from the last place to the first, so the earlier places keep their index.
-  // New imports and a new bind line go first in the block, imports before the bind.
+  // New imports and a new bind line go first in the block, imports before the bind; the form's
+  // handler lines go where the first of them was, or last.
   const inserts = [
     { at: importSlot ?? [1, -2], add: buildImportLines(proxy) },
     { at: bindSlot ?? [1, -1], add: buildBindLines(proxy) },
     ...(tlsSlot ? [{ at: tlsSlot, add: tlsLines }] : []),
+    { at: sectionSlot ?? [kept.length, found], add: ownsHandler ? section : newTls },
   ].sort((a, b) => b.at[0] - a.at[0] || b.at[1] - a.at[1]);
   for (const { at, add } of inserts) kept.splice(at[0], 0, ...add);
-  // A block without a tls directive gets it before the handlers the form writes.
-  const newTls = tlsSlot === undefined ? tlsLines : [];
-  if (!ownsHandler) {
-    kept.push(...newTls, lines[closingIdx]);
-    return kept.join("\n");
-  }
-  kept.push(...siteHandlerSection(proxy, newTls, extra));
   kept.push(lines[closingIdx]); // closing }
   return kept.join("\n");
 }

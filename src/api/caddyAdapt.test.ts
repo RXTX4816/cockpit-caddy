@@ -1462,4 +1462,17 @@ describe.runIf(available || required)("saving a hand-written site from its dialo
     expect(blockOf(saved, "api.example.com").match(/reverse_proxy/g)).toHaveLength(1);
     expect(readBack(saved).find(x => x.externalHost === "api.example.com")).toMatchObject({ matchers: { path: ["/v2/*"] }, targetPort: 8001 });
   });
+  it("keeps the user's matcher name and the log subdirectives the form doesn't model", () => {
+    const raw = "api.example.com {\n\tlog access {\n\t\toutput stdout\n\t\tsampling {\n\t\t\tinterval 1s\n\t\t\tfirst 10\n\t\t}\n\t}\n\t@api {\n\t\tpath /api/*\n\t}\n\thandle @api {\n\t\treverse_proxy localhost:8000\n\t}\n}";
+    const conf = `${CONF_HEADER}\n\n${raw}${other}`;
+    expect(() => adapt(conf)).not.toThrow();
+    const p = readBack(conf).find(x => x.externalHost === "api.example.com")!;
+    const saved = save(conf, { ...p, matchers: { path: ["/v2/*"] }, accessLog: { output: "stderr" } });
+    const block = blockOf(saved, "api.example.com");
+    expect(block).toContain("\t@api {\n\t\tpath /v2/*\n\t}\n");
+    expect(block).toContain("\thandle @api {\n");
+    expect(block).not.toContain("@m443");
+    expect(block).toContain("\tlog access {\n\t\toutput stderr\n\t\tsampling {\n\t\t\tinterval 1s\n\t\t\tfirst 10\n\t\t}\n\t}\n");
+    expect(readBack(saved).find(x => x.externalHost === "api.example.com")?.matchers).toEqual({ path: ["/v2/*"] });
+  });
 });

@@ -93,7 +93,8 @@ describe("saving a hand-written reverse_proxy site writes every section the form
 
   it("removes each section the form cleared", () => {
     const out = saved(raw, site());
-    expect(out).toBe("app.example.com {\n\tvars tenant acme\n\treverse_proxy http://localhost:8000\n}");
+    // The handler goes where the first of the form's lines was, the rewrite at the top.
+    expect(out).toBe("app.example.com {\n\treverse_proxy http://localhost:8000\n\tvars tenant acme\n}");
   });
 
   it("keeps a rewrite or request_body with a matcher of its own", () => {
@@ -155,5 +156,51 @@ describe("saving a hand-written site with a route matcher (C19)", () => {
   it("leaves a site with several handle blocks to the Tree tab: its handlers stay as written", () => {
     const multi = "api.example.com {\n\thandle /api/* {\n\t\treverse_proxy localhost:8000\n\t}\n\thandle {\n\t\troot * /srv/www\n\t\tfile_server\n\t}\n}";
     expect(saved(multi, site({ externalHost: "api.example.com", targetPort: 9000 }))).toBe(multi);
+  });
+});
+
+describe("saving a hand-written site keeps what the user wrote where the form allows it", () => {
+  const logged = [
+    "app.example.com {",
+    "\tlog {",
+    "\t\toutput stdout",
+    "\t\tsampling {",
+    "\t\t\tinterval 1s",
+    "\t\t}",
+    "\t}",
+    "\treverse_proxy localhost:8000",
+    "}",
+  ].join("\n");
+
+  it("leaves the log block as written when the form's log settings didn't change", () => {
+    expect(saved(logged, site({ accessLog: { output: "stdout" } }))).toBe(logged.replace("localhost:8000", "http://localhost:8000"));
+  });
+
+  it("keeps a bare log line the form reads no settings from", () => {
+    const raw = "app.example.com {\n\tlog\n\treverse_proxy localhost:8000\n}";
+    expect(saved(raw, site())).toBe("app.example.com {\n\tlog\n\treverse_proxy http://localhost:8000\n}");
+  });
+
+  it("keeps the log subdirectives the form doesn't model when its log settings change", () => {
+    const out = saved(logged, site({ accessLog: { output: "file", filePath: "/var/log/caddy/app.log" } }));
+    expect(out).toContain("\t\toutput file /var/log/caddy/app.log\n");
+    expect(out).toContain("\t\tsampling {\n\t\t\tinterval 1s\n\t\t}\n\t}\n");
+    expect(count(out, /^\tlog /)).toBe(1);
+  });
+
+  it("keeps the logger name of a changed log", () => {
+    const raw = "app.example.com {\n\tlog access {\n\t\toutput stdout\n\t}\n\treverse_proxy localhost:8000\n}";
+    expect(saved(raw, site({ accessLog: { output: "stderr" } }))).toContain("\tlog access {\n\t\toutput stderr\n\t}\n");
+  });
+
+  it("keeps the name of the site's own matcher", () => {
+    const raw = "api.example.com {\n\t@api {\n\t\tpath /api/*\n\t}\n\thandle @api {\n\t\treverse_proxy localhost:8000\n\t}\n}";
+    const out = saved(raw, site({ externalHost: "api.example.com", matchers: { path: ["/v2/*"] } }));
+    expect(out).toBe("api.example.com {\n\t@api {\n\t\tpath /v2/*\n\t}\n\thandle @api {\n\t\treverse_proxy http://localhost:8000\n\t}\n}");
+  });
+
+  it("writes the handler where the site had it", () => {
+    const raw = "app.example.com {\n\tvars tenant acme\n\treverse_proxy localhost:8000\n\trespond /health 200\n}";
+    expect(saved(raw, site({ targetPort: 9000 }))).toBe("app.example.com {\n\tvars tenant acme\n\treverse_proxy http://localhost:9000\n\trespond /health 200\n}");
   });
 });
