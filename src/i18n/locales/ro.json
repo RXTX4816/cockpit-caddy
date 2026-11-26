@@ -1280,7 +1280,9 @@
     "remove_confirm_zero": "Eliminați acest bloc și cele {{count}} de blocuri din el?",
     "remove_confirm_two": "Eliminați acest bloc și cele {{count}} de blocuri din el?",
     "remove_confirm_many": "Eliminați acest bloc și cele {{count}} de blocuri din el?",
-    "remove_confirm": "Eliminați acest bloc și cele {{count}} de blocuri din el?"
+    "remove_confirm": "Eliminați acest bloc și cele {{count}} de blocuri din el?",
+    "definition_help": "Ce potrivește {{name}}, așa cum e definit în acest site. Modificările de aici rescriu definiția, deci se aplică fiecărui bloc care folosește {{name}}.",
+    "definition_empty": "Un matcher are nevoie de cel puțin o condiție, iar un regexp de antet are nevoie de antetul său."
   },
   "encode": {
     "heading": "Compresie",

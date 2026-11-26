@@ -16,6 +16,7 @@ import { buildEncodeHandler, buildFilterEncoder, buildRedirectHandler, buildRewr
 import { buildGlobalOptionsPatch, buildServerExtrasLines } from "./globalOptions";
 import { buildMatcherJson } from "./siteBlocks";
 import { addNode, editNode, moveNode, parseSiteTree, removeNode, serializeSiteTree } from "./siteTree";
+import { replaceSiteMatcherDefinition } from "./treeMatchers";
 import type { CaddyConfig, CaddyServer, ProxyEntry } from "./types";
 
 function hasCaddy(): boolean {
@@ -1341,5 +1342,17 @@ describe.runIf(available || required)("caddy adapt accepts dynamic upstreams (#3
   it.each([[[srv]], [[a]], [[srv, a]], [[{ type: "srv" as const, name: "_x._tcp.example.com" }]]])("reads %j back from a real adapt", sources => {
     const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, dynamicUpstreams: sources })]);
     expect(readBack(conf)[0].dynamicUpstreams).toEqual(sources);
+  });
+});
+
+describe.runIf(available || required)("a named matcher edited in the Tree tab (#350)", () => {
+  it("adapts to the matcher the form describes", () => {
+    const match = { path: ["/api/*"], header: { "X-A": ["1"] }, not: { method: ["DELETE"] } };
+    const tree = parseSiteTree(":8080 {\n\t@api {\n\t\tpath /old/*\n\t}\n\troute {\n\t\thandle @api {\n\t\t\trespond ok\n\t\t}\n\t}\n}")!;
+    const conf = serializeSiteTree(replaceSiteMatcherDefinition(tree, "api", match)) + "\n";
+    const routes = Object.values(adapt(conf).apps?.http?.servers ?? {})[0]?.routes ?? [];
+    const matches: unknown[] = [];
+    JSON.stringify(routes, (k, v) => { if (k === "match") matches.push(...(v as unknown[])); return v; });
+    expect(matches).toContainEqual(buildMatcherJson(match));
   });
 });

@@ -206,3 +206,34 @@ describe("Tree tab review fixes (#362)", () => {
     expect(document.querySelectorAll("input:disabled, button:disabled").length).toBeGreaterThan(0);
   });
 });
+
+describe("the named matcher form in the Tree tab (#350)", () => {
+  const SITE_DEF = `example.com {
+\t@api {
+\t\tpath /api/*
+\t}
+\troute {
+\t\thandle @api {
+\t\t\treverse_proxy localhost:9000
+\t\t}
+\t}
+}`;
+
+  it("edits the definition of the node's @name with the matcher fields, and only that", async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    render(<SiteTreeTab siteText={SITE_DEF} onSave={onSave} />);
+    fireEvent.click(screen.getByRole("button", { name: /Edit: handle @api/ }));
+    const form = screen.getByTestId("tree-matcher-definition");
+    fireEvent.change(within(form).getAllByLabelText("Path")[0], { target: { value: "/v2/*" } });
+    fireEvent.click(within(form).getAllByRole("button", { name: "Add path" })[0]);
+    fireEvent.click(screen.getByRole("button", { name: "Save blocks" }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
+    expect(onSave.mock.calls[0][0]).toBe(SITE_DEF.replace("\t\tpath /api/*\n", "\t\tpath /api/* /v2/*\n"));
+  });
+
+  it("keeps a one-line definition as text: no matcher form", () => {
+    render(<SiteTreeTab siteText={SITE} onSave={vi.fn()} />);
+    fireEvent.click(screen.getByRole("button", { name: /Edit: handle @api/ }));
+    expect(screen.queryByTestId("tree-matcher-definition")).toBeNull();
+  });
+});

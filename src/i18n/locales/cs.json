@@ -1280,7 +1280,9 @@
     "form_locked": "Tento web má vnořené bloky, takže formulář ukládá jen adresu, bind, importy a TLS. Zbytek upravte na kartě Strom.",
     "remove_confirm_zero": "Odebrat tento blok a {{count}} bloků v něm?",
     "remove_confirm_two": "Odebrat tento blok a {{count}} bloků v něm?",
-    "remove_confirm": "Odebrat tento blok a {{count}} bloků v něm?"
+    "remove_confirm": "Odebrat tento blok a {{count}} bloků v něm?",
+    "definition_help": "Co {{name}} zachytí, jak je definováno v tomto webu. Změny zde přepíšou tuto definici, takže platí pro každý blok, který {{name}} používá.",
+    "definition_empty": "Matcher potřebuje aspoň jednu podmínku a regulární výraz hlavičky potřebuje svou hlavičku."
   },
   "encode": {
     "heading": "Komprese",

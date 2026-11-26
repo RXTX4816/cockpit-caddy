@@ -1280,7 +1280,9 @@
     "remove_confirm_two": "Dit blok en de {{count}} blokken erin verwijderen?",
     "remove_confirm_few": "Dit blok en de {{count}} blokken erin verwijderen?",
     "remove_confirm_many": "Dit blok en de {{count}} blokken erin verwijderen?",
-    "remove_confirm": "Dit blok en de {{count}} blokken erin verwijderen?"
+    "remove_confirm": "Dit blok en de {{count}} blokken erin verwijderen?",
+    "definition_help": "Waar {{name}} op past, zoals gedefinieerd in deze site. Wijzigingen hier herschrijven die definitie en gelden dus voor elk blok dat {{name}} gebruikt.",
+    "definition_empty": "Een matcher heeft minstens één voorwaarde nodig, en een header-regexp heeft zijn header nodig."
   },
   "encode": {
     "heading": "Compressie",

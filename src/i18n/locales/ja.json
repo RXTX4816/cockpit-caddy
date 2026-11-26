@@ -1280,7 +1280,9 @@
     "remove_confirm_two": "このブロックと、その中の {{count}} 個のブロックを削除しますか?",
     "remove_confirm_few": "このブロックと、その中の {{count}} 個のブロックを削除しますか?",
     "remove_confirm_many": "このブロックと、その中の {{count}} 個のブロックを削除しますか?",
-    "remove_confirm": "このブロックと、その中の {{count}} 個のブロックを削除しますか?"
+    "remove_confirm": "このブロックと、その中の {{count}} 個のブロックを削除しますか?",
+    "definition_help": "このサイトで定義された {{name}} の一致条件です。ここでの変更はその定義を書き換えるため、{{name}} を使うすべてのブロックに反映されます。",
+    "definition_empty": "マッチャーには少なくとも 1 つの条件が必要です。ヘッダー正規表現には対象のヘッダーが必要です。"
   },
   "encode": {
     "heading": "圧縮",

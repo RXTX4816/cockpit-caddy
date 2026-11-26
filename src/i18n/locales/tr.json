@@ -1280,7 +1280,9 @@
     "remove_confirm_two": "Bu blok ve içindeki {{count}} blok kaldırılsın mı?",
     "remove_confirm_few": "Bu blok ve içindeki {{count}} blok kaldırılsın mı?",
     "remove_confirm_many": "Bu blok ve içindeki {{count}} blok kaldırılsın mı?",
-    "remove_confirm": "Bu blok ve içindeki {{count}} blok kaldırılsın mı?"
+    "remove_confirm": "Bu blok ve içindeki {{count}} blok kaldırılsın mı?",
+    "definition_help": "{{name}} öğesinin bu sitedeki tanımına göre eşleştirdikleri. Buradaki değişiklikler tanımı yeniden yazar, yani {{name}} kullanan her bloğu etkiler.",
+    "definition_empty": "Bir eşleştiricinin en az bir koşulu, başlık regex'inin de başlığı olmalı."
   },
   "encode": {
     "heading": "Sıkıştırma",

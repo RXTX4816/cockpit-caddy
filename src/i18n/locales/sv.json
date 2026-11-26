@@ -1280,7 +1280,9 @@
     "remove_confirm_two": "Ta bort det här blocket och de {{count}} blocken i det?",
     "remove_confirm_few": "Ta bort det här blocket och de {{count}} blocken i det?",
     "remove_confirm_many": "Ta bort det här blocket och de {{count}} blocken i det?",
-    "remove_confirm": "Ta bort det här blocket och de {{count}} blocken i det?"
+    "remove_confirm": "Ta bort det här blocket och de {{count}} blocken i det?",
+    "definition_help": "Vad {{name}} matchar, enligt definitionen i den här webbplatsen. Ändringar här skriver om definitionen, så de gäller varje block som använder {{name}}.",
+    "definition_empty": "En matcher behöver minst ett villkor, och ett header-regexp behöver sin header."
   },
   "encode": {
     "heading": "Komprimering",

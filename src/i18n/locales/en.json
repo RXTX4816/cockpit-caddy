@@ -1280,7 +1280,9 @@
     "remove_confirm_two": "Remove this block and the {{count}} blocks inside it?",
     "remove_confirm_few": "Remove this block and the {{count}} blocks inside it?",
     "remove_confirm_many": "Remove this block and the {{count}} blocks inside it?",
-    "remove_confirm": "Remove this block and the {{count}} blocks inside it?"
+    "remove_confirm": "Remove this block and the {{count}} blocks inside it?",
+    "definition_help": "What {{name}} matches, as defined in this site. Changes here rewrite that definition, so every block using {{name}} sees them.",
+    "definition_empty": "A matcher needs at least one condition, and a header regexp needs its header."
   },
   "encode": {
     "heading": "Compression",

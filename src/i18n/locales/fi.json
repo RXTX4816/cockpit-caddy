@@ -1280,7 +1280,9 @@
     "remove_confirm_two": "Poistetaanko tämä lohko ja sen sisällä olevat {{count}} lohkoa?",
     "remove_confirm_few": "Poistetaanko tämä lohko ja sen sisällä olevat {{count}} lohkoa?",
     "remove_confirm_many": "Poistetaanko tämä lohko ja sen sisällä olevat {{count}} lohkoa?",
-    "remove_confirm": "Poistetaanko tämä lohko ja sen sisällä olevat {{count}} lohkoa?"
+    "remove_confirm": "Poistetaanko tämä lohko ja sen sisällä olevat {{count}} lohkoa?",
+    "definition_help": "Mitä {{name}} vastaa, kuten tässä sivustossa määritelty. Muutokset kirjoittavat määritelmän uudelleen, joten ne koskevat jokaista lohkoa, joka käyttää {{name}}.",
+    "definition_empty": "Matcher tarvitsee vähintään yhden ehdon, ja otsakkeen säännöllinen lauseke tarvitsee otsakkeensa."
   },
   "encode": {
     "heading": "Pakkaus",

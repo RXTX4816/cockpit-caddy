@@ -1280,7 +1280,9 @@
     "remove_confirm_two": "Diesen Block und die {{count}} Blöcke darin entfernen?",
     "remove_confirm_few": "Diesen Block und die {{count}} Blöcke darin entfernen?",
     "remove_confirm_many": "Diesen Block und die {{count}} Blöcke darin entfernen?",
-    "remove_confirm": "Diesen Block und die {{count}} Blöcke darin entfernen?"
+    "remove_confirm": "Diesen Block und die {{count}} Blöcke darin entfernen?",
+    "definition_help": "Was {{name}} erfasst, wie in dieser Site definiert. Änderungen hier schreiben diese Definition neu, also gelten sie für jeden Block, der {{name}} nutzt.",
+    "definition_empty": "Ein Matcher braucht mindestens eine Bedingung, und ein Header-Regexp braucht seinen Header."
   },
   "encode": {
     "heading": "Komprimierung",

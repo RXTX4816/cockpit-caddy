@@ -1280,7 +1280,9 @@
     "remove_confirm_zero": "Remover este bloco e os {{count}} blocos dentro dele?",
     "remove_confirm_two": "Remover este bloco e os {{count}} blocos dentro dele?",
     "remove_confirm_few": "Remover este bloco e os {{count}} blocos dentro dele?",
-    "remove_confirm": "Remover este bloco e os {{count}} blocos dentro dele?"
+    "remove_confirm": "Remover este bloco e os {{count}} blocos dentro dele?",
+    "definition_help": "O que {{name}} corresponde, conforme definido neste site. As mudanças aqui reescrevem essa definição e valem para todo bloco que usa {{name}}.",
+    "definition_empty": "Um matcher precisa de pelo menos uma condição, e uma regexp de cabeçalho precisa do seu cabeçalho."
   },
   "encode": {
     "heading": "Compressão",

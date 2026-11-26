@@ -1280,7 +1280,9 @@
     "remove_confirm_two": "Hapus blok ini beserta {{count}} blok di dalamnya?",
     "remove_confirm_few": "Hapus blok ini beserta {{count}} blok di dalamnya?",
     "remove_confirm_many": "Hapus blok ini beserta {{count}} blok di dalamnya?",
-    "remove_confirm": "Hapus blok ini beserta {{count}} blok di dalamnya?"
+    "remove_confirm": "Hapus blok ini beserta {{count}} blok di dalamnya?",
+    "definition_help": "Yang dicocokkan {{name}}, seperti didefinisikan di situs ini. Perubahan di sini menulis ulang definisi itu, jadi berlaku untuk setiap blok yang memakai {{name}}.",
+    "definition_empty": "Matcher butuh setidaknya satu syarat, dan regexp header butuh nama header-nya."
   },
   "encode": {
     "heading": "Kompresi",

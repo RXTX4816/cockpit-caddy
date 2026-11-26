@@ -1280,7 +1280,9 @@
     "remove_confirm_zero": "Rimuovere questo blocco e i {{count}} blocchi al suo interno?",
     "remove_confirm_two": "Rimuovere questo blocco e i {{count}} blocchi al suo interno?",
     "remove_confirm_few": "Rimuovere questo blocco e i {{count}} blocchi al suo interno?",
-    "remove_confirm": "Rimuovere questo blocco e i {{count}} blocchi al suo interno?"
+    "remove_confirm": "Rimuovere questo blocco e i {{count}} blocchi al suo interno?",
+    "definition_help": "Ciò che {{name}} intercetta, come definito in questo sito. Le modifiche qui riscrivono quella definizione e valgono per ogni blocco che usa {{name}}.",
+    "definition_empty": "Un matcher richiede almeno una condizione, e una regexp di intestazione richiede la sua intestazione."
   },
   "encode": {
     "heading": "Compressione",

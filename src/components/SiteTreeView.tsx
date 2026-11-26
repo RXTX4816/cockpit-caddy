@@ -6,6 +6,10 @@ import {
   serializeSiteTree, validateNodeEdit,
   type NodePath, type SiteTree, type TreeItem, type TreeKind, type TreeNode,
 } from "../api/siteTree";
+import { replaceSiteMatcherDefinition, siteMatcherDefinition } from "../api/treeMatchers";
+import { hasAnyMatcher } from "../api/siteBlocks";
+import type { RouteMatch } from "../api/types";
+import { RouteMatchersSection, validateRouteMatch } from "./RouteMatchersSection";
 
 const KIND_COLORS = { route: "purple", handle: "blue", handle_path: "teal", opaque: "grey" } as const;
 
@@ -121,15 +125,25 @@ export function SiteTreeView({ tree, selected, onSelect, onMove, onRemove, locke
 }
 
 /** The fields of the selected node: its matcher and the directives it holds itself (#350). */
-function NodeFields({ node, edit, onChange, isDisabled }: {
+/** The `@name` a matcher text refers to, if it is one. */
+const namedMatcher = (matcher: string) => matcher.trim().match(/^@([\w-]+)$/)?.[1];
+
+/** A named matcher definition being edited with the matcher form (#350), or none. */
+const badDefinition = (def: RouteMatch | undefined) => !!def && (!hasAnyMatcher(def) || validateRouteMatch(def));
+
+function NodeFields({ node, edit, onChange, isDisabled, definition, onDefinitionChange }: {
   node: TreeNode;
   edit: { matcher?: string; handlers: Record<number, string> };
   onChange: (e: { matcher?: string; handlers: Record<number, string> }) => void;
   isDisabled?: boolean;
+  /** The site's `@name { … }` the matcher refers to, when the matcher form can edit it. */
+  definition?: RouteMatch;
+  onDefinitionChange: (m: RouteMatch | undefined) => void;
 }) {
   const { t } = useTranslation();
   const handlers = nodeHandlers(node);
   const matcherError = validateNodeEdit({ matcher: edit.matcher }, node.kind);
+  const name = namedMatcher(edit.matcher ?? node.matcher);
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
       <FormGroup label={t("tree.matcher_label")} fieldId="tree-matcher">
@@ -149,6 +163,15 @@ function NodeFields({ node, edit, onChange, isDisabled }: {
           </HelperText>
         </FormHelperText>
       </FormGroup>
+      {definition && name && (
+        <div data-testid="tree-matcher-definition">
+          <HelperText><HelperTextItem>{t("tree.definition_help", { name: `@${name}` })}</HelperTextItem></HelperText>
+          <RouteMatchersSection value={definition} onChange={onDefinitionChange} isDisabled={isDisabled} isExpanded onToggleExpanded={() => {}} />
+          {badDefinition(definition) && (
+            <HelperText><HelperTextItem variant="error">{t("tree.definition_empty")}</HelperTextItem></HelperText>
+          )}
+        </div>
+      )}
       {handlers.map((h, i) => (
         <FormGroup key={i} label={`${t("tree.handler_label")} ${i + 1}`} fieldId={`tree-handler-${i}`}>
           <TextInput
@@ -179,7 +202,14 @@ export function SiteTreeTab({ siteText, onSave }: { siteText: string; onSave?: (
   const original = parseSiteTree(base);
   const [tree, setTree] = useState<SiteTree | undefined>(original);
   const [selected, setSelected] = useState<NodePath | undefined>();
-  const [edit, setEdit] = useState<{ matcher?: string; handlers: Record<number, string> }>({ handlers: {} });
+  const [edit, setEditState] = useState<{ matcher?: string; handlers: Record<number, string> }>({ handlers: {} });
+  // The named matcher definition as edited in the matcher form, by name (#350).
+  const [defEdit, setDefEdit] = useState<{ name: string; match: RouteMatch } | undefined>();
+  /** A fresh edit drops the definition edit with it; the matcher form keeps its own. */
+  const setEdit = (e: { matcher?: string; handlers: Record<number, string> }) => {
+    setEditState(e);
+    if (!e.matcher && !Object.keys(e.handlers).length) setDefEdit(undefined);
+  };
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<NodePath | undefined>();
@@ -188,13 +218,18 @@ export function SiteTreeTab({ siteText, onSave }: { siteText: string; onSave?: (
 
   if (!original || !tree) return <p>{t("tree.unreadable")}</p>;
   const node = selected ? nodeAt(tree, selected) : undefined;
+  const name = node && node.kind !== "opaque" ? namedMatcher(edit.matcher ?? node.matcher) : undefined;
+  const loadedDefinition = selected && name ? siteMatcherDefinition(tree, selected, name) : undefined;
+  const definition = name && defEdit?.name === name ? defEdit.match : loadedDefinition;
   // An invalid edit can't be applied, so moving on would drop what was typed: everything else
   // waits until it is fixed or discarded (#362).
-  const invalid = !!validateNodeEdit(edit, node?.kind);
+  const invalid = !!validateNodeEdit(edit, node?.kind) || (!!loadedDefinition && badDefinition(definition));
 
   /** The tree with what is typed for the selected node applied to it. */
   function apply(): SiteTree {
-    return selected && node && !invalid ? editNode(tree!, selected, edit) : tree!;
+    if (!selected || !node || invalid) return tree!;
+    const edited = editNode(tree!, selected, edit);
+    return name && loadedDefinition && defEdit?.name === name ? replaceSiteMatcherDefinition(edited, name, defEdit.match) : edited;
   }
 
   function choose(p: NodePath) {
@@ -295,7 +330,15 @@ export function SiteTreeTab({ siteText, onSave }: { siteText: string; onSave?: (
         </Alert>
       )}
       {onSave && node && node.kind !== "opaque" && (
-        <NodeFields key={selected?.join(".")} node={node} edit={edit} onChange={setEdit} isDisabled={saving} />
+        <NodeFields
+          key={selected?.join(".")}
+          node={node}
+          edit={edit}
+          onChange={e => setEditState(e)}
+          isDisabled={saving}
+          definition={loadedDefinition ? definition : undefined}
+          onDefinitionChange={m => name && setDefEdit({ name, match: m ?? {} })}
+        />
       )}
       {onSave && (
         <div style={{ display: "flex", gap: "0.5rem", alignItems: "flex-end", flexWrap: "wrap" }}>
@@ -323,7 +366,7 @@ export function SiteTreeTab({ siteText, onSave }: { siteText: string; onSave?: (
       {onSave && (
         <div style={{ display: "flex", gap: "0.5rem" }}>
           <Button variant="primary" isDisabled={!changed || invalid || saving} isLoading={saving} onClick={() => void save()}>{t("tree.save")}</Button>
-          <Button variant="link" isDisabled={!changed || saving} onClick={() => { setTree(parseSiteTree(base)); setEdit({ handlers: {} }); setSelected(undefined); setPendingDelete(undefined); setError(null); }}>{t("tree.discard")}</Button>
+          <Button variant="link" isDisabled={!changed || saving} onClick={() => { setTree(parseSiteTree(base)); setEdit({ handlers: {} }); setDefEdit(undefined); setSelected(undefined); setPendingDelete(undefined); setError(null); }}>{t("tree.discard")}</Button>
         </div>
       )}
     </>

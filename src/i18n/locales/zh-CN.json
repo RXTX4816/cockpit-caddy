@@ -1280,7 +1280,9 @@
     "remove_confirm_two": "要移除此块及其中的 {{count}} 个块吗？",
     "remove_confirm_few": "要移除此块及其中的 {{count}} 个块吗？",
     "remove_confirm_many": "要移除此块及其中的 {{count}} 个块吗？",
-    "remove_confirm": "要移除此块及其中的 {{count}} 个块吗？"
+    "remove_confirm": "要移除此块及其中的 {{count}} 个块吗？",
+    "definition_help": "{{name}} 在此站点中定义的匹配条件。在这里修改会重写该定义,因此对所有使用 {{name}} 的块都生效。",
+    "definition_empty": "匹配器至少需要一个条件,头部正则还需要指定头部。"
   },
   "encode": {
     "heading": "压缩",

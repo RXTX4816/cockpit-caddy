@@ -1280,7 +1280,9 @@
     "remove_confirm_two": "要移除此區塊及其中的 {{count}} 個區塊嗎？",
     "remove_confirm_few": "要移除此區塊及其中的 {{count}} 個區塊嗎？",
     "remove_confirm_many": "要移除此區塊及其中的 {{count}} 個區塊嗎？",
-    "remove_confirm": "要移除此區塊及其中的 {{count}} 個區塊嗎？"
+    "remove_confirm": "要移除此區塊及其中的 {{count}} 個區塊嗎？",
+    "definition_help": "{{name}} 在此網站中定義的比對條件。在這裡修改會重寫該定義,因此對所有使用 {{name}} 的區塊都生效。",
+    "definition_empty": "比對器至少需要一個條件,標頭正規表示式還需要指定標頭。"
   },
   "encode": {
     "heading": "壓縮",

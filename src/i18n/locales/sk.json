@@ -1280,7 +1280,9 @@
     "form_locked": "Táto stránka má vnorené bloky, takže formulár ukladá len adresu, bind, importy a TLS. Zvyšok upravte na karte Strom.",
     "remove_confirm_zero": "Odstrániť tento blok a {{count}} blokov v ňom?",
     "remove_confirm_two": "Odstrániť tento blok a {{count}} blokov v ňom?",
-    "remove_confirm": "Odstrániť tento blok a {{count}} blokov v ňom?"
+    "remove_confirm": "Odstrániť tento blok a {{count}} blokov v ňom?",
+    "definition_help": "Čo {{name}} zachytí, ako je definované v tomto webe. Zmeny tu prepíšu túto definíciu, takže platia pre každý blok, ktorý {{name}} používa.",
+    "definition_empty": "Matcher potrebuje aspoň jednu podmienku a regulárny výraz hlavičky potrebuje svoju hlavičku."
   },
   "encode": {
     "heading": "Kompresia",

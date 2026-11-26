@@ -1280,7 +1280,9 @@
     "remove_confirm_two": "이 블록과 그 안의 블록 {{count}}개를 제거할까요?",
     "remove_confirm_few": "이 블록과 그 안의 블록 {{count}}개를 제거할까요?",
     "remove_confirm_many": "이 블록과 그 안의 블록 {{count}}개를 제거할까요?",
-    "remove_confirm": "이 블록과 그 안의 블록 {{count}}개를 제거할까요?"
+    "remove_confirm": "이 블록과 그 안의 블록 {{count}}개를 제거할까요?",
+    "definition_help": "이 사이트에 정의된 {{name}}의 일치 조건입니다. 여기서 바꾸면 그 정의가 다시 쓰이므로 {{name}}을(를) 쓰는 모든 블록에 적용됩니다.",
+    "definition_empty": "매처에는 조건이 하나 이상 필요하고, 헤더 정규식에는 대상 헤더가 필요합니다."
   },
   "encode": {
     "heading": "압축",

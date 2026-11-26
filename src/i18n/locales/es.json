@@ -1280,7 +1280,9 @@
     "remove_confirm_zero": "¿Quitar este bloque y los {{count}} bloques que contiene?",
     "remove_confirm_two": "¿Quitar este bloque y los {{count}} bloques que contiene?",
     "remove_confirm_few": "¿Quitar este bloque y los {{count}} bloques que contiene?",
-    "remove_confirm": "¿Quitar este bloque y los {{count}} bloques que contiene?"
+    "remove_confirm": "¿Quitar este bloque y los {{count}} bloques que contiene?",
+    "definition_help": "Lo que coincide con {{name}}, según su definición en este sitio. Los cambios aquí reescriben esa definición, así que afectan a todo bloque que use {{name}}.",
+    "definition_empty": "Un matcher necesita al menos una condición, y una regexp de cabecera necesita su cabecera."
   },
   "encode": {
     "heading": "Compresión",

@@ -1280,7 +1280,9 @@
     "form_locked": "Ta witryna ma zagnieżdżone bloki, więc formularz zapisuje tylko adres, bind, importy i TLS. Resztę edytuj na karcie Drzewo.",
     "remove_confirm_zero": "Usunąć ten blok i {{count}} bloku w nim?",
     "remove_confirm_two": "Usunąć ten blok i {{count}} bloku w nim?",
-    "remove_confirm": "Usunąć ten blok i {{count}} bloku w nim?"
+    "remove_confirm": "Usunąć ten blok i {{count}} bloku w nim?",
+    "definition_help": "Co dopasowuje {{name}}, zgodnie z definicją w tej witrynie. Zmiany tutaj przepisują tę definicję, więc dotyczą każdego bloku używającego {{name}}.",
+    "definition_empty": "Matcher potrzebuje co najmniej jednego warunku, a regexp nagłówka — swojego nagłówka."
   },
   "encode": {
     "heading": "Kompresja",
