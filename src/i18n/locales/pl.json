@@ -1275,7 +1275,7 @@
     "remove_confirm_many": "Usunąć ten blok i {{count}} bloków w nim?",
     "handle_path_invalid": "handle_path wymaga jednej ścieżki zaczynającej się od /, np. /app/*.",
     "fix_first": "Najpierw popraw lub odrzuć tę zmianę: w tej postaci nie da się jej zastosować.",
-    "move_hint": "Bloki można przenosić wewnątrz route. Pozostałe bloki Caddy sortuje sam, według tego, jak szczegółowa jest ich ścieżka.",
+    "move_hint": "Bloki można przesuwać wewnątrz route oraz między blokami handle z nazwanymi matcherami, których kolejność Caddy zachowuje. Pozostałe bloki Caddy sortuje sam, według szczegółowości ścieżki.",
     "changed_meanwhile": "Blok witryny zmienił się od czasu, gdy ta karta go odczytała. Zamknij okno i otwórz je ponownie, aby edytować bieżący tekst.",
     "form_locked": "Ta witryna ma zagnieżdżone bloki, więc formularz zapisuje tylko adres, bind, importy i TLS. Resztę edytuj na karcie Drzewo.",
     "remove_confirm_zero": "Usunąć ten blok i {{count}} bloku w nim?",

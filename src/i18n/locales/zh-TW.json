@@ -1273,7 +1273,7 @@
     "remove_confirm_other": "要移除此區塊及其中的 {{count}} 個區塊嗎？",
     "handle_path_invalid": "handle_path 需要一個以 / 開頭的路徑，例如 /app/*。",
     "fix_first": "請先修正或捨棄此編輯：以目前的樣子無法套用。",
-    "move_hint": "區塊只能在 route 內移動。其他區塊由 Caddy 依路徑的具體程度自行排序。",
+    "move_hint": "可以在 route 內移動區塊,也可以在使用命名比對器的 handle 之間移動,Caddy 會保留它們的書寫順序。其他區塊由 Caddy 依路徑的具體程度自行排序。",
     "changed_meanwhile": "自此分頁讀取後，網站的區塊已被變更。請關閉對話框後重新開啟，以編輯目前的文字。",
     "form_locked": "此網站包含巢狀區塊，因此表單只儲存位址、bind、匯入和 TLS。其餘內容請在「樹」分頁中編輯。",
     "remove_confirm_zero": "要移除此區塊及其中的 {{count}} 個區塊嗎？",

@@ -1275,7 +1275,7 @@
     "remove_confirm_many": "Odstrániť tento blok a {{count}} bloku v ňom?",
     "handle_path_invalid": "handle_path potrebuje jednu cestu, ktorá začína znakom /, napríklad /app/*.",
     "fix_first": "Najprv túto úpravu opravte alebo zahoďte: v tejto podobe ju nemožno použiť.",
-    "move_hint": "Bloky možno presúvať vnútri route. Ostatné bloky si Caddy zoraďuje sám podľa toho, aká konkrétna je ich cesta.",
+    "move_hint": "Bloky možno presúvať vnútri route a medzi blokmi handle s pomenovanými matchermi, ktorých poradie Caddy zachováva. Ostatné bloky Caddy radí sám podľa toho, aká presná je ich cesta.",
     "changed_meanwhile": "Blok stránky sa od načítania na tejto karte zmenil. Zatvorte dialóg a otvorte ho znova, aby ste upravovali aktuálny text.",
     "form_locked": "Táto stránka má vnorené bloky, takže formulár ukladá len adresu, bind, importy a TLS. Zvyšok upravte na karte Strom.",
     "remove_confirm_zero": "Odstrániť tento blok a {{count}} blokov v ňom?",

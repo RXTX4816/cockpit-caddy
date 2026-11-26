@@ -188,11 +188,18 @@ describe("Tree tab review fixes (#362)", () => {
     expect(onSave.mock.calls[1][1]).toBe(onSave.mock.calls[0][0]);
   });
 
-  it("moves blocks only inside a route, and says why", () => {
+  it("moves a block only where Caddy keeps the order, and says why", () => {
     const text = "example.com {\n\thandle /a/* {\n\t\troute {\n\t\t\trespond a\n\t\t}\n\t}\n\thandle {\n\t\trespond b\n\t}\n}";
     render(<SiteTreeTab siteText={text} onSave={vi.fn()} />);
     expect((screen.getByRole("button", { name: /Move down: handle \/a\/\*/ }) as HTMLButtonElement).disabled).toBe(true);
     expect(screen.getByText(/sorts the other blocks itself/)).toBeTruthy();
+  });
+
+  it("moves two handles with named matchers, whose order Caddy keeps", () => {
+    const text = "example.com {\n\t@a header X 1\n\t@b path /p/*\n\thandle @a {\n\t\trespond a\n\t}\n\thandle @b {\n\t\trespond b\n\t}\n}";
+    render(<SiteTreeTab siteText={text} onSave={vi.fn()} />);
+    expect((screen.getByRole("button", { name: /Move down: handle @a/ }) as HTMLButtonElement).disabled).toBe(false);
+    expect((screen.getByRole("button", { name: /Move up: handle @a/ }) as HTMLButtonElement).disabled).toBe(true);
   });
 
   it("locks the form fields the save would drop for a site with nested blocks", () => {

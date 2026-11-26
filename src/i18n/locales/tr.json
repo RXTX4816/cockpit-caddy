@@ -1273,7 +1273,7 @@
     "remove_confirm_other": "Bu blok ve içindeki {{count}} blok kaldırılsın mı?",
     "handle_path_invalid": "handle_path, / ile başlayan tek bir yol gerektirir; örneğin /app/*.",
     "fix_first": "Önce bu düzenlemeyi düzeltin ya da vazgeçin: bu haliyle uygulanamaz.",
-    "move_hint": "Bloklar bir route içinde taşınabilir. Diğer blokları Caddy, yollarının ne kadar belirgin olduğuna göre kendisi sıralar.",
+    "move_hint": "Bloklar bir route içinde ve Caddy'nin yazılış sırasını koruduğu adlandırılmış eşleştiricili handle blokları arasında taşınabilir. Diğer blokları Caddy, yollarının ne kadar belirgin olduğuna göre kendisi sıralar.",
     "changed_meanwhile": "Sitenin bloğu bu sekme okuduktan sonra değişti. Güncel metni düzenlemek için pencereyi kapatıp yeniden açın.",
     "form_locked": "Bu sitede iç içe bloklar var, bu yüzden form yalnızca adresi, bind'ı, içe aktarmaları ve TLS'yi kaydeder. Gerisini Ağaç sekmesinde düzenleyin.",
     "remove_confirm_zero": "Bu blok ve içindeki {{count}} blok kaldırılsın mı?",

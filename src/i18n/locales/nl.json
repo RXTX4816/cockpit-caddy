@@ -1273,7 +1273,7 @@
     "remove_confirm_other": "Dit blok en de {{count}} blokken erin verwijderen?",
     "handle_path_invalid": "Een handle_path heeft één pad nodig dat met / begint, zoals /app/*.",
     "fix_first": "Herstel of verwerp deze wijziging eerst: zo kan ze niet worden toegepast.",
-    "move_hint": "Blokken kunnen binnen een route worden verplaatst. De andere blokken sorteert Caddy zelf, naar hoe specifiek hun pad is.",
+    "move_hint": "Blokken kunnen worden verplaatst binnen een route, en tussen handles met benoemde matchers, waarvan Caddy de geschreven volgorde aanhoudt. De andere blokken sorteert Caddy zelf, op hoe specifiek hun pad is.",
     "changed_meanwhile": "Het blok van de site is gewijzigd sinds dit tabblad het las. Sluit het venster en open het opnieuw om de huidige tekst te bewerken.",
     "form_locked": "Deze site heeft geneste blokken, dus het formulier slaat alleen het adres, bind, imports en TLS op. Bewerk de rest op het tabblad Boom.",
     "remove_confirm_zero": "Dit blok en de {{count}} blokken erin verwijderen?",

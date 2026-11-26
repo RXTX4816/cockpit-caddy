@@ -1273,7 +1273,7 @@
     "remove_confirm_other": "Remove this block and the {{count}} blocks inside it?",
     "handle_path_invalid": "A handle_path needs one path that starts with /, such as /app/*.",
     "fix_first": "Fix or discard this edit first: it can't be applied as it is.",
-    "move_hint": "Blocks can be moved inside a route. Caddy sorts the other blocks itself, by how specific their path is.",
+    "move_hint": "Blocks can be moved inside a route, and among handles with named matchers, whose written order Caddy keeps. Caddy sorts the other blocks itself, by how specific their path is.",
     "changed_meanwhile": "The site's block was changed since this tab read it. Close the dialog and open it again to edit the current text.",
     "form_locked": "This site has nested blocks, so the form only saves the address, bind, imports and TLS. Edit the rest in the Tree tab.",
     "remove_confirm_zero": "Remove this block and the {{count}} blocks inside it?",

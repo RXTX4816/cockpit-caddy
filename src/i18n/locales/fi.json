@@ -1273,7 +1273,7 @@
     "remove_confirm_other": "Poistetaanko tämä lohko ja sen sisällä olevat {{count}} lohkoa?",
     "handle_path_invalid": "handle_path tarvitsee yhden polun, joka alkaa merkillä /, kuten /app/*.",
     "fix_first": "Korjaa tai hylkää tämä muutos ensin: sitä ei voi ottaa käyttöön tällaisenaan.",
-    "move_hint": "Lohkoja voi siirtää route-lohkon sisällä. Muut lohkot Caddy järjestää itse sen mukaan, kuinka tarkka niiden polku on.",
+    "move_hint": "Lohkoja voi siirtää route-lohkon sisällä sekä nimettyjä matchereita käyttävien handle-lohkojen kesken, joiden kirjoitetun järjestyksen Caddy säilyttää. Muut lohkot Caddy järjestää itse polun tarkkuuden mukaan.",
     "changed_meanwhile": "Sivuston lohko on muuttunut sen jälkeen, kun tämä välilehti luki sen. Sulje ikkuna ja avaa se uudelleen muokataksesi nykyistä tekstiä.",
     "form_locked": "Tällä sivustolla on sisäkkäisiä lohkoja, joten lomake tallentaa vain osoitteen, bindin, tuonnit ja TLS:n. Muokkaa loput Puu-välilehdellä.",
     "remove_confirm_zero": "Poistetaanko tämä lohko ja sen sisällä olevat {{count}} lohkoa?",

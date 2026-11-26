@@ -50,6 +50,8 @@ interface Select {
   onSelect?: (p: NodePath) => void;
   /** Move (-1 up, 1 down) and delete buttons next to every node (#351). */
   onMove?: (p: NodePath, direction: -1 | 1) => void;
+  /** Whether moving that way changes what Caddy does (#362). */
+  canMove?: (p: NodePath, direction: -1 | 1) => boolean;
   onRemove?: (p: NodePath) => void;
   /** While the selected node's fields hold an invalid edit, nothing else can be done (#362). */
   locked?: boolean;
@@ -57,7 +59,7 @@ interface Select {
 
 const samePath = (a: NodePath | undefined, b: NodePath) => !!a && a.length === b.length && a.every((v, i) => v === b[i]);
 
-function NodeView({ node, scopes, path, selected, onSelect, onMove, onRemove, locked, siblings, inRoute }: { node: TreeNode; scopes: Array<Record<string, string>>; path: NodePath; siblings: number; inRoute: boolean } & Select) {
+function NodeView({ node, scopes, path, selected, onSelect, onMove, canMove, onRemove, locked }: { node: TreeNode; scopes: Array<Record<string, string>>; path: NodePath } & Select) {
   const { t } = useTranslation();
   const own = [matcherDefinitions(node.items), ...scopes];
   const handlers = node.kind === "opaque" ? node.items.flatMap(it => "line" in it ? [it.line.trim()] : []).filter(Boolean) : nodeHandlers(node);
@@ -83,9 +85,9 @@ function NodeView({ node, scopes, path, selected, onSelect, onMove, onRemove, lo
         )}
         {onMove && onRemove && (
           <span style={{ display: "inline-flex", gap: "0.1rem" }}>
-            {/* Outside a route Caddy orders handle blocks itself, so moving them would change nothing (#362). */}
-            <Button variant="plain" size="sm" aria-label={`${t("tree.move_up")}: ${kindLabel} ${summary}`} isDisabled={locked || !inRoute || path[path.length - 1] === 0} onClick={() => onMove(path, -1)}>↑</Button>
-            <Button variant="plain" size="sm" aria-label={`${t("tree.move_down")}: ${kindLabel} ${summary}`} isDisabled={locked || !inRoute || path[path.length - 1] === siblings - 1} onClick={() => onMove(path, 1)}>↓</Button>
+            {/* A move Caddy's own sorting undoes would change nothing (#362). */}
+            <Button variant="plain" size="sm" aria-label={`${t("tree.move_up")}: ${kindLabel} ${summary}`} isDisabled={locked || !canMove?.(path, -1)} onClick={() => onMove(path, -1)}>↑</Button>
+            <Button variant="plain" size="sm" aria-label={`${t("tree.move_down")}: ${kindLabel} ${summary}`} isDisabled={locked || !canMove?.(path, 1)} onClick={() => onMove(path, 1)}>↓</Button>
             <Button variant="plain" size="sm" isDanger aria-label={`${t("tree.remove")}: ${kindLabel} ${summary}`} isDisabled={locked} onClick={() => onRemove(path)}>✕</Button>
           </span>
         )}
@@ -97,7 +99,7 @@ function NodeView({ node, scopes, path, selected, onSelect, onMove, onRemove, lo
       )}
       {children.length > 0 && (
         <ul role="group" style={listStyle}>
-          {children.map((c, i) => <NodeView key={i} node={c} scopes={own} path={[...path, i]} siblings={children.length} inRoute={node.kind === "route"} selected={selected} onSelect={onSelect} onMove={onMove} onRemove={onRemove} locked={locked} />)}
+          {children.map((c, i) => <NodeView key={i} node={c} scopes={own} path={[...path, i]} selected={selected} onSelect={onSelect} onMove={onMove} canMove={canMove} onRemove={onRemove} locked={locked} />)}
         </ul>
       )}
     </li>
@@ -105,7 +107,7 @@ function NodeView({ node, scopes, path, selected, onSelect, onMove, onRemove, lo
 }
 
 /** The route and handle blocks of a site, read-only (#349). */
-export function SiteTreeView({ tree, selected, onSelect, onMove, onRemove, locked }: { tree: SiteTree } & Select) {
+export function SiteTreeView({ tree, selected, onSelect, onMove, canMove, onRemove, locked }: { tree: SiteTree } & Select) {
   const { t } = useTranslation();
   const scopes = [matcherDefinitions(tree.items)];
   const roots = childNodes(tree.items);
@@ -117,7 +119,7 @@ export function SiteTreeView({ tree, selected, onSelect, onMove, onRemove, locke
           <code>{tree.header.trim().replace(/\s*\{\s*$/, "")}</code>
         </div>
         <ul role="group" style={listStyle}>
-          {roots.map((n, i) => <NodeView key={i} node={n} scopes={scopes} path={[i]} siblings={roots.length} inRoute={false} selected={selected} onSelect={onSelect} onMove={onMove} onRemove={onRemove} locked={locked} />)}
+          {roots.map((n, i) => <NodeView key={i} node={n} scopes={scopes} path={[i]} selected={selected} onSelect={onSelect} onMove={onMove} canMove={canMove} onRemove={onRemove} locked={locked} />)}
         </ul>
       </li>
     </ul>
@@ -241,7 +243,7 @@ export function SiteTreeTab({ siteText, onSave }: { siteText: string; onSave?: (
   }
 
   function move(p: NodePath, direction: -1 | 1) {
-    if (invalid || !orderMatters(tree!, p)) return;
+    if (invalid || !orderMatters(tree!, p, direction)) return;
     const moved = moveNode(apply(), p, direction);
     if (!moved) return;
     setTree(moved.tree);
@@ -306,6 +308,7 @@ export function SiteTreeTab({ siteText, onSave }: { siteText: string; onSave?: (
         selected={selected}
         onSelect={onSave ? choose : undefined}
         onMove={onSave ? move : undefined}
+        canMove={(p, d) => orderMatters(tree, p, d)}
         onRemove={onSave ? remove : undefined}
         locked={invalid}
       />

@@ -321,14 +321,29 @@ export function removeNode(tree: SiteTree, path: NodePath): SiteTree {
   });
 }
 
+/** The directive a node is, and how Caddy's adapter sorts it among blocks of the same directive. */
+function sortClass(n: TreeNode): { keyword: string; by: "path" | "named" | "none" } {
+  const [keyword, matcher = ""] = n.header.trim().replace(/\{\s*(#.*)?$/, "").trim().split(/\s+/);
+  const by = keyword === "handle_path" || matcher.startsWith("/") ? "path" : matcher.startsWith("@") ? "named" : "none";
+  return { keyword, by };
+}
+
 /**
- * True when the order of a node among its siblings is the order Caddy runs them in: inside a
- * `route`. Anywhere else Caddy sorts handle blocks itself (by how specific their path is), so
- * moving one changes the text and nothing else (#362).
+ * True when moving a node one place (`-1` up, `1` down) changes what Caddy does (#362). Inside a
+ * `route` blocks run as written. Elsewhere Caddy's adapter sorts blocks by directive, and blocks
+ * of one directive by how specific their path is; two with named matchers (or none) keep their
+ * written order, and the first that matches wins, so only swapping such a pair matters.
  */
-export function orderMatters(tree: SiteTree, path: NodePath): boolean {
-  const parent = path.length > 1 ? nodeAt(tree, path.slice(0, -1)) : undefined;
-  return parent?.kind === "route";
+export function orderMatters(tree: SiteTree, path: NodePath, direction: -1 | 1): boolean {
+  const parentPath = path.slice(0, -1);
+  const parent = parentPath.length ? nodeAt(tree, parentPath) : undefined;
+  const siblings = childNodes(parent ? parent.items : tree.items);
+  const node = siblings[path[path.length - 1]];
+  const other = siblings[path[path.length - 1] + direction];
+  if (!node || !other) return false;
+  if (parent?.kind === "route") return true;
+  const [a, b] = [sortClass(node), sortClass(other)];
+  return a.keyword === b.keyword && a.by === b.by && a.by !== "path";
 }
 
 /**

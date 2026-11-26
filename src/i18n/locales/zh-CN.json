@@ -1273,7 +1273,7 @@
     "remove_confirm_other": "要移除此块及其中的 {{count}} 个块吗？",
     "handle_path_invalid": "handle_path 需要一个以 / 开头的路径，例如 /app/*。",
     "fix_first": "请先修正或放弃此编辑：按现在的样子无法应用。",
-    "move_hint": "块只能在 route 内移动。其他块由 Caddy 按路径的具体程度自行排序。",
+    "move_hint": "可以在 route 内移动块,也可以在使用命名匹配器的 handle 之间移动,Caddy 会保留它们的书写顺序。其他块由 Caddy 按路径的具体程度自行排序。",
     "changed_meanwhile": "自此标签页读取后，站点的块已被更改。请关闭对话框后重新打开，以编辑当前文本。",
     "form_locked": "此站点包含嵌套块，因此表单只保存地址、bind、导入和 TLS。其余内容请在“树”标签页中编辑。",
     "remove_confirm_zero": "要移除此块及其中的 {{count}} 个块吗？",

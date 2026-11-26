@@ -330,10 +330,21 @@ describe("tree edits Caddy would reject or ignore (#362)", () => {
     expect(addNode(tree, [], { kind: "handle_path", matcher: "" })).toBeUndefined();
   });
 
-  it("says the order only counts inside a route", () => {
-    const tree = parseSiteTree(text)!;
-    expect(orderMatters(tree, [0, 0])).toBe(true);
-    expect(orderMatters(tree, [1])).toBe(false);
-    expect(orderMatters(tree, [2])).toBe(false);
+  it("says when a move changes what Caddy does: in a route, or between named handles", () => {
+    const site = parseSiteTree([
+      "example.com {",
+      "\troute {", "\t\thandle /x/* {", "\t\t}", "\t\thandle /y/* {", "\t\t}", "\t}",
+      "\thandle @a {", "\t}", "\thandle @b {", "\t}", "\thandle /p/* {", "\t}", "\thandle_path /q/* {", "\t}",
+      "}",
+    ].join("\n"))!;
+    expect(orderMatters(site, [0, 0], 1)).toBe(true);
+    expect(orderMatters(site, [0, 0], -1)).toBe(false);
+    // Caddy keeps two handles with named matchers in the order written (checked with caddy adapt 2.11.7).
+    expect(orderMatters(site, [1], 1)).toBe(true);
+    expect(orderMatters(site, [2], -1)).toBe(true);
+    // A path matcher is sorted by Caddy, and route vs handle by directive.
+    expect(orderMatters(site, [2], 1)).toBe(false);
+    expect(orderMatters(site, [3], 1)).toBe(false);
+    expect(orderMatters(site, [0], 1)).toBe(false);
   });
 });

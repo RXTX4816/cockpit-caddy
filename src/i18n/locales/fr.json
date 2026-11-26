@@ -1274,7 +1274,7 @@
     "remove_confirm_many": "Supprimer ce bloc et les {{count}} blocs qu'il contient ?",
     "handle_path_invalid": "Un handle_path exige un seul chemin qui commence par /, comme /app/*.",
     "fix_first": "Corrigez ou abandonnez d'abord cette modification : elle ne peut pas être appliquée telle quelle.",
-    "move_hint": "Les blocs peuvent être déplacés à l'intérieur d'une route. Caddy trie lui-même les autres blocs, selon la précision de leur chemin.",
+    "move_hint": "Les blocs se déplacent dans un route, et entre des handle à matchers nommés, dont Caddy garde l'ordre écrit. Caddy trie lui-même les autres blocs, selon la précision de leur chemin.",
     "changed_meanwhile": "Le bloc du site a changé depuis que cet onglet l'a lu. Fermez la boîte de dialogue et rouvrez-la pour modifier le texte actuel.",
     "form_locked": "Ce site a des blocs imbriqués : le formulaire n'enregistre que l'adresse, bind, les imports et le TLS. Modifiez le reste dans l'onglet Arbre.",
     "remove_confirm_zero": "Supprimer ce bloc et les {{count}} blocs qu'il contient ?",

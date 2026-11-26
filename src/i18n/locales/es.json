@@ -1274,7 +1274,7 @@
     "remove_confirm_many": "¿Quitar este bloque y los {{count}} bloques que contiene?",
     "handle_path_invalid": "Un handle_path necesita una ruta que empiece por /, como /app/*.",
     "fix_first": "Corrija o descarte primero este cambio: tal como está no se puede aplicar.",
-    "move_hint": "Los bloques se pueden mover dentro de una route. Caddy ordena los demás bloques por sí mismo, según lo específica que sea su ruta.",
+    "move_hint": "Los bloques se pueden mover dentro de un route y entre handles con matchers con nombre, cuyo orden escrito Caddy mantiene. Caddy ordena él mismo los demás bloques, según lo específica que sea su ruta.",
     "changed_meanwhile": "El bloque del sitio cambió desde que esta pestaña lo leyó. Cierre el diálogo y vuelva a abrirlo para editar el texto actual.",
     "form_locked": "Este sitio tiene bloques anidados, así que el formulario solo guarda la dirección, bind, las importaciones y TLS. Edite el resto en la pestaña Árbol.",
     "remove_confirm_zero": "¿Quitar este bloque y los {{count}} bloques que contiene?",

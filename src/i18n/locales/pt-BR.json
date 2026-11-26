@@ -1274,7 +1274,7 @@
     "remove_confirm_many": "Remover este bloco e os {{count}} blocos dentro dele?",
     "handle_path_invalid": "Um handle_path precisa de um caminho que comece com /, como /app/*.",
     "fix_first": "Corrija ou descarte esta alteração primeiro: do jeito que está, ela não pode ser aplicada.",
-    "move_hint": "Os blocos podem ser movidos dentro de uma route. O Caddy ordena os outros blocos sozinho, conforme o quão específico é o caminho deles.",
+    "move_hint": "Os blocos podem ser movidos dentro de um route e entre handles com matchers nomeados, cuja ordem escrita o Caddy mantém. O Caddy ordena os outros blocos sozinho, pelo quão específico é o caminho.",
     "changed_meanwhile": "O bloco do site mudou desde que esta aba o leu. Feche a janela e abra-a de novo para editar o texto atual.",
     "form_locked": "Este site tem blocos aninhados, então o formulário só salva o endereço, bind, as importações e o TLS. Edite o resto na aba Árvore.",
     "remove_confirm_zero": "Remover este bloco e os {{count}} blocos dentro dele?",

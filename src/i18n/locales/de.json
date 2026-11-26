@@ -1273,7 +1273,7 @@
     "remove_confirm_other": "Diesen Block und die {{count}} Blöcke darin entfernen?",
     "handle_path_invalid": "Ein handle_path braucht genau einen Pfad, der mit / beginnt, etwa /app/*.",
     "fix_first": "Korrigieren oder verwerfen Sie diese Änderung zuerst: So lässt sie sich nicht übernehmen.",
-    "move_hint": "Blöcke lassen sich innerhalb einer route verschieben. Die übrigen Blöcke sortiert Caddy selbst, danach wie genau ihr Pfad ist.",
+    "move_hint": "Blöcke lassen sich in einem route verschieben und zwischen handle-Blöcken mit benannten Matchern, deren Reihenfolge Caddy beibehält. Die übrigen Blöcke sortiert Caddy selbst, nach der Genauigkeit ihres Pfads.",
     "changed_meanwhile": "Der Block der Website wurde geändert, seit dieser Tab ihn gelesen hat. Schließen Sie den Dialog und öffnen Sie ihn erneut, um den aktuellen Text zu bearbeiten.",
     "form_locked": "Diese Website hat verschachtelte Blöcke, deshalb speichert das Formular nur Adresse, bind, Importe und TLS. Den Rest bearbeiten Sie im Tab Baum.",
     "remove_confirm_zero": "Diesen Block und die {{count}} Blöcke darin entfernen?",

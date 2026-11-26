@@ -1273,7 +1273,7 @@
     "remove_confirm_other": "Hapus blok ini beserta {{count}} blok di dalamnya?",
     "handle_path_invalid": "handle_path memerlukan satu path yang diawali /, seperti /app/*.",
     "fix_first": "Perbaiki atau buang dulu perubahan ini: perubahan ini tidak bisa diterapkan apa adanya.",
-    "move_hint": "Blok dapat dipindahkan di dalam route. Blok lainnya diurutkan sendiri oleh Caddy, berdasarkan seberapa spesifik path-nya.",
+    "move_hint": "Blok dapat dipindahkan di dalam route, dan di antara handle dengan matcher bernama, yang urutan tulisnya dipertahankan Caddy. Blok lain diurutkan Caddy sendiri, menurut seberapa spesifik path-nya.",
     "changed_meanwhile": "Blok situs telah berubah sejak tab ini membacanya. Tutup dialog lalu buka lagi untuk menyunting teks terkini.",
     "form_locked": "Situs ini memiliki blok bersarang, jadi formulir hanya menyimpan alamat, bind, impor, dan TLS. Sunting sisanya di tab Pohon.",
     "remove_confirm_zero": "Hapus blok ini beserta {{count}} blok di dalamnya?",
