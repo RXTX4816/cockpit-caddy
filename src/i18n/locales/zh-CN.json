@@ -991,6 +991,7 @@
     "validation_duration": "请输入 Caddy 时长，例如 90d 或 2160h（此处不支持“y”）",
     "validation_ratio": "请输入介于 0 和 1 之间的数字（不含 0 和 1）",
     "hostless_global_only_note": "此代理没有主机名，因此 Caddy 无法只为它设定证书策略。请在“全局选项”标签页的“内部 TLS（无主机名的代理）”中，一次性为所有无主机名代理设置证书有效期和续期窗口。",
+    "off_note": "此站点的 HTTPS 已关闭。请在“常规”中开启后再设置 TLS 策略。",
     "lifetime_preset_default": "默认（12h）",
     "lifetime_preset_90d": "90 天",
     "lifetime_preset_180d": "180 天",

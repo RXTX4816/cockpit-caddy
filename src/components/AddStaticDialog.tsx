@@ -126,6 +126,7 @@ export function AddStaticDialog({ existingPorts, onAdd, onClose, initialValues, 
           idPrefix="add-static"
           layout="site"
           showTls={!serverCtx}
+          tlsMode={tlsMode}
           generalHasError={!!(portErr || rootErr)}
           general={
             <Form isHorizontal>

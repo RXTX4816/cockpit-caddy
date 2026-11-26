@@ -991,6 +991,7 @@
     "validation_duration": "請輸入 Caddy 時間長度，例如 90d 或 2160h（此處不支援「y」）",
     "validation_ratio": "請輸入介於 0 和 1 之間的數字（不含 0 和 1）",
     "hostless_global_only_note": "此代理沒有主機名稱，因此 Caddy 無法只為它設定憑證原則。請在「全域選項」分頁的「內部 TLS（無主機名稱的代理）」中，一次為所有無主機名稱的代理設定憑證有效期限與續約時間窗。",
+    "off_note": "此網站的 HTTPS 已關閉。請在「一般」中開啟後再設定 TLS 原則。",
     "lifetime_preset_default": "預設（12h）",
     "lifetime_preset_90d": "90 天",
     "lifetime_preset_180d": "180 天",

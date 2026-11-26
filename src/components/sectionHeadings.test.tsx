@@ -6,6 +6,7 @@ import { FlatSectionsContext } from "./sectionLayout";
 import { BasicAuthSection } from "./BasicAuthSection";
 import { ErrorHandlersSection } from "./ErrorHandlersSection";
 import { ForwardAuthSection } from "./ForwardAuthSection";
+import { AccessLogSection, accessLogConfigToValues } from "./AccessLogSection";
 
 const flat = (ui: ReactNode) => render(<FlatSectionsContext.Provider value>{ui}</FlatSectionsContext.Provider>);
 
@@ -31,5 +32,16 @@ describe("section headings in tab mode (#291)", () => {
     } finally {
       i18n.addResource("en", "translation", "forward_auth.section_title", "Forward Authentication (optional)");
     }
+  });
+
+  it("keeps \"Access logging\" on a site's access log", () => {
+    flat(<AccessLogSection value={accessLogConfigToValues(undefined)} onChange={() => {}} />);
+    expect(screen.getByRole("heading", { name: "Access logging" })).toBeInTheDocument();
+  });
+
+  it("leaves the heading out of the global runtime log, which is not an access log", () => {
+    flat(<AccessLogSection idPrefix="rl" heading={null} enableLabel="Override Caddy's default runtime log destination" value={accessLogConfigToValues(undefined)} onChange={() => {}} />);
+    expect(screen.queryByRole("heading", { name: "Access logging" })).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Override Caddy's default runtime log destination")).toBeInTheDocument();
   });
 });

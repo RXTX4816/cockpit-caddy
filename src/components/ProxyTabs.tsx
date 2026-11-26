@@ -17,6 +17,7 @@ import { RewriteSection } from "./RewriteSection";
 import { RouteMatchersSection } from "./RouteMatchersSection";
 import { ServerTimeoutsSection } from "./ServerTimeoutsSection";
 import { TlsSection } from "./TlsSection";
+import type { TlsMode } from "./TlsModeField";
 import { TransportSection } from "./TransportSection";
 import { UpstreamsSection } from "./UpstreamsSection";
 import { SiteTreeTab } from "./SiteTreeView";
@@ -41,6 +42,8 @@ interface Props {
   showTls?: boolean;
   /** The site address has no host, so TLS Policy explains that its settings reach other hostless sites too. */
   hostless?: boolean;
+  /** Where the site's certificate comes from (General tab); TLS Policy shows only what applies to it. */
+  tlsMode?: TlsMode;
   /** The site's block as written in conf.d. With route or nested handle blocks in it, a Tree tab shows them (#349). */
   siteText?: string;
   /** Saves the text the Tree tab made (#350); without it the tab is read-only. */
@@ -48,7 +51,7 @@ interface Props {
 }
 
 /** The site dialogs' tabs (#260), shared by Add, Edit and Duplicate (#290) of every site type (#293). */
-export function ProxyTabs({ state: s, onChange, general, generalHasError, active, onSelect, isDisabled, idPrefix, layout = "proxy", showTls = false, hostless = false, siteText, onSaveSiteText }: Props) {
+export function ProxyTabs({ state: s, onChange, general, generalHasError, active, onSelect, isDisabled, idPrefix, layout = "proxy", showTls = false, hostless = false, tlsMode, siteText, onSaveSiteText }: Props) {
   const { t } = useTranslation();
   const flags = proxyTabStateFlags(s, generalHasError, layout);
   const forwardAuthErr = validateForwardAuth(s.forwardAuth);
@@ -95,7 +98,7 @@ export function ProxyTabs({ state: s, onChange, general, generalHasError, active
               <ForwardAuthSection value={s.forwardAuth} onChange={v => onChange({ forwardAuth: v })} isDisabled={locked} uriError={forwardAuthErr ?? undefined} />
             )}
             {showTls && (
-              <TlsSection value={s.tlsValues} onChange={v => onChange({ tlsValues: v })} isDisabled={isDisabled} hostless={hostless} />
+              <TlsSection value={s.tlsValues} onChange={v => onChange({ tlsValues: v })} isDisabled={isDisabled} hostless={hostless} tlsMode={tlsMode} />
             )}
           </>
         ),

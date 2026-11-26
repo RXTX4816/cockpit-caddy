@@ -40,4 +40,16 @@ describe("ProxyRows", () => {
     expect(second.getByText("Static")).toBeInTheDocument();
     expect(second.getByRole("link", { name: /files\.example\.com/ })).toBeInTheDocument();
   });
+
+  // A long address used to push the TLS badge out of the cell ("..A(" for ACME).
+  it("wide: a long address truncates with its full text as title, the badges don't shrink", () => {
+    const long: ProxyEntry = { id: "srv2", serverKey: "srv2", externalPort: 443, externalHost: "app.example.test, www.example.test", targetHost: "localhost", targetPort: 3000, targetScheme: "http", tls: true, tlsIssuer: "acme", tlsSkipVerify: false };
+    render(<ProxyRows proxies={[long]} compact={false} onEdit={vi.fn()} onDelete={vi.fn()} onDuplicate={vi.fn()} probeStatuses={new Map()} servers={[]} />);
+    const link = screen.getByRole("link", { name: /app\.example\.test/ });
+    expect(link).toHaveAttribute("title", link.textContent);
+    expect(link).toHaveStyle({ overflow: "hidden", textOverflow: "ellipsis" });
+    const badge = screen.getByText("ACME");
+    expect(badge.closest("span[style*='flex-shrink']")).toHaveStyle({ flexShrink: "0" });
+    expect(link.parentElement).toHaveStyle({ display: "flex" });
+  });
 });

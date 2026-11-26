@@ -991,6 +991,7 @@
     "validation_duration": "Ange en Caddy-varaktighet som 90d eller 2160h (\"y\" stöds inte här)",
     "validation_ratio": "Ange ett tal mellan 0 och 1 (ej inklusive)",
     "hostless_global_only_note": "Den här proxyn har inget värdnamn, så Caddy kan inte avgränsa en certifikatpolicy till bara den. Ange certifikatens livslängd och förnyelsefönster för proxies utan värdnamn en gång, för alla, på fliken Globala alternativ under \"Intern TLS (proxies utan värdnamn)\".",
+    "off_note": "HTTPS är av för den här webbplatsen. Slå på det under Allmänt för att ställa in en TLS-policy.",
     "lifetime_preset_default": "Standard (12h)",
     "lifetime_preset_90d": "90 dagar",
     "lifetime_preset_180d": "180 dagar",

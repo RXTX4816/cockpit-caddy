@@ -991,6 +991,7 @@
     "validation_duration": "Zadejte dobu ve formátu Caddy, např. 90d nebo 2160h („y“ zde není podporováno)",
     "validation_ratio": "Zadejte číslo mezi 0 a 1 (bez krajních hodnot)",
     "hostless_global_only_note": "Tato proxy nemá název hostitele, takže pro ni Caddy nemůže vymezit samostatnou zásadu certifikátů. Dobu platnosti certifikátu a okno obnovení pro proxy bez názvu hostitele nastavte jednou pro všechny na kartě Globální volby v části „Interní TLS (proxy bez názvu hostitele)“.",
+    "off_note": "HTTPS je pro tento web vypnuté. Zapněte ho v části Obecné, chcete-li nastavit zásadu TLS.",
     "lifetime_preset_default": "Výchozí (12h)",
     "lifetime_preset_90d": "90 dní",
     "lifetime_preset_180d": "180 dní",

@@ -991,6 +991,7 @@
     "validation_duration": "Masukkan durasi Caddy seperti 90d atau 2160h (\"y\" tidak didukung di sini)",
     "validation_ratio": "Masukkan angka antara 0 dan 1 (eksklusif)",
     "hostless_global_only_note": "Proxy ini tidak memiliki nama host, jadi Caddy tidak dapat membatasi kebijakan sertifikat hanya untuknya. Atur masa berlaku sertifikat dan jendela pembaruan untuk proxy tanpa nama host sekali saja, untuk semuanya, di tab Opsi global pada \"TLS internal (proxy tanpa nama host)\".",
+    "off_note": "HTTPS mati untuk situs ini. Aktifkan di Umum untuk mengatur kebijakan TLS.",
     "lifetime_preset_default": "Bawaan (12h)",
     "lifetime_preset_90d": "90 hari",
     "lifetime_preset_180d": "180 hari",

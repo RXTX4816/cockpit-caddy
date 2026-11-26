@@ -991,6 +991,7 @@
     "validation_duration": "Introdu o durată Caddy precum 90d sau 2160h („y” nu este acceptat aici)",
     "validation_ratio": "Introdu un număr între 0 și 1 (exclusiv)",
     "hostless_global_only_note": "Acest proxy nu are nume de gazdă, deci Caddy nu poate delimita o politică de certificate doar pentru el. Setează durata de valabilitate și fereastra de reînnoire pentru proxy-urile fără nume de gazdă o singură dată, pentru toate, în fila Opțiuni globale, la „TLS intern (proxy-uri fără nume de gazdă)”.",
+    "off_note": "HTTPS este oprit pentru acest site. Porniți-l în General pentru a seta o politică TLS.",
     "lifetime_preset_default": "Implicit (12h)",
     "lifetime_preset_90d": "90 de zile",
     "lifetime_preset_180d": "180 de zile",

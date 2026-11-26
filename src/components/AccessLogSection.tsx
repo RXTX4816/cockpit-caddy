@@ -71,8 +71,9 @@ interface Props {
   title?: string;
   titleOn?: string;
   enableLabel?: string;
-  /** The heading inside a tab (#291); the global runtime logger isn't shown in one. */
-  heading?: string;
+  /** The heading inside a tab (#291). `null` leaves it out: the global runtime logger sits
+   *  under its own "Runtime / error log" heading and is not an access log. */
+  heading?: string | null;
   /** Caddy's own log can also take in or leave out other loggers' entries (#334). */
   showLoggerFilters?: boolean;
   /** A site's own log can leave out the requests to noisy paths (#334). */
@@ -108,7 +109,7 @@ export function AccessLogSection({ value, onChange, isDisabled, idPrefix = "al",
 
   return (
     <SectionShell
-      heading={heading ?? t("access_log.heading")}
+      heading={heading === undefined ? t("access_log.heading") : heading}
       toggleText={value.enabled ? (titleOn ?? t("access_log.section_title_on")) : (title ?? t("access_log.section_title"))}
       isIndented
       isExpanded={expanded}
