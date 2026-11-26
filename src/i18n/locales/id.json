@@ -1317,7 +1317,7 @@
   },
   "bind": {
     "label": "Alamat bind",
-    "help": "Alamat yang didengarkan situs ini, dipisahkan spasi, misalnya 127.0.0.1 ::1. Kosong mendengarkan di semua alamat. Host yang berupa satu alamat IP sudah terikat padanya.",
+    "help": "Alamat yang didengarkan situs ini, dipisahkan spasi, misalnya 127.0.0.1 ::1. Kosong mendengarkan di semua alamat, meski host berupa alamat IP: host hanya mencocokkan permintaan.",
     "invalid": "Masukkan alamat IP atau nama host, tanpa port."
   },
   "modules": {

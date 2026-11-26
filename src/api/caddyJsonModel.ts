@@ -796,26 +796,25 @@ export function parseRouteToEntry(
   // the real address instead of a blank host with an opaque matcher chip. A site
   // block with several names (`a.com, b.com {`, #208) lists all of them here.
   if (!externalHost && isHostOnlyMatcher(matchers)) {
-    externalHost = matchers.host.join(", ");
+    // An IPv6 host is bare in the matcher and bracketed in the site address (#323).
+    externalHost = matchers.host.map(h => looksLikeIp(h) ? canonicalBindHost(h) : h).join(", ");
     matchers = undefined;
   }
 
-  // `bind` next to a host name (#323): the listen addresses are the bind, and the names are in the
-  // host matcher. A listen host is an IP or a name (`bind localhost`). An IP host is in the matcher
-  // and the listen addresses both, and the form adds its bind itself, so it is not one of the binds.
-  // One IP address with no names is an IP host, as before.
+  // `bind` next to a host (#323): the listen addresses are the bind, and the names are in the host
+  // matcher. A listen host is an IP or a name (`bind localhost`). The host no longer implies a bind,
+  // so an IP host's own listen address is one of the binds too: that is how a Caddyfile written
+  // before #323 (`10.0.0.5:80 { bind 10.0.0.5 }`) keeps its listener. A JSON push from before #323
+  // named an IP host by its listen address alone; it reads back as that host with that bind.
   const listenHosts = [...new Set((server.listen ?? []).map(listenHostOf).filter(Boolean))];
   let bind: string[] | undefined;
   if (!namedServerKey && listenHosts.length && isHostOnlyMatcher(matchers)) {
-    const names = matchers.host.map(h => looksLikeIp(h) ? canonicalBindHost(h) : h);
-    const ownIp = names.length === 1 && isIpAddress(names[0]) ? names[0] : undefined;
-    const extra = listenHosts.filter(h => h !== ownIp);
-    bind = extra.length ? extra : undefined;
-    externalHost = names.join(", ");
-    matchers = undefined;
-  } else if (!namedServerKey && !matchers && (listenHosts.length > 1 || (listenHosts.length === 1 && !isIpAddress(listenHosts[0])))) {
     bind = listenHosts;
-    externalHost = undefined;
+    externalHost = matchers.host.map(h => looksLikeIp(h) ? canonicalBindHost(h) : h).join(", ");
+    matchers = undefined;
+  } else if (!namedServerKey && !matchers && listenHosts.length) {
+    bind = listenHosts;
+    if (listenHosts.length > 1 || !isIpAddress(listenHosts[0])) externalHost = undefined;
   }
 
   // #51 — Caddy enables h1/h2/h3 by default; an explicit protocols list omitting h3 is
@@ -1553,15 +1552,16 @@ export function applyServerTimeouts(server: CaddyServer, proxy: TimeoutProxy): C
 
 /**
  * Host matcher for a proxy whose site address lists several names (#208), the shape
- * Caddy's Caddyfile adapter gives `a.com, b.com { }`. A single-host or hostless proxy
- * gets none, as before, and an explicit Route Matcher (#48) always wins.
+ * Caddy's Caddyfile adapter gives `a.com, b.com { }`, or whose one host doesn't show in
+ * its listen addresses: an IP host, or any host with a bind (#323). A hostless proxy gets
+ * none, and an explicit Route Matcher (#48) always wins.
  */
 export function siteHostMatch(proxy: Pick<ProxyEntry, "externalHost" | "matchers" | "bind">): Array<Record<string, unknown>> | undefined {
   if (proxy.matchers) return undefined;
   const hosts = externalHostList(proxy.externalHost);
-  // With a bind (#323) the listen addresses no longer name the site, so its host goes into a
-  // matcher, as Caddy's adapter writes it (an IPv6 address without its brackets).
-  if (hosts.length === 1 && proxy.bind?.length) return [{ host: hosts.map(h => h.replace(/^\[(.*)\]$/, "$1")) }];
+  // The listen addresses name no host, so it goes into a matcher, as Caddy's adapter writes it
+  // (an IPv6 address without its brackets). An IP host listens on every interface (#323).
+  if (hosts.length === 1 && (proxy.bind?.length || isIpAddress(hosts[0]))) return [{ host: hosts.map(h => h.replace(/^\[(.*)\]$/, "$1")) }];
   return hosts.length > 1 ? [{ host: hosts }] : undefined;
 }
 

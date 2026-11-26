@@ -1317,7 +1317,7 @@
   },
   "bind": {
     "label": "Bind-adresser",
-    "help": "Adresserna som den här webbplatsen lyssnar på, avgränsade med mellanslag, till exempel 127.0.0.1 ::1. Tomt lyssnar på alla adresser. En värd som är en enda IP-adress binder redan till den.",
+    "help": "Adresserna som den här webbplatsen lyssnar på, avgränsade med mellanslag, till exempel 127.0.0.1 ::1. Tomt lyssnar på alla adresser, även när värden är en IP-adress: värden matchar bara förfrågningar.",
     "invalid": "Ange IP-adresser eller värdnamn, utan port."
   },
   "modules": {

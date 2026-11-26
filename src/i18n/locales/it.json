@@ -1317,7 +1317,7 @@
   },
   "bind": {
     "label": "Indirizzi di bind",
-    "help": "Gli indirizzi su cui questo sito ascolta, separati da spazi, ad esempio 127.0.0.1 ::1. Vuoto ascolta su ogni indirizzo. Un host che è un solo indirizzo IP vi è già legato.",
+    "help": "Gli indirizzi su cui questo sito ascolta, separati da spazi, ad esempio 127.0.0.1 ::1. Vuoto ascolta su ogni indirizzo, anche se l'host è un indirizzo IP: l'host filtra solo le richieste.",
     "invalid": "Inserisci indirizzi IP o nomi host, senza porta."
   },
   "modules": {

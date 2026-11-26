@@ -1317,7 +1317,7 @@
   },
   "bind": {
     "label": "Adresy bind",
-    "help": "Adresy, na których ta witryna nasłuchuje, oddzielone spacjami, np. 127.0.0.1 ::1. Puste oznacza nasłuch na wszystkich adresach. Host będący jednym adresem IP jest już z nim powiązany.",
+    "help": "Adresy, na których ta witryna nasłuchuje, oddzielone spacjami, np. 127.0.0.1 ::1. Puste oznacza nasłuch na wszystkich adresach, nawet gdy host jest adresem IP: host tylko dopasowuje żądania.",
     "invalid": "Podaj adresy IP lub nazwy hostów, bez portu."
   },
   "modules": {

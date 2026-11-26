@@ -4841,7 +4841,7 @@ describe("proxy error handlers and upstream error pages (#255)", () => {
 describe("bind next to a host name (#323)", () => {
   const site = (extra: Partial<ProxyEntry>) => proxy({ tls: false, externalHost: "example.com", ...extra });
 
-  it("writes one bind line with the addresses, and the host's own IP once", () => {
+  it("writes one bind line with the addresses, once each", () => {
     expect(proxyToBlock(site({ bind: ["10.0.0.5", "::1"] }))).toContain("\tbind 10.0.0.5 [::1]");
     expect(proxyToBlock(proxy({ tls: false, externalHost: "10.0.0.5", bind: ["10.0.0.5", "10.0.0.6"] }))).toContain("\tbind 10.0.0.5 10.0.0.6");
     expect(proxyToBlock(site({}))).not.toContain("bind");
@@ -4850,7 +4850,14 @@ describe("bind next to a host name (#323)", () => {
   it("listens on every bind address in the JSON push", () => {
     expect(buildServerEntry(site({ bind: ["10.0.0.5", "10.0.0.6"] })).listen).toEqual(["10.0.0.5:7700", "10.0.0.6:7700"]);
     expect(buildServerEntry(site({})).listen).toEqual([":7700"]);
-    expect(buildServerEntry(proxy({ tls: false, externalHost: "10.0.0.5" })).listen).toEqual(["10.0.0.5:7700"]);
+  });
+
+  it("an IP host only matches: it listens on every interface, with a host matcher, as adapt does", () => {
+    const entry = buildServerEntry(proxy({ tls: false, externalHost: "10.0.0.5" }));
+    expect(entry.listen).toEqual([":7700"]);
+    expect(entry.routes?.[0]?.match).toEqual([{ host: ["10.0.0.5"] }]);
+    expect(proxyToBlock(proxy({ tls: false, externalHost: "10.0.0.5" }))).not.toMatch(/\bbind\b/);
+    expect(buildServerEntry(proxy({ tls: false, externalHost: "[::1]" })).routes?.[0]?.match).toEqual([{ host: ["::1"] }]);
   });
 
   it("reads the names from the host matcher and the bind from the listen addresses", () => {
@@ -4875,9 +4882,9 @@ describe("bind next to a host name (#323)", () => {
   });
 
   it("builds the bind line and the listen addresses from one set (#360)", () => {
-    const p = proxy({ tls: false, externalHost: "10.0.0.5", bind: ["::1", "10.0.0.5"] });
-    expect(siteBindAddresses(p)).toEqual(["10.0.0.5", "[::1]"]);
-    expect(proxyToBlock(p)).toContain("\tbind 10.0.0.5 [::1]\n");
+    const p = proxy({ tls: false, externalHost: "10.0.0.5", bind: ["::1", "10.0.0.5", "[::1]"] });
+    expect(siteBindAddresses(p)).toEqual(["[::1]", "10.0.0.5"]);
+    expect(proxyToBlock(p)).toContain("\tbind [::1] 10.0.0.5\n");
     expect(buildServerEntry(p).listen).toEqual(siteBindAddresses(p).map(h => `${h}:7700`).sort());
   });
 
@@ -4891,16 +4898,17 @@ describe("bind next to a host name (#323)", () => {
     expect(named(["localhost:7700"]).bind).toEqual(["localhost"]);
   });
 
-  it("keeps the IP host of a site that has more binds (#360)", () => {
+  it("keeps the IP host of a site and every bind, its own IP too (#360, #323)", () => {
     const p = proxy({ tls: false, externalHost: "10.0.0.5", bind: ["10.0.0.6"] });
     const [back] = parseProxies({ apps: { http: { servers: { srv0: buildServerEntry(p) } } } } as unknown as CaddyConfig);
     expect(back).toMatchObject({ externalHost: "10.0.0.5", bind: ["10.0.0.6"] });
-    // What Caddy's adapter makes of `10.0.0.5:7700 { bind 10.0.0.5 10.0.0.6 }`.
+    // What Caddy's adapter makes of `10.0.0.5:7700 { bind 10.0.0.5 10.0.0.6 }`: the bind the plugin
+    // wrote for an IP host before #323 is now an ordinary bind, so the listener stays as it was.
     const adapted = { apps: { http: { servers: { srv0: {
       listen: ["10.0.0.5:7700", "10.0.0.6:7700"],
       routes: [{ match: [{ host: ["10.0.0.5"] }], handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:9000" }] }] }],
     } } } } } as unknown as CaddyConfig;
-    expect(parseProxies(adapted)[0]).toMatchObject({ externalHost: "10.0.0.5", bind: ["10.0.0.6"] });
+    expect(parseProxies(adapted)[0]).toMatchObject({ externalHost: "10.0.0.5", bind: ["10.0.0.5", "10.0.0.6"] });
     expect(parseProxies(adapted)[0].matchers).toBeUndefined();
   });
 
@@ -4915,10 +4923,9 @@ describe("bind next to a host name (#323)", () => {
     expect(patchRawBlock(raw, site({ bind: ["10.0.0.6"] }))).toContain("example.com {\n\tbind 10.0.0.6\n");
   });
 
-  it("keeps an IP host as a host, and several binds without a name as binds", () => {
+  it("reads a pre-#323 push of an IP host as that host with that bind, and several binds without a name as binds", () => {
     const one = { apps: { http: { servers: { srv0: { listen: ["10.0.0.5:7700"], routes: [{ handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:9000" }] }] }] } } } } } as unknown as CaddyConfig;
-    expect(parseProxies(one)[0]).toMatchObject({ externalHost: "10.0.0.5" });
-    expect(parseProxies(one)[0].bind).toBeUndefined();
+    expect(parseProxies(one)[0]).toMatchObject({ externalHost: "10.0.0.5", bind: ["10.0.0.5"] });
     const two = { apps: { http: { servers: { srv0: { listen: ["10.0.0.5:7700", "10.0.0.6:7700"], routes: [{ handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:9000" }] }] }] } } } } } as unknown as CaddyConfig;
     expect(parseProxies(two)[0].externalHost).toBeUndefined();
     expect(parseProxies(two)[0].bind).toEqual(["10.0.0.5", "10.0.0.6"]);

@@ -1317,7 +1317,7 @@
   },
   "bind": {
     "label": "Bind-adressen",
-    "help": "De adressen waarop deze site luistert, gescheiden door spaties, bijvoorbeeld 127.0.0.1 ::1. Leeg luistert op elk adres. Een host die één IP-adres is, bindt er al aan.",
+    "help": "De adressen waarop deze site luistert, gescheiden door spaties, bijvoorbeeld 127.0.0.1 ::1. Leeg luistert op elk adres, ook als de host een IP-adres is: de host filtert alleen verzoeken.",
     "invalid": "Voer IP-adressen of hostnamen in, zonder poort."
   },
   "modules": {

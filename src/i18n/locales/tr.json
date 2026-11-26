@@ -1317,7 +1317,7 @@
   },
   "bind": {
     "label": "Bind adresleri",
-    "help": "Bu sitenin dinlediği adresler, boşlukla ayrılmış, örneğin 127.0.0.1 ::1. Boş, tüm adreslerde dinler. Tek bir IP adresi olan ana makine zaten ona bağlanır.",
+    "help": "Bu sitenin dinlediği adresler, boşlukla ayrılmış, örneğin 127.0.0.1 ::1. Boş, ana makine bir IP adresi olsa bile tüm adreslerde dinler: ana makine yalnızca istekleri eşleştirir.",
     "invalid": "Port olmadan IP adresleri veya ana makine adları girin."
   },
   "modules": {

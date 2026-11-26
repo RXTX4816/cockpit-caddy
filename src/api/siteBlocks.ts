@@ -6,7 +6,7 @@ import { type ProxyEntry } from "./types";
 import { externalHostList } from "./externalHosts";
 import { hasNestedBlocks } from "./siteTree";
 import { dnsProviderLines, buildLogCaddyLines } from "./globalOptions";
-import { caddyQuote, parseSiteAddresses, isIpAddress, findMatchingBlock, findBlockPositions, CONF_HEADER, sameHostSet, hostsConflict, surgicallyRemoveBlock, isCaddyInternalSubject, findServerBlock, surgicallyRemoveServerBlock } from "./caddyfileDocument";
+import { caddyQuote, parseSiteAddresses, findMatchingBlock, findBlockPositions, CONF_HEADER, sameHostSet, hostsConflict, surgicallyRemoveBlock, isCaddyInternalSubject, findServerBlock, surgicallyRemoveServerBlock } from "./caddyfileDocument";
 export { caddyQuote };
 
 // ---------------------------------------------------------------------------
@@ -1095,16 +1095,9 @@ export function proxiesToCaddyfile(proxies: ProxyEntry[]): string {
 export const UPSTREAM_ERROR_MESSAGE = "upstream error";
 
 
-/** True when the host field is one IP address, which the plugin treats as the bind address. */
-export function bindsToIp(proxy: { externalHost?: string }): boolean {
-  return !!proxy.externalHost && externalHostList(proxy.externalHost).length === 1 && isIpAddress(proxy.externalHost);
-}
-
-
 /**
- * An IP site address only matches the Host header in a Caddyfile and still listens on every
- * interface; `bind` is what restricts the listener, as the instant-apply JSON's `IP:port`
- * listen address does (#254).
+ * The site's `bind` line. The host only matches the Host header, an IP host too: as in Caddy,
+ * only `bind` restricts the listener (#323). The JSON push listens on the same addresses (#254).
  */
 export function buildBindLines(proxy: { externalHost?: string; bind?: string[] }): string[] {
   const addresses = siteBindAddresses(proxy);
@@ -1120,13 +1113,11 @@ export function canonicalBindHost(host: string): string {
 
 
 /**
- * Every address a site binds to, once each: the IP its host field names (#254), then its bind
- * addresses (#323). The Caddyfile's `bind` line and the JSON push's listen addresses are both
- * built from it.
+ * Every address a site binds to, once each, as Caddy writes them (#323). The Caddyfile's `bind`
+ * line and the JSON push's listen addresses are both built from it.
  */
-export function siteBindAddresses(proxy: { externalHost?: string; bind?: string[] }): string[] {
-  const all = [...(bindsToIp(proxy) ? [proxy.externalHost!] : []), ...(proxy.bind ?? [])];
-  return [...new Set(all.map(canonicalBindHost).filter(Boolean))];
+export function siteBindAddresses(proxy: { bind?: string[] }): string[] {
+  return [...new Set((proxy.bind ?? []).map(canonicalBindHost).filter(Boolean))];
 }
 
 

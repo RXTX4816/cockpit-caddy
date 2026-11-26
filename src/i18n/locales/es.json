@@ -1317,7 +1317,7 @@
   },
   "bind": {
     "label": "Direcciones de enlace",
-    "help": "Las direcciones en las que escucha este sitio, separadas por espacios, por ejemplo 127.0.0.1 ::1. Vacío escucha en todas. Un host que es una sola dirección IP ya se enlaza a ella.",
+    "help": "Las direcciones en las que escucha este sitio, separadas por espacios, por ejemplo 127.0.0.1 ::1. Vacío escucha en todas, aunque el host sea una dirección IP: el host solo filtra las solicitudes.",
     "invalid": "Introduzca direcciones IP o nombres de host, sin puerto."
   },
   "modules": {

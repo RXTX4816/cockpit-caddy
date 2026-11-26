@@ -1317,7 +1317,7 @@
   },
   "bind": {
     "label": "Endereços de bind",
-    "help": "Os endereços em que este site escuta, separados por espaços, por exemplo 127.0.0.1 ::1. Vazio escuta em todos. Um host que é um único endereço IP já se liga a ele.",
+    "help": "Os endereços em que este site escuta, separados por espaços, por exemplo 127.0.0.1 ::1. Vazio escuta em todos, mesmo que o host seja um endereço IP: o host só filtra as requisições.",
     "invalid": "Informe endereços IP ou nomes de host, sem porta."
   },
   "modules": {

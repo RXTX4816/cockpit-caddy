@@ -76,7 +76,7 @@ Click **Add Proxy** in the toolbar.
 
 | Field | Description |
 |---|---|
-| External Address | Port (and optionally scheme + hostname) Caddy listens on — omitted when adding to a named server. Several hostnames can share one proxy: separate them with commas (`example.com, www.example.com`) and they are written as one site block with every name. An IP address as the host binds only that IP (`bind`), so the port isn't opened on every interface |
+| External Address | Port (and optionally scheme + hostname) Caddy listens on — omitted when adding to a named server. Several hostnames can share one proxy: separate them with commas (`example.com, www.example.com`) and they are written as one site block with every name. The host only matches requests, an IP address too; to open the port on some interfaces only, list them under **Bind addresses** (`bind`) |
 | Target Host | Upstream host to forward traffic to (default `localhost`) |
 | Target Port | Upstream port |
 

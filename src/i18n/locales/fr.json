@@ -1317,7 +1317,7 @@
   },
   "bind": {
     "label": "Adresses de liaison",
-    "help": "Les adresses sur lesquelles ce site écoute, séparées par des espaces, par exemple 127.0.0.1 ::1. Vide écoute sur toutes les adresses. Un hôte qui est une seule adresse IP s'y lie déjà.",
+    "help": "Les adresses sur lesquelles ce site écoute, séparées par des espaces, par exemple 127.0.0.1 ::1. Vide écoute sur toutes les adresses, même si l'hôte est une adresse IP : l'hôte ne sert qu'à filtrer les requêtes.",
     "invalid": "Saisissez des adresses IP ou des noms d'hôte, sans port."
   },
   "modules": {

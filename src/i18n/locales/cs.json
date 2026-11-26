@@ -1317,7 +1317,7 @@
   },
   "bind": {
     "label": "Adresy pro bind",
-    "help": "Adresy, na kterých tento web poslouchá, oddělené mezerami, například 127.0.0.1 ::1. Prázdné znamená všechny adresy. Hostitel, který je jedinou IP adresou, se na ni už váže.",
+    "help": "Adresy, na kterých tento web poslouchá, oddělené mezerami, například 127.0.0.1 ::1. Prázdné znamená všechny adresy, i když je hostitelem IP adresa: hostitel jen porovnává požadavky.",
     "invalid": "Zadejte IP adresy nebo názvy hostitelů bez portu."
   },
   "modules": {

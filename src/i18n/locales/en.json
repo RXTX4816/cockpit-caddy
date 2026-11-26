@@ -1317,7 +1317,7 @@
   },
   "bind": {
     "label": "Bind addresses",
-    "help": "The addresses this site listens on, separated by spaces, for example 127.0.0.1 ::1. Empty listens on every address. A host that is one IP address already binds to it.",
+    "help": "The addresses this site listens on, separated by spaces, for example 127.0.0.1 ::1. Empty listens on every address, even when the host is an IP address: the host only matches requests.",
     "invalid": "Enter IP addresses or host names, without a port."
   },
   "modules": {

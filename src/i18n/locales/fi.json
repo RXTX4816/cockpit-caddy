@@ -1317,7 +1317,7 @@
   },
   "bind": {
     "label": "Bind-osoitteet",
-    "help": "Osoitteet, joissa tämä sivusto kuuntelee, välilyönnein erotettuina, esimerkiksi 127.0.0.1 ::1. Tyhjä kuuntelee kaikissa osoitteissa. Isäntä, joka on yksi IP-osoite, sitoutuu jo siihen.",
+    "help": "Osoitteet, joissa tämä sivusto kuuntelee, välilyönnein erotettuina, esimerkiksi 127.0.0.1 ::1. Tyhjä kuuntelee kaikissa osoitteissa, vaikka isäntä olisi IP-osoite: isäntä vain tunnistaa pyynnöt.",
     "invalid": "Anna IP-osoitteita tai isäntänimiä ilman porttia."
   },
   "modules": {

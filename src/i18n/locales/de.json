@@ -1317,7 +1317,7 @@
   },
   "bind": {
     "label": "Bind-Adressen",
-    "help": "Die Adressen, auf denen diese Site lauscht, durch Leerzeichen getrennt, zum Beispiel 127.0.0.1 ::1. Leer lauscht auf jeder Adresse. Ein Host, der eine einzelne IP-Adresse ist, bindet bereits daran.",
+    "help": "Die Adressen, auf denen diese Site lauscht, durch Leerzeichen getrennt, zum Beispiel 127.0.0.1 ::1. Leer lauscht auf jeder Adresse, auch wenn der Host eine IP-Adresse ist: Der Host prüft nur die Anfragen.",
     "invalid": "Geben Sie IP-Adressen oder Hostnamen ohne Port ein."
   },
   "modules": {

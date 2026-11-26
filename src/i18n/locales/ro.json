@@ -1317,7 +1317,7 @@
   },
   "bind": {
     "label": "Adrese de bind",
-    "help": "Adresele pe care ascultă acest site, separate prin spații, de exemplu 127.0.0.1 ::1. Gol ascultă pe toate adresele. O gazdă care este o singură adresă IP se leagă deja la ea.",
+    "help": "Adresele pe care ascultă acest site, separate prin spații, de exemplu 127.0.0.1 ::1. Gol ascultă pe toate adresele, chiar dacă gazda este o adresă IP: gazda doar potrivește cererile.",
     "invalid": "Introdu adrese IP sau nume de gazdă, fără port."
   },
   "modules": {
