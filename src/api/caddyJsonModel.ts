@@ -787,8 +787,9 @@ export function parseRouteToEntry(
   certLoadFiles: import("./types").CaddyCertLoadFile[] | undefined,
   acmeAccount?: AcmeAccount,
 ): ProxyEntry | undefined {
-  const handles = (route.handle ?? []) as AnyHandler[];
+  let handles = (route.handle ?? []) as AnyHandler[];
   let matchers = route.match?.[0] ? parseMatcherJson(route.match[0]) : undefined;
+  const hostRoute = isHostOnlyMatcher(matchers);
 
   // A route whose only matcher is a host list is how Caddy represents a
   // hostname-only Caddyfile site block (no explicit port) sharing an implicit
@@ -817,6 +818,23 @@ export function parseRouteToEntry(
     externalHost = undefined;
   }
 
+  // A host site with a route matcher (`api.example.com { @api { ... } handle @api { ... } }`) adapts to
+  // its host route holding a subroute with one matched route in it: that match is the site's matcher,
+  // as the route's own match is for a site without a host. Its `log_skip` routes sit next to it.
+  let outerSkipPaths: string[] = [];
+  let siteRoute = route;
+  if (hostRoute && !matchers && handles.length === 1 && handles[0].handler === "subroute") {
+    const inner = ((handles[0] as { routes?: CaddyRoute[] }).routes ?? []);
+    const content = inner.filter(r => !isLogSkipRoute(r));
+    const only = content.length === 1 ? content[0] : undefined;
+    if (only?.match?.length === 1) {
+      matchers = parseMatcherJson(only.match[0]);
+      handles = (only.handle ?? []) as AnyHandler[];
+      siteRoute = only;
+      outerSkipPaths = inner.filter(isLogSkipRoute).flatMap(r => logSkipRoutePaths(r as { match?: Array<Record<string, unknown>> }).paths);
+    }
+  }
+
   // #51 — Caddy enables h1/h2/h3 by default; an explicit protocols list omitting h3 is
   // how a user opted out of HTTP/3.
   const disableHttp3 = Array.isArray(server.protocols) && !server.protocols.includes("h3") || undefined;
@@ -831,8 +849,8 @@ export function parseRouteToEntry(
     ? subrouteH.routes.flatMap(r => (r.handle ?? []) as AnyHandler[])
     : handles;
   // A `log_skip` inside the site's own subroute keeps its paths in the site's log settings (#334).
-  const innerSkipPaths = (subrouteH?.routes ?? []).filter(isLogSkipRoute)
-    .flatMap(r => logSkipRoutePaths(r as { match?: Array<Record<string, unknown>> }).paths);
+  const innerSkipPaths = [...outerSkipPaths, ...(subrouteH?.routes ?? []).filter(isLogSkipRoute)
+    .flatMap(r => logSkipRoutePaths(r as { match?: Array<Record<string, unknown>> }).paths)];
   const accessLog = siteAccessLog && innerSkipPaths.length ? { ...siteAccessLog, skipPaths: innerSkipPaths } : siteAccessLog;
 
   // Detect php_fastcgi (#35) — must run before the redirect/static_response checks below,
@@ -840,7 +858,7 @@ export function parseRouteToEntry(
   // a Location header and would otherwise be misdetected as a plain redirect proxy. Uses
   // the subroute's own inner routes (not effectiveHandles) so each route's `match` survives
   // long enough to recover a custom index filename — see detectPhpFastcgiFromRoutes.
-  const phpFastcgi = detectPhpFastcgiFromRoutes(subrouteH?.routes?.length ? subrouteH.routes : [route]);
+  const phpFastcgi = detectPhpFastcgiFromRoutes(subrouteH?.routes?.length ? subrouteH.routes : [siteRoute]);
   if (phpFastcgi) {
     const phpTls = serverHasTls(server, automationPolicies, externalHost);
     const phpTlsPolicy = Array.isArray(server.tls_connection_policies) ? server.tls_connection_policies[0] : undefined;
@@ -859,7 +877,7 @@ export function parseRouteToEntry(
       requestBodyMaxSize: parseRequestBodyMaxSize(effectiveHandles),
       matchers,
       serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, serverExtras, bind, accessLog,
-      errorHandlers: parseErrorHandlers(server),
+      errorHandlers: parseErrorHandlers(server, externalHost),
       tlsAdvanced: phpTlsPolicy ? parseTlsAdvanced(phpTlsPolicy, automationPolicies, tlsSubjectHosts(externalHost)[0], acmeAccount) : parseSiteAcmeSettings(automationPolicies, tlsSubjectHosts(externalHost)[0], acmeAccount),
       mtls: phpTlsPolicy ? parseMtls(phpTlsPolicy) : undefined,
     };
@@ -882,7 +900,7 @@ export function parseRouteToEntry(
       redirect: { to: jsonPlaceholderToCaddy(htmlRedirect), code: 302, html: true },
       matchers,
       serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, serverExtras, bind, accessLog,
-      errorHandlers: parseErrorHandlers(server),
+      errorHandlers: parseErrorHandlers(server, externalHost),
     };
   }
 
@@ -906,7 +924,7 @@ export function parseRouteToEntry(
       redirect: { to: jsonPlaceholderToCaddy(locationHeader), code },
       matchers,
       serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, serverExtras, bind, accessLog,
-      errorHandlers: parseErrorHandlers(server),
+      errorHandlers: parseErrorHandlers(server, externalHost),
     };
   }
 
@@ -930,7 +948,7 @@ export function parseRouteToEntry(
       },
       matchers,
       serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, serverExtras, bind, accessLog,
-      errorHandlers: parseErrorHandlers(server),
+      errorHandlers: parseErrorHandlers(server, externalHost),
     };
   }
 
@@ -967,7 +985,7 @@ export function parseRouteToEntry(
           ?? "",
         browse: fsHandle.browse !== undefined,
         ...(parseTemplatesJson(effectiveHandles) ? { templates: parseTemplatesJson(effectiveHandles) } : {}),
-        ...parseFileServerOptions(fsHandle, subrouteH?.routes?.length ? subrouteH.routes : [route]),
+        ...parseFileServerOptions(fsHandle, subrouteH?.routes?.length ? subrouteH.routes : [siteRoute]),
       },
       requestBodyMaxSize: parseRequestBodyMaxSize(effectiveHandles),
       compress: fsCompress || undefined,
@@ -977,7 +995,7 @@ export function parseRouteToEntry(
       responseHeaders: fsResponseHeaders.length ? fsResponseHeaders : undefined,
       matchers,
       serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, serverExtras, bind, accessLog,
-      errorHandlers: parseErrorHandlers(server),
+      errorHandlers: parseErrorHandlers(server, externalHost),
       tlsAdvanced: fsTlsPolicy ? parseTlsAdvanced(fsTlsPolicy, automationPolicies, tlsSubjectHosts(externalHost)[0], acmeAccount) : parseSiteAcmeSettings(automationPolicies, tlsSubjectHosts(externalHost)[0], acmeAccount),
       mtls: fsTlsPolicy ? parseMtls(fsTlsPolicy) : undefined,
     };
@@ -1108,7 +1126,7 @@ export function parseRouteToEntry(
     matchers,
     handlePath,
     serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, serverExtras, bind, accessLog,
-    errorHandlers: parseErrorHandlers(server),
+    errorHandlers: parseErrorHandlers(server, externalHost),
     replaceUpstreamErrors: reraisesUpstreamErrors(rp) || undefined,
     forwardAuth,
     tlsAdvanced: tlsPolicy ? parseTlsAdvanced(tlsPolicy, automationPolicies, tlsSubjectHosts(externalHost)[0], acmeAccount) : parseSiteAcmeSettings(automationPolicies, tlsSubjectHosts(externalHost)[0], acmeAccount),
@@ -1217,7 +1235,7 @@ export function parseProxies(config: CaddyConfig, serverDefs?: import("./types")
         requestBodyMaxSize: parseRequestBodyMaxSize(contentRoutes.flatMap(r => (r.handle ?? []) as AnyHandler[])),
         serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
         disableHttp3: phpDisableHttp3, serverExtras, accessLog,
-        errorHandlers: parseErrorHandlers(server),
+        errorHandlers: parseErrorHandlers(server, externalHost),
       });
       continue;
     }
@@ -1995,12 +2013,34 @@ export function reraisesUpstreamErrors(rp: CaddyReverseProxyHandler): boolean {
 }
 
 
-export function parseErrorHandlers(server: CaddyServer): import("./types").ErrorHandlerConfig[] | undefined {
+/**
+ * The error handlers of a site. A server shared by several host sites has one error route per site
+ * that has any, matched on the site's hosts with the status matchers in a subroute inside (what
+ * `caddy adapt` makes of `a.example.com { handle_errors 5xx { ... } }`): only the site's own count,
+ * and the routes inside are read as its handlers. Routes without a host matcher are every site's.
+ */
+export function parseErrorHandlers(server: CaddyServer, externalHost?: string): import("./types").ErrorHandlerConfig[] | undefined {
   const errRoutes = (server.errors as { routes?: unknown[] } | undefined)?.routes;
   if (!errRoutes?.length) return undefined;
 
-  const handlers: import("./types").ErrorHandlerConfig[] = [];
+  const bare = (h: string) => h.replace(/^\[(.*)\]$/, "$1").toLowerCase();
+  const siteHosts = externalHostList(externalHost).map(bare);
+  const routes: Array<Record<string, unknown>> = [];
   for (const route of errRoutes as Array<Record<string, unknown>>) {
+    const match = route.match as Array<Record<string, unknown>> | undefined;
+    const hosts = match?.length === 1 && Object.keys(match[0]).length === 1 ? match[0].host : undefined;
+    if (!Array.isArray(hosts)) {
+      routes.push(route);
+      continue;
+    }
+    if (!hosts.some(h => typeof h === "string" && siteHosts.includes(bare(h)))) continue;
+    const handle = (route.handle as Array<Record<string, unknown>> | undefined) ?? [];
+    const inner = handle.length === 1 && handle[0].handler === "subroute" ? handle[0].routes as Array<Record<string, unknown>> | undefined : undefined;
+    routes.push(...(inner ?? [{ handle }]));
+  }
+
+  const handlers: import("./types").ErrorHandlerConfig[] = [];
+  for (const route of routes) {
     const matchArr = (route.match as Array<Record<string, unknown>> | undefined) ?? [];
     const firstMatch = matchArr[0] ?? {};
 

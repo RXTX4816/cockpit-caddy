@@ -116,6 +116,20 @@ describe("liveChangeFor", () => {
   });
 });
 
+describe("needsCaddyfileReload for a host site with a route matcher", () => {
+  const base = { id: "x", serverKey: "x", externalPort: 8443, targetHost: "localhost", targetPort: 8000, targetScheme: "http", tls: false, tlsSkipVerify: false } as ProxyEntry;
+  // The pushed JSON matches the route on its matcher alone, while `caddy adapt` puts it under the
+  // site's host route: until the next reload it would answer requests for any host on the port.
+  it("reloads a site with a host and a matcher", () => {
+    expect(needsCaddyfileReload({ ...base, externalHost: "api.example.com", matchers: { path: ["/api/*"] } })).toBe(true);
+  });
+
+  it("still pushes a hostless site with a matcher, and a host site without one", () => {
+    expect(needsCaddyfileReload({ ...base, matchers: { path: ["/api/*"] } })).toBe(false);
+    expect(needsCaddyfileReload({ ...base, externalHost: "api.example.com" })).toBe(false);
+  });
+});
+
 describe("needsCaddyfileReload for a site with nested blocks (#348)", () => {
   it("reloads instead of pushing the form's single target over the blocks", () => {
     const base = { id: "x", serverKey: "x", externalHost: "example.com", externalPort: 443, targetHost: "", targetPort: 0, targetScheme: "http", tls: true, tlsSkipVerify: false } as ProxyEntry;

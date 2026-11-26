@@ -5610,3 +5610,37 @@ describe("metrics per_host (#342)", () => {
   });
 });
 
+
+describe("a host site's route matcher and error handlers read back (C19)", () => {
+  // What `caddy adapt` 2.11 makes of
+  //   a.example.com { @api { path /api/* }  handle @api { reverse_proxy localhost:8000 }  handle_errors 5xx { respond "down" 503 } }
+  //   b.example.com { reverse_proxy localhost:9000 }
+  const config = { apps: { http: { servers: { srv0: {
+    listen: [":443"],
+    routes: [
+      { match: [{ host: ["a.example.com"] }], terminal: true, handle: [{ handler: "subroute", routes: [
+        { match: [{ path: ["/api/*"] }], handle: [{ handler: "subroute", routes: [{ handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:8000" }] }] }] }] },
+      ] }] },
+      { match: [{ host: ["b.example.com"] }], terminal: true, handle: [{ handler: "subroute", routes: [{ handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:9000" }] }] }] }] },
+    ],
+    errors: { routes: [
+      { match: [{ host: ["a.example.com"] }], terminal: true, handle: [{ handler: "subroute", routes: [
+        { match: [{ expression: "{http.error.status_code} >= 500 && {http.error.status_code} <= 599" }], handle: [{ handler: "subroute", routes: [{ handle: [{ handler: "static_response", body: "down", status_code: 503 }] }] }] },
+      ] }] },
+    ] },
+  } } } } } as unknown as CaddyConfig;
+  const site = (host: string) => parseProxies(config).find(p => p.externalHost === host)!;
+
+  it("reads the matcher of the site's one handle", () => {
+    expect(site("a.example.com")).toMatchObject({ matchers: { path: ["/api/*"] }, targetPort: 8000 });
+    expect(site("b.example.com").matchers).toBeUndefined();
+  });
+
+  it("reads the status matcher of a host site's handle_errors", () => {
+    expect(site("a.example.com").errorHandlers).toEqual([{ matchType: "5xx", type: "respond", body: "down", statusCode: 503 }]);
+  });
+
+  it("gives a host site's error handlers to that site only", () => {
+    expect(site("b.example.com").errorHandlers).toBeUndefined();
+  });
+});
