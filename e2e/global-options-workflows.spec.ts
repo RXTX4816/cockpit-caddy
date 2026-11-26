@@ -11,31 +11,29 @@
  * The result: real user labels vanished from the Caddyfile the moment they saved *any*
  * Settings field, even one entirely unrelated to TLS/internal-CA.
  */
-import { test, expect, dismissAdminBanner } from './fixtures';
-import { addProxy, readFile, PROXY_CONF_PATH } from './helpers';
+import { test, expect } from './fixtures';
+import { addProxy, readFile, PROXY_CONF_PATH, CADDYFILE_PATH, openSettingsTab, saveSettings } from './helpers';
 
 test('saving Settings does not strip labels from existing TLS proxies', async ({ pluginPage: page }) => {
   await addProxy(page, { port: 8443, target: 'localhost:9000', tls: 'internal', label: 'My Important Service' });
 
-  await dismissAdminBanner(page);
-  await page.getByRole('tab', { name: /settings/i }).click();
-  await page.getByRole('heading', { name: 'Storage' }).waitFor({ state: 'visible', timeout: 10000 });
+  await openSettingsTab(page, 'Core');
 
   // Change something unrelated to TLS/internal-CA entirely, to prove the label-stripping
   // isn't specific to editing the lifetime field itself.
   const debugCheckbox = page.locator('#go-debug');
   const wasChecked = await debugCheckbox.isChecked().catch(() => false);
   await debugCheckbox.setChecked(!wasChecked);
-  await page.getByRole('button', { name: /save/i }).click();
-  await page.getByRole('button', { name: /^confirm$/i }).click();
-  await expect(page.getByText(/settings saved/i)).toBeVisible({ timeout: 10000 });
+  await saveSettings(page);
+  await expect(page.getByText(/settings saved/i).first()).toBeVisible({ timeout: 10000 });
+  // The save itself went through, so the check below isn't vacuous.
+  expect((await readFile(page, CADDYFILE_PATH)).includes('debug')).toBe(!wasChecked);
 
   const conf = await readFile(page, PROXY_CONF_PATH);
   expect(conf).toContain('# label: My Important Service');
 
   // Cleanup: restore the checkbox so state doesn't leak into later tests.
-  await page.getByRole('tab', { name: /settings/i }).click();
+  await openSettingsTab(page, 'Core');
   await debugCheckbox.setChecked(wasChecked);
-  await page.getByRole('button', { name: /save/i }).click();
-  await page.getByRole('button', { name: /^confirm$/i }).click().catch(() => {});
+  await saveSettings(page);
 });

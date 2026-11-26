@@ -7,7 +7,7 @@
  */
 import type { Locator } from '@playwright/test';
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { readConf, spawnCmd, openSection } from './helpers';
+import { readConf, spawnCmd, openSection, headerSection, pickHeaderOp } from './helpers';
 import { waitForListener } from './live';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
@@ -19,13 +19,10 @@ function proxyRow(page: import('@playwright/test').Page, port: number) {
   return page.locator('li').filter({ has: page.locator(`#proxy-${port}`) });
 }
 
-/** Route Matchers also has a header-matcher field labeled "Header name"/"Value" that
- *  stays in the DOM (just visually collapsed) when this accordion section is the one
- *  expanded — getByLabel('Header name') alone is ambiguous across the modal. Scope to
- *  the Request Headers region specifically, matching how PatternFly exposes the
- *  ExpandableSection's toggle text as the region's accessible name. */
+/** Route Matchers and the two response-header sections on the same Routing tab have
+ *  fields labeled "Header name"/"Value" too, so scope to the Request Headers region. */
 function requestHeadersSection(modal: Locator) {
-  return modal.getByRole('region', { name: /^request headers/i });
+  return headerSection(modal, 'request');
 }
 
 test('add request header preset writes correct Caddyfile directive', async ({ pluginPage: page }) => {
@@ -65,13 +62,13 @@ test('custom set/add/delete header operations write correct Caddyfile directives
   await requestHeadersSection(modal).getByRole('button', { name: /^add$/i }).last().click();
 
   // add
-  await modal.locator('#hdr-op-add').click();
+  await pickHeaderOp(requestHeadersSection(modal), 'Add');
   await requestHeadersSection(modal).getByLabel('Header name').fill('X-Custom-Add');
   await requestHeadersSection(modal).getByLabel('Value').fill('world');
   await requestHeadersSection(modal).getByRole('button', { name: /^add$/i }).last().click();
 
   // delete
-  await modal.locator('#hdr-op-delete').click();
+  await pickHeaderOp(requestHeadersSection(modal), 'Delete');
   await requestHeadersSection(modal).getByLabel('Header name').fill('X-Remove-Me');
   await requestHeadersSection(modal).getByRole('button', { name: /^add$/i }).last().click();
 

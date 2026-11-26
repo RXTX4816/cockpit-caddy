@@ -7,8 +7,11 @@
  * /etc/caddy, or Caddy silently can't write to it despite the config being valid.
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { readFile, readConf, spawnCmd, CADDYFILE_PATH, openSection } from './helpers';
-import { waitForListener } from './live';
+import {
+  readFile, readConf, spawnCmd, CADDYFILE_PATH, openSection,
+  openSettingsTab, saveSettings, reloadFromSettings,
+} from './helpers';
+import { waitForListener, expectCaddyActive } from './live';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
   await dismissAdminBanner(page);
@@ -82,27 +85,33 @@ test('a real request produces a log entry in the configured access log file', as
 
 test('enabling the global runtime log writes the correct log directive', async ({ pluginPage: page }) => {
   await waitForToolbar(page);
-  await page.getByRole('tab', { name: /settings/i }).click();
-  await page.getByRole('heading', { name: 'Global Caddy options' }).waitFor({ state: 'visible', timeout: 10000 });
+  // The runtime log sits on the Settings tab's "Logging & metrics" sub-tab, with its
+  // switch shown directly instead of behind its own expander (#346, #363).
+  await openSettingsTab(page, 'Logging & metrics');
+  await spawnCmd(page, ['rm', '-f', '/var/log/caddy/e2e-runtime.log']);
 
-  await page.getByRole('button', { name: /runtime log/i }).click();
   await page.locator('#rl-enabled').check();
   await page.locator('#rl-output-file').check();
   await page.locator('#rl-file-path').fill('/var/log/caddy/e2e-runtime.log');
   await page.locator('#rl-level-ERROR').check();
 
-  await page.getByRole('button', { name: /^save$/i }).click();
-  await page.getByRole('button', { name: /^confirm$/i }).click();
-  await expect(page.getByText(/settings saved/i)).toBeVisible({ timeout: 10000 });
+  await saveSettings(page);
+  await expect(page.getByText(/settings saved/i).first()).toBeVisible({ timeout: 10000 });
 
   const conf = await readFile(page, CADDYFILE_PATH);
   expect(conf).toContain('log {');
   expect(conf).toContain('output file /var/log/caddy/e2e-runtime.log');
   expect(conf).toContain('level ERROR');
 
+  // Caddy accepts it live, and writes its runtime log to that file from then on.
+  await reloadFromSettings(page);
+  await expectCaddyActive(page);
+  await expect.poll(async () => (await spawnCmd(page, ['bash', '-c', 'test -f /var/log/caddy/e2e-runtime.log && echo yes; true'])).trim(), { timeout: 10000 })
+    .toBe('yes');
+
   // Cleanup: disable so this doesn't leak a global log override into later tests.
   await page.locator('#rl-enabled').uncheck();
-  await page.getByRole('button', { name: /^save$/i }).click();
-  await page.getByRole('button', { name: /^confirm$/i }).click();
-  await expect(page.getByText(/settings saved/i)).toBeVisible({ timeout: 10000 });
+  await saveSettings(page);
+  expect(await readFile(page, CADDYFILE_PATH)).not.toContain('e2e-runtime.log');
+  await reloadFromSettings(page);
 });

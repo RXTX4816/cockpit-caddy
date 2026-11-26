@@ -8,22 +8,22 @@
  */
 import type { Page } from '@playwright/test';
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { readFile, writeFile, spawnCmd, readConf, rowAction, CADDYFILE_PATH, PROXY_CONF_PATH } from './helpers';
+import {
+  readFile, writeFile, spawnCmd, readConf, rowAction, CADDYFILE_PATH, PROXY_CONF_PATH,
+  openSettingsTab, saveSettings as saveSettingsForm,
+} from './helpers';
 
 const ENV_FILE = '/etc/caddy/dns.env';
 const DROPIN = '/etc/systemd/system/caddy.service.d/cockpit-caddy-dns.conf';
 const SECRET = 'e2e-secret-token-261';
 
 async function openSettings(page: Page) {
-  await dismissAdminBanner(page);
-  await page.getByRole('tab', { name: /settings/i }).click();
-  await page.getByRole('heading', { name: 'DNS challenge' }).waitFor({ state: 'visible', timeout: 10000 });
+  await openSettingsTab(page, 'TLS & ACME');
 }
 
 async function saveSettings(page: Page) {
-  await page.getByRole('button', { name: /^save/i }).click();
-  await page.getByRole('button', { name: /^confirm$/i }).click();
-  await expect(page.getByText(/settings saved/i)).toBeVisible({ timeout: 15000 });
+  await saveSettingsForm(page);
+  await expect(page.getByText(/settings saved/i).first()).toBeVisible({ timeout: 15000 });
 }
 
 async function hasCloudflare(page: Page): Promise<boolean> {

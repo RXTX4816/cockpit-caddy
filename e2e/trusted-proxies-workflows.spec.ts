@@ -16,7 +16,10 @@
  * button (unlike the toolbar's copy of the same label) has no confirmation dialog.
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { spawnCmd, readFile, CADDYFILE_PATH, startHttpBackend, openSection } from './helpers';
+import {
+  spawnCmd, readFile, CADDYFILE_PATH, startHttpBackend, openSection,
+  openSettingsTab, saveSettings, reloadFromSettings,
+} from './helpers';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
   await dismissAdminBanner(page);
@@ -26,8 +29,7 @@ async function waitForToolbar(page: import('@playwright/test').Page) {
 /** Saves the trusted-proxies Settings fields. Does not reload — callers that need the
  *  change live (not just on disk) must also call reloadConfig() themselves. */
 async function saveTrustedProxies(page: import('@playwright/test').Page, ranges: string | null): Promise<void> {
-  await page.getByRole('tab', { name: /settings/i }).click();
-  await page.getByRole('heading', { name: 'Global Caddy options' }).waitFor({ state: 'visible', timeout: 10000 });
+  await openSettingsTab(page, 'Proxy headers & protocols');
 
   const enabledCheckbox = page.locator('#go-trusted-proxies-enabled');
   if (ranges === null) {
@@ -36,20 +38,11 @@ async function saveTrustedProxies(page: import('@playwright/test').Page, ranges:
     if (!(await enabledCheckbox.isChecked())) await enabledCheckbox.check();
     await page.locator('#go-trusted-proxies-ranges').fill(ranges);
   }
-  await page.getByRole('button', { name: /save/i }).click();
-  await page.getByRole('button', { name: /^confirm$/i }).click();
-  await expect(page.getByText(/settings saved/i)).toBeVisible({ timeout: 10000 });
+  await saveSettings(page);
+  await expect(page.getByText(/settings saved/i).first()).toBeVisible({ timeout: 10000 });
 }
 
-/** The Settings tab's own inline "Reload config" button (inside its "needs reload"
- *  warning banner) calls reloadService directly with no confirmation dialog — unlike the
- *  toolbar's copy of the same label, which opens a "Reload Caddy config?" confirm dialog
- *  that then sits open and blocks the tab bar underneath it if left unconfirmed. Scoped to
- *  the Settings tabpanel specifically so it can't accidentally match the toolbar button. */
-async function reloadConfig(page: import('@playwright/test').Page): Promise<void> {
-  await page.getByRole('tabpanel', { name: /settings/i }).getByRole('button', { name: /reload config/i }).click();
-  await expect(page.getByText(/caddy config reloaded/i)).toBeVisible({ timeout: 10000 });
-}
+const reloadConfig = reloadFromSettings;
 
 /** Reads Caddy's own live running config straight from the admin API socket — the
  *  ground truth for "did this setting actually reach the already-running server,"
