@@ -42,6 +42,8 @@ Each server tab shows:
 
 Use the **Edit Server** and **Delete Server** buttons in the server info card. Deleting a server removes it and all its routes.
 
+![Edit Server dialog](https://raw.githubusercontent.com/RXTX4816/cockpit-caddy/main/docs/assets/screenshots/edit-server.png)
+
 ---
 
 ## Route Matchers
