@@ -21,14 +21,14 @@ import {
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
-import { readGlobalOptions, syncGlobalOptions, reloadCaddy, readMainCaddyfile, reloadWithAdminSwitch, adminMoves, adminTarget, AdminSwitchError, type AdminTarget, fetchStorageInfo, checkStoragePathWritable, listDnsProviders, readDnsEnvNames, restartService, notifyConfigChanged } from "../api";
+import { readGlobalOptions, syncGlobalOptions, reloadCaddy, keepAdminBackup, adminMoves, AdminSwitchError, type AdminTarget, fetchStorageInfo, checkStoragePathWritable, listDnsProviders, readDnsEnvNames, notifyConfigChanged } from "../api";
 import type { DnsChallengeConfig, GlobalOptions, StorageInfo } from "../api";
 import { DnsChallengeFields, dnsDraftFromConfig, dnsDraftToConfig, validateDnsDraft, type DnsDraft } from "./DnsChallengeFields";
 import { CertLifetimeSelect } from "./CertLifetimeSelect";
 import { CaddyModulesPanel } from "./CaddyModulesPanel";
 import { GlobalTlsFields, globalTlsFromValues, globalTlsIssuerError, globalTlsToValues, type GlobalTlsValues } from "./GlobalTlsFields";
 import { GlobalAdminFields, globalAdminFromValues, globalAdminToValues, type GlobalAdminValues } from "./GlobalAdminFields";
-import { loadAdminAddress, storeAdminAddress } from "../hooks/useAdminAddress";
+import { loadAdminAddress } from "../hooks/useAdminAddress";
 
 const adminTargetLabel = (target: AdminTarget) => target.transport === "unix" ? target.socket : target.tcp;
 import { AccessLogSection, type AccessLogValues, accessLogConfigToValues, accessLogHasError, accessLogValuesToConfig } from "./AccessLogSection";
@@ -73,15 +73,6 @@ function metricsLinkUrl(listenAddress: string, path: string): string | null {
   return `http://${host}:${m[2]}${path.trim() || "/metrics"}`;
 }
 
-/** A saved admin address that the next reload has to move to safely (#330). */
-interface PendingAdminSwitch {
-  /** The main Caddyfile before the first save that moved the endpoint. */
-  backup: string;
-  /** The admin address that Caddyfile had. */
-  from: string | undefined;
-  target: AdminTarget;
-}
-
 export function GlobalOptionsTab({ unmanaged = false }: { unmanaged?: boolean } = {}) {
   const { t } = useTranslation();
   const toast = useToast();
@@ -112,7 +103,6 @@ export function GlobalOptionsTab({ unmanaged = false }: { unmanaged?: boolean } 
   const [globalTls, setGlobalTls] = useState<GlobalTlsValues>(globalTlsToValues({}));
   const [globalAdmin, setGlobalAdmin] = useState<GlobalAdminValues>(globalAdminToValues({}));
   const [savedAdminAddress, setSavedAdminAddress] = useState<string | undefined>(undefined);
-  const [pendingAdmin, setPendingAdmin] = useState<PendingAdminSwitch | null>(null);
   const [storagePath, setStoragePath] = useState("");
   const [storageInfo, setStorageInfo] = useState<StorageInfo | null>(null);
   const [storageInfoError, setStorageInfoError] = useState<string | null>(null);
@@ -247,21 +237,18 @@ export function GlobalOptionsTab({ unmanaged = false }: { unmanaged?: boolean } 
   const isConfirming = confirm.step !== "idle";
   const isSaving = confirm.step === "submitting";
 
-  /** Moves the plugin to the saved admin address, or reports the rollback (#330). */
-  async function switchAdmin(pending: PendingAdminSwitch, restart: boolean) {
+  /** Runs a reload or restart, and says where the admin endpoint went, or why it didn't (#330). */
+  async function reloadOrRestart(restart: boolean) {
     try {
-      await reloadWithAdminSwitch(pending.backup, pending.target, { restart });
-      storeAdminAddress(pending.target.tcp, pending.target.socket);
-      toast.success(t("global_opts.admin_switched", { address: adminTargetLabel(pending.target) }));
+      const { adminMovedTo } = await reloadCaddy({ restart });
+      if (adminMovedTo) toast.success(t("global_opts.admin_switched", { address: adminTargetLabel(adminMovedTo) }));
     } catch (e) {
       if (!(e instanceof AdminSwitchError)) throw e;
       // The Caddyfile on disk is the backup again, so the form shows it again.
       load();
       throw new Error(t(e.restored ? "global_opts.admin_switch_failed" : "global_opts.admin_switch_unrestored", {
-        address: adminTargetLabel(pending.target), reason: e.rejection ?? t("global_opts.admin_no_answer"),
+        address: e.target ? adminTargetLabel(e.target) : "", reason: e.rejection ?? t("global_opts.admin_no_answer"),
       }));
-    } finally {
-      setPendingAdmin(null);
     }
   }
 
@@ -269,8 +256,7 @@ export function GlobalOptionsTab({ unmanaged = false }: { unmanaged?: boolean } 
     setReloading(true);
     setReloadError(null);
     try {
-      if (pendingAdmin) await switchAdmin(pendingAdmin, false);
-      else await reloadCaddy();
+      await reloadOrRestart(false);
       setNeedsReload(false);
       toast.success(t("caddyfile.reloaded"));
     } catch (e) {
@@ -945,7 +931,7 @@ export function GlobalOptionsTab({ unmanaged = false }: { unmanaged?: boolean } 
             <Button variant="warning" size="sm" isLoading={restarting} isDisabled={restarting} onClick={() => {
               setRestarting(true);
               setReloadError(null);
-              (pendingAdmin ? switchAdmin(pendingAdmin, true) : restartService("caddy"))
+              reloadOrRestart(true)
                 .then(() => { setRestartNeeded(false); setNeedsReload(false); void notifyConfigChanged(); })
                 .catch(e => setReloadError(e instanceof Error ? e.message : String(e)))
                 .finally(() => setRestarting(false));
@@ -1041,19 +1027,15 @@ export function GlobalOptionsTab({ unmanaged = false }: { unmanaged?: boolean } 
                     const writeErr = await checkStoragePathWritable(opts.storagePath);
                     if (writeErr) throw new Error(t("global_opts.storage_not_writable", { error: writeErr }));
                   }
-                  // A save that moves the admin endpoint keeps the Caddyfile from before it, so the
-                  // reload can put it back when the new address doesn't answer (#330).
-                  const current = loadAdminAddress();
-                  const from = pendingAdmin ? pendingAdmin.from : savedAdminAddress;
-                  const moves = !unmanaged && adminMoves(from, opts.adminAddress, current);
-                  const backup = moves && !pendingAdmin ? await readMainCaddyfile() : pendingAdmin?.backup;
+                  // A save that moves the admin endpoint keeps the files from before it, so the
+                  // reload can put them back when the new address doesn't answer (#330).
+                  if (!unmanaged && adminMoves(savedAdminAddress, opts.adminAddress, loadAdminAddress())) await keepAdminBackup();
                   const dns = dnsDraftToConfig(dnsEnabled ? dnsDraft : dnsDraftFromConfig(undefined), loadedAcmeDns);
                   opts.acmeDns = dns.config;
                   const { restartNeeded: mustRestart } = await syncGlobalOptions(opts, { set: dns.set, remove: dns.remove }).catch(e => {
                     throw e instanceof Error ? e : new Error(String(e));
                   });
                   if (mustRestart) setRestartNeeded(true);
-                  setPendingAdmin(moves && backup !== undefined ? { backup, from, target: adminTarget(opts.adminAddress, current) } : null);
                   setSavedAdminAddress(opts.adminAddress);
                   // The values went to the env file; the form keeps only the option names.
                   setLoadedAcmeDns(dns.config);

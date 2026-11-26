@@ -6,7 +6,7 @@ import { getHost, mkdirp, HostError } from "@rxtx4816/cockpit-plugin-base-react/
 import { applyConfigChange, type FileChange } from "./configChange";
 import { listConfDFiles, readCaddyfile, writeCaddyfile } from "./systemd";
 import { externalHostList } from "./externalHosts";
-import { AdminRejectedError, switchAdminEndpoint, type AdminTarget } from "./adminSwitch";
+import { AdminRejectedError, adminTarget, switchAdminEndpoint, type AdminTarget } from "./adminSwitch";
 import { confSites, confSiteMaps } from "./confSites";
 import { mergeSnippetLists, parseSnippets } from "./snippets";
 import { withConfDImport, type RawBlock, extractRawBlocksFromCaddyfile, migrateCaddyfile, extractLogFilePaths, parseConfExternalAddresses, CONF_HEADER, findGlobalBlock } from "./caddyfileDocument";
@@ -323,12 +323,58 @@ async function loadOverCurrentAddress(content: string): Promise<void> {
   }
 }
 
+/** The files a Settings save changes, as they were before the first save that moved the admin endpoint. */
+let adminBackup: { main: string; proxyConf: string } | undefined;
+let adminSwitchListener: ((tcp: string, socket: string) => void) | undefined;
+
+/** Called with the new address once the plugin follows a moved admin endpoint, to store it. */
+export function onAdminSwitched(listener: (tcp: string, socket: string) => void): void {
+  adminSwitchListener = listener;
+}
+
 /**
- * The reload for a save that moved the admin endpoint (#330). `backup` is the main Caddyfile
- * from before that save. With `restart`, Caddy is restarted instead of reloaded (the env file
- * changed too). See adminSwitch.ts for the steps.
+ * Keeps the main Caddyfile and conf.d as they are now, before a save that moves the admin
+ * endpoint (#330), so the reload can put them back. A second such save keeps the first backup.
  */
-export async function reloadWithAdminSwitch(backup: string, target: AdminTarget, opts: { restart?: boolean } = {}): Promise<void> {
+export async function keepAdminBackup(): Promise<void> {
+  if (adminBackup) return;
+  adminBackup = {
+    main: await readMainCaddyfile(),
+    proxyConf: (await getHost().readFile(PROXY_CONF_PATH, { superuser: "try" })) ?? "",
+  };
+}
+
+const sameTcp = (a: string, b: string) => {
+  const norm = (u: string) => u.replace(/\/+$/, "").replace("://localhost:", "://127.0.0.1:");
+  return norm(a) === norm(b);
+};
+
+/**
+ * Where the Caddyfile on disk puts the admin endpoint, when the next reload moves it away from
+ * where the plugin reaches Caddy now. An `admin` line left out counts only right after a Settings
+ * save took one out: otherwise the address may come from Caddy's environment (CADDY_ADMIN).
+ */
+async function movedAdminTarget(): Promise<AdminTarget | undefined> {
+  if (!transport) return undefined;
+  let admin: string | undefined;
+  try {
+    admin = parseGlobalOptions(await readMainCaddyfile()).adminAddress;
+  } catch {
+    return undefined; // can't tell: the plain reload, as before
+  }
+  if (!admin && !adminBackup) return undefined;
+  const target = adminTarget(admin, { tcp: tcpBase, socket: unixSocket });
+  const same = target.transport === transport && (transport === "unix" ? target.socket === unixSocket : sameTcp(target.tcp, tcpBase));
+  return same ? undefined : target;
+}
+
+/**
+ * The reload that moves the admin endpoint (#330), see adminSwitch.ts: with `restart`, Caddy is
+ * restarted instead (the env file changed too). Without a backup there is nothing to roll back
+ * to, e.g. after the page was reloaded, and the error says so.
+ */
+async function reloadWithAdminSwitch(target: AdminTarget, opts: { restart?: boolean }): Promise<void> {
+  const backup = adminBackup;
   try {
     await switchAdminEndpoint(target, {
       apply: async () => opts.restart ? restartService("caddy") : loadOverCurrentAddress(await buildFlattenedMainCaddyfile()),
@@ -336,9 +382,12 @@ export async function reloadWithAdminSwitch(backup: string, target: AdminTarget,
       switchTo: t => {
         setAdminAddress(t.tcp, t.socket);
         transport = t.transport;
+        adminSwitchListener?.(t.tcp, t.socket);
       },
       restore: async () => {
-        await getHost().writeFile(MAIN_CADDYFILE, backup, { superuser: "try" });
+        if (!backup) throw new Error("no backup");
+        await getHost().writeFile(MAIN_CADDYFILE, backup.main, { superuser: "try" });
+        await getHost().writeFile(PROXY_CONF_PATH, backup.proxyConf, { superuser: "try" });
         // The old endpoint still answers when Caddy refused the new config; otherwise only a
         // restart brings it back, since Caddy listens wherever the config it took says.
         try {
@@ -349,6 +398,7 @@ export async function reloadWithAdminSwitch(backup: string, target: AdminTarget,
       },
     });
   } finally {
+    adminBackup = undefined;
     await notifyConfigChanged();
   }
 }
@@ -828,13 +878,22 @@ async function runCaddyValidate(): Promise<void> {
  * (see caddyManaged) — e.g. Caddy running in a container with no local unit
  * to reload.
  */
-export async function reloadCaddy(): Promise<void> {
+export async function reloadCaddy(opts: { restart?: boolean } = {}): Promise<{ adminMovedTo?: AdminTarget }> {
   if (!caddyManaged) {
     await applyCurrentCaddyfileViaApi();
-    return;
+    return {};
   }
-  await reloadSystemdService("caddy");
+  // `caddy reload` sends the config to the address it names, where nothing listens yet when the
+  // admin endpoint moves (#330): that reload goes over the old address instead, whoever asks for it.
+  const moved = await movedAdminTarget();
+  if (moved) {
+    await reloadWithAdminSwitch(moved, opts);
+    return { adminMovedTo: moved };
+  }
+  adminBackup = undefined;
+  await (opts.restart ? restartService("caddy") : reloadSystemdService("caddy"));
   await notifyConfigChanged();
+  return {};
 }
 
 /**

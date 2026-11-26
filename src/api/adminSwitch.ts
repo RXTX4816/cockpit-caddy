@@ -43,7 +43,7 @@ export function adminMoves(before: string | undefined, after: string | undefined
 
 export class AdminSwitchError extends Error {
   /** `rejection`: Caddy's message when it refused the config; unset when the target never answered. */
-  constructor(readonly rejection: string | undefined, readonly restored: boolean) {
+  constructor(readonly rejection: string | undefined, readonly restored: boolean, readonly target?: AdminTarget) {
     super(rejection ?? "the new admin address did not answer");
     this.name = "AdminSwitchError";
   }
@@ -99,5 +99,5 @@ export async function switchAdminEndpoint(target: AdminTarget, steps: AdminSwitc
   } catch {
     restored = false;
   }
-  throw new AdminSwitchError(reason, restored);
+  throw new AdminSwitchError(reason, restored, target);
 }

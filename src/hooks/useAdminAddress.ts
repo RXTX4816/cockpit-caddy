@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { setAdminAddress, ADMIN_TCP_DEFAULT, ADMIN_SOCKET_DEFAULT } from "../api/caddy";
+import { setAdminAddress, onAdminSwitched, ADMIN_TCP_DEFAULT, ADMIN_SOCKET_DEFAULT } from "../api/caddy";
 
 const LS_TCP_KEY = "cockpit-caddy:admin-tcp";
 const LS_SOCKET_KEY = "cockpit-caddy:admin-socket";
@@ -13,6 +13,8 @@ export function loadAdminAddress(): { tcp: string; socket: string } {
 export function applyStoredAdminAddress(): void {
   const { tcp, socket } = loadAdminAddress();
   setAdminAddress(tcp, socket);
+  // A reload that moves Caddy's admin endpoint (#330) moves the stored address with it.
+  onAdminSwitched(storeAdminAddress);
 }
 
 /** Stores where the plugin reaches the admin API and uses it from now on. */
