@@ -119,7 +119,7 @@ class AdminHttpError extends Error {
 }
 
 async function tcpPost(path: string, body: string, contentType?: string): Promise<void> {
-  await curlPost(["curl", `${tcpBase}${path}`], body, {}, contentType);
+  await curlPost(["curl", "--connect-timeout", "2", `${tcpBase}${path}`], body, {}, contentType);
 }
 
 async function unixPost(path: string, body: string, contentType?: string): Promise<void> {
@@ -239,7 +239,9 @@ export async function adaptCaddyfileViaApi(content: string): Promise<void> {
       ? unixPost("/adapt", content, "text/caddyfile")
       : tcpPost("/adapt", content, "text/caddyfile"));
   } catch (e) {
-    if (e instanceof AdminHttpError) throw new CaddyfileError(e.message);
+    // The adapter reports a config it can't read as 400. Any other status (403 from an origin
+    // check, 404, 500) says nothing about the Caddyfile.
+    if (e instanceof AdminHttpError && e.status === 400) throw new CaddyfileError(e.message);
     throw e;
   }
 }

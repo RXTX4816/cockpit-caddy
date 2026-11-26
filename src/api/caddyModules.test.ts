@@ -103,7 +103,28 @@ describe("module probes over the Admin API (#343)", () => {
     expect(hasCapability(m, "layer4")).toBe(false);
   });
 
-  it("knows nothing when Caddy can't be reached, which is never missing", async () => {
-    expect(await probeCaddyModules(async () => { throw new Error("curl: (7) Failed to connect"); })).toBeUndefined();
+  it("knows nothing when Caddy can't be reached, which is never missing, and stops asking soon", async () => {
+    let calls = 0;
+    expect(await probeCaddyModules(async () => { calls++; throw new Error("curl: (7) Failed to connect"); })).toBeUndefined();
+    expect(calls).toBeLessThan(12);
+  });
+
+  it("asks a few providers at a time", async () => {
+    let open = 0, most = 0;
+    await probeCaddyModules(async () => { open++; most = Math.max(most, open); await new Promise(r => setTimeout(r, 1)); open--; });
+    expect(most).toBeLessThanOrEqual(6);
+  });
+});
+
+describe("adaptCaddyfileViaApi status handling (#343)", () => {
+  it("takes only an adapter's 400 as an answer about the Caddyfile", async () => {
+    const { mockSpawn } = await import("../test/setup");
+    const { adaptCaddyfileViaApi, CaddyfileError: Err } = await import("./caddy");
+    mockSpawn.mockImplementation(() => '{"error":"unrecognized global option: layer4"}\n400');
+    await expect(adaptCaddyfileViaApi("{}")).rejects.toBeInstanceOf(Err);
+    mockSpawn.mockImplementation(() => '{"error":"client is not allowed to access from origin"}\n403');
+    const e = await adaptCaddyfileViaApi("{}").catch(x => x);
+    expect(e).not.toBeInstanceOf(Err);
+    mockSpawn.mockReset();
   });
 });

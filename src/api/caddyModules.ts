@@ -92,7 +92,13 @@ async function probe(adapt: (caddyfile: string) => Promise<void>, caddyfile: str
  * could be learned, e.g. the Admin API is not reachable.
  */
 export async function probeCaddyModules(adapt: (caddyfile: string) => Promise<void> = adaptCaddyfileViaApi): Promise<CaddyModules | undefined> {
-  const dnsResults = await Promise.all(PROBED_DNS_PROVIDERS.map(async name => [name, await probe(adapt, `{\n\tacme_dns ${name} x\n}\n`)] as const));
+  // A few at a time: each probe is a curl process on the host.
+  const dnsResults: Array<readonly [string, boolean | undefined]> = [];
+  for (let i = 0; i < PROBED_DNS_PROVIDERS.length; i += PROBE_BATCH) {
+    dnsResults.push(...await Promise.all(PROBED_DNS_PROVIDERS.slice(i, i + PROBE_BATCH).map(async name => [name, await probe(adapt, `{\n\tacme_dns ${name} x\n}\n`)] as const)));
+    // Nothing answers: the Admin API isn't there, so the rest would fail the same way.
+    if (i === 0 && dnsResults.every(([, found]) => found === undefined)) break;
+  }
   const probed: Partial<Record<CapabilityKey, boolean>> = {};
   for (const c of MODULE_CAPABILITIES) {
     if (!c.probe) continue;
@@ -112,6 +118,10 @@ export async function probeCaddyModules(adapt: (caddyfile: string) => Promise<vo
   return { all, dnsProviders, source: "admin-api", probed };
 }
 
+const PROBE_BATCH = 6;
+/** How long a failed lookup is kept before a screen asks again. */
+const RETRY_AFTER_MS = 60_000;
+
 let cached: Promise<CaddyModules | undefined> | undefined;
 
 /**
@@ -122,8 +132,9 @@ let cached: Promise<CaddyModules | undefined> | undefined;
 export function listCaddyModules(opts: { refresh?: boolean } = {}): Promise<CaddyModules | undefined> {
   if (!cached || opts.refresh) {
     cached = (async () => (isCaddyManaged() ? await runListModules() : undefined) ?? await probeCaddyModules())();
-    // A failed lookup is not kept, so the next screen asks again.
-    void cached.then(m => { if (!m) cached = undefined; });
+    // A failed lookup is kept for a minute, so screens opened meanwhile don't each ask again.
+    const mine = cached;
+    void mine.then(m => { if (!m) setTimeout(() => { if (cached === mine) cached = undefined; }, RETRY_AFTER_MS); });
   }
   return cached;
 }
