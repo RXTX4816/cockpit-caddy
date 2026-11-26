@@ -836,7 +836,15 @@
     "tab_tls": "TLS och ACME",
     "tab_logging": "Loggning och mätvärden",
     "tab_proxy": "Proxyrubriker och protokoll",
-    "tabs_aria": "Inställningsavsnitt"
+    "tabs_aria": "Inställningsavsnitt",
+    "issuer_custom": "Annan utfärdare…",
+    "issuer_custom_name": "Utfärdare och argument",
+    "issuer_custom_name_help": "Det som följer cert_issuer: utfärdarmodulen och dess argument, t.ex. acme https://ca.example/directory.",
+    "issuer_custom_body": "Utfärdarens alternativ",
+    "issuer_custom_body_help": "Valfritt: raderna i cert_issuer-blocket, en per rad, som i Caddyfile.",
+    "issuer_custom_required": "Ange utfärdarmodulen, t.ex. acme eller zerossl.",
+    "issuer_custom_invalid": "Börja med modulnamnet och sedan argument åtskilda med mellanslag, utan klammerparenteser.",
+    "issuer_body_braces": "Varje { behöver en matchande }."
   },
   "ca": {
     "title": "Intern certifikatutfärdare",

@@ -836,7 +836,15 @@
     "tab_tls": "TLS & ACME",
     "tab_logging": "Logging & metrics",
     "tab_proxy": "Proxy-headers & protocollen",
-    "tabs_aria": "Onderdelen van de instellingen"
+    "tabs_aria": "Onderdelen van de instellingen",
+    "issuer_custom": "Andere uitgever…",
+    "issuer_custom_name": "Uitgever en argumenten",
+    "issuer_custom_name_help": "Wat na cert_issuer komt: de uitgevermodule en daarna de argumenten, bijv. acme https://ca.example/directory.",
+    "issuer_custom_body": "Opties van de uitgever",
+    "issuer_custom_body_help": "Optioneel: de regels in het cert_issuer-blok, één per regel, zoals in de Caddyfile.",
+    "issuer_custom_required": "Voer de uitgevermodule in, bijv. acme of zerossl.",
+    "issuer_custom_invalid": "Begin met de modulenaam en daarna argumenten gescheiden door spaties, zonder accolades.",
+    "issuer_body_braces": "Elke { heeft een bijbehorende } nodig."
   },
   "ca": {
     "title": "Interne certificeringsinstantie",

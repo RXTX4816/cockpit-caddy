@@ -836,7 +836,15 @@
     "tab_tls": "TLS ve ACME",
     "tab_logging": "Günlük ve metrikler",
     "tab_proxy": "Proxy üstbilgileri ve protokoller",
-    "tabs_aria": "Ayar bölümleri"
+    "tabs_aria": "Ayar bölümleri",
+    "issuer_custom": "Başka bir sağlayıcı…",
+    "issuer_custom_name": "Sağlayıcı ve argümanlar",
+    "issuer_custom_name_help": "cert_issuer'dan sonra gelen: sağlayıcı modülü ve argümanları, örn. acme https://ca.example/directory.",
+    "issuer_custom_body": "Sağlayıcı seçenekleri",
+    "issuer_custom_body_help": "İsteğe bağlı: cert_issuer bloğunun içindeki satırlar, Caddyfile'daki gibi satır başına bir tane.",
+    "issuer_custom_required": "Sağlayıcı modülünü girin, örn. acme veya zerossl.",
+    "issuer_custom_invalid": "Modül adıyla başlayın, ardından boşlukla ayrılmış argümanlar gelsin, süslü parantez olmadan.",
+    "issuer_body_braces": "Her { için eşleşen bir } gerekir."
   },
   "ca": {
     "title": "İç sertifika yetkilisi",

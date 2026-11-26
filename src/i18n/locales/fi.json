@@ -836,7 +836,15 @@
     "tab_tls": "TLS ja ACME",
     "tab_logging": "Lokit ja mittarit",
     "tab_proxy": "Välityspalvelimen otsakkeet ja protokollat",
-    "tabs_aria": "Asetusten osiot"
+    "tabs_aria": "Asetusten osiot",
+    "issuer_custom": "Muu myöntäjä…",
+    "issuer_custom_name": "Myöntäjä ja argumentit",
+    "issuer_custom_name_help": "Mitä cert_issuerin jälkeen tulee: myöntäjämoduuli ja sen argumentit, esim. acme https://ca.example/directory.",
+    "issuer_custom_body": "Myöntäjän asetukset",
+    "issuer_custom_body_help": "Valinnainen: cert_issuer-lohkon rivit, yksi riviä kohden, kuten Caddyfilessa.",
+    "issuer_custom_required": "Anna myöntäjämoduuli, esim. acme tai zerossl.",
+    "issuer_custom_invalid": "Aloita moduulin nimellä ja sitten välilyönnein erotetut argumentit, ilman aaltosulkeita.",
+    "issuer_body_braces": "Jokainen { tarvitsee vastaavan }."
   },
   "ca": {
     "title": "Sisäinen varmentaja",

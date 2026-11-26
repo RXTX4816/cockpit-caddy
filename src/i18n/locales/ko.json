@@ -836,7 +836,15 @@
     "tab_tls": "TLS 및 ACME",
     "tab_logging": "로그 및 메트릭",
     "tab_proxy": "프록시 헤더 및 프로토콜",
-    "tabs_aria": "설정 섹션"
+    "tabs_aria": "설정 섹션",
+    "issuer_custom": "다른 발급자…",
+    "issuer_custom_name": "발급자와 인수",
+    "issuer_custom_name_help": "cert_issuer 뒤에 오는 내용: 발급자 모듈과 그 인수. 예: acme https://ca.example/directory",
+    "issuer_custom_body": "발급자 옵션",
+    "issuer_custom_body_help": "선택 사항: cert_issuer 블록 안의 줄을 Caddyfile처럼 한 줄에 하나씩.",
+    "issuer_custom_required": "발급자 모듈을 입력하세요(예: acme, zerossl).",
+    "issuer_custom_invalid": "모듈 이름으로 시작하고, 인수는 공백으로 구분하며 중괄호는 쓰지 마세요.",
+    "issuer_body_braces": "모든 {에는 짝이 되는 }가 필요합니다."
   },
   "ca": {
     "title": "내부 인증 기관",

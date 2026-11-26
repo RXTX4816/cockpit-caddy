@@ -836,7 +836,15 @@
     "tab_tls": "TLS & ACME",
     "tab_logging": "Protokolle & Metriken",
     "tab_proxy": "Proxy-Header & Protokolle",
-    "tabs_aria": "Bereiche der Einstellungen"
+    "tabs_aria": "Bereiche der Einstellungen",
+    "issuer_custom": "Anderer Aussteller…",
+    "issuer_custom_name": "Aussteller und Argumente",
+    "issuer_custom_name_help": "Was nach cert_issuer steht: das Aussteller-Modul, dann seine Argumente, z. B. acme https://ca.example/directory.",
+    "issuer_custom_body": "Optionen des Ausstellers",
+    "issuer_custom_body_help": "Optional: die Zeilen im cert_issuer-Block, eine pro Zeile, wie im Caddyfile.",
+    "issuer_custom_required": "Gib das Aussteller-Modul ein, z. B. acme oder zerossl.",
+    "issuer_custom_invalid": "Beginne mit dem Modulnamen, dann Argumente durch Leerzeichen getrennt, ohne geschweifte Klammern.",
+    "issuer_body_braces": "Jede { braucht eine passende }."
   },
   "ca": {
     "title": "Interne Zertifizierungsstelle",

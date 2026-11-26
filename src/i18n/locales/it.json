@@ -836,7 +836,15 @@
     "tab_tls": "TLS e ACME",
     "tab_logging": "Log e metriche",
     "tab_proxy": "Header proxy e protocolli",
-    "tabs_aria": "Sezioni delle impostazioni"
+    "tabs_aria": "Sezioni delle impostazioni",
+    "issuer_custom": "Altro emittente…",
+    "issuer_custom_name": "Emittente e argomenti",
+    "issuer_custom_name_help": "Ciò che segue cert_issuer: il modulo dell'emittente e i suoi argomenti, ad es. acme https://ca.example/directory.",
+    "issuer_custom_body": "Opzioni dell'emittente",
+    "issuer_custom_body_help": "Facoltativo: le righe all'interno del blocco cert_issuer, una per riga, come nel Caddyfile.",
+    "issuer_custom_required": "Inserisci il modulo dell'emittente, ad es. acme o zerossl.",
+    "issuer_custom_invalid": "Inizia con il nome del modulo, poi gli argomenti separati da spazi, senza parentesi graffe.",
+    "issuer_body_braces": "Ogni { richiede la sua }."
   },
   "ca": {
     "title": "Autorità di certificazione interna",

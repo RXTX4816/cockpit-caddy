@@ -1253,6 +1253,17 @@ describe.runIf(available || required)("caddy adapt accepts the TLS and admin glo
     expect(server.automatic_https).toEqual({ disable_redirects: true });
   });
 
+  it("accepts a cert_issuer typed with arguments and a nested body (#329)", () => {
+    const withArgs = adapt(`${buildGlobalOptionsPatch("", { certIssuer: "acme https://ca.example/directory" })}\n${site}`);
+    expect(withArgs.apps?.tls?.automation?.policies?.[0]?.issuers?.[0]).toMatchObject({ module: "acme", ca: "https://ca.example/directory" });
+    const patched = buildGlobalOptionsPatch("", {
+      certIssuer: "acme", certIssuerBody: ["dir https://ca.example/directory", "preferred_chains {", "root_common_name X1", "}"],
+    });
+    expect(patched).toContain("\tcert_issuer acme {\n\t\tdir https://ca.example/directory\n\t\tpreferred_chains {\n\t\t\troot_common_name X1\n\t\t}\n\t}");
+    const issuer = adapt(`${patched}\n${site}`).apps?.tls?.automation?.policies?.[0]?.issuers?.[0];
+    expect(issuer).toMatchObject({ module: "acme", ca: "https://ca.example/directory", preferred_chains: { root_common_name: ["X1"] } });
+  });
+
   it("accepts local_certs and admin off", () => {
     const config = adapt(`${buildGlobalOptionsPatch("", { localCerts: true, adminOff: true })}\n${site}`);
     expect(config.admin).toEqual({ disabled: true });

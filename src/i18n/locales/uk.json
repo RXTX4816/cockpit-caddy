@@ -836,7 +836,15 @@
     "tab_tls": "TLS та ACME",
     "tab_logging": "Журнали та метрики",
     "tab_proxy": "Заголовки проксі та протоколи",
-    "tabs_aria": "Розділи налаштувань"
+    "tabs_aria": "Розділи налаштувань",
+    "issuer_custom": "Інший видавець…",
+    "issuer_custom_name": "Видавець і аргументи",
+    "issuer_custom_name_help": "Те, що йде після cert_issuer: модуль видавця і його аргументи, наприклад acme https://ca.example/directory.",
+    "issuer_custom_body": "Параметри видавця",
+    "issuer_custom_body_help": "Необов'язково: рядки всередині блоку cert_issuer, по одному на рядок, як у Caddyfile.",
+    "issuer_custom_required": "Введіть модуль видавця, наприклад acme або zerossl.",
+    "issuer_custom_invalid": "Почніть з імені модуля, далі аргументи через пробіл, без фігурних дужок.",
+    "issuer_body_braces": "Кожній { потрібна парна }."
   },
   "ca": {
     "title": "Внутрішній центр сертифікації",

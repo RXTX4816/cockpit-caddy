@@ -25,7 +25,7 @@ import type { DnsChallengeConfig, GlobalOptions, StorageInfo } from "../api";
 import { DnsChallengeFields, dnsDraftFromConfig, dnsDraftToConfig, validateDnsDraft, type DnsDraft } from "./DnsChallengeFields";
 import { CertLifetimeSelect } from "./CertLifetimeSelect";
 import { CaddyModulesPanel } from "./CaddyModulesPanel";
-import { GlobalTlsFields, globalTlsFromValues, globalTlsToValues, type GlobalTlsValues } from "./GlobalTlsFields";
+import { GlobalTlsFields, globalTlsFromValues, globalTlsIssuerError, globalTlsToValues, type GlobalTlsValues } from "./GlobalTlsFields";
 import { GlobalAdminFields, globalAdminFromValues, globalAdminToValues, type GlobalAdminValues } from "./GlobalAdminFields";
 import { AccessLogSection, type AccessLogValues, accessLogConfigToValues, accessLogHasError, accessLogValuesToConfig } from "./AccessLogSection";
 import { Notice } from "./Notice";
@@ -210,7 +210,7 @@ export function GlobalOptionsTab() {
   const dnsErr = dnsEnabled ? (dnsDraft.provider ? validateDnsDraft(dnsDraft, dnsEnvNames) : "dns.validation_provider") : null;
   const hasError: Record<SettingsTabKey, boolean> = {
     core: !!(httpPortErr || httpsPortErr || gracePeriodErr || shutdownDelayErr),
-    tls: !!(dnsErr || onDemandBurstErr || onDemandIntervalErr || internalCertLifetimeErr || renewalWindowRatioErr),
+    tls: !!(dnsErr || onDemandBurstErr || onDemandIntervalErr || internalCertLifetimeErr || renewalWindowRatioErr || globalTlsIssuerError(globalTls)),
     logging: !!(metricsListenAddressErr || metricsPathErr) || accessLogHasError(runtimeLog),
     proxy: !!(trustedProxiesRangesErr || proxyProtocolTimeoutErr),
   };

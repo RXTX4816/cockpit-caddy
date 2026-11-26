@@ -836,7 +836,15 @@
     "tab_tls": "TLS და ACME",
     "tab_logging": "ლოგები და მეტრიკები",
     "tab_proxy": "პროქსის ჰედერები და პროტოკოლები",
-    "tabs_aria": "პარამეტრების სექციები"
+    "tabs_aria": "პარამეტრების სექციები",
+    "issuer_custom": "სხვა გამცემი…",
+    "issuer_custom_name": "გამცემი და არგუმენტები",
+    "issuer_custom_name_help": "რაც cert_issuer-ს მოსდევს: გამცემის მოდული და მისი არგუმენტები, მაგ. acme https://ca.example/directory.",
+    "issuer_custom_body": "გამცემის პარამეტრები",
+    "issuer_custom_body_help": "არასავალდებულო: cert_issuer ბლოკის ხაზები, თითო ხაზზე ერთი, როგორც Caddyfile-ში.",
+    "issuer_custom_required": "შეიყვანეთ გამცემის მოდული, მაგ. acme ან zerossl.",
+    "issuer_custom_invalid": "დაიწყეთ მოდულის სახელით, შემდეგ არგუმენტები ჰარით გამოყოფილი, ფიგურული ფრჩხილების გარეშე.",
+    "issuer_body_braces": "ყოველ {-ს სჭირდება შესაბამისი }."
   },
   "ca": {
     "title": "შიდა სასერტიფიკაციო ცენტრი",

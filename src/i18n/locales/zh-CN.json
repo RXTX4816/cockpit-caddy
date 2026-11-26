@@ -836,7 +836,15 @@
     "tab_tls": "TLS 与 ACME",
     "tab_logging": "日志与指标",
     "tab_proxy": "代理标头与协议",
-    "tabs_aria": "设置分区"
+    "tabs_aria": "设置分区",
+    "issuer_custom": "其他签发者…",
+    "issuer_custom_name": "签发者和参数",
+    "issuer_custom_name_help": "cert_issuer 后面的内容:签发者模块及其参数,例如 acme https://ca.example/directory。",
+    "issuer_custom_body": "签发者选项",
+    "issuer_custom_body_help": "可选:cert_issuer 块内的行,每行一条,与 Caddyfile 中相同。",
+    "issuer_custom_required": "请输入签发者模块,例如 acme 或 zerossl。",
+    "issuer_custom_invalid": "以模块名开头,后接以空格分隔的参数,不要使用花括号。",
+    "issuer_body_braces": "每个 { 都需要对应的 }。"
   },
   "ca": {
     "title": "内部证书颁发机构",

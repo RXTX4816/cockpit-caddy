@@ -836,7 +836,15 @@
     "tab_tls": "TLS ו-ACME",
     "tab_logging": "יומנים ומדדים",
     "tab_proxy": "כותרות פרוקסי ופרוטוקולים",
-    "tabs_aria": "חלקי ההגדרות"
+    "tabs_aria": "חלקי ההגדרות",
+    "issuer_custom": "מנפיק אחר…",
+    "issuer_custom_name": "מנפיק וארגומנטים",
+    "issuer_custom_name_help": "מה שבא אחרי cert_issuer: מודול המנפיק ואחריו הארגומנטים, למשל acme https://ca.example/directory.",
+    "issuer_custom_body": "אפשרויות המנפיק",
+    "issuer_custom_body_help": "אופציונלי: השורות בתוך בלוק cert_issuer, אחת בכל שורה, כמו ב-Caddyfile.",
+    "issuer_custom_required": "הזן את מודול המנפיק, למשל acme או zerossl.",
+    "issuer_custom_invalid": "התחל בשם המודול ואחריו ארגומנטים מופרדים ברווחים, ללא סוגריים מסולסלים.",
+    "issuer_body_braces": "לכל { צריך } תואם."
   },
   "ca": {
     "title": "רשות אישורים פנימית",

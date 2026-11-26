@@ -836,7 +836,15 @@
     "tab_tls": "TLS și ACME",
     "tab_logging": "Jurnale și metrici",
     "tab_proxy": "Antete proxy și protocoale",
-    "tabs_aria": "Secțiunile setărilor"
+    "tabs_aria": "Secțiunile setărilor",
+    "issuer_custom": "Alt emitent…",
+    "issuer_custom_name": "Emitent și argumente",
+    "issuer_custom_name_help": "Ce urmează după cert_issuer: modulul emitentului, apoi argumentele lui, de ex. acme https://ca.example/directory.",
+    "issuer_custom_body": "Opțiunile emitentului",
+    "issuer_custom_body_help": "Opțional: liniile din blocul cert_issuer, câte una pe rând, ca în Caddyfile.",
+    "issuer_custom_required": "Introduceți modulul emitentului, de ex. acme sau zerossl.",
+    "issuer_custom_invalid": "Începeți cu numele modulului, apoi argumentele separate prin spații, fără acolade.",
+    "issuer_body_braces": "Fiecare { are nevoie de o } pereche."
   },
   "ca": {
     "title": "Autoritate de certificare internă",

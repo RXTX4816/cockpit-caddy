@@ -836,7 +836,15 @@
     "tab_tls": "TLS a ACME",
     "tab_logging": "Logovanie a metriky",
     "tab_proxy": "Hlavičky proxy a protokoly",
-    "tabs_aria": "Sekcie nastavení"
+    "tabs_aria": "Sekcie nastavení",
+    "issuer_custom": "Iný vydavateľ…",
+    "issuer_custom_name": "Vydavateľ a argumenty",
+    "issuer_custom_name_help": "Čo nasleduje po cert_issuer: modul vydavateľa a jeho argumenty, napr. acme https://ca.example/directory.",
+    "issuer_custom_body": "Voľby vydavateľa",
+    "issuer_custom_body_help": "Voliteľné: riadky vnútri bloku cert_issuer, jeden na riadok, ako v Caddyfile.",
+    "issuer_custom_required": "Zadajte modul vydavateľa, napr. acme alebo zerossl.",
+    "issuer_custom_invalid": "Začnite názvom modulu, potom argumenty oddelené medzerami, bez zložených zátvoriek.",
+    "issuer_body_braces": "Každá { potrebuje zodpovedajúcu }."
   },
   "ca": {
     "title": "Interná certifikačná autorita",

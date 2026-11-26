@@ -1,14 +1,16 @@
-import { Checkbox, FormGroup, FormHelperText, FormSelect, FormSelectOption, HelperText, HelperTextItem, TextInput } from "@patternfly/react-core";
+import { Checkbox, FormGroup, FormHelperText, FormSelect, FormSelectOption, HelperText, HelperTextItem, TextArea, TextInput } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
-import type { GlobalOptions, PreferredChains } from "../api";
+import { certIssuerError, type GlobalOptions, type PreferredChains } from "../api";
 
 /** The form's view of the TLS and listener options of #329. */
 export interface GlobalTlsValues {
   autoHttps: string;
-  /** "" (default), "local_certs", "internal", "acme", or "custom" for an issuer read from the file. */
+  /** "" (default), "local_certs", "internal", "acme", or "custom": any issuer, typed as Caddy reads it. */
   issuer: string;
+  /** The issuer module and its arguments, e.g. `zerossl {env.ZEROSSL_API_KEY}`. */
   customIssuer: string;
-  customIssuerBody: string[] | undefined;
+  /** The `cert_issuer` block's body, one directive per line; "" for none. */
+  customIssuerBody: string;
   keyType: string;
   defaultSni: string;
   defaultBind: string;
@@ -27,7 +29,7 @@ export function globalTlsToValues(o: GlobalOptions): GlobalTlsValues {
     autoHttps: o.autoHttps ?? "",
     issuer: o.certIssuer ? (simple ? o.certIssuer : "custom") : o.localCerts ? "local_certs" : "",
     customIssuer: o.certIssuer ?? "",
-    customIssuerBody: o.certIssuerBody,
+    customIssuerBody: o.certIssuerBody?.join("\n") ?? "",
     keyType: o.keyType ?? "",
     defaultSni: o.defaultSni ?? "",
     defaultBind: o.defaultBind?.join(" ") ?? "",
@@ -45,14 +47,27 @@ export function globalTlsFromValues(v: GlobalTlsValues): Pick<GlobalOptions,
   return {
     autoHttps: v.autoHttps || undefined,
     localCerts: v.issuer === "local_certs" || undefined,
-    certIssuer: v.issuer === "custom" ? v.customIssuer || undefined : SIMPLE_ISSUERS.includes(v.issuer) ? v.issuer : undefined,
-    certIssuerBody: v.issuer === "custom" ? v.customIssuerBody : undefined,
+    certIssuer: v.issuer === "custom" ? v.customIssuer.trim() || undefined : SIMPLE_ISSUERS.includes(v.issuer) ? v.issuer : undefined,
+    certIssuerBody: v.issuer === "custom" && v.customIssuer.trim() ? issuerBodyLines(v.customIssuerBody) : undefined,
     keyType: v.keyType || undefined,
     defaultSni: v.defaultSni.trim() || undefined,
     defaultBind: v.defaultBind.trim() ? v.defaultBind.trim().split(/\s+/) : undefined,
     ocspStaplingOff: v.ocspStaplingOff || undefined,
     preferredChains: chains,
   };
+}
+
+const issuerBodyLines = (body: string): string[] | undefined => {
+  const lines = body.split("\n").map(l => l.trim()).filter(Boolean);
+  return lines.length ? lines : undefined;
+};
+
+/** The translation key of what's wrong with a custom issuer, or null. */
+export function globalTlsIssuerError(v: GlobalTlsValues): string | null {
+  if (v.issuer !== "custom") return null;
+  if (!v.customIssuer.trim()) return "global_opts.issuer_custom_required";
+  const err = certIssuerError(v.customIssuer, issuerBodyLines(v.customIssuerBody) ?? []);
+  return err === "name" ? "global_opts.issuer_custom_invalid" : err === "braces" ? "global_opts.issuer_body_braces" : null;
 }
 
 interface Props {
@@ -66,6 +81,8 @@ export function GlobalTlsFields({ value, onChange, isDisabled }: Props) {
   const set = <K extends keyof GlobalTlsValues>(key: K, v: GlobalTlsValues[K]) => onChange({ ...value, [key]: v });
   const unknownAutoHttps = value.autoHttps && !(AUTO_HTTPS_MODES as readonly string[]).includes(value.autoHttps);
   const unknownKeyType = value.keyType && !(KEY_TYPES as readonly string[]).includes(value.keyType);
+  const issuerErr = globalTlsIssuerError(value);
+  const bodyErr = issuerErr === "global_opts.issuer_body_braces";
 
   return (
     <>
@@ -83,9 +100,42 @@ export function GlobalTlsFields({ value, onChange, isDisabled }: Props) {
           <FormSelectOption value="local_certs" label={t("global_opts.issuer_local_certs")} />
           <FormSelectOption value="internal" label={t("global_opts.issuer_internal")} />
           <FormSelectOption value="acme" label={t("global_opts.issuer_acme")} />
-          {value.customIssuer && <FormSelectOption value="custom" label={`${t("tls_policy.lifetime_preset_custom")}: ${value.customIssuer}`} />}
+          <FormSelectOption value="custom" label={t("global_opts.issuer_custom")} />
         </FormSelect>
       </FormGroup>
+      {value.issuer === "custom" && (
+        <>
+          <FormGroup label={t("global_opts.issuer_custom_name")} fieldId="go-issuer-custom" isRequired>
+            <TextInput
+              id="go-issuer-custom"
+              value={value.customIssuer}
+              onChange={(_e, v) => set("customIssuer", v)}
+              placeholder="zerossl {env.ZEROSSL_API_KEY}"
+              validated={issuerErr && !bodyErr ? "error" : "default"}
+              isDisabled={isDisabled}
+            />
+            <FormHelperText><HelperText><HelperTextItem variant={issuerErr && !bodyErr ? "error" : "default"}>
+              {issuerErr && !bodyErr ? t(issuerErr) : t("global_opts.issuer_custom_name_help")}
+            </HelperTextItem></HelperText></FormHelperText>
+          </FormGroup>
+          <FormGroup label={t("global_opts.issuer_custom_body")} fieldId="go-issuer-body">
+            <TextArea
+              id="go-issuer-body"
+              value={value.customIssuerBody}
+              onChange={(_e, v) => set("customIssuerBody", v)}
+              placeholder={"dir https://acme.example.com/directory\neab <key_id> <mac_key>"}
+              rows={3}
+              resizeOrientation="vertical"
+              validated={bodyErr ? "error" : "default"}
+              isDisabled={isDisabled}
+              style={{ fontFamily: "monospace" }}
+            />
+            <FormHelperText><HelperText><HelperTextItem variant={bodyErr ? "error" : "default"}>
+              {bodyErr ? t("global_opts.issuer_body_braces") : t("global_opts.issuer_custom_body_help")}
+            </HelperTextItem></HelperText></FormHelperText>
+          </FormGroup>
+        </>
+      )}
 
       <FormGroup label={t("global_opts.key_type")} fieldId="go-key-type">
         <FormSelect id="go-key-type" value={value.keyType} onChange={(_e, v) => set("keyType", v)} isDisabled={isDisabled} style={{ maxWidth: "20rem" }}>

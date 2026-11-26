@@ -836,7 +836,15 @@
     "tab_tls": "TLS وACME",
     "tab_logging": "السجلات والمقاييس",
     "tab_proxy": "ترويسات الوكيل والبروتوكولات",
-    "tabs_aria": "أقسام الإعدادات"
+    "tabs_aria": "أقسام الإعدادات",
+    "issuer_custom": "جهة إصدار أخرى…",
+    "issuer_custom_name": "جهة الإصدار والوسائط",
+    "issuer_custom_name_help": "ما يلي cert_issuer: وحدة جهة الإصدار ثم وسائطها، مثل acme https://ca.example/directory.",
+    "issuer_custom_body": "خيارات جهة الإصدار",
+    "issuer_custom_body_help": "اختياري: الأسطر داخل كتلة cert_issuer، سطر لكل خيار، كما في ملف Caddyfile.",
+    "issuer_custom_required": "أدخل وحدة جهة الإصدار، مثل acme أو zerossl.",
+    "issuer_custom_invalid": "ابدأ باسم الوحدة ثم الوسائط مفصولة بمسافات، دون أقواس معقوصة.",
+    "issuer_body_braces": "كل { تحتاج إلى } مقابلة."
   },
   "ca": {
     "title": "سلطة الشهادات الداخلية",

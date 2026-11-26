@@ -836,7 +836,15 @@
     "tab_tls": "TLS & ACME",
     "tab_logging": "Log & metrik",
     "tab_proxy": "Header proxy & protokol",
-    "tabs_aria": "Bagian pengaturan"
+    "tabs_aria": "Bagian pengaturan",
+    "issuer_custom": "Penerbit lain…",
+    "issuer_custom_name": "Penerbit dan argumen",
+    "issuer_custom_name_help": "Yang mengikuti cert_issuer: modul penerbit, lalu argumennya, mis. acme https://ca.example/directory.",
+    "issuer_custom_body": "Opsi penerbit",
+    "issuer_custom_body_help": "Opsional: baris di dalam blok cert_issuer, satu per baris, seperti di Caddyfile.",
+    "issuer_custom_required": "Masukkan modul penerbit, mis. acme atau zerossl.",
+    "issuer_custom_invalid": "Mulai dengan nama modul, lalu argumen dipisahkan spasi, tanpa kurung kurawal.",
+    "issuer_body_braces": "Setiap { perlu } pasangannya."
   },
   "ca": {
     "title": "Otoritas sertifikat internal",

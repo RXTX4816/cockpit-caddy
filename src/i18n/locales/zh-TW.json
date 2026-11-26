@@ -836,7 +836,15 @@
     "tab_tls": "TLS 與 ACME",
     "tab_logging": "日誌與指標",
     "tab_proxy": "代理標頭與協定",
-    "tabs_aria": "設定分區"
+    "tabs_aria": "設定分區",
+    "issuer_custom": "其他簽發者…",
+    "issuer_custom_name": "簽發者和參數",
+    "issuer_custom_name_help": "cert_issuer 後面的內容:簽發者模組及其參數,例如 acme https://ca.example/directory。",
+    "issuer_custom_body": "簽發者選項",
+    "issuer_custom_body_help": "選填:cert_issuer 區塊內的行,每行一條,與 Caddyfile 中相同。",
+    "issuer_custom_required": "請輸入簽發者模組,例如 acme 或 zerossl。",
+    "issuer_custom_invalid": "以模組名稱開頭,後接以空格分隔的參數,不要使用大括號。",
+    "issuer_body_braces": "每個 { 都需要對應的 }。"
   },
   "ca": {
     "title": "內部憑證授權單位",

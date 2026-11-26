@@ -836,7 +836,15 @@
     "tab_tls": "TLS & ACME",
     "tab_logging": "Logging & metrics",
     "tab_proxy": "Proxy headers & protocols",
-    "tabs_aria": "Settings sections"
+    "tabs_aria": "Settings sections",
+    "issuer_custom": "Other issuer…",
+    "issuer_custom_name": "Issuer and arguments",
+    "issuer_custom_name_help": "What follows cert_issuer: the issuer module, then its arguments, e.g. acme https://ca.example/directory.",
+    "issuer_custom_body": "Issuer options",
+    "issuer_custom_body_help": "Optional: the lines inside the cert_issuer block, one per line, as in the Caddyfile.",
+    "issuer_custom_required": "Enter the issuer module, e.g. acme or zerossl.",
+    "issuer_custom_invalid": "Start with the module name, then arguments separated by spaces, without braces.",
+    "issuer_body_braces": "Every { needs a matching }."
   },
   "ca": {
     "title": "Internal Certificate Authority",

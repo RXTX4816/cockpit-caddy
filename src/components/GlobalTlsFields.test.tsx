@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import { GlobalTlsFields, globalTlsFromValues, globalTlsToValues } from "./GlobalTlsFields";
+import { GlobalTlsFields, globalTlsFromValues, globalTlsIssuerError, globalTlsToValues } from "./GlobalTlsFields";
 import { GlobalAdminFields, globalAdminFromValues, globalAdminToValues } from "./GlobalAdminFields";
 
 describe("GlobalTlsFields values (#329)", () => {
@@ -18,6 +18,33 @@ describe("GlobalTlsFields values (#329)", () => {
     const values = globalTlsToValues(opts);
     expect(values.issuer).toBe("custom");
     expect(globalTlsFromValues(values)).toMatchObject(opts);
+  });
+
+  it("edits an issuer with arguments and a body as typed text (#329)", () => {
+    const values = { ...globalTlsToValues({}), issuer: "custom", customIssuer: " zerossl {env.ZEROSSL_API_KEY} ", customIssuerBody: "\n  email me@example.com \n\n" };
+    expect(globalTlsIssuerError(values)).toBeNull();
+    expect(globalTlsFromValues(values)).toMatchObject({ certIssuer: "zerossl {env.ZEROSSL_API_KEY}", certIssuerBody: ["email me@example.com"] });
+    expect(globalTlsFromValues({ ...values, customIssuerBody: " " }).certIssuerBody).toBeUndefined();
+  });
+
+  it("rejects an empty issuer, braces in the head and an unbalanced body", () => {
+    const v = (customIssuer: string, customIssuerBody = "") => ({ ...globalTlsToValues({}), issuer: "custom", customIssuer, customIssuerBody });
+    expect(globalTlsIssuerError(v(" "))).toBe("global_opts.issuer_custom_required");
+    expect(globalTlsIssuerError(v("acme {"))).toBe("global_opts.issuer_custom_invalid");
+    expect(globalTlsIssuerError(v("acme", "eab {\nkey_id x"))).toBe("global_opts.issuer_body_braces");
+    expect(globalTlsIssuerError(v("acme", "}\n{"))).toBe("global_opts.issuer_body_braces");
+    expect(globalTlsIssuerError({ ...v(""), issuer: "acme" })).toBeNull();
+  });
+
+  it("offers the custom issuer and shows its fields when picked", () => {
+    const onChange = vi.fn();
+    const { rerender } = render(<GlobalTlsFields value={globalTlsToValues({})} onChange={onChange} />);
+    expect(screen.queryByLabelText(/Issuer and arguments/)).toBeNull();
+    fireEvent.change(screen.getByLabelText("Certificate issuer"), { target: { value: "custom" } });
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ issuer: "custom" }));
+    rerender(<GlobalTlsFields value={{ ...globalTlsToValues({}), issuer: "custom" }} onChange={onChange} />);
+    expect(screen.getByLabelText(/Issuer and arguments/)).toBeTruthy();
+    expect(screen.getByLabelText("Issuer options")).toBeTruthy();
   });
 
   it("reads a plain cert_issuer internal as the internal choice", () => {

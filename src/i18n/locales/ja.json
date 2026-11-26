@@ -836,7 +836,15 @@
     "tab_tls": "TLS と ACME",
     "tab_logging": "ログとメトリクス",
     "tab_proxy": "プロキシヘッダーとプロトコル",
-    "tabs_aria": "設定のセクション"
+    "tabs_aria": "設定のセクション",
+    "issuer_custom": "その他の発行者…",
+    "issuer_custom_name": "発行者と引数",
+    "issuer_custom_name_help": "cert_issuer に続く内容: 発行者モジュールとその引数。例: acme https://ca.example/directory",
+    "issuer_custom_body": "発行者のオプション",
+    "issuer_custom_body_help": "任意: cert_issuer ブロック内の行。Caddyfile と同じく 1 行に 1 つ。",
+    "issuer_custom_required": "発行者モジュールを入力してください(例: acme、zerossl)。",
+    "issuer_custom_invalid": "モジュール名から始め、引数をスペースで区切ってください。波括弧は使えません。",
+    "issuer_body_braces": "{ ごとに対応する } が必要です。"
   },
   "ca": {
     "title": "内部認証局",

@@ -836,7 +836,15 @@
     "tab_tls": "TLS i ACME",
     "tab_logging": "Logi i metryki",
     "tab_proxy": "Nagłówki proxy i protokoły",
-    "tabs_aria": "Sekcje ustawień"
+    "tabs_aria": "Sekcje ustawień",
+    "issuer_custom": "Inny wystawca…",
+    "issuer_custom_name": "Wystawca i argumenty",
+    "issuer_custom_name_help": "To, co następuje po cert_issuer: moduł wystawcy i jego argumenty, np. acme https://ca.example/directory.",
+    "issuer_custom_body": "Opcje wystawcy",
+    "issuer_custom_body_help": "Opcjonalnie: wiersze wewnątrz bloku cert_issuer, po jednym w wierszu, jak w Caddyfile.",
+    "issuer_custom_required": "Wpisz moduł wystawcy, np. acme lub zerossl.",
+    "issuer_custom_invalid": "Zacznij od nazwy modułu, potem argumenty oddzielone spacjami, bez nawiasów klamrowych.",
+    "issuer_body_braces": "Każdy { wymaga pasującego }."
   },
   "ca": {
     "title": "Wewnętrzny urząd certyfikacji",
