@@ -47,7 +47,11 @@ test('enabling per-route access log writes the correct log directive', async ({ 
 
 test('a real request produces a log entry in the configured access log file', async ({ pluginPage: page }) => {
   const logPath = '/var/log/caddy/e2e-access-19452.log';
-  await spawnCmd(page, ['bash', '-c', `rm -f '${logPath}'`]);
+  // Empty the file instead of deleting it: Caddy 2.11 keeps a log file open after the site
+  // that wrote it is gone, and reuses that handle when a site logs to the same path again,
+  // so after `rm` its lines would go to the deleted file. Only an existing file is emptied:
+  // one created here would be root's, and Caddy runs as the caddy user.
+  await spawnCmd(page, ['bash', '-c', `[ -f '${logPath}' ] && : > '${logPath}'; true`]);
   await spawnCmd(page, ['bash', '-c', `fuser -k 19453/tcp 2>&1; true`]);
   await spawnCmd(page, ['bash', '-c',
     `nohup python3 -m http.server 19453 >/tmp/e2e-backend-19453.log 2>&1 & disown`]);
@@ -88,7 +92,6 @@ test('enabling the global runtime log writes the correct log directive', async (
   // The runtime log sits on the Settings tab's "Logging & metrics" sub-tab, with its
   // switch shown directly instead of behind its own expander (#346, #363).
   await openSettingsTab(page, 'Logging & metrics');
-  await spawnCmd(page, ['rm', '-f', '/var/log/caddy/e2e-runtime.log']);
 
   await page.locator('#rl-enabled').check();
   await page.locator('#rl-output-file').check();
@@ -103,11 +106,11 @@ test('enabling the global runtime log writes the correct log directive', async (
   expect(conf).toContain('output file /var/log/caddy/e2e-runtime.log');
   expect(conf).toContain('level ERROR');
 
-  // Caddy accepts it live, and writes its runtime log to that file from then on.
+  // Caddy accepts it on a reload, and its running default logger now writes there.
   await reloadFromSettings(page);
   await expectCaddyActive(page);
-  await expect.poll(async () => (await spawnCmd(page, ['bash', '-c', 'test -f /var/log/caddy/e2e-runtime.log && echo yes; true'])).trim(), { timeout: 10000 })
-    .toBe('yes');
+  await expect.poll(async () => JSON.parse(await spawnCmd(page, ['curl', '-s', '--unix-socket', '/run/caddy/admin.socket', 'http://localhost/config/logging/logs/default'])), { timeout: 10000 })
+    .toMatchObject({ writer: { output: 'file', filename: '/var/log/caddy/e2e-runtime.log' }, level: 'ERROR' });
 
   // Cleanup: disable so this doesn't leak a global log override into later tests.
   await page.locator('#rl-enabled').uncheck();
