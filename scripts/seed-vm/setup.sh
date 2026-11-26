@@ -40,4 +40,6 @@ install -m 644 /tmp/seed/cockpit-caddy-snippets.conf /etc/caddy/conf.d/cockpit-c
 ls /etc/caddy/conf.d
 caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile 2>&1 | tail -2
 chown -R caddy:caddy /var/lib/caddy /var/log/caddy 2>/dev/null || true
-systemctl reload caddy && echo reloaded
+# A restart, not a reload: `caddy reload` sends the config to the admin address the new
+# Caddyfile names, and fails when the running Caddy listens elsewhere (another earlier config).
+systemctl restart caddy && echo restarted
