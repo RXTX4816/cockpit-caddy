@@ -13,6 +13,7 @@
   "scripts": {
     "build": "node scripts/build.mjs && cockpit-i18n-check",
     "watch": "node scripts/watch.mjs",
+    "pretypecheck": "node scripts/ensure-notices.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/",
     "test": "NODE_OPTIONS='--max-old-space-size=8192 --disable-warning=ExperimentalWarning' vitest run",

@@ -9,7 +9,6 @@ import {
   EmptyState,
   EmptyStateBody,
   ExpandableSection,
-  Label,
   MenuToggle,
   PageSection,
   Spinner,
@@ -23,9 +22,8 @@ import {
 } from "@patternfly/react-core";
 import CogIcon from "@patternfly/react-icons/dist/esm/icons/cog-icon";
 import WrenchIcon from "@patternfly/react-icons/dist/esm/icons/wrench-icon";
-import { PluginPage, PluginFooter } from "@rxtx4816/cockpit-plugin-base-react/components";
+import { PluginPage } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { useAdminMode, useDialogState } from "@rxtx4816/cockpit-plugin-base-react";
-import pkg from "../../package.json";
 
 import { ProxyList } from "./ProxyList";
 import { ServiceControl } from "./ServiceControl";
@@ -44,6 +42,7 @@ import { applyStoredAdminAddress } from "../hooks/useAdminAddress";
 import { useCaddyVersion } from "../hooks/useCaddyVersion";
 import { useIsNarrow } from "./useIsNarrow";
 import { Notice } from "./Notice";
+import { AppFooter } from "./AppFooter";
 
 function AppInner() {
   const { t } = useTranslation();
@@ -85,18 +84,7 @@ function AppInner() {
     <PluginPage
       fallbackTitle={t("error_boundary.load_error")}
       footer={
-        <PluginFooter
-          version={pkg.version}
-          links={[
-            { label: t("footer.help"), href: (pkg.homepage as string) + "/wiki" },
-            { label: t("footer.feedback"), href: (pkg.homepage as string) + "/issues/new/choose" },
-            { label: t("footer.source"), href: pkg.homepage as string },
-          ]}
-        >
-          {caddyVersion && (
-            <Label isCompact color="blue">{t("footer.caddy_version", { version: caddyVersion })}</Label>
-          )}
-        </PluginFooter>
+        <AppFooter caddyVersion={caddyVersion} />
       }
     >
       <Stack hasGutter>

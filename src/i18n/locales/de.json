@@ -618,7 +618,8 @@
     "caddy_version": "Caddy {{version}}",
     "help": "Hilfe & Wiki",
     "feedback": "Problem melden",
-    "source": "Quellcode"
+    "source": "Quellcode",
+    "licenses": "Open-Source-Lizenzen"
   },
   "error_boundary": {
     "load_error": "Fehler beim Laden des Caddy-Plugins"
@@ -1347,5 +1348,16 @@
     "non_standard": "Module, die nicht zu Caddy selbst gehören: {{count}}",
     "not_known": "Unbekannt",
     "probed": "Dieser Caddy ist nur über die Admin-API erreichbar, die keine Modulliste hat. Jede Funktion wurde durch Umwandeln einer kleinen Konfiguration getestet; nur gängige DNS-Anbieter werden getestet."
+  },
+  "notices": {
+    "title": "Open-Source-Lizenzen",
+    "aria_label": "Open-Source-Lizenzen",
+    "intro": "{{product}} ist unter {{license}} lizenziert.",
+    "source_link": "Quellcode abrufen",
+    "summary": "Es bündelt die folgenden {{count}} Open-Source-Pakete. Die Lizenz und der Copyright-Hinweis jedes Pakets sind unten vollständig wiedergegeben.",
+    "licenses_used": "Lizenzen",
+    "filter_placeholder": "Nach Name, Lizenz oder Herausgeber filtern",
+    "no_matches": "Keine Pakete entsprechen diesem Filter",
+    "no_text": "Mit diesem Paket wurde kein Lizenztext ausgeliefert — siehe die Paket-Homepage oben."
   }
 }

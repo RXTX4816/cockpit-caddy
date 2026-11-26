@@ -618,7 +618,8 @@
     "caddy_version": "Caddy {{version}}",
     "help": "Ohje ja wiki",
     "feedback": "Ilmoita ongelmasta",
-    "source": "Lähdekoodi"
+    "source": "Lähdekoodi",
+    "licenses": "Avoimen lähdekoodin lisenssit"
   },
   "error_boundary": {
     "load_error": "Virhe Caddy-liitännäisen latauksessa"
@@ -1347,5 +1348,16 @@
     "non_standard": "Moduulit, jotka eivät kuulu Caddyyn itseensä: {{count}}",
     "not_known": "Ei tiedossa",
     "probed": "Tähän Caddyyn pääsee vain Admin API:n kautta, jossa ei ole moduuliluetteloa. Jokainen ominaisuus testattiin muuntamalla pieni asetus; vain yleiset DNS-palveluntarjoajat testataan."
+  },
+  "notices": {
+    "title": "Avoimen lähdekoodin lisenssit",
+    "aria_label": "Avoimen lähdekoodin lisenssit",
+    "intro": "{{product}} on lisensoitu lisenssillä {{license}}.",
+    "source_link": "Hae lähdekoodi",
+    "summary": "Se sisältää seuraavat {{count}} avoimen lähdekoodin pakettia. Kunkin paketin lisenssi ja tekijänoikeusilmoitus on toistettu kokonaisuudessaan alla.",
+    "licenses_used": "Lisenssit",
+    "filter_placeholder": "Suodata nimen, lisenssin tai julkaisijan mukaan",
+    "no_matches": "Mikään paketti ei vastaa tätä suodatinta",
+    "no_text": "Tämän paketin mukana ei toimitettu lisenssitekstiä — katso paketin kotisivu yllä."
   }
 }

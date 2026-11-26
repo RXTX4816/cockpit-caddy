@@ -618,7 +618,8 @@
     "caddy_version": "Caddy {{version}}",
     "help": "Hjälp och wiki",
     "feedback": "Rapportera ett problem",
-    "source": "Källkod"
+    "source": "Källkod",
+    "licenses": "Licenser för öppen källkod"
   },
   "error_boundary": {
     "load_error": "Fel vid inläsning av Caddy-tillägget"
@@ -1347,5 +1348,16 @@
     "non_standard": "Moduler som inte ingår i själva Caddy: {{count}}",
     "not_known": "Okänt",
     "probed": "Denna Caddy nås bara via Admin-API:t, som saknar modullista. Varje funktion testades genom att anpassa en liten konfiguration; bara vanliga DNS-leverantörer testas."
+  },
+  "notices": {
+    "title": "Licenser för öppen källkod",
+    "aria_label": "Licenser för öppen källkod",
+    "intro": "{{product}} licensieras under {{license}}.",
+    "source_link": "Hämta källkoden",
+    "summary": "Det paketerar följande {{count}} paket med öppen källkod. Varje pakets licens och upphovsrättsmeddelande återges i sin helhet nedan.",
+    "licenses_used": "Licenser",
+    "filter_placeholder": "Filtrera efter namn, licens eller utgivare",
+    "no_matches": "Inga paket matchar det här filtret",
+    "no_text": "Ingen licenstext levererades med det här paketet — se paketets webbplats ovan."
   }
 }

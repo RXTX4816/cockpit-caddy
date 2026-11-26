@@ -618,7 +618,8 @@
     "caddy_version": "Caddy {{version}}",
     "help": "Help & wiki",
     "feedback": "Probleem melden",
-    "source": "Broncode"
+    "source": "Broncode",
+    "licenses": "Opensourcelicenties"
   },
   "error_boundary": {
     "load_error": "Fout bij het laden van de Caddy-plugin"
@@ -1347,5 +1348,16 @@
     "non_standard": "Modules die geen deel van Caddy zelf zijn: {{count}}",
     "not_known": "Onbekend",
     "probed": "Deze Caddy is alleen bereikbaar via de Admin-API, die geen lijst met modules heeft. Elke functie is getest door een kleine configuratie te adapteren; alleen gangbare DNS-providers worden getest."
+  },
+  "notices": {
+    "title": "Opensourcelicenties",
+    "aria_label": "Opensourcelicenties",
+    "intro": "{{product}} is gelicentieerd onder {{license}}.",
+    "source_link": "Broncode ophalen",
+    "summary": "Het bundelt de volgende {{count}} opensourcepakketten. De licentie en copyrightvermelding van elk pakket zijn hieronder volledig weergegeven.",
+    "licenses_used": "Licenties",
+    "filter_placeholder": "Filteren op naam, licentie of uitgever",
+    "no_matches": "Geen pakketten komen overeen met dit filter",
+    "no_text": "Bij dit pakket is geen licentietekst meegeleverd — zie de pakketpagina hierboven."
   }
 }
