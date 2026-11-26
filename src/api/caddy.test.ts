@@ -5370,6 +5370,20 @@ describe("a site's own ACME email, CA and key type (#341)", () => {
     expect(parseSiteAcmeSettings(config.apps?.tls?.automation?.policies, "other.example.com")).toBeUndefined();
   });
 
+  it("keeps ZeroSSL picked for the site, and drops only a CA inherited from the global acme_ca", () => {
+    const zerossl = "https://acme.zerossl.com/v2/DV90";
+    // caddy adapt 2.11.7 for `a.example.com { tls { ca <zerossl> } }`.
+    const own = [{ subjects: ["a.example.com"], issuers: [{ module: "acme", ca: zerossl }] }];
+    expect(parseSiteAcmeSettings(own, "a.example.com")).toEqual({ acmeCa: zerossl });
+    // ...and for `{ acme_ca <zerossl> }` with `b.example.com { tls me@x.com }`.
+    const inherited = [
+      { subjects: ["b.example.com"], issuers: [{ module: "acme", ca: zerossl, email: "me@x.com" }, { module: "acme", ca: zerossl, email: "me@x.com" }] },
+      { issuers: [{ module: "acme", ca: zerossl }] },
+    ];
+    expect(parseSiteAcmeSettings(inherited, "b.example.com")).toEqual({ acmeEmail: "me@x.com" });
+    expect(parseSiteAcmeSettings(inherited.slice(0, 1), "b.example.com", { ca: zerossl })).toEqual({ acmeEmail: "me@x.com" });
+  });
+
   // The policies below are what `caddy adapt` builds for the same sites under a global
   // `email g@example.com` and `acme_eab` (Caddy 2.11).
   describe("with a global email and EAB", () => {

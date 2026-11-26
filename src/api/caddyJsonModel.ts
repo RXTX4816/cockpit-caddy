@@ -1766,12 +1766,13 @@ export const ZEROSSL_DIRECTORY = "https://acme.zerossl.com/v2/DV90";
 type AcmeIssuer = { module?: string; email?: string; ca?: string; external_account?: Record<string, unknown> };
 
 /** The global ACME account (`email`, `acme_eab`) in the shape Caddy copies it into every issuer. */
-export type AcmeAccount = { email?: string; external_account?: Record<string, unknown> };
+export type AcmeAccount = { email?: string; external_account?: Record<string, unknown>; /** The global `acme_ca`. */ ca?: string };
 
 /** The global ACME account of the Caddyfile's global options. */
-export function acmeAccountOf(opts: { email?: string; acmeEabKeyId?: string; acmeEabMacKey?: string }): AcmeAccount {
+export function acmeAccountOf(opts: { email?: string; acmeEabKeyId?: string; acmeEabMacKey?: string; acmeCA?: string }): AcmeAccount {
   return {
     ...(opts.email ? { email: opts.email } : {}),
+    ...(opts.acmeCA ? { ca: opts.acmeCA } : {}),
     ...(opts.acmeEabKeyId && opts.acmeEabMacKey ? { external_account: { key_id: opts.acmeEabKeyId, mac_key: opts.acmeEabMacKey } } : {}),
   };
 }
@@ -1795,7 +1796,11 @@ export function globalAcmeAccount(
     ...(i?.external_account ? { external_account: i.external_account } : {}),
   });
   const catchAll = policies?.find(p => !p.subjects?.length);
-  if (catchAll) return pick(acmeOf(catchAll)[0]);
+  // Only the catch-all policy says which CA is the global one; another site's may be its own.
+  if (catchAll) {
+    const first = acmeOf(catchAll)[0];
+    return { ...pick(first), ...(first?.ca ? { ca: first.ca } : {}) };
+  }
   const others = (policies ?? []).filter(p => !exceptHosts.some(h => subjectsInclude(p.subjects, h)));
   const issuers = others.flatMap(acmeOf);
   const emails = new Set(issuers.map(i => i.email));
@@ -1816,10 +1821,12 @@ export function parseSiteAcmeSettings(
 ): Pick<import("./types").TlsAdvancedConfig, "acmeEmail" | "acmeCa" | "keyType"> | undefined {
   const scoped = host ? automationPolicies?.find(p => subjectsInclude(p.subjects, host)) : undefined;
   const acme = scoped?.issuers?.find(i => i.module === "acme") as AcmeIssuer | undefined;
-  const globalEmail = host ? globalAcmeAccount(automationPolicies, [host], acmeAccount).email : undefined;
+  const global = host ? globalAcmeAccount(automationPolicies, [host], acmeAccount) : {};
+  const globalEmail = global.email;
   const out: Pick<import("./types").TlsAdvancedConfig, "acmeEmail" | "acmeCa" | "keyType"> = {
     ...(acme?.email && acme.email !== globalEmail ? { acmeEmail: acme.email } : {}),
-    ...(acme?.ca && acme.ca !== ZEROSSL_DIRECTORY ? { acmeCa: acme.ca } : {}),
+    // A CA the site inherits from the global acme_ca isn't its own; ZeroSSL picked for the site is.
+    ...(acme?.ca && acme.ca !== global.ca ? { acmeCa: acme.ca } : {}),
     ...(scoped?.key_type ? { keyType: scoped.key_type } : {}),
   };
   return Object.keys(out).length ? out : undefined;
