@@ -618,7 +618,8 @@
     "caddy_version": "Caddy {{version}}",
     "help": "Yardım ve wiki",
     "feedback": "Sorun bildir",
-    "source": "Kaynak kodu"
+    "source": "Kaynak kodu",
+    "licenses": "Açık kaynak lisansları"
   },
   "error_boundary": {
     "load_error": "Caddy eklentisi yüklenirken hata oluştu"
@@ -1347,5 +1348,16 @@
     "non_standard": "Caddy'nin kendisine ait olmayan modüller: {{count}}",
     "not_known": "Bilinmiyor",
     "probed": "Bu Caddy'ye yalnızca modül listesi olmayan Admin API üzerinden ulaşılabiliyor. Her özellik küçük bir yapılandırma dönüştürülerek denendi; yalnızca yaygın DNS sağlayıcıları denenir."
+  },
+  "notices": {
+    "title": "Açık kaynak lisansları",
+    "aria_label": "Açık kaynak lisansları",
+    "intro": "{{product}}, {{license}} lisansı altında dağıtılmaktadır.",
+    "source_link": "Kaynak kodunu edinin",
+    "summary": "Aşağıdaki {{count}} açık kaynak paketini içerir. Her paketin lisansı ve telif hakkı bildirimi aşağıda tam olarak yer almaktadır.",
+    "licenses_used": "Lisanslar",
+    "filter_placeholder": "Ada, lisansa veya yayıncıya göre filtrele",
+    "no_matches": "Bu filtreyle eşleşen paket yok",
+    "no_text": "Bu paketle birlikte lisans metni gelmiyor — yukarıdaki paket ana sayfasına bakın."
   }
 }

@@ -618,7 +618,8 @@
     "caddy_version": "Caddy {{version}}",
     "help": "Bantuan & wiki",
     "feedback": "Laporkan masalah",
-    "source": "Kode sumber"
+    "source": "Kode sumber",
+    "licenses": "Lisensi sumber terbuka"
   },
   "error_boundary": {
     "load_error": "Galat saat memuat plugin Caddy"
@@ -1347,5 +1348,16 @@
     "non_standard": "Modul yang bukan bagian dari Caddy sendiri: {{count}}",
     "not_known": "Tidak diketahui",
     "probed": "Caddy ini hanya dapat dijangkau melalui Admin API, yang tidak memiliki daftar modul. Setiap fitur diuji dengan mengadaptasi konfigurasi kecil; hanya penyedia DNS umum yang diuji."
+  },
+  "notices": {
+    "title": "Lisensi sumber terbuka",
+    "aria_label": "Lisensi sumber terbuka",
+    "intro": "{{product}} dilisensikan di bawah {{license}}.",
+    "source_link": "Dapatkan kode sumber",
+    "summary": "Aplikasi ini memaketkan {{count}} paket sumber terbuka berikut. Lisensi dan pemberitahuan hak cipta setiap paket direproduksi selengkapnya di bawah ini.",
+    "licenses_used": "Lisensi",
+    "filter_placeholder": "Saring menurut nama, lisensi, atau penerbit",
+    "no_matches": "Tidak ada paket yang cocok dengan filter ini",
+    "no_text": "Tidak ada teks lisensi yang disertakan dengan paket ini — lihat beranda paket di atas."
   }
 }

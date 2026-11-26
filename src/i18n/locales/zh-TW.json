@@ -618,7 +618,8 @@
     "caddy_version": "Caddy {{version}}",
     "help": "說明與 Wiki",
     "feedback": "回報問題",
-    "source": "原始碼"
+    "source": "原始碼",
+    "licenses": "開源授權條款"
   },
   "error_boundary": {
     "load_error": "載入 Caddy 外掛時發生錯誤"
@@ -1347,5 +1348,16 @@
     "non_standard": "不屬於 Caddy 本身的模組:{{count}}",
     "not_known": "未知",
     "probed": "此 Caddy 只能透過 Admin API 存取，而 Admin API 沒有模組清單。每項功能都透過轉換一個小設定來偵測；只偵測常見的 DNS 供應商。"
+  },
+  "notices": {
+    "title": "開源授權條款",
+    "aria_label": "開源授權條款",
+    "intro": "{{product}} 依據 {{license}} 授權條款發布。",
+    "source_link": "取得原始碼",
+    "summary": "它整合了下列 {{count}} 個開源套件。各套件的授權條款與版權聲明全文如下。",
+    "licenses_used": "授權條款",
+    "filter_placeholder": "依名稱、授權條款或發行者篩選",
+    "no_matches": "沒有套件符合此篩選條件",
+    "no_text": "此套件未隨附授權條款文字 — 請參閱上方的套件首頁。"
   }
 }

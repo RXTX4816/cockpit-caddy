@@ -618,7 +618,8 @@
     "caddy_version": "Caddy {{version}}",
     "help": "Nápověda a wiki",
     "feedback": "Nahlásit problém",
-    "source": "Zdrojový kód"
+    "source": "Zdrojový kód",
+    "licenses": "Licence open source"
   },
   "error_boundary": {
     "load_error": "Chyba při načítání doplňku Caddy"
@@ -1347,5 +1348,16 @@
     "non_standard": "Moduly, které nejsou součástí samotného Caddy: {{count}}",
     "not_known": "Neznámé",
     "probed": "Tento Caddy je dostupný jen přes Admin API, které seznam modulů nemá. Každá funkce byla otestována převodem malé konfigurace; testují se jen běžní poskytovatelé DNS."
+  },
+  "notices": {
+    "title": "Licence open source",
+    "aria_label": "Licence open source",
+    "intro": "{{product}} je licencován pod {{license}}.",
+    "source_link": "Získat zdrojový kód",
+    "summary": "Obsahuje následující open source balíčky ({{count}}). Licence a copyrightové upozornění každého balíčku jsou v plném znění uvedeny níže.",
+    "licenses_used": "Licence",
+    "filter_placeholder": "Filtrovat podle názvu, licence nebo vydavatele",
+    "no_matches": "Tomuto filtru neodpovídají žádné balíčky",
+    "no_text": "S tímto balíčkem nebyl dodán text licence — viz domovská stránka balíčku výše."
   }
 }

@@ -618,7 +618,8 @@
     "caddy_version": "Caddy {{version}}",
     "help": "ヘルプと Wiki",
     "feedback": "問題を報告",
-    "source": "ソースコード"
+    "source": "ソースコード",
+    "licenses": "オープンソースライセンス"
   },
   "error_boundary": {
     "load_error": "Caddy プラグインの読み込みエラー"
@@ -1347,5 +1348,16 @@
     "non_standard": "Caddy 本体に含まれないモジュール: {{count}}",
     "not_known": "不明",
     "probed": "この Caddy には Admin API でしか接続できず、Admin API にはモジュール一覧がありません。各機能は小さな設定を変換して確認しました。DNS プロバイダーは一般的なものだけを確認します。"
+  },
+  "notices": {
+    "title": "オープンソースライセンス",
+    "aria_label": "オープンソースライセンス",
+    "intro": "{{product}} は {{license}} の下でライセンスされています。",
+    "source_link": "ソースコードを取得",
+    "summary": "以下の {{count}} 個のオープンソースパッケージを同梱しています。各パッケージのライセンスと著作権表示の全文を以下に掲載します。",
+    "licenses_used": "ライセンス",
+    "filter_placeholder": "名前、ライセンス、発行者で絞り込み",
+    "no_matches": "このフィルターに一致するパッケージはありません",
+    "no_text": "このパッケージにはライセンス本文が同梱されていません — 上記のパッケージのホームページを参照してください。"
   }
 }

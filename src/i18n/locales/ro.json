@@ -618,7 +618,8 @@
     "caddy_version": "Caddy {{version}}",
     "help": "Ajutor și wiki",
     "feedback": "Raportează o problemă",
-    "source": "Cod sursă"
+    "source": "Cod sursă",
+    "licenses": "Licențe open source"
   },
   "error_boundary": {
     "load_error": "Eroare la încărcarea plugin-ului Caddy"
@@ -1347,5 +1348,16 @@
     "non_standard": "Module care nu fac parte din Caddy însuși: {{count}}",
     "not_known": "Necunoscut",
     "probed": "Acest Caddy este accesibil doar prin Admin API, care nu are o listă de module. Fiecare funcție a fost testată prin adaptarea unei configurații mici; sunt testați doar furnizorii DNS uzuali."
+  },
+  "notices": {
+    "title": "Licențe open source",
+    "aria_label": "Licențe open source",
+    "intro": "{{product}} este licențiat sub {{license}}.",
+    "source_link": "Obține codul sursă",
+    "summary": "Include următoarele {{count}} pachete open source. Licența și nota de copyright ale fiecărui pachet sunt reproduse integral mai jos.",
+    "licenses_used": "Licențe",
+    "filter_placeholder": "Filtrează după nume, licență sau editor",
+    "no_matches": "Niciun pachet nu corespunde acestui filtru",
+    "no_text": "Acest pachet nu include textul licenței — vezi pagina pachetului de mai sus."
   }
 }

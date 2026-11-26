@@ -618,7 +618,8 @@
     "caddy_version": "Caddy {{version}}",
     "help": "Ayuda y wiki",
     "feedback": "Informar de un problema",
-    "source": "Código fuente"
+    "source": "Código fuente",
+    "licenses": "Licencias de código abierto"
   },
   "error_boundary": {
     "load_error": "Error al cargar el plugin de Caddy"
@@ -1347,5 +1348,16 @@
     "non_standard": "Módulos que no forman parte del propio Caddy: {{count}}",
     "not_known": "Desconocido",
     "probed": "Este Caddy solo es accesible a través de la Admin API, que no tiene lista de módulos. Cada función se probó adaptando una configuración pequeña; solo se prueban los proveedores DNS habituales."
+  },
+  "notices": {
+    "title": "Licencias de código abierto",
+    "aria_label": "Licencias de código abierto",
+    "intro": "{{product}} se distribuye bajo la licencia {{license}}.",
+    "source_link": "Obtener el código fuente",
+    "summary": "Incluye los siguientes {{count}} paquetes de código abierto. La licencia y el aviso de copyright de cada paquete se reproducen íntegramente a continuación.",
+    "licenses_used": "Licencias",
+    "filter_placeholder": "Filtrar por nombre, licencia o editor",
+    "no_matches": "Ningún paquete coincide con este filtro",
+    "no_text": "Este paquete no incluye el texto de la licencia — consulta la página del paquete más arriba."
   }
 }
