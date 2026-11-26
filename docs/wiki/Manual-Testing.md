@@ -10,7 +10,7 @@ npm run vm start arch && npm run vm wait arch
 npm run vm:seed            # or: npm run vm:seed debian
 ```
 
-`vm:seed` (`scripts/seed-vm/`) writes the sites below with the plugin's own Caddyfile writers, installs them with snippets and global options, starts small demo backends and reloads Caddy. It backs up `/etc/caddy` to `/root/caddy-before-seed-<time>.tgz` first. The e2e fixtures reset the config, so seed again after an e2e run.
+`vm:seed` (`scripts/seed-vm/`) writes the sites below with the plugin's own Caddyfile writers, installs them with snippets and global options, starts small demo backends and restarts Caddy. It backs up `/etc/caddy` to `/root/caddy-before-seed-<time>.tgz` first. The e2e fixtures reset the config, so seed again after an e2e run.
 
 Open `https://localhost:9190`, log in as `test` / `test`, turn on administrative access and open **Caddy**.
 
