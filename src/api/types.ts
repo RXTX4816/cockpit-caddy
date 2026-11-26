@@ -102,7 +102,7 @@ export interface BasicAuthOptions {
   algorithm?: "bcrypt" | "argon2id";
 }
 
-/** What `encode` is told besides turning compression on (#335). Unset is `encode gzip zstd`. */
+/** What `encode` is told besides turning compression on (#335). Unset is a plain `encode`, which prefers zstd over gzip. */
 export interface EncodeOptions {
   /** The algorithms in order of preference. */
   algorithms?: Array<"gzip" | "zstd">;
@@ -417,8 +417,21 @@ export interface FileServerConfig {
   status?: number;
   /** `file_server { browse <template_file> }`: a template for the directory listing; needs `browse` (#340). */
   browseTemplate?: string;
+  /** `browse { reveal_symlinks }`: show where a symlink in the listing points (#340). */
+  browseRevealSymlinks?: boolean;
+  /** `browse { sort <by> [<order>] }`: the listing's default order (#340). */
+  browseSort?: BrowseSort;
+  /** `browse { file_limit <n> }`: the most entries a listing shows (#340). */
+  browseFileLimit?: number;
   /** The `templates` directive in front of file_server: Caddy's template engine on the served files (#339). */
   templates?: TemplatesConfig;
+}
+
+export const BROWSE_SORT_KEYS = ["name", "namedirfirst", "size", "time"] as const;
+export interface BrowseSort {
+  by: typeof BROWSE_SORT_KEYS[number];
+  /** Omitted: Caddy's default, ascending. */
+  order?: "asc" | "desc";
 }
 
 /** `templates { mime … root … }`: an empty object is a plain `templates`. */

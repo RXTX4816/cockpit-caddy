@@ -14,7 +14,7 @@ import {
   TextInput,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
-import { FileServerOptionsFields, fileServerOptionsDraft, fileServerOptionsFromDraft } from "./FileServerOptionsFields";
+import { FileServerOptionsFields, browseFileLimitInvalid, fileServerOptionsDraft, fileServerOptionsFromDraft } from "./FileServerOptionsFields";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { CaddyApiError, saveWithDnsSecrets } from "../api";
@@ -68,6 +68,8 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
 
     if (!root.trim()) { setRootErr(t("add_static.validation_root_required")); ok = false; }
     else setRootErr(null);
+
+    if (browse && browseFileLimitInvalid(fsOptions)) ok = false;
 
     return ok;
   }
@@ -160,7 +162,7 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
                 />
               </FormGroup>
 
-              <FileServerOptionsFields idPrefix="static-edit" value={fsOptions} onChange={setFsOptions} isDisabled={isLocked} />
+              <FileServerOptionsFields idPrefix="static-edit" value={fsOptions} onChange={setFsOptions} isDisabled={isLocked} browse={browse} />
 
               {!proxy.namedServerKey && (
                 <TlsModeField id="static-edit-tls" value={tlsMode} onChange={setTlsModeChoice} publicName={publicName} isDisabled={isLocked} onDemand={tlsOnDemand} onOnDemandChange={setTlsOnDemand} dns={siteDns} host={proxy.externalHost} />

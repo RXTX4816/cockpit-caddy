@@ -24,7 +24,8 @@
     "unit_kb": "KB",
     "unit_mb": "MB",
     "unit_gb": "GB",
-    "example_value": "לדוגמה {{value}}"
+    "example_value": "לדוגמה {{value}}",
+    "more_about": "אודות {{topic}}"
   },
   "app": {
     "title": "Caddy",
@@ -95,8 +96,8 @@
     "delete_confirm_title": "למחוק את הפרוקסי :{{port}}?",
     "delete_confirm_body": "ה-reverse proxy של פורט {{port}} → {{target}} יוסר.",
     "delete_confirm_button": "מחיקה",
-    "api_error_add_title": "הפרוקסי נוצר בדיסק — Caddy דחה את ההחלה החיה",
-    "api_error_edit_title": "התווית נשמרה — Caddy דחה את עדכון התצורה (שאר השינויים לא הוחלו)",
+    "api_error_add_title": "נשמר, אבל Caddy דחה",
+    "api_error_edit_title": "רק התווית נשמרה",
     "caddyfile_error_title": "אימות ה-Caddyfile נכשל — השינויים לא נשמרו",
     "view_logs": "הצגת יומנים",
     "indicator_browse": "רשימת תיקיות",
@@ -192,7 +193,21 @@
     "field_templates_help": "מפעיל את מנוע התבניות של Caddy לקבצים המוגשים, כך שיוכלו להשתמש ב-include, ב-.Req ובשאר פעולות התבניות.",
     "field_templates_mime": "סוגי MIME",
     "field_templates_root": "תיקייה להכללות",
-    "field_templates_root_help": "היכן include ושאר פעולות הקבצים מחפשות קבצים. ריק פירושו שורש האתר."
+    "field_templates_root_help": "היכן include ושאר פעולות הקבצים מחפשות קבצים. ריק פירושו שורש האתר.",
+    "field_browse_sort": "סדר הרשימה",
+    "field_browse_order": "כיוון",
+    "browse_sort_default": "ברירת המחדל של Caddy (שם)",
+    "browse_sort_name": "שם",
+    "browse_sort_namedirfirst": "שם, תיקיות תחילה",
+    "browse_sort_size": "גודל",
+    "browse_sort_time": "שונה לאחרונה",
+    "browse_order_asc": "עולה",
+    "browse_order_desc": "יורד",
+    "field_browse_file_limit": "מספר פריטים מרבי ברשימה",
+    "browse_file_limit_none": "ללא הגבלה",
+    "browse_file_limit_invalid": "הזן מספר שלם 1 ומעלה.",
+    "field_browse_reveal_symlinks": "הצג יעדים של קישורים סמליים",
+    "field_browse_reveal_symlinks_help": "הרשימה מציגה לאן כל קישור סמלי מפנה. זה עלול לחשוף נתיבים מחוץ לשורש האתר."
   },
   "edit_static": {
     "title": "עריכת שרת סטטי — :{{port}}",
@@ -571,7 +586,8 @@
     "backup_warning_title": "קודם כדאי לגבות את התצורה",
     "backup_warning_body": "ההעברה מגבה רק את ה-Caddyfile עצמו. כדאי ליצור גיבוי מלא של התצורה כדי שאפשר יהיה לשחזר הכול אם משהו ישתבש.",
     "banner_details_toggle": "פרטים",
-    "banner_details": "בלוקי האתרים מועברים ללא שינוי מ-/etc/caddy/Caddyfile אל /etc/caddy/conf.d/cockpit-caddy.conf, ו-Caddyfile מקבל שורת import עבור conf.d. עותק גיבוי של Caddyfile המקורי נשמר ב-/etc/caddy/Caddyfile.bak. עד אז, שינויי התוסף עלולים להתנגש עם האתרים ב-Caddyfile."
+    "banner_details": "בלוקי האתרים מועברים ללא שינוי מ-/etc/caddy/Caddyfile אל /etc/caddy/conf.d/cockpit-caddy.conf, ו-Caddyfile מקבל שורת import עבור conf.d. עותק גיבוי של Caddyfile המקורי נשמר ב-/etc/caddy/Caddyfile.bak. עד אז, שינויי התוסף עלולים להתנגש עם האתרים ב-Caddyfile.",
+    "gate_continue_title": "ייתכנו אתרים כפולים"
   },
   "backup": {
     "button": "גיבוי",
@@ -688,7 +704,7 @@
   },
   "global_opts": {
     "title": "אפשרויות גלובליות של Caddy",
-    "caddyfile_note": "ההגדרות האלה נכתבות לבלוק האפשרויות הגלובליות ב-/etc/caddy/Caddyfile. ‏Caddy נטען מחדש אוטומטית בשמירה.",
+    "caddyfile_note": "הגדרות אלה נמצאות בבלוק האפשרויות הגלובליות של /etc/caddy/Caddyfile. שמירה כותבת ובודקת אותן; טעינה מחדש מחילה אותן.",
     "unmanaged_hint": "לא הוגדרו אפשרויות גלובליות מפורשות — Caddy משתמש בברירות המחדל של HTTPS אוטומטי (כולל Let's Encrypt כשלפרוקסי יש שם מארח ציבורי). השדות למטה ריקים כי אין מה להגדיר, ולא כי משהו שבור.",
     "http_port": "פורט HTTP",
     "https_port": "פורט HTTPS",
@@ -808,10 +824,8 @@
     "default_bind_help": "כתובות מופרדות ברווחים שאתרים ללא אפשרות bind מאזינים להן.",
     "ocsp_stapling_off": "כבה OCSP stapling",
     "admin_title": "נקודת קצה לניהול",
-    "admin_off": "כבה את נקודת הקצה לניהול",
-    "admin_off_help": "התוסף זקוק ל-API הניהול כדי לקרוא ולשנות את התצורה הפועלת.",
     "admin_address": "כתובת ניהול",
-    "admin_address_help": "היכן ה-API לניהול של Caddy מאזין, כפי שנכתב ב-Caddyfile. התוסף מתחבר לכתובת שבהגדרה שלו, לכן שנו את שתיהן יחד.",
+    "admin_address_help": "היכן ממשק הניהול של Caddy מאזין, כמו ב-Caddyfile, למשל localhost:2019 או unix//run/caddy/admin.socket. בטעינה הבאה התוסף ממתין עד 10 שניות שהכתובת החדשה תענה ואז משתמש בה; אם אין תשובה הוא משחזר את ה-Caddyfile הקודם.",
     "admin_origins": "מקורות מותרים",
     "admin_origins_help": "מארחים מופרדים ברווחים שרשאים לקרוא ל-API הניהול מדפדפן.",
     "admin_enforce_origin": "אכוף מקורות",
@@ -822,7 +836,21 @@
     "tab_tls": "TLS ו-ACME",
     "tab_logging": "יומנים ומדדים",
     "tab_proxy": "כותרות פרוקסי ופרוטוקולים",
-    "tabs_aria": "חלקי ההגדרות"
+    "tabs_aria": "חלקי ההגדרות",
+    "issuer_custom": "מנפיק אחר…",
+    "issuer_custom_name": "מנפיק וארגומנטים",
+    "issuer_custom_name_help": "מה שבא אחרי cert_issuer: מודול המנפיק ואחריו הארגומנטים, למשל acme https://ca.example/directory.",
+    "issuer_custom_body": "אפשרויות המנפיק",
+    "issuer_custom_body_help": "אופציונלי: השורות בתוך בלוק cert_issuer, אחת בכל שורה, כמו ב-Caddyfile.",
+    "issuer_custom_required": "הזן את מודול המנפיק, למשל acme או zerossl.",
+    "issuer_custom_invalid": "התחל בשם המודול ואחריו ארגומנטים מופרדים ברווחים, ללא סוגריים מסולסלים.",
+    "issuer_body_braces": "לכל { צריך } תואם.",
+    "admin_read_only": "Caddy כאן אינו השירות המקומי, ולכן התוסף אינו מנהל את ה-Caddyfile שלו. שנה את נקודת הניהול במקום שבו Caddy זה מוגדר.",
+    "admin_off_kept": "ה-Caddyfile מכבה את נקודת הניהול. התוסף משאיר את השורה כפי שהיא; שנה אותה בעורך ה-Caddyfile.",
+    "admin_switched": "ממשק הניהול עונה כעת בכתובת {{address}}",
+    "admin_switch_failed": "נקודת הניהול לא עברה אל {{address}} ({{reason}}). ה-Caddyfile הקודם שוחזר.",
+    "admin_switch_unrestored": "נקודת הניהול לא עברה אל {{address}} ({{reason}}), ושחזור ה-Caddyfile הקודם נכשל. בדוק את ה-Caddyfile והפעל מחדש את Caddy.",
+    "admin_no_answer": "אין תשובה תוך 10 שניות"
   },
   "ca": {
     "title": "רשות אישורים פנימית",
@@ -1235,21 +1263,34 @@
     "move_up": "הזזה למעלה",
     "move_down": "הזזה למטה",
     "remove": "הסרה",
-    "remove_confirm": "להסיר את הבלוק הזה ואת {{count}} הבלוקים שבתוכו?",
     "remove_yes": "הסרה",
     "remove_no": "שמירה",
     "add_kind": "סוג",
     "add_inside": "הוספה בתוך הבלוק הנבחר",
     "add_top": "הוספה ברמה העליונה",
-    "add_matcher": "מתאם הבלוק החדש"
+    "add_matcher": "מתאם הבלוק החדש",
+    "remove_confirm_one": "להסיר את הבלוק הזה ואת {{count}} הבלוקים שבתוכו?",
+    "remove_confirm_other": "להסיר את הבלוק הזה ואת {{count}} הבלוקים שבתוכו?",
+    "remove_confirm_two": "להסיר את הבלוק הזה ואת {{count}} הבלוקים שבתוכו?",
+    "handle_path_invalid": "handle_path צריך נתיב אחד שמתחיל ב-/, כמו /app/*.",
+    "fix_first": "תקנו או בטלו קודם את העריכה הזו: אי אפשר להחיל אותה כפי שהיא.",
+    "move_hint": "ניתן להזיז בלוקים בתוך route, ובין בלוקי handle עם מתאמים בעלי שם, ש-Caddy שומר על הסדר הכתוב שלהם. את שאר הבלוקים Caddy ממיין בעצמו לפי מידת הספציפיות של הנתיב.",
+    "changed_meanwhile": "הבלוק של האתר השתנה מאז שהלשונית הזו קראה אותו. סגרו את החלון ופתחו אותו שוב כדי לערוך את הטקסט הנוכחי.",
+    "form_locked": "לאתר זה יש בלוקים מקוננים, ולכן הטופס שומר רק את הכתובת, bind, הייבואים ו-TLS. ערכו את השאר בלשונית העץ.",
+    "remove_confirm_zero": "להסיר את הבלוק הזה ואת {{count}} הבלוקים שבתוכו?",
+    "remove_confirm_few": "להסיר את הבלוק הזה ואת {{count}} הבלוקים שבתוכו?",
+    "remove_confirm_many": "להסיר את הבלוק הזה ואת {{count}} הבלוקים שבתוכו?",
+    "remove_confirm": "להסיר את הבלוק הזה ואת {{count}} הבלוקים שבתוכו?",
+    "definition_help": "מה {{name}} תואם, כפי שהוגדר באתר זה. שינויים כאן כותבים מחדש את ההגדרה, ולכן חלים על כל בלוק שמשתמש ב-{{name}}.",
+    "definition_empty": "מתאם צריך לפחות תנאי אחד, וביטוי רגולרי של כותרת צריך את הכותרת שלו."
   },
   "encode": {
     "heading": "דחיסה",
     "section_title": "הגדרות דחיסה (אופציונלי)",
     "help": "בשימוש כשהדחיסה פעילה בלשונית כללי. ללא בחירה Caddy דוחס ב-gzip וב-zstd.",
     "algorithms": "אלגוריתמים וסדר",
-    "algorithms_default": "gzip, zstd (ברירת מחדל)",
-    "algorithms_zstd_gzip": "zstd ואז gzip",
+    "algorithms_default": "zstd, gzip (ברירת מחדל)",
+    "algorithms_gzip_zstd": "gzip ואז zstd",
     "algorithms_gzip": "gzip בלבד",
     "algorithms_zstd": "zstd בלבד",
     "minimum_length": "גודל מינימלי",
@@ -1284,13 +1325,13 @@
   },
   "bind": {
     "label": "כתובות bind",
-    "help": "הכתובות שהאתר מאזין עליהן, מופרדות ברווחים, למשל 127.0.0.1 ::1. ריק מאזין על כל הכתובות. מארח שהוא כתובת IP אחת כבר מקושר אליה.",
+    "help": "הכתובות שהאתר מאזין עליהן, מופרדות ברווחים, למשל 127.0.0.1 ::1. ריק מאזין על כל הכתובות, גם כשהמארח הוא כתובת IP: המארח רק מתאים בקשות.",
     "invalid": "הזינו כתובות IP או שמות מארחים, ללא יציאה."
   },
   "modules": {
     "title": "מודולי Caddy",
     "loading": "קורא את המודולים…",
-    "unknown": "לא ניתן היה לקרוא את המודולים של ה-Caddy הזה (האם הפקודה caddy זמינה?).",
+    "unknown": "לא ניתן היה לקרוא את המודולים של Caddy זה: לא הפקודה caddy ולא ה-Admin API ענו.",
     "help": "מה ש-Caddy המותקן יכול לעשות מעבר לגרסה רגילה. תכונה שדורשת מודול חסר נכשלת כש-Caddy טוען את התצורה, לכן בדקו כאן קודם.",
     "cap_dns": "ספקי אתגר DNS",
     "cap_layer4": "שכבה 4 (פרוקסי TCP ו-UDP)",
@@ -1303,6 +1344,8 @@
     "all": "כל המודולים ({{count}})",
     "filter": "סינון מודולים",
     "no_match": "אין מודול תואם.",
-    "non_standard": "מודולים שאינם חלק מ-Caddy עצמו: {{count}}"
+    "non_standard": "מודולים שאינם חלק מ-Caddy עצמו: {{count}}",
+    "not_known": "לא ידוע",
+    "probed": "ניתן להגיע ל-Caddy זה רק דרך ה-Admin API, שאין בו רשימת מודולים. כל תכונה נבדקה על ידי המרת תצורה קטנה; נבדקים רק ספקי DNS נפוצים."
   }
 }

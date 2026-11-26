@@ -107,9 +107,10 @@ export function SiteDnsChallengeField({ id, dns, host, isDisabled }: Props) {
             site={externalHostList(host)[0]}
             isDisabled={isDisabled}
           />
-          {error === "dns.validation_provider" && dns.providers?.length ? (
+          {/* The provider field always shows (#361), as a text box when no provider is known. */}
+          {error === "dns.validation_provider" && (
             <HelperText><HelperTextItem variant="error" id={`${id}-provider-error`}>{t(error)}</HelperTextItem></HelperText>
-          ) : null}
+          )}
         </div>
       )}
     </FormGroup>

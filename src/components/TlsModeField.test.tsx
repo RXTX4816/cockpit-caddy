@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { resetHost } from "@rxtx4816/cockpit-plugin-base-react/host";
 import { installFakeHost } from "@rxtx4816/cockpit-plugin-base-react/testing/host";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { TlsModeField, defaultTlsMode, tlsModeOf, tlsModeToEntry, hasPublicName } from "./TlsModeField";
 import { useSiteDns } from "./SiteDnsChallenge";
+import { resetCaddyModulesCache } from "../api/caddyModules";
 
 // #246: pick where the certificate comes from instead of a "self-signed" checkbox.
 describe("TLS mode (#246)", () => {
@@ -110,6 +111,14 @@ describe("per-site DNS challenge (#289)", () => {
     render(<Harness host="*.example.com" />);
     await screen.findByRole("option", { name: "Inherit global (hetzner)" });
     expect(screen.queryByTestId("t-dns-wildcard-warning")).toBeNull();
+  });
+
+  it("says the provider is missing next to the field, also without known provider modules", async () => {
+    stub(NO_GLOBAL, "http.handlers.reverse_proxy\n");
+    resetCaddyModulesCache();
+    const { container } = render(<Harness host="a.example.com" />);
+    fireEvent.change(await screen.findByLabelText("DNS challenge"), { target: { value: "override" } });
+    await waitFor(() => expect(container.querySelector("#t-dns-provider-error")).toBeTruthy());
   });
 
   it("an override asks for a provider, then plans per-site variables with the value on the side", async () => {

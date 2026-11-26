@@ -6,15 +6,18 @@ import { getHost, mkdirp, HostError } from "@rxtx4816/cockpit-plugin-base-react/
 import { applyConfigChange, type FileChange } from "./configChange";
 import { listConfDFiles, readCaddyfile, writeCaddyfile } from "./systemd";
 import { externalHostList } from "./externalHosts";
-import { withConfDImport, type RawBlock, extractRawBlocksFromCaddyfile, migrateCaddyfile, extractLogFilePaths, parseConfExternalAddresses, parseLabelsFromCaddyfile, CONF_HEADER, findGlobalBlock } from "./caddyfileDocument";
+import { AdminRejectedError, adminTarget, switchAdminEndpoint, type AdminTarget } from "./adminSwitch";
+import { confSites, confSiteMaps } from "./confSites";
+import { mergeSnippetLists, parseSnippets } from "./snippets";
+import { withConfDImport, type RawBlock, extractRawBlocksFromCaddyfile, migrateCaddyfile, extractLogFilePaths, parseConfExternalAddresses, CONF_HEADER, findGlobalBlock } from "./caddyfileDocument";
 import { buildTrustedProxiesLines, buildProxyProtocolLines, buildServerExtrasLines, patchMainCaddyfile, type GlobalOptions, INTERNAL_LIFETIME_MARKER, parseGlobalOptions, buildGlobalOptionsPatch, METRICS_SITE_BEGIN, METRICS_SITE_END, buildMetricsSiteBlock, parseMetricsSiteBlock } from "./globalOptions";
 import { buildExternalAddress, surgicallyWriteProxy, proxiesToCaddyfile, tlsSubjectHost, tlsSubjectHosts, namedServerIsHostless, parseServerDefsFromConf, surgicallyWriteServerBlock } from "./siteBlocks";
-import { parseCertLifetimeDuration, parseProxies, subjectsInclude, findAutomationPolicy } from "./caddyJsonModel";
+import { parseCertLifetimeDuration, parseProxies, subjectsInclude, findAutomationPolicy, acmeAccountOf, type AcmeAccount } from "./caddyJsonModel";
 
 // Re-exported from the modules the Caddyfile and JSON logic now lives in.
 export { CONF_D_IMPORT_LINE, withConfDImport, setBlockResult, extractRawBlocksFromCaddyfile, migrateCaddyfile, extractLogFilePaths, parseLegacyLabelsFromCaddyfile, parseConfExternalAddresses, parseConfTlsMap, parseConfTlsIssuerMap, parseConfTlsOnDemandMap, parseConfTlsDnsMap, parseConfCustomTlsCaMap, parseConfAccessLogMap, parseLabelsFromCaddyfile, CONF_HEADER, parseConfForwardAuthMap, surgicallyReplaceBlock, surgicallyRemoveBlock, hostsConflict, findServerBlock, deduplicateServerBlocks, surgicallyRemoveServerBlock, findGlobalBlock, parseDnsProviderDirective } from "./caddyfileDocument";
 export type { RawBlock } from "./caddyfileDocument";
-export { patchMainCaddyfile, dnsProviderLines, parseGlobalOptions, buildGlobalOptionsPatch, buildMetricsSiteBlock, parseMetricsSiteBlock } from "./globalOptions";
+export { patchMainCaddyfile, dnsProviderLines, parseGlobalOptions, buildGlobalOptionsPatch, buildMetricsSiteBlock, parseMetricsSiteBlock, certIssuerError } from "./globalOptions";
 export type { GlobalOptions, PreferredChains } from "./globalOptions";
 export { caddyQuote, hasAnyMatcher, isPathOnlyMatcher, expandPlaceholderShorthands, proxyToBlock, surgicallyWriteProxy, surgicallyEditProxy, proxiesToCaddyfile, tlsSubjectHost, tlsSubjectHosts, routeHosts, namedServerIsHostless, parseServerDefsFromConf, serverDefToBlock, surgicallyWriteServerBlock } from "./siteBlocks";
 export { collapsePlaceholderShorthands, parseProxies, standaloneProxyId, buildServerEntry, mergeProxy, removeProxy, mergeNamedServer, removeNamedServer } from "./caddyJsonModel";
@@ -105,12 +108,20 @@ async function curlPost(
     const raw = out.slice(0, nl).trim();
     let msg = raw;
     try { msg = (JSON.parse(raw) as { error?: string }).error ?? raw; } catch { /* keep raw */ }
-    throw new Error(msg || `HTTP ${code}`);
+    throw new AdminHttpError(msg || `HTTP ${code}`, code);
+  }
+}
+
+/** The Admin API answered with an HTTP error; its message is the body's `error`. */
+class AdminHttpError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(message);
+    this.name = "AdminHttpError";
   }
 }
 
 async function tcpPost(path: string, body: string, contentType?: string): Promise<void> {
-  await curlPost(["curl", `${tcpBase}${path}`], body, {}, contentType);
+  await curlPost(["curl", "--connect-timeout", "2", `${tcpBase}${path}`], body, {}, contentType);
 }
 
 async function unixPost(path: string, body: string, contentType?: string): Promise<void> {
@@ -219,6 +230,24 @@ export async function applyCaddyfileViaApi(content: string): Promise<void> {
   await notifyConfigChanged();
 }
 
+/**
+ * Adapts a Caddyfile through the Admin API's `/adapt` endpoint without loading it: what a check
+ * can use when there is no local `caddy` binary. Throws CaddyfileError with Caddy's message when
+ * the adapter rejects it, and the transport's own error when Caddy can't be reached.
+ */
+export async function adaptCaddyfileViaApi(content: string): Promise<void> {
+  try {
+    await (transport === "unix"
+      ? unixPost("/adapt", content, "text/caddyfile")
+      : tcpPost("/adapt", content, "text/caddyfile"));
+  } catch (e) {
+    // The adapter reports a config it can't read as 400. Any other status (403 from an origin
+    // check, 404, 500) says nothing about the Caddyfile.
+    if (e instanceof AdminHttpError && e.status === 400) throw new CaddyfileError(e.message);
+    throw e;
+  }
+}
+
 /** `import [/etc/caddy/]conf.d/*` or `…/*.conf`, the globs whose files can be inlined. */
 const CONF_D_GLOB_IMPORT = /^[ \t]*import[ \t]+(?:\/etc\/caddy\/)?conf\.d\/\*(\.conf)?[ \t]*$/m;
 
@@ -277,6 +306,101 @@ async function buildFlattenedMainCaddyfile(): Promise<string> {
 
 export async function applyCurrentCaddyfileViaApi(): Promise<void> {
   await applyCaddyfileViaApi(await buildFlattenedMainCaddyfile());
+}
+
+/** The main Caddyfile as it is on disk, e.g. to keep as a backup before a save. */
+export async function readMainCaddyfile(): Promise<string> {
+  return (await getHost().readFile(MAIN_CADDYFILE, { superuser: "try" })) ?? "";
+}
+
+/** POST /load over the address the plugin uses now; a refusal from Caddy is an AdminRejectedError. */
+async function loadOverCurrentAddress(content: string): Promise<void> {
+  try {
+    await (transport === "unix" ? unixPost("/load", content, "text/caddyfile") : tcpPost("/load", content, "text/caddyfile"));
+  } catch (e) {
+    if (e instanceof AdminHttpError) throw new AdminRejectedError(e.message);
+    throw e;
+  }
+}
+
+/** The files a Settings save changes, as they were before the first save that moved the admin endpoint. */
+let adminBackup: { main: string; proxyConf: string } | undefined;
+let adminSwitchListener: ((tcp: string, socket: string) => void) | undefined;
+
+/** Called with the new address once the plugin follows a moved admin endpoint, to store it. */
+export function onAdminSwitched(listener: (tcp: string, socket: string) => void): void {
+  adminSwitchListener = listener;
+}
+
+/**
+ * Keeps the main Caddyfile and conf.d as they are now, before a save that moves the admin
+ * endpoint (#330), so the reload can put them back. A second such save keeps the first backup.
+ */
+export async function keepAdminBackup(): Promise<void> {
+  if (adminBackup) return;
+  adminBackup = {
+    main: await readMainCaddyfile(),
+    proxyConf: (await getHost().readFile(PROXY_CONF_PATH, { superuser: "try" })) ?? "",
+  };
+}
+
+const sameTcp = (a: string, b: string) => {
+  const norm = (u: string) => u.replace(/\/+$/, "").replace("://localhost:", "://127.0.0.1:");
+  return norm(a) === norm(b);
+};
+
+/**
+ * Where the Caddyfile on disk puts the admin endpoint, when the next reload moves it away from
+ * where the plugin reaches Caddy now. An `admin` line left out counts only right after a Settings
+ * save took one out: otherwise the address may come from Caddy's environment (CADDY_ADMIN).
+ */
+async function movedAdminTarget(): Promise<AdminTarget | undefined> {
+  if (!transport) return undefined;
+  let admin: string | undefined;
+  try {
+    admin = parseGlobalOptions(await readMainCaddyfile()).adminAddress;
+  } catch {
+    return undefined; // can't tell: the plain reload, as before
+  }
+  if (!admin && !adminBackup) return undefined;
+  const target = adminTarget(admin, { tcp: tcpBase, socket: unixSocket });
+  const same = target.transport === transport && (transport === "unix" ? target.socket === unixSocket : sameTcp(target.tcp, tcpBase));
+  return same ? undefined : target;
+}
+
+/**
+ * The reload that moves the admin endpoint (#330), see adminSwitch.ts: with `restart`, Caddy is
+ * restarted instead (the env file changed too). Without a backup there is nothing to roll back
+ * to, e.g. after the page was reloaded, and the error says so.
+ */
+async function reloadWithAdminSwitch(target: AdminTarget, opts: { restart?: boolean }): Promise<void> {
+  const backup = adminBackup;
+  try {
+    await switchAdminEndpoint(target, {
+      apply: async () => opts.restart ? restartService("caddy") : loadOverCurrentAddress(await buildFlattenedMainCaddyfile()),
+      probe: t => t.transport === "unix" ? testUnixSocket(t.socket) : testTcpConnection(t.tcp),
+      switchTo: t => {
+        setAdminAddress(t.tcp, t.socket);
+        transport = t.transport;
+        adminSwitchListener?.(t.tcp, t.socket);
+      },
+      restore: async () => {
+        if (!backup) throw new Error("no backup");
+        await getHost().writeFile(MAIN_CADDYFILE, backup.main, { superuser: "try" });
+        await getHost().writeFile(PROXY_CONF_PATH, backup.proxyConf, { superuser: "try" });
+        // The old endpoint still answers when Caddy refused the new config; otherwise only a
+        // restart brings it back, since Caddy listens wherever the config it took says.
+        try {
+          await loadOverCurrentAddress(await buildFlattenedMainCaddyfile());
+        } catch {
+          await restartService("caddy");
+        }
+      },
+    });
+  } finally {
+    adminBackup = undefined;
+    await notifyConfigChanged();
+  }
 }
 
 const PROXY_CONF_PATH = "/etc/caddy/conf.d/cockpit-caddy.conf";
@@ -754,13 +878,22 @@ async function runCaddyValidate(): Promise<void> {
  * (see caddyManaged) — e.g. Caddy running in a container with no local unit
  * to reload.
  */
-export async function reloadCaddy(): Promise<void> {
+export async function reloadCaddy(opts: { restart?: boolean } = {}): Promise<{ adminMovedTo?: AdminTarget }> {
   if (!caddyManaged) {
     await applyCurrentCaddyfileViaApi();
-    return;
+    return {};
   }
-  await reloadSystemdService("caddy");
+  // `caddy reload` sends the config to the address it names, where nothing listens yet when the
+  // admin endpoint moves (#330): that reload goes over the old address instead, whoever asks for it.
+  const moved = await movedAdminTarget();
+  if (moved) {
+    await reloadWithAdminSwitch(moved, opts);
+    return { adminMovedTo: moved };
+  }
+  adminBackup = undefined;
+  await (opts.restart ? restartService("caddy") : reloadSystemdService("caddy"));
   await notifyConfigChanged();
+  return {};
 }
 
 /**
@@ -1148,7 +1281,11 @@ export async function checkLogFileWritable(filePath: string): Promise<string | n
  * skips propagation entirely — existing hostless proxies keep their previous
  * lifetime until their next individual edit re-applies the current shared value.
  */
-async function applyInternalLifetimeToProxyConf(content: string, internalCertLifetime: string | undefined): Promise<string> {
+/**
+ * `acmeAccount` is the global ACME account the running config was built with (#341), so a site's
+ * ACME settings read from that config aren't taken for the global ones copied into its issuers.
+ */
+async function applyInternalLifetimeToProxyConf(content: string, internalCertLifetime: string | undefined, acmeAccount: AcmeAccount): Promise<string> {
   let config: CaddyConfig;
   try {
     config = await fetchCaddyConfig();
@@ -1157,20 +1294,19 @@ async function applyInternalLifetimeToProxyConf(content: string, internalCertLif
   }
 
   const serverDefs = parseServerDefsFromConf(content);
-  const proxies = parseProxies(config, serverDefs);
-  // parseProxies never populates .label (that's a UI-layer merge over `# label:` comments,
-  // done in useProxies) — without re-attaching it here, rewriting a standalone proxy's
-  // block below would silently drop its label comment.
-  const labels = parseLabelsFromCaddyfile(content);
+  // The sites as the plugin shows them, with what only conf.d holds (issuer, imports, label, the
+  // site's text): the JSON alone wrote an automatic-HTTPS site back as `tls internal`.
+  const snippets = mergeSnippetLists(parseSnippets(await readSnippetsConf(), "plugin"), parseSnippets(await readMainCaddyfile(), "caddyfile"));
+  const proxies = confSites(config, serverDefs, confSiteMaps(content), snippets, acmeAccount);
 
+  // The shared lifetime only applies to sites without a host name, so no other block is touched.
   let updated = content;
   for (const p of proxies) {
-    if (!p.tls || p.namedServerKey) continue;
-    const label = proxyAddressKeys(p).map(k => labels[k]).find(Boolean);
-    updated = surgicallyWriteProxy(updated, { ...p, label, tlsAdvanced: applyGlobalInternalLifetimeToProxy(p, internalCertLifetime) });
+    if (!p.tls || p.namedServerKey || tlsSubjectHosts(p.externalHost).length) continue;
+    updated = surgicallyWriteProxy(updated, { ...p, tlsAdvanced: applyGlobalInternalLifetimeToProxy(p, internalCertLifetime) });
   }
   for (const def of serverDefs) {
-    if (!def.tls) continue;
+    if (!def.tls || !namedServerIsHostless(def.listenAddresses)) continue;
     const routes = proxies.filter(p => p.namedServerKey === def.key);
     updated = surgicallyWriteServerBlock(updated, { ...def, tlsAdvanced: applyGlobalInternalLifetimeToServer(def, internalCertLifetime) }, routes);
   }
@@ -1244,6 +1380,8 @@ export async function syncGlobalOptions(
 async function writeGlobalOptions(opts: GlobalOptions): Promise<void> {
   const diskContent = (await getHost().readFile(MAIN_CADDYFILE, { superuser: "try" })) ?? "";
   let patched = buildGlobalOptionsPatch(diskContent, opts);
+  // The running config was built from the options on disk, not the ones being saved.
+  const runningAccount = acmeAccountOf(parseGlobalOptions(diskContent));
 
   // #153 — trusted_proxies must also be re-merged into every per-port managed servers
   // block (see buildManagedServersBlocks' comment), not just the global servers{} block
@@ -1252,7 +1390,7 @@ async function writeGlobalOptions(opts: GlobalOptions): Promise<void> {
   try {
     const config = await fetchCaddyConfig();
     const serverDefs = parseServerDefsFromConf((await getHost().readFile(PROXY_CONF_PATH, { superuser: "try" })) ?? "");
-    const proxies = parseProxies(config, serverDefs);
+    const proxies = parseProxies(config, serverDefs, runningAccount);
     patched = patchMainCaddyfile(patched, buildManagedServersBlocks(proxies, opts.trustedProxies, opts.proxyProtocol));
   } catch {
     // Admin API unreachable — existing per-port blocks (if any) keep whatever
@@ -1260,7 +1398,7 @@ async function writeGlobalOptions(opts: GlobalOptions): Promise<void> {
   }
 
   const proxyConfDisk = (await getHost().readFile(PROXY_CONF_PATH, { superuser: "try" })) ?? "";
-  let proxyConfPatched = await applyInternalLifetimeToProxyConf(proxyConfDisk, opts.internalCertLifetime);
+  let proxyConfPatched = await applyInternalLifetimeToProxyConf(proxyConfDisk, opts.internalCertLifetime, runningAccount);
   proxyConfPatched = patchTopLevelMarkedSection(proxyConfPatched, METRICS_SITE_BEGIN, METRICS_SITE_END, buildMetricsSiteBlock(opts));
 
   if (patched === diskContent && proxyConfPatched === proxyConfDisk) return;

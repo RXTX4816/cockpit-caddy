@@ -7,6 +7,7 @@ import {
   DescriptionListDescription,
   DescriptionListGroup,
   DescriptionListTerm,
+  Content,
   Divider,
   Form,
   FormGroup,
@@ -20,15 +21,19 @@ import {
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
-import { readGlobalOptions, syncGlobalOptions, reloadCaddy, fetchStorageInfo, checkStoragePathWritable, listDnsProviders, readDnsEnvNames, restartService, notifyConfigChanged } from "../api";
+import { readGlobalOptions, syncGlobalOptions, reloadCaddy, keepAdminBackup, adminMoves, AdminSwitchError, type AdminTarget, fetchStorageInfo, checkStoragePathWritable, listDnsProviders, readDnsEnvNames, notifyConfigChanged } from "../api";
 import type { DnsChallengeConfig, GlobalOptions, StorageInfo } from "../api";
 import { DnsChallengeFields, dnsDraftFromConfig, dnsDraftToConfig, validateDnsDraft, type DnsDraft } from "./DnsChallengeFields";
 import { CertLifetimeSelect } from "./CertLifetimeSelect";
 import { CaddyModulesPanel } from "./CaddyModulesPanel";
-import { GlobalTlsFields, globalTlsFromValues, globalTlsToValues, type GlobalTlsValues } from "./GlobalTlsFields";
+import { GlobalTlsFields, globalTlsFromValues, globalTlsIssuerError, globalTlsToValues, type GlobalTlsValues } from "./GlobalTlsFields";
 import { GlobalAdminFields, globalAdminFromValues, globalAdminToValues, type GlobalAdminValues } from "./GlobalAdminFields";
+import { loadAdminAddress } from "../hooks/useAdminAddress";
+
+const adminTargetLabel = (target: AdminTarget) => target.transport === "unix" ? target.socket : target.tcp;
 import { AccessLogSection, type AccessLogValues, accessLogConfigToValues, accessLogHasError, accessLogValuesToConfig } from "./AccessLogSection";
 import { Notice } from "./Notice";
+import { HelpPopover } from "./HelpPopover";
 import { ProxyDialogTabs, type ProxyTab } from "./proxyDialogParts";
 
 /** True when any of the options a section writes is set. */
@@ -68,7 +73,7 @@ function metricsLinkUrl(listenAddress: string, path: string): string | null {
   return `http://${host}:${m[2]}${path.trim() || "/metrics"}`;
 }
 
-export function GlobalOptionsTab() {
+export function GlobalOptionsTab({ unmanaged = false }: { unmanaged?: boolean } = {}) {
   const { t } = useTranslation();
   const toast = useToast();
   const confirm = useConfirmAction();
@@ -97,6 +102,7 @@ export function GlobalOptionsTab() {
   const [renewalWindowRatio, setRenewalWindowRatio] = useState("");
   const [globalTls, setGlobalTls] = useState<GlobalTlsValues>(globalTlsToValues({}));
   const [globalAdmin, setGlobalAdmin] = useState<GlobalAdminValues>(globalAdminToValues({}));
+  const [savedAdminAddress, setSavedAdminAddress] = useState<string | undefined>(undefined);
   const [storagePath, setStoragePath] = useState("");
   const [storageInfo, setStorageInfo] = useState<StorageInfo | null>(null);
   const [storageInfoError, setStorageInfoError] = useState<string | null>(null);
@@ -160,6 +166,7 @@ export function GlobalOptionsTab() {
         setRenewalWindowRatio(opts.renewalWindowRatio != null ? String(opts.renewalWindowRatio) : "");
         setGlobalTls(globalTlsToValues(opts));
         setGlobalAdmin(globalAdminToValues(opts));
+        setSavedAdminAddress(opts.adminAddress);
         setStoragePath(opts.storagePath ?? "");
         loadStorageInfo(opts.storagePath);
         setMetricsEnabled(opts.metricsEnabled ?? false);
@@ -210,7 +217,7 @@ export function GlobalOptionsTab() {
   const dnsErr = dnsEnabled ? (dnsDraft.provider ? validateDnsDraft(dnsDraft, dnsEnvNames) : "dns.validation_provider") : null;
   const hasError: Record<SettingsTabKey, boolean> = {
     core: !!(httpPortErr || httpsPortErr || gracePeriodErr || shutdownDelayErr),
-    tls: !!(dnsErr || onDemandBurstErr || onDemandIntervalErr || internalCertLifetimeErr || renewalWindowRatioErr),
+    tls: !!(dnsErr || onDemandBurstErr || onDemandIntervalErr || internalCertLifetimeErr || renewalWindowRatioErr || globalTlsIssuerError(globalTls)),
     logging: !!(metricsListenAddressErr || metricsPathErr) || accessLogHasError(runtimeLog),
     proxy: !!(trustedProxiesRangesErr || proxyProtocolTimeoutErr),
   };
@@ -230,11 +237,26 @@ export function GlobalOptionsTab() {
   const isConfirming = confirm.step !== "idle";
   const isSaving = confirm.step === "submitting";
 
+  /** Runs a reload or restart, and says where the admin endpoint went, or why it didn't (#330). */
+  async function reloadOrRestart(restart: boolean) {
+    try {
+      const { adminMovedTo } = await reloadCaddy({ restart });
+      if (adminMovedTo) toast.success(t("global_opts.admin_switched", { address: adminTargetLabel(adminMovedTo) }));
+    } catch (e) {
+      if (!(e instanceof AdminSwitchError)) throw e;
+      // The Caddyfile on disk is the backup again, so the form shows it again.
+      load();
+      throw new Error(t(e.restored ? "global_opts.admin_switch_failed" : "global_opts.admin_switch_unrestored", {
+        address: e.target ? adminTargetLabel(e.target) : "", reason: e.rejection ?? t("global_opts.admin_no_answer"),
+      }));
+    }
+  }
+
   async function handleReload() {
     setReloading(true);
     setReloadError(null);
     try {
-      await reloadCaddy();
+      await reloadOrRestart(false);
       setNeedsReload(false);
       toast.success(t("caddyfile.reloaded"));
     } catch (e) {
@@ -379,7 +401,7 @@ export function GlobalOptionsTab() {
         <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
           {t("global_opts.admin_title")}
         </Title>
-        <GlobalAdminFields value={globalAdmin} onChange={setGlobalAdmin} isDisabled={isConfirming} />
+        <GlobalAdminFields value={globalAdmin} onChange={setGlobalAdmin} isDisabled={isConfirming} isReadOnly={unmanaged} />
 
         <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
 
@@ -391,9 +413,9 @@ export function GlobalOptionsTab() {
     </>) },
     { key: "tls", label: t("global_opts.tab_tls"), configured: configured.tls, hasError: hasError.tls, content: (<>
         <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
-          {t("global_opts.acme_title")}
+          {t("global_opts.acme_title")}{" "}
+          <HelpPopover topic={t("global_opts.acme_title")}>{t("global_opts.acme_note")}</HelpPopover>
         </Title>
-        <Notice variant="info" title={t("global_opts.acme_note")} />
 
         <FormGroup label={t("global_opts.acme_email")} fieldId="go-email">
           <TextInput
@@ -481,24 +503,18 @@ export function GlobalOptionsTab() {
         <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
           {t("dns.global_title")}
         </Title>
-        {dnsProviders && !dnsProviders.length && !dnsEnabled ? (
+        <FormGroup fieldId="go-dns-enabled">
+          <Checkbox
+            id="go-dns-enabled"
+            label={t("dns.global_enabled")}
+            description={t("dns.global_enabled_help")}
+            isChecked={dnsEnabled}
+            onChange={(_e, v) => setDnsEnabled(v)}
+            isDisabled={isConfirming}
+          />
+        </FormGroup>
+        {dnsEnabled && (
           <DnsChallengeFields idPrefix="go-dns" providers={dnsProviders} envNames={dnsEnvNames} value={dnsDraft} onChange={setDnsDraft} isDisabled={isConfirming} />
-        ) : (
-          <>
-            <FormGroup fieldId="go-dns-enabled">
-              <Checkbox
-                id="go-dns-enabled"
-                label={t("dns.global_enabled")}
-                description={t("dns.global_enabled_help")}
-                isChecked={dnsEnabled}
-                onChange={(_e, v) => setDnsEnabled(v)}
-                isDisabled={isConfirming}
-              />
-            </FormGroup>
-            {dnsEnabled && (
-              <DnsChallengeFields idPrefix="go-dns" providers={dnsProviders} envNames={dnsEnvNames} value={dnsDraft} onChange={setDnsDraft} isDisabled={isConfirming} />
-            )}
-          </>
         )}
 
         <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
@@ -580,9 +596,9 @@ export function GlobalOptionsTab() {
         <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
 
         <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
-          {t("global_opts.internal_tls_title")}
+          {t("global_opts.internal_tls_title")}{" "}
+          <HelpPopover topic={t("global_opts.internal_tls_title")}>{t("global_opts.internal_tls_note")}</HelpPopover>
         </Title>
-        <Notice variant="info" title={t("global_opts.internal_tls_note")} />
 
         <FormGroup label={t("global_opts.internal_cert_lifetime")} fieldId="go-internal-cert-lifetime">
           <CertLifetimeSelect
@@ -734,9 +750,9 @@ export function GlobalOptionsTab() {
         <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
 
         <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
-          {t("global_opts.runtime_log_title")}
+          {t("global_opts.runtime_log_title")}{" "}
+          <HelpPopover topic={t("global_opts.runtime_log_title")}>{t("global_opts.runtime_log_note")}</HelpPopover>
         </Title>
-        <Notice variant="info" title={t("global_opts.runtime_log_note")} />
 
         <AccessLogSection
           idPrefix="rl"
@@ -752,9 +768,9 @@ export function GlobalOptionsTab() {
     </>) },
     { key: "proxy", label: t("global_opts.tab_proxy"), configured: configured.proxy, hasError: hasError.proxy, content: (<>
         <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
-          {t("global_opts.trusted_proxies_title")}
+          {t("global_opts.trusted_proxies_title")}{" "}
+          <HelpPopover topic={t("global_opts.trusted_proxies_title")}>{t("global_opts.trusted_proxies_note")}</HelpPopover>
         </Title>
-        <Notice variant="info" title={t("global_opts.trusted_proxies_note")} />
 
         <FormGroup fieldId="go-trusted-proxies-enabled">
           <Checkbox
@@ -827,9 +843,9 @@ export function GlobalOptionsTab() {
         <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
 
         <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
-          {t("global_opts.proxy_protocol_title")}
+          {t("global_opts.proxy_protocol_title")}{" "}
+          <HelpPopover topic={t("global_opts.proxy_protocol_title")}>{t("global_opts.proxy_protocol_note")}</HelpPopover>
         </Title>
-        <Notice variant="info" title={t("global_opts.proxy_protocol_note")} />
 
         <FormGroup fieldId="go-proxy-protocol-enabled">
           <Checkbox
@@ -902,7 +918,8 @@ export function GlobalOptionsTab() {
   return (
     <div style={{ maxWidth: "56rem" }}>
       <Title headingLevel="h3" style={{ marginBottom: "var(--pf-v6-global--spacer--md)" }}>
-        {t("global_opts.title")}
+        {t("global_opts.title")}{" "}
+        <HelpPopover topic={t("global_opts.title")}>{t("global_opts.caddyfile_note")}</HelpPopover>
       </Title>
 
       {restartNeeded && (
@@ -914,7 +931,7 @@ export function GlobalOptionsTab() {
             <Button variant="warning" size="sm" isLoading={restarting} isDisabled={restarting} onClick={() => {
               setRestarting(true);
               setReloadError(null);
-              restartService("caddy")
+              reloadOrRestart(true)
                 .then(() => { setRestartNeeded(false); setNeedsReload(false); void notifyConfigChanged(); })
                 .catch(e => setReloadError(e instanceof Error ? e.message : String(e)))
                 .finally(() => setRestarting(false));
@@ -939,13 +956,8 @@ export function GlobalOptionsTab() {
         <Notice variant="danger" title={reloadError} />
       )}
 
-      <Notice variant="info" title={t("global_opts.caddyfile_note")} />
-
       {!hasAnyOption && (
-        <Notice
-          variant="info"
-          title={t("global_opts.unmanaged_hint")}
-        />
+        <Content component="p" style={{ color: "var(--pf-t--global--text--color--subtle)" }}>{t("global_opts.unmanaged_hint")}</Content>
       )}
 
       <Form>
@@ -1015,12 +1027,16 @@ export function GlobalOptionsTab() {
                     const writeErr = await checkStoragePathWritable(opts.storagePath);
                     if (writeErr) throw new Error(t("global_opts.storage_not_writable", { error: writeErr }));
                   }
+                  // A save that moves the admin endpoint keeps the files from before it, so the
+                  // reload can put them back when the new address doesn't answer (#330).
+                  if (!unmanaged && adminMoves(savedAdminAddress, opts.adminAddress, loadAdminAddress())) await keepAdminBackup();
                   const dns = dnsDraftToConfig(dnsEnabled ? dnsDraft : dnsDraftFromConfig(undefined), loadedAcmeDns);
                   opts.acmeDns = dns.config;
                   const { restartNeeded: mustRestart } = await syncGlobalOptions(opts, { set: dns.set, remove: dns.remove }).catch(e => {
                     throw e instanceof Error ? e : new Error(String(e));
                   });
                   if (mustRestart) setRestartNeeded(true);
+                  setSavedAdminAddress(opts.adminAddress);
                   // The values went to the env file; the form keeps only the option names.
                   setLoadedAcmeDns(dns.config);
                   setDnsDraft(dnsDraftFromConfig(dns.config));

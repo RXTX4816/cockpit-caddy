@@ -24,7 +24,8 @@
     "unit_kb": "KB",
     "unit_mb": "MB",
     "unit_gb": "GB",
-    "example_value": "例如 {{value}}"
+    "example_value": "例如 {{value}}",
+    "more_about": "关于{{topic}}"
   },
   "app": {
     "title": "Caddy",
@@ -95,8 +96,8 @@
     "delete_confirm_title": "删除代理 :{{port}}？",
     "delete_confirm_body": "将移除端口 {{port}} → {{target}} 的反向代理。",
     "delete_confirm_button": "删除",
-    "api_error_add_title": "代理已写入磁盘——Caddy 拒绝了实时推送",
-    "api_error_edit_title": "标签已保存——Caddy 拒绝了配置更新（其他更改未应用）",
+    "api_error_add_title": "已保存,但 Caddy 拒绝了",
+    "api_error_edit_title": "仅保存了标签",
     "caddyfile_error_title": "Caddyfile 校验失败——更改未保存",
     "view_logs": "查看日志",
     "indicator_browse": "目录浏览",
@@ -192,7 +193,21 @@
     "field_templates_help": "为所提供的文件启用 Caddy 的模板引擎,文件即可使用 include、.Req 等模板操作。",
     "field_templates_mime": "MIME 类型",
     "field_templates_root": "include 目录",
-    "field_templates_root_help": "include 等文件操作查找文件的位置。留空表示站点根目录。"
+    "field_templates_root_help": "include 等文件操作查找文件的位置。留空表示站点根目录。",
+    "field_browse_sort": "列表排序",
+    "field_browse_order": "方向",
+    "browse_sort_default": "Caddy 默认(名称)",
+    "browse_sort_name": "名称",
+    "browse_sort_namedirfirst": "名称,文件夹优先",
+    "browse_sort_size": "大小",
+    "browse_sort_time": "最后修改",
+    "browse_order_asc": "升序",
+    "browse_order_desc": "降序",
+    "field_browse_file_limit": "每个列表最多条目数",
+    "browse_file_limit_none": "无限制",
+    "browse_file_limit_invalid": "请输入大于或等于 1 的整数。",
+    "field_browse_reveal_symlinks": "显示符号链接目标",
+    "field_browse_reveal_symlinks_help": "列表会显示每个符号链接指向的位置,可能暴露站点根目录之外的路径。"
   },
   "edit_static": {
     "title": "编辑静态服务器 — :{{port}}",
@@ -571,7 +586,8 @@
     "backup_warning_title": "请先备份配置",
     "backup_warning_body": "迁移只备份 Caddyfile 本身。请创建完整的配置备份，以便出问题时可以恢复全部内容。",
     "banner_details_toggle": "详细信息",
-    "banner_details": "站点块会原样从 /etc/caddy/Caddyfile 移到 /etc/caddy/conf.d/cockpit-caddy.conf，Caddyfile 会添加一行导入 conf.d 的 import。原始 Caddyfile 备份为 /etc/caddy/Caddyfile.bak。在此之前，插件的更改可能与 Caddyfile 中的站点冲突。"
+    "banner_details": "站点块会原样从 /etc/caddy/Caddyfile 移到 /etc/caddy/conf.d/cockpit-caddy.conf，Caddyfile 会添加一行导入 conf.d 的 import。原始 Caddyfile 备份为 /etc/caddy/Caddyfile.bak。在此之前，插件的更改可能与 Caddyfile 中的站点冲突。",
+    "gate_continue_title": "可能出现重复站点"
   },
   "backup": {
     "button": "备份",
@@ -688,7 +704,7 @@
   },
   "global_opts": {
     "title": "Caddy 全局选项",
-    "caddyfile_note": "这些设置会写入 /etc/caddy/Caddyfile 的全局选项块。保存时 Caddy 会自动重新加载。",
+    "caddyfile_note": "这些设置位于 /etc/caddy/Caddyfile 的全局选项块中。保存会写入并检查它们;重新加载会应用它们。",
     "unmanaged_hint": "未设置显式全局选项——Caddy 正在使用其自动 HTTPS 默认设置（包括代理有公共主机名时的 Let's Encrypt）。下面的字段为空，是因为无需配置，而不是有东西坏了。",
     "http_port": "HTTP 端口",
     "https_port": "HTTPS 端口",
@@ -808,10 +824,8 @@
     "default_bind_help": "以空格分隔的地址,未设置 bind 选项的站点在这些地址上监听。",
     "ocsp_stapling_off": "关闭 OCSP stapling",
     "admin_title": "管理端点",
-    "admin_off": "关闭管理端点",
-    "admin_off_help": "插件需要管理 API 来读取和修改运行中的配置。",
     "admin_address": "管理地址",
-    "admin_address_help": "Caddy 管理 API 的监听位置,写法与 Caddyfile 相同。插件连接的是自身设置中的地址,因此请同时修改两处。",
+    "admin_address_help": "Caddy 管理 API 的监听位置,写法同 Caddyfile,例如 localhost:2019 或 unix//run/caddy/admin.socket。下次重新加载时,插件最多等待 10 秒让新地址响应,然后改用它;若无响应,则恢复之前的 Caddyfile。",
     "admin_origins": "允许的来源",
     "admin_origins_help": "可以从浏览器调用管理 API 的主机,以空格分隔。",
     "admin_enforce_origin": "强制检查来源",
@@ -822,7 +836,21 @@
     "tab_tls": "TLS 与 ACME",
     "tab_logging": "日志与指标",
     "tab_proxy": "代理标头与协议",
-    "tabs_aria": "设置分区"
+    "tabs_aria": "设置分区",
+    "issuer_custom": "其他签发者…",
+    "issuer_custom_name": "签发者和参数",
+    "issuer_custom_name_help": "cert_issuer 后面的内容:签发者模块及其参数,例如 acme https://ca.example/directory。",
+    "issuer_custom_body": "签发者选项",
+    "issuer_custom_body_help": "可选:cert_issuer 块内的行,每行一条,与 Caddyfile 中相同。",
+    "issuer_custom_required": "请输入签发者模块,例如 acme 或 zerossl。",
+    "issuer_custom_invalid": "以模块名开头,后接以空格分隔的参数,不要使用花括号。",
+    "issuer_body_braces": "每个 { 都需要对应的 }。",
+    "admin_read_only": "此处的 Caddy 不是本地服务,插件不管理它的 Caddyfile。请在配置该 Caddy 的地方更改管理端点。",
+    "admin_off_kept": "Caddyfile 关闭了管理端点。插件会原样保留这一行;请在 Caddyfile 编辑器中修改。",
+    "admin_switched": "管理 API 现在在 {{address}} 响应",
+    "admin_switch_failed": "管理端点未能迁移到 {{address}}({{reason}})。已恢复之前的 Caddyfile。",
+    "admin_switch_unrestored": "管理端点未能迁移到 {{address}}({{reason}}),也未能恢复之前的 Caddyfile。请检查 Caddyfile 并重启 Caddy。",
+    "admin_no_answer": "10 秒内无响应"
   },
   "ca": {
     "title": "内部证书颁发机构",
@@ -1235,21 +1263,34 @@
     "move_up": "上移",
     "move_down": "下移",
     "remove": "移除",
-    "remove_confirm": "移除此块及其中的 {{count}} 个块?",
     "remove_yes": "移除",
     "remove_no": "保留",
     "add_kind": "类型",
     "add_inside": "添加到所选块内",
     "add_top": "添加到顶层",
-    "add_matcher": "新块的匹配器"
+    "add_matcher": "新块的匹配器",
+    "remove_confirm_one": "要移除此块及其中的 {{count}} 个块吗？",
+    "remove_confirm_other": "要移除此块及其中的 {{count}} 个块吗？",
+    "handle_path_invalid": "handle_path 需要一个以 / 开头的路径，例如 /app/*。",
+    "fix_first": "请先修正或放弃此编辑：按现在的样子无法应用。",
+    "move_hint": "可以在 route 内移动块,也可以在使用命名匹配器的 handle 之间移动,Caddy 会保留它们的书写顺序。其他块由 Caddy 按路径的具体程度自行排序。",
+    "changed_meanwhile": "自此标签页读取后，站点的块已被更改。请关闭对话框后重新打开，以编辑当前文本。",
+    "form_locked": "此站点包含嵌套块，因此表单只保存地址、bind、导入和 TLS。其余内容请在“树”标签页中编辑。",
+    "remove_confirm_zero": "要移除此块及其中的 {{count}} 个块吗？",
+    "remove_confirm_two": "要移除此块及其中的 {{count}} 个块吗？",
+    "remove_confirm_few": "要移除此块及其中的 {{count}} 个块吗？",
+    "remove_confirm_many": "要移除此块及其中的 {{count}} 个块吗？",
+    "remove_confirm": "要移除此块及其中的 {{count}} 个块吗？",
+    "definition_help": "{{name}} 在此站点中定义的匹配条件。在这里修改会重写该定义,因此对所有使用 {{name}} 的块都生效。",
+    "definition_empty": "匹配器至少需要一个条件,头部正则还需要指定头部。"
   },
   "encode": {
     "heading": "压缩",
     "section_title": "压缩设置(可选)",
     "help": "在“常规”中开启压缩时生效。不作选择时,Caddy 使用 gzip 和 zstd 压缩。",
     "algorithms": "算法及顺序",
-    "algorithms_default": "gzip、zstd(默认)",
-    "algorithms_zstd_gzip": "先 zstd,后 gzip",
+    "algorithms_default": "zstd、gzip(默认)",
+    "algorithms_gzip_zstd": "先 gzip,后 zstd",
     "algorithms_gzip": "仅 gzip",
     "algorithms_zstd": "仅 zstd",
     "minimum_length": "最小大小",
@@ -1284,13 +1325,13 @@
   },
   "bind": {
     "label": "绑定地址",
-    "help": "此站点监听的地址,以空格分隔,例如 127.0.0.1 ::1。留空表示监听所有地址。主机若是单个 IP 地址,则已经绑定到该地址。",
+    "help": "此站点监听的地址,以空格分隔,例如 127.0.0.1 ::1。留空表示监听所有地址,即使主机是 IP 地址也是如此:主机只用于匹配请求。",
     "invalid": "请输入 IP 地址或主机名,不带端口。"
   },
   "modules": {
     "title": "Caddy 模块",
     "loading": "正在读取模块…",
-    "unknown": "无法读取此 Caddy 的模块(caddy 命令可用吗?)。",
+    "unknown": "无法读取此 Caddy 的模块：caddy 命令和 Admin API 都没有响应。",
     "help": "已安装的 Caddy 在标准构建之外还能做什么。需要缺失模块的功能会在 Caddy 加载配置时失败,所以请先在这里确认。",
     "cap_dns": "DNS 验证提供商",
     "cap_layer4": "第 4 层(TCP 和 UDP 代理)",
@@ -1303,6 +1344,8 @@
     "all": "所有模块({{count}})",
     "filter": "筛选模块",
     "no_match": "没有匹配的模块。",
-    "non_standard": "不属于 Caddy 本身的模块:{{count}}"
+    "non_standard": "不属于 Caddy 本身的模块:{{count}}",
+    "not_known": "未知",
+    "probed": "此 Caddy 只能通过 Admin API 访问，而 Admin API 没有模块列表。每项功能都通过转换一个小配置来检测；只检测常见的 DNS 提供商。"
   }
 }

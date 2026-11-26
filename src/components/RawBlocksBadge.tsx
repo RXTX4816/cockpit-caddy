@@ -1,6 +1,7 @@
 import { Label, Tooltip } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
-import { hasNestedBlocks, rawOnlyBlocks } from "../api/siteTree";
+import { hasNestedBlocks, parseSiteTree, rawOnlyBlocks } from "../api/siteTree";
+import { editableMatcherHeaders } from "../api/treeMatchers";
 import type { ProxyEntry } from "../api";
 
 /**
@@ -13,7 +14,11 @@ export function hasRawBlocks(proxy: Pick<ProxyEntry, "siteText">): boolean {
 
 /** What is still raw-only: the opening lines of the blocks the tree shows as written. */
 export function rawBlocksOf(proxy: Pick<ProxyEntry, "siteText">): string[] {
-  return proxy.siteText && hasNestedBlocks(proxy.siteText) ? rawOnlyBlocks(proxy.siteText) : [];
+  if (!proxy.siteText || !hasNestedBlocks(proxy.siteText)) return [];
+  // A named matcher the Tree tab edits with the matcher form (#350) is not raw-only.
+  const tree = parseSiteTree(proxy.siteText);
+  const editable = new Set(tree ? editableMatcherHeaders(tree) : []);
+  return rawOnlyBlocks(proxy.siteText).filter(h => !editable.has(h));
 }
 
 /** The read-only mark of #348, next to the other badges of a site. */

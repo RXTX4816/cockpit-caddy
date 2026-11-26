@@ -715,7 +715,7 @@ export function buildGlobalOptionsLines(opts: GlobalOptions): string {
     lines.push("\tpreferred_chains {", `\t\t${opts.preferredChains.mode} ${opts.preferredChains.names.map(v => caddyQuote(v)).join(" ")}`, "\t}");
   }
   if (opts.certIssuer) {
-    if (opts.certIssuerBody?.length) lines.push(`\tcert_issuer ${opts.certIssuer} {`, ...opts.certIssuerBody.map(l => `\t\t${l}`), "\t}");
+    if (opts.certIssuerBody?.length) lines.push(`\tcert_issuer ${opts.certIssuer} {`, ...indentBlockBody(opts.certIssuerBody, 2), "\t}");
     else lines.push(`\tcert_issuer ${opts.certIssuer}`);
   }
   if (opts.defaultBind?.length) lines.push(`\tdefault_bind ${opts.defaultBind.join(" ")}`);
@@ -830,4 +830,33 @@ export function parseMetricsSiteBlock(content: string): Pick<GlobalOptions, "met
     metricsPath: path,
     metricsPlainFormat: lines.includes("disable_openmetrics") || undefined,
   };
+}
+
+
+/**
+ * Lines of a block body, each trimmed, indented by their nesting depth under `base` tabs, so
+ * a nested sub-block (`eab { … }`) keeps its shape when written back.
+ */
+export function indentBlockBody(body: string[], base: number): string[] {
+  let depth = 0;
+  return body.map(raw => {
+    const line = raw.trim();
+    if (line.startsWith("}")) depth = Math.max(0, depth - 1);
+    const out = "\t".repeat(base + depth) + line;
+    if (line.endsWith("{")) depth++;
+    return out;
+  });
+}
+
+/** What's wrong with a hand-entered `cert_issuer` (#329), or null when Caddy can parse it. */
+export function certIssuerError(head: string, body: string[]): "name" | "braces" | null {
+  // Arguments may hold placeholders like {env.KEY}; only a bare brace would open or close a block.
+  const [name, ...args] = head.trim().split(/\s+/);
+  if (!/^[a-z][a-z0-9_.]*$/i.test(name ?? "") || args.some(a => a === "{" || a === "}")) return "name";
+  let depth = 0;
+  for (const line of body) {
+    depth += (line.match(/\{/g) ?? []).length - (line.match(/\}/g) ?? []).length;
+    if (depth < 0) return "braces";
+  }
+  return depth === 0 ? null : "braces";
 }

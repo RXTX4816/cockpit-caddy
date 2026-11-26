@@ -1,10 +1,10 @@
 // A site as Caddy's JSON config: reading ProxyEntry values out of a CaddyConfig and merging or
 // removing a proxy or named server in one. Pure: no Host, no I/O. Builds on siteBlocks.
 
-import { type CaddyHandler, type CaddyReverseProxyHandler, type CaddyRoute, type CaddyServer, type ProxyEntry, type CaddyConfig, type CaddyTLSConnectionPolicy, type CaddyTLSClientAuthentication } from "./types";
+import { type CaddyHandler, type CaddyReverseProxyHandler, type CaddyRoute, type CaddyServer, type ProxyEntry, type CaddyConfig, type CaddyTLSConnectionPolicy, type CaddyTLSClientAuthentication, type BrowseSort, BROWSE_SORT_KEYS } from "./types";
 import { externalHostList } from "./externalHosts";
 import { isIpAddress } from "./caddyfileDocument";
-import { mapPlaceholders, PLACEHOLDER_SHORTHANDS, PLACEHOLDER_PREFIXES, isPathOnlyMatcher, handlePathPrefix, multiPathStripRegex, type TransportProps, type LbFields, LB_POLICIES, tlsSubjectHosts, errorHandlerResponseCodes, UPSTREAM_ERROR_MESSAGE, bindsToIp, routeHosts, buildMatcherJson, hasAnyMatcher, namedServerSubjectHost } from "./siteBlocks";
+import { mapPlaceholders, PLACEHOLDER_SHORTHANDS, PLACEHOLDER_PREFIXES, isPathOnlyMatcher, handlePathPrefix, multiPathStripRegex, type TransportProps, type LbFields, LB_POLICIES, tlsSubjectHosts, errorHandlerResponseCodes, UPSTREAM_ERROR_MESSAGE, siteBindAddresses, canonicalBindHost, routeHosts, buildMatcherJson, hasAnyMatcher, namedServerSubjectHost } from "./siteBlocks";
 
 /**
  * Converts a Caddy duration value to a string.
@@ -314,8 +314,9 @@ export function buildEncodeHandler(options?: import("./types").EncodeOptions): C
   const handler: Record<string, unknown> = {
     handler: "encode",
     encodings: Object.fromEntries((algorithms ?? ["gzip", "zstd"]).map(a => [a, {}])),
+    // What `caddy adapt` gives a plain `encode`.
+    prefer: algorithms ?? ["zstd", "gzip"],
   };
-  if (algorithms) handler.prefer = algorithms;
   if (options?.minimumLength != null) handler.minimum_length = options.minimumLength;
   const match: Record<string, unknown> = {};
   // A status class (2xx) is stored as its first digit, as Caddy's adapter does.
@@ -338,13 +339,14 @@ export function buildRequestBodyHandler(maxSize: number): CaddyHandler {
 }
 
 
-/** The `encode` options that differ from plain `encode gzip zstd` (#335). */
+/** The `encode` options that differ from a plain `encode` (#335). */
 export function parseEncodeOptionsJson(h: AnyHandler): import("./types").EncodeOptions | undefined {
   if (h.handler !== "encode") return undefined;
   const e = h as { prefer?: string[]; encodings?: Record<string, unknown>; minimum_length?: number; match?: { status_code?: number[]; headers?: Record<string, string[]> } };
   const order = (e.prefer?.length ? e.prefer : Object.keys(e.encodings ?? {})).filter((a): a is "gzip" | "zstd" => a === "gzip" || a === "zstd");
-  // Without a `prefer` Caddy lists no order; that and gzip + zstd both is what a plain `encode gzip zstd` is.
-  const isDefault = order.length === 2 && order[0] === "gzip" && order[1] === "zstd";
+  // A plain `encode` adapts to zstd before gzip; without a `prefer` (older pushes) both are
+  // listed in no order, which is read as the default too.
+  const isDefault = order.length === 2 && (e.prefer?.length ? order[0] === "zstd" && order[1] === "gzip" : true);
   const o: import("./types").EncodeOptions = {
     algorithms: order.length && !isDefault ? [...new Set(order)] : undefined,
     minimumLength: typeof e.minimum_length === "number" && e.minimum_length > 0 ? e.minimum_length : undefined,
@@ -607,13 +609,19 @@ export function isConfigSourcePath(p: string): boolean {
 /** The `file_server` options (#262) of a static site, from its JSON handler and routes. */
 export function parseFileServerOptions(
   fsHandle: Record<string, unknown>, routes: JsonRoute[],
-): Pick<import("./types").FileServerConfig, "spa" | "index" | "hide" | "precompressed" | "disableCanonicalUris" | "status" | "browseTemplate"> {
-  const out: Pick<import("./types").FileServerConfig, "spa" | "index" | "hide" | "precompressed" | "disableCanonicalUris" | "status" | "browseTemplate"> = {};
+): Pick<import("./types").FileServerConfig, "spa" | "index" | "hide" | "precompressed" | "disableCanonicalUris" | "status" | "browseTemplate" | "browseRevealSymlinks" | "browseSort" | "browseFileLimit"> {
+  const out: Pick<import("./types").FileServerConfig, "spa" | "index" | "hide" | "precompressed" | "disableCanonicalUris" | "status" | "browseTemplate" | "browseRevealSymlinks" | "browseSort" | "browseFileLimit"> = {};
   if (fsHandle.canonical_uris === false) out.disableCanonicalUris = true;
   const status = typeof fsHandle.status_code === "string" ? parseInt(fsHandle.status_code, 10) : fsHandle.status_code;
   if (typeof status === "number" && status > 0) out.status = status;
-  const template = (fsHandle.browse as { template_file?: string } | undefined)?.template_file;
-  if (template) out.browseTemplate = template;
+  const browse = fsHandle.browse as { template_file?: string; reveal_symlinks?: boolean; sort?: string[]; file_limit?: number } | undefined;
+  if (browse?.template_file) out.browseTemplate = browse.template_file;
+  if (browse?.reveal_symlinks) out.browseRevealSymlinks = true;
+  const [sortBy, sortOrder] = browse?.sort ?? [];
+  if ((BROWSE_SORT_KEYS as readonly string[]).includes(sortBy)) {
+    out.browseSort = { by: sortBy as BrowseSort["by"], ...(sortOrder === "asc" || sortOrder === "desc" ? { order: sortOrder } : {}) };
+  }
+  if (typeof browse?.file_limit === "number" && browse.file_limit > 0) out.browseFileLimit = browse.file_limit;
   if (findTryFiles(routes) === "{path} /index.html") out.spa = true;
   const index = fsHandle.index_names;
   if (Array.isArray(index) && index.length) out.index = index as string[];
@@ -777,6 +785,7 @@ export function parseRouteToEntry(
   namedServerKey: string | undefined,
   automationPolicies: import("./types").CaddyAutomationPolicy[] | undefined,
   certLoadFiles: import("./types").CaddyCertLoadFile[] | undefined,
+  acmeAccount?: AcmeAccount,
 ): ProxyEntry | undefined {
   const handles = (route.handle ?? []) as AnyHandler[];
   let matchers = route.match?.[0] ? parseMatcherJson(route.match[0]) : undefined;
@@ -787,19 +796,23 @@ export function parseRouteToEntry(
   // the real address instead of a blank host with an opaque matcher chip. A site
   // block with several names (`a.com, b.com {`, #208) lists all of them here.
   if (!externalHost && isHostOnlyMatcher(matchers)) {
-    externalHost = matchers.host.join(", ");
+    // An IPv6 host is bare in the matcher and bracketed in the site address (#323).
+    externalHost = matchers.host.map(h => looksLikeIp(h) ? canonicalBindHost(h) : h).join(", ");
     matchers = undefined;
   }
 
-  // `bind` next to a host name (#323): the listen addresses are the bind, and the names are in the
-  // host matcher. One IP address with no names is an IP host, as before.
-  const listenHosts = (server.listen ?? []).map(a => a.slice(0, Math.max(a.lastIndexOf(":"), 0)));
+  // `bind` next to a host (#323): the listen addresses are the bind, and the names are in the host
+  // matcher. A listen host is an IP or a name (`bind localhost`). The host no longer implies a bind,
+  // so an IP host's own listen address is one of the binds too: that is how a Caddyfile written
+  // before #323 (`10.0.0.5:80 { bind 10.0.0.5 }`) keeps its listener. Listen addresses without a
+  // host matcher are a site without a host that binds, as `:80 { bind 10.0.0.5 }` adapts.
+  const listenHosts = [...new Set((server.listen ?? []).map(listenHostOf).filter(Boolean))];
   let bind: string[] | undefined;
-  if (externalHost && isIpAddress(externalHost) && isHostOnlyMatcher(matchers) && matchers.host.every(h => !looksLikeIp(h))) {
-    bind = listenHosts.filter(Boolean);
-    externalHost = matchers.host.join(", ");
+  if (!namedServerKey && listenHosts.length && isHostOnlyMatcher(matchers)) {
+    bind = listenHosts;
+    externalHost = matchers.host.map(h => looksLikeIp(h) ? canonicalBindHost(h) : h).join(", ");
     matchers = undefined;
-  } else if (externalHost && isIpAddress(externalHost) && listenHosts.length > 1 && listenHosts.every(h => looksLikeIp(h))) {
+  } else if (!namedServerKey && !matchers && listenHosts.length) {
     bind = listenHosts;
     externalHost = undefined;
   }
@@ -847,7 +860,7 @@ export function parseRouteToEntry(
       matchers,
       serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, serverExtras, bind, accessLog,
       errorHandlers: parseErrorHandlers(server),
-      tlsAdvanced: phpTlsPolicy ? parseTlsAdvanced(phpTlsPolicy, automationPolicies, tlsSubjectHosts(externalHost)[0]) : parseSiteAcmeSettings(automationPolicies, tlsSubjectHosts(externalHost)[0]),
+      tlsAdvanced: phpTlsPolicy ? parseTlsAdvanced(phpTlsPolicy, automationPolicies, tlsSubjectHosts(externalHost)[0], acmeAccount) : parseSiteAcmeSettings(automationPolicies, tlsSubjectHosts(externalHost)[0], acmeAccount),
       mtls: phpTlsPolicy ? parseMtls(phpTlsPolicy) : undefined,
     };
   }
@@ -868,7 +881,7 @@ export function parseRouteToEntry(
       namedServerKey,
       redirect: { to: jsonPlaceholderToCaddy(htmlRedirect), code: 302, html: true },
       matchers,
-      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, bind, accessLog,
+      serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, serverExtras, bind, accessLog,
       errorHandlers: parseErrorHandlers(server),
     };
   }
@@ -965,7 +978,7 @@ export function parseRouteToEntry(
       matchers,
       serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes, disableHttp3, serverExtras, bind, accessLog,
       errorHandlers: parseErrorHandlers(server),
-      tlsAdvanced: fsTlsPolicy ? parseTlsAdvanced(fsTlsPolicy, automationPolicies, tlsSubjectHosts(externalHost)[0]) : parseSiteAcmeSettings(automationPolicies, tlsSubjectHosts(externalHost)[0]),
+      tlsAdvanced: fsTlsPolicy ? parseTlsAdvanced(fsTlsPolicy, automationPolicies, tlsSubjectHosts(externalHost)[0], acmeAccount) : parseSiteAcmeSettings(automationPolicies, tlsSubjectHosts(externalHost)[0], acmeAccount),
       mtls: fsTlsPolicy ? parseMtls(fsTlsPolicy) : undefined,
     };
   }
@@ -1098,14 +1111,15 @@ export function parseRouteToEntry(
     errorHandlers: parseErrorHandlers(server),
     replaceUpstreamErrors: reraisesUpstreamErrors(rp) || undefined,
     forwardAuth,
-    tlsAdvanced: tlsPolicy ? parseTlsAdvanced(tlsPolicy, automationPolicies, tlsSubjectHosts(externalHost)[0]) : parseSiteAcmeSettings(automationPolicies, tlsSubjectHosts(externalHost)[0]),
+    tlsAdvanced: tlsPolicy ? parseTlsAdvanced(tlsPolicy, automationPolicies, tlsSubjectHosts(externalHost)[0], acmeAccount) : parseSiteAcmeSettings(automationPolicies, tlsSubjectHosts(externalHost)[0], acmeAccount),
     mtls: tlsPolicy ? parseMtls(tlsPolicy) : undefined,
     customTls,
   };
 }
 
 
-export function parseProxies(config: CaddyConfig, serverDefs?: import("./types").ServerDef[]): ProxyEntry[] {
+/** `acmeAccount` is the global ACME account of the Caddyfile, which the JSON alone can't always tell (#341). */
+export function parseProxies(config: CaddyConfig, serverDefs?: import("./types").ServerDef[], acmeAccount?: AcmeAccount): ProxyEntry[] {
   const servers = config.apps?.http?.servers ?? {};
   const automationPolicies = config.apps?.tls?.automation?.policies;
   const certLoadFiles = config.apps?.tls?.certificates?.load_files;
@@ -1216,7 +1230,7 @@ export function parseProxies(config: CaddyConfig, serverDefs?: import("./types")
       const entry = parseRouteToEntry(
         { handle: [{ handler: "subroute", routes: contentRoutes } as CaddyHandler] } as CaddyRoute, key, externalPort, externalHost, server, accessLog,
         serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
-        String(externalPort), undefined, automationPolicies, certLoadFiles,
+        String(externalPort), undefined, automationPolicies, certLoadFiles, acmeAccount,
       );
       if (entry) proxies.push(entry);
       continue;
@@ -1228,7 +1242,7 @@ export function parseProxies(config: CaddyConfig, serverDefs?: import("./types")
         const entry = parseRouteToEntry(
           contentRoutes[i], key, externalPort, externalHost, server, accessLog,
           serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
-          `${namedDef.key}:${i}`, isNamedServer ? namedDef.key : undefined, automationPolicies, certLoadFiles,
+          `${namedDef.key}:${i}`, isNamedServer ? namedDef.key : undefined, automationPolicies, certLoadFiles, acmeAccount,
         );
         if (entry) proxies.push(entry);
       }
@@ -1239,7 +1253,7 @@ export function parseProxies(config: CaddyConfig, serverDefs?: import("./types")
       const entry = parseRouteToEntry(
         route, key, externalPort, externalHost, server, accessLog,
         serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
-        String(externalPort), undefined, automationPolicies, certLoadFiles,
+        String(externalPort), undefined, automationPolicies, certLoadFiles, acmeAccount,
       );
       if (entry) proxies.push(entry);
     } else {
@@ -1253,7 +1267,7 @@ export function parseProxies(config: CaddyConfig, serverDefs?: import("./types")
         const entry = parseRouteToEntry(
           contentRoutes[i], key, externalPort, externalHost, server, accessLog,
           serverReadTimeout, serverReadHeaderTimeout, serverWriteTimeout, serverIdleTimeout, maxHeaderBytes,
-          routeHost ? `host:${routeHost}` : `${key}:${i}`, undefined, automationPolicies, certLoadFiles,
+          routeHost ? `host:${routeHost}` : `${key}:${i}`, undefined, automationPolicies, certLoadFiles, acmeAccount,
         );
         if (entry) proxies.push(entry);
       }
@@ -1538,12 +1552,16 @@ export function applyServerTimeouts(server: CaddyServer, proxy: TimeoutProxy): C
 
 /**
  * Host matcher for a proxy whose site address lists several names (#208), the shape
- * Caddy's Caddyfile adapter gives `a.com, b.com { }`. A single-host or hostless proxy
- * gets none, as before, and an explicit Route Matcher (#48) always wins.
+ * Caddy's Caddyfile adapter gives `a.com, b.com { }`, or whose one host doesn't show in
+ * its listen addresses: an IP host, or any host with a bind (#323). A hostless proxy gets
+ * none, and an explicit Route Matcher (#48) always wins.
  */
-export function siteHostMatch(proxy: Pick<ProxyEntry, "externalHost" | "matchers">): Array<Record<string, unknown>> | undefined {
+export function siteHostMatch(proxy: Pick<ProxyEntry, "externalHost" | "matchers" | "bind">): Array<Record<string, unknown>> | undefined {
   if (proxy.matchers) return undefined;
   const hosts = externalHostList(proxy.externalHost);
+  // The listen addresses name no host, so it goes into a matcher, as Caddy's adapter writes it
+  // (an IPv6 address without its brackets). An IP host listens on every interface (#323).
+  if (hosts.length === 1 && (proxy.bind?.length || isIpAddress(hosts[0]))) return [{ host: hosts.map(h => h.replace(/^\[(.*)\]$/, "$1")) }];
   return hosts.length > 1 ? [{ host: hosts }] : undefined;
 }
 
@@ -1569,8 +1587,15 @@ export function buildListenAddr(proxy: { externalHost?: string; externalPort: nu
 /** Every address the site listens on: its `bind` addresses (#323), the IP it is named by, or the port alone. */
 export function buildListenAddrs(proxy: { externalHost?: string; externalPort: number; bind?: string[] }): string[] {
   // Several names (#208) can't share one bind address, so they listen on every interface.
-  const hosts = [...new Set([...(bindsToIp(proxy) ? [proxy.externalHost!] : []), ...(proxy.bind ?? [])])];
-  return hosts.length ? hosts.map(h => `${h}:${proxy.externalPort}`) : [`:${proxy.externalPort}`];
+  const hosts = siteBindAddresses(proxy);
+  // Caddy's adapter sorts a server's listen addresses; the push sorts them the same way.
+  return hosts.length ? hosts.map(h => `${h}:${proxy.externalPort}`).sort() : [`:${proxy.externalPort}`];
+}
+
+
+/** The host of a listen address (`[::1]:80` -> `[::1]`, `:80` -> ``). */
+function listenHostOf(address: string): string {
+  return address.slice(0, Math.max(address.lastIndexOf(":"), 0));
 }
 
 
@@ -1659,10 +1684,15 @@ export function applyAccessLog(server: CaddyServer, proxy: { externalPort: numbe
   const routes = (server.routes ?? []).filter(r => !isLogSkipRoute(r));
   const paths = proxy.accessLog?.skipPaths;
   if (paths?.length && routes.length) {
-    const base = routes[0].match as Array<Record<string, unknown>> | undefined;
-    // A site that matches a path of its own can't be narrowed the same way: write none.
-    if (!base?.some(m => m.path)) {
-      const match = base?.length ? base.map(m => ({ ...m, path: paths })) : [{ path: paths }];
+    // Every route of the server is the site's: the skip route covers the hosts of all of them.
+    // A route that matches a path of its own can't be narrowed the same way and is left out.
+    const bases = routes
+      .map(r => r.match as Array<Record<string, unknown>> | undefined)
+      .filter(base => !base?.some(m => m.path));
+    if (bases.length) {
+      const match = bases.some(base => !base?.length)
+        ? [{ path: paths }]
+        : [...new Map(bases.flatMap(base => base!).map(m => [JSON.stringify(m), { ...m, path: paths }])).values()];
       server.routes = [{ match, handle: [{ handler: "vars", log_skip: true } as CaddyHandler] } as CaddyRoute, ...routes];
       return;
     }
@@ -1712,6 +1742,7 @@ export function parseTlsAdvanced(
   policy: CaddyTLSConnectionPolicy,
   automationPolicies: import("./types").CaddyAutomationPolicy[] | undefined,
   host: string | undefined,
+  acmeAccount?: AcmeAccount,
 ): import("./types").TlsAdvancedConfig | undefined {
   const cfg: import("./types").TlsAdvancedConfig = {};
   let hasData = false;
@@ -1723,26 +1754,79 @@ export function parseTlsAdvanced(
   const lifetime = parseCertLifetimeDuration(automationPolicy?.issuers?.[0]?.lifetime);
   if (lifetime) { cfg.certLifetime = lifetime; hasData = true; }
   if (automationPolicy?.renewal_window_ratio !== undefined) { cfg.renewalWindowRatio = automationPolicy.renewal_window_ratio; hasData = true; }
-  const own = parseSiteAcmeSettings(automationPolicies, host);
+  const own = parseSiteAcmeSettings(automationPolicies, host, acmeAccount);
   if (own) { Object.assign(cfg, own); hasData = true; }
   return hasData ? cfg : undefined;
 }
 
 
+/** The ZeroSSL directory Caddy adds as the fallback issuer when a policy names no CA. */
+export const ZEROSSL_DIRECTORY = "https://acme.zerossl.com/v2/DV90";
+
+type AcmeIssuer = { module?: string; email?: string; ca?: string; external_account?: Record<string, unknown> };
+
+/** The global ACME account (`email`, `acme_eab`) in the shape Caddy copies it into every issuer. */
+export type AcmeAccount = { email?: string; external_account?: Record<string, unknown>; /** The global `acme_ca`. */ ca?: string };
+
+/** The global ACME account of the Caddyfile's global options. */
+export function acmeAccountOf(opts: { email?: string; acmeEabKeyId?: string; acmeEabMacKey?: string; acmeCA?: string }): AcmeAccount {
+  return {
+    ...(opts.email ? { email: opts.email } : {}),
+    ...(opts.acmeCA ? { ca: opts.acmeCA } : {}),
+    ...(opts.acmeEabKeyId && opts.acmeEabMacKey ? { external_account: { key_id: opts.acmeEabKeyId, mac_key: opts.acmeEabMacKey } } : {}),
+  };
+}
+
 /**
- * A site's own ACME account and key type (#341), from the policy that names its host; the shared
- * catch-all policy is the global one. A site on automatic HTTPS has no connection policy, so this
- * is read on its own too.
+ * The global ACME account: the one read from the Caddyfile's global options when the caller has
+ * it, else as Caddy copied it into the issuers. That is the catch-all policy, or, when every site
+ * has a policy of its own and the JSON has none, the email all of them share, which is a guess.
+ * `exceptHosts` leaves out the policy of the site being read or written.
+ */
+export function globalAcmeAccount(
+  policies: import("./types").CaddyAutomationPolicy[] | undefined,
+  exceptHosts: string[] = [],
+  known?: AcmeAccount,
+): AcmeAccount {
+  if (known) return known;
+  const acmeOf = (p: import("./types").CaddyAutomationPolicy) =>
+    (p.issuers ?? []).filter(i => i.module === "acme") as AcmeIssuer[];
+  const pick = (i: AcmeIssuer | undefined) => ({
+    ...(i?.email ? { email: i.email } : {}),
+    ...(i?.external_account ? { external_account: i.external_account } : {}),
+  });
+  const catchAll = policies?.find(p => !p.subjects?.length);
+  // Only the catch-all policy says which CA is the global one; another site's may be its own.
+  if (catchAll) {
+    const first = acmeOf(catchAll)[0];
+    return { ...pick(first), ...(first?.ca ? { ca: first.ca } : {}) };
+  }
+  const others = (policies ?? []).filter(p => !exceptHosts.some(h => subjectsInclude(p.subjects, h)));
+  const issuers = others.flatMap(acmeOf);
+  const emails = new Set(issuers.map(i => i.email));
+  if (!issuers.length || emails.size !== 1) return {};
+  return pick(issuers[0]);
+}
+
+/**
+ * A site's own ACME account and key type (#341), from the policy that names its host. Caddy copies
+ * the global email into every site's issuers, so an email equal to the global one is not the
+ * site's own, and the ZeroSSL fallback issuer is not a CA the site chose. A site on automatic
+ * HTTPS has no connection policy, so this is read on its own too.
  */
 export function parseSiteAcmeSettings(
   automationPolicies: import("./types").CaddyAutomationPolicy[] | undefined,
   host: string | undefined,
+  acmeAccount?: AcmeAccount,
 ): Pick<import("./types").TlsAdvancedConfig, "acmeEmail" | "acmeCa" | "keyType"> | undefined {
   const scoped = host ? automationPolicies?.find(p => subjectsInclude(p.subjects, host)) : undefined;
-  const acme = scoped?.issuers?.find(i => i.module === "acme") as { email?: string; ca?: string } | undefined;
+  const acme = scoped?.issuers?.find(i => i.module === "acme") as AcmeIssuer | undefined;
+  const global = host ? globalAcmeAccount(automationPolicies, [host], acmeAccount) : {};
+  const globalEmail = global.email;
   const out: Pick<import("./types").TlsAdvancedConfig, "acmeEmail" | "acmeCa" | "keyType"> = {
-    ...(acme?.email ? { acmeEmail: acme.email } : {}),
-    ...(acme?.ca ? { acmeCa: acme.ca } : {}),
+    ...(acme?.email && acme.email !== globalEmail ? { acmeEmail: acme.email } : {}),
+    // A CA the site inherits from the global acme_ca isn't its own; ZeroSSL picked for the site is.
+    ...(acme?.ca && acme.ca !== global.ca ? { acmeCa: acme.ca } : {}),
     ...(scoped?.key_type ? { keyType: scoped.key_type } : {}),
   };
   return Object.keys(out).length ? out : undefined;
@@ -1842,6 +1926,7 @@ export function rebuildTlsAutomationPolicies(
   changedAdv: import("./types").TlsAdvancedConfig | undefined,
   changedHosts: string[],
   changedIssuer?: "acme" | "internal",
+  acmeAccount?: AcmeAccount,
 ): import("./types").CaddyTlsApp | undefined {
   const hasTls = Object.values(servers).some(
     s => Array.isArray(s.tls_connection_policies) && s.tls_connection_policies.length > 0,
@@ -1870,13 +1955,19 @@ export function rebuildTlsAutomationPolicies(
 
   const policies: import("./types").CaddyAutomationPolicy[] = [defaultPolicy, ...otherSubjectPolicies];
 
-  // #341: a site on its own ACME account, CA or key type gets a policy of its own; the default
-  // issuers stay for whatever it leaves unset.
+  // #341: a site on its own ACME account, CA or key type gets a policy of its own, built the
+  // way `caddy adapt` builds it: the global email and EAB fill in what the site leaves unset, and
+  // without its own CA the site keeps Let's Encrypt with the ZeroSSL fallback.
   if (changedHosts.length && isChangedServerLive && changedIssuer === "acme" && (changedAdv?.acmeEmail || changedAdv?.acmeCa || changedAdv?.keyType)) {
-    const issuer = { module: "acme", ...(changedAdv.acmeCa ? { ca: changedAdv.acmeCa } : {}), ...(changedAdv.acmeEmail ? { email: changedAdv.acmeEmail } : {}) };
+    const global = globalAcmeAccount(existing, changedHosts, acmeAccount);
+    const email = changedAdv.acmeEmail || global.email;
+    const account = { ...(email ? { email } : {}), ...(global.external_account ? { external_account: global.external_account } : {}) };
+    const issuers = changedAdv.acmeCa
+      ? [{ module: "acme", ca: changedAdv.acmeCa, ...account }]
+      : [{ module: "acme", ...account }, { module: "acme", ca: ZEROSSL_DIRECTORY, ...account }];
     policies.push({
       subjects: changedHosts,
-      ...(changedAdv.acmeCa || changedAdv.acmeEmail ? { issuers: [issuer] } : {}),
+      issuers,
       ...(changedAdv.keyType ? { key_type: changedAdv.keyType } : {}),
     });
   } else if (changedHosts.length && isChangedServerLive && changedAdv?.keyType && !hasCustomInternalIssuer(changedAdv)) {
@@ -2096,7 +2187,14 @@ export function parseTemplatesJson(handles: AnyHandler[]): import("./types").Tem
 
 export function buildFileServerJson(fs: import("./types").FileServerConfig): CaddyHandler {
   const h: Record<string, unknown> = { handler: "file_server", root: fs.root };
-  if (fs.browse) h.browse = fs.browseTemplate ? { template_file: fs.browseTemplate } : {};
+  if (fs.browse) {
+    h.browse = {
+      ...(fs.browseTemplate ? { template_file: fs.browseTemplate } : {}),
+      ...(fs.browseRevealSymlinks ? { reveal_symlinks: true } : {}),
+      ...(fs.browseSort ? { sort: fs.browseSort.order ? [fs.browseSort.by, fs.browseSort.order] : [fs.browseSort.by] } : {}),
+      ...(fs.browseFileLimit ? { file_limit: fs.browseFileLimit } : {}),
+    };
+  }
   if (fs.disableCanonicalUris) h.canonical_uris = false;
   if (fs.status) h.status_code = fs.status;
   if (fs.index?.length) h.index_names = fs.index;
@@ -2351,13 +2449,13 @@ export function rebuildTlsCertificates(
 }
 
 
-export function mergeProxy(config: CaddyConfig, proxy: ProxyEntry): CaddyConfig {
+export function mergeProxy(config: CaddyConfig, proxy: ProxyEntry, acmeAccount?: AcmeAccount): CaddyConfig {
   const servers = { ...(config.apps?.http?.servers ?? {}) };
   const original = servers[proxy.serverKey];
   servers[proxy.serverKey] = (original && !proxy.redirect && !proxy.staticResponse) ? patchServer(original, proxy) : buildServerEntry(proxy);
 
   const logging = patchLoggingLogs(config, original, proxy);
-  const automation = rebuildTlsAutomationPolicies(config, servers, proxy.serverKey, proxy.tlsAdvanced, tlsSubjectHosts(proxy.externalHost), proxy.tlsIssuer);
+  const automation = rebuildTlsAutomationPolicies(config, servers, proxy.serverKey, proxy.tlsAdvanced, tlsSubjectHosts(proxy.externalHost), proxy.tlsIssuer, acmeAccount);
   const certificates = rebuildTlsCertificates(config, proxy);
 
   return {

@@ -24,7 +24,8 @@
     "unit_kb": "KB",
     "unit_mb": "MB",
     "unit_gb": "GB",
-    "example_value": "např. {{value}}"
+    "example_value": "např. {{value}}",
+    "more_about": "O tématu {{topic}}"
   },
   "app": {
     "title": "Caddy",
@@ -95,8 +96,8 @@
     "delete_confirm_title": "Smazat proxy :{{port}}?",
     "delete_confirm_body": "Odstraní se reverse proxy pro port {{port}} → {{target}}.",
     "delete_confirm_button": "Smazat",
-    "api_error_add_title": "Proxy vytvořena na disku — Caddy odmítl živé nasazení",
-    "api_error_edit_title": "Popisek uložen — Caddy odmítl aktualizaci konfigurace (ostatní změny nebyly použity)",
+    "api_error_add_title": "Uloženo, ale Caddy to odmítl",
+    "api_error_edit_title": "Uložen byl jen štítek",
     "caddyfile_error_title": "Ověření Caddyfile selhalo — změny nebyly uloženy",
     "view_logs": "Zobrazit logy",
     "indicator_browse": "výpis adresářů",
@@ -192,7 +193,21 @@
     "field_templates_help": "Zapne šablonovací systém Caddy pro obsluhované soubory, takže mohou používat include, .Req a další akce šablon.",
     "field_templates_mime": "Typy MIME",
     "field_templates_root": "Adresář pro include",
-    "field_templates_root_help": "Kde include a další souborové akce hledají soubory. Prázdné znamená kořen webu."
+    "field_templates_root_help": "Kde include a další souborové akce hledají soubory. Prázdné znamená kořen webu.",
+    "field_browse_sort": "Řazení výpisu",
+    "field_browse_order": "Směr",
+    "browse_sort_default": "Výchozí v Caddy (název)",
+    "browse_sort_name": "Název",
+    "browse_sort_namedirfirst": "Název, složky napřed",
+    "browse_sort_size": "Velikost",
+    "browse_sort_time": "Poslední změna",
+    "browse_order_asc": "Vzestupně",
+    "browse_order_desc": "Sestupně",
+    "field_browse_file_limit": "Nejvýše položek ve výpisu",
+    "browse_file_limit_none": "Bez omezení",
+    "browse_file_limit_invalid": "Zadejte celé číslo 1 nebo větší.",
+    "field_browse_reveal_symlinks": "Zobrazit cíle symbolických odkazů",
+    "field_browse_reveal_symlinks_help": "Výpis ukazuje, kam vede každý symbolický odkaz. To může prozradit cesty mimo kořen webu."
   },
   "edit_static": {
     "title": "Upravit statický server — :{{port}}",
@@ -571,7 +586,8 @@
     "backup_warning_title": "Nejprve zálohujte konfiguraci",
     "backup_warning_body": "Migrace zálohuje jen samotný Caddyfile. Vytvořte úplnou zálohu konfigurace, abyste mohli vše obnovit, kdyby se něco pokazilo.",
     "banner_details_toggle": "Podrobnosti",
-    "banner_details": "Bloky webů se beze změny přesunou z /etc/caddy/Caddyfile do /etc/caddy/conf.d/cockpit-caddy.conf a Caddyfile dostane řádek import pro conf.d. Původní Caddyfile se zálohuje do /etc/caddy/Caddyfile.bak. Do té doby se změny doplňku mohou střetávat s weby v Caddyfile."
+    "banner_details": "Bloky webů se beze změny přesunou z /etc/caddy/Caddyfile do /etc/caddy/conf.d/cockpit-caddy.conf a Caddyfile dostane řádek import pro conf.d. Původní Caddyfile se zálohuje do /etc/caddy/Caddyfile.bak. Do té doby se změny doplňku mohou střetávat s weby v Caddyfile.",
+    "gate_continue_title": "Možné duplicitní weby"
   },
   "backup": {
     "button": "Záloha",
@@ -688,7 +704,7 @@
   },
   "global_opts": {
     "title": "Globální volby Caddy",
-    "caddyfile_note": "Tato nastavení se zapisují do bloku globálních voleb v /etc/caddy/Caddyfile. Caddy se po uložení automaticky znovu načte.",
+    "caddyfile_note": "Tato nastavení jsou v bloku globálních voleb souboru /etc/caddy/Caddyfile. Uložení je zapíše a zkontroluje; Znovu načíst je použije.",
     "unmanaged_hint": "Nejsou nastavené žádné explicitní globální volby — Caddy používá výchozí nastavení automatického HTTPS (včetně Let's Encrypt, když má proxy veřejný název hostitele). Pole níže jsou prázdná, protože není co nastavovat, ne proto, že by něco bylo rozbité.",
     "http_port": "Port HTTP",
     "https_port": "Port HTTPS",
@@ -808,10 +824,8 @@
     "default_bind_help": "Adresy oddělené mezerami, na kterých poslouchají weby bez volby bind.",
     "ocsp_stapling_off": "Vypnout OCSP stapling",
     "admin_title": "Administrační rozhraní",
-    "admin_off": "Vypnout administrační rozhraní",
-    "admin_off_help": "Plugin potřebuje administrační API ke čtení a změně běžící konfigurace.",
     "admin_address": "Adresa administrace",
-    "admin_address_help": "Kde naslouchá administrační API Caddy, zapsáno jako v Caddyfile. Plugin se připojuje na adresu ve svém vlastním nastavení, proto měňte obě společně.",
+    "admin_address_help": "Kde naslouchá administrační API Caddy, zapsané jako v Caddyfile, např. localhost:2019 nebo unix//run/caddy/admin.socket. Při příštím načtení plugin čeká až 10 sekund, než nová adresa odpoví, a pak ji použije; bez odpovědi obnoví předchozí Caddyfile.",
     "admin_origins": "Povolené originy",
     "admin_origins_help": "Hostitelé oddělení mezerami, kteří smí volat administrační API z prohlížeče.",
     "admin_enforce_origin": "Vynutit originy",
@@ -822,7 +836,21 @@
     "tab_tls": "TLS a ACME",
     "tab_logging": "Logování a metriky",
     "tab_proxy": "Hlavičky proxy a protokoly",
-    "tabs_aria": "Sekce nastavení"
+    "tabs_aria": "Sekce nastavení",
+    "issuer_custom": "Jiný vydavatel…",
+    "issuer_custom_name": "Vydavatel a argumenty",
+    "issuer_custom_name_help": "Co následuje po cert_issuer: modul vydavatele a jeho argumenty, např. acme https://ca.example/directory.",
+    "issuer_custom_body": "Volby vydavatele",
+    "issuer_custom_body_help": "Volitelné: řádky uvnitř bloku cert_issuer, jeden na řádek, jako v Caddyfile.",
+    "issuer_custom_required": "Zadejte modul vydavatele, např. acme nebo zerossl.",
+    "issuer_custom_invalid": "Začněte názvem modulu, pak argumenty oddělené mezerami, bez složených závorek.",
+    "issuer_body_braces": "Každá { potřebuje odpovídající }.",
+    "admin_read_only": "Caddy tu není místní služba, takže plugin nevlastní jeho Caddyfile. Změňte administrační koncový bod tam, kde je tento Caddy nastaven.",
+    "admin_off_kept": "Caddyfile vypíná administrační koncový bod. Plugin ponechá tento řádek, jak je; změňte ho v editoru Caddyfile.",
+    "admin_switched": "Administrační API nyní odpovídá na {{address}}",
+    "admin_switch_failed": "Administrační koncový bod se nepřesunul na {{address}} ({{reason}}). Předchozí Caddyfile je obnoven.",
+    "admin_switch_unrestored": "Administrační koncový bod se nepřesunul na {{address}} ({{reason}}) a obnovení předchozího Caddyfile selhalo. Zkontrolujte Caddyfile a restartujte Caddy.",
+    "admin_no_answer": "žádná odpověď do 10 sekund"
   },
   "ca": {
     "title": "Interní certifikační autorita",
@@ -1235,21 +1263,34 @@
     "move_up": "Posunout nahoru",
     "move_down": "Posunout dolů",
     "remove": "Odebrat",
-    "remove_confirm": "Odebrat tento blok i {{count}} bloků v něm?",
     "remove_yes": "Odebrat",
     "remove_no": "Ponechat",
     "add_kind": "Druh",
     "add_inside": "Přidat do vybraného bloku",
     "add_top": "Přidat na nejvyšší úroveň",
-    "add_matcher": "Matcher nového bloku"
+    "add_matcher": "Matcher nového bloku",
+    "remove_confirm_one": "Odebrat tento blok a {{count}} bloků v něm?",
+    "remove_confirm_other": "Odebrat tento blok a {{count}} bloků v něm?",
+    "remove_confirm_few": "Odebrat tento blok a {{count}} bloky v něm?",
+    "remove_confirm_many": "Odebrat tento blok a {{count}} bloku v něm?",
+    "handle_path_invalid": "handle_path potřebuje jednu cestu, která začíná znakem /, například /app/*.",
+    "fix_first": "Nejdřív tuto úpravu opravte nebo zahoďte: v této podobě ji nelze použít.",
+    "move_hint": "Bloky lze přesouvat uvnitř route a mezi bloky handle s pojmenovanými matchery, jejichž pořadí Caddy zachovává. Ostatní bloky řadí Caddy sám podle toho, jak přesná je jejich cesta.",
+    "changed_meanwhile": "Blok webu se od načtení na této kartě změnil. Zavřete dialog a otevřete jej znovu, abyste upravovali aktuální text.",
+    "form_locked": "Tento web má vnořené bloky, takže formulář ukládá jen adresu, bind, importy a TLS. Zbytek upravte na kartě Strom.",
+    "remove_confirm_zero": "Odebrat tento blok a {{count}} bloků v něm?",
+    "remove_confirm_two": "Odebrat tento blok a {{count}} bloků v něm?",
+    "remove_confirm": "Odebrat tento blok a {{count}} bloků v něm?",
+    "definition_help": "Co {{name}} zachytí, jak je definováno v tomto webu. Změny zde přepíšou tuto definici, takže platí pro každý blok, který {{name}} používá.",
+    "definition_empty": "Matcher potřebuje aspoň jednu podmínku a regulární výraz hlavičky potřebuje svou hlavičku."
   },
   "encode": {
     "heading": "Komprese",
     "section_title": "Nastavení komprese (volitelné)",
     "help": "Platí, když je v Obecném zapnutá komprese. Bez voleb Caddy komprimuje gzip a zstd.",
     "algorithms": "Algoritmy a pořadí",
-    "algorithms_default": "gzip, zstd (výchozí)",
-    "algorithms_zstd_gzip": "zstd, poté gzip",
+    "algorithms_default": "zstd, gzip (výchozí)",
+    "algorithms_gzip_zstd": "gzip, poté zstd",
     "algorithms_gzip": "pouze gzip",
     "algorithms_zstd": "pouze zstd",
     "minimum_length": "Minimální velikost",
@@ -1284,13 +1325,13 @@
   },
   "bind": {
     "label": "Adresy pro bind",
-    "help": "Adresy, na kterých tento web poslouchá, oddělené mezerami, například 127.0.0.1 ::1. Prázdné znamená všechny adresy. Hostitel, který je jedinou IP adresou, se na ni už váže.",
+    "help": "Adresy, na kterých tento web poslouchá, oddělené mezerami, například 127.0.0.1 ::1. Prázdné znamená všechny adresy, i když je hostitelem IP adresa: hostitel jen porovnává požadavky.",
     "invalid": "Zadejte IP adresy nebo názvy hostitelů bez portu."
   },
   "modules": {
     "title": "Moduly Caddy",
     "loading": "Načítání modulů…",
-    "unknown": "Moduly tohoto Caddy se nepodařilo přečíst (je dostupný příkaz caddy?).",
+    "unknown": "Moduly tohoto Caddy se nepodařilo načíst: neodpověděl příkaz caddy ani Admin API.",
     "help": "Co nainstalovaný Caddy umí nad rámec standardního sestavení. Funkce, která potřebuje chybějící modul, selže při načtení konfigurace, proto zkontrolujte nejdřív zde.",
     "cap_dns": "Poskytovatelé DNS challenge",
     "cap_layer4": "Vrstva 4 (proxy TCP a UDP)",
@@ -1303,6 +1344,8 @@
     "all": "Všechny moduly ({{count}})",
     "filter": "Filtrovat moduly",
     "no_match": "Žádný modul neodpovídá.",
-    "non_standard": "Moduly, které nejsou součástí samotného Caddy: {{count}}"
+    "non_standard": "Moduly, které nejsou součástí samotného Caddy: {{count}}",
+    "not_known": "Neznámé",
+    "probed": "Tento Caddy je dostupný jen přes Admin API, které seznam modulů nemá. Každá funkce byla otestována převodem malé konfigurace; testují se jen běžní poskytovatelé DNS."
   }
 }

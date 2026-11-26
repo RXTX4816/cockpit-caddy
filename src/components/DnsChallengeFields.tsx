@@ -1,9 +1,9 @@
-import { Button, FormGroup, FormHelperText, FormSelect, FormSelectOption, HelperText, HelperTextItem, Label, TextInput,
+import { Button, FormGroup, FormHelperText, FormSelect, FormSelectOption, HelperText, HelperTextItem, Label, Popover, TextInput,
 } from "@patternfly/react-core";
+import { OutlinedQuestionCircleIcon } from "@patternfly/react-icons";
 import { useTranslation } from "react-i18next";
 import { DNS_MODULES_DOCS, DNS_PROVIDER_PRESETS, dnsEnvVarName, isSiteDnsVar } from "../api";
 import type { DnsChallengeConfig } from "../api";
-import { Notice } from "./Notice";
 
 /** One credential as edited: the provider option, a new value (empty = keep), the variable it lives in. */
 export interface DnsCredentialRow {
@@ -86,7 +86,7 @@ export function validateDnsDraft(draft: DnsDraft, envNames: string[], site?: str
 
 interface Props {
   idPrefix: string;
-  /** Installed dns.providers.* modules; null while loading. */
+  /** Installed dns.providers.* modules; null while loading or when it can't be told. */
   providers: string[] | null;
   /** Variables already in the env file (to show "set"). */
   envNames: string[];
@@ -96,20 +96,16 @@ interface Props {
   isDisabled?: boolean;
 }
 
-/** Provider select and credential fields; without any DNS module, the explanation instead. */
+/**
+ * Provider and credential fields. They are always shown (#343): without a detected DNS module
+ * the provider is typed in, and a hint says the module is needed.
+ */
 export function DnsChallengeFields({ idPrefix, providers, envNames, value, onChange, site, isDisabled }: Props) {
   const { t } = useTranslation();
-  if (providers && !providers.length && !value.provider) {
-    return (
-      <Notice variant="info" isPlain title={t("dns.no_modules_title")} data-testid={`${idPrefix}-no-modules`}>
-        <p>{t("dns.no_modules_body")}</p>
-        <a href={DNS_MODULES_DOCS} target="_blank" rel="noopener noreferrer">{t("dns.no_modules_link")}</a>
-      </Notice>
-    );
-  }
   const list = providers ?? [];
   const options = value.provider && !list.includes(value.provider) ? [value.provider, ...list] : list;
   const error = validateDnsDraft(value, envNames, site);
+  const missing = !!providers && !providers.length;
 
   function setProvider(provider: string) {
     // Prefill the option names of a known provider while nothing has been entered yet.
@@ -123,10 +119,27 @@ export function DnsChallengeFields({ idPrefix, providers, envNames, value, onCha
   return (
     <>
       <FormGroup label={t("dns.provider")} fieldId={`${idPrefix}-provider`}>
-        <FormSelect id={`${idPrefix}-provider`} value={value.provider} onChange={(_e, v) => setProvider(v)} isDisabled={isDisabled}>
-          <FormSelectOption value="" label={t("dns.provider_choose")} isPlaceholder />
-          {options.map(p => <FormSelectOption key={p} value={p} label={p} />)}
-        </FormSelect>
+        {list.length ? (
+          <FormSelect id={`${idPrefix}-provider`} value={value.provider} onChange={(_e, v) => setProvider(v)} isDisabled={isDisabled}>
+            <FormSelectOption value="" label={t("dns.provider_choose")} isPlaceholder />
+            {options.map(p => <FormSelectOption key={p} value={p} label={p} />)}
+          </FormSelect>
+        ) : (
+          <TextInput id={`${idPrefix}-provider`} value={value.provider} onChange={(_e, v) => setProvider(v.trim())} placeholder="cloudflare" isDisabled={isDisabled} />
+        )}
+        {missing && (
+          <FormHelperText>
+            <HelperText>
+              <HelperTextItem variant="warning" data-testid={`${idPrefix}-no-modules`}>
+                {t("dns.no_modules_title")}{" "}
+                <Popover headerContent={t("dns.no_modules_title")} bodyContent={<p>{t("dns.no_modules_body")}</p>}
+                  footerContent={<a href={DNS_MODULES_DOCS} target="_blank" rel="noopener noreferrer">{t("dns.no_modules_link")}</a>}>
+                  <Button variant="plain" size="sm" isInline aria-label={t("dns.no_modules_title")} icon={<OutlinedQuestionCircleIcon />} />
+                </Popover>
+              </HelperTextItem>
+            </HelperText>
+          </FormHelperText>
+        )}
       </FormGroup>
       {value.provider && (
         <FormGroup label={t("dns.credentials")} fieldId={`${idPrefix}-cred-key-0`} role="group">

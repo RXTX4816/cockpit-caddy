@@ -1,24 +1,27 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useAutoRefresh } from "@rxtx4816/cockpit-plugin-base-react";
 import {
-  parseProxies, readCaddyfile, writeCaddyfile, readProxyConf,
-  parseLabelsFromCaddyfile, parseConfTlsMap, parseConfExternalAddresses, parseConfAccessLogMap, parseConfForwardAuthMap, parseConfCustomTlsCaMap, parseClientAuthCaFile, parseConfTlsIssuerMap, parseConfTlsOnDemandMap, parseConfTlsDnsMap, migrateCaddyfile, isStockCaddyfile, mergeMigratedConfContent, writeRawProxyConf, writeRawProxyConfValidated,
+  readCaddyfile, writeCaddyfile, readProxyConf,
+  parseLabelsFromCaddyfile, parseConfTlsMap, parseConfExternalAddresses, parseConfAccessLogMap, parseConfForwardAuthMap, parseConfCustomTlsCaMap, parseConfTlsIssuerMap, parseConfTlsOnDemandMap, parseConfTlsDnsMap, migrateCaddyfile, isStockCaddyfile, mergeMigratedConfContent, writeRawProxyConf, writeRawProxyConfValidated,
   writeFile, reloadCaddy, ensureConfDDir,
   removeLegacyServerDefsFile, parseServerDefsFromConf,
   surgicallyWriteServerBlock, surgicallyRemoveServerBlock,
   mergeNamedServer, removeNamedServer,
-  deduplicateServerBlocks, normalizeManagedHeader, proxyAddressKeys,
+  deduplicateServerBlocks, normalizeManagedHeader,
   ensureConfDImported,
-  resolveInternalIssuerSettings, readGlobalOptions,
+  readGlobalOptions,
   applyGlobalInternalLifetimeToServer,
-  readSnippetsConf, parseSnippets, parseConfSiteBlocks, parseConfSiteImports, separateSnippetSettings, mergeSnippetLists,
+  readSnippetsConf, parseSnippets, parseConfSiteBlocks, parseConfSiteImports, mergeSnippetLists,
+  parseGlobalOptions,
 } from "../api";
+import { acmeAccountOf } from "../api/caddyJsonModel";
 import type { CaddyConfig, DnsChallengeConfig, ProxyEntry, ServerDef, SnippetDef } from "../api";
 import {
   addSite, editSite, replaceSiteText, removeSite, liveChangeFor, checkServerPortConflicts, withIssuer, withOnDemand, withDns,
   type SiteEditResult,
 } from "../api/siteEditing";
 import { useCaddyConfig } from "./useCaddyConfig";
+import { confSites } from "../api/confSites";
 
 const CADDYFILE_BAK = "/etc/caddy/Caddyfile.bak";
 
@@ -41,6 +44,8 @@ export function useProxies() {
   const [confImports, setConfImports] = useState<Record<string, string[]>>({});
   const [pluginSnippets, setPluginSnippets] = useState<SnippetDef[]>([]);
   const [caddyfileContent, setCaddyfileContent] = useState<string>("");
+  /** Whether caddyfileContent was read, so an empty one means an empty Caddyfile. */
+  const [caddyfileRead, setCaddyfileRead] = useState(false);
   const [servers, setServers] = useState<ServerDef[]>([]);
   // Guards proxies memo from running before the first conf.d read completes.
   // Without this, config (API) can arrive before servers (disk), causing named-server
@@ -95,7 +100,7 @@ export function useProxies() {
   }, [noteConfSites]);
 
   const syncCaddyfile = useCallback(() => {
-    void readCaddyfile().then(c => setCaddyfileContent(c ?? "")).catch(() => {});
+    void readCaddyfile().then(c => { setCaddyfileContent(c ?? ""); setCaddyfileRead(true); }).catch(() => {});
   }, []);
 
   // Initial sync
@@ -122,69 +127,18 @@ export function useProxies() {
     [pluginSnippets, caddyfileContent],
   );
 
+  // The global ACME account (#341): the JSON only shows it when some site shares the global policy.
+  const acmeAccount = useMemo(
+    () => caddyfileRead ? acmeAccountOf(parseGlobalOptions(caddyfileContent)) : undefined,
+    [caddyfileRead, caddyfileContent],
+  );
+
   const proxies = useMemo(
-    () => (!serversLoaded ? [] : parseProxies(config, servers)).map(p => {
-      if (p.namedServerKey) {
-        const def = servers.find(s => s.key === p.namedServerKey);
-        return { ...p, label: def?.routeLabels?.[p.id] };
-      }
-      // A bare-hostname conf.d block has no explicit port, so its on-disk address
-      // key won't match buildExternalAddress(p) (which always includes the port) —
-      // try each candidate key (host:port, then bare host) in turn.
-      const keys = proxyAddressKeys(p);
-      const lookup = <T,>(map: Record<string, T>): T | undefined => {
-        for (const k of keys) if (k in map) return map[k];
-        return undefined;
-      };
-      const tls = p.tls || (lookup(confTls) ?? false);
-      const externalHost = p.externalHost ?? lookup(confExternal)?.host;
-      // parseProxies resolves tlsAdvanced.certLifetime/renewalWindowRatio using whatever
-      // host it could see in the live JSON route (often none — a server that's the sole
-      // occupant of its port has no host matcher at all, since there's nothing else on
-      // that listener to disambiguate). externalHost above may have just been recovered
-      // from the conf.d fallback instead, so re-resolve with the corrected host and layer
-      // it over the already-parsed tlsAdvanced (which still has protocol/cipher/curves).
-      const resolved = tls ? resolveInternalIssuerSettings(config, externalHost) : {};
-      const tlsAdvanced = (p.tlsAdvanced || resolved.certLifetime !== undefined || resolved.renewalWindowRatio !== undefined)
-        ? {
-            ...p.tlsAdvanced,
-            ...(resolved.certLifetime !== undefined ? { certLifetime: resolved.certLifetime } : {}),
-            ...(resolved.renewalWindowRatio !== undefined ? { renewalWindowRatio: resolved.renewalWindowRatio } : {}),
-          }
-        : undefined;
-      const imports = lookup(confImports);
-      return separateSnippetSettings({
-        ...p,
-        imports,
-        // The Tree tab (#333) and the badge for nested blocks (#348) read the site's own text.
-        siteText: lookup(confSiteBlocks),
-        label: lookup(labels),
-        tls,
-        externalScheme: p.externalScheme ?? lookup(confExternal)?.scheme,
-        externalHost,
-        tlsAdvanced,
-        // Fallback: if the JSON API config doesn't have server.logs (was last pushed by
-        // older code), read access log config from the Caddyfile conf.d directly.
-        accessLog: p.accessLog ?? lookup(confAccessLog),
-        // Fallback: read forward_auth config from conf.d when JSON detection is insufficient.
-        forwardAuth: p.forwardAuth ?? lookup(confForwardAuth),
-        // The CA bundle path (#152) isn't part of Caddy's own JSON model at all — it only
-        // ever lives in the Caddyfile comment, so always layer it in from there.
-        customTls: p.customTls ? { ...p.customTls, caFile: lookup(confCustomTlsCa) } : undefined,
-        // The deprecated trusted_ca_cert_file reaches the JSON as an inlined certificate (#255),
-        // so its path is read from the site block.
-        mtls: p.mtls && !p.mtls.trustedCaFile
-          ? { ...p.mtls, trustedCaFile: parseClientAuthCaFile(lookup(confSiteBlocks) ?? "") }
-          : p.mtls,
-        // Automatic HTTPS vs the internal CA (#246) is only visible in the Caddyfile text.
-        tlsIssuer: tls && !p.customTls ? lookup(confTlsIssuer) : undefined,
-        // Per-site on-demand TLS (#253), likewise read from the Caddyfile.
-        tlsOnDemand: tls && !p.customTls && lookup(confTlsOnDemand) ? true : undefined,
-        // The site's own DNS provider (#289), for automatic HTTPS only.
-        dnsChallenge: tls && !p.customTls && lookup(confTlsIssuer) === "acme" ? lookup(confTlsDns) : undefined,
-      }, lookup(confSiteBlocks), snippets);
-    }),
-    [config, labels, confTls, confExternal, confAccessLog, confForwardAuth, confCustomTlsCa, confTlsIssuer, confTlsOnDemand, confTlsDns, confSiteBlocks, confImports, snippets, servers, serversLoaded],
+    () => !serversLoaded ? [] : confSites(config, servers, {
+      labels, tls: confTls, external: confExternal, accessLog: confAccessLog, forwardAuth: confForwardAuth, customTlsCa: confCustomTlsCa,
+      tlsIssuer: confTlsIssuer, tlsOnDemand: confTlsOnDemand, tlsDns: confTlsDns, siteBlocks: confSiteBlocks, imports: confImports,
+    }, snippets, acmeAccount),
+    [config, labels, confTls, confExternal, confAccessLog, confForwardAuth, confCustomTlsCa, confTlsIssuer, confTlsOnDemand, confTlsDns, confSiteBlocks, confImports, snippets, servers, serversLoaded, acmeAccount],
   );
 
   // #246: while any site relies on automatic HTTPS, Caddy's own Caddyfile adapter has to build
@@ -209,7 +163,7 @@ export function useProxies() {
 
   const addProxy = useCallback(
     async (entry: Omit<ProxyEntry, "id" | "serverKey">) => {
-      const result = await addSite({ config, proxies, servers }, entry);
+      const result = await addSite({ config, proxies, servers, acmeAccount }, entry);
       const site = result.site;
       if (site) {
         const { entry: saved, key } = site;
@@ -227,12 +181,12 @@ export function useProxies() {
       }
       await finish(result);
     },
-    [config, proxies, servers, finish],
+    [config, proxies, servers, acmeAccount, finish],
   );
 
   const editProxy = useCallback(
     async (entry: ProxyEntry) => {
-      const result = await editSite({ config, proxies, servers }, entry);
+      const result = await editSite({ config, proxies, servers, acmeAccount }, entry);
       const site = result.site;
       if (site) {
         const { entry: saved, key, originalKey } = site;
@@ -261,20 +215,20 @@ export function useProxies() {
       }
       await finish(result);
     },
-    [config, proxies, servers, finish],
+    [config, proxies, servers, acmeAccount, finish],
   );
 
   /** Saves the text the Tree tab made for a site's block (#350). */
   const saveSiteText = useCallback(
-    async (proxy: ProxyEntry, text: string) => {
-      await finish(await replaceSiteText(proxy, text));
+    async (proxy: ProxyEntry, text: string, expected: string) => {
+      await finish(await replaceSiteText(proxy, text, expected));
     },
     [finish],
   );
 
   const deleteProxy = useCallback(
     async (proxyId: string) => {
-      const result = await removeSite({ config, proxies, servers }, proxyId);
+      const result = await removeSite({ config, proxies, servers, acmeAccount }, proxyId);
       if (!result) return;
       const key = result.removedKey;
       if (key) {
@@ -285,7 +239,7 @@ export function useProxies() {
       }
       await finish(result);
     },
-    [config, proxies, servers, finish],
+    [config, proxies, servers, acmeAccount, finish],
   );
 
   const addServer = useCallback(

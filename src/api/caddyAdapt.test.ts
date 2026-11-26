@@ -10,12 +10,13 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync, writeFileSync, rmSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { CONF_HEADER, parseConfAccessLogMap, mergeProxy, buildServerEntry, proxiesToCaddyfile, parseProxies, parseConfExternalAddresses, proxyAddressKeys, resolveInternalIssuerSettings, surgicallyWriteProxy, buildMigratedConfContent, migrateCaddyfile, parseConfTlsIssuerMap, parseConfTlsOnDemandMap, parseConfTlsMap, expandPlaceholderShorthands } from "./caddy";
+import { CONF_HEADER, parseConfAccessLogMap, mergeProxy, buildServerEntry, proxiesToCaddyfile, parseProxies, parseConfExternalAddresses, proxyAddressKeys, resolveInternalIssuerSettings, surgicallyWriteProxy, surgicallyEditProxy, buildMigratedConfContent, migrateCaddyfile, parseConfTlsIssuerMap, parseConfTlsOnDemandMap, parseConfTlsMap, expandPlaceholderShorthands } from "./caddy";
 import { snippetsToConf, parseSnippets, parseConfSiteImports, parseConfSiteBlocks, separateSnippetSettings } from "./snippets";
 import { buildEncodeHandler, buildFilterEncoder, buildRedirectHandler, buildRewriteHandler, parseServerExtras } from "./caddyJsonModel";
 import { buildGlobalOptionsPatch, buildServerExtrasLines } from "./globalOptions";
 import { buildMatcherJson } from "./siteBlocks";
 import { addNode, editNode, moveNode, parseSiteTree, removeNode, serializeSiteTree } from "./siteTree";
+import { replaceSiteMatcherDefinition } from "./treeMatchers";
 import type { CaddyConfig, CaddyServer, ProxyEntry } from "./types";
 
 function hasCaddy(): boolean {
@@ -563,11 +564,24 @@ describe.runIf(available || required)("instant-apply JSON and the saved Caddyfil
     return found;
   }
 
-  it.each(["127.0.0.1", "[::1]"])("an IP in the host field binds that IP after a reload too (%s)", ip => {
+  it.each(["127.0.0.1", "[::1]"])("an IP in the host field only matches, in the push and after a reload alike (%s, #323)", ip => {
     const p = entry({ tls: false, externalPort: 8443, externalHost: ip });
     const conf = proxiesToCaddyfile([p]);
-    expect(firstServer(conf)?.listen).toEqual(buildServerEntry(p).listen);
-    expect(readBack(conf)[0].externalHost).toBe(ip);
+    expect(conf).not.toMatch(/\bbind\b/);
+    const adapted = firstServer(conf);
+    expect(adapted?.listen).toEqual([":8443"]);
+    expect(buildServerEntry(p).listen).toEqual(adapted?.listen);
+    expect(buildServerEntry(p).routes?.[0]?.match).toEqual(adapted?.routes?.[0]?.match);
+    expect(readBack(conf)[0]).toMatchObject({ externalHost: ip });
+    expect(readBack(conf)[0].bind).toBeUndefined();
+  });
+
+  it("a site without a host that binds one IP reads back without a host (#323)", () => {
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, externalHost: undefined, bind: ["127.0.0.1"] })]);
+    expect(conf).toContain(":8080 {\n\tbind 127.0.0.1");
+    const [p] = readBack(conf);
+    expect(p.externalHost).toBeUndefined();
+    expect(p.bind).toEqual(["127.0.0.1"]);
   });
 
   it("a hostname still listens on every interface", () => {
@@ -576,24 +590,31 @@ describe.runIf(available || required)("instant-apply JSON and the saved Caddyfil
     expect(firstServer(proxiesToCaddyfile([p]))?.listen).toEqual([":8443"]);
   });
 
-  it("editing a hand-written IP site adds the bind once and keeps an existing one", () => {
-    const conf = `${CONF_HEADER}\n\nhttp://127.0.0.1:8443 {\n\treverse_proxy localhost:8000\n}\n`;
+  it("an IP site saved before #323 keeps the bind written for it, once", () => {
+    const conf = `${CONF_HEADER}\n\nhttp://127.0.0.1:8443 {\n\tbind 127.0.0.1\n\treverse_proxy localhost:8000\n}\n`;
     const p = readBack(conf)[0];
+    expect(p).toMatchObject({ externalHost: "127.0.0.1", bind: ["127.0.0.1"] });
+    expect(buildServerEntry(p).listen).toEqual(firstServer(conf)?.listen);
     const edited = surgicallyWriteProxy(conf, { ...p, targetPort: 8001 });
     expect(edited.match(/\bbind\b/g)).toHaveLength(1);
     expect(firstServer(edited)?.listen).toEqual(["127.0.0.1:8443"]);
-    const again = surgicallyWriteProxy(edited, { ...readBack(edited)[0], targetPort: 8002 });
-    expect(again.match(/\bbind\b/g)).toHaveLength(1);
   });
 
-  it("changing an IP host to a hostname drops the bind the plugin added", () => {
-    const conf = `${CONF_HEADER}\n\n10.0.0.5 {\n\treverse_proxy localhost:8000\n}\n`;
-    const once = surgicallyWriteProxy(conf, { ...readBack(conf)[0], tls: true, targetPort: 8001 });
-    expect(once).toContain("10.0.0.5 {\n\tbind 10.0.0.5");
-    const p = readBack(once)[0];
-    const renamed = surgicallyWriteProxy(once, { ...p, tls: true, externalHost: "10.0.0.5, app.example.com" });
-    expect(renamed).not.toMatch(/\bbind\b/);
-    expect(firstServer(renamed)?.listen).toEqual([":443"]);
+  it("editing a hand-written IP site without a bind adds none", () => {
+    const conf = `${CONF_HEADER}\n\nhttp://127.0.0.1:8443 {\n\treverse_proxy localhost:8000\n}\n`;
+    const edited = surgicallyWriteProxy(conf, { ...readBack(conf)[0], targetPort: 8001 });
+    expect(edited).not.toMatch(/\bbind\b/);
+    expect(firstServer(edited)?.listen).toEqual([":8443"]);
+  });
+
+  it("changing an IP host to a hostname keeps the bind, which is its own field now", () => {
+    const conf = `${CONF_HEADER}\n\n10.0.0.5 {\n\tbind 10.0.0.5\n\treverse_proxy localhost:8000\n}\n`;
+    const p = readBack(conf)[0];
+    const renamed = surgicallyWriteProxy(conf, { ...p, tls: true, externalHost: "10.0.0.5, app.example.com" });
+    expect(renamed.match(/\bbind 10\.0\.0\.5\b/g)).toHaveLength(1);
+    expect(firstServer(renamed)?.listen).toEqual(["10.0.0.5:443"]);
+    const cleared = surgicallyWriteProxy(renamed, { ...readBack(renamed)[0], bind: undefined });
+    expect(cleared).not.toMatch(/\bbind\b/);
   });
 
   it("a hand-written bind on a hostname site is kept", () => {
@@ -882,10 +903,59 @@ describe.runIf(available || required)("caddy adapt accepts bind, several hosts a
     expect(proxies[0].bind).toEqual(fields.bind);
   });
 
-  it("builds the listen addresses Caddy builds", () => {
-    const e = entry({ tls: false, externalPort: 8080, externalHost: "example.com", bind: ["10.0.0.5", "10.0.0.6"] });
+  it.each([
+    ["two IPv4 binds", { externalHost: "example.com", bind: ["10.0.0.5", "10.0.0.6"] }],
+    ["an IPv6 bind without brackets (#360)", { externalHost: "example.com", bind: ["::1"] }],
+    ["binds out of Caddy's order (#360)", { externalHost: "example.com", bind: ["localhost", "::1", "127.0.0.1", "127.0.0.10"] }],
+    ["an IP host with more binds (#360)", { externalHost: "10.0.0.5", bind: ["10.0.0.6"] }],
+  ])("builds the listen addresses Caddy builds for %s", (_name, fields) => {
+    const e = entry({ tls: false, externalPort: 8080, ...fields });
     const real = Object.values(adapt(proxiesToCaddyfile([e])).apps?.http?.servers ?? {})[0] as CaddyServer;
     expect(buildServerEntry(e).listen).toEqual(real.listen);
+  });
+
+  it.each([
+    ["a host name bind (#360)", { externalHost: "example.com", bind: ["localhost"] }],
+    ["an IP host with more binds (#360)", { externalHost: "10.0.0.5", bind: ["10.0.0.6"] }],
+    ["an IPv6 bind (#360)", { externalHost: "example.com", bind: ["[::1]"] }],
+  ])("reads %s back from a real adapt and from the push", (_name, fields) => {
+    const e = entry({ tls: false, externalPort: 8080, ...fields });
+    const fromAdapt = readBack(proxiesToCaddyfile([e]))[0];
+    expect(fromAdapt.externalHost).toBe(fields.externalHost);
+    expect(fromAdapt.bind).toEqual(fields.bind);
+    const fromPush = parseProxies({ apps: { http: { servers: { srv0: buildServerEntry(e) } } } } as CaddyConfig)[0];
+    expect(fromPush.externalHost).toBe(fields.externalHost);
+    expect(fromPush.bind).toEqual(fields.bind);
+  });
+
+  it("drops a hand-written bind when the field is cleared (#360)", () => {
+    const conf = `${CONF_HEADER}\n\nhttp://app.example.com:8443 {\n\tbind 10.0.0.9\n\treverse_proxy localhost:8000\n}\n`;
+    const p = readBack(conf)[0];
+    expect(p.bind).toEqual(["10.0.0.9"]);
+    const cleared = surgicallyWriteProxy(conf, { ...p, bind: undefined });
+    expect(cleared).not.toMatch(/\bbind\b/);
+    expect((Object.values(adapt(cleared).apps?.http?.servers ?? {})[0] as CaddyServer).listen).toEqual([":8443"]);
+  });
+
+  it("saving a nested site without changes leaves its text byte-identical (#349)", () => {
+    const site = [
+      "app.example.com {",
+      "\t# the API first",
+      "\troute {",
+      "\t\theader X-A 1",
+      "\t\treverse_proxy localhost:9001",
+      "\t}",
+      "\ttls internal",
+      "\tbind 10.0.0.5",
+      "\thandle /api/* {",
+      "\t\treverse_proxy localhost:9002",
+      "\t}",
+      "}",
+    ].join("\n");
+    const conf = `${CONF_HEADER}\n\n${site}\n`;
+    const [p] = readBack(conf);
+    expect(p).toMatchObject({ externalHost: "app.example.com", bind: ["10.0.0.5"], tlsIssuer: "internal" });
+    expect(surgicallyEditProxy(conf, p, p)).toBe(conf);
   });
 
   it("keeps a wildcard host and several hosts as they are", () => {
@@ -936,7 +1006,7 @@ describe.runIf(available || required)("caddy adapt accepts redir html (#338)", (
 });
 
 describe.runIf(available || required)("caddy adapt accepts the encode options (#335)", () => {
-  const options = { algorithms: ["zstd" as const, "gzip" as const], minimumLength: 1024, matchStatus: ["2xx", "404"], matchHeaders: [{ name: "Content-Type", value: "text/*" }] };
+  const options = { algorithms: ["gzip" as const, "zstd" as const], minimumLength: 1024, matchStatus: ["2xx", "404"], matchHeaders: [{ name: "Content-Type", value: "text/*" }] };
 
   it("reads them back from a real adapt", () => {
     const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, compress: true, encodeOptions: options })]));
@@ -951,6 +1021,13 @@ describe.runIf(available || required)("caddy adapt accepts the encode options (#
     expect(buildEncodeHandler(options)).toMatchObject({ prefer: real.prefer, minimum_length: real.minimum_length, match: real.match });
   });
 
+  it("builds what Caddy builds for a plain encode", () => {
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, compress: true })]);
+    const server = Object.values(adapt(conf).apps?.http?.servers ?? {})[0] as CaddyServer;
+    const real = server.routes?.[0]?.handle?.find(h => h.handler === "encode");
+    expect(buildEncodeHandler()).toEqual(real);
+  });
+
   it("reads plain compression back as no options", () => {
     const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, compress: true })]));
     expect(p.compress).toBe(true);
@@ -963,6 +1040,33 @@ describe.runIf(available || required)("caddy adapt accepts the file_server and p
     const fileServer = { root: "/srv/www", browse: true, browseTemplate: "/etc/caddy/listing.html", disableCanonicalUris: true, status: 404 };
     const [p] = readBack(proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, targetPort: 0, fileServer })]));
     expect(p.fileServer).toMatchObject(fileServer);
+  });
+
+  it("reads the listing options back from a real adapt", () => {
+    const fileServer = {
+      root: "/srv/www", browse: true, browseTemplate: "/etc/caddy/listing.html",
+      browseRevealSymlinks: true, browseSort: { by: "size" as const, order: "desc" as const }, browseFileLimit: 100,
+    };
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, targetPort: 0, fileServer })]);
+    expect(conf).toContain("\tfile_server {\n\t\tbrowse /etc/caddy/listing.html {\n\t\t\treveal_symlinks\n\t\t\tsort size desc\n\t\t\tfile_limit 100\n\t\t}\n\t}");
+    const [p] = readBack(conf);
+    expect(p.fileServer).toMatchObject(fileServer);
+  });
+
+  it("writes listing options without a template as a bare browse block", () => {
+    const fileServer = { root: "/srv/www", browse: true, browseSort: { by: "namedirfirst" as const } };
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, targetPort: 0, fileServer })]);
+    expect(conf).toContain("\tfile_server {\n\t\tbrowse {\n\t\t\tsort namedirfirst\n\t\t}\n\t}");
+    const [p] = readBack(conf);
+    expect(p.fileServer?.browseSort).toEqual({ by: "namedirfirst" });
+    expect(p.fileServer?.browseTemplate).toBeUndefined();
+  });
+
+  it("writes no listing options when browse is off", () => {
+    const fileServer = { root: "/srv/www", browse: false, browseRevealSymlinks: true, browseFileLimit: 5 };
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, targetPort: 0, fileServer })]);
+    expect(conf).toContain("\tfile_server\n}");
+    expect(readBack(conf)[0].fileServer?.browseFileLimit).toBeUndefined();
   });
 
   it("reads the php_fastcgi options back from a real adapt", () => {
@@ -1170,6 +1274,17 @@ describe.runIf(available || required)("caddy adapt accepts the TLS and admin glo
     expect(server.automatic_https).toEqual({ disable_redirects: true });
   });
 
+  it("accepts a cert_issuer typed with arguments and a nested body (#329)", () => {
+    const withArgs = adapt(`${buildGlobalOptionsPatch("", { certIssuer: "acme https://ca.example/directory" })}\n${site}`);
+    expect(withArgs.apps?.tls?.automation?.policies?.[0]?.issuers?.[0]).toMatchObject({ module: "acme", ca: "https://ca.example/directory" });
+    const patched = buildGlobalOptionsPatch("", {
+      certIssuer: "acme", certIssuerBody: ["dir https://ca.example/directory", "preferred_chains {", "root_common_name X1", "}"],
+    });
+    expect(patched).toContain("\tcert_issuer acme {\n\t\tdir https://ca.example/directory\n\t\tpreferred_chains {\n\t\t\troot_common_name X1\n\t\t}\n\t}");
+    const issuer = adapt(`${patched}\n${site}`).apps?.tls?.automation?.policies?.[0]?.issuers?.[0];
+    expect(issuer).toMatchObject({ module: "acme", ca: "https://ca.example/directory", preferred_chains: { root_common_name: ["X1"] } });
+  });
+
   it("accepts local_certs and admin off", () => {
     const config = adapt(`${buildGlobalOptionsPatch("", { localCerts: true, adminOff: true })}\n${site}`);
     expect(config.admin).toEqual({ disabled: true });
@@ -1235,5 +1350,17 @@ describe.runIf(available || required)("caddy adapt accepts dynamic upstreams (#3
   it.each([[[srv]], [[a]], [[srv, a]], [[{ type: "srv" as const, name: "_x._tcp.example.com" }]]])("reads %j back from a real adapt", sources => {
     const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, dynamicUpstreams: sources })]);
     expect(readBack(conf)[0].dynamicUpstreams).toEqual(sources);
+  });
+});
+
+describe.runIf(available || required)("a named matcher edited in the Tree tab (#350)", () => {
+  it("adapts to the matcher the form describes", () => {
+    const match = { path: ["/api/*"], header: { "X-A": ["1"] }, not: { method: ["DELETE"] } };
+    const tree = parseSiteTree(":8080 {\n\t@api {\n\t\tpath /old/*\n\t}\n\troute {\n\t\thandle @api {\n\t\t\trespond ok\n\t\t}\n\t}\n}")!;
+    const conf = serializeSiteTree(replaceSiteMatcherDefinition(tree, "api", match)) + "\n";
+    const routes = Object.values(adapt(conf).apps?.http?.servers ?? {})[0]?.routes ?? [];
+    const matches: unknown[] = [];
+    JSON.stringify(routes, (k, v) => { if (k === "match") matches.push(...(v as unknown[])); return v; });
+    expect(matches).toContainEqual(buildMatcherJson(match));
   });
 });

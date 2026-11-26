@@ -22,3 +22,11 @@ describe("RawBlocksBadge (#348)", () => {
     expect(hasRawBlocks({ siteText: editable })).toBe(false);
   });
 });
+
+describe("named matchers the Tree tab edits (#350)", () => {
+  it("are not raw-only when a node uses them and the matcher form can edit them", () => {
+    const site = "example.com {\n\t@api {\n\t\tpath /api/*\n\t}\n\t@odd {\n\t\thost b.example.com\n\t\tpath /x/*\n\t}\n\troute {\n\t\thandle @api {\n\t\t\trespond a\n\t\t}\n\t\thandle @odd {\n\t\t\trespond b\n\t\t}\n\t}\n}";
+    // @odd is written host-then-path, which the form would reorder, so it stays raw.
+    expect(rawBlocksOf({ siteText: site })).toEqual(["@odd {"]);
+  });
+});

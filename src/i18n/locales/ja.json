@@ -24,7 +24,8 @@
     "unit_kb": "KB",
     "unit_mb": "MB",
     "unit_gb": "GB",
-    "example_value": "例: {{value}}"
+    "example_value": "例: {{value}}",
+    "more_about": "{{topic}} について"
   },
   "app": {
     "title": "Caddy",
@@ -95,8 +96,8 @@
     "delete_confirm_title": "プロキシ :{{port}} を削除しますか？",
     "delete_confirm_body": "ポート {{port}} → {{target}} のリバースプロキシを削除します。",
     "delete_confirm_button": "削除",
-    "api_error_add_title": "プロキシはディスクに作成されました — Caddy がライブ反映を拒否しました",
-    "api_error_edit_title": "ラベルは保存されました — Caddy が設定の更新を拒否しました（ほかの変更は適用されていません）",
+    "api_error_add_title": "保存しましたが、Caddy が拒否しました",
+    "api_error_edit_title": "ラベルだけが保存されました",
     "caddyfile_error_title": "Caddyfile の検証に失敗しました — 変更は保存されていません",
     "view_logs": "ログを表示",
     "indicator_browse": "一覧表示",
@@ -192,7 +193,21 @@
     "field_templates_help": "配信するファイルに Caddy のテンプレートエンジンを適用し、include や .Req などのテンプレートアクションを使えるようにします。",
     "field_templates_mime": "MIME タイプ",
     "field_templates_root": "include のディレクトリ",
-    "field_templates_root_help": "include などのファイル操作がファイルを探す場所。空欄はサイトルートです。"
+    "field_templates_root_help": "include などのファイル操作がファイルを探す場所。空欄はサイトルートです。",
+    "field_browse_sort": "一覧の並び順",
+    "field_browse_order": "方向",
+    "browse_sort_default": "Caddy の既定(名前)",
+    "browse_sort_name": "名前",
+    "browse_sort_namedirfirst": "名前(フォルダーを先に)",
+    "browse_sort_size": "サイズ",
+    "browse_sort_time": "最終更新",
+    "browse_order_asc": "昇順",
+    "browse_order_desc": "降順",
+    "field_browse_file_limit": "一覧の最大件数",
+    "browse_file_limit_none": "制限なし",
+    "browse_file_limit_invalid": "1 以上の整数を入力してください。",
+    "field_browse_reveal_symlinks": "シンボリックリンクの参照先を表示",
+    "field_browse_reveal_symlinks_help": "一覧に各シンボリックリンクの参照先が表示されます。サイトのルート外のパスが見える場合があります。"
   },
   "edit_static": {
     "title": "静的サーバーを編集 — :{{port}}",
@@ -571,7 +586,8 @@
     "backup_warning_title": "先に設定をバックアップしてください",
     "backup_warning_body": "移行でバックアップされるのは Caddyfile 本体だけです。問題が起きたときにすべてを復元できるよう、設定全体のバックアップを作成してください。",
     "banner_details_toggle": "詳細",
-    "banner_details": "サイトブロックは /etc/caddy/Caddyfile から /etc/caddy/conf.d/cockpit-caddy.conf へそのまま移動され、Caddyfile には conf.d の import 行が追加されます。元の Caddyfile は /etc/caddy/Caddyfile.bak にバックアップされます。それまでは、プラグインの変更が Caddyfile 内のサイトと衝突することがあります。"
+    "banner_details": "サイトブロックは /etc/caddy/Caddyfile から /etc/caddy/conf.d/cockpit-caddy.conf へそのまま移動され、Caddyfile には conf.d の import 行が追加されます。元の Caddyfile は /etc/caddy/Caddyfile.bak にバックアップされます。それまでは、プラグインの変更が Caddyfile 内のサイトと衝突することがあります。",
+    "gate_continue_title": "サイトが重複する可能性"
   },
   "backup": {
     "button": "バックアップ",
@@ -688,7 +704,7 @@
   },
   "global_opts": {
     "title": "Caddy のグローバルオプション",
-    "caddyfile_note": "これらの設定は /etc/caddy/Caddyfile のグローバルオプションブロックに書き込まれます。保存時に Caddy は自動的に再読み込みされます。",
+    "caddyfile_note": "これらの設定は /etc/caddy/Caddyfile のグローバルオプションブロックにあります。保存で書き込んで検証し、再読み込みで適用します。",
     "unmanaged_hint": "明示的なグローバルオプションは設定されていません。Caddy は自動 HTTPS の既定設定を使用しています（プロキシに公開ホスト名がある場合の Let's Encrypt を含む）。下のフィールドが空なのは設定が不要だからで、何かが壊れているわけではありません。",
     "http_port": "HTTP ポート",
     "https_port": "HTTPS ポート",
@@ -808,10 +824,8 @@
     "default_bind_help": "bind オプションのないサイトが待ち受けるアドレス(スペース区切り)。",
     "ocsp_stapling_off": "OCSP stapling をオフにする",
     "admin_title": "管理エンドポイント",
-    "admin_off": "管理エンドポイントをオフにする",
-    "admin_off_help": "プラグインは、実行中の設定の読み取りと変更に管理 API を必要とします。",
     "admin_address": "管理アドレス",
-    "admin_address_help": "Caddy の管理 API が待ち受ける場所を Caddyfile と同じ書式で指定します。プラグインは自身の設定のアドレスに接続するため、両方を同時に変更してください。",
+    "admin_address_help": "Caddy の管理 API が待ち受ける場所(Caddyfile と同じ書き方。例: localhost:2019、unix//run/caddy/admin.socket)。次の再読み込みで、プラグインは新しいアドレスが応答するまで最大 10 秒待ってから切り替えます。応答がなければ以前の Caddyfile に戻します。",
     "admin_origins": "許可するオリジン",
     "admin_origins_help": "ブラウザーから管理 API を呼び出せるホスト(スペース区切り)。",
     "admin_enforce_origin": "オリジンを強制",
@@ -822,7 +836,21 @@
     "tab_tls": "TLS と ACME",
     "tab_logging": "ログとメトリクス",
     "tab_proxy": "プロキシヘッダーとプロトコル",
-    "tabs_aria": "設定のセクション"
+    "tabs_aria": "設定のセクション",
+    "issuer_custom": "その他の発行者…",
+    "issuer_custom_name": "発行者と引数",
+    "issuer_custom_name_help": "cert_issuer に続く内容: 発行者モジュールとその引数。例: acme https://ca.example/directory",
+    "issuer_custom_body": "発行者のオプション",
+    "issuer_custom_body_help": "任意: cert_issuer ブロック内の行。Caddyfile と同じく 1 行に 1 つ。",
+    "issuer_custom_required": "発行者モジュールを入力してください(例: acme、zerossl)。",
+    "issuer_custom_invalid": "モジュール名から始め、引数をスペースで区切ってください。波括弧は使えません。",
+    "issuer_body_braces": "{ ごとに対応する } が必要です。",
+    "admin_read_only": "ここでの Caddy はローカルのサービスではないため、プラグインはその Caddyfile を管理していません。その Caddy を設定している場所で管理エンドポイントを変更してください。",
+    "admin_off_kept": "Caddyfile で管理エンドポイントがオフになっています。プラグインはその行をそのまま残します。Caddyfile エディターで変更してください。",
+    "admin_switched": "管理 API は {{address}} で応答するようになりました",
+    "admin_switch_failed": "管理エンドポイントは {{address}} に移動しませんでした({{reason}})。以前の Caddyfile に戻しました。",
+    "admin_switch_unrestored": "管理エンドポイントは {{address}} に移動せず({{reason}})、以前の Caddyfile にも戻せませんでした。Caddyfile を確認し、Caddy を再起動してください。",
+    "admin_no_answer": "10 秒以内に応答なし"
   },
   "ca": {
     "title": "内部認証局",
@@ -1235,21 +1263,34 @@
     "move_up": "上へ移動",
     "move_down": "下へ移動",
     "remove": "削除",
-    "remove_confirm": "このブロックと、その中の {{count}} 個のブロックを削除しますか?",
     "remove_yes": "削除",
     "remove_no": "残す",
     "add_kind": "種類",
     "add_inside": "選択したブロックの中に追加",
     "add_top": "最上位に追加",
-    "add_matcher": "新しいブロックのマッチャー"
+    "add_matcher": "新しいブロックのマッチャー",
+    "remove_confirm_one": "このブロックと、その中の {{count}} 個のブロックを削除しますか?",
+    "remove_confirm_other": "このブロックと、その中の {{count}} 個のブロックを削除しますか?",
+    "handle_path_invalid": "handle_path には / で始まるパスが 1 つ必要です (例: /app/*)。",
+    "fix_first": "先にこの編集を修正するか破棄してください。このままでは適用できません。",
+    "move_hint": "ブロックは route の中と、名前付きマッチャーを使う handle 同士で移動できます。これらは書いた順序を Caddy が保ちます。ほかのブロックは Caddy がパスの具体性に応じて自動で並べ替えます。",
+    "changed_meanwhile": "このタブが読み込んだ後に、サイトのブロックが変更されました。現在のテキストを編集するには、ダイアログを閉じて開き直してください。",
+    "form_locked": "このサイトには入れ子のブロックがあるため、フォームはアドレス、bind、インポート、TLS だけを保存します。それ以外はツリータブで編集してください。",
+    "remove_confirm_zero": "このブロックと、その中の {{count}} 個のブロックを削除しますか?",
+    "remove_confirm_two": "このブロックと、その中の {{count}} 個のブロックを削除しますか?",
+    "remove_confirm_few": "このブロックと、その中の {{count}} 個のブロックを削除しますか?",
+    "remove_confirm_many": "このブロックと、その中の {{count}} 個のブロックを削除しますか?",
+    "remove_confirm": "このブロックと、その中の {{count}} 個のブロックを削除しますか?",
+    "definition_help": "このサイトで定義された {{name}} の一致条件です。ここでの変更はその定義を書き換えるため、{{name}} を使うすべてのブロックに反映されます。",
+    "definition_empty": "マッチャーには少なくとも 1 つの条件が必要です。ヘッダー正規表現には対象のヘッダーが必要です。"
   },
   "encode": {
     "heading": "圧縮",
     "section_title": "圧縮の設定(任意)",
     "help": "「一般」で圧縮がオンのときに使われます。選択しない場合、Caddy は gzip と zstd で圧縮します。",
     "algorithms": "アルゴリズムと順序",
-    "algorithms_default": "gzip、zstd(既定)",
-    "algorithms_zstd_gzip": "zstd、次に gzip",
+    "algorithms_default": "zstd、gzip(既定)",
+    "algorithms_gzip_zstd": "gzip、次に zstd",
     "algorithms_gzip": "gzip のみ",
     "algorithms_zstd": "zstd のみ",
     "minimum_length": "最小サイズ",
@@ -1284,13 +1325,13 @@
   },
   "bind": {
     "label": "バインドアドレス",
-    "help": "このサイトが待ち受けるアドレス(スペース区切り)。例: 127.0.0.1 ::1。空欄はすべてのアドレスで待ち受けます。1 つの IP アドレスであるホストは、すでにそのアドレスにバインドされます。",
+    "help": "このサイトが待ち受けるアドレス(スペース区切り)。例: 127.0.0.1 ::1。空欄はすべてのアドレスで待ち受けます。ホストが IP アドレスでも同じです。ホストはリクエストの照合にだけ使われます。",
     "invalid": "ポートを付けずに、IP アドレスまたはホスト名を入力してください。"
   },
   "modules": {
     "title": "Caddy のモジュール",
     "loading": "モジュールを読み取り中…",
-    "unknown": "この Caddy のモジュールを読み取れませんでした(caddy コマンドは使えますか?)。",
+    "unknown": "この Caddy のモジュールを読み取れませんでした。caddy コマンドも Admin API も応答しませんでした。",
     "help": "インストール済みの Caddy が標準ビルド以外にできること。足りないモジュールが必要な機能は、Caddy が設定を読み込むときに失敗するので、先にここで確認してください。",
     "cap_dns": "DNS チャレンジのプロバイダー",
     "cap_layer4": "レイヤー 4(TCP と UDP のプロキシ)",
@@ -1303,6 +1344,8 @@
     "all": "すべてのモジュール({{count}})",
     "filter": "モジュールを絞り込む",
     "no_match": "一致するモジュールはありません。",
-    "non_standard": "Caddy 本体に含まれないモジュール: {{count}}"
+    "non_standard": "Caddy 本体に含まれないモジュール: {{count}}",
+    "not_known": "不明",
+    "probed": "この Caddy には Admin API でしか接続できず、Admin API にはモジュール一覧がありません。各機能は小さな設定を変換して確認しました。DNS プロバイダーは一般的なものだけを確認します。"
   }
 }

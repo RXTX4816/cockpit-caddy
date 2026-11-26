@@ -24,7 +24,8 @@
     "unit_kb": "KB",
     "unit_mb": "MB",
     "unit_gb": "GB",
-    "example_value": "예: {{value}}"
+    "example_value": "예: {{value}}",
+    "more_about": "{{topic}} 정보"
   },
   "app": {
     "title": "Caddy",
@@ -95,8 +96,8 @@
     "delete_confirm_title": "프록시 :{{port}}을(를) 삭제할까요?",
     "delete_confirm_body": "포트 {{port}} → {{target}}의 리버스 프록시가 제거됩니다.",
     "delete_confirm_button": "삭제",
-    "api_error_add_title": "프록시가 디스크에 생성됨 — Caddy가 실시간 적용을 거부했습니다",
-    "api_error_edit_title": "레이블 저장됨 — Caddy가 설정 업데이트를 거부했습니다(다른 변경 사항은 적용되지 않음)",
+    "api_error_add_title": "저장했지만 Caddy가 거부했습니다",
+    "api_error_edit_title": "레이블만 저장되었습니다",
     "caddyfile_error_title": "Caddyfile 검증 실패 — 변경 사항이 저장되지 않았습니다",
     "view_logs": "로그 보기",
     "indicator_browse": "디렉터리 목록",
@@ -192,7 +193,21 @@
     "field_templates_help": "제공하는 파일에 Caddy의 템플릿 엔진을 적용하여 include, .Req 등 템플릿 동작을 쓸 수 있게 합니다.",
     "field_templates_mime": "MIME 형식",
     "field_templates_root": "include 디렉터리",
-    "field_templates_root_help": "include 등 파일 동작이 파일을 찾는 위치입니다. 비워 두면 사이트 루트입니다."
+    "field_templates_root_help": "include 등 파일 동작이 파일을 찾는 위치입니다. 비워 두면 사이트 루트입니다.",
+    "field_browse_sort": "목록 정렬",
+    "field_browse_order": "방향",
+    "browse_sort_default": "Caddy 기본값(이름)",
+    "browse_sort_name": "이름",
+    "browse_sort_namedirfirst": "이름, 폴더 먼저",
+    "browse_sort_size": "크기",
+    "browse_sort_time": "마지막 수정",
+    "browse_order_asc": "오름차순",
+    "browse_order_desc": "내림차순",
+    "field_browse_file_limit": "목록당 최대 항목 수",
+    "browse_file_limit_none": "제한 없음",
+    "browse_file_limit_invalid": "1 이상의 정수를 입력하세요.",
+    "field_browse_reveal_symlinks": "심볼릭 링크 대상 표시",
+    "field_browse_reveal_symlinks_help": "목록에 각 심볼릭 링크가 가리키는 곳이 표시됩니다. 사이트 루트 밖의 경로가 드러날 수 있습니다."
   },
   "edit_static": {
     "title": "정적 서버 편집 — :{{port}}",
@@ -571,7 +586,8 @@
     "backup_warning_title": "먼저 설정을 백업하세요",
     "backup_warning_body": "마이그레이션은 Caddyfile 자체만 백업합니다. 문제가 생겨도 모두 복원할 수 있도록 전체 설정 백업을 만드세요.",
     "banner_details_toggle": "세부 정보",
-    "banner_details": "사이트 블록은 /etc/caddy/Caddyfile에서 /etc/caddy/conf.d/cockpit-caddy.conf로 그대로 이동되며, Caddyfile에는 conf.d용 import 줄이 추가됩니다. 원래 Caddyfile은 /etc/caddy/Caddyfile.bak에 백업됩니다. 그 전까지는 플러그인의 변경 사항이 Caddyfile의 사이트와 충돌할 수 있습니다."
+    "banner_details": "사이트 블록은 /etc/caddy/Caddyfile에서 /etc/caddy/conf.d/cockpit-caddy.conf로 그대로 이동되며, Caddyfile에는 conf.d용 import 줄이 추가됩니다. 원래 Caddyfile은 /etc/caddy/Caddyfile.bak에 백업됩니다. 그 전까지는 플러그인의 변경 사항이 Caddyfile의 사이트와 충돌할 수 있습니다.",
+    "gate_continue_title": "사이트가 중복될 수 있음"
   },
   "backup": {
     "button": "백업",
@@ -688,7 +704,7 @@
   },
   "global_opts": {
     "title": "Caddy 전역 옵션",
-    "caddyfile_note": "이 설정은 /etc/caddy/Caddyfile의 전역 옵션 블록에 기록됩니다. 저장하면 Caddy가 자동으로 다시 불러옵니다.",
+    "caddyfile_note": "이 설정은 /etc/caddy/Caddyfile의 전역 옵션 블록에 있습니다. 저장하면 쓰고 검사하며, 다시 불러오면 적용됩니다.",
     "unmanaged_hint": "명시적인 전역 옵션이 없습니다. Caddy는 자동 HTTPS 기본값을 사용 중입니다(프록시에 공개 호스트 이름이 있으면 Let's Encrypt 포함). 아래 필드가 비어 있는 것은 설정할 것이 없기 때문이지 무언가 고장 났기 때문이 아닙니다.",
     "http_port": "HTTP 포트",
     "https_port": "HTTPS 포트",
@@ -808,10 +824,8 @@
     "default_bind_help": "bind 옵션이 없는 사이트가 수신하는 주소(공백으로 구분)입니다.",
     "ocsp_stapling_off": "OCSP stapling 끄기",
     "admin_title": "관리 엔드포인트",
-    "admin_off": "관리 엔드포인트 끄기",
-    "admin_off_help": "플러그인은 실행 중인 구성을 읽고 변경하기 위해 관리 API가 필요합니다.",
     "admin_address": "관리 주소",
-    "admin_address_help": "Caddy 관리 API가 수신하는 위치를 Caddyfile 형식으로 씁니다. 플러그인은 자체 설정의 주소로 연결하므로 두 곳을 함께 변경하세요.",
+    "admin_address_help": "Caddy 관리 API가 수신하는 곳으로, Caddyfile과 같이 씁니다(예: localhost:2019, unix//run/caddy/admin.socket). 다음 다시 불러오기 때 플러그인은 새 주소가 응답할 때까지 최대 10초 기다린 뒤 그 주소를 씁니다. 응답이 없으면 이전 Caddyfile을 되돌립니다.",
     "admin_origins": "허용된 오리진",
     "admin_origins_help": "브라우저에서 관리 API를 호출할 수 있는 호스트(공백으로 구분)입니다.",
     "admin_enforce_origin": "오리진 강제",
@@ -822,7 +836,21 @@
     "tab_tls": "TLS 및 ACME",
     "tab_logging": "로그 및 메트릭",
     "tab_proxy": "프록시 헤더 및 프로토콜",
-    "tabs_aria": "설정 섹션"
+    "tabs_aria": "설정 섹션",
+    "issuer_custom": "다른 발급자…",
+    "issuer_custom_name": "발급자와 인수",
+    "issuer_custom_name_help": "cert_issuer 뒤에 오는 내용: 발급자 모듈과 그 인수. 예: acme https://ca.example/directory",
+    "issuer_custom_body": "발급자 옵션",
+    "issuer_custom_body_help": "선택 사항: cert_issuer 블록 안의 줄을 Caddyfile처럼 한 줄에 하나씩.",
+    "issuer_custom_required": "발급자 모듈을 입력하세요(예: acme, zerossl).",
+    "issuer_custom_invalid": "모듈 이름으로 시작하고, 인수는 공백으로 구분하며 중괄호는 쓰지 마세요.",
+    "issuer_body_braces": "모든 {에는 짝이 되는 }가 필요합니다.",
+    "admin_read_only": "여기서 Caddy는 로컬 서비스가 아니므로 플러그인이 그 Caddyfile을 관리하지 않습니다. 해당 Caddy를 설정하는 곳에서 관리 엔드포인트를 바꾸세요.",
+    "admin_off_kept": "Caddyfile이 관리 엔드포인트를 끕니다. 플러그인은 그 줄을 그대로 둡니다. Caddyfile 편집기에서 바꾸세요.",
+    "admin_switched": "이제 관리 API가 {{address}}에서 응답합니다",
+    "admin_switch_failed": "관리 엔드포인트가 {{address}}(으)로 옮겨지지 않았습니다({{reason}}). 이전 Caddyfile을 되돌렸습니다.",
+    "admin_switch_unrestored": "관리 엔드포인트가 {{address}}(으)로 옮겨지지 않았고({{reason}}) 이전 Caddyfile도 되돌리지 못했습니다. Caddyfile을 확인하고 Caddy를 다시 시작하세요.",
+    "admin_no_answer": "10초 안에 응답 없음"
   },
   "ca": {
     "title": "내부 인증 기관",
@@ -1235,21 +1263,34 @@
     "move_up": "위로 이동",
     "move_down": "아래로 이동",
     "remove": "제거",
-    "remove_confirm": "이 블록과 그 안의 블록 {{count}}개를 제거할까요?",
     "remove_yes": "제거",
     "remove_no": "유지",
     "add_kind": "종류",
     "add_inside": "선택한 블록 안에 추가",
     "add_top": "최상위에 추가",
-    "add_matcher": "새 블록의 매처"
+    "add_matcher": "새 블록의 매처",
+    "remove_confirm_one": "이 블록과 그 안의 블록 {{count}}개를 제거할까요?",
+    "remove_confirm_other": "이 블록과 그 안의 블록 {{count}}개를 제거할까요?",
+    "handle_path_invalid": "handle_path에는 /로 시작하는 경로가 하나 필요합니다(예: /app/*).",
+    "fix_first": "먼저 이 편집을 고치거나 취소하세요. 지금 상태로는 적용할 수 없습니다.",
+    "move_hint": "블록은 route 안에서, 그리고 이름 있는 매처를 쓰는 handle끼리 옮길 수 있습니다. 이 경우 Caddy가 쓰인 순서를 지킵니다. 나머지 블록은 Caddy가 경로의 구체성에 따라 직접 정렬합니다.",
+    "changed_meanwhile": "이 탭이 읽은 뒤 사이트 블록이 바뀌었습니다. 대화 상자를 닫았다가 다시 열어 현재 텍스트를 편집하세요.",
+    "form_locked": "이 사이트에는 중첩된 블록이 있어 양식은 주소, bind, 가져오기, TLS만 저장합니다. 나머지는 트리 탭에서 편집하세요.",
+    "remove_confirm_zero": "이 블록과 그 안의 블록 {{count}}개를 제거할까요?",
+    "remove_confirm_two": "이 블록과 그 안의 블록 {{count}}개를 제거할까요?",
+    "remove_confirm_few": "이 블록과 그 안의 블록 {{count}}개를 제거할까요?",
+    "remove_confirm_many": "이 블록과 그 안의 블록 {{count}}개를 제거할까요?",
+    "remove_confirm": "이 블록과 그 안의 블록 {{count}}개를 제거할까요?",
+    "definition_help": "이 사이트에 정의된 {{name}}의 일치 조건입니다. 여기서 바꾸면 그 정의가 다시 쓰이므로 {{name}}을(를) 쓰는 모든 블록에 적용됩니다.",
+    "definition_empty": "매처에는 조건이 하나 이상 필요하고, 헤더 정규식에는 대상 헤더가 필요합니다."
   },
   "encode": {
     "heading": "압축",
     "section_title": "압축 설정(선택)",
     "help": "일반 탭에서 압축이 켜져 있을 때 사용됩니다. 선택하지 않으면 Caddy는 gzip과 zstd로 압축합니다.",
     "algorithms": "알고리즘과 순서",
-    "algorithms_default": "gzip, zstd(기본값)",
-    "algorithms_zstd_gzip": "zstd, 그다음 gzip",
+    "algorithms_default": "zstd, gzip(기본값)",
+    "algorithms_gzip_zstd": "gzip, 그다음 zstd",
     "algorithms_gzip": "gzip만",
     "algorithms_zstd": "zstd만",
     "minimum_length": "최소 크기",
@@ -1284,13 +1325,13 @@
   },
   "bind": {
     "label": "바인드 주소",
-    "help": "이 사이트가 수신하는 주소(공백으로 구분)입니다. 예: 127.0.0.1 ::1. 비워 두면 모든 주소에서 수신합니다. 호스트가 IP 주소 하나이면 이미 그 주소에 바인드됩니다.",
+    "help": "이 사이트가 수신하는 주소(공백으로 구분)입니다. 예: 127.0.0.1 ::1. 비워 두면 호스트가 IP 주소여도 모든 주소에서 수신합니다. 호스트는 요청을 가려낼 뿐입니다.",
     "invalid": "포트 없이 IP 주소나 호스트 이름을 입력하세요."
   },
   "modules": {
     "title": "Caddy 모듈",
     "loading": "모듈을 읽는 중…",
-    "unknown": "이 Caddy의 모듈을 읽을 수 없습니다(caddy 명령을 쓸 수 있나요?).",
+    "unknown": "이 Caddy의 모듈을 읽을 수 없습니다. caddy 명령도 Admin API도 응답하지 않았습니다.",
     "help": "설치된 Caddy가 표준 빌드 이상으로 할 수 있는 것입니다. 없는 모듈이 필요한 기능은 Caddy가 구성을 불러올 때 실패하므로 먼저 여기서 확인하세요.",
     "cap_dns": "DNS 챌린지 제공자",
     "cap_layer4": "레이어 4(TCP 및 UDP 프록시)",
@@ -1303,6 +1344,8 @@
     "all": "모든 모듈({{count}})",
     "filter": "모듈 필터",
     "no_match": "일치하는 모듈이 없습니다.",
-    "non_standard": "Caddy 자체에 포함되지 않은 모듈: {{count}}"
+    "non_standard": "Caddy 자체에 포함되지 않은 모듈: {{count}}",
+    "not_known": "알 수 없음",
+    "probed": "이 Caddy는 모듈 목록이 없는 Admin API로만 연결할 수 있습니다. 각 기능은 작은 설정을 변환해 확인했으며, 일반적인 DNS 공급자만 확인합니다."
   }
 }

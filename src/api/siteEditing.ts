@@ -13,13 +13,17 @@ import {
 } from "./caddy";
 import { applyDnsSecrets, isSiteDnsVar } from "./dnsChallenge";
 import { findBlockPositions, findMatchingBlock } from "./caddyfileDocument";
+import { hasNestedBlocks } from "./siteTree";
 import type { CaddyConfig, DnsChallengeConfig, ProxyEntry, ServerDef } from "./types";
+import type { AcmeAccount } from "./caddyJsonModel";
 
 /** What an edit needs to know about the current state: the live config, the sites and the named servers. */
 export interface SiteEditContext {
   config: CaddyConfig;
   proxies: ProxyEntry[];
   servers: ServerDef[];
+  /** The Caddyfile's global ACME account (#341), when it was read. */
+  acmeAccount?: AcmeAccount;
 }
 
 /** How the running Caddy is brought up to date: a reload from the Caddyfile, or a JSON push. */
@@ -53,8 +57,11 @@ export function needsCaddyfileReload(p: ProxyEntry): boolean {
   // Snippet imports (#288) only exist in the Caddyfile; hand-built JSON would drop what they add.
   // A client_ip matcher (#286) needs the server's trusted_proxies, which the global options set
   // and only Caddy's adapter puts on the server; the hand-built JSON server has none.
+  // Route and nested handle blocks (#348) are the site's text; the form's JSON knows one target
+  // and would put it in place of every reverse_proxy in them.
   return !!p.phpFastcgi || reliesOnCaddyfileTls(p) || !!p.imports?.length
-    || !!p.matchers?.client_ip?.ranges.length || !!p.matchers?.not?.client_ip?.ranges.length;
+    || !!p.matchers?.client_ip?.ranges.length || !!p.matchers?.not?.client_ip?.ranges.length
+    || (!!p.siteText && hasNestedBlocks(p.siteText));
 }
 
 /**
@@ -198,7 +205,7 @@ export async function addSite(ctx: SiteEditContext, entry: Omit<ProxyEntry, "id"
   if (sharesPortWithOtherHost(afterProxies, newProxy) || needsCaddyfileReload(newProxy)) {
     return { live: { kind: "reload" }, written, site };
   }
-  return { live: liveChangeFor(proxies, mergeProxy(config, newProxy)), written, site };
+  return { live: liveChangeFor(proxies, mergeProxy(config, newProxy, ctx.acmeAccount)), written, site };
 }
 
 export async function editSite(ctx: SiteEditContext, entry: ProxyEntry): Promise<SiteEditResult> {
@@ -262,21 +269,24 @@ export async function editSite(ctx: SiteEditContext, entry: ProxyEntry): Promise
   if (sharesPortWithOtherHost(afterProxies, entry) || needsCaddyfileReload(entry) || matchersChanged) {
     return { live: { kind: "reload" }, written, site };
   }
-  return { live: liveChangeFor(proxies, mergeProxy(config, entry)), written, site };
+  return { live: liveChangeFor(proxies, mergeProxy(config, entry, ctx.acmeAccount)), written, site };
 }
 
 /**
  * Writes a new text for a site's block (#350), the one the Tree tab edited. The block is found by
- * the site's address and replaced as it is, so what the form owns (label, header comments around
- * it) and every other site stay as they were. The config is checked before it is kept: throws
- * CaddyfileError, leaving the file as it was, when Caddy would not take it.
+ * the hosts the site answers on, as surgicallyEditProxy finds it, and replaced as it is, so what the
+ * form owns (label, header comments around it) and every other site stay as they were. `expected`
+ * is the text the edit started from: when the block on disk is no longer that, someone changed it
+ * meanwhile and nothing is written. The config is checked before it is kept: throws CaddyfileError,
+ * leaving the file as it was, when Caddy would not take it.
  */
-export async function replaceSiteText(proxy: ProxyEntry, newText: string): Promise<SiteEditResult> {
+export async function replaceSiteText(proxy: ProxyEntry, newText: string, expected: string): Promise<SiteEditResult> {
   await ensureConfDImported();
   const current = await readProxyConf();
   const lines = current.split("\n");
-  const pos = findMatchingBlock(findBlockPositions(lines), proxy.externalPort, proxy.externalHost);
+  const pos = findMatchingBlock(findBlockPositions(lines), proxy.externalPort, routeHosts(proxy)?.join(", "));
   if (!pos) throw new CaddyfileError(i18n.t("tree.block_not_found"));
+  if (lines.slice(pos.headerLine, pos.closingLine + 1).join("\n") !== expected) throw new CaddyfileError(i18n.t("tree.changed_meanwhile"));
   const written = [...lines.slice(0, pos.headerLine), newText, ...lines.slice(pos.closingLine + 1)].join("\n");
   await writeRawProxyConfValidated(written);
   return { live: { kind: "reload" }, written };

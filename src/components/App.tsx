@@ -235,7 +235,7 @@ function AppInner() {
               </Tab>
               <Tab eventKey={3} title={<TabTitleText>{t("tabs.settings")}</TabTitleText>}>
                 <PageSection hasBodyWrapper={false}>
-                  <GlobalOptionsTab />
+                  <GlobalOptionsTab unmanaged={unmanaged} />
                   <SnippetsSection />
                 </PageSection>
               </Tab>

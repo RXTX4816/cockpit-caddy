@@ -2,7 +2,7 @@ import { useState, type ReactNode } from "react";
 import { Button, Dropdown, DropdownItem, DropdownList, Flex, FlexItem, Label, MenuToggle, Spinner, Tooltip } from "@patternfly/react-core";
 import { EllipsisVIcon } from "@patternfly/react-icons";
 import { useTranslation } from "react-i18next";
-import { ServiceStatusBadge, startService, stopService, restartService, reloadService } from "@rxtx4816/cockpit-plugin-base-react/systemd";
+import { ServiceStatusBadge, startService, stopService, restartService } from "@rxtx4816/cockpit-plugin-base-react/systemd";
 import { ConfirmDialog, useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
 import { notifyConfigChanged, reloadCaddy, type ServiceStatus } from "../api";
 
@@ -40,8 +40,9 @@ export function ServiceControl({ status, loading, onRefresh, extraActions, unman
   const run: Record<Action, () => Promise<void>> = {
     start: () => startService(UNIT).then(notifyConfigChanged),
     stop: () => stopService(UNIT),
-    restart: () => restartService(UNIT).then(notifyConfigChanged),
-    reload: () => (unmanaged ? reloadCaddy() : reloadService(UNIT).then(notifyConfigChanged)),
+    // Through reloadCaddy, so a reload or restart that moves the admin endpoint is done safely (#330).
+    restart: () => (unmanaged ? restartService(UNIT).then(notifyConfigChanged) : reloadCaddy({ restart: true }).then(() => undefined)),
+    reload: () => reloadCaddy().then(() => undefined),
   };
   const success: Record<Action, string> = {
     start: t("toast.service_started"),

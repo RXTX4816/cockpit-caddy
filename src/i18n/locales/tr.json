@@ -24,7 +24,8 @@
     "unit_kb": "KB",
     "unit_mb": "MB",
     "unit_gb": "GB",
-    "example_value": "ör. {{value}}"
+    "example_value": "ör. {{value}}",
+    "more_about": "{{topic}} hakkında"
   },
   "app": {
     "title": "Caddy",
@@ -95,8 +96,8 @@
     "delete_confirm_title": ":{{port}} proxy'si silinsin mi?",
     "delete_confirm_body": "{{port}} → {{target}} bağlantı noktası için reverse proxy kaldırılacak.",
     "delete_confirm_button": "Sil",
-    "api_error_add_title": "Proxy diskte oluşturuldu — Caddy canlı uygulamayı reddetti",
-    "api_error_edit_title": "Etiket kaydedildi — Caddy yapılandırma güncellemesini reddetti (diğer değişiklikler uygulanmadı)",
+    "api_error_add_title": "Kaydedildi ama Caddy reddetti",
+    "api_error_edit_title": "Yalnızca etiket kaydedildi",
     "caddyfile_error_title": "Caddyfile doğrulaması başarısız — değişiklikler kaydedilmedi",
     "view_logs": "Günlükleri görüntüle",
     "indicator_browse": "dizin listeleme",
@@ -192,7 +193,21 @@
     "field_templates_help": "Sunulan dosyalar için Caddy'nin şablon motorunu açar; böylece include, .Req ve diğer şablon eylemlerini kullanabilirler.",
     "field_templates_mime": "MIME türleri",
     "field_templates_root": "Include dizini",
-    "field_templates_root_help": "include ve diğer dosya eylemlerinin dosya aradığı yer. Boş, site kökü demektir."
+    "field_templates_root_help": "include ve diğer dosya eylemlerinin dosya aradığı yer. Boş, site kökü demektir.",
+    "field_browse_sort": "Liste sıralaması",
+    "field_browse_order": "Yön",
+    "browse_sort_default": "Caddy varsayılanı (ad)",
+    "browse_sort_name": "Ad",
+    "browse_sort_namedirfirst": "Ad, önce klasörler",
+    "browse_sort_size": "Boyut",
+    "browse_sort_time": "Son değişiklik",
+    "browse_order_asc": "Artan",
+    "browse_order_desc": "Azalan",
+    "field_browse_file_limit": "Listede en fazla girdi",
+    "browse_file_limit_none": "Sınır yok",
+    "browse_file_limit_invalid": "1 veya daha büyük bir tam sayı girin.",
+    "field_browse_reveal_symlinks": "Sembolik bağlantı hedeflerini göster",
+    "field_browse_reveal_symlinks_help": "Liste, her sembolik bağlantının nereyi gösterdiğini gösterir. Bu, site kökü dışındaki yolları açığa çıkarabilir."
   },
   "edit_static": {
     "title": "Statik sunucuyu düzenle — :{{port}}",
@@ -571,7 +586,8 @@
     "backup_warning_title": "Önce yapılandırmanızı yedekleyin",
     "backup_warning_body": "Taşıma yalnızca Caddyfile'ın kendisini yedekler. Bir sorun olursa her şeyi geri yükleyebilmek için yapılandırmanın tam yedeğini oluşturun.",
     "banner_details_toggle": "Ayrıntılar",
-    "banner_details": "Site blokları /etc/caddy/Caddyfile dosyasından /etc/caddy/conf.d/cockpit-caddy.conf dosyasına değiştirilmeden taşınır ve Caddyfile'a conf.d için bir import satırı eklenir. Özgün Caddyfile /etc/caddy/Caddyfile.bak olarak yedeklenir. O zamana kadar eklentinin değişiklikleri Caddyfile'daki sitelerle çakışabilir."
+    "banner_details": "Site blokları /etc/caddy/Caddyfile dosyasından /etc/caddy/conf.d/cockpit-caddy.conf dosyasına değiştirilmeden taşınır ve Caddyfile'a conf.d için bir import satırı eklenir. Özgün Caddyfile /etc/caddy/Caddyfile.bak olarak yedeklenir. O zamana kadar eklentinin değişiklikleri Caddyfile'daki sitelerle çakışabilir.",
+    "gate_continue_title": "Yinelenen siteler olabilir"
   },
   "backup": {
     "button": "Yedekle",
@@ -688,7 +704,7 @@
   },
   "global_opts": {
     "title": "Genel Caddy seçenekleri",
-    "caddyfile_note": "Bu ayarlar /etc/caddy/Caddyfile içindeki genel seçenekler bloğuna yazılır. Kaydedince Caddy otomatik olarak yeniden yüklenir.",
+    "caddyfile_note": "Bu ayarlar /etc/caddy/Caddyfile dosyasının genel seçenekler bloğundadır. Kaydet onları yazar ve denetler; Yeniden yükle uygular.",
     "unmanaged_hint": "Açık genel seçenek ayarlanmamış — Caddy otomatik HTTPS varsayılanlarını kullanıyor (bir proxy'nin genel ana bilgisayar adı varsa Let's Encrypt dahil). Aşağıdaki alanlar bir şey bozuk olduğu için değil, yapılandırılacak bir şey olmadığı için boş.",
     "http_port": "HTTP bağlantı noktası",
     "https_port": "HTTPS bağlantı noktası",
@@ -808,10 +824,8 @@
     "default_bind_help": "bind seçeneği olmayan sitelerin dinlediği, boşlukla ayrılmış adresler.",
     "ocsp_stapling_off": "OCSP stapling'i kapat",
     "admin_title": "Yönetim uç noktası",
-    "admin_off": "Yönetim uç noktasını kapat",
-    "admin_off_help": "Eklenti, çalışan yapılandırmayı okumak ve değiştirmek için yönetim API'sine ihtiyaç duyar.",
     "admin_address": "Yönetim adresi",
-    "admin_address_help": "Caddy'nin yönetim API'sinin dinlediği yer, Caddyfile'daki gibi yazılır. Eklenti kendi ayarındaki adrese bağlanır, bu yüzden ikisini birlikte değiştirin.",
+    "admin_address_help": "Caddy yönetim API'sinin dinlediği yer, Caddyfile'daki gibi, örn. localhost:2019 veya unix//run/caddy/admin.socket. Bir sonraki yeniden yüklemede eklenti yeni adresin yanıt vermesi için 10 saniyeye kadar bekler ve sonra onu kullanır; yanıt yoksa önceki Caddyfile'ı geri yükler.",
     "admin_origins": "İzin verilen originler",
     "admin_origins_help": "Yönetim API'sini bir tarayıcıdan çağırabilen, boşlukla ayrılmış ana makineler.",
     "admin_enforce_origin": "Originleri zorunlu kıl",
@@ -822,7 +836,21 @@
     "tab_tls": "TLS ve ACME",
     "tab_logging": "Günlük ve metrikler",
     "tab_proxy": "Proxy üstbilgileri ve protokoller",
-    "tabs_aria": "Ayar bölümleri"
+    "tabs_aria": "Ayar bölümleri",
+    "issuer_custom": "Başka bir sağlayıcı…",
+    "issuer_custom_name": "Sağlayıcı ve argümanlar",
+    "issuer_custom_name_help": "cert_issuer'dan sonra gelen: sağlayıcı modülü ve argümanları, örn. acme https://ca.example/directory.",
+    "issuer_custom_body": "Sağlayıcı seçenekleri",
+    "issuer_custom_body_help": "İsteğe bağlı: cert_issuer bloğunun içindeki satırlar, Caddyfile'daki gibi satır başına bir tane.",
+    "issuer_custom_required": "Sağlayıcı modülünü girin, örn. acme veya zerossl.",
+    "issuer_custom_invalid": "Modül adıyla başlayın, ardından boşlukla ayrılmış argümanlar gelsin, süslü parantez olmadan.",
+    "issuer_body_braces": "Her { için eşleşen bir } gerekir.",
+    "admin_read_only": "Caddy burada yerel hizmet değil, bu yüzden eklenti onun Caddyfile'ını yönetmez. Yönetim uç noktasını o Caddy'nin yapılandırıldığı yerde değiştirin.",
+    "admin_off_kept": "Caddyfile yönetim uç noktasını kapatıyor. Eklenti bu satırı olduğu gibi bırakır; Caddyfile düzenleyicisinde değiştirin.",
+    "admin_switched": "Yönetim API'si artık {{address}} adresinde yanıt veriyor",
+    "admin_switch_failed": "Yönetim uç noktası {{address}} adresine taşınmadı ({{reason}}). Önceki Caddyfile geri yüklendi.",
+    "admin_switch_unrestored": "Yönetim uç noktası {{address}} adresine taşınmadı ({{reason}}) ve önceki Caddyfile geri yüklenemedi. Caddyfile'ı denetleyip Caddy'yi yeniden başlatın.",
+    "admin_no_answer": "10 saniye içinde yanıt yok"
   },
   "ca": {
     "title": "İç sertifika yetkilisi",
@@ -1235,21 +1263,34 @@
     "move_up": "Yukarı taşı",
     "move_down": "Aşağı taşı",
     "remove": "Kaldır",
-    "remove_confirm": "Bu blok ve içindeki {{count}} blok kaldırılsın mı?",
     "remove_yes": "Kaldır",
     "remove_no": "Koru",
     "add_kind": "Tür",
     "add_inside": "Seçili bloğun içine ekle",
     "add_top": "Üst düzeye ekle",
-    "add_matcher": "Yeni bloğun eşleştiricisi"
+    "add_matcher": "Yeni bloğun eşleştiricisi",
+    "remove_confirm_one": "Bu blok ve içindeki {{count}} blok kaldırılsın mı?",
+    "remove_confirm_other": "Bu blok ve içindeki {{count}} blok kaldırılsın mı?",
+    "handle_path_invalid": "handle_path, / ile başlayan tek bir yol gerektirir; örneğin /app/*.",
+    "fix_first": "Önce bu düzenlemeyi düzeltin ya da vazgeçin: bu haliyle uygulanamaz.",
+    "move_hint": "Bloklar bir route içinde ve Caddy'nin yazılış sırasını koruduğu adlandırılmış eşleştiricili handle blokları arasında taşınabilir. Diğer blokları Caddy, yollarının ne kadar belirgin olduğuna göre kendisi sıralar.",
+    "changed_meanwhile": "Sitenin bloğu bu sekme okuduktan sonra değişti. Güncel metni düzenlemek için pencereyi kapatıp yeniden açın.",
+    "form_locked": "Bu sitede iç içe bloklar var, bu yüzden form yalnızca adresi, bind'ı, içe aktarmaları ve TLS'yi kaydeder. Gerisini Ağaç sekmesinde düzenleyin.",
+    "remove_confirm_zero": "Bu blok ve içindeki {{count}} blok kaldırılsın mı?",
+    "remove_confirm_two": "Bu blok ve içindeki {{count}} blok kaldırılsın mı?",
+    "remove_confirm_few": "Bu blok ve içindeki {{count}} blok kaldırılsın mı?",
+    "remove_confirm_many": "Bu blok ve içindeki {{count}} blok kaldırılsın mı?",
+    "remove_confirm": "Bu blok ve içindeki {{count}} blok kaldırılsın mı?",
+    "definition_help": "{{name}} öğesinin bu sitedeki tanımına göre eşleştirdikleri. Buradaki değişiklikler tanımı yeniden yazar, yani {{name}} kullanan her bloğu etkiler.",
+    "definition_empty": "Bir eşleştiricinin en az bir koşulu, başlık regex'inin de başlığı olmalı."
   },
   "encode": {
     "heading": "Sıkıştırma",
     "section_title": "Sıkıştırma ayarları (isteğe bağlı)",
     "help": "Genel sekmesinde sıkıştırma açıkken kullanılır. Seçim yapılmazsa Caddy gzip ve zstd ile sıkıştırır.",
     "algorithms": "Algoritmalar ve sıra",
-    "algorithms_default": "gzip, zstd (varsayılan)",
-    "algorithms_zstd_gzip": "önce zstd, sonra gzip",
+    "algorithms_default": "zstd, gzip (varsayılan)",
+    "algorithms_gzip_zstd": "önce gzip, sonra zstd",
     "algorithms_gzip": "yalnızca gzip",
     "algorithms_zstd": "yalnızca zstd",
     "minimum_length": "En küçük boyut",
@@ -1284,13 +1325,13 @@
   },
   "bind": {
     "label": "Bind adresleri",
-    "help": "Bu sitenin dinlediği adresler, boşlukla ayrılmış, örneğin 127.0.0.1 ::1. Boş, tüm adreslerde dinler. Tek bir IP adresi olan ana makine zaten ona bağlanır.",
+    "help": "Bu sitenin dinlediği adresler, boşlukla ayrılmış, örneğin 127.0.0.1 ::1. Boş, ana makine bir IP adresi olsa bile tüm adreslerde dinler: ana makine yalnızca istekleri eşleştirir.",
     "invalid": "Port olmadan IP adresleri veya ana makine adları girin."
   },
   "modules": {
     "title": "Caddy modülleri",
     "loading": "Modüller okunuyor…",
-    "unknown": "Bu Caddy'nin modülleri okunamadı (caddy komutu kullanılabilir mi?).",
+    "unknown": "Bu Caddy'nin modülleri okunamadı: ne caddy komutu ne de Admin API yanıt verdi.",
     "help": "Kurulu Caddy'nin standart yapının ötesinde neler yapabildiği. Eksik bir modül gerektiren özellik, Caddy yapılandırmayı yüklerken başarısız olur, bu yüzden önce buraya bakın.",
     "cap_dns": "DNS doğrulama sağlayıcıları",
     "cap_layer4": "Katman 4 (TCP ve UDP vekili)",
@@ -1303,6 +1344,8 @@
     "all": "Tüm modüller ({{count}})",
     "filter": "Modülleri filtrele",
     "no_match": "Eşleşen modül yok.",
-    "non_standard": "Caddy'nin kendisine ait olmayan modüller: {{count}}"
+    "non_standard": "Caddy'nin kendisine ait olmayan modüller: {{count}}",
+    "not_known": "Bilinmiyor",
+    "probed": "Bu Caddy'ye yalnızca modül listesi olmayan Admin API üzerinden ulaşılabiliyor. Her özellik küçük bir yapılandırma dönüştürülerek denendi; yalnızca yaygın DNS sağlayıcıları denenir."
   }
 }

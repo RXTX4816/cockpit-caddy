@@ -1,5 +1,8 @@
-import { describe, it, expect, afterEach } from "vitest";
-import { applyCaddyfileViaApi, reloadCaddy, setCaddyManaged, CaddyfileError, pingCaddyApi } from "./caddy";
+import { describe, it, expect, afterEach, beforeEach, vi } from "vitest";
+import { applyCaddyfileViaApi, reloadCaddy, setCaddyManaged, CaddyfileError, pingCaddyApi, setAdminAddress, onAdminSwitched, keepAdminBackup } from "./caddy";
+import { AdminSwitchError } from "./adminSwitch";
+import { resetHost } from "@rxtx4816/cockpit-plugin-base-react/host";
+import { installFakeHost, type FakeHost } from "@rxtx4816/cockpit-plugin-base-react/testing/host";
 import { mockCockpitFile } from "@rxtx4816/cockpit-plugin-base-react/testing/helpers";
 import { mockSpawn } from "../test/setup";
 
@@ -106,5 +109,71 @@ describe("applyCaddyfileViaApi / reloadCaddy", () => {
     expect(postedBody).not.toContain("import");
     expect(postedBody).toContain("example.com");
     expect(postedBody).toContain("reverse_proxy localhost:8080");
+  });
+});
+
+describe("a reload that moves the admin endpoint (#330)", () => {
+  const MAIN = "/etc/caddy/Caddyfile";
+  const CONF = "/etc/caddy/conf.d/cockpit-caddy.conf";
+  let host: FakeHost;
+  beforeEach(() => {
+    host = installFakeHost();
+    setAdminAddress("http://127.0.0.1:2019", "/run/caddy/admin.socket");
+    setCaddyManaged(true);
+  });
+  afterEach(() => {
+    resetHost();
+    mockSpawn.mockReset();
+    vi.useRealTimers();
+    setAdminAddress("http://127.0.0.1:2019", "/run/caddy/admin.socket");
+  });
+
+  /** curl answers: the old address for /config/ and /load; the new one only when `newAnswers`. */
+  function caddyAt(newAnswers: boolean) {
+    mockSpawn.mockImplementation((argv: string[]) => {
+      const url = argv.find(a => a.startsWith("http://")) ?? "";
+      if (url.startsWith("http://127.0.0.1:2019/config/")) return Promise.resolve("{}");
+      if (url.startsWith("http://127.0.0.1:2019/load")) return Promise.resolve("\n200");
+      if (url.startsWith("http://127.0.0.1:2020/config/") && newAnswers) return Promise.resolve("{}");
+      return Promise.reject(new Error(`unreachable: ${argv.join(" ")}`));
+    });
+  }
+
+  it("loads the config over the old address and follows it to the new one", async () => {
+    host.files.set(MAIN, "{\n\tadmin localhost:2020\n}\n");
+    caddyAt(true);
+    await pingCaddyApi();
+    const switched = vi.fn();
+    onAdminSwitched(switched);
+    expect(await reloadCaddy()).toEqual({ adminMovedTo: expect.objectContaining({ transport: "tcp", tcp: "http://127.0.0.1:2020" }) });
+    expect(host.commands.some(c => c.startsWith("systemctl reload"))).toBe(false);
+    expect(switched).toHaveBeenCalledWith("http://127.0.0.1:2020", "/run/caddy/admin.socket");
+  });
+
+  it("puts the main Caddyfile and conf.d back when the new address stays silent", async () => {
+    host.files.set(MAIN, "{\n\tadmin localhost:2019\n}\n");
+    host.files.set(CONF, "old sites\n");
+    caddyAt(false);
+    await pingCaddyApi();
+    await keepAdminBackup();
+    host.files.set(MAIN, "{\n\tadmin localhost:2020\n}\n");
+    host.files.set(CONF, "new sites\n");
+    vi.useFakeTimers();
+    const result = reloadCaddy().catch(e => e);
+    await vi.advanceTimersByTimeAsync(10_000);
+    const err = await result;
+    expect(err).toBeInstanceOf(AdminSwitchError);
+    expect(err).toMatchObject({ restored: true });
+    expect(host.files.get(MAIN)).toBe("{\n\tadmin localhost:2019\n}\n");
+    expect(host.files.get(CONF)).toBe("old sites\n");
+  });
+
+  it("is a plain reload when the Caddyfile names no admin address and no save took one out", async () => {
+    host.files.set(MAIN, "example.com {\n}\n");
+    caddyAt(false);
+    await pingCaddyApi();
+    host.onRun(["systemctl", "reload", "caddy"], "");
+    mockSpawn.mockImplementation((argv: string[]) => argv[0] === "systemctl" ? Promise.resolve("") : Promise.reject(new Error("no")));
+    expect(await reloadCaddy()).toEqual({});
   });
 });

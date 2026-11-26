@@ -24,7 +24,8 @@
     "unit_kb": "KB",
     "unit_mb": "MB",
     "unit_gb": "GB",
-    "example_value": "mis. {{value}}"
+    "example_value": "mis. {{value}}",
+    "more_about": "Tentang {{topic}}"
   },
   "app": {
     "title": "Caddy",
@@ -95,8 +96,8 @@
     "delete_confirm_title": "Hapus proxy :{{port}}?",
     "delete_confirm_body": "Reverse proxy untuk port {{port}} → {{target}} akan dihapus.",
     "delete_confirm_button": "Hapus",
-    "api_error_add_title": "Proxy dibuat di disk — Caddy menolak penerapan langsung",
-    "api_error_edit_title": "Label disimpan — Caddy menolak pembaruan konfigurasi (perubahan lain tidak diterapkan)",
+    "api_error_add_title": "Tersimpan, tetapi Caddy menolaknya",
+    "api_error_edit_title": "Hanya label yang tersimpan",
     "caddyfile_error_title": "Validasi Caddyfile gagal — perubahan tidak disimpan",
     "view_logs": "Lihat log",
     "indicator_browse": "daftar direktori",
@@ -192,7 +193,21 @@
     "field_templates_help": "Mengaktifkan mesin templat Caddy untuk berkas yang disajikan, sehingga dapat memakai include, .Req dan aksi templat lainnya.",
     "field_templates_mime": "Tipe MIME",
     "field_templates_root": "Direktori untuk include",
-    "field_templates_root_help": "Tempat include dan aksi berkas lain mencari berkas. Kosong berarti root situs."
+    "field_templates_root_help": "Tempat include dan aksi berkas lain mencari berkas. Kosong berarti root situs.",
+    "field_browse_sort": "Urutan daftar",
+    "field_browse_order": "Arah",
+    "browse_sort_default": "Bawaan Caddy (nama)",
+    "browse_sort_name": "Nama",
+    "browse_sort_namedirfirst": "Nama, folder dahulu",
+    "browse_sort_size": "Ukuran",
+    "browse_sort_time": "Terakhir diubah",
+    "browse_order_asc": "Naik",
+    "browse_order_desc": "Turun",
+    "field_browse_file_limit": "Entri maksimum per daftar",
+    "browse_file_limit_none": "Tanpa batas",
+    "browse_file_limit_invalid": "Masukkan bilangan bulat 1 atau lebih.",
+    "field_browse_reveal_symlinks": "Tampilkan tujuan symlink",
+    "field_browse_reveal_symlinks_help": "Daftar menampilkan tujuan setiap symlink. Ini dapat mengungkap jalur di luar root situs."
   },
   "edit_static": {
     "title": "Edit server statis — :{{port}}",
@@ -571,7 +586,8 @@
     "backup_warning_title": "Cadangkan konfigurasi Anda terlebih dahulu",
     "backup_warning_body": "Migrasi hanya mencadangkan Caddyfile itu sendiri. Buat cadangan konfigurasi lengkap agar Anda dapat memulihkan semuanya jika terjadi masalah.",
     "banner_details_toggle": "Detail",
-    "banner_details": "Blok situs dipindahkan tanpa perubahan dari /etc/caddy/Caddyfile ke /etc/caddy/conf.d/cockpit-caddy.conf, dan Caddyfile mendapat baris import untuk conf.d. Caddyfile asli dicadangkan ke /etc/caddy/Caddyfile.bak. Sampai saat itu, perubahan plugin dapat berbenturan dengan situs di Caddyfile."
+    "banner_details": "Blok situs dipindahkan tanpa perubahan dari /etc/caddy/Caddyfile ke /etc/caddy/conf.d/cockpit-caddy.conf, dan Caddyfile mendapat baris import untuk conf.d. Caddyfile asli dicadangkan ke /etc/caddy/Caddyfile.bak. Sampai saat itu, perubahan plugin dapat berbenturan dengan situs di Caddyfile.",
+    "gate_continue_title": "Mungkin ada situs ganda"
   },
   "backup": {
     "button": "Cadangkan",
@@ -688,7 +704,7 @@
   },
   "global_opts": {
     "title": "Opsi global Caddy",
-    "caddyfile_note": "Pengaturan ini ditulis ke blok opsi global di /etc/caddy/Caddyfile. Caddy dimuat ulang otomatis saat disimpan.",
+    "caddyfile_note": "Pengaturan ini ada di blok opsi global /etc/caddy/Caddyfile. Simpan menulis dan memeriksanya; Muat ulang menerapkannya.",
     "unmanaged_hint": "Tidak ada opsi global eksplisit — Caddy memakai bawaan HTTPS otomatisnya (termasuk Let's Encrypt jika proxy memiliki nama host publik). Kolom di bawah kosong karena memang tidak ada yang perlu dikonfigurasi, bukan karena ada yang rusak.",
     "http_port": "Port HTTP",
     "https_port": "Port HTTPS",
@@ -808,10 +824,8 @@
     "default_bind_help": "Alamat dipisahkan spasi tempat situs tanpa opsi bind mendengarkan.",
     "ocsp_stapling_off": "Matikan OCSP stapling",
     "admin_title": "Endpoint admin",
-    "admin_off": "Matikan endpoint admin",
-    "admin_off_help": "Plugin membutuhkan API admin untuk membaca dan mengubah konfigurasi yang berjalan.",
     "admin_address": "Alamat admin",
-    "admin_address_help": "Tempat API admin Caddy mendengarkan, ditulis seperti di Caddyfile. Plugin tersambung ke alamat pada pengaturannya sendiri, jadi ubah keduanya bersamaan.",
+    "admin_address_help": "Tempat API admin Caddy mendengarkan, seperti di Caddyfile, mis. localhost:2019 atau unix//run/caddy/admin.socket. Saat muat ulang berikutnya, plugin menunggu hingga 10 detik sampai alamat baru menjawab lalu memakainya; tanpa jawaban, Caddyfile sebelumnya dipulihkan.",
     "admin_origins": "Origin yang diizinkan",
     "admin_origins_help": "Host dipisahkan spasi yang boleh memanggil API admin dari browser.",
     "admin_enforce_origin": "Paksakan origin",
@@ -822,7 +836,21 @@
     "tab_tls": "TLS & ACME",
     "tab_logging": "Log & metrik",
     "tab_proxy": "Header proxy & protokol",
-    "tabs_aria": "Bagian pengaturan"
+    "tabs_aria": "Bagian pengaturan",
+    "issuer_custom": "Penerbit lain…",
+    "issuer_custom_name": "Penerbit dan argumen",
+    "issuer_custom_name_help": "Yang mengikuti cert_issuer: modul penerbit, lalu argumennya, mis. acme https://ca.example/directory.",
+    "issuer_custom_body": "Opsi penerbit",
+    "issuer_custom_body_help": "Opsional: baris di dalam blok cert_issuer, satu per baris, seperti di Caddyfile.",
+    "issuer_custom_required": "Masukkan modul penerbit, mis. acme atau zerossl.",
+    "issuer_custom_invalid": "Mulai dengan nama modul, lalu argumen dipisahkan spasi, tanpa kurung kurawal.",
+    "issuer_body_braces": "Setiap { perlu } pasangannya.",
+    "admin_read_only": "Caddy di sini bukan layanan lokal, jadi plugin tidak mengelola Caddyfile-nya. Ubah endpoint admin di tempat Caddy itu dikonfigurasi.",
+    "admin_off_kept": "Caddyfile mematikan endpoint admin. Plugin membiarkan baris itu apa adanya; ubah di editor Caddyfile.",
+    "admin_switched": "API admin kini menjawab di {{address}}",
+    "admin_switch_failed": "Endpoint admin tidak pindah ke {{address}} ({{reason}}). Caddyfile sebelumnya sudah dipulihkan.",
+    "admin_switch_unrestored": "Endpoint admin tidak pindah ke {{address}} ({{reason}}), dan memulihkan Caddyfile sebelumnya gagal. Periksa Caddyfile lalu mulai ulang Caddy.",
+    "admin_no_answer": "tidak ada jawaban dalam 10 detik"
   },
   "ca": {
     "title": "Otoritas sertifikat internal",
@@ -1235,21 +1263,34 @@
     "move_up": "Pindah ke atas",
     "move_down": "Pindah ke bawah",
     "remove": "Hapus",
-    "remove_confirm": "Hapus blok ini dan {{count}} blok di dalamnya?",
     "remove_yes": "Hapus",
     "remove_no": "Simpan",
     "add_kind": "Jenis",
     "add_inside": "Tambah di dalam blok yang dipilih",
     "add_top": "Tambah di tingkat atas",
-    "add_matcher": "Matcher blok baru"
+    "add_matcher": "Matcher blok baru",
+    "remove_confirm_one": "Hapus blok ini beserta {{count}} blok di dalamnya?",
+    "remove_confirm_other": "Hapus blok ini beserta {{count}} blok di dalamnya?",
+    "handle_path_invalid": "handle_path memerlukan satu path yang diawali /, seperti /app/*.",
+    "fix_first": "Perbaiki atau buang dulu perubahan ini: perubahan ini tidak bisa diterapkan apa adanya.",
+    "move_hint": "Blok dapat dipindahkan di dalam route, dan di antara handle dengan matcher bernama, yang urutan tulisnya dipertahankan Caddy. Blok lain diurutkan Caddy sendiri, menurut seberapa spesifik path-nya.",
+    "changed_meanwhile": "Blok situs telah berubah sejak tab ini membacanya. Tutup dialog lalu buka lagi untuk menyunting teks terkini.",
+    "form_locked": "Situs ini memiliki blok bersarang, jadi formulir hanya menyimpan alamat, bind, impor, dan TLS. Sunting sisanya di tab Pohon.",
+    "remove_confirm_zero": "Hapus blok ini beserta {{count}} blok di dalamnya?",
+    "remove_confirm_two": "Hapus blok ini beserta {{count}} blok di dalamnya?",
+    "remove_confirm_few": "Hapus blok ini beserta {{count}} blok di dalamnya?",
+    "remove_confirm_many": "Hapus blok ini beserta {{count}} blok di dalamnya?",
+    "remove_confirm": "Hapus blok ini beserta {{count}} blok di dalamnya?",
+    "definition_help": "Yang dicocokkan {{name}}, seperti didefinisikan di situs ini. Perubahan di sini menulis ulang definisi itu, jadi berlaku untuk setiap blok yang memakai {{name}}.",
+    "definition_empty": "Matcher butuh setidaknya satu syarat, dan regexp header butuh nama header-nya."
   },
   "encode": {
     "heading": "Kompresi",
     "section_title": "Pengaturan kompresi (opsional)",
     "help": "Dipakai saat kompresi aktif di Umum. Tanpa pilihan, Caddy mengompres dengan gzip dan zstd.",
     "algorithms": "Algoritma dan urutan",
-    "algorithms_default": "gzip, zstd (bawaan)",
-    "algorithms_zstd_gzip": "zstd, lalu gzip",
+    "algorithms_default": "zstd, gzip (bawaan)",
+    "algorithms_gzip_zstd": "gzip, lalu zstd",
     "algorithms_gzip": "hanya gzip",
     "algorithms_zstd": "hanya zstd",
     "minimum_length": "Ukuran minimum",
@@ -1284,13 +1325,13 @@
   },
   "bind": {
     "label": "Alamat bind",
-    "help": "Alamat yang didengarkan situs ini, dipisahkan spasi, misalnya 127.0.0.1 ::1. Kosong mendengarkan di semua alamat. Host yang berupa satu alamat IP sudah terikat padanya.",
+    "help": "Alamat yang didengarkan situs ini, dipisahkan spasi, misalnya 127.0.0.1 ::1. Kosong mendengarkan di semua alamat, meski host berupa alamat IP: host hanya mencocokkan permintaan.",
     "invalid": "Masukkan alamat IP atau nama host, tanpa port."
   },
   "modules": {
     "title": "Modul Caddy",
     "loading": "Membaca modul…",
-    "unknown": "Modul Caddy ini tidak dapat dibaca (apakah perintah caddy tersedia?).",
+    "unknown": "Modul Caddy ini tidak dapat dibaca: perintah caddy maupun Admin API tidak menjawab.",
     "help": "Apa yang bisa dilakukan Caddy terpasang di luar build standar. Fitur yang membutuhkan modul yang hilang gagal saat Caddy memuat konfigurasi, jadi periksa di sini dulu.",
     "cap_dns": "Penyedia tantangan DNS",
     "cap_layer4": "Layer 4 (proksi TCP dan UDP)",
@@ -1303,6 +1344,8 @@
     "all": "Semua modul ({{count}})",
     "filter": "Saring modul",
     "no_match": "Tidak ada modul yang cocok.",
-    "non_standard": "Modul yang bukan bagian dari Caddy sendiri: {{count}}"
+    "non_standard": "Modul yang bukan bagian dari Caddy sendiri: {{count}}",
+    "not_known": "Tidak diketahui",
+    "probed": "Caddy ini hanya dapat dijangkau melalui Admin API, yang tidak memiliki daftar modul. Setiap fitur diuji dengan mengadaptasi konfigurasi kecil; hanya penyedia DNS umum yang diuji."
   }
 }

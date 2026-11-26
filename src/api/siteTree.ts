@@ -217,9 +217,13 @@ export interface NodeEdit {
   handlers?: Record<number, string>;
 }
 
-/** What is wrong with an edit, or undefined: a matcher or directive must stay on one line without braces. */
-export function validateNodeEdit(edit: NodeEdit): string | undefined {
+/**
+ * What is wrong with an edit, or undefined: a matcher or directive must stay on one line without
+ * braces, and a handle_path takes one path, which Caddy wants to start with `/` (no @name, not empty).
+ */
+export function validateNodeEdit(edit: NodeEdit, kind?: TreeNode["kind"]): string | undefined {
   if (edit.matcher !== undefined && /[\n{}]/.test(edit.matcher)) return "matcher";
+  if (kind === "handle_path" && edit.matcher !== undefined && !/^\/\S*$/.test(edit.matcher.trim())) return "handle_path";
   for (const text of Object.values(edit.handlers ?? {})) {
     if (!text.trim() || /\n/.test(text) || braceDelta(text) !== 0) return "handler";
   }
@@ -242,7 +246,8 @@ function replaceNode(items: TreeItem[], path: NodePath, change: (n: TreeNode) =>
  * changed differ; every other line, comment and block, opaque ones included, stays as it was.
  */
 export function editNode(tree: SiteTree, path: NodePath, edit: NodeEdit): SiteTree {
-  if (validateNodeEdit(edit) || !nodeAt(tree, path)) return tree;
+  const target = nodeAt(tree, path);
+  if (!target || validateNodeEdit(edit, target.kind)) return tree;
   return {
     ...tree,
     items: replaceNode(tree.items, path, node => {
@@ -283,7 +288,7 @@ function replaceItems(tree: SiteTree, parent: NodePath, change: (items: TreeItem
 
 /** A new, empty node of the given kind at the end of `parent` (the site when it is empty); its path comes back with the tree. */
 export function addNode(tree: SiteTree, parent: NodePath, spec: { kind: TreeKind; matcher: string }): { tree: SiteTree; path: NodePath } | undefined {
-  if (validateNodeEdit({ matcher: spec.matcher })) return undefined;
+  if (validateNodeEdit({ matcher: spec.matcher }, spec.kind)) return undefined;
   const parentNode = parent.length ? nodeAt(tree, parent) : undefined;
   if (parent.length && (!parentNode || parentNode.kind === "opaque")) return undefined;
   const baseIndent = (parentNode ? parentNode.header : tree.header).match(/^\s*/)![0];
@@ -316,6 +321,31 @@ export function removeNode(tree: SiteTree, path: NodePath): SiteTree {
   });
 }
 
+/** The directive a node is, and how Caddy's adapter sorts it among blocks of the same directive. */
+function sortClass(n: TreeNode): { keyword: string; by: "path" | "named" | "none" } {
+  const [keyword, matcher = ""] = n.header.trim().replace(/\{\s*(#.*)?$/, "").trim().split(/\s+/);
+  const by = keyword === "handle_path" || matcher.startsWith("/") ? "path" : matcher.startsWith("@") ? "named" : "none";
+  return { keyword, by };
+}
+
+/**
+ * True when moving a node one place (`-1` up, `1` down) changes what Caddy does (#362). Inside a
+ * `route` blocks run as written. Elsewhere Caddy's adapter sorts blocks by directive, and blocks
+ * of one directive by how specific their path is; two with named matchers (or none) keep their
+ * written order, and the first that matches wins, so only swapping such a pair matters.
+ */
+export function orderMatters(tree: SiteTree, path: NodePath, direction: -1 | 1): boolean {
+  const parentPath = path.slice(0, -1);
+  const parent = parentPath.length ? nodeAt(tree, parentPath) : undefined;
+  const siblings = childNodes(parent ? parent.items : tree.items);
+  const node = siblings[path[path.length - 1]];
+  const other = siblings[path[path.length - 1] + direction];
+  if (!node || !other) return false;
+  if (parent?.kind === "route") return true;
+  const [a, b] = [sortClass(node), sortClass(other)];
+  return a.keyword === b.keyword && a.by === b.by && a.by !== "path";
+}
+
 /**
  * Moves a node one place up (`-1`) or down (`1`) among its sibling nodes by swapping the two.
  * Lines between them stay where they are. Nothing happens at either end.
@@ -337,9 +367,10 @@ export function moveNode(tree: SiteTree, path: NodePath, direction: -1 | 1): { t
 }
 
 /**
- * The blocks of a site with route or nested handle blocks that the tree cannot edit (#351): blocks of
- * other directives inside its route and handle blocks, by their opening line. Empty when every nested
- * block can be edited in the Tree tab.
+ * The blocks of a site with route or nested handle blocks that neither the tree nor the form can edit
+ * (#351): blocks of other directives, by their opening line, inside its route and handle blocks and at
+ * the top of the site too (a `reverse_proxy { … }` there). The form keeps `tls` for such a site, so a
+ * top-level tls block is not one. Empty when every block can be edited.
  */
 export function rawOnlyBlocks(siteText: string): string[] {
   const tree = parseSiteTree(siteText);
@@ -347,7 +378,7 @@ export function rawOnlyBlocks(siteText: string): string[] {
   const out: string[] = [];
   const walk = (items: TreeItem[], inside: boolean) => {
     for (const n of childNodes(items)) {
-      if (n.kind === "opaque") { if (inside) out.push(n.header.trim().replace(/\s*\{\s*$/, " {")); }
+      if (n.kind === "opaque") { if (inside || !/^tls\b/.test(n.header.trim())) out.push(n.header.trim().replace(/\s*\{\s*$/, " {")); }
       else walk(n.items, true);
     }
   };

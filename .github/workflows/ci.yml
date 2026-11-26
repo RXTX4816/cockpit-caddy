@@ -44,3 +44,29 @@ jobs:
         run: npx vitest run src/api/caddyAdapt.test.ts
         env:
           CADDY_ADAPT_REQUIRED: "1"
+
+      # The per-site DNS tests need a Caddy with a dns.providers module, which the release
+      # tarball lacks. caddyserver.com builds one on request; cache it per version so the
+      # (slow) build server is hit once.
+      - name: Cache Caddy with cloudflare
+        id: caddy-dns-cache
+        uses: actions/cache@v6
+        with:
+          path: ${{ runner.temp }}/caddy-dns
+          key: caddy-dns-cloudflare-${{ env.CADDY_VERSION }}
+
+      - name: Download Caddy with cloudflare
+        if: steps.caddy-dns-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p "$RUNNER_TEMP/caddy-dns"
+          curl -fsSL --retry 3 -o "$RUNNER_TEMP/caddy-dns/caddy" \
+            "https://caddyserver.com/api/download?os=linux&arch=amd64&p=github.com/caddy-dns/cloudflare&version=v${CADDY_VERSION}"
+          chmod +x "$RUNNER_TEMP/caddy-dns/caddy"
+
+      - name: caddy adapt with a DNS provider
+        run: |
+          export PATH="$RUNNER_TEMP/caddy-dns:$PATH"
+          caddy list-modules | grep -q '^dns.providers.cloudflare$'
+          npx vitest run src/api/siteDns.test.ts
+        env:
+          CADDY_ADAPT_REQUIRED_DNS: "1"

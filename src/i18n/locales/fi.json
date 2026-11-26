@@ -24,7 +24,8 @@
     "unit_kb": "KB",
     "unit_mb": "MB",
     "unit_gb": "GB",
-    "example_value": "esim. {{value}}"
+    "example_value": "esim. {{value}}",
+    "more_about": "Tietoa: {{topic}}"
   },
   "app": {
     "title": "Caddy",
@@ -95,8 +96,8 @@
     "delete_confirm_title": "Poistetaanko proxy :{{port}}?",
     "delete_confirm_body": "Portin {{port}} → {{target}} reverse proxy poistetaan.",
     "delete_confirm_button": "Poista",
-    "api_error_add_title": "Proxy luotiin levylle — Caddy hylkäsi muutoksen käyttöönoton",
-    "api_error_edit_title": "Nimiö tallennettiin — Caddy hylkäsi asetusten päivityksen (muita muutoksia ei otettu käyttöön)",
+    "api_error_add_title": "Tallennettu, mutta Caddy hylkäsi sen",
+    "api_error_edit_title": "Vain nimi tallennettiin",
     "caddyfile_error_title": "Caddyfilen validointi epäonnistui — muutoksia ei tallennettu",
     "view_logs": "Näytä lokit",
     "indicator_browse": "hakemistolistaus",
@@ -192,7 +193,21 @@
     "field_templates_help": "Ottaa Caddyn mallimoottorin käyttöön tarjoiltaville tiedostoille, jotta ne voivat käyttää include, .Req ja muita mallitoimintoja.",
     "field_templates_mime": "MIME-tyypit",
     "field_templates_root": "Include-hakemisto",
-    "field_templates_root_help": "Mistä include ja muut tiedostotoiminnot etsivät tiedostoja. Tyhjä tarkoittaa sivuston juurta."
+    "field_templates_root_help": "Mistä include ja muut tiedostotoiminnot etsivät tiedostoja. Tyhjä tarkoittaa sivuston juurta.",
+    "field_browse_sort": "Listauksen järjestys",
+    "field_browse_order": "Suunta",
+    "browse_sort_default": "Caddyn oletus (nimi)",
+    "browse_sort_name": "Nimi",
+    "browse_sort_namedirfirst": "Nimi, kansiot ensin",
+    "browse_sort_size": "Koko",
+    "browse_sort_time": "Viimeksi muokattu",
+    "browse_order_asc": "Nouseva",
+    "browse_order_desc": "Laskeva",
+    "field_browse_file_limit": "Enintään merkintöjä listauksessa",
+    "browse_file_limit_none": "Ei rajaa",
+    "browse_file_limit_invalid": "Anna kokonaisluku, joka on vähintään 1.",
+    "field_browse_reveal_symlinks": "Näytä symbolisten linkkien kohteet",
+    "field_browse_reveal_symlinks_help": "Listaus näyttää, mihin kukin symbolinen linkki osoittaa. Se voi paljastaa polkuja sivuston juuren ulkopuolelta."
   },
   "edit_static": {
     "title": "Muokkaa staattista palvelinta — :{{port}}",
@@ -571,7 +586,8 @@
     "backup_warning_title": "Varmuuskopioi asetukset ensin",
     "backup_warning_body": "Siirto varmuuskopioi vain itse Caddyfilen. Tee asetuksista täydellinen varmuuskopio, jotta voit palauttaa kaiken, jos jokin menee pieleen.",
     "banner_details_toggle": "Tiedot",
-    "banner_details": "Sivustolohkot siirretään muuttamattomina tiedostosta /etc/caddy/Caddyfile tiedostoon /etc/caddy/conf.d/cockpit-caddy.conf, ja Caddyfileen lisätään conf.d:n import-rivi. Alkuperäinen Caddyfile varmuuskopioidaan tiedostoon /etc/caddy/Caddyfile.bak. Siihen asti liitännäisen muutokset voivat törmätä Caddyfilen sivustoihin."
+    "banner_details": "Sivustolohkot siirretään muuttamattomina tiedostosta /etc/caddy/Caddyfile tiedostoon /etc/caddy/conf.d/cockpit-caddy.conf, ja Caddyfileen lisätään conf.d:n import-rivi. Alkuperäinen Caddyfile varmuuskopioidaan tiedostoon /etc/caddy/Caddyfile.bak. Siihen asti liitännäisen muutokset voivat törmätä Caddyfilen sivustoihin.",
+    "gate_continue_title": "Päällekkäisiä sivustoja mahdollisesti"
   },
   "backup": {
     "button": "Varmuuskopio",
@@ -688,7 +704,7 @@
   },
   "global_opts": {
     "title": "Caddyn yleiset asetukset",
-    "caddyfile_note": "Nämä asetukset kirjoitetaan tiedoston /etc/caddy/Caddyfile yleisten asetusten lohkoon. Caddy ladataan uudelleen automaattisesti tallennettaessa.",
+    "caddyfile_note": "Nämä asetukset ovat tiedoston /etc/caddy/Caddyfile yleisten asetusten lohkossa. Tallennus kirjoittaa ja tarkistaa ne; uudelleenlataus ottaa ne käyttöön.",
     "unmanaged_hint": "Nimenomaisia yleisiä asetuksia ei ole määritetty — Caddy käyttää automaattisen HTTPS:n oletuksiaan (mukaan lukien Let's Encrypt, kun proxylla on julkinen isäntänimi). Alla olevat kentät ovat tyhjiä, koska mitään ei tarvitse määrittää, eivät siksi, että jokin olisi rikki.",
     "http_port": "HTTP-portti",
     "https_port": "HTTPS-portti",
@@ -808,10 +824,8 @@
     "default_bind_help": "Välilyönnein erotetut osoitteet, joissa ilman bind-asetusta olevat sivustot kuuntelevat.",
     "ocsp_stapling_off": "Poista OCSP stapling käytöstä",
     "admin_title": "Hallintapääte",
-    "admin_off": "Poista hallintapääte käytöstä",
-    "admin_off_help": "Laajennus tarvitsee hallinta-API:n käynnissä olevan asetuksen lukemiseen ja muuttamiseen.",
     "admin_address": "Hallintaosoite",
-    "admin_address_help": "Missä Caddyn hallinta-API kuuntelee, kirjoitettuna kuten Caddyfilessä. Laajennus yhdistää omassa asetuksessaan olevaan osoitteeseen, joten muuta molemmat yhdessä.",
+    "admin_address_help": "Missä Caddyn hallinta-API kuuntelee, kuten Caddyfilessa, esim. localhost:2019 tai unix//run/caddy/admin.socket. Seuraavassa uudelleenlatauksessa laajennus odottaa enintään 10 sekuntia, että uusi osoite vastaa, ja käyttää sitä sitten; ilman vastausta se palauttaa edellisen Caddyfilen.",
     "admin_origins": "Sallitut originit",
     "admin_origins_help": "Välilyönnein erotetut isännät, jotka saavat kutsua hallinta-API:a selaimesta.",
     "admin_enforce_origin": "Pakota originit",
@@ -822,7 +836,21 @@
     "tab_tls": "TLS ja ACME",
     "tab_logging": "Lokit ja mittarit",
     "tab_proxy": "Välityspalvelimen otsakkeet ja protokollat",
-    "tabs_aria": "Asetusten osiot"
+    "tabs_aria": "Asetusten osiot",
+    "issuer_custom": "Muu myöntäjä…",
+    "issuer_custom_name": "Myöntäjä ja argumentit",
+    "issuer_custom_name_help": "Mitä cert_issuerin jälkeen tulee: myöntäjämoduuli ja sen argumentit, esim. acme https://ca.example/directory.",
+    "issuer_custom_body": "Myöntäjän asetukset",
+    "issuer_custom_body_help": "Valinnainen: cert_issuer-lohkon rivit, yksi riviä kohden, kuten Caddyfilessa.",
+    "issuer_custom_required": "Anna myöntäjämoduuli, esim. acme tai zerossl.",
+    "issuer_custom_invalid": "Aloita moduulin nimellä ja sitten välilyönnein erotetut argumentit, ilman aaltosulkeita.",
+    "issuer_body_braces": "Jokainen { tarvitsee vastaavan }.",
+    "admin_read_only": "Caddy ei ole tässä paikallinen palvelu, joten laajennus ei hallitse sen Caddyfileä. Muuta hallintapistettä siellä, missä tämä Caddy määritetään.",
+    "admin_off_kept": "Caddyfile poistaa hallintapisteen käytöstä. Laajennus jättää rivin ennalleen; muuta sitä Caddyfile-editorissa.",
+    "admin_switched": "Hallinta-API vastaa nyt osoitteessa {{address}}",
+    "admin_switch_failed": "Hallintapiste ei siirtynyt osoitteeseen {{address}} ({{reason}}). Edellinen Caddyfile on palautettu.",
+    "admin_switch_unrestored": "Hallintapiste ei siirtynyt osoitteeseen {{address}} ({{reason}}), eikä edellisen Caddyfilen palautus onnistunut. Tarkista Caddyfile ja käynnistä Caddy uudelleen.",
+    "admin_no_answer": "ei vastausta 10 sekunnissa"
   },
   "ca": {
     "title": "Sisäinen varmentaja",
@@ -1235,21 +1263,34 @@
     "move_up": "Siirrä ylös",
     "move_down": "Siirrä alas",
     "remove": "Poista",
-    "remove_confirm": "Poistetaanko tämä lohko ja sen sisällä olevat {{count}} lohkoa?",
     "remove_yes": "Poista",
     "remove_no": "Säilytä",
     "add_kind": "Laji",
     "add_inside": "Lisää valitun lohkon sisään",
     "add_top": "Lisää ylimmälle tasolle",
-    "add_matcher": "Uuden lohkon täsmääjä"
+    "add_matcher": "Uuden lohkon täsmääjä",
+    "remove_confirm_one": "Poistetaanko tämä lohko ja sen sisällä olevat {{count}} lohkoa?",
+    "remove_confirm_other": "Poistetaanko tämä lohko ja sen sisällä olevat {{count}} lohkoa?",
+    "handle_path_invalid": "handle_path tarvitsee yhden polun, joka alkaa merkillä /, kuten /app/*.",
+    "fix_first": "Korjaa tai hylkää tämä muutos ensin: sitä ei voi ottaa käyttöön tällaisenaan.",
+    "move_hint": "Lohkoja voi siirtää route-lohkon sisällä sekä nimettyjä matchereita käyttävien handle-lohkojen kesken, joiden kirjoitetun järjestyksen Caddy säilyttää. Muut lohkot Caddy järjestää itse polun tarkkuuden mukaan.",
+    "changed_meanwhile": "Sivuston lohko on muuttunut sen jälkeen, kun tämä välilehti luki sen. Sulje ikkuna ja avaa se uudelleen muokataksesi nykyistä tekstiä.",
+    "form_locked": "Tällä sivustolla on sisäkkäisiä lohkoja, joten lomake tallentaa vain osoitteen, bindin, tuonnit ja TLS:n. Muokkaa loput Puu-välilehdellä.",
+    "remove_confirm_zero": "Poistetaanko tämä lohko ja sen sisällä olevat {{count}} lohkoa?",
+    "remove_confirm_two": "Poistetaanko tämä lohko ja sen sisällä olevat {{count}} lohkoa?",
+    "remove_confirm_few": "Poistetaanko tämä lohko ja sen sisällä olevat {{count}} lohkoa?",
+    "remove_confirm_many": "Poistetaanko tämä lohko ja sen sisällä olevat {{count}} lohkoa?",
+    "remove_confirm": "Poistetaanko tämä lohko ja sen sisällä olevat {{count}} lohkoa?",
+    "definition_help": "Mitä {{name}} vastaa, kuten tässä sivustossa määritelty. Muutokset kirjoittavat määritelmän uudelleen, joten ne koskevat jokaista lohkoa, joka käyttää {{name}}.",
+    "definition_empty": "Matcher tarvitsee vähintään yhden ehdon, ja otsakkeen säännöllinen lauseke tarvitsee otsakkeensa."
   },
   "encode": {
     "heading": "Pakkaus",
     "section_title": "Pakkausasetukset (valinnainen)",
     "help": "Käytössä, kun pakkaus on päällä Yleiset-välilehdellä. Ilman valintoja Caddy pakkaa gzipillä ja zstd:llä.",
     "algorithms": "Algoritmit ja järjestys",
-    "algorithms_default": "gzip, zstd (oletus)",
-    "algorithms_zstd_gzip": "zstd, sitten gzip",
+    "algorithms_default": "zstd, gzip (oletus)",
+    "algorithms_gzip_zstd": "gzip, sitten zstd",
     "algorithms_gzip": "vain gzip",
     "algorithms_zstd": "vain zstd",
     "minimum_length": "Vähimmäiskoko",
@@ -1284,13 +1325,13 @@
   },
   "bind": {
     "label": "Bind-osoitteet",
-    "help": "Osoitteet, joissa tämä sivusto kuuntelee, välilyönnein erotettuina, esimerkiksi 127.0.0.1 ::1. Tyhjä kuuntelee kaikissa osoitteissa. Isäntä, joka on yksi IP-osoite, sitoutuu jo siihen.",
+    "help": "Osoitteet, joissa tämä sivusto kuuntelee, välilyönnein erotettuina, esimerkiksi 127.0.0.1 ::1. Tyhjä kuuntelee kaikissa osoitteissa, vaikka isäntä olisi IP-osoite: isäntä vain tunnistaa pyynnöt.",
     "invalid": "Anna IP-osoitteita tai isäntänimiä ilman porttia."
   },
   "modules": {
     "title": "Caddyn moduulit",
     "loading": "Luetaan moduuleja…",
-    "unknown": "Tämän Caddyn moduuleja ei voitu lukea (onko caddy-komento käytettävissä?).",
+    "unknown": "Tämän Caddyn moduuleja ei voitu lukea: caddy-komento eikä Admin API vastannut.",
     "help": "Mitä asennettu Caddy osaa vakiorakennetta enemmän. Ominaisuus, joka tarvitsee puuttuvan moduulin, epäonnistuu kun Caddy lataa asetukset, joten tarkista ensin täältä.",
     "cap_dns": "DNS-haasteen tarjoajat",
     "cap_layer4": "Taso 4 (TCP- ja UDP-välitys)",
@@ -1303,6 +1344,8 @@
     "all": "Kaikki moduulit ({{count}})",
     "filter": "Suodata moduuleja",
     "no_match": "Mikään moduuli ei täsmää.",
-    "non_standard": "Moduulit, jotka eivät kuulu Caddyyn itseensä: {{count}}"
+    "non_standard": "Moduulit, jotka eivät kuulu Caddyyn itseensä: {{count}}",
+    "not_known": "Ei tiedossa",
+    "probed": "Tähän Caddyyn pääsee vain Admin API:n kautta, jossa ei ole moduuliluetteloa. Jokainen ominaisuus testattiin muuntamalla pieni asetus; vain yleiset DNS-palveluntarjoajat testataan."
   }
 }

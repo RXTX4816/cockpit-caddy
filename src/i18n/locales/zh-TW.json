@@ -24,7 +24,8 @@
     "unit_kb": "KB",
     "unit_mb": "MB",
     "unit_gb": "GB",
-    "example_value": "例如 {{value}}"
+    "example_value": "例如 {{value}}",
+    "more_about": "關於{{topic}}"
   },
   "app": {
     "title": "Caddy",
@@ -95,8 +96,8 @@
     "delete_confirm_title": "要刪除代理 :{{port}} 嗎？",
     "delete_confirm_body": "將移除連接埠 {{port}} → {{target}} 的反向代理。",
     "delete_confirm_button": "刪除",
-    "api_error_add_title": "代理已寫入磁碟——Caddy 拒絕即時推送",
-    "api_error_edit_title": "標籤已儲存——Caddy 拒絕設定更新（其他變更未套用）",
+    "api_error_add_title": "已儲存,但 Caddy 拒絕了",
+    "api_error_edit_title": "僅儲存了標籤",
     "caddyfile_error_title": "Caddyfile 驗證失敗——變更未儲存",
     "view_logs": "檢視記錄",
     "indicator_browse": "目錄瀏覽",
@@ -192,7 +193,21 @@
     "field_templates_help": "為所提供的檔案啟用 Caddy 的範本引擎,檔案即可使用 include、.Req 等範本操作。",
     "field_templates_mime": "MIME 類型",
     "field_templates_root": "include 目錄",
-    "field_templates_root_help": "include 等檔案操作尋找檔案的位置。留空表示網站根目錄。"
+    "field_templates_root_help": "include 等檔案操作尋找檔案的位置。留空表示網站根目錄。",
+    "field_browse_sort": "列表排序",
+    "field_browse_order": "方向",
+    "browse_sort_default": "Caddy 預設(名稱)",
+    "browse_sort_name": "名稱",
+    "browse_sort_namedirfirst": "名稱,資料夾優先",
+    "browse_sort_size": "大小",
+    "browse_sort_time": "最後修改",
+    "browse_order_asc": "遞增",
+    "browse_order_desc": "遞減",
+    "field_browse_file_limit": "每個列表最多項目數",
+    "browse_file_limit_none": "無限制",
+    "browse_file_limit_invalid": "請輸入大於或等於 1 的整數。",
+    "field_browse_reveal_symlinks": "顯示符號連結目標",
+    "field_browse_reveal_symlinks_help": "列表會顯示每個符號連結指向的位置,可能暴露網站根目錄之外的路徑。"
   },
   "edit_static": {
     "title": "編輯靜態伺服器 — :{{port}}",
@@ -571,7 +586,8 @@
     "backup_warning_title": "請先備份設定",
     "backup_warning_body": "移轉只會備份 Caddyfile 本身。請建立完整的設定備份，以便出問題時能還原所有內容。",
     "banner_details_toggle": "詳細資訊",
-    "banner_details": "站台區塊會原封不動地從 /etc/caddy/Caddyfile 移到 /etc/caddy/conf.d/cockpit-caddy.conf，Caddyfile 會加上一行匯入 conf.d 的 import。原始 Caddyfile 備份為 /etc/caddy/Caddyfile.bak。在此之前，外掛的變更可能與 Caddyfile 中的站台衝突。"
+    "banner_details": "站台區塊會原封不動地從 /etc/caddy/Caddyfile 移到 /etc/caddy/conf.d/cockpit-caddy.conf，Caddyfile 會加上一行匯入 conf.d 的 import。原始 Caddyfile 備份為 /etc/caddy/Caddyfile.bak。在此之前，外掛的變更可能與 Caddyfile 中的站台衝突。",
+    "gate_continue_title": "可能出現重複網站"
   },
   "backup": {
     "button": "備份",
@@ -688,7 +704,7 @@
   },
   "global_opts": {
     "title": "Caddy 全域選項",
-    "caddyfile_note": "這些設定會寫入 /etc/caddy/Caddyfile 的全域選項區塊。儲存時 Caddy 會自動重新載入。",
+    "caddyfile_note": "這些設定位於 /etc/caddy/Caddyfile 的全域選項區塊中。儲存會寫入並檢查它們;重新載入會套用它們。",
     "unmanaged_hint": "未設定明確的全域選項——Caddy 正在使用其自動 HTTPS 預設值（包括代理有公開主機名稱時的 Let's Encrypt）。下方欄位是空的，是因為不需要設定，而不是有東西壞了。",
     "http_port": "HTTP 連接埠",
     "https_port": "HTTPS 連接埠",
@@ -808,10 +824,8 @@
     "default_bind_help": "以空格分隔的位址,未設定 bind 選項的網站會在這些位址上監聽。",
     "ocsp_stapling_off": "關閉 OCSP stapling",
     "admin_title": "管理端點",
-    "admin_off": "關閉管理端點",
-    "admin_off_help": "外掛程式需要管理 API 來讀取及修改執行中的設定。",
     "admin_address": "管理位址",
-    "admin_address_help": "Caddy 管理 API 的監聽位置,寫法與 Caddyfile 相同。外掛程式連線的是自身設定中的位址,因此請同時修改兩處。",
+    "admin_address_help": "Caddy 管理 API 的監聽位置,寫法同 Caddyfile,例如 localhost:2019 或 unix//run/caddy/admin.socket。下次重新載入時,外掛最多等待 10 秒讓新位址回應,然後改用它;若無回應,則還原先前的 Caddyfile。",
     "admin_origins": "允許的來源",
     "admin_origins_help": "可從瀏覽器呼叫管理 API 的主機,以空格分隔。",
     "admin_enforce_origin": "強制檢查來源",
@@ -822,7 +836,21 @@
     "tab_tls": "TLS 與 ACME",
     "tab_logging": "日誌與指標",
     "tab_proxy": "代理標頭與協定",
-    "tabs_aria": "設定分區"
+    "tabs_aria": "設定分區",
+    "issuer_custom": "其他簽發者…",
+    "issuer_custom_name": "簽發者和參數",
+    "issuer_custom_name_help": "cert_issuer 後面的內容:簽發者模組及其參數,例如 acme https://ca.example/directory。",
+    "issuer_custom_body": "簽發者選項",
+    "issuer_custom_body_help": "選填:cert_issuer 區塊內的行,每行一條,與 Caddyfile 中相同。",
+    "issuer_custom_required": "請輸入簽發者模組,例如 acme 或 zerossl。",
+    "issuer_custom_invalid": "以模組名稱開頭,後接以空格分隔的參數,不要使用大括號。",
+    "issuer_body_braces": "每個 { 都需要對應的 }。",
+    "admin_read_only": "此處的 Caddy 不是本機服務,外掛不管理它的 Caddyfile。請在設定該 Caddy 的地方變更管理端點。",
+    "admin_off_kept": "Caddyfile 關閉了管理端點。外掛會原樣保留這一行;請在 Caddyfile 編輯器中修改。",
+    "admin_switched": "管理 API 現在在 {{address}} 回應",
+    "admin_switch_failed": "管理端點未能遷移到 {{address}}({{reason}})。已還原先前的 Caddyfile。",
+    "admin_switch_unrestored": "管理端點未能遷移到 {{address}}({{reason}}),也未能還原先前的 Caddyfile。請檢查 Caddyfile 並重新啟動 Caddy。",
+    "admin_no_answer": "10 秒內無回應"
   },
   "ca": {
     "title": "內部憑證授權單位",
@@ -1235,21 +1263,34 @@
     "move_up": "上移",
     "move_down": "下移",
     "remove": "移除",
-    "remove_confirm": "移除此區塊及其中的 {{count}} 個區塊?",
     "remove_yes": "移除",
     "remove_no": "保留",
     "add_kind": "類型",
     "add_inside": "加入所選區塊內",
     "add_top": "加入最上層",
-    "add_matcher": "新區塊的比對器"
+    "add_matcher": "新區塊的比對器",
+    "remove_confirm_one": "要移除此區塊及其中的 {{count}} 個區塊嗎？",
+    "remove_confirm_other": "要移除此區塊及其中的 {{count}} 個區塊嗎？",
+    "handle_path_invalid": "handle_path 需要一個以 / 開頭的路徑，例如 /app/*。",
+    "fix_first": "請先修正或捨棄此編輯：以目前的樣子無法套用。",
+    "move_hint": "可以在 route 內移動區塊,也可以在使用命名比對器的 handle 之間移動,Caddy 會保留它們的書寫順序。其他區塊由 Caddy 依路徑的具體程度自行排序。",
+    "changed_meanwhile": "自此分頁讀取後，網站的區塊已被變更。請關閉對話框後重新開啟，以編輯目前的文字。",
+    "form_locked": "此網站包含巢狀區塊，因此表單只儲存位址、bind、匯入和 TLS。其餘內容請在「樹」分頁中編輯。",
+    "remove_confirm_zero": "要移除此區塊及其中的 {{count}} 個區塊嗎？",
+    "remove_confirm_two": "要移除此區塊及其中的 {{count}} 個區塊嗎？",
+    "remove_confirm_few": "要移除此區塊及其中的 {{count}} 個區塊嗎？",
+    "remove_confirm_many": "要移除此區塊及其中的 {{count}} 個區塊嗎？",
+    "remove_confirm": "要移除此區塊及其中的 {{count}} 個區塊嗎？",
+    "definition_help": "{{name}} 在此網站中定義的比對條件。在這裡修改會重寫該定義,因此對所有使用 {{name}} 的區塊都生效。",
+    "definition_empty": "比對器至少需要一個條件,標頭正規表示式還需要指定標頭。"
   },
   "encode": {
     "heading": "壓縮",
     "section_title": "壓縮設定(選用)",
     "help": "在「一般」中開啟壓縮時生效。未選擇時,Caddy 會用 gzip 和 zstd 壓縮。",
     "algorithms": "演算法與順序",
-    "algorithms_default": "gzip、zstd(預設)",
-    "algorithms_zstd_gzip": "先 zstd,後 gzip",
+    "algorithms_default": "zstd、gzip(預設)",
+    "algorithms_gzip_zstd": "先 gzip,後 zstd",
     "algorithms_gzip": "僅 gzip",
     "algorithms_zstd": "僅 zstd",
     "minimum_length": "最小大小",
@@ -1284,13 +1325,13 @@
   },
   "bind": {
     "label": "綁定位址",
-    "help": "此網站監聽的位址,以空格分隔,例如 127.0.0.1 ::1。留空表示監聽所有位址。主機若是單一 IP 位址,則已經綁定到該位址。",
+    "help": "此網站監聽的位址,以空格分隔,例如 127.0.0.1 ::1。留空表示監聽所有位址,即使主機是 IP 位址也是如此:主機只用於比對請求。",
     "invalid": "請輸入 IP 位址或主機名稱,不含連接埠。"
   },
   "modules": {
     "title": "Caddy 模組",
     "loading": "正在讀取模組…",
-    "unknown": "無法讀取此 Caddy 的模組(caddy 指令可用嗎?)。",
+    "unknown": "無法讀取此 Caddy 的模組：caddy 指令和 Admin API 都沒有回應。",
     "help": "已安裝的 Caddy 在標準建置之外還能做什麼。需要缺少模組的功能會在 Caddy 載入設定時失敗,所以請先在這裡確認。",
     "cap_dns": "DNS 驗證提供者",
     "cap_layer4": "第 4 層(TCP 和 UDP 代理)",
@@ -1303,6 +1344,8 @@
     "all": "所有模組({{count}})",
     "filter": "篩選模組",
     "no_match": "沒有符合的模組。",
-    "non_standard": "不屬於 Caddy 本身的模組:{{count}}"
+    "non_standard": "不屬於 Caddy 本身的模組:{{count}}",
+    "not_known": "未知",
+    "probed": "此 Caddy 只能透過 Admin API 存取，而 Admin API 沒有模組清單。每項功能都透過轉換一個小設定來偵測；只偵測常見的 DNS 供應商。"
   }
 }

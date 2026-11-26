@@ -24,7 +24,8 @@
     "unit_kb": "KB",
     "unit_mb": "MB",
     "unit_gb": "GB",
-    "example_value": "مثال: {{value}}"
+    "example_value": "مثال: {{value}}",
+    "more_about": "حول {{topic}}"
   },
   "app": {
     "title": "Caddy",
@@ -95,8 +96,8 @@
     "delete_confirm_title": "حذف الوكيل :{{port}}؟",
     "delete_confirm_body": "ستتم إزالة الوكيل العكسي للمنفذ {{port}} → {{target}}.",
     "delete_confirm_button": "حذف",
-    "api_error_add_title": "أُنشئ الوكيل على القرص — رفض Caddy التطبيق المباشر",
-    "api_error_edit_title": "حُفظت التسمية — رفض Caddy تحديث الإعدادات (لم تُطبَّق التغييرات الأخرى)",
+    "api_error_add_title": "حُفظ، لكن Caddy رفضه",
+    "api_error_edit_title": "حُفظ الوسم فقط",
     "caddyfile_error_title": "فشل التحقق من Caddyfile — لم تُحفظ التغييرات",
     "view_logs": "عرض السجلات",
     "indicator_browse": "استعراض المجلدات",
@@ -192,7 +193,21 @@
     "field_templates_help": "يفعّل محرك قوالب Caddy للملفات المقدَّمة، فيمكنها استخدام include و.Req وبقية إجراءات القوالب.",
     "field_templates_mime": "أنواع MIME",
     "field_templates_root": "مجلد الملفات المضمَّنة",
-    "field_templates_root_help": "المكان الذي تبحث فيه include وبقية إجراءات الملفات عن الملفات. الفراغ يعني جذر الموقع."
+    "field_templates_root_help": "المكان الذي تبحث فيه include وبقية إجراءات الملفات عن الملفات. الفراغ يعني جذر الموقع.",
+    "field_browse_sort": "ترتيب القائمة",
+    "field_browse_order": "الاتجاه",
+    "browse_sort_default": "افتراضي Caddy (الاسم)",
+    "browse_sort_name": "الاسم",
+    "browse_sort_namedirfirst": "الاسم، المجلدات أولاً",
+    "browse_sort_size": "الحجم",
+    "browse_sort_time": "آخر تعديل",
+    "browse_order_asc": "تصاعدي",
+    "browse_order_desc": "تنازلي",
+    "field_browse_file_limit": "أقصى عدد من العناصر في القائمة",
+    "browse_file_limit_none": "بلا حد",
+    "browse_file_limit_invalid": "أدخل عددًا صحيحًا يساوي 1 أو أكثر.",
+    "field_browse_reveal_symlinks": "إظهار أهداف الروابط الرمزية",
+    "field_browse_reveal_symlinks_help": "تعرض القائمة وجهة كل رابط رمزي. قد يكشف ذلك مسارات خارج جذر الموقع."
   },
   "edit_static": {
     "title": "تعديل الخادم الثابت — :{{port}}",
@@ -571,7 +586,8 @@
     "backup_warning_title": "انسخ إعداداتك احتياطيًا أولًا",
     "backup_warning_body": "لا ينسخ الترحيل احتياطيًا إلا ملف Caddyfile نفسه. أنشئ نسخة احتياطية كاملة من الإعدادات لتتمكن من استعادة كل شيء إذا حدث خطأ.",
     "banner_details_toggle": "التفاصيل",
-    "banner_details": "تُنقل كتل المواقع دون تغيير من /etc/caddy/Caddyfile إلى /etc/caddy/conf.d/cockpit-caddy.conf، ويُضاف إلى Caddyfile سطر import لـ conf.d. تُحفظ نسخة احتياطية من Caddyfile الأصلي في /etc/caddy/Caddyfile.bak. وحتى ذلك الحين قد تتعارض تغييرات الإضافة مع المواقع الموجودة في Caddyfile."
+    "banner_details": "تُنقل كتل المواقع دون تغيير من /etc/caddy/Caddyfile إلى /etc/caddy/conf.d/cockpit-caddy.conf، ويُضاف إلى Caddyfile سطر import لـ conf.d. تُحفظ نسخة احتياطية من Caddyfile الأصلي في /etc/caddy/Caddyfile.bak. وحتى ذلك الحين قد تتعارض تغييرات الإضافة مع المواقع الموجودة في Caddyfile.",
+    "gate_continue_title": "قد تتكرر المواقع"
   },
   "backup": {
     "button": "نسخ احتياطي",
@@ -688,7 +704,7 @@
   },
   "global_opts": {
     "title": "خيارات Caddy العامة",
-    "caddyfile_note": "تُكتب هذه الإعدادات في كتلة الخيارات العامة في /etc/caddy/Caddyfile. يُعاد تحميل Caddy تلقائيًا عند الحفظ.",
+    "caddyfile_note": "توجد هذه الإعدادات في كتلة الخيارات العامة في /etc/caddy/Caddyfile. الحفظ يكتبها ويتحقق منها؛ وإعادة التحميل تطبّقها.",
     "unmanaged_hint": "لا توجد خيارات عامة صريحة — يستخدم Caddy إعدادات HTTPS التلقائية الافتراضية (بما فيها Let's Encrypt عندما يكون للوكيل اسم مضيف عام). الحقول أدناه فارغة لأنه لا يلزم إعداد شيء، وليس لأن شيئًا معطوب.",
     "http_port": "منفذ HTTP",
     "https_port": "منفذ HTTPS",
@@ -808,10 +824,8 @@
     "default_bind_help": "عناوين مفصولة بمسافات تستمع عليها المواقع التي بلا خيار bind.",
     "ocsp_stapling_off": "إيقاف OCSP stapling",
     "admin_title": "نقطة نهاية الإدارة",
-    "admin_off": "إيقاف نقطة نهاية الإدارة",
-    "admin_off_help": "تحتاج الإضافة إلى واجهة الإدارة لقراءة التكوين الجاري وتغييره.",
     "admin_address": "عنوان الإدارة",
-    "admin_address_help": "العنوان الذي تستمع عليه واجهة إدارة Caddy، كما يُكتب في Caddyfile. تتصل الإضافة بالعنوان في إعدادها الخاص، لذا غيّر الاثنين معاً.",
+    "admin_address_help": "المكان الذي تستمع عليه واجهة إدارة Caddy، كما في Caddyfile، مثل localhost:2019 أو unix//run/caddy/admin.socket. عند إعادة التحميل التالية تنتظر الإضافة حتى 10 ثوانٍ لكي يجيب العنوان الجديد ثم تستخدمه؛ وإن لم يُجب تعيد ملف Caddyfile السابق.",
     "admin_origins": "المصادر المسموحة",
     "admin_origins_help": "مضيفون مفصولون بمسافات يمكنهم استدعاء واجهة الإدارة من المتصفح.",
     "admin_enforce_origin": "فرض المصادر",
@@ -822,7 +836,21 @@
     "tab_tls": "TLS وACME",
     "tab_logging": "السجلات والمقاييس",
     "tab_proxy": "ترويسات الوكيل والبروتوكولات",
-    "tabs_aria": "أقسام الإعدادات"
+    "tabs_aria": "أقسام الإعدادات",
+    "issuer_custom": "جهة إصدار أخرى…",
+    "issuer_custom_name": "جهة الإصدار والوسائط",
+    "issuer_custom_name_help": "ما يلي cert_issuer: وحدة جهة الإصدار ثم وسائطها، مثل acme https://ca.example/directory.",
+    "issuer_custom_body": "خيارات جهة الإصدار",
+    "issuer_custom_body_help": "اختياري: الأسطر داخل كتلة cert_issuer، سطر لكل خيار، كما في ملف Caddyfile.",
+    "issuer_custom_required": "أدخل وحدة جهة الإصدار، مثل acme أو zerossl.",
+    "issuer_custom_invalid": "ابدأ باسم الوحدة ثم الوسائط مفصولة بمسافات، دون أقواس معقوصة.",
+    "issuer_body_braces": "كل { تحتاج إلى } مقابلة.",
+    "admin_read_only": "Caddy هنا ليس الخدمة المحلية، لذا لا تملك الإضافة ملف Caddyfile الخاص به. غيّر نقطة الإدارة حيث يُضبط Caddy ذاك.",
+    "admin_off_kept": "يوقف ملف Caddyfile نقطة الإدارة. تُبقي الإضافة هذا السطر كما هو؛ غيّره في محرر Caddyfile.",
+    "admin_switched": "واجهة الإدارة تجيب الآن على {{address}}",
+    "admin_switch_failed": "لم تنتقل نقطة الإدارة إلى {{address}} ({{reason}}). أُعيد ملف Caddyfile السابق.",
+    "admin_switch_unrestored": "لم تنتقل نقطة الإدارة إلى {{address}} ({{reason}})، وفشلت إعادة ملف Caddyfile السابق. افحص Caddyfile وأعد تشغيل Caddy.",
+    "admin_no_answer": "لا إجابة خلال 10 ثوانٍ"
   },
   "ca": {
     "title": "سلطة الشهادات الداخلية",
@@ -1235,21 +1263,34 @@
     "move_up": "نقل لأعلى",
     "move_down": "نقل لأسفل",
     "remove": "إزالة",
-    "remove_confirm": "إزالة هذه الكتلة والكتل الـ {{count}} داخلها؟",
     "remove_yes": "إزالة",
     "remove_no": "إبقاء",
     "add_kind": "النوع",
     "add_inside": "إضافة داخل الكتلة المحددة",
     "add_top": "إضافة في المستوى الأعلى",
-    "add_matcher": "مطابق الكتلة الجديدة"
+    "add_matcher": "مطابق الكتلة الجديدة",
+    "remove_confirm_one": "إزالة هذه الكتلة و{{count}} كتلة داخلها؟",
+    "remove_confirm_other": "إزالة هذه الكتلة و{{count}} كتلة داخلها؟",
+    "remove_confirm_zero": "إزالة هذه الكتلة و{{count}} كتلة داخلها؟",
+    "remove_confirm_two": "إزالة هذه الكتلة و{{count}} كتلة داخلها؟",
+    "remove_confirm_few": "إزالة هذه الكتلة و{{count}} كتل داخلها؟",
+    "remove_confirm_many": "إزالة هذه الكتلة و{{count}} كتلة داخلها؟",
+    "handle_path_invalid": "يحتاج handle_path إلى مسار واحد يبدأ بـ /، مثل /app/*.",
+    "fix_first": "أصلح هذا التعديل أو تجاهله أولًا: لا يمكن تطبيقه كما هو.",
+    "move_hint": "يمكن نقل الكتل داخل route، وبين كتل handle ذات المطابِقات المسماة التي يحافظ Caddy على ترتيبها المكتوب. أما بقية الكتل فيرتّبها Caddy بنفسه حسب دقة مسارها.",
+    "changed_meanwhile": "تغيّرت كتلة الموقع منذ قرأها هذا التبويب. أغلق النافذة وافتحها مجددًا لتحرير النص الحالي.",
+    "form_locked": "يحتوي هذا الموقع على كتل متداخلة، لذا لا يحفظ النموذج إلا العنوان وbind والاستيرادات وTLS. حرّر الباقي في تبويب الشجرة.",
+    "remove_confirm": "إزالة هذه الكتلة و{{count}} كتلة داخلها؟",
+    "definition_help": "ما يطابقه {{name}} كما هو معرّف في هذا الموقع. التغييرات هنا تعيد كتابة ذلك التعريف، فتشمل كل كتلة تستخدم {{name}}.",
+    "definition_empty": "يحتاج المطابِق إلى شرط واحد على الأقل، ويحتاج تعبير الترويسة النمطي إلى اسم الترويسة."
   },
   "encode": {
     "heading": "الضغط",
     "section_title": "إعدادات الضغط (اختياري)",
     "help": "تُستخدم عندما يكون الضغط مفعّلًا في عام. بدون اختيارات يضغط Caddy بـ gzip وzstd.",
     "algorithms": "الخوارزميات وترتيبها",
-    "algorithms_default": "gzip، zstd (الافتراضي)",
-    "algorithms_zstd_gzip": "zstd ثم gzip",
+    "algorithms_default": "zstd، gzip (الافتراضي)",
+    "algorithms_gzip_zstd": "gzip ثم zstd",
     "algorithms_gzip": "gzip فقط",
     "algorithms_zstd": "zstd فقط",
     "minimum_length": "الحجم الأدنى",
@@ -1284,13 +1325,13 @@
   },
   "bind": {
     "label": "عناوين الربط",
-    "help": "العناوين التي يستمع عليها هذا الموقع، مفصولة بمسافات، مثل 127.0.0.1 ::1. الفراغ يعني الاستماع على كل العناوين. المضيف الذي هو عنوان IP واحد يرتبط به أصلًا.",
+    "help": "العناوين التي يستمع عليها هذا الموقع، مفصولة بمسافات، مثل 127.0.0.1 ::1. الفراغ يعني الاستماع على كل العناوين، حتى لو كان المضيف عنوان IP: المضيف يطابق الطلبات فقط.",
     "invalid": "أدخل عناوين IP أو أسماء مضيفين، بدون منفذ."
   },
   "modules": {
     "title": "وحدات Caddy",
     "loading": "جارٍ قراءة الوحدات…",
-    "unknown": "تعذّرت قراءة وحدات هذا الـ Caddy (هل الأمر caddy متاح؟).",
+    "unknown": "تعذّرت قراءة وحدات Caddy هذا: لم يستجب أمر caddy ولا واجهة Admin API.",
     "help": "ما يستطيع Caddy المثبَّت فعله فوق الإصدار القياسي. ميزة تحتاج وحدة مفقودة تفشل عند تحميل Caddy للإعداد، فتحقق هنا أولًا.",
     "cap_dns": "مزوّدو تحدّي DNS",
     "cap_layer4": "الطبقة 4 (وكيل TCP وUDP)",
@@ -1303,6 +1344,8 @@
     "all": "كل الوحدات ({{count}})",
     "filter": "تصفية الوحدات",
     "no_match": "لا توجد وحدة مطابقة.",
-    "non_standard": "وحدات ليست جزءًا من Caddy نفسه: {{count}}"
+    "non_standard": "وحدات ليست جزءًا من Caddy نفسه: {{count}}",
+    "not_known": "غير معروف",
+    "probed": "لا يمكن الوصول إلى Caddy هذا إلا عبر Admin API، التي لا تقدّم قائمة بالوحدات. اختُبرت كل ميزة بتحويل إعداد صغير؛ ولا تُختبر إلا مزوّدات DNS الشائعة."
   }
 }

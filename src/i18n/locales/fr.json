@@ -24,7 +24,8 @@
     "unit_kb": "Ko",
     "unit_mb": "Mo",
     "unit_gb": "Go",
-    "example_value": "ex. {{value}}"
+    "example_value": "ex. {{value}}",
+    "more_about": "À propos de {{topic}}"
   },
   "app": {
     "title": "Caddy",
@@ -95,8 +96,8 @@
     "delete_confirm_title": "Supprimer le proxy :{{port}} ?",
     "delete_confirm_body": "Le reverse proxy du port {{port}} → {{target}} sera supprimé.",
     "delete_confirm_button": "Supprimer",
-    "api_error_add_title": "Proxy créé sur le disque — Caddy a refusé l'envoi à chaud",
-    "api_error_edit_title": "Libellé enregistré — Caddy a refusé la mise à jour de la configuration (autres modifications non appliquées)",
+    "api_error_add_title": "Enregistré, mais Caddy l'a refusé",
+    "api_error_edit_title": "Seul le libellé a été enregistré",
     "caddyfile_error_title": "Échec de la validation du Caddyfile — modifications non enregistrées",
     "view_logs": "Voir les journaux",
     "indicator_browse": "listage",
@@ -192,7 +193,21 @@
     "field_templates_help": "Active le moteur de modèles de Caddy pour les fichiers servis, qui peuvent alors utiliser include, .Req et les autres actions de modèle.",
     "field_templates_mime": "Types MIME",
     "field_templates_root": "Répertoire des inclusions",
-    "field_templates_root_help": "Où include et les autres actions de fichier cherchent les fichiers. Vide signifie la racine du site."
+    "field_templates_root_help": "Où include et les autres actions de fichier cherchent les fichiers. Vide signifie la racine du site.",
+    "field_browse_sort": "Ordre de la liste",
+    "field_browse_order": "Sens",
+    "browse_sort_default": "Par défaut de Caddy (nom)",
+    "browse_sort_name": "Nom",
+    "browse_sort_namedirfirst": "Nom, dossiers d'abord",
+    "browse_sort_size": "Taille",
+    "browse_sort_time": "Dernière modification",
+    "browse_order_asc": "Croissant",
+    "browse_order_desc": "Décroissant",
+    "field_browse_file_limit": "Entrées maximales par liste",
+    "browse_file_limit_none": "Aucune limite",
+    "browse_file_limit_invalid": "Saisissez un nombre entier supérieur ou égal à 1.",
+    "field_browse_reveal_symlinks": "Afficher la cible des liens symboliques",
+    "field_browse_reveal_symlinks_help": "La liste indique la cible de chaque lien symbolique, ce qui peut révéler des chemins hors de la racine du site."
   },
   "edit_static": {
     "title": "Modifier le serveur statique — :{{port}}",
@@ -571,7 +586,8 @@
     "backup_warning_title": "Sauvegardez d'abord votre configuration",
     "backup_warning_body": "La migration ne sauvegarde que le Caddyfile lui-même. Créez une sauvegarde complète de la configuration pour pouvoir tout restaurer en cas de problème.",
     "banner_details_toggle": "Détails",
-    "banner_details": "Les blocs de site sont déplacés tels quels de /etc/caddy/Caddyfile vers /etc/caddy/conf.d/cockpit-caddy.conf, et le Caddyfile reçoit une ligne import pour conf.d. Le Caddyfile d’origine est sauvegardé dans /etc/caddy/Caddyfile.bak. D’ici là, les modifications du plugin peuvent entrer en conflit avec les sites du Caddyfile."
+    "banner_details": "Les blocs de site sont déplacés tels quels de /etc/caddy/Caddyfile vers /etc/caddy/conf.d/cockpit-caddy.conf, et le Caddyfile reçoit une ligne import pour conf.d. Le Caddyfile d’origine est sauvegardé dans /etc/caddy/Caddyfile.bak. D’ici là, les modifications du plugin peuvent entrer en conflit avec les sites du Caddyfile.",
+    "gate_continue_title": "Sites en double possibles"
   },
   "backup": {
     "button": "Sauvegarde",
@@ -688,7 +704,7 @@
   },
   "global_opts": {
     "title": "Options globales de Caddy",
-    "caddyfile_note": "Ces réglages sont écrits dans le bloc d'options globales de /etc/caddy/Caddyfile. Caddy est rechargé automatiquement à l'enregistrement.",
+    "caddyfile_note": "Ces réglages se trouvent dans le bloc d'options globales de /etc/caddy/Caddyfile. Enregistrer les écrit et les vérifie ; Recharger les applique.",
     "unmanaged_hint": "Aucune option globale explicite n'est définie — Caddy utilise ses réglages HTTPS automatiques par défaut (y compris Let's Encrypt lorsqu'un proxy a un nom d'hôte public). Les champs ci-dessous sont vides parce qu'il n'y a rien à configurer, pas parce que quelque chose est cassé.",
     "http_port": "Port HTTP",
     "https_port": "Port HTTPS",
@@ -808,10 +824,8 @@
     "default_bind_help": "Adresses séparées par des espaces sur lesquelles écoutent les sites sans option bind.",
     "ocsp_stapling_off": "Désactiver l'OCSP stapling",
     "admin_title": "Point d'accès d'administration",
-    "admin_off": "Désactiver le point d'accès d'administration",
-    "admin_off_help": "Le plugin a besoin de l'API d'administration pour lire et modifier la configuration en cours.",
     "admin_address": "Adresse d'administration",
-    "admin_address_help": "Où l'API d'administration de Caddy écoute, écrite comme dans le Caddyfile. Le plugin se connecte à l'adresse de son propre réglage : modifiez donc les deux ensemble.",
+    "admin_address_help": "Où écoute l'API d'administration de Caddy, comme dans le Caddyfile, p. ex. localhost:2019 ou unix//run/caddy/admin.socket. Au prochain rechargement, le plugin attend jusqu'à 10 secondes que la nouvelle adresse réponde, puis l'utilise ; sans réponse, il restaure le Caddyfile précédent.",
     "admin_origins": "Origines autorisées",
     "admin_origins_help": "Hôtes séparés par des espaces qui peuvent appeler l'API d'administration depuis un navigateur.",
     "admin_enforce_origin": "Imposer les origines",
@@ -822,7 +836,21 @@
     "tab_tls": "TLS et ACME",
     "tab_logging": "Journaux et métriques",
     "tab_proxy": "En-têtes de proxy et protocoles",
-    "tabs_aria": "Sections des paramètres"
+    "tabs_aria": "Sections des paramètres",
+    "issuer_custom": "Autre émetteur…",
+    "issuer_custom_name": "Émetteur et arguments",
+    "issuer_custom_name_help": "Ce qui suit cert_issuer : le module d'émetteur puis ses arguments, p. ex. acme https://ca.example/directory.",
+    "issuer_custom_body": "Options de l'émetteur",
+    "issuer_custom_body_help": "Facultatif : les lignes du bloc cert_issuer, une par ligne, comme dans le Caddyfile.",
+    "issuer_custom_required": "Saisissez le module d'émetteur, p. ex. acme ou zerossl.",
+    "issuer_custom_invalid": "Commencez par le nom du module, puis les arguments séparés par des espaces, sans accolades.",
+    "issuer_body_braces": "Chaque { doit avoir sa }.",
+    "admin_read_only": "Ici, Caddy n'est pas le service local : le plugin ne gère pas son Caddyfile. Modifiez le point d'administration là où ce Caddy est configuré.",
+    "admin_off_kept": "Le Caddyfile désactive le point d'administration. Le plugin laisse cette ligne telle quelle ; modifiez-la dans l'éditeur du Caddyfile.",
+    "admin_switched": "L'API d'administration répond maintenant sur {{address}}",
+    "admin_switch_failed": "Le point d'administration n'est pas passé à {{address}} ({{reason}}). Le Caddyfile précédent est rétabli.",
+    "admin_switch_unrestored": "Le point d'administration n'est pas passé à {{address}} ({{reason}}) et le Caddyfile précédent n'a pas pu être rétabli. Vérifiez le Caddyfile et redémarrez Caddy.",
+    "admin_no_answer": "aucune réponse en 10 secondes"
   },
   "ca": {
     "title": "Autorité de certification interne",
@@ -1235,21 +1263,34 @@
     "move_up": "Monter",
     "move_down": "Descendre",
     "remove": "Supprimer",
-    "remove_confirm": "Supprimer ce bloc et les {{count}} blocs qu'il contient ?",
     "remove_yes": "Supprimer",
     "remove_no": "Conserver",
     "add_kind": "Type",
     "add_inside": "Ajouter dans le bloc sélectionné",
     "add_top": "Ajouter au niveau supérieur",
-    "add_matcher": "Matcher du nouveau bloc"
+    "add_matcher": "Matcher du nouveau bloc",
+    "remove_confirm_one": "Supprimer ce bloc et les {{count}} blocs qu'il contient ?",
+    "remove_confirm_other": "Supprimer ce bloc et les {{count}} blocs qu'il contient ?",
+    "remove_confirm_many": "Supprimer ce bloc et les {{count}} blocs qu'il contient ?",
+    "handle_path_invalid": "Un handle_path exige un seul chemin qui commence par /, comme /app/*.",
+    "fix_first": "Corrigez ou abandonnez d'abord cette modification : elle ne peut pas être appliquée telle quelle.",
+    "move_hint": "Les blocs se déplacent dans un route, et entre des handle à matchers nommés, dont Caddy garde l'ordre écrit. Caddy trie lui-même les autres blocs, selon la précision de leur chemin.",
+    "changed_meanwhile": "Le bloc du site a changé depuis que cet onglet l'a lu. Fermez la boîte de dialogue et rouvrez-la pour modifier le texte actuel.",
+    "form_locked": "Ce site a des blocs imbriqués : le formulaire n'enregistre que l'adresse, bind, les imports et le TLS. Modifiez le reste dans l'onglet Arbre.",
+    "remove_confirm_zero": "Supprimer ce bloc et les {{count}} blocs qu'il contient ?",
+    "remove_confirm_two": "Supprimer ce bloc et les {{count}} blocs qu'il contient ?",
+    "remove_confirm_few": "Supprimer ce bloc et les {{count}} blocs qu'il contient ?",
+    "remove_confirm": "Supprimer ce bloc et les {{count}} blocs qu'il contient ?",
+    "definition_help": "Ce que {{name}} sélectionne, tel que défini dans ce site. Les changements ici réécrivent cette définition et valent donc pour chaque bloc qui utilise {{name}}.",
+    "definition_empty": "Un matcher a besoin d'au moins une condition, et une regexp d'en-tête a besoin de son en-tête."
   },
   "encode": {
     "heading": "Compression",
     "section_title": "Compression (facultatif)",
     "help": "S'applique quand la compression est activée dans Général. Sans choix, Caddy compresse en gzip et zstd.",
     "algorithms": "Algorithmes et ordre",
-    "algorithms_default": "gzip, zstd (par défaut)",
-    "algorithms_zstd_gzip": "zstd, puis gzip",
+    "algorithms_default": "zstd, gzip (par défaut)",
+    "algorithms_gzip_zstd": "gzip, puis zstd",
     "algorithms_gzip": "gzip seulement",
     "algorithms_zstd": "zstd seulement",
     "minimum_length": "Taille minimale",
@@ -1284,13 +1325,13 @@
   },
   "bind": {
     "label": "Adresses de liaison",
-    "help": "Les adresses sur lesquelles ce site écoute, séparées par des espaces, par exemple 127.0.0.1 ::1. Vide écoute sur toutes les adresses. Un hôte qui est une seule adresse IP s'y lie déjà.",
+    "help": "Les adresses sur lesquelles ce site écoute, séparées par des espaces, par exemple 127.0.0.1 ::1. Vide écoute sur toutes les adresses, même si l'hôte est une adresse IP : l'hôte ne sert qu'à filtrer les requêtes.",
     "invalid": "Saisissez des adresses IP ou des noms d'hôte, sans port."
   },
   "modules": {
     "title": "Modules de Caddy",
     "loading": "Lecture des modules…",
-    "unknown": "Les modules de ce Caddy n'ont pas pu être lus (la commande caddy est-elle disponible ?).",
+    "unknown": "Impossible de lire les modules de ce Caddy : ni la commande caddy ni l’API Admin n’ont répondu.",
     "help": "Ce que le Caddy installé sait faire au-delà d'une version standard. Une fonction qui exige un module absent échoue au chargement de la configuration : vérifiez donc ici d'abord.",
     "cap_dns": "Fournisseurs du défi DNS",
     "cap_layer4": "Couche 4 (proxy TCP et UDP)",
@@ -1303,6 +1344,8 @@
     "all": "Tous les modules ({{count}})",
     "filter": "Filtrer les modules",
     "no_match": "Aucun module ne correspond.",
-    "non_standard": "Modules ne faisant pas partie de Caddy lui-même : {{count}}"
+    "non_standard": "Modules ne faisant pas partie de Caddy lui-même : {{count}}",
+    "not_known": "Inconnu",
+    "probed": "Ce Caddy n’est joignable que par l’API Admin, qui ne liste pas les modules. Chaque fonction a été testée en adaptant une petite configuration ; seuls les fournisseurs DNS courants sont testés."
   }
 }

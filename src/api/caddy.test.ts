@@ -52,9 +52,9 @@ import {
   CONF_D_IMPORT_LINE,
   parseConfTlsIssuerMap,
 } from "./caddy";
-import { parseSiteAcmeSettings, applyServerExtras, parseServerExtras, parseMatcherJson, isHostOnlyMatcher, buildRewriteHandler, parseRewriteFromHandle, patchServer, buildFilterEncoder, parseLogEncoder, PRIVATE_RANGES, buildForwardAuthHandler, extractForwardAuthFromProxy, forwardAuthResponseRoutes, buildBasicAuthHandler, buildEncodeHandler, buildFileServerHandlers, buildFileServerJson, parseFileServerOptions, parseTemplatesJson, buildRedirectHandler, parseEncodeOptionsJson, parseBasicAuthOptionsJson, parseHtmlRedirect } from "./caddyJsonModel";
+import { parseSiteAcmeSettings, acmeAccountOf, applyServerExtras, applyAccessLog, parseServerExtras, parseMatcherJson, isHostOnlyMatcher, buildRewriteHandler, parseRewriteFromHandle, patchServer, buildFilterEncoder, parseLogEncoder, PRIVATE_RANGES, buildForwardAuthHandler, extractForwardAuthFromProxy, forwardAuthResponseRoutes, buildBasicAuthHandler, buildEncodeHandler, buildFileServerHandlers, buildFileServerJson, parseFileServerOptions, parseTemplatesJson, buildRedirectHandler, parseEncodeOptionsJson, parseBasicAuthOptionsJson, parseHtmlRedirect } from "./caddyJsonModel";
 import { proxiesToCaddyfile } from "./caddy";
-import { buildForwardAuthCaddyLines, buildMatcherCaddyLines, buildPhpFastcgiLines, buildRewriteCaddyLines, buildMatcherJson, hasAnyMatcher } from "./siteBlocks";
+import { buildForwardAuthCaddyLines, buildMatcherCaddyLines, buildPhpFastcgiLines, buildRewriteCaddyLines, buildMatcherJson, hasAnyMatcher, patchRawBlock, siteBindAddresses } from "./siteBlocks";
 import { buildLogCaddyLines } from "./globalOptions";
 import type { CaddyConfig, CaddyReverseProxyHandler, CaddyServer, ProxyEntry, RouteMatch, ServerDef } from "./types";
 
@@ -2014,15 +2014,15 @@ describe("parseProxies — rewrite round-trip", () => {
 // ---------------------------------------------------------------------------
 
 describe("proxyToBlock — compress", () => {
-  it("emits encode gzip zstd when compress is true", () => {
+  it("emits a plain encode when compress is true", () => {
     const result = proxyToBlock(proxy({ compress: true }));
-    expect(result).toContain("\tencode gzip zstd");
+    expect(result).toMatch(/\tencode\n/);
   });
 
   it("encode line appears before reverse_proxy", () => {
     const result = proxyToBlock(proxy({ compress: true }));
     const lines = result.split("\n");
-    const encIdx = lines.findIndex(l => l.includes("encode gzip"));
+    const encIdx = lines.findIndex(l => l.trim() === "encode");
     const rpIdx = lines.findIndex(l => l.includes("reverse_proxy"));
     expect(encIdx).toBeGreaterThan(-1);
     expect(encIdx).toBeLessThan(rpIdx);
@@ -2290,8 +2290,8 @@ describe("parseProxies — fileServer round-trip", () => {
 describe("proxyToBlock — fileServer with compress/auth/headers", () => {
   it("adds encode directive when compress is true", () => {
     const result = proxyToBlock(proxy({ fileServer: { root: "/var/www" }, compress: true, tls: false, targetHost: "localhost", targetPort: 0 }));
-    expect(result).toContain("encode gzip zstd");
-    expect(result.indexOf("encode gzip zstd")).toBeLessThan(result.indexOf("root *"));
+    expect(result).toContain("\tencode\n");
+    expect(result.indexOf("\tencode\n")).toBeLessThan(result.indexOf("root *"));
   });
 
   it("adds basic_auth block when basicAuth is set", () => {
@@ -4711,7 +4711,7 @@ describe("editing hand-written multi-line directive blocks (#253)", () => {
   it("replaces a whole header { } block instead of leaving its body behind", () => {
     const conf = `${CONF_HEADER}\n\napp.example.com {\n\theader {\n\t\tX-A 1\n\t}\n\tencode {\n\t\tgzip\n\t}\n\treverse_proxy localhost:8000\n}\n`;
     const out = surgicallyWriteProxy(conf, proxy({ externalHost: "app.example.com", externalPort: 443, tls: true, tlsIssuer: "acme", targetPort: 8001, compress: true }));
-    expect(out).toContain("app.example.com {\n\tencode gzip zstd\n\treverse_proxy http://localhost:8001\n}");
+    expect(out).toContain("app.example.com {\n\tencode\n\treverse_proxy http://localhost:8001\n}");
   });
 });
 
@@ -4841,8 +4841,8 @@ describe("proxy error handlers and upstream error pages (#255)", () => {
 describe("bind next to a host name (#323)", () => {
   const site = (extra: Partial<ProxyEntry>) => proxy({ tls: false, externalHost: "example.com", ...extra });
 
-  it("writes one bind line with the addresses, and the host's own IP once", () => {
-    expect(proxyToBlock(site({ bind: ["10.0.0.5", "::1"] }))).toContain("\tbind 10.0.0.5 ::1");
+  it("writes one bind line with the addresses, once each", () => {
+    expect(proxyToBlock(site({ bind: ["10.0.0.5", "::1"] }))).toContain("\tbind 10.0.0.5 [::1]");
     expect(proxyToBlock(proxy({ tls: false, externalHost: "10.0.0.5", bind: ["10.0.0.5", "10.0.0.6"] }))).toContain("\tbind 10.0.0.5 10.0.0.6");
     expect(proxyToBlock(site({}))).not.toContain("bind");
   });
@@ -4850,7 +4850,14 @@ describe("bind next to a host name (#323)", () => {
   it("listens on every bind address in the JSON push", () => {
     expect(buildServerEntry(site({ bind: ["10.0.0.5", "10.0.0.6"] })).listen).toEqual(["10.0.0.5:7700", "10.0.0.6:7700"]);
     expect(buildServerEntry(site({})).listen).toEqual([":7700"]);
-    expect(buildServerEntry(proxy({ tls: false, externalHost: "10.0.0.5" })).listen).toEqual(["10.0.0.5:7700"]);
+  });
+
+  it("an IP host only matches: it listens on every interface, with a host matcher, as adapt does", () => {
+    const entry = buildServerEntry(proxy({ tls: false, externalHost: "10.0.0.5" }));
+    expect(entry.listen).toEqual([":7700"]);
+    expect(entry.routes?.[0]?.match).toEqual([{ host: ["10.0.0.5"] }]);
+    expect(proxyToBlock(proxy({ tls: false, externalHost: "10.0.0.5" }))).not.toMatch(/\bbind\b/);
+    expect(buildServerEntry(proxy({ tls: false, externalHost: "[::1]" })).routes?.[0]?.match).toEqual([{ host: ["::1"] }]);
   });
 
   it("reads the names from the host matcher and the bind from the listen addresses", () => {
@@ -4864,10 +4871,63 @@ describe("bind next to a host name (#323)", () => {
     expect(p.matchers).toBeUndefined();
   });
 
-  it("keeps an IP host as a host, and several binds without a name as binds", () => {
+  it("puts an IPv6 bind in brackets in front of the port (#360)", () => {
+    expect(buildServerEntry(site({ bind: ["::1"] })).listen).toEqual(["[::1]:7700"]);
+    expect(buildServerEntry(site({ bind: ["::1", "[::1]"] })).listen).toEqual(["[::1]:7700"]);
+  });
+
+  it("sorts the listen addresses as Caddy's adapter does (#360)", () => {
+    expect(buildServerEntry(site({ bind: ["localhost", "[::1]", "127.0.0.1", "127.0.0.10"] })).listen)
+      .toEqual(["127.0.0.10:7700", "127.0.0.1:7700", "[::1]:7700", "localhost:7700"]);
+  });
+
+  it("builds the bind line and the listen addresses from one set (#360)", () => {
+    const p = proxy({ tls: false, externalHost: "10.0.0.5", bind: ["::1", "10.0.0.5", "[::1]"] });
+    expect(siteBindAddresses(p)).toEqual(["[::1]", "10.0.0.5"]);
+    expect(proxyToBlock(p)).toContain("\tbind [::1] 10.0.0.5\n");
+    expect(buildServerEntry(p).listen).toEqual(siteBindAddresses(p).map(h => `${h}:7700`).sort());
+  });
+
+  it("reads a host name bind back (#360)", () => {
+    const named = (listen: string[], host?: string[]) => parseProxies({ apps: { http: { servers: { srv0: {
+      listen, routes: [{ ...(host ? { match: [{ host }] } : {}), handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:9000" }] }] }],
+    } } } } } as unknown as CaddyConfig)[0];
+    expect(named(["localhost:7700"], ["example.com"])).toMatchObject({ externalHost: "example.com", bind: ["localhost"] });
+    expect(named(["127.0.0.1:7700", "localhost:7700"])).toMatchObject({ bind: ["127.0.0.1", "localhost"] });
+    expect(named(["127.0.0.1:7700", "localhost:7700"]).externalHost).toBeUndefined();
+    expect(named(["localhost:7700"]).bind).toEqual(["localhost"]);
+  });
+
+  it("keeps the IP host of a site and every bind, its own IP too (#360, #323)", () => {
+    const p = proxy({ tls: false, externalHost: "10.0.0.5", bind: ["10.0.0.6"] });
+    const [back] = parseProxies({ apps: { http: { servers: { srv0: buildServerEntry(p) } } } } as unknown as CaddyConfig);
+    expect(back).toMatchObject({ externalHost: "10.0.0.5", bind: ["10.0.0.6"] });
+    // What Caddy's adapter makes of `10.0.0.5:7700 { bind 10.0.0.5 10.0.0.6 }`: the bind the plugin
+    // wrote for an IP host before #323 is now an ordinary bind, so the listener stays as it was.
+    const adapted = { apps: { http: { servers: { srv0: {
+      listen: ["10.0.0.5:7700", "10.0.0.6:7700"],
+      routes: [{ match: [{ host: ["10.0.0.5"] }], handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:9000" }] }] }],
+    } } } } } as unknown as CaddyConfig;
+    expect(parseProxies(adapted)[0]).toMatchObject({ externalHost: "10.0.0.5", bind: ["10.0.0.5", "10.0.0.6"] });
+    expect(parseProxies(adapted)[0].matchers).toBeUndefined();
+  });
+
+  it("keeps one host name with a bind through the JSON push (#360)", () => {
+    const [back] = parseProxies({ apps: { http: { servers: { srv0: buildServerEntry(site({ bind: ["10.0.0.5"] })) } } } } as unknown as CaddyConfig);
+    expect(back).toMatchObject({ externalHost: "example.com", bind: ["10.0.0.5"] });
+  });
+
+  it("removes the bind line when the field is cleared (#360)", () => {
+    const raw = "example.com {\n\tbind 10.0.0.5\n\treverse_proxy localhost:9000\n}";
+    expect(patchRawBlock(raw, site({ bind: undefined }))).not.toMatch(/\bbind\b/);
+    expect(patchRawBlock(raw, site({ bind: ["10.0.0.6"] }))).toContain("example.com {\n\tbind 10.0.0.6\n");
+  });
+
+  it("reads listen addresses without a host matcher as a site without a host that binds", () => {
+    // What `:7700 { bind 10.0.0.5 }` adapts to: an IP host gets a host matcher since #323.
     const one = { apps: { http: { servers: { srv0: { listen: ["10.0.0.5:7700"], routes: [{ handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:9000" }] }] }] } } } } } as unknown as CaddyConfig;
-    expect(parseProxies(one)[0]).toMatchObject({ externalHost: "10.0.0.5" });
-    expect(parseProxies(one)[0].bind).toBeUndefined();
+    expect(parseProxies(one)[0]).toMatchObject({ bind: ["10.0.0.5"] });
+    expect(parseProxies(one)[0].externalHost).toBeUndefined();
     const two = { apps: { http: { servers: { srv0: { listen: ["10.0.0.5:7700", "10.0.0.6:7700"], routes: [{ handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:9000" }] }] }] } } } } } as unknown as CaddyConfig;
     expect(parseProxies(two)[0].externalHost).toBeUndefined();
     expect(parseProxies(two)[0].bind).toEqual(["10.0.0.5", "10.0.0.6"]);
@@ -4927,14 +4987,20 @@ describe("redirect html mode (#338)", () => {
     const [back] = parseProxies(config);
     expect(back.redirect).toEqual({ to: "https://example.com{uri}", code: 302, html: true });
   });
+
+  it("keeps the server options of a redirect page", () => {
+    const server = buildServerEntry({ ...htmlRedirect, serverExtras: { strictSniHost: true } });
+    const [back] = parseProxies({ apps: { http: { servers: { srv0: server } } } } as unknown as CaddyConfig);
+    expect(back.serverExtras).toEqual({ strictSniHost: true });
+  });
 });
 
 describe("encode options (#335)", () => {
   const site = (encodeOptions?: import("./types").EncodeOptions) => proxy({ tls: false, compress: true, encodeOptions });
 
-  it("keeps writing plain gzip and zstd without options", () => {
-    expect(proxyToBlock(site())).toContain("\tencode gzip zstd\n");
-    expect(buildEncodeHandler()).toEqual({ handler: "encode", encodings: { gzip: {}, zstd: {} } });
+  it("writes a plain encode without options, which prefers zstd as Caddy does", () => {
+    expect(proxyToBlock(site())).toContain("\tencode\n");
+    expect(buildEncodeHandler()).toEqual({ handler: "encode", encodings: { gzip: {}, zstd: {} }, prefer: ["zstd", "gzip"] });
   });
 
   it("writes the algorithms in order, the minimum length and the match", () => {
@@ -4957,10 +5023,10 @@ describe("encode options (#335)", () => {
     expect(parseEncodeOptionsJson(h as never)).toEqual(options);
   });
 
-  it("reads gzip then zstd, in either spelling, as no options", () => {
+  it("reads zstd then gzip, or both without an order, as no options, and gzip first as a choice", () => {
     expect(parseEncodeOptionsJson({ handler: "encode", encodings: { gzip: {}, zstd: {} } } as never)).toBeUndefined();
-    expect(parseEncodeOptionsJson({ handler: "encode", encodings: { gzip: {}, zstd: {} }, prefer: ["gzip", "zstd"] } as never)).toBeUndefined();
-    expect(parseEncodeOptionsJson({ handler: "encode", encodings: { gzip: {}, zstd: {} }, prefer: ["zstd", "gzip"] } as never)).toEqual({ algorithms: ["zstd", "gzip"] });
+    expect(parseEncodeOptionsJson({ handler: "encode", encodings: { gzip: {}, zstd: {} }, prefer: ["zstd", "gzip"] } as never)).toBeUndefined();
+    expect(parseEncodeOptionsJson({ handler: "encode", encodings: { gzip: {}, zstd: {} }, prefer: ["gzip", "zstd"] } as never)).toEqual({ algorithms: ["gzip", "zstd"] });
   });
 });
 
@@ -4986,6 +5052,14 @@ describe("file_server and php_fastcgi options (#340)", () => {
     const h = buildFileServerJson(fs) as unknown as Record<string, unknown>;
     expect(h).toMatchObject({ browse: { template_file: "/etc/caddy/listing.html" }, canonical_uris: false, status_code: 404 });
     expect(parseFileServerOptions(h, [])).toEqual({ browseTemplate: "/etc/caddy/listing.html", disableCanonicalUris: true, status: 404 });
+  });
+
+  it("builds and reads the JSON of the listing options", () => {
+    const fs = { root: "/srv", browse: true, browseRevealSymlinks: true, browseSort: { by: "size" as const, order: "desc" as const }, browseFileLimit: 7 };
+    const h = buildFileServerJson(fs) as unknown as Record<string, unknown>;
+    expect(h.browse).toEqual({ reveal_symlinks: true, sort: ["size", "desc"], file_limit: 7 });
+    expect(parseFileServerOptions(h, [])).toEqual({ browseRevealSymlinks: true, browseSort: { by: "size", order: "desc" }, browseFileLimit: 7 });
+    expect((buildFileServerJson({ root: "/srv", browseFileLimit: 7 }) as unknown as Record<string, unknown>).browse).toBeUndefined();
   });
 
   it("writes the php_fastcgi options", () => {
@@ -5152,6 +5226,26 @@ describe("access log log_skip (#334)", () => {
     expect(buildServerEntry(withSkip(["/x"], { matchers: { path: ["/api/*"] } })).routes).toHaveLength(1);
   });
 
+  it("covers the hosts of every route on a multi-route server", () => {
+    const server = { listen: [":7700"], routes: [
+      { match: [{ host: ["a.example.com"] }], handle: [{ handler: "static_response" }] },
+      { match: [{ host: ["b.example.com"] }], handle: [{ handler: "static_response" }] },
+      { match: [{ host: ["a.example.com"] }], handle: [{ handler: "static_response" }] },
+    ] } as unknown as CaddyServer;
+    applyAccessLog(server, { externalPort: 7700, accessLog: { output: "stderr", skipPaths: ["/x"] } });
+    expect(server.routes?.[0].match).toEqual([{ host: ["a.example.com"], path: ["/x"] }, { host: ["b.example.com"], path: ["/x"] }]);
+    expect(server.routes).toHaveLength(4);
+  });
+
+  it("skips on every host when one route of the server has no matcher", () => {
+    const server = { listen: [":7700"], routes: [
+      { match: [{ host: ["a.example.com"] }], handle: [{ handler: "static_response" }] },
+      { handle: [{ handler: "static_response" }] },
+    ] } as unknown as CaddyServer;
+    applyAccessLog(server, { externalPort: 7700, accessLog: { output: "stderr", skipPaths: ["/x"] } });
+    expect(server.routes?.[0].match).toEqual([{ path: ["/x"] }]);
+  });
+
   it("does not patch the skip route as if it were the site", () => {
     const original = buildServerEntry(withSkip(["/x"]));
     const patched = patchServer(original, withSkip(["/x"], { targetPort: 9999 }));
@@ -5276,6 +5370,90 @@ describe("a site's own ACME email, CA and key type (#341)", () => {
     // The host is the Caddyfile's, so the policy is read by it, as useProxies does with the host it has.
     expect(parseSiteAcmeSettings(config.apps?.tls?.automation?.policies, "example.com")).toEqual({ acmeEmail: "me@example.com", acmeCa: staging, keyType: "p256" });
     expect(parseSiteAcmeSettings(config.apps?.tls?.automation?.policies, "other.example.com")).toBeUndefined();
+  });
+
+  it("keeps ZeroSSL picked for the site, and drops only a CA inherited from the global acme_ca", () => {
+    const zerossl = "https://acme.zerossl.com/v2/DV90";
+    // caddy adapt 2.11.7 for `a.example.com { tls { ca <zerossl> } }`.
+    const own = [{ subjects: ["a.example.com"], issuers: [{ module: "acme", ca: zerossl }] }];
+    expect(parseSiteAcmeSettings(own, "a.example.com")).toEqual({ acmeCa: zerossl });
+    // ...and for `{ acme_ca <zerossl> }` with `b.example.com { tls me@x.com }`.
+    const inherited = [
+      { subjects: ["b.example.com"], issuers: [{ module: "acme", ca: zerossl, email: "me@x.com" }, { module: "acme", ca: zerossl, email: "me@x.com" }] },
+      { issuers: [{ module: "acme", ca: zerossl }] },
+    ];
+    expect(parseSiteAcmeSettings(inherited, "b.example.com")).toEqual({ acmeEmail: "me@x.com" });
+    expect(parseSiteAcmeSettings(inherited.slice(0, 1), "b.example.com", { ca: zerossl })).toEqual({ acmeEmail: "me@x.com" });
+  });
+
+  // The policies below are what `caddy adapt` builds for the same sites under a global
+  // `email g@example.com` and `acme_eab` (Caddy 2.11).
+  describe("with a global email and EAB", () => {
+    const eab = { key_id: "K", mac_key: "M" };
+    const account = { email: "g@example.com", external_account: eab };
+    const zerossl = "https://acme.zerossl.com/v2/DV90";
+    const withGlobal = () => ({ apps: { http: { servers: {} }, tls: { automation: { policies: [
+      { issuers: [{ module: "acme", ...account }, { module: "acme", ca: zerossl, ...account }] },
+    ] } } } }) as unknown as CaddyConfig;
+    const policyOf = (adv: import("./types").TlsAdvancedConfig) => {
+      const config = mergeProxy(withGlobal(), site(adv, { serverKey: "srv0" }));
+      return { config, policy: (config.apps?.tls?.automation?.policies ?? []).find(p => p.subjects?.some(s => s === "example.com")) };
+    };
+
+    it("keeps the global email and EAB on a site with its own CA", () => {
+      expect(policyOf({ acmeCa: staging }).policy).toEqual({
+        subjects: ["example.com"], issuers: [{ module: "acme", ca: staging, ...account }],
+      });
+    });
+
+    it("keeps the ZeroSSL fallback for a site with only its own email", () => {
+      const own = { email: "me@example.com", external_account: eab };
+      expect(policyOf({ acmeEmail: "me@example.com" }).policy).toEqual({
+        subjects: ["example.com"], issuers: [{ module: "acme", ...own }, { module: "acme", ca: zerossl, ...own }],
+      });
+    });
+
+    it("keeps the global account on a site with only a key type", () => {
+      expect(policyOf({ keyType: "ed25519" }).policy).toEqual({
+        subjects: ["example.com"], issuers: [{ module: "acme", ...account }, { module: "acme", ca: zerossl, ...account }], key_type: "ed25519",
+      });
+    });
+
+    it("reads back only what the site set itself", () => {
+      for (const adv of [{ acmeCa: staging }, { acmeEmail: "me@example.com" }, { keyType: "ed25519" }]) {
+        const { config } = policyOf(adv);
+        expect(parseSiteAcmeSettings(config.apps?.tls?.automation?.policies, "example.com")).toEqual(adv);
+      }
+    });
+
+    it("takes the email every site shares as the global one when there is no catch-all policy", () => {
+      const policies = [
+        { subjects: ["example.com"], issuers: [{ module: "acme", ca: staging, email: "g@example.com" }] },
+        { subjects: ["other.example.com"], issuers: [{ module: "acme", email: "g@example.com" }, { module: "acme", ca: zerossl, email: "g@example.com" }] },
+      ];
+      expect(parseSiteAcmeSettings(policies, "example.com")).toEqual({ acmeCa: staging });
+    });
+
+    it("uses the Caddyfile's global account instead of guessing it from another site (#341)", () => {
+      // No global email: the only other site's own email is not the global one.
+      const config = { apps: { http: { servers: {} }, tls: { automation: { policies: [
+        { subjects: ["other.example.com"], issuers: [{ module: "acme", email: "other@example.com" }] },
+      ] } } } } as unknown as CaddyConfig;
+      const policy = (c: CaddyConfig) => (c.apps?.tls?.automation?.policies ?? []).find(p => p.subjects?.some(s => s === "example.com"));
+      const guessed = policy(mergeProxy(config, site({ acmeCa: staging }, { serverKey: "srv0" })));
+      expect(guessed?.issuers).toEqual([{ module: "acme", ca: staging, email: "other@example.com" }]);
+      const known = policy(mergeProxy(config, site({ acmeCa: staging }, { serverKey: "srv0" }), acmeAccountOf({})));
+      expect(known?.issuers).toEqual([{ module: "acme", ca: staging }]);
+
+      const policies = [{ subjects: ["example.com"], issuers: [{ module: "acme", email: "other@example.com" }] }, ...(config.apps!.tls!.automation!.policies!)];
+      expect(parseSiteAcmeSettings(policies, "example.com", acmeAccountOf({}))).toEqual({ acmeEmail: "other@example.com" });
+      expect(parseSiteAcmeSettings(policies, "example.com", acmeAccountOf({ email: "other@example.com" }))).toBeUndefined();
+    });
+
+    it("builds the account Caddy copies into the issuers from the global options", () => {
+      expect(acmeAccountOf({ email: "g@example.com", acmeEabKeyId: "K", acmeEabMacKey: "M" })).toEqual(account);
+      expect(acmeAccountOf({ acmeEabKeyId: "K" })).toEqual({});
+    });
   });
 
   it("keeps the internal CA in a policy that only sets a key type", () => {

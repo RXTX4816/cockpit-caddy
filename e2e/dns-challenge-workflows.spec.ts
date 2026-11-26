@@ -31,14 +31,16 @@ async function hasCloudflare(page: Page): Promise<boolean> {
   return out.trim() === 'dns.providers.cloudflare';
 }
 
-test('without a DNS module, the setting explains what is needed and links the module list', async ({ pluginPage: page }) => {
+test('without a DNS module, the setting stays usable and says what is needed (#343)', async ({ pluginPage: page }) => {
   test.skip(await hasCloudflare(page), 'this Caddy has a DNS module');
   await openSettings(page);
+  // Options are never hidden: the switch and the fields are there, with a hint.
+  await page.locator('#go-dns-enabled').check();
+  await expect(page.locator('#go-dns-provider')).toBeVisible();
   const hint = page.getByTestId('go-dns-no-modules');
   await expect(hint).toContainText('No DNS provider module installed');
-  await expect(hint.getByRole('link')).toHaveAttribute('href', 'https://caddyserver.com/docs/modules/');
-  await expect(page.locator('#go-dns-provider')).toHaveCount(0);
-  await expect(page.locator('#go-dns-enabled')).toHaveCount(0);
+  await hint.getByRole('button').click();
+  await expect(page.getByRole('dialog').getByRole('link')).toHaveAttribute('href', 'https://caddyserver.com/docs/modules/');
 });
 
 test('credentials go to the root-only env file, never into the Caddyfile', async ({ pluginPage: page }) => {

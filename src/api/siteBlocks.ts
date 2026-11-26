@@ -6,7 +6,7 @@ import { type ProxyEntry } from "./types";
 import { externalHostList } from "./externalHosts";
 import { hasNestedBlocks } from "./siteTree";
 import { dnsProviderLines, buildLogCaddyLines } from "./globalOptions";
-import { caddyQuote, parseSiteAddresses, isIpAddress, findMatchingBlock, findBlockPositions, CONF_HEADER, sameHostSet, hostsConflict, surgicallyRemoveBlock, isCaddyInternalSubject, findServerBlock, surgicallyRemoveServerBlock } from "./caddyfileDocument";
+import { caddyQuote, parseSiteAddresses, findMatchingBlock, findBlockPositions, CONF_HEADER, sameHostSet, hostsConflict, surgicallyRemoveBlock, isCaddyInternalSubject, findServerBlock, surgicallyRemoveServerBlock } from "./caddyfileDocument";
 export { caddyQuote };
 
 // ---------------------------------------------------------------------------
@@ -255,7 +255,8 @@ export function buildForwardAuthCaddyLines(fa: import("./types").ForwardAuthConf
  * `header Name value` takes one value, so a header with several values is written as several lines.
  */
 export function buildEncodeLines(indent: string, options?: import("./types").EncodeOptions): string[] {
-  const head = `${indent}encode ${(options?.algorithms?.length ? options.algorithms : ["gzip", "zstd"]).join(" ")}`;
+  // A plain `encode` is Caddy's default: zstd and gzip, zstd preferred.
+  const head = `${indent}encode${options?.algorithms?.length ? ` ${options.algorithms.join(" ")}` : ""}`;
   const inner: string[] = [];
   if (options?.minimumLength != null) inner.push(`${indent}\tminimum_length ${options.minimumLength}`);
   const match: string[] = [];
@@ -663,7 +664,12 @@ export function buildTlsPolicyBlockLines(
 
 /** True when a static site has any `file_server` sub-directive set (#262). */
 export function hasFileServerOptions(fs: import("./types").FileServerConfig): boolean {
-  return !!(fs.index?.length || fs.hide?.length || fs.precompressed?.length || fs.disableCanonicalUris || fs.status || (fs.browse && fs.browseTemplate));
+  return !!(fs.index?.length || fs.hide?.length || fs.precompressed?.length || fs.disableCanonicalUris || fs.status || (fs.browse && (fs.browseTemplate || hasBrowseOptions(fs))));
+}
+
+/** True when the listing has options of its own, which need a `browse { … }` block (#340). */
+function hasBrowseOptions(fs: import("./types").FileServerConfig): boolean {
+  return !!(fs.browseRevealSymlinks || fs.browseSort || fs.browseFileLimit);
 }
 
 
@@ -674,8 +680,9 @@ export function hasFileServerOptions(fs: import("./types").FileServerConfig): bo
 export function buildFileServerLines(fs: import("./types").FileServerConfig, indent: string): string[] {
   const lines = [`${indent}root * ${caddyQuote(fs.root)}`];
   if (fs.spa) lines.push(`${indent}try_files {path} /index.html`);
-  // A listing template is an argument of the block's own `browse`, so then the head has none.
+  // A listing template or listing options go on the block's own `browse`, so then the head has none.
   const template = fs.browse ? fs.browseTemplate : undefined;
+  const browseBlock = !!fs.browse && hasBrowseOptions(fs);
   if (fs.templates) {
     const t = fs.templates;
     if (t.mime?.length || t.root) {
@@ -687,13 +694,21 @@ export function buildFileServerLines(fs: import("./types").FileServerConfig, ind
       lines.push(`${indent}templates`);
     }
   }
-  const head = fs.browse && !template ? `${indent}file_server browse` : `${indent}file_server`;
+  const head = fs.browse && !template && !browseBlock ? `${indent}file_server browse` : `${indent}file_server`;
   if (!hasFileServerOptions(fs)) {
     lines.push(head);
     return lines;
   }
   lines.push(`${head} {`);
-  if (template) lines.push(`${indent}\tbrowse ${caddyQuote(template)}`);
+  if (browseBlock) {
+    lines.push(`${indent}\tbrowse${template ? ` ${caddyQuote(template)}` : ""} {`);
+    if (fs.browseRevealSymlinks) lines.push(`${indent}\t\treveal_symlinks`);
+    if (fs.browseSort) lines.push(`${indent}\t\tsort ${fs.browseSort.by}${fs.browseSort.order ? ` ${fs.browseSort.order}` : ""}`);
+    if (fs.browseFileLimit) lines.push(`${indent}\t\tfile_limit ${fs.browseFileLimit}`);
+    lines.push(`${indent}\t}`);
+  } else if (template) {
+    lines.push(`${indent}\tbrowse ${caddyQuote(template)}`);
+  }
   if (fs.disableCanonicalUris) lines.push(`${indent}\tdisable_canonical_uris`);
   if (fs.status) lines.push(`${indent}\tstatus ${fs.status}`);
   if (fs.index?.length) lines.push(`${indent}\tindex ${fs.index.map(v => caddyQuote(v)).join(" ")}`);
@@ -896,21 +911,43 @@ export function patchRawBlock(raw: string, proxy: ProxyEntry): string {
   // A site with `route` or nested `handle` blocks (#348) is edited in its Tree tab or the raw editor:
   // what the form owns here is the site's address, binds, imports and TLS, and the blocks stay as written.
   const nested = hasNestedBlocks(raw);
-  // The directives the plugin writes again below are dropped here, each with its whole block.
-  const rewritten = nested ? ["tls"] : ["tls", "encode", "root", "templates", "file_server", "header", "basic_auth", "forward_auth", "reverse_proxy", "php_fastcgi"];
+  // The directives the plugin writes again below are dropped here, each with its whole block
+  // (tls, bind and snippet imports on every site, and these).
+  const rewritten = nested ? [] : ["encode", "root", "templates", "file_server", "header", "basic_auth", "forward_auth", "reverse_proxy", "php_fastcgi"];
   // try_files belongs to the static and PHP forms (#262); on any other site it's the user's.
   if ((proxy.fileServer || proxy.phpFastcgi) && !nested) rewritten.push("try_files");
 
+  // Where the block had its snippet imports, binds and tls: they are written again in that place,
+  // so a save that changes none of them leaves the text as it was (#349).
+  // Each place is [index in kept, how many places were found before it], which orders two at one index.
+  let importSlot: [number, number] | undefined;
+  let bindSlot: [number, number] | undefined;
+  let tlsSlot: [number, number] | undefined;
+  let found = 0;
+  const here = (): [number, number] => [kept.length, found++];
   while (i < closingIdx) {
     const line = lines[i];
     const trimmed = line.trim();
 
+    if (nestDepth === 0 && isDirective(trimmed, "tls")) {
+      tlsSlot ??= here();
+      skipDirective();
+      continue;
+    }
     if (nestDepth === 0 && rewritten.some(name => isDirective(trimmed, name))) {
       skipDirective();
       continue;
     }
     // Snippet imports (#288) follow proxy.imports; file and glob imports are the user's and stay.
     if (nestDepth === 0 && isSnippetImportLine(trimmed)) {
+      importSlot ??= here();
+      i++;
+      continue;
+    }
+    // The form shows every bind the site has (#323), its own and hand-written ones, so it owns the
+    // bind line: a cleared field removes it.
+    if (nestDepth === 0 && isDirective(trimmed, "bind")) {
+      bindSlot ??= here();
       i++;
       continue;
     }
@@ -920,18 +957,17 @@ export function patchRawBlock(raw: string, proxy: ProxyEntry): string {
     i++;
   }
 
-  // An IP host binds that IP (#254). A `bind` that only repeats the block's old IP header is the
-  // one the plugin wrote, so it follows the host field; any other bind is the user's and stays.
-  const oldHeader = parseSiteAddresses(lines[0].trim().replace(/\{$/, "").trim());
-  const oldIp = oldHeader?.length === 1 && oldHeader[0].host && isIpAddress(oldHeader[0].host) ? oldHeader[0].host : undefined;
-  const isOwnBind = (l: string) => !!oldIp && l.trim() === `bind ${oldIp}`;
-  for (let k = kept.length - 1; k >= 1; k--) if (isOwnBind(kept[k])) kept.splice(k, 1);
-  // A bind chosen in the form (#323) replaces the block's own; without one a hand-written bind stays.
-  if (proxy.bind?.length) for (let k = kept.length - 1; k >= 1; k--) if (/^\s*bind(\s|$)/.test(kept[k])) kept.splice(k, 1);
-  if (!kept.slice(1).some(l => /^\s*bind(\s|$)/.test(l))) kept.splice(1, 0, ...buildBindLines(proxy));
-  kept.splice(1, 0, ...buildImportLines(proxy));
-  // Re-add updated directives before closing brace
-  kept.push(...buildTlsCaddyLines(proxy, !tlsSubjectHosts(proxy.externalHost).length));
+  const tlsLines = buildTlsCaddyLines(proxy, !tlsSubjectHosts(proxy.externalHost).length);
+  // Inserted from the last place to the first, so the earlier places keep their index.
+  // New imports and a new bind line go first in the block, imports before the bind.
+  const inserts = [
+    { at: importSlot ?? [1, -2], add: buildImportLines(proxy) },
+    { at: bindSlot ?? [1, -1], add: buildBindLines(proxy) },
+    ...(tlsSlot ? [{ at: tlsSlot, add: tlsLines }] : []),
+  ].sort((a, b) => b.at[0] - a.at[0] || b.at[1] - a.at[1]);
+  for (const { at, add } of inserts) kept.splice(at[0], 0, ...add);
+  // A block without a tls directive gets it before the handlers the form writes.
+  if (tlsSlot === undefined) kept.push(...tlsLines);
   if (nested) {
     kept.push(lines[closingIdx]);
     return kept.join("\n");
@@ -1059,20 +1095,29 @@ export function proxiesToCaddyfile(proxies: ProxyEntry[]): string {
 export const UPSTREAM_ERROR_MESSAGE = "upstream error";
 
 
-/** True when the host field is one IP address, which the plugin treats as the bind address. */
-export function bindsToIp(proxy: { externalHost?: string }): boolean {
-  return !!proxy.externalHost && externalHostList(proxy.externalHost).length === 1 && isIpAddress(proxy.externalHost);
+/**
+ * The site's `bind` line. The host only matches the Host header, an IP host too: as in Caddy,
+ * only `bind` restricts the listener (#323). The JSON push listens on the same addresses (#254).
+ */
+export function buildBindLines(proxy: { externalHost?: string; bind?: string[] }): string[] {
+  const addresses = siteBindAddresses(proxy);
+  return addresses.length ? [`\tbind ${addresses.join(" ")}`] : [];
+}
+
+
+/** A bind or listen host as Caddy writes it in a listen address: an IPv6 address in brackets. */
+export function canonicalBindHost(host: string): string {
+  const h = host.trim();
+  return !h.startsWith("[") && h.includes(":") && /^[0-9A-Fa-f:.]+(%[\w.-]+)?$/.test(h) ? `[${h}]` : h;
 }
 
 
 /**
- * An IP site address only matches the Host header in a Caddyfile and still listens on every
- * interface; `bind` is what restricts the listener, as the instant-apply JSON's `IP:port`
- * listen address does (#254).
+ * Every address a site binds to, once each, as Caddy writes them (#323). The Caddyfile's `bind`
+ * line and the JSON push's listen addresses are both built from it.
  */
-export function buildBindLines(proxy: { externalHost?: string; bind?: string[] }): string[] {
-  const addresses = [...new Set([...(bindsToIp(proxy) ? [proxy.externalHost!] : []), ...(proxy.bind ?? [])])];
-  return addresses.length ? [`\tbind ${addresses.join(" ")}`] : [];
+export function siteBindAddresses(proxy: { bind?: string[] }): string[] {
+  return [...new Set((proxy.bind ?? []).map(canonicalBindHost).filter(Boolean))];
 }
 
 

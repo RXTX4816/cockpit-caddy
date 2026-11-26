@@ -14,6 +14,10 @@ Settings are written and validated on **Save**, but — unlike adding or editing
 | Grace period / Shutdown delay | Connection-draining timing on reload/stop |
 | Debug logging | Raises the global log level to `DEBUG` |
 
+### Admin endpoint
+
+Where Caddy's admin API listens (`admin`), the browser origins allowed to call it (`origins`) and whether they are enforced (`enforce_origin`). The plugin itself talks to Caddy over this API, so a reload that moves it is done safely: the new config goes to the old address, the plugin waits up to 10 seconds for the new address to answer and then uses it. Without an answer, or when Caddy refuses the config, the Caddyfile from before the save is put back. The fields are read-only when Caddy isn't the local service (Docker, external). `admin off` isn't offered; one already in the Caddyfile is kept as written.
+
 ## ACME / Let's Encrypt
 
 Registration email, ACME CA directory URL (with Let's Encrypt / staging / ZeroSSL presets), a custom trusted CA root, and External Account Binding (EAB) credentials for providers that require them (e.g. ZeroSSL).
@@ -39,6 +43,10 @@ A site on automatic HTTPS can use its own provider instead: see **DNS challenge*
 On-demand TLS gets a site's certificate at the first TLS handshake instead of up front, for names that aren't known in advance. It is turned on **per site**: the site's HTTPS settings have an "On-demand" checkbox, written as `tls { on_demand }`.
 
 This global section only configures it: the `ask` endpoint Caddy queries before it gets a certificate (it must answer 2xx to allow the name). Set one, or anyone who points a name at the server can make Caddy request certificates for it. The old `interval`/`burst` rate limits are no longer accepted by Caddy; the form only shows them while an existing config still has them, so they can be cleared.
+
+## Certificate issuer
+
+The global `cert_issuer`: Caddy's own CA for every site (`local_certs`), the internal CA, ACME, or **Other issuer…** for any other issuer typed as Caddy reads it: the module and its arguments on one line (`zerossl {env.ZEROSSL_API_KEY}`, `acme https://ca.example/directory`), plus an optional body with one directive per line.
 
 ## Internal TLS (hostless proxies)
 

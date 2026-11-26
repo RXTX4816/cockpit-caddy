@@ -24,7 +24,8 @@
     "unit_kb": "KB",
     "unit_mb": "MB",
     "unit_gb": "GB",
-    "example_value": "t.ex. {{value}}"
+    "example_value": "t.ex. {{value}}",
+    "more_about": "Om {{topic}}"
   },
   "app": {
     "title": "Caddy",
@@ -95,8 +96,8 @@
     "delete_confirm_title": "Ta bort proxy :{{port}}?",
     "delete_confirm_body": "Reverse proxyn för port {{port}} → {{target}} tas bort.",
     "delete_confirm_button": "Ta bort",
-    "api_error_add_title": "Proxyn skapades på disk — Caddy avvisade direktuppdateringen",
-    "api_error_edit_title": "Etiketten sparades — Caddy avvisade konfigurationsuppdateringen (övriga ändringar tillämpades inte)",
+    "api_error_add_title": "Sparat, men Caddy avvisade det",
+    "api_error_edit_title": "Bara etiketten sparades",
     "caddyfile_error_title": "Valideringen av Caddyfile misslyckades — ändringarna sparades inte",
     "view_logs": "Visa loggar",
     "indicator_browse": "kataloglistning",
@@ -192,7 +193,21 @@
     "field_templates_help": "Slår på Caddys mallmotor för de filer som serveras, så att de kan använda include, .Req och de andra mallåtgärderna.",
     "field_templates_mime": "MIME-typer",
     "field_templates_root": "Katalog för include",
-    "field_templates_root_help": "Var include och de andra filåtgärderna letar efter filer. Tomt betyder webbplatsens rot."
+    "field_templates_root_help": "Var include och de andra filåtgärderna letar efter filer. Tomt betyder webbplatsens rot.",
+    "field_browse_sort": "Listans ordning",
+    "field_browse_order": "Riktning",
+    "browse_sort_default": "Caddys standard (namn)",
+    "browse_sort_name": "Namn",
+    "browse_sort_namedirfirst": "Namn, mappar först",
+    "browse_sort_size": "Storlek",
+    "browse_sort_time": "Senast ändrad",
+    "browse_order_asc": "Stigande",
+    "browse_order_desc": "Fallande",
+    "field_browse_file_limit": "Högst antal poster per lista",
+    "browse_file_limit_none": "Ingen gräns",
+    "browse_file_limit_invalid": "Ange ett heltal som är 1 eller större.",
+    "field_browse_reveal_symlinks": "Visa mål för symboliska länkar",
+    "field_browse_reveal_symlinks_help": "Listan visar vart varje symbolisk länk pekar. Det kan avslöja sökvägar utanför webbplatsens rot."
   },
   "edit_static": {
     "title": "Redigera statisk server — :{{port}}",
@@ -571,7 +586,8 @@
     "backup_warning_title": "Säkerhetskopiera konfigurationen först",
     "backup_warning_body": "Migreringen säkerhetskopierar bara själva Caddyfile. Skapa en fullständig säkerhetskopia av konfigurationen så att du kan återställa allt om något går fel.",
     "banner_details_toggle": "Detaljer",
-    "banner_details": "Webbplatsblocken flyttas oförändrade från /etc/caddy/Caddyfile till /etc/caddy/conf.d/cockpit-caddy.conf, och Caddyfile får en import-rad för conf.d. Den ursprungliga Caddyfile säkerhetskopieras till /etc/caddy/Caddyfile.bak. Till dess kan insticksprogrammets ändringar krocka med webbplatserna i Caddyfile."
+    "banner_details": "Webbplatsblocken flyttas oförändrade från /etc/caddy/Caddyfile till /etc/caddy/conf.d/cockpit-caddy.conf, och Caddyfile får en import-rad för conf.d. Den ursprungliga Caddyfile säkerhetskopieras till /etc/caddy/Caddyfile.bak. Till dess kan insticksprogrammets ändringar krocka med webbplatserna i Caddyfile.",
+    "gate_continue_title": "Möjliga dubblettwebbplatser"
   },
   "backup": {
     "button": "Säkerhetskopiera",
@@ -688,7 +704,7 @@
   },
   "global_opts": {
     "title": "Globala Caddy-alternativ",
-    "caddyfile_note": "De här inställningarna skrivs till blocket med globala alternativ i /etc/caddy/Caddyfile. Caddy läses in igen automatiskt när du sparar.",
+    "caddyfile_note": "De här inställningarna finns i blocket med globala alternativ i /etc/caddy/Caddyfile. Spara skriver och kontrollerar dem; Ladda om tillämpar dem.",
     "unmanaged_hint": "Inga uttryckliga globala alternativ är angivna — Caddy använder sina standardinställningar för automatisk HTTPS (inklusive Let's Encrypt när en proxy har ett publikt värdnamn). Fälten nedan är tomma för att inget behöver konfigureras, inte för att något är trasigt.",
     "http_port": "HTTP-port",
     "https_port": "HTTPS-port",
@@ -808,10 +824,8 @@
     "default_bind_help": "Mellanslagsavgränsade adresser som webbplatser utan bind-alternativ lyssnar på.",
     "ocsp_stapling_off": "Stäng av OCSP stapling",
     "admin_title": "Adminändpunkt",
-    "admin_off": "Stäng av adminändpunkten",
-    "admin_off_help": "Tillägget behöver admin-API:et för att läsa och ändra den körande konfigurationen.",
     "admin_address": "Adminadress",
-    "admin_address_help": "Var Caddys admin-API lyssnar, skrivet som i Caddyfile. Tillägget ansluter till adressen i sin egen inställning, så ändra båda tillsammans.",
+    "admin_address_help": "Var Caddys administrations-API lyssnar, som i Caddyfile, t.ex. localhost:2019 eller unix//run/caddy/admin.socket. Vid nästa omladdning väntar tillägget upp till 10 sekunder på att den nya adressen svarar och använder den sedan; utan svar återställs den tidigare Caddyfile.",
     "admin_origins": "Tillåtna origins",
     "admin_origins_help": "Mellanslagsavgränsade värdar som får anropa admin-API:et från en webbläsare.",
     "admin_enforce_origin": "Tvinga origins",
@@ -822,7 +836,21 @@
     "tab_tls": "TLS och ACME",
     "tab_logging": "Loggning och mätvärden",
     "tab_proxy": "Proxyrubriker och protokoll",
-    "tabs_aria": "Inställningsavsnitt"
+    "tabs_aria": "Inställningsavsnitt",
+    "issuer_custom": "Annan utfärdare…",
+    "issuer_custom_name": "Utfärdare och argument",
+    "issuer_custom_name_help": "Det som följer cert_issuer: utfärdarmodulen och dess argument, t.ex. acme https://ca.example/directory.",
+    "issuer_custom_body": "Utfärdarens alternativ",
+    "issuer_custom_body_help": "Valfritt: raderna i cert_issuer-blocket, en per rad, som i Caddyfile.",
+    "issuer_custom_required": "Ange utfärdarmodulen, t.ex. acme eller zerossl.",
+    "issuer_custom_invalid": "Börja med modulnamnet och sedan argument åtskilda med mellanslag, utan klammerparenteser.",
+    "issuer_body_braces": "Varje { behöver en matchande }.",
+    "admin_read_only": "Caddy är inte den lokala tjänsten här, så tillägget äger inte dess Caddyfile. Ändra administrationsslutpunkten där den Caddy konfigureras.",
+    "admin_off_kept": "Caddyfile stänger av administrationsslutpunkten. Tillägget lämnar raden som den är; ändra den i Caddyfile-redigeraren.",
+    "admin_switched": "Administrations-API:t svarar nu på {{address}}",
+    "admin_switch_failed": "Administrationsslutpunkten flyttade inte till {{address}} ({{reason}}). Den tidigare Caddyfile är återställd.",
+    "admin_switch_unrestored": "Administrationsslutpunkten flyttade inte till {{address}} ({{reason}}) och den tidigare Caddyfile gick inte att återställa. Kontrollera Caddyfile och starta om Caddy.",
+    "admin_no_answer": "inget svar inom 10 sekunder"
   },
   "ca": {
     "title": "Intern certifikatutfärdare",
@@ -1235,21 +1263,34 @@
     "move_up": "Flytta upp",
     "move_down": "Flytta ned",
     "remove": "Ta bort",
-    "remove_confirm": "Ta bort det här blocket och de {{count}} blocken i det?",
     "remove_yes": "Ta bort",
     "remove_no": "Behåll",
     "add_kind": "Slag",
     "add_inside": "Lägg till i det valda blocket",
     "add_top": "Lägg till på översta nivån",
-    "add_matcher": "Matchare för det nya blocket"
+    "add_matcher": "Matchare för det nya blocket",
+    "remove_confirm_one": "Ta bort det här blocket och de {{count}} blocken i det?",
+    "remove_confirm_other": "Ta bort det här blocket och de {{count}} blocken i det?",
+    "handle_path_invalid": "En handle_path behöver en sökväg som börjar med /, till exempel /app/*.",
+    "fix_first": "Rätta eller förkasta ändringen först: den kan inte tillämpas som den är.",
+    "move_hint": "Block kan flyttas inuti en route och mellan handle-block med namngivna matchers, vars skrivna ordning Caddy behåller. Övriga block sorterar Caddy själv, efter hur specifik sökvägen är.",
+    "changed_meanwhile": "Webbplatsens block har ändrats sedan den här fliken läste det. Stäng dialogen och öppna den igen för att redigera den aktuella texten.",
+    "form_locked": "Den här webbplatsen har nästlade block, så formuläret sparar bara adressen, bind, importer och TLS. Redigera resten på fliken Träd.",
+    "remove_confirm_zero": "Ta bort det här blocket och de {{count}} blocken i det?",
+    "remove_confirm_two": "Ta bort det här blocket och de {{count}} blocken i det?",
+    "remove_confirm_few": "Ta bort det här blocket och de {{count}} blocken i det?",
+    "remove_confirm_many": "Ta bort det här blocket och de {{count}} blocken i det?",
+    "remove_confirm": "Ta bort det här blocket och de {{count}} blocken i det?",
+    "definition_help": "Vad {{name}} matchar, enligt definitionen i den här webbplatsen. Ändringar här skriver om definitionen, så de gäller varje block som använder {{name}}.",
+    "definition_empty": "En matcher behöver minst ett villkor, och ett header-regexp behöver sin header."
   },
   "encode": {
     "heading": "Komprimering",
     "section_title": "Komprimeringsinställningar (valfritt)",
     "help": "Gäller så länge komprimering är på under Allmänt. Utan val komprimerar Caddy med gzip och zstd.",
     "algorithms": "Algoritmer och ordning",
-    "algorithms_default": "gzip, zstd (standard)",
-    "algorithms_zstd_gzip": "zstd, sedan gzip",
+    "algorithms_default": "zstd, gzip (standard)",
+    "algorithms_gzip_zstd": "gzip, sedan zstd",
     "algorithms_gzip": "endast gzip",
     "algorithms_zstd": "endast zstd",
     "minimum_length": "Minsta storlek",
@@ -1284,13 +1325,13 @@
   },
   "bind": {
     "label": "Bind-adresser",
-    "help": "Adresserna som den här webbplatsen lyssnar på, avgränsade med mellanslag, till exempel 127.0.0.1 ::1. Tomt lyssnar på alla adresser. En värd som är en enda IP-adress binder redan till den.",
+    "help": "Adresserna som den här webbplatsen lyssnar på, avgränsade med mellanslag, till exempel 127.0.0.1 ::1. Tomt lyssnar på alla adresser, även när värden är en IP-adress: värden matchar bara förfrågningar.",
     "invalid": "Ange IP-adresser eller värdnamn, utan port."
   },
   "modules": {
     "title": "Caddy-moduler",
     "loading": "Läser modulerna…",
-    "unknown": "Modulerna i den här Caddy kunde inte läsas (finns kommandot caddy?).",
+    "unknown": "Modulerna i denna Caddy kunde inte läsas: varken kommandot caddy eller Admin-API:t svarade.",
     "help": "Vad den installerade Caddy kan utöver ett standardbygge. En funktion som kräver en saknad modul misslyckas när Caddy läser in konfigurationen, så kontrollera här först.",
     "cap_dns": "Leverantörer för DNS-utmaning",
     "cap_layer4": "Lager 4 (TCP- och UDP-proxy)",
@@ -1303,6 +1344,8 @@
     "all": "Alla moduler ({{count}})",
     "filter": "Filtrera moduler",
     "no_match": "Ingen modul matchar.",
-    "non_standard": "Moduler som inte ingår i själva Caddy: {{count}}"
+    "non_standard": "Moduler som inte ingår i själva Caddy: {{count}}",
+    "not_known": "Okänt",
+    "probed": "Denna Caddy nås bara via Admin-API:t, som saknar modullista. Varje funktion testades genom att anpassa en liten konfiguration; bara vanliga DNS-leverantörer testas."
   }
 }

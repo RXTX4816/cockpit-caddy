@@ -545,7 +545,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
               <Content>{t("migration.gate_body")}</Content>
             </StackItem>
             <StackItem>
-              <Notice variant="warning" title={t("migration.gate_continue_warning")} />
+              <Notice variant="warning" title={t("migration.gate_continue_title")}>{t("migration.gate_continue_warning")}</Notice>
             </StackItem>
           </Stack>
         </ModalBody>
@@ -786,7 +786,7 @@ export function ProxyList({ onViewLogs, onOpenBackup }: Props) {
           proxy={editing}
           existingRoutes={proxies.filter(p => p.id !== editing.id && !p.namedServerKey)}
           onSave={editProxy}
-          onSaveSiteText={text => saveSiteText(editing, text)}
+          onSaveSiteText={(text, expected) => saveSiteText(editing, text, expected)}
           onClose={() => setEditing(null)}
           onApiError={msg => setApiError({ message: msg, search: extractLogsSearch(msg), action: "edit" })}
           servers={servers}

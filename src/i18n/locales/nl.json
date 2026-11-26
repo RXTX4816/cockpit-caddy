@@ -24,7 +24,8 @@
     "unit_kb": "KB",
     "unit_mb": "MB",
     "unit_gb": "GB",
-    "example_value": "bijv. {{value}}"
+    "example_value": "bijv. {{value}}",
+    "more_about": "Over {{topic}}"
   },
   "app": {
     "title": "Caddy",
@@ -95,8 +96,8 @@
     "delete_confirm_title": "Proxy :{{port}} verwijderen?",
     "delete_confirm_body": "De reverse proxy voor poort {{port}} → {{target}} wordt verwijderd.",
     "delete_confirm_button": "Verwijderen",
-    "api_error_add_title": "Proxy op schijf aangemaakt — Caddy weigerde de live-update",
-    "api_error_edit_title": "Label opgeslagen — Caddy weigerde de configuratie-update (andere wijzigingen niet toegepast)",
+    "api_error_add_title": "Opgeslagen, maar Caddy weigerde het",
+    "api_error_edit_title": "Alleen het label is opgeslagen",
     "caddyfile_error_title": "Validatie van de Caddyfile mislukt — wijzigingen niet opgeslagen",
     "view_logs": "Logs bekijken",
     "indicator_browse": "mapweergave",
@@ -192,7 +193,21 @@
     "field_templates_help": "Zet Caddy's sjabloonengine aan voor de geserveerde bestanden, zodat ze include, .Req en de andere sjabloonacties kunnen gebruiken.",
     "field_templates_mime": "MIME-typen",
     "field_templates_root": "Map voor includes",
-    "field_templates_root_help": "Waar include en de andere bestandsacties bestanden zoeken. Leeg betekent de siteroot."
+    "field_templates_root_help": "Waar include en de andere bestandsacties bestanden zoeken. Leeg betekent de siteroot.",
+    "field_browse_sort": "Volgorde van de lijst",
+    "field_browse_order": "Richting",
+    "browse_sort_default": "Standaard van Caddy (naam)",
+    "browse_sort_name": "Naam",
+    "browse_sort_namedirfirst": "Naam, mappen eerst",
+    "browse_sort_size": "Grootte",
+    "browse_sort_time": "Laatst gewijzigd",
+    "browse_order_asc": "Oplopend",
+    "browse_order_desc": "Aflopend",
+    "field_browse_file_limit": "Maximaal aantal items per lijst",
+    "browse_file_limit_none": "Geen limiet",
+    "browse_file_limit_invalid": "Voer een geheel getal van 1 of meer in.",
+    "field_browse_reveal_symlinks": "Doelen van symlinks tonen",
+    "field_browse_reveal_symlinks_help": "De lijst toont waar elke symlink naar wijst. Dat kan paden buiten de hoofdmap van de site prijsgeven."
   },
   "edit_static": {
     "title": "Statische server bewerken — :{{port}}",
@@ -571,7 +586,8 @@
     "backup_warning_title": "Maak eerst een back-up van je configuratie",
     "backup_warning_body": "De migratie maakt alleen een back-up van de Caddyfile zelf. Maak een volledige back-up van de configuratie zodat je alles kunt herstellen als er iets misgaat.",
     "banner_details_toggle": "Details",
-    "banner_details": "Siteblokken worden ongewijzigd verplaatst van /etc/caddy/Caddyfile naar /etc/caddy/conf.d/cockpit-caddy.conf, en de Caddyfile krijgt een import-regel voor conf.d. De oorspronkelijke Caddyfile wordt bewaard als /etc/caddy/Caddyfile.bak. Tot die tijd kunnen wijzigingen van de plug-in botsen met de sites in de Caddyfile."
+    "banner_details": "Siteblokken worden ongewijzigd verplaatst van /etc/caddy/Caddyfile naar /etc/caddy/conf.d/cockpit-caddy.conf, en de Caddyfile krijgt een import-regel voor conf.d. De oorspronkelijke Caddyfile wordt bewaard als /etc/caddy/Caddyfile.bak. Tot die tijd kunnen wijzigingen van de plug-in botsen met de sites in de Caddyfile.",
+    "gate_continue_title": "Mogelijk dubbele sites"
   },
   "backup": {
     "button": "Back-up",
@@ -688,7 +704,7 @@
   },
   "global_opts": {
     "title": "Globale Caddy-opties",
-    "caddyfile_note": "Deze instellingen worden geschreven naar het blok met globale opties in /etc/caddy/Caddyfile. Caddy wordt bij opslaan automatisch herladen.",
+    "caddyfile_note": "Deze instellingen staan in het blok met globale opties van /etc/caddy/Caddyfile. Opslaan schrijft en controleert ze; Herladen past ze toe.",
     "unmanaged_hint": "Er zijn geen expliciete globale opties ingesteld — Caddy gebruikt zijn standaardinstellingen voor automatische HTTPS (inclusief Let's Encrypt als een proxy een publieke hostnaam heeft). De velden hieronder zijn leeg omdat er niets geconfigureerd hoeft te worden, niet omdat er iets stuk is.",
     "http_port": "HTTP-poort",
     "https_port": "HTTPS-poort",
@@ -808,10 +824,8 @@
     "default_bind_help": "Adressen gescheiden door spaties waarop sites zonder bind-optie luisteren.",
     "ocsp_stapling_off": "OCSP-stapling uitschakelen",
     "admin_title": "Beheereindpunt",
-    "admin_off": "Beheereindpunt uitschakelen",
-    "admin_off_help": "De plug-in heeft de beheer-API nodig om de lopende configuratie te lezen en te wijzigen.",
     "admin_address": "Beheeradres",
-    "admin_address_help": "Waar de beheer-API van Caddy luistert, geschreven zoals in de Caddyfile. De plug-in verbindt met het adres in zijn eigen instelling, wijzig dus beide samen.",
+    "admin_address_help": "Waar de beheer-API van Caddy luistert, zoals in de Caddyfile, bijv. localhost:2019 of unix//run/caddy/admin.socket. Bij de volgende herlaadbeurt wacht de plugin tot 10 seconden tot het nieuwe adres antwoordt en gebruikt het dan; zonder antwoord zet hij de vorige Caddyfile terug.",
     "admin_origins": "Toegestane origins",
     "admin_origins_help": "Hosts gescheiden door spaties die de beheer-API vanuit een browser mogen aanroepen.",
     "admin_enforce_origin": "Origins afdwingen",
@@ -822,7 +836,21 @@
     "tab_tls": "TLS & ACME",
     "tab_logging": "Logging & metrics",
     "tab_proxy": "Proxy-headers & protocollen",
-    "tabs_aria": "Onderdelen van de instellingen"
+    "tabs_aria": "Onderdelen van de instellingen",
+    "issuer_custom": "Andere uitgever…",
+    "issuer_custom_name": "Uitgever en argumenten",
+    "issuer_custom_name_help": "Wat na cert_issuer komt: de uitgevermodule en daarna de argumenten, bijv. acme https://ca.example/directory.",
+    "issuer_custom_body": "Opties van de uitgever",
+    "issuer_custom_body_help": "Optioneel: de regels in het cert_issuer-blok, één per regel, zoals in de Caddyfile.",
+    "issuer_custom_required": "Voer de uitgevermodule in, bijv. acme of zerossl.",
+    "issuer_custom_invalid": "Begin met de modulenaam en daarna argumenten gescheiden door spaties, zonder accolades.",
+    "issuer_body_braces": "Elke { heeft een bijbehorende } nodig.",
+    "admin_read_only": "Caddy is hier niet de lokale dienst, dus de plugin beheert de Caddyfile niet. Wijzig het beheer-eindpunt waar die Caddy wordt geconfigureerd.",
+    "admin_off_kept": "De Caddyfile zet het beheer-eindpunt uit. De plugin laat die regel zoals hij is; wijzig hem in de Caddyfile-editor.",
+    "admin_switched": "De beheer-API antwoordt nu op {{address}}",
+    "admin_switch_failed": "Het beheer-eindpunt is niet naar {{address}} verhuisd ({{reason}}). De vorige Caddyfile is teruggezet.",
+    "admin_switch_unrestored": "Het beheer-eindpunt is niet naar {{address}} verhuisd ({{reason}}) en het terugzetten van de vorige Caddyfile is mislukt. Controleer de Caddyfile en herstart Caddy.",
+    "admin_no_answer": "geen antwoord binnen 10 seconden"
   },
   "ca": {
     "title": "Interne certificeringsinstantie",
@@ -1235,21 +1263,34 @@
     "move_up": "Omhoog",
     "move_down": "Omlaag",
     "remove": "Verwijderen",
-    "remove_confirm": "Dit blok en de {{count}} blokken erin verwijderen?",
     "remove_yes": "Verwijderen",
     "remove_no": "Behouden",
     "add_kind": "Soort",
     "add_inside": "Toevoegen in het geselecteerde blok",
     "add_top": "Toevoegen op het hoogste niveau",
-    "add_matcher": "Matcher van het nieuwe blok"
+    "add_matcher": "Matcher van het nieuwe blok",
+    "remove_confirm_one": "Dit blok en de {{count}} blokken erin verwijderen?",
+    "remove_confirm_other": "Dit blok en de {{count}} blokken erin verwijderen?",
+    "handle_path_invalid": "Een handle_path heeft één pad nodig dat met / begint, zoals /app/*.",
+    "fix_first": "Herstel of verwerp deze wijziging eerst: zo kan ze niet worden toegepast.",
+    "move_hint": "Blokken kunnen worden verplaatst binnen een route, en tussen handles met benoemde matchers, waarvan Caddy de geschreven volgorde aanhoudt. De andere blokken sorteert Caddy zelf, op hoe specifiek hun pad is.",
+    "changed_meanwhile": "Het blok van de site is gewijzigd sinds dit tabblad het las. Sluit het venster en open het opnieuw om de huidige tekst te bewerken.",
+    "form_locked": "Deze site heeft geneste blokken, dus het formulier slaat alleen het adres, bind, imports en TLS op. Bewerk de rest op het tabblad Boom.",
+    "remove_confirm_zero": "Dit blok en de {{count}} blokken erin verwijderen?",
+    "remove_confirm_two": "Dit blok en de {{count}} blokken erin verwijderen?",
+    "remove_confirm_few": "Dit blok en de {{count}} blokken erin verwijderen?",
+    "remove_confirm_many": "Dit blok en de {{count}} blokken erin verwijderen?",
+    "remove_confirm": "Dit blok en de {{count}} blokken erin verwijderen?",
+    "definition_help": "Waar {{name}} op past, zoals gedefinieerd in deze site. Wijzigingen hier herschrijven die definitie en gelden dus voor elk blok dat {{name}} gebruikt.",
+    "definition_empty": "Een matcher heeft minstens één voorwaarde nodig, en een header-regexp heeft zijn header nodig."
   },
   "encode": {
     "heading": "Compressie",
     "section_title": "Compressie-instellingen (optioneel)",
     "help": "Geldt zolang compressie aan staat bij Algemeen. Zonder keuzes comprimeert Caddy met gzip en zstd.",
     "algorithms": "Algoritmen en volgorde",
-    "algorithms_default": "gzip, zstd (standaard)",
-    "algorithms_zstd_gzip": "zstd, dan gzip",
+    "algorithms_default": "zstd, gzip (standaard)",
+    "algorithms_gzip_zstd": "gzip, dan zstd",
     "algorithms_gzip": "alleen gzip",
     "algorithms_zstd": "alleen zstd",
     "minimum_length": "Minimale grootte",
@@ -1284,13 +1325,13 @@
   },
   "bind": {
     "label": "Bind-adressen",
-    "help": "De adressen waarop deze site luistert, gescheiden door spaties, bijvoorbeeld 127.0.0.1 ::1. Leeg luistert op elk adres. Een host die één IP-adres is, bindt er al aan.",
+    "help": "De adressen waarop deze site luistert, gescheiden door spaties, bijvoorbeeld 127.0.0.1 ::1. Leeg luistert op elk adres, ook als de host een IP-adres is: de host filtert alleen verzoeken.",
     "invalid": "Voer IP-adressen of hostnamen in, zonder poort."
   },
   "modules": {
     "title": "Caddy-modules",
     "loading": "Modules lezen…",
-    "unknown": "De modules van deze Caddy konden niet worden gelezen (is de opdracht caddy beschikbaar?).",
+    "unknown": "De modules van deze Caddy konden niet worden gelezen: het caddy-commando en de Admin-API antwoordden geen van beide.",
     "help": "Wat de geïnstalleerde Caddy kan boven op een standaardbuild. Een functie die een ontbrekende module nodig heeft, mislukt wanneer Caddy de configuratie laadt, controleer dus eerst hier.",
     "cap_dns": "DNS-challenge-providers",
     "cap_layer4": "Laag 4 (TCP- en UDP-proxy)",
@@ -1303,6 +1344,8 @@
     "all": "Alle modules ({{count}})",
     "filter": "Modules filteren",
     "no_match": "Geen module komt overeen.",
-    "non_standard": "Modules die geen deel van Caddy zelf zijn: {{count}}"
+    "non_standard": "Modules die geen deel van Caddy zelf zijn: {{count}}",
+    "not_known": "Onbekend",
+    "probed": "Deze Caddy is alleen bereikbaar via de Admin-API, die geen lijst met modules heeft. Elke functie is getest door een kleine configuratie te adapteren; alleen gangbare DNS-providers worden getest."
   }
 }

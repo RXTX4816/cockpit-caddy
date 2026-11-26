@@ -24,7 +24,8 @@
     "unit_kb": "KB",
     "unit_mb": "MB",
     "unit_gb": "GB",
-    "example_value": "p. ej. {{value}}"
+    "example_value": "p. ej. {{value}}",
+    "more_about": "Acerca de {{topic}}"
   },
   "app": {
     "title": "Caddy",
@@ -95,8 +96,8 @@
     "delete_confirm_title": "¿Eliminar el proxy :{{port}}?",
     "delete_confirm_body": "Se eliminará el reverse proxy del puerto {{port}} → {{target}}.",
     "delete_confirm_button": "Eliminar",
-    "api_error_add_title": "Proxy creado en disco: Caddy rechazó la aplicación en vivo",
-    "api_error_edit_title": "Etiqueta guardada: Caddy rechazó la actualización de la configuración (los demás cambios no se aplicaron)",
+    "api_error_add_title": "Guardado, pero Caddy lo rechazó",
+    "api_error_edit_title": "Solo se guardó la etiqueta",
     "caddyfile_error_title": "Falló la validación del Caddyfile: los cambios no se guardaron",
     "view_logs": "Ver registros",
     "indicator_browse": "listado",
@@ -192,7 +193,21 @@
     "field_templates_help": "Activa el motor de plantillas de Caddy para los archivos servidos, de modo que puedan usar include, .Req y las demás acciones de plantilla.",
     "field_templates_mime": "Tipos MIME",
     "field_templates_root": "Directorio para includes",
-    "field_templates_root_help": "Dónde buscan archivos include y las demás acciones de archivo. Vacío significa la raíz del sitio."
+    "field_templates_root_help": "Dónde buscan archivos include y las demás acciones de archivo. Vacío significa la raíz del sitio.",
+    "field_browse_sort": "Orden del listado",
+    "field_browse_order": "Dirección",
+    "browse_sort_default": "Predeterminado de Caddy (nombre)",
+    "browse_sort_name": "Nombre",
+    "browse_sort_namedirfirst": "Nombre, carpetas primero",
+    "browse_sort_size": "Tamaño",
+    "browse_sort_time": "Última modificación",
+    "browse_order_asc": "Ascendente",
+    "browse_order_desc": "Descendente",
+    "field_browse_file_limit": "Máximo de entradas por listado",
+    "browse_file_limit_none": "Sin límite",
+    "browse_file_limit_invalid": "Introduce un número entero igual o mayor que 1.",
+    "field_browse_reveal_symlinks": "Mostrar destinos de enlaces simbólicos",
+    "field_browse_reveal_symlinks_help": "El listado muestra adónde apunta cada enlace simbólico. Puede revelar rutas fuera de la raíz del sitio."
   },
   "edit_static": {
     "title": "Editar servidor estático — :{{port}}",
@@ -571,7 +586,8 @@
     "backup_warning_title": "Haga primero una copia de seguridad de su configuración",
     "backup_warning_body": "La migración solo guarda una copia del propio Caddyfile. Cree una copia de seguridad completa de la configuración para poder restaurarlo todo si algo sale mal.",
     "banner_details_toggle": "Detalles",
-    "banner_details": "Los bloques de sitio se mueven sin cambios de /etc/caddy/Caddyfile a /etc/caddy/conf.d/cockpit-caddy.conf, y el Caddyfile recibe una línea import para conf.d. El Caddyfile original se respalda en /etc/caddy/Caddyfile.bak. Hasta entonces, los cambios del complemento pueden chocar con los sitios del Caddyfile."
+    "banner_details": "Los bloques de sitio se mueven sin cambios de /etc/caddy/Caddyfile a /etc/caddy/conf.d/cockpit-caddy.conf, y el Caddyfile recibe una línea import para conf.d. El Caddyfile original se respalda en /etc/caddy/Caddyfile.bak. Hasta entonces, los cambios del complemento pueden chocar con los sitios del Caddyfile.",
+    "gate_continue_title": "Posibles sitios duplicados"
   },
   "backup": {
     "button": "Copia de seguridad",
@@ -688,7 +704,7 @@
   },
   "global_opts": {
     "title": "Opciones globales de Caddy",
-    "caddyfile_note": "Estos ajustes se escriben en el bloque de opciones globales de /etc/caddy/Caddyfile. Caddy se recarga automáticamente al guardar.",
+    "caddyfile_note": "Estos ajustes están en el bloque de opciones globales de /etc/caddy/Caddyfile. Guardar los escribe y comprueba; Recargar los aplica.",
     "unmanaged_hint": "No hay opciones globales explícitas: Caddy usa sus valores predeterminados de HTTPS automático (incluido Let's Encrypt cuando un proxy tiene un nombre de host público). Los campos de abajo están vacíos porque no hace falta configurar nada, no porque algo esté roto.",
     "http_port": "Puerto HTTP",
     "https_port": "Puerto HTTPS",
@@ -808,10 +824,8 @@
     "default_bind_help": "Direcciones separadas por espacios en las que escuchan los sitios sin opción bind.",
     "ocsp_stapling_off": "Desactivar OCSP stapling",
     "admin_title": "Punto de acceso de administración",
-    "admin_off": "Desactivar el punto de acceso de administración",
-    "admin_off_help": "El plugin necesita la API de administración para leer y cambiar la configuración en ejecución.",
     "admin_address": "Dirección de administración",
-    "admin_address_help": "Dónde escucha la API de administración de Caddy, escrita como en el Caddyfile. El plugin se conecta a la dirección de su propio ajuste, así que cambie ambas a la vez.",
+    "admin_address_help": "Dónde escucha la API de administración de Caddy, como en el Caddyfile, p. ej. localhost:2019 o unix//run/caddy/admin.socket. En la próxima recarga, el plugin espera hasta 10 segundos a que responda la nueva dirección y luego la usa; si no responde, restaura el Caddyfile anterior.",
     "admin_origins": "Orígenes permitidos",
     "admin_origins_help": "Hosts separados por espacios que pueden llamar a la API de administración desde un navegador.",
     "admin_enforce_origin": "Exigir orígenes",
@@ -822,7 +836,21 @@
     "tab_tls": "TLS y ACME",
     "tab_logging": "Registros y métricas",
     "tab_proxy": "Cabeceras de proxy y protocolos",
-    "tabs_aria": "Secciones de ajustes"
+    "tabs_aria": "Secciones de ajustes",
+    "issuer_custom": "Otro emisor…",
+    "issuer_custom_name": "Emisor y argumentos",
+    "issuer_custom_name_help": "Lo que sigue a cert_issuer: el módulo del emisor y sus argumentos, p. ej. acme https://ca.example/directory.",
+    "issuer_custom_body": "Opciones del emisor",
+    "issuer_custom_body_help": "Opcional: las líneas dentro del bloque cert_issuer, una por línea, como en el Caddyfile.",
+    "issuer_custom_required": "Introduce el módulo del emisor, p. ej. acme o zerossl.",
+    "issuer_custom_invalid": "Empieza por el nombre del módulo y luego los argumentos separados por espacios, sin llaves.",
+    "issuer_body_braces": "Cada { necesita su }.",
+    "admin_read_only": "Aquí Caddy no es el servicio local, así que el plugin no gestiona su Caddyfile. Cambia el endpoint de administración donde se configure ese Caddy.",
+    "admin_off_kept": "El Caddyfile desactiva el endpoint de administración. El plugin deja esa línea como está; cámbiala en el editor del Caddyfile.",
+    "admin_switched": "La API de administración responde ahora en {{address}}",
+    "admin_switch_failed": "El endpoint de administración no pasó a {{address}} ({{reason}}). Se restauró el Caddyfile anterior.",
+    "admin_switch_unrestored": "El endpoint de administración no pasó a {{address}} ({{reason}}) y no se pudo restaurar el Caddyfile anterior. Revisa el Caddyfile y reinicia Caddy.",
+    "admin_no_answer": "sin respuesta en 10 segundos"
   },
   "ca": {
     "title": "Autoridad de certificación interna",
@@ -1235,21 +1263,34 @@
     "move_up": "Subir",
     "move_down": "Bajar",
     "remove": "Quitar",
-    "remove_confirm": "¿Quitar este bloque y los {{count}} bloques que contiene?",
     "remove_yes": "Quitar",
     "remove_no": "Conservar",
     "add_kind": "Tipo",
     "add_inside": "Añadir dentro del bloque seleccionado",
     "add_top": "Añadir en el nivel superior",
-    "add_matcher": "Matcher del bloque nuevo"
+    "add_matcher": "Matcher del bloque nuevo",
+    "remove_confirm_one": "¿Quitar este bloque y los {{count}} bloques que contiene?",
+    "remove_confirm_other": "¿Quitar este bloque y los {{count}} bloques que contiene?",
+    "remove_confirm_many": "¿Quitar este bloque y los {{count}} bloques que contiene?",
+    "handle_path_invalid": "Un handle_path necesita una ruta que empiece por /, como /app/*.",
+    "fix_first": "Corrija o descarte primero este cambio: tal como está no se puede aplicar.",
+    "move_hint": "Los bloques se pueden mover dentro de un route y entre handles con matchers con nombre, cuyo orden escrito Caddy mantiene. Caddy ordena él mismo los demás bloques, según lo específica que sea su ruta.",
+    "changed_meanwhile": "El bloque del sitio cambió desde que esta pestaña lo leyó. Cierre el diálogo y vuelva a abrirlo para editar el texto actual.",
+    "form_locked": "Este sitio tiene bloques anidados, así que el formulario solo guarda la dirección, bind, las importaciones y TLS. Edite el resto en la pestaña Árbol.",
+    "remove_confirm_zero": "¿Quitar este bloque y los {{count}} bloques que contiene?",
+    "remove_confirm_two": "¿Quitar este bloque y los {{count}} bloques que contiene?",
+    "remove_confirm_few": "¿Quitar este bloque y los {{count}} bloques que contiene?",
+    "remove_confirm": "¿Quitar este bloque y los {{count}} bloques que contiene?",
+    "definition_help": "Lo que coincide con {{name}}, según su definición en este sitio. Los cambios aquí reescriben esa definición, así que afectan a todo bloque que use {{name}}.",
+    "definition_empty": "Un matcher necesita al menos una condición, y una regexp de cabecera necesita su cabecera."
   },
   "encode": {
     "heading": "Compresión",
     "section_title": "Compresión (opcional)",
     "help": "Se usa mientras la compresión está activada en General. Sin elecciones, Caddy comprime con gzip y zstd.",
     "algorithms": "Algoritmos y orden",
-    "algorithms_default": "gzip, zstd (predeterminado)",
-    "algorithms_zstd_gzip": "zstd y luego gzip",
+    "algorithms_default": "zstd, gzip (predeterminado)",
+    "algorithms_gzip_zstd": "gzip y luego zstd",
     "algorithms_gzip": "solo gzip",
     "algorithms_zstd": "solo zstd",
     "minimum_length": "Tamaño mínimo",
@@ -1284,13 +1325,13 @@
   },
   "bind": {
     "label": "Direcciones de enlace",
-    "help": "Las direcciones en las que escucha este sitio, separadas por espacios, por ejemplo 127.0.0.1 ::1. Vacío escucha en todas. Un host que es una sola dirección IP ya se enlaza a ella.",
+    "help": "Las direcciones en las que escucha este sitio, separadas por espacios, por ejemplo 127.0.0.1 ::1. Vacío escucha en todas, aunque el host sea una dirección IP: el host solo filtra las solicitudes.",
     "invalid": "Introduzca direcciones IP o nombres de host, sin puerto."
   },
   "modules": {
     "title": "Módulos de Caddy",
     "loading": "Leyendo los módulos…",
-    "unknown": "No se pudieron leer los módulos de este Caddy (¿está disponible el comando caddy?).",
+    "unknown": "No se pudieron leer los módulos de este Caddy: no respondió ni el comando caddy ni la Admin API.",
     "help": "Lo que el Caddy instalado puede hacer además de una compilación estándar. Una función que necesita un módulo ausente falla cuando Caddy carga la configuración, así que compruébelo aquí primero.",
     "cap_dns": "Proveedores del desafío DNS",
     "cap_layer4": "Capa 4 (proxy TCP y UDP)",
@@ -1303,6 +1344,8 @@
     "all": "Todos los módulos ({{count}})",
     "filter": "Filtrar módulos",
     "no_match": "Ningún módulo coincide.",
-    "non_standard": "Módulos que no forman parte del propio Caddy: {{count}}"
+    "non_standard": "Módulos que no forman parte del propio Caddy: {{count}}",
+    "not_known": "Desconocido",
+    "probed": "Este Caddy solo es accesible a través de la Admin API, que no tiene lista de módulos. Cada función se probó adaptando una configuración pequeña; solo se prueban los proveedores DNS habituales."
   }
 }
