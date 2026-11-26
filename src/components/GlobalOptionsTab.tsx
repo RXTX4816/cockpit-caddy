@@ -20,13 +20,16 @@ import {
 import { useTranslation } from "react-i18next";
 import { useConfirmAction } from "@rxtx4816/cockpit-plugin-base-react";
 import { useToast } from "@rxtx4816/cockpit-plugin-base-react/components";
-import { readGlobalOptions, syncGlobalOptions, reloadCaddy, fetchStorageInfo, checkStoragePathWritable, listDnsProviders, readDnsEnvNames, restartService, notifyConfigChanged } from "../api";
+import { readGlobalOptions, syncGlobalOptions, reloadCaddy, readMainCaddyfile, reloadWithAdminSwitch, adminMoves, adminTarget, AdminSwitchError, type AdminTarget, fetchStorageInfo, checkStoragePathWritable, listDnsProviders, readDnsEnvNames, restartService, notifyConfigChanged } from "../api";
 import type { DnsChallengeConfig, GlobalOptions, StorageInfo } from "../api";
 import { DnsChallengeFields, dnsDraftFromConfig, dnsDraftToConfig, validateDnsDraft, type DnsDraft } from "./DnsChallengeFields";
 import { CertLifetimeSelect } from "./CertLifetimeSelect";
 import { CaddyModulesPanel } from "./CaddyModulesPanel";
 import { GlobalTlsFields, globalTlsFromValues, globalTlsIssuerError, globalTlsToValues, type GlobalTlsValues } from "./GlobalTlsFields";
 import { GlobalAdminFields, globalAdminFromValues, globalAdminToValues, type GlobalAdminValues } from "./GlobalAdminFields";
+import { loadAdminAddress, storeAdminAddress } from "../hooks/useAdminAddress";
+
+const adminTargetLabel = (target: AdminTarget) => target.transport === "unix" ? target.socket : target.tcp;
 import { AccessLogSection, type AccessLogValues, accessLogConfigToValues, accessLogHasError, accessLogValuesToConfig } from "./AccessLogSection";
 import { Notice } from "./Notice";
 import { ProxyDialogTabs, type ProxyTab } from "./proxyDialogParts";
@@ -68,7 +71,16 @@ function metricsLinkUrl(listenAddress: string, path: string): string | null {
   return `http://${host}:${m[2]}${path.trim() || "/metrics"}`;
 }
 
-export function GlobalOptionsTab() {
+/** A saved admin address that the next reload has to move to safely (#330). */
+interface PendingAdminSwitch {
+  /** The main Caddyfile before the first save that moved the endpoint. */
+  backup: string;
+  /** The admin address that Caddyfile had. */
+  from: string | undefined;
+  target: AdminTarget;
+}
+
+export function GlobalOptionsTab({ unmanaged = false }: { unmanaged?: boolean } = {}) {
   const { t } = useTranslation();
   const toast = useToast();
   const confirm = useConfirmAction();
@@ -97,6 +109,8 @@ export function GlobalOptionsTab() {
   const [renewalWindowRatio, setRenewalWindowRatio] = useState("");
   const [globalTls, setGlobalTls] = useState<GlobalTlsValues>(globalTlsToValues({}));
   const [globalAdmin, setGlobalAdmin] = useState<GlobalAdminValues>(globalAdminToValues({}));
+  const [savedAdminAddress, setSavedAdminAddress] = useState<string | undefined>(undefined);
+  const [pendingAdmin, setPendingAdmin] = useState<PendingAdminSwitch | null>(null);
   const [storagePath, setStoragePath] = useState("");
   const [storageInfo, setStorageInfo] = useState<StorageInfo | null>(null);
   const [storageInfoError, setStorageInfoError] = useState<string | null>(null);
@@ -160,6 +174,7 @@ export function GlobalOptionsTab() {
         setRenewalWindowRatio(opts.renewalWindowRatio != null ? String(opts.renewalWindowRatio) : "");
         setGlobalTls(globalTlsToValues(opts));
         setGlobalAdmin(globalAdminToValues(opts));
+        setSavedAdminAddress(opts.adminAddress);
         setStoragePath(opts.storagePath ?? "");
         loadStorageInfo(opts.storagePath);
         setMetricsEnabled(opts.metricsEnabled ?? false);
@@ -230,11 +245,30 @@ export function GlobalOptionsTab() {
   const isConfirming = confirm.step !== "idle";
   const isSaving = confirm.step === "submitting";
 
+  /** Moves the plugin to the saved admin address, or reports the rollback (#330). */
+  async function switchAdmin(pending: PendingAdminSwitch, restart: boolean) {
+    try {
+      await reloadWithAdminSwitch(pending.backup, pending.target, { restart });
+      storeAdminAddress(pending.target.tcp, pending.target.socket);
+      toast.success(t("global_opts.admin_switched", { address: adminTargetLabel(pending.target) }));
+    } catch (e) {
+      if (!(e instanceof AdminSwitchError)) throw e;
+      // The Caddyfile on disk is the backup again, so the form shows it again.
+      load();
+      throw new Error(t(e.restored ? "global_opts.admin_switch_failed" : "global_opts.admin_switch_unrestored", {
+        address: adminTargetLabel(pending.target), reason: e.rejection ?? t("global_opts.admin_no_answer"),
+      }));
+    } finally {
+      setPendingAdmin(null);
+    }
+  }
+
   async function handleReload() {
     setReloading(true);
     setReloadError(null);
     try {
-      await reloadCaddy();
+      if (pendingAdmin) await switchAdmin(pendingAdmin, false);
+      else await reloadCaddy();
       setNeedsReload(false);
       toast.success(t("caddyfile.reloaded"));
     } catch (e) {
@@ -379,7 +413,7 @@ export function GlobalOptionsTab() {
         <Title headingLevel="h4" size="md" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
           {t("global_opts.admin_title")}
         </Title>
-        <GlobalAdminFields value={globalAdmin} onChange={setGlobalAdmin} isDisabled={isConfirming} />
+        <GlobalAdminFields value={globalAdmin} onChange={setGlobalAdmin} isDisabled={isConfirming} isReadOnly={unmanaged} />
 
         <Divider style={{ margin: "var(--pf-v6-global--spacer--md) 0 var(--pf-v6-global--spacer--sm)" }} />
 
@@ -908,7 +942,7 @@ export function GlobalOptionsTab() {
             <Button variant="warning" size="sm" isLoading={restarting} isDisabled={restarting} onClick={() => {
               setRestarting(true);
               setReloadError(null);
-              restartService("caddy")
+              (pendingAdmin ? switchAdmin(pendingAdmin, true) : restartService("caddy"))
                 .then(() => { setRestartNeeded(false); setNeedsReload(false); void notifyConfigChanged(); })
                 .catch(e => setReloadError(e instanceof Error ? e.message : String(e)))
                 .finally(() => setRestarting(false));
@@ -1009,12 +1043,20 @@ export function GlobalOptionsTab() {
                     const writeErr = await checkStoragePathWritable(opts.storagePath);
                     if (writeErr) throw new Error(t("global_opts.storage_not_writable", { error: writeErr }));
                   }
+                  // A save that moves the admin endpoint keeps the Caddyfile from before it, so the
+                  // reload can put it back when the new address doesn't answer (#330).
+                  const current = loadAdminAddress();
+                  const from = pendingAdmin ? pendingAdmin.from : savedAdminAddress;
+                  const moves = !unmanaged && adminMoves(from, opts.adminAddress, current);
+                  const backup = moves && !pendingAdmin ? await readMainCaddyfile() : pendingAdmin?.backup;
                   const dns = dnsDraftToConfig(dnsEnabled ? dnsDraft : dnsDraftFromConfig(undefined), loadedAcmeDns);
                   opts.acmeDns = dns.config;
                   const { restartNeeded: mustRestart } = await syncGlobalOptions(opts, { set: dns.set, remove: dns.remove }).catch(e => {
                     throw e instanceof Error ? e : new Error(String(e));
                   });
                   if (mustRestart) setRestartNeeded(true);
+                  setPendingAdmin(moves && backup !== undefined ? { backup, from, target: adminTarget(opts.adminAddress, current) } : null);
+                  setSavedAdminAddress(opts.adminAddress);
                   // The values went to the env file; the form keeps only the option names.
                   setLoadedAcmeDns(dns.config);
                   setDnsDraft(dnsDraftFromConfig(dns.config));

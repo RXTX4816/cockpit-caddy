@@ -822,10 +822,8 @@
     "default_bind_help": "Adressen gescheiden door spaties waarop sites zonder bind-optie luisteren.",
     "ocsp_stapling_off": "OCSP-stapling uitschakelen",
     "admin_title": "Beheereindpunt",
-    "admin_off": "Beheereindpunt uitschakelen",
-    "admin_off_help": "De plug-in heeft de beheer-API nodig om de lopende configuratie te lezen en te wijzigen.",
     "admin_address": "Beheeradres",
-    "admin_address_help": "Waar de beheer-API van Caddy luistert, geschreven zoals in de Caddyfile. De plug-in verbindt met het adres in zijn eigen instelling, wijzig dus beide samen.",
+    "admin_address_help": "Waar de beheer-API van Caddy luistert, zoals in de Caddyfile, bijv. localhost:2019 of unix//run/caddy/admin.socket. Bij de volgende herlaadbeurt wacht de plugin tot 10 seconden tot het nieuwe adres antwoordt en gebruikt het dan; zonder antwoord zet hij de vorige Caddyfile terug.",
     "admin_origins": "Toegestane origins",
     "admin_origins_help": "Hosts gescheiden door spaties die de beheer-API vanuit een browser mogen aanroepen.",
     "admin_enforce_origin": "Origins afdwingen",
@@ -844,7 +842,13 @@
     "issuer_custom_body_help": "Optioneel: de regels in het cert_issuer-blok, één per regel, zoals in de Caddyfile.",
     "issuer_custom_required": "Voer de uitgevermodule in, bijv. acme of zerossl.",
     "issuer_custom_invalid": "Begin met de modulenaam en daarna argumenten gescheiden door spaties, zonder accolades.",
-    "issuer_body_braces": "Elke { heeft een bijbehorende } nodig."
+    "issuer_body_braces": "Elke { heeft een bijbehorende } nodig.",
+    "admin_read_only": "Caddy is hier niet de lokale dienst, dus de plugin beheert de Caddyfile niet. Wijzig het beheer-eindpunt waar die Caddy wordt geconfigureerd.",
+    "admin_off_kept": "De Caddyfile zet het beheer-eindpunt uit. De plugin laat die regel zoals hij is; wijzig hem in de Caddyfile-editor.",
+    "admin_switched": "De beheer-API antwoordt nu op {{address}}",
+    "admin_switch_failed": "Het beheer-eindpunt is niet naar {{address}} verhuisd ({{reason}}). De vorige Caddyfile is teruggezet.",
+    "admin_switch_unrestored": "Het beheer-eindpunt is niet naar {{address}} verhuisd ({{reason}}) en het terugzetten van de vorige Caddyfile is mislukt. Controleer de Caddyfile en herstart Caddy.",
+    "admin_no_answer": "geen antwoord binnen 10 seconden"
   },
   "ca": {
     "title": "Interne certificeringsinstantie",

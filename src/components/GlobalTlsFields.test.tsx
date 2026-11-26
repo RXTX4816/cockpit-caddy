@@ -70,12 +70,21 @@ describe("GlobalAdminFields values (#330)", () => {
     expect(globalAdminFromValues(globalAdminToValues(opts))).toEqual(opts);
   });
 
-  it("writes only admin off when it is off", () => {
+  it("keeps an admin off read from the file, and offers no switch for it", () => {
     expect(globalAdminFromValues({ off: true, address: "localhost:2019", origins: "x", enforceOrigin: true })).toEqual({ adminOff: true });
   });
 
   it("disables the other fields while the admin endpoint is off", () => {
     render(<GlobalAdminFields value={globalAdminToValues({ adminOff: true })} onChange={() => {}} />);
     expect(screen.getByLabelText("Admin address")).toHaveProperty("disabled", true);
+    expect(screen.queryByRole("checkbox", { name: /off/i })).toBeNull();
+    expect(screen.getByText(/turns the admin endpoint off/)).toBeTruthy();
+  });
+
+  it("is read-only with a note when Caddy isn't the local service", () => {
+    render(<GlobalAdminFields value={globalAdminToValues({ adminAddress: "localhost:2019" })} onChange={() => {}} isReadOnly />);
+    expect(screen.getByLabelText("Admin address")).toHaveProperty("disabled", true);
+    expect(screen.getByLabelText("Allowed origins")).toHaveProperty("disabled", true);
+    expect(screen.getByText(/doesn't own its Caddyfile/)).toBeTruthy();
   });
 });

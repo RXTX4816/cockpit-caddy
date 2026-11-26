@@ -822,10 +822,8 @@
     "default_bind_help": "Adresses séparées par des espaces sur lesquelles écoutent les sites sans option bind.",
     "ocsp_stapling_off": "Désactiver l'OCSP stapling",
     "admin_title": "Point d'accès d'administration",
-    "admin_off": "Désactiver le point d'accès d'administration",
-    "admin_off_help": "Le plugin a besoin de l'API d'administration pour lire et modifier la configuration en cours.",
     "admin_address": "Adresse d'administration",
-    "admin_address_help": "Où l'API d'administration de Caddy écoute, écrite comme dans le Caddyfile. Le plugin se connecte à l'adresse de son propre réglage : modifiez donc les deux ensemble.",
+    "admin_address_help": "Où écoute l'API d'administration de Caddy, comme dans le Caddyfile, p. ex. localhost:2019 ou unix//run/caddy/admin.socket. Au prochain rechargement, le plugin attend jusqu'à 10 secondes que la nouvelle adresse réponde, puis l'utilise ; sans réponse, il restaure le Caddyfile précédent.",
     "admin_origins": "Origines autorisées",
     "admin_origins_help": "Hôtes séparés par des espaces qui peuvent appeler l'API d'administration depuis un navigateur.",
     "admin_enforce_origin": "Imposer les origines",
@@ -844,7 +842,13 @@
     "issuer_custom_body_help": "Facultatif : les lignes du bloc cert_issuer, une par ligne, comme dans le Caddyfile.",
     "issuer_custom_required": "Saisissez le module d'émetteur, p. ex. acme ou zerossl.",
     "issuer_custom_invalid": "Commencez par le nom du module, puis les arguments séparés par des espaces, sans accolades.",
-    "issuer_body_braces": "Chaque { doit avoir sa }."
+    "issuer_body_braces": "Chaque { doit avoir sa }.",
+    "admin_read_only": "Ici, Caddy n'est pas le service local : le plugin ne gère pas son Caddyfile. Modifiez le point d'administration là où ce Caddy est configuré.",
+    "admin_off_kept": "Le Caddyfile désactive le point d'administration. Le plugin laisse cette ligne telle quelle ; modifiez-la dans l'éditeur du Caddyfile.",
+    "admin_switched": "L'API d'administration répond maintenant sur {{address}}",
+    "admin_switch_failed": "Le point d'administration n'est pas passé à {{address}} ({{reason}}). Le Caddyfile précédent est rétabli.",
+    "admin_switch_unrestored": "Le point d'administration n'est pas passé à {{address}} ({{reason}}) et le Caddyfile précédent n'a pas pu être rétabli. Vérifiez le Caddyfile et redémarrez Caddy.",
+    "admin_no_answer": "aucune réponse en 10 secondes"
   },
   "ca": {
     "title": "Autorité de certification interne",

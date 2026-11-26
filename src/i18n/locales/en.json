@@ -822,10 +822,8 @@
     "default_bind_help": "Space-separated addresses that sites without a bind option listen on.",
     "ocsp_stapling_off": "Turn OCSP stapling off",
     "admin_title": "Admin endpoint",
-    "admin_off": "Turn the admin endpoint off",
-    "admin_off_help": "The plugin needs the admin API to read and change the running configuration.",
     "admin_address": "Admin address",
-    "admin_address_help": "Where Caddy's admin API listens, written as in the Caddyfile. The plugin connects to the address in its own setting, so change both together.",
+    "admin_address_help": "Where Caddy's admin API listens, as in the Caddyfile, e.g. localhost:2019 or unix//run/caddy/admin.socket. On the next reload the plugin waits up to 10 seconds for the new address to answer and then uses it; without an answer it restores the previous Caddyfile.",
     "admin_origins": "Allowed origins",
     "admin_origins_help": "Space-separated hosts that may call the admin API from a browser.",
     "admin_enforce_origin": "Enforce origins",
@@ -844,7 +842,13 @@
     "issuer_custom_body_help": "Optional: the lines inside the cert_issuer block, one per line, as in the Caddyfile.",
     "issuer_custom_required": "Enter the issuer module, e.g. acme or zerossl.",
     "issuer_custom_invalid": "Start with the module name, then arguments separated by spaces, without braces.",
-    "issuer_body_braces": "Every { needs a matching }."
+    "issuer_body_braces": "Every { needs a matching }.",
+    "admin_read_only": "Caddy isn't the local service here, so the plugin doesn't own its Caddyfile. Change the admin endpoint where that Caddy is configured.",
+    "admin_off_kept": "The Caddyfile turns the admin endpoint off. The plugin keeps that line as written; change it in the Caddyfile editor.",
+    "admin_switched": "The admin API now answers at {{address}}",
+    "admin_switch_failed": "The admin endpoint didn't move to {{address}} ({{reason}}). The previous Caddyfile is back in place.",
+    "admin_switch_unrestored": "The admin endpoint didn't move to {{address}} ({{reason}}), and putting the previous Caddyfile back failed. Check the Caddyfile and restart Caddy.",
+    "admin_no_answer": "no answer within 10 seconds"
   },
   "ca": {
     "title": "Internal Certificate Authority",

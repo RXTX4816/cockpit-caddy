@@ -822,10 +822,8 @@
     "default_bind_help": "以空格分隔的地址,未设置 bind 选项的站点在这些地址上监听。",
     "ocsp_stapling_off": "关闭 OCSP stapling",
     "admin_title": "管理端点",
-    "admin_off": "关闭管理端点",
-    "admin_off_help": "插件需要管理 API 来读取和修改运行中的配置。",
     "admin_address": "管理地址",
-    "admin_address_help": "Caddy 管理 API 的监听位置,写法与 Caddyfile 相同。插件连接的是自身设置中的地址,因此请同时修改两处。",
+    "admin_address_help": "Caddy 管理 API 的监听位置,写法同 Caddyfile,例如 localhost:2019 或 unix//run/caddy/admin.socket。下次重新加载时,插件最多等待 10 秒让新地址响应,然后改用它;若无响应,则恢复之前的 Caddyfile。",
     "admin_origins": "允许的来源",
     "admin_origins_help": "可以从浏览器调用管理 API 的主机,以空格分隔。",
     "admin_enforce_origin": "强制检查来源",
@@ -844,7 +842,13 @@
     "issuer_custom_body_help": "可选:cert_issuer 块内的行,每行一条,与 Caddyfile 中相同。",
     "issuer_custom_required": "请输入签发者模块,例如 acme 或 zerossl。",
     "issuer_custom_invalid": "以模块名开头,后接以空格分隔的参数,不要使用花括号。",
-    "issuer_body_braces": "每个 { 都需要对应的 }。"
+    "issuer_body_braces": "每个 { 都需要对应的 }。",
+    "admin_read_only": "此处的 Caddy 不是本地服务,插件不管理它的 Caddyfile。请在配置该 Caddy 的地方更改管理端点。",
+    "admin_off_kept": "Caddyfile 关闭了管理端点。插件会原样保留这一行;请在 Caddyfile 编辑器中修改。",
+    "admin_switched": "管理 API 现在在 {{address}} 响应",
+    "admin_switch_failed": "管理端点未能迁移到 {{address}}({{reason}})。已恢复之前的 Caddyfile。",
+    "admin_switch_unrestored": "管理端点未能迁移到 {{address}}({{reason}}),也未能恢复之前的 Caddyfile。请检查 Caddyfile 并重启 Caddy。",
+    "admin_no_answer": "10 秒内无响应"
   },
   "ca": {
     "title": "内部证书颁发机构",

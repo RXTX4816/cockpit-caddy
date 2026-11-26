@@ -822,10 +822,8 @@
     "default_bind_help": "Mellanslagsavgränsade adresser som webbplatser utan bind-alternativ lyssnar på.",
     "ocsp_stapling_off": "Stäng av OCSP stapling",
     "admin_title": "Adminändpunkt",
-    "admin_off": "Stäng av adminändpunkten",
-    "admin_off_help": "Tillägget behöver admin-API:et för att läsa och ändra den körande konfigurationen.",
     "admin_address": "Adminadress",
-    "admin_address_help": "Var Caddys admin-API lyssnar, skrivet som i Caddyfile. Tillägget ansluter till adressen i sin egen inställning, så ändra båda tillsammans.",
+    "admin_address_help": "Var Caddys administrations-API lyssnar, som i Caddyfile, t.ex. localhost:2019 eller unix//run/caddy/admin.socket. Vid nästa omladdning väntar tillägget upp till 10 sekunder på att den nya adressen svarar och använder den sedan; utan svar återställs den tidigare Caddyfile.",
     "admin_origins": "Tillåtna origins",
     "admin_origins_help": "Mellanslagsavgränsade värdar som får anropa admin-API:et från en webbläsare.",
     "admin_enforce_origin": "Tvinga origins",
@@ -844,7 +842,13 @@
     "issuer_custom_body_help": "Valfritt: raderna i cert_issuer-blocket, en per rad, som i Caddyfile.",
     "issuer_custom_required": "Ange utfärdarmodulen, t.ex. acme eller zerossl.",
     "issuer_custom_invalid": "Börja med modulnamnet och sedan argument åtskilda med mellanslag, utan klammerparenteser.",
-    "issuer_body_braces": "Varje { behöver en matchande }."
+    "issuer_body_braces": "Varje { behöver en matchande }.",
+    "admin_read_only": "Caddy är inte den lokala tjänsten här, så tillägget äger inte dess Caddyfile. Ändra administrationsslutpunkten där den Caddy konfigureras.",
+    "admin_off_kept": "Caddyfile stänger av administrationsslutpunkten. Tillägget lämnar raden som den är; ändra den i Caddyfile-redigeraren.",
+    "admin_switched": "Administrations-API:t svarar nu på {{address}}",
+    "admin_switch_failed": "Administrationsslutpunkten flyttade inte till {{address}} ({{reason}}). Den tidigare Caddyfile är återställd.",
+    "admin_switch_unrestored": "Administrationsslutpunkten flyttade inte till {{address}} ({{reason}}) och den tidigare Caddyfile gick inte att återställa. Kontrollera Caddyfile och starta om Caddy.",
+    "admin_no_answer": "inget svar inom 10 sekunder"
   },
   "ca": {
     "title": "Intern certifikatutfärdare",

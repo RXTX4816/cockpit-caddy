@@ -822,10 +822,8 @@
     "default_bind_help": "以空格分隔的位址,未設定 bind 選項的網站會在這些位址上監聽。",
     "ocsp_stapling_off": "關閉 OCSP stapling",
     "admin_title": "管理端點",
-    "admin_off": "關閉管理端點",
-    "admin_off_help": "外掛程式需要管理 API 來讀取及修改執行中的設定。",
     "admin_address": "管理位址",
-    "admin_address_help": "Caddy 管理 API 的監聽位置,寫法與 Caddyfile 相同。外掛程式連線的是自身設定中的位址,因此請同時修改兩處。",
+    "admin_address_help": "Caddy 管理 API 的監聽位置,寫法同 Caddyfile,例如 localhost:2019 或 unix//run/caddy/admin.socket。下次重新載入時,外掛最多等待 10 秒讓新位址回應,然後改用它;若無回應,則還原先前的 Caddyfile。",
     "admin_origins": "允許的來源",
     "admin_origins_help": "可從瀏覽器呼叫管理 API 的主機,以空格分隔。",
     "admin_enforce_origin": "強制檢查來源",
@@ -844,7 +842,13 @@
     "issuer_custom_body_help": "選填:cert_issuer 區塊內的行,每行一條,與 Caddyfile 中相同。",
     "issuer_custom_required": "請輸入簽發者模組,例如 acme 或 zerossl。",
     "issuer_custom_invalid": "以模組名稱開頭,後接以空格分隔的參數,不要使用大括號。",
-    "issuer_body_braces": "每個 { 都需要對應的 }。"
+    "issuer_body_braces": "每個 { 都需要對應的 }。",
+    "admin_read_only": "此處的 Caddy 不是本機服務,外掛不管理它的 Caddyfile。請在設定該 Caddy 的地方變更管理端點。",
+    "admin_off_kept": "Caddyfile 關閉了管理端點。外掛會原樣保留這一行;請在 Caddyfile 編輯器中修改。",
+    "admin_switched": "管理 API 現在在 {{address}} 回應",
+    "admin_switch_failed": "管理端點未能遷移到 {{address}}({{reason}})。已還原先前的 Caddyfile。",
+    "admin_switch_unrestored": "管理端點未能遷移到 {{address}}({{reason}}),也未能還原先前的 Caddyfile。請檢查 Caddyfile 並重新啟動 Caddy。",
+    "admin_no_answer": "10 秒內無回應"
   },
   "ca": {
     "title": "內部憑證授權單位",

@@ -822,10 +822,8 @@
     "default_bind_help": "bind 옵션이 없는 사이트가 수신하는 주소(공백으로 구분)입니다.",
     "ocsp_stapling_off": "OCSP stapling 끄기",
     "admin_title": "관리 엔드포인트",
-    "admin_off": "관리 엔드포인트 끄기",
-    "admin_off_help": "플러그인은 실행 중인 구성을 읽고 변경하기 위해 관리 API가 필요합니다.",
     "admin_address": "관리 주소",
-    "admin_address_help": "Caddy 관리 API가 수신하는 위치를 Caddyfile 형식으로 씁니다. 플러그인은 자체 설정의 주소로 연결하므로 두 곳을 함께 변경하세요.",
+    "admin_address_help": "Caddy 관리 API가 수신하는 곳으로, Caddyfile과 같이 씁니다(예: localhost:2019, unix//run/caddy/admin.socket). 다음 다시 불러오기 때 플러그인은 새 주소가 응답할 때까지 최대 10초 기다린 뒤 그 주소를 씁니다. 응답이 없으면 이전 Caddyfile을 되돌립니다.",
     "admin_origins": "허용된 오리진",
     "admin_origins_help": "브라우저에서 관리 API를 호출할 수 있는 호스트(공백으로 구분)입니다.",
     "admin_enforce_origin": "오리진 강제",
@@ -844,7 +842,13 @@
     "issuer_custom_body_help": "선택 사항: cert_issuer 블록 안의 줄을 Caddyfile처럼 한 줄에 하나씩.",
     "issuer_custom_required": "발급자 모듈을 입력하세요(예: acme, zerossl).",
     "issuer_custom_invalid": "모듈 이름으로 시작하고, 인수는 공백으로 구분하며 중괄호는 쓰지 마세요.",
-    "issuer_body_braces": "모든 {에는 짝이 되는 }가 필요합니다."
+    "issuer_body_braces": "모든 {에는 짝이 되는 }가 필요합니다.",
+    "admin_read_only": "여기서 Caddy는 로컬 서비스가 아니므로 플러그인이 그 Caddyfile을 관리하지 않습니다. 해당 Caddy를 설정하는 곳에서 관리 엔드포인트를 바꾸세요.",
+    "admin_off_kept": "Caddyfile이 관리 엔드포인트를 끕니다. 플러그인은 그 줄을 그대로 둡니다. Caddyfile 편집기에서 바꾸세요.",
+    "admin_switched": "이제 관리 API가 {{address}}에서 응답합니다",
+    "admin_switch_failed": "관리 엔드포인트가 {{address}}(으)로 옮겨지지 않았습니다({{reason}}). 이전 Caddyfile을 되돌렸습니다.",
+    "admin_switch_unrestored": "관리 엔드포인트가 {{address}}(으)로 옮겨지지 않았고({{reason}}) 이전 Caddyfile도 되돌리지 못했습니다. Caddyfile을 확인하고 Caddy를 다시 시작하세요.",
+    "admin_no_answer": "10초 안에 응답 없음"
   },
   "ca": {
     "title": "내부 인증 기관",

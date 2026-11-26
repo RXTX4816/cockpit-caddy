@@ -6,6 +6,7 @@ import { getHost, mkdirp, HostError } from "@rxtx4816/cockpit-plugin-base-react/
 import { applyConfigChange, type FileChange } from "./configChange";
 import { listConfDFiles, readCaddyfile, writeCaddyfile } from "./systemd";
 import { externalHostList } from "./externalHosts";
+import { AdminRejectedError, switchAdminEndpoint, type AdminTarget } from "./adminSwitch";
 import { withConfDImport, type RawBlock, extractRawBlocksFromCaddyfile, migrateCaddyfile, extractLogFilePaths, parseConfExternalAddresses, parseLabelsFromCaddyfile, CONF_HEADER, findGlobalBlock } from "./caddyfileDocument";
 import { buildTrustedProxiesLines, buildProxyProtocolLines, buildServerExtrasLines, patchMainCaddyfile, type GlobalOptions, INTERNAL_LIFETIME_MARKER, parseGlobalOptions, buildGlobalOptionsPatch, METRICS_SITE_BEGIN, METRICS_SITE_END, buildMetricsSiteBlock, parseMetricsSiteBlock } from "./globalOptions";
 import { buildExternalAddress, surgicallyWriteProxy, proxiesToCaddyfile, tlsSubjectHost, tlsSubjectHosts, namedServerIsHostless, parseServerDefsFromConf, surgicallyWriteServerBlock } from "./siteBlocks";
@@ -301,6 +302,51 @@ async function buildFlattenedMainCaddyfile(): Promise<string> {
 
 export async function applyCurrentCaddyfileViaApi(): Promise<void> {
   await applyCaddyfileViaApi(await buildFlattenedMainCaddyfile());
+}
+
+/** The main Caddyfile as it is on disk, e.g. to keep as a backup before a save. */
+export async function readMainCaddyfile(): Promise<string> {
+  return (await getHost().readFile(MAIN_CADDYFILE, { superuser: "try" })) ?? "";
+}
+
+/** POST /load over the address the plugin uses now; a refusal from Caddy is an AdminRejectedError. */
+async function loadOverCurrentAddress(content: string): Promise<void> {
+  try {
+    await (transport === "unix" ? unixPost("/load", content, "text/caddyfile") : tcpPost("/load", content, "text/caddyfile"));
+  } catch (e) {
+    if (e instanceof AdminHttpError) throw new AdminRejectedError(e.message);
+    throw e;
+  }
+}
+
+/**
+ * The reload for a save that moved the admin endpoint (#330). `backup` is the main Caddyfile
+ * from before that save. With `restart`, Caddy is restarted instead of reloaded (the env file
+ * changed too). See adminSwitch.ts for the steps.
+ */
+export async function reloadWithAdminSwitch(backup: string, target: AdminTarget, opts: { restart?: boolean } = {}): Promise<void> {
+  try {
+    await switchAdminEndpoint(target, {
+      apply: async () => opts.restart ? restartService("caddy") : loadOverCurrentAddress(await buildFlattenedMainCaddyfile()),
+      probe: t => t.transport === "unix" ? testUnixSocket(t.socket) : testTcpConnection(t.tcp),
+      switchTo: t => {
+        setAdminAddress(t.tcp, t.socket);
+        transport = t.transport;
+      },
+      restore: async () => {
+        await getHost().writeFile(MAIN_CADDYFILE, backup, { superuser: "try" });
+        // The old endpoint still answers when Caddy refused the new config; otherwise only a
+        // restart brings it back, since Caddy listens wherever the config it took says.
+        try {
+          await loadOverCurrentAddress(await buildFlattenedMainCaddyfile());
+        } catch {
+          await restartService("caddy");
+        }
+      },
+    });
+  } finally {
+    await notifyConfigChanged();
+  }
 }
 
 const PROXY_CONF_PATH = "/etc/caddy/conf.d/cockpit-caddy.conf";

@@ -822,10 +822,8 @@
     "default_bind_help": "Adresy oddzielone spacjami, na których nasłuchują witryny bez opcji bind.",
     "ocsp_stapling_off": "Wyłącz OCSP stapling",
     "admin_title": "Punkt końcowy administracji",
-    "admin_off": "Wyłącz punkt końcowy administracji",
-    "admin_off_help": "Wtyczka potrzebuje API administracji, aby odczytywać i zmieniać działającą konfigurację.",
     "admin_address": "Adres administracji",
-    "admin_address_help": "Gdzie nasłuchuje API administracji Caddy, zapisane jak w Caddyfile. Wtyczka łączy się z adresem z własnego ustawienia, więc zmień oba razem.",
+    "admin_address_help": "Gdzie nasłuchuje API administracyjne Caddy, zapisane jak w Caddyfile, np. localhost:2019 lub unix//run/caddy/admin.socket. Przy następnym przeładowaniu wtyczka czeka do 10 sekund na odpowiedź nowego adresu i potem go używa; bez odpowiedzi przywraca poprzedni Caddyfile.",
     "admin_origins": "Dozwolone originy",
     "admin_origins_help": "Hosty oddzielone spacjami, które mogą wywoływać API administracji z przeglądarki.",
     "admin_enforce_origin": "Wymuszaj originy",
@@ -844,7 +842,13 @@
     "issuer_custom_body_help": "Opcjonalnie: wiersze wewnątrz bloku cert_issuer, po jednym w wierszu, jak w Caddyfile.",
     "issuer_custom_required": "Wpisz moduł wystawcy, np. acme lub zerossl.",
     "issuer_custom_invalid": "Zacznij od nazwy modułu, potem argumenty oddzielone spacjami, bez nawiasów klamrowych.",
-    "issuer_body_braces": "Każdy { wymaga pasującego }."
+    "issuer_body_braces": "Każdy { wymaga pasującego }.",
+    "admin_read_only": "Caddy nie jest tu usługą lokalną, więc wtyczka nie zarządza jego Caddyfile. Zmień punkt administracyjny tam, gdzie ten Caddy jest konfigurowany.",
+    "admin_off_kept": "Caddyfile wyłącza punkt administracyjny. Wtyczka zostawia ten wiersz bez zmian; zmień go w edytorze Caddyfile.",
+    "admin_switched": "API administracyjne odpowiada teraz pod {{address}}",
+    "admin_switch_failed": "Punkt administracyjny nie przeniósł się na {{address}} ({{reason}}). Przywrócono poprzedni Caddyfile.",
+    "admin_switch_unrestored": "Punkt administracyjny nie przeniósł się na {{address}} ({{reason}}), a przywrócenie poprzedniego Caddyfile się nie udało. Sprawdź Caddyfile i uruchom Caddy ponownie.",
+    "admin_no_answer": "brak odpowiedzi w ciągu 10 sekund"
   },
   "ca": {
     "title": "Wewnętrzny urząd certyfikacji",

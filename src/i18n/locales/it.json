@@ -822,10 +822,8 @@
     "default_bind_help": "Indirizzi separati da spazi su cui ascoltano i siti senza opzione bind.",
     "ocsp_stapling_off": "Disattiva OCSP stapling",
     "admin_title": "Endpoint di amministrazione",
-    "admin_off": "Disattiva l'endpoint di amministrazione",
-    "admin_off_help": "Il plugin ha bisogno dell'API di amministrazione per leggere e modificare la configurazione in esecuzione.",
     "admin_address": "Indirizzo di amministrazione",
-    "admin_address_help": "Dove ascolta l'API di amministrazione di Caddy, scritto come nel Caddyfile. Il plugin si collega all'indirizzo della propria impostazione, quindi modifica entrambi insieme.",
+    "admin_address_help": "Dove ascolta l'API di amministrazione di Caddy, come nel Caddyfile, ad es. localhost:2019 o unix//run/caddy/admin.socket. Al prossimo ricaricamento il plugin attende fino a 10 secondi che il nuovo indirizzo risponda e poi lo usa; senza risposta ripristina il Caddyfile precedente.",
     "admin_origins": "Origini consentite",
     "admin_origins_help": "Host separati da spazi che possono chiamare l'API di amministrazione da un browser.",
     "admin_enforce_origin": "Imponi le origini",
@@ -844,7 +842,13 @@
     "issuer_custom_body_help": "Facoltativo: le righe all'interno del blocco cert_issuer, una per riga, come nel Caddyfile.",
     "issuer_custom_required": "Inserisci il modulo dell'emittente, ad es. acme o zerossl.",
     "issuer_custom_invalid": "Inizia con il nome del modulo, poi gli argomenti separati da spazi, senza parentesi graffe.",
-    "issuer_body_braces": "Ogni { richiede la sua }."
+    "issuer_body_braces": "Ogni { richiede la sua }.",
+    "admin_read_only": "Qui Caddy non è il servizio locale, quindi il plugin non gestisce il suo Caddyfile. Modifica l'endpoint di amministrazione dove è configurato quel Caddy.",
+    "admin_off_kept": "Il Caddyfile disattiva l'endpoint di amministrazione. Il plugin lascia quella riga com'è; modificala nell'editor del Caddyfile.",
+    "admin_switched": "L'API di amministrazione ora risponde su {{address}}",
+    "admin_switch_failed": "L'endpoint di amministrazione non è passato a {{address}} ({{reason}}). Il Caddyfile precedente è stato ripristinato.",
+    "admin_switch_unrestored": "L'endpoint di amministrazione non è passato a {{address}} ({{reason}}) e il ripristino del Caddyfile precedente non è riuscito. Controlla il Caddyfile e riavvia Caddy.",
+    "admin_no_answer": "nessuna risposta entro 10 secondi"
   },
   "ca": {
     "title": "Autorità di certificazione interna",

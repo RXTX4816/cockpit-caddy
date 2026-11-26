@@ -822,10 +822,8 @@
     "default_bind_help": "bind オプションのないサイトが待ち受けるアドレス(スペース区切り)。",
     "ocsp_stapling_off": "OCSP stapling をオフにする",
     "admin_title": "管理エンドポイント",
-    "admin_off": "管理エンドポイントをオフにする",
-    "admin_off_help": "プラグインは、実行中の設定の読み取りと変更に管理 API を必要とします。",
     "admin_address": "管理アドレス",
-    "admin_address_help": "Caddy の管理 API が待ち受ける場所を Caddyfile と同じ書式で指定します。プラグインは自身の設定のアドレスに接続するため、両方を同時に変更してください。",
+    "admin_address_help": "Caddy の管理 API が待ち受ける場所(Caddyfile と同じ書き方。例: localhost:2019、unix//run/caddy/admin.socket)。次の再読み込みで、プラグインは新しいアドレスが応答するまで最大 10 秒待ってから切り替えます。応答がなければ以前の Caddyfile に戻します。",
     "admin_origins": "許可するオリジン",
     "admin_origins_help": "ブラウザーから管理 API を呼び出せるホスト(スペース区切り)。",
     "admin_enforce_origin": "オリジンを強制",
@@ -844,7 +842,13 @@
     "issuer_custom_body_help": "任意: cert_issuer ブロック内の行。Caddyfile と同じく 1 行に 1 つ。",
     "issuer_custom_required": "発行者モジュールを入力してください(例: acme、zerossl)。",
     "issuer_custom_invalid": "モジュール名から始め、引数をスペースで区切ってください。波括弧は使えません。",
-    "issuer_body_braces": "{ ごとに対応する } が必要です。"
+    "issuer_body_braces": "{ ごとに対応する } が必要です。",
+    "admin_read_only": "ここでの Caddy はローカルのサービスではないため、プラグインはその Caddyfile を管理していません。その Caddy を設定している場所で管理エンドポイントを変更してください。",
+    "admin_off_kept": "Caddyfile で管理エンドポイントがオフになっています。プラグインはその行をそのまま残します。Caddyfile エディターで変更してください。",
+    "admin_switched": "管理 API は {{address}} で応答するようになりました",
+    "admin_switch_failed": "管理エンドポイントは {{address}} に移動しませんでした({{reason}})。以前の Caddyfile に戻しました。",
+    "admin_switch_unrestored": "管理エンドポイントは {{address}} に移動せず({{reason}})、以前の Caddyfile にも戻せませんでした。Caddyfile を確認し、Caddy を再起動してください。",
+    "admin_no_answer": "10 秒以内に応答なし"
   },
   "ca": {
     "title": "内部認証局",

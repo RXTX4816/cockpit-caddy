@@ -15,24 +15,25 @@ export function applyStoredAdminAddress(): void {
   setAdminAddress(tcp, socket);
 }
 
+/** Stores where the plugin reaches the admin API and uses it from now on. */
+export function storeAdminAddress(tcp: string, socket: string): void {
+  try {
+    if (tcp && tcp !== ADMIN_TCP_DEFAULT) localStorage.setItem(LS_TCP_KEY, tcp);
+    else localStorage.removeItem(LS_TCP_KEY);
+    if (socket && socket !== ADMIN_SOCKET_DEFAULT) localStorage.setItem(LS_SOCKET_KEY, socket);
+    else localStorage.removeItem(LS_SOCKET_KEY);
+  } catch { /* storage blocked: the address still applies to this page */ }
+  setAdminAddress(tcp, socket);
+}
+
 export function useAdminAddress() {
   const [tcp, setTcpState] = useState(() => localStorage.getItem(LS_TCP_KEY) ?? ADMIN_TCP_DEFAULT);
   const [socket, setSocketState] = useState(() => localStorage.getItem(LS_SOCKET_KEY) ?? ADMIN_SOCKET_DEFAULT);
 
   const save = useCallback((newTcp: string, newSocket: string) => {
-    if (newTcp && newTcp !== ADMIN_TCP_DEFAULT) {
-      localStorage.setItem(LS_TCP_KEY, newTcp);
-    } else {
-      localStorage.removeItem(LS_TCP_KEY);
-    }
-    if (newSocket && newSocket !== ADMIN_SOCKET_DEFAULT) {
-      localStorage.setItem(LS_SOCKET_KEY, newSocket);
-    } else {
-      localStorage.removeItem(LS_SOCKET_KEY);
-    }
+    storeAdminAddress(newTcp, newSocket);
     setTcpState(newTcp || ADMIN_TCP_DEFAULT);
     setSocketState(newSocket || ADMIN_SOCKET_DEFAULT);
-    setAdminAddress(newTcp, newSocket);
   }, []);
 
   return { tcp, socket, save };

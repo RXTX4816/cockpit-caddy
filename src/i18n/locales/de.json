@@ -822,10 +822,8 @@
     "default_bind_help": "Durch Leerzeichen getrennte Adressen, auf denen Sites ohne bind-Option lauschen.",
     "ocsp_stapling_off": "OCSP-Stapling ausschalten",
     "admin_title": "Admin-Endpunkt",
-    "admin_off": "Admin-Endpunkt ausschalten",
-    "admin_off_help": "Das Plugin braucht die Admin-API, um die laufende Konfiguration zu lesen und zu ändern.",
     "admin_address": "Admin-Adresse",
-    "admin_address_help": "Wo die Admin-API von Caddy lauscht, so geschrieben wie im Caddyfile. Das Plugin verbindet sich mit der Adresse in seiner eigenen Einstellung, ändern Sie also beide zusammen.",
+    "admin_address_help": "Wo Caddys Admin-API lauscht, wie im Caddyfile, z. B. localhost:2019 oder unix//run/caddy/admin.socket. Beim nächsten Neuladen wartet das Plugin bis zu 10 Sekunden, bis die neue Adresse antwortet, und nutzt sie dann; ohne Antwort stellt es das vorherige Caddyfile wieder her.",
     "admin_origins": "Erlaubte Origins",
     "admin_origins_help": "Durch Leerzeichen getrennte Hosts, die die Admin-API aus einem Browser aufrufen dürfen.",
     "admin_enforce_origin": "Origins erzwingen",
@@ -844,7 +842,13 @@
     "issuer_custom_body_help": "Optional: die Zeilen im cert_issuer-Block, eine pro Zeile, wie im Caddyfile.",
     "issuer_custom_required": "Gib das Aussteller-Modul ein, z. B. acme oder zerossl.",
     "issuer_custom_invalid": "Beginne mit dem Modulnamen, dann Argumente durch Leerzeichen getrennt, ohne geschweifte Klammern.",
-    "issuer_body_braces": "Jede { braucht eine passende }."
+    "issuer_body_braces": "Jede { braucht eine passende }.",
+    "admin_read_only": "Caddy ist hier nicht der lokale Dienst, daher gehört das Caddyfile nicht dem Plugin. Ändere den Admin-Endpunkt dort, wo dieser Caddy konfiguriert wird.",
+    "admin_off_kept": "Das Caddyfile schaltet den Admin-Endpunkt ab. Das Plugin lässt diese Zeile, wie sie ist; ändere sie im Caddyfile-Editor.",
+    "admin_switched": "Die Admin-API antwortet jetzt unter {{address}}",
+    "admin_switch_failed": "Der Admin-Endpunkt ist nicht nach {{address}} umgezogen ({{reason}}). Das vorherige Caddyfile ist wiederhergestellt.",
+    "admin_switch_unrestored": "Der Admin-Endpunkt ist nicht nach {{address}} umgezogen ({{reason}}), und das vorherige Caddyfile ließ sich nicht wiederherstellen. Prüfe das Caddyfile und starte Caddy neu.",
+    "admin_no_answer": "keine Antwort innerhalb von 10 Sekunden"
   },
   "ca": {
     "title": "Interne Zertifizierungsstelle",

@@ -822,10 +822,8 @@
     "default_bind_help": "Alamat dipisahkan spasi tempat situs tanpa opsi bind mendengarkan.",
     "ocsp_stapling_off": "Matikan OCSP stapling",
     "admin_title": "Endpoint admin",
-    "admin_off": "Matikan endpoint admin",
-    "admin_off_help": "Plugin membutuhkan API admin untuk membaca dan mengubah konfigurasi yang berjalan.",
     "admin_address": "Alamat admin",
-    "admin_address_help": "Tempat API admin Caddy mendengarkan, ditulis seperti di Caddyfile. Plugin tersambung ke alamat pada pengaturannya sendiri, jadi ubah keduanya bersamaan.",
+    "admin_address_help": "Tempat API admin Caddy mendengarkan, seperti di Caddyfile, mis. localhost:2019 atau unix//run/caddy/admin.socket. Saat muat ulang berikutnya, plugin menunggu hingga 10 detik sampai alamat baru menjawab lalu memakainya; tanpa jawaban, Caddyfile sebelumnya dipulihkan.",
     "admin_origins": "Origin yang diizinkan",
     "admin_origins_help": "Host dipisahkan spasi yang boleh memanggil API admin dari browser.",
     "admin_enforce_origin": "Paksakan origin",
@@ -844,7 +842,13 @@
     "issuer_custom_body_help": "Opsional: baris di dalam blok cert_issuer, satu per baris, seperti di Caddyfile.",
     "issuer_custom_required": "Masukkan modul penerbit, mis. acme atau zerossl.",
     "issuer_custom_invalid": "Mulai dengan nama modul, lalu argumen dipisahkan spasi, tanpa kurung kurawal.",
-    "issuer_body_braces": "Setiap { perlu } pasangannya."
+    "issuer_body_braces": "Setiap { perlu } pasangannya.",
+    "admin_read_only": "Caddy di sini bukan layanan lokal, jadi plugin tidak mengelola Caddyfile-nya. Ubah endpoint admin di tempat Caddy itu dikonfigurasi.",
+    "admin_off_kept": "Caddyfile mematikan endpoint admin. Plugin membiarkan baris itu apa adanya; ubah di editor Caddyfile.",
+    "admin_switched": "API admin kini menjawab di {{address}}",
+    "admin_switch_failed": "Endpoint admin tidak pindah ke {{address}} ({{reason}}). Caddyfile sebelumnya sudah dipulihkan.",
+    "admin_switch_unrestored": "Endpoint admin tidak pindah ke {{address}} ({{reason}}), dan memulihkan Caddyfile sebelumnya gagal. Periksa Caddyfile lalu mulai ulang Caddy.",
+    "admin_no_answer": "tidak ada jawaban dalam 10 detik"
   },
   "ca": {
     "title": "Otoritas sertifikat internal",

@@ -822,10 +822,8 @@
     "default_bind_help": "bind seçeneği olmayan sitelerin dinlediği, boşlukla ayrılmış adresler.",
     "ocsp_stapling_off": "OCSP stapling'i kapat",
     "admin_title": "Yönetim uç noktası",
-    "admin_off": "Yönetim uç noktasını kapat",
-    "admin_off_help": "Eklenti, çalışan yapılandırmayı okumak ve değiştirmek için yönetim API'sine ihtiyaç duyar.",
     "admin_address": "Yönetim adresi",
-    "admin_address_help": "Caddy'nin yönetim API'sinin dinlediği yer, Caddyfile'daki gibi yazılır. Eklenti kendi ayarındaki adrese bağlanır, bu yüzden ikisini birlikte değiştirin.",
+    "admin_address_help": "Caddy yönetim API'sinin dinlediği yer, Caddyfile'daki gibi, örn. localhost:2019 veya unix//run/caddy/admin.socket. Bir sonraki yeniden yüklemede eklenti yeni adresin yanıt vermesi için 10 saniyeye kadar bekler ve sonra onu kullanır; yanıt yoksa önceki Caddyfile'ı geri yükler.",
     "admin_origins": "İzin verilen originler",
     "admin_origins_help": "Yönetim API'sini bir tarayıcıdan çağırabilen, boşlukla ayrılmış ana makineler.",
     "admin_enforce_origin": "Originleri zorunlu kıl",
@@ -844,7 +842,13 @@
     "issuer_custom_body_help": "İsteğe bağlı: cert_issuer bloğunun içindeki satırlar, Caddyfile'daki gibi satır başına bir tane.",
     "issuer_custom_required": "Sağlayıcı modülünü girin, örn. acme veya zerossl.",
     "issuer_custom_invalid": "Modül adıyla başlayın, ardından boşlukla ayrılmış argümanlar gelsin, süslü parantez olmadan.",
-    "issuer_body_braces": "Her { için eşleşen bir } gerekir."
+    "issuer_body_braces": "Her { için eşleşen bir } gerekir.",
+    "admin_read_only": "Caddy burada yerel hizmet değil, bu yüzden eklenti onun Caddyfile'ını yönetmez. Yönetim uç noktasını o Caddy'nin yapılandırıldığı yerde değiştirin.",
+    "admin_off_kept": "Caddyfile yönetim uç noktasını kapatıyor. Eklenti bu satırı olduğu gibi bırakır; Caddyfile düzenleyicisinde değiştirin.",
+    "admin_switched": "Yönetim API'si artık {{address}} adresinde yanıt veriyor",
+    "admin_switch_failed": "Yönetim uç noktası {{address}} adresine taşınmadı ({{reason}}). Önceki Caddyfile geri yüklendi.",
+    "admin_switch_unrestored": "Yönetim uç noktası {{address}} adresine taşınmadı ({{reason}}) ve önceki Caddyfile geri yüklenemedi. Caddyfile'ı denetleyip Caddy'yi yeniden başlatın.",
+    "admin_no_answer": "10 saniye içinde yanıt yok"
   },
   "ca": {
     "title": "İç sertifika yetkilisi",

@@ -822,10 +822,8 @@
     "default_bind_help": "כתובות מופרדות ברווחים שאתרים ללא אפשרות bind מאזינים להן.",
     "ocsp_stapling_off": "כבה OCSP stapling",
     "admin_title": "נקודת קצה לניהול",
-    "admin_off": "כבה את נקודת הקצה לניהול",
-    "admin_off_help": "התוסף זקוק ל-API הניהול כדי לקרוא ולשנות את התצורה הפועלת.",
     "admin_address": "כתובת ניהול",
-    "admin_address_help": "היכן ה-API לניהול של Caddy מאזין, כפי שנכתב ב-Caddyfile. התוסף מתחבר לכתובת שבהגדרה שלו, לכן שנו את שתיהן יחד.",
+    "admin_address_help": "היכן ממשק הניהול של Caddy מאזין, כמו ב-Caddyfile, למשל localhost:2019 או unix//run/caddy/admin.socket. בטעינה הבאה התוסף ממתין עד 10 שניות שהכתובת החדשה תענה ואז משתמש בה; אם אין תשובה הוא משחזר את ה-Caddyfile הקודם.",
     "admin_origins": "מקורות מותרים",
     "admin_origins_help": "מארחים מופרדים ברווחים שרשאים לקרוא ל-API הניהול מדפדפן.",
     "admin_enforce_origin": "אכוף מקורות",
@@ -844,7 +842,13 @@
     "issuer_custom_body_help": "אופציונלי: השורות בתוך בלוק cert_issuer, אחת בכל שורה, כמו ב-Caddyfile.",
     "issuer_custom_required": "הזן את מודול המנפיק, למשל acme או zerossl.",
     "issuer_custom_invalid": "התחל בשם המודול ואחריו ארגומנטים מופרדים ברווחים, ללא סוגריים מסולסלים.",
-    "issuer_body_braces": "לכל { צריך } תואם."
+    "issuer_body_braces": "לכל { צריך } תואם.",
+    "admin_read_only": "Caddy כאן אינו השירות המקומי, ולכן התוסף אינו מנהל את ה-Caddyfile שלו. שנה את נקודת הניהול במקום שבו Caddy זה מוגדר.",
+    "admin_off_kept": "ה-Caddyfile מכבה את נקודת הניהול. התוסף משאיר את השורה כפי שהיא; שנה אותה בעורך ה-Caddyfile.",
+    "admin_switched": "ממשק הניהול עונה כעת בכתובת {{address}}",
+    "admin_switch_failed": "נקודת הניהול לא עברה אל {{address}} ({{reason}}). ה-Caddyfile הקודם שוחזר.",
+    "admin_switch_unrestored": "נקודת הניהול לא עברה אל {{address}} ({{reason}}), ושחזור ה-Caddyfile הקודם נכשל. בדוק את ה-Caddyfile והפעל מחדש את Caddy.",
+    "admin_no_answer": "אין תשובה תוך 10 שניות"
   },
   "ca": {
     "title": "רשות אישורים פנימית",

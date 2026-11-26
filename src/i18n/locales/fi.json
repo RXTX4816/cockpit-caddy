@@ -822,10 +822,8 @@
     "default_bind_help": "Välilyönnein erotetut osoitteet, joissa ilman bind-asetusta olevat sivustot kuuntelevat.",
     "ocsp_stapling_off": "Poista OCSP stapling käytöstä",
     "admin_title": "Hallintapääte",
-    "admin_off": "Poista hallintapääte käytöstä",
-    "admin_off_help": "Laajennus tarvitsee hallinta-API:n käynnissä olevan asetuksen lukemiseen ja muuttamiseen.",
     "admin_address": "Hallintaosoite",
-    "admin_address_help": "Missä Caddyn hallinta-API kuuntelee, kirjoitettuna kuten Caddyfilessä. Laajennus yhdistää omassa asetuksessaan olevaan osoitteeseen, joten muuta molemmat yhdessä.",
+    "admin_address_help": "Missä Caddyn hallinta-API kuuntelee, kuten Caddyfilessa, esim. localhost:2019 tai unix//run/caddy/admin.socket. Seuraavassa uudelleenlatauksessa laajennus odottaa enintään 10 sekuntia, että uusi osoite vastaa, ja käyttää sitä sitten; ilman vastausta se palauttaa edellisen Caddyfilen.",
     "admin_origins": "Sallitut originit",
     "admin_origins_help": "Välilyönnein erotetut isännät, jotka saavat kutsua hallinta-API:a selaimesta.",
     "admin_enforce_origin": "Pakota originit",
@@ -844,7 +842,13 @@
     "issuer_custom_body_help": "Valinnainen: cert_issuer-lohkon rivit, yksi riviä kohden, kuten Caddyfilessa.",
     "issuer_custom_required": "Anna myöntäjämoduuli, esim. acme tai zerossl.",
     "issuer_custom_invalid": "Aloita moduulin nimellä ja sitten välilyönnein erotetut argumentit, ilman aaltosulkeita.",
-    "issuer_body_braces": "Jokainen { tarvitsee vastaavan }."
+    "issuer_body_braces": "Jokainen { tarvitsee vastaavan }.",
+    "admin_read_only": "Caddy ei ole tässä paikallinen palvelu, joten laajennus ei hallitse sen Caddyfileä. Muuta hallintapistettä siellä, missä tämä Caddy määritetään.",
+    "admin_off_kept": "Caddyfile poistaa hallintapisteen käytöstä. Laajennus jättää rivin ennalleen; muuta sitä Caddyfile-editorissa.",
+    "admin_switched": "Hallinta-API vastaa nyt osoitteessa {{address}}",
+    "admin_switch_failed": "Hallintapiste ei siirtynyt osoitteeseen {{address}} ({{reason}}). Edellinen Caddyfile on palautettu.",
+    "admin_switch_unrestored": "Hallintapiste ei siirtynyt osoitteeseen {{address}} ({{reason}}), eikä edellisen Caddyfilen palautus onnistunut. Tarkista Caddyfile ja käynnistä Caddy uudelleen.",
+    "admin_no_answer": "ei vastausta 10 sekunnissa"
   },
   "ca": {
     "title": "Sisäinen varmentaja",

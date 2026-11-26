@@ -822,10 +822,8 @@
     "default_bind_help": "Adresy oddělené mezerami, na kterých poslouchají weby bez volby bind.",
     "ocsp_stapling_off": "Vypnout OCSP stapling",
     "admin_title": "Administrační rozhraní",
-    "admin_off": "Vypnout administrační rozhraní",
-    "admin_off_help": "Plugin potřebuje administrační API ke čtení a změně běžící konfigurace.",
     "admin_address": "Adresa administrace",
-    "admin_address_help": "Kde naslouchá administrační API Caddy, zapsáno jako v Caddyfile. Plugin se připojuje na adresu ve svém vlastním nastavení, proto měňte obě společně.",
+    "admin_address_help": "Kde naslouchá administrační API Caddy, zapsané jako v Caddyfile, např. localhost:2019 nebo unix//run/caddy/admin.socket. Při příštím načtení plugin čeká až 10 sekund, než nová adresa odpoví, a pak ji použije; bez odpovědi obnoví předchozí Caddyfile.",
     "admin_origins": "Povolené originy",
     "admin_origins_help": "Hostitelé oddělení mezerami, kteří smí volat administrační API z prohlížeče.",
     "admin_enforce_origin": "Vynutit originy",
@@ -844,7 +842,13 @@
     "issuer_custom_body_help": "Volitelné: řádky uvnitř bloku cert_issuer, jeden na řádek, jako v Caddyfile.",
     "issuer_custom_required": "Zadejte modul vydavatele, např. acme nebo zerossl.",
     "issuer_custom_invalid": "Začněte názvem modulu, pak argumenty oddělené mezerami, bez složených závorek.",
-    "issuer_body_braces": "Každá { potřebuje odpovídající }."
+    "issuer_body_braces": "Každá { potřebuje odpovídající }.",
+    "admin_read_only": "Caddy tu není místní služba, takže plugin nevlastní jeho Caddyfile. Změňte administrační koncový bod tam, kde je tento Caddy nastaven.",
+    "admin_off_kept": "Caddyfile vypíná administrační koncový bod. Plugin ponechá tento řádek, jak je; změňte ho v editoru Caddyfile.",
+    "admin_switched": "Administrační API nyní odpovídá na {{address}}",
+    "admin_switch_failed": "Administrační koncový bod se nepřesunul na {{address}} ({{reason}}). Předchozí Caddyfile je obnoven.",
+    "admin_switch_unrestored": "Administrační koncový bod se nepřesunul na {{address}} ({{reason}}) a obnovení předchozího Caddyfile selhalo. Zkontrolujte Caddyfile a restartujte Caddy.",
+    "admin_no_answer": "žádná odpověď do 10 sekund"
   },
   "ca": {
     "title": "Interní certifikační autorita",
