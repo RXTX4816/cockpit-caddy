@@ -148,3 +148,19 @@ export function replaceSiteMatcherDefinition(tree: SiteTree, name: string, match
     }),
   };
 }
+
+/**
+ * The opening lines (`@api {`) of the site's matcher definitions the Tree tab edits with the
+ * matcher form: the ones a node refers to and siteMatcherDefinition can read. They aren't raw-only.
+ */
+export function editableMatcherHeaders(tree: SiteTree): string[] {
+  const out = new Set<string>();
+  const walk = (items: TreeItem[], path: NodePath) => childNodes(items).forEach((n, i) => {
+    if (n.kind === "opaque") return;
+    const name = n.matcher.match(/^@([\w-]+)$/)?.[1];
+    if (name && siteMatcherDefinition(tree, [...path, i], name)) out.add(`@${name} {`);
+    walk(n.items, [...path, i]);
+  });
+  walk(tree.items, []);
+  return [...out];
+}
