@@ -6,7 +6,8 @@
  * the proxy list state and the raw cockpit-caddy.conf content.
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { readConf, spawnCmd, CONF_HEADER, rowAction } from './helpers';
+import { readConf, spawnCmd, CONF_HEADER, rowAction, openSection, startHttpBackend } from './helpers';
+import { curlStatus } from './live';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
   await dismissAdminBanner(page);
@@ -241,25 +242,59 @@ test('two hostless proxies on the same port still conflict', async ({ pluginPage
   await expect(modal.getByText(/port \d+ is already in use/i)).toBeVisible({ timeout: 5000 });
 });
 
-// #254: an IP in the host field binds that IP. The instant-apply JSON always did; the saved
-// Caddyfile needs `bind`, or the port opens on every interface after the next reload.
-test('an IP host keeps binding only that IP after a reload', async ({ pluginPage: page }) => {
-  await waitForToolbar(page);
-  await page.getByRole('button', { name: /add proxy/i }).first().click();
-  const modal = page.getByRole('dialog');
-  await modal.getByLabel('External port').fill('19254');
-  await modal.getByLabel(/external host/i).fill('127.0.0.1');
-  await modal.getByLabel(/target host/i).fill('localhost');
-  await modal.locator('#target-port').fill('3000');
-  await modal.locator('#tls').selectOption('off');
-  await modal.getByRole('button', { name: /^add proxy$/i }).click();
-  await modal.getByRole('button', { name: /^confirm$/i }).click();
-  await expect(modal).not.toBeVisible({ timeout: 15000 });
+// #323 / 3fa13ad: the host field only matches, even when it is an IP address; which
+// addresses the site listens on comes from the Bind addresses field alone, as in Caddy's
+// own site addresses. Checked after a real `caddy reload`, so it is the saved Caddyfile
+// that behaves this way, not just the instant-apply JSON (#254).
+test('an IP host only matches requests; Bind addresses decides where the site listens', async ({ pluginPage: page }) => {
+  const backend = await startHttpBackend(page, 19255);
+  // The VM's non-loopback address, to tell "every interface" from "127.0.0.1 only".
+  const lanIp = (await spawnCmd(page, ['bash', '-c', "ip -4 -o addr show scope global | awk '{print $4}' | cut -d/ -f1 | head -n1"])).trim();
+  expect(lanIp).toMatch(/^\d+\.\d+\.\d+\.\d+$/);
+  const listeners = async () => (await spawnCmd(page, ['bash', '-c', "ss -Hltn 'sport = :19254' | awk '{print $4}'"])).trim();
+  const body = (url: string, host: string) => spawnCmd(page, ['bash', '-c', `curl -s -m 3 -H 'Host: ${host}' '${url}'; true`]);
 
-  expect(await readConf(page)).toContain('\tbind 127.0.0.1');
-  await spawnCmd(page, ['caddy', 'reload', '--config', '/etc/caddy/Caddyfile']);
-  await expect.poll(async () => (await spawnCmd(page, ['bash', '-c', "ss -Hltn 'sport = :19254' | awk '{print $4}'"])).trim(), { timeout: 10000 })
-    .toBe('127.0.0.1:19254');
+  try {
+    await waitForToolbar(page);
+    await page.getByRole('button', { name: /add proxy/i }).first().click();
+    let modal = page.getByRole('dialog');
+    await modal.getByLabel('External port').fill('19254');
+    await modal.getByLabel(/external host/i).fill('127.0.0.1');
+    await modal.getByLabel(/target host/i).fill('localhost');
+    await modal.locator('#target-port').fill('19255');
+    await modal.locator('#tls').selectOption('off');
+    await modal.getByRole('button', { name: /^add proxy$/i }).click();
+    await modal.getByRole('button', { name: /^confirm$/i }).click();
+    await expect(modal).not.toBeVisible({ timeout: 15000 });
+
+    let conf = await readConf(page);
+    expect(conf).toContain('http://127.0.0.1:19254 {');
+    expect(conf).not.toContain('bind ');
+
+    // No bind: the port is open on every interface, and the IP host only matches requests.
+    await spawnCmd(page, ['caddy', 'reload', '--config', '/etc/caddy/Caddyfile']);
+    await expect.poll(listeners, { timeout: 10000 }).toMatch(/^(\*|0\.0\.0\.0|\[::\]):19254$/m);
+    await expect.poll(() => body(`http://${lanIp}:19254/`, '127.0.0.1'), { timeout: 10000 }).toContain('Directory listing');
+    expect(await body('http://127.0.0.1:19254/', 'other.example')).not.toContain('Directory listing');
+
+    // Bind addresses set to 127.0.0.1: the site listens there and nowhere else.
+    await proxyRow(page, 19254).getByRole('button', { name: /^edit$/i }).click();
+    modal = page.getByRole('dialog');
+    await openSection(modal, 'bind');
+    await modal.getByLabel('Bind addresses').fill('127.0.0.1');
+    await modal.getByRole('button', { name: /save changes/i }).click();
+    await modal.getByRole('button', { name: /^confirm$/i }).click();
+    await expect(modal).not.toBeVisible({ timeout: 15000 });
+
+    conf = await readConf(page);
+    expect(conf).toContain('\tbind 127.0.0.1');
+    await spawnCmd(page, ['caddy', 'reload', '--config', '/etc/caddy/Caddyfile']);
+    await expect.poll(listeners, { timeout: 10000 }).toBe('127.0.0.1:19254');
+    await expect.poll(() => curlStatus(page, `http://${lanIp}:19254/`, ['-m', '3', '-H', "'Host: 127.0.0.1'"]), { timeout: 10000 }).toBe('000');
+    expect(await body('http://127.0.0.1:19254/', '127.0.0.1')).toContain('Directory listing');
+  } finally {
+    await backend.stop();
+  }
 });
 
 // #246: a public hostname defaults to automatic HTTPS; the internal CA is a deliberate choice.

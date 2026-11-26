@@ -1,5 +1,5 @@
 /**
- * Response Headers section workflows (AddProxyDialog/EditProxyDialog accordion).
+ * Response Headers section workflows (Routing tab of the proxy dialogs).
  *
  * Response headers are added by Caddy on the way back to the client, so curl -I
  * against the proxy is a direct, reliable live check (unlike request headers,
@@ -7,7 +7,7 @@
  */
 import type { Locator } from '@playwright/test';
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { readConf, spawnCmd, openSection } from './helpers';
+import { readConf, spawnCmd, openSection, headerSection, pickHeaderOp } from './helpers';
 import { waitForListener } from './live';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
@@ -19,12 +19,11 @@ function proxyRow(page: import('@playwright/test').Page, port: number) {
   return page.locator('li').filter({ has: page.locator(`#proxy-${port}`) });
 }
 
-/** Route Matchers also has a header-matcher field labeled "Header name"/"Value" that
- *  stays in the DOM (just visually collapsed) when a different section is expanded —
- *  getByLabel('Header name') alone is ambiguous across the modal. Scope to the Response
- *  Headers region specifically. */
+/** Route Matchers, Request Headers and "Response headers from the upstream" (#372) on the
+ *  same Routing tab have fields labeled "Header name"/"Value" too, so scope to the
+ *  Response Headers region (the `header` directive). */
 function responseHeadersSection(modal: Locator) {
-  return modal.getByRole('region', { name: /^response headers/i });
+  return headerSection(modal, 'response');
 }
 
 async function startBackend(page: import('@playwright/test').Page, port: number): Promise<void> {
@@ -81,7 +80,7 @@ test('delete response header removes it from curl -I output', async ({ pluginPag
     await modal1.locator('#target-port').fill(String(targetPort));
     await modal1.locator('#tls').selectOption('off');
     await openSection(modal1, 'responseHeaders');
-    await modal1.locator('#resp-hdr-op-delete').click();
+    await pickHeaderOp(responseHeadersSection(modal1), 'Delete');
     await responseHeadersSection(modal1).getByLabel('Header name').fill('Server');
     await responseHeadersSection(modal1).getByRole('button', { name: /^add$/i }).last().click();
     await modal1.getByRole('button', { name: /^add proxy$/i }).click();
@@ -103,7 +102,7 @@ test('delete response header removes it from curl -I output', async ({ pluginPag
     await proxyRow(page, 19262).getByRole('button', { name: /^edit$/i }).click();
     const modal2 = page.getByRole('dialog');
     await openSection(modal2, 'responseHeaders');
-    await modal2.getByRole('button', { name: 'remove', exact: true }).click();
+    await responseHeadersSection(modal2).getByRole('button', { name: 'remove', exact: true }).click();
     await modal2.getByRole('button', { name: /save changes/i }).click();
     await modal2.getByRole('button', { name: /^confirm$/i }).click();
     await expect(modal2).not.toBeVisible({ timeout: 15000 });

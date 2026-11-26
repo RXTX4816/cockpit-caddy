@@ -7,13 +7,17 @@
  * custom root writes a valid `storage file_system { root ... }` global option Caddy
  * actually accepts on reload.
  */
-import { test, expect, dismissAdminBanner } from './fixtures';
-import { readFile, CADDYFILE_PATH } from './helpers';
+import { test, expect } from './fixtures';
+import { readFile, CADDYFILE_PATH, openSettingsTab, saveSettings, settingsSaveButton, settingsPanel } from './helpers';
 
 async function openSettings(page: import('@playwright/test').Page) {
-  await dismissAdminBanner(page);
-  await page.getByRole('tab', { name: /settings/i }).click();
-  await page.getByRole('heading', { name: 'Storage' }).waitFor({ state: 'visible', timeout: 10000 });
+  await openSettingsTab(page, 'Core');
+}
+
+/** Save + Confirm for a save that is expected to fail, so it doesn't wait for the form to go idle. */
+async function trySave(page: import('@playwright/test').Page) {
+  await settingsSaveButton(page).click();
+  await settingsPanel(page).getByRole('button', { name: 'Confirm', exact: true }).click();
 }
 
 test.afterEach(async ({ page }) => {
@@ -30,8 +34,7 @@ test.afterEach(async ({ page }) => {
   const root = page.locator('#go-storage-root');
   if (await root.isVisible().catch(() => false) && (await root.inputValue())) {
     await root.fill('');
-    await page.getByRole('button', { name: /save/i }).click();
-    await page.getByRole('button', { name: /^confirm$/i }).click().catch(() => {});
+    await saveSettings(page).catch(() => {});
   }
 });
 
@@ -52,12 +55,11 @@ test('saving a custom storage root writes a valid global option Caddy accepts', 
   // rejected by the ReadWritePaths check below, same as the real production failure this
   // feature was built to catch.
   await page.locator('#go-storage-root').fill('/var/lib/caddy/custom-storage');
-  await page.getByRole('button', { name: /save/i }).click();
   // The confirm step is an inline form state (not a Modal) — no dialog role involved.
-  await page.getByRole('button', { name: /^confirm$/i }).click();
+  await trySave(page);
   // A Caddyfile validation failure would keep the confirm alert/error visible instead of
   // succeeding — this is the regression check for a malformed `storage` directive.
-  await expect(page.getByText(/settings saved/i)).toBeVisible({ timeout: 10000 });
+  await expect(page.getByText(/settings saved/i).first()).toBeVisible({ timeout: 10000 });
 
   const mainConf = await readFile(page, CADDYFILE_PATH);
   expect(mainConf).toContain('storage file_system {');
@@ -78,8 +80,7 @@ test('saving a custom storage root writes a valid global option Caddy accepts', 
 test('an unwritable storage path is rejected before ever being saved', async ({ pluginPage: page }) => {
   await openSettings(page);
   await page.locator('#go-storage-root').fill('/etc/hostname/impossible');
-  await page.getByRole('button', { name: /save/i }).click();
-  await page.getByRole('button', { name: /^confirm$/i }).click();
+  await trySave(page);
 
   await expect(page.getByText(/isn't writable by caddy/i)).toBeVisible({ timeout: 10000 });
 
@@ -99,8 +100,7 @@ test('an unwritable storage path is rejected before ever being saved', async ({ 
 test('a path outside the systemd sandbox ReadWritePaths is rejected even though root can create it', async ({ pluginPage: page }) => {
   await openSettings(page);
   await page.locator('#go-storage-root').fill('/var/lib/caddy2');
-  await page.getByRole('button', { name: /save/i }).click();
-  await page.getByRole('button', { name: /^confirm$/i }).click();
+  await trySave(page);
 
   await expect(page.getByText(/isn't writable by caddy/i)).toBeVisible({ timeout: 10000 });
   await expect(page.getByText(/sandboxed/i)).toBeVisible();
@@ -121,9 +121,8 @@ test('a path outside the systemd sandbox ReadWritePaths is rejected even though 
 test('a fresh directory under an allowed path is usable by the caddy user, not just root', async ({ pluginPage: page }) => {
   await openSettings(page);
   await page.locator('#go-storage-root').fill('/run/caddy/custom-storage');
-  await page.getByRole('button', { name: /save/i }).click();
-  await page.getByRole('button', { name: /^confirm$/i }).click();
-  await expect(page.getByText(/settings saved/i)).toBeVisible({ timeout: 10000 });
+  await trySave(page);
+  await expect(page.getByText(/settings saved/i).first()).toBeVisible({ timeout: 10000 });
 
   const mainConf = await readFile(page, CADDYFILE_PATH);
   expect(mainConf).toContain('root /run/caddy/custom-storage');

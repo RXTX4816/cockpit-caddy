@@ -6,7 +6,7 @@
  * an explicit "Reload config" click on the Settings tab's own inline button is required.
  */
 import { test, expect, dismissAdminBanner } from './fixtures';
-import { readFile, CADDYFILE_PATH } from './helpers';
+import { readFile, CADDYFILE_PATH, openSettingsTab, saveSettings as saveSettingsForm, reloadFromSettings } from './helpers';
 import { expectCaddyActive } from './live';
 
 async function waitForToolbar(page: import('@playwright/test').Page) {
@@ -15,19 +15,12 @@ async function waitForToolbar(page: import('@playwright/test').Page) {
 }
 
 async function openSettings(page: import('@playwright/test').Page) {
-  await page.getByRole('tab', { name: /settings/i }).click();
-  await page.getByRole('heading', { name: 'Global Caddy options' }).waitFor({ state: 'visible', timeout: 10000 });
+  await openSettingsTab(page, 'TLS & ACME');
 }
 
 async function saveSettings(page: import('@playwright/test').Page) {
-  await page.getByRole('button', { name: /^save$/i }).click();
-  await page.getByRole('button', { name: /^confirm$/i }).click();
-  await expect(page.getByText(/settings saved/i)).toBeVisible({ timeout: 10000 });
-}
-
-async function reloadFromSettings(page: import('@playwright/test').Page) {
-  await page.getByRole('tabpanel', { name: /settings/i }).getByRole('button', { name: /reload config/i }).click();
-  await expect(page.getByText(/caddy config reloaded/i)).toBeVisible({ timeout: 10000 });
+  await saveSettingsForm(page);
+  await expect(page.getByText(/settings saved/i).first()).toBeVisible({ timeout: 10000 });
 }
 
 test('enabling on-demand TLS writes the correct global tls block', async ({ pluginPage: page }) => {

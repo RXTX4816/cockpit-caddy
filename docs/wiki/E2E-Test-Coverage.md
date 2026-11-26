@@ -3,7 +3,7 @@
 A catalog of every Playwright end-to-end spec in `e2e/`: what it exercises, and how.
 Use this page to see what's already covered before adding new tests, and to spot gaps.
 
-**Current totals:** 43 spec files, 175 tests, run against real Cockpit + Caddy on QEMU
+**Current totals:** 43 spec files, 177 tests, run against real Cockpit + Caddy on QEMU
 VMs (see [VM Testing](VM-Testing)). All specs share one Caddy instance per VM
 (`workers: 1` in `playwright.config.ts`), so they run serially and each test resets
 config state via the `pluginPage` fixture before it starts.
@@ -33,6 +33,9 @@ Helper reference (`e2e/helpers.ts`, `e2e/live.ts`, `e2e/fixtures.ts`):
 | `curlStatus()` / `waitForListener()` | Live HTTP checks against the real Caddy instance |
 | `expectCaddyActive()` | Cheapest "did this config change break the daemon" check |
 | `openSection(modal, section)` | Shows a settings section in a site dialog: clicks the tab that holds it (falls back to expanding an accordion in a dialog without tabs) |
+| `headerSection(modal, which)` / `pickHeaderOp(section, op)` | Scope to one of the Routing tab's three header sections (request, response from the upstream, response) and pick the operation for the next header |
+| `openSettingsTab(page, tab)` | Opens the Settings tab and one of its sub-tabs (Core, TLS & ACME, Logging & metrics, Proxy headers & protocols); fields on the other sub-tabs stay in the DOM but hidden |
+| `saveSettings()` / `settingsSaveButton()` / `reloadFromSettings()` | Save + Confirm on the Settings form and wait for it to go idle; the Save button itself; the Settings tab's own "Reload config" |
 
 ## Coverage by area
 
@@ -47,7 +50,7 @@ Helper reference (`e2e/helpers.ts`, `e2e/live.ts`, `e2e/fixtures.ts`):
 
 | File | What it covers | Tests |
 |---|---|---|
-| `proxy-workflows.spec.ts` | Reverse-proxy CRUD, duplicate, and port/host-sharing conflict rules | create proxy appears in the proxy list · create proxy writes correct Caddyfile block · edit proxy target updates the Caddyfile · edit proxy port removes old block and creates new block · delete proxy removes it from the list and the Caddyfile · duplicate proxy opens prefilled dialog that creates a distinct new entry · two standalone proxies can share a port via distinct subdomains · two proxies with explicit https:// scheme sharing a port keep distinct labels · two hostless proxies on the same port still conflict |
+| `proxy-workflows.spec.ts` | Reverse-proxy CRUD, duplicate, and port/host-sharing conflict rules | create proxy appears in the proxy list · create proxy writes correct Caddyfile block · edit proxy target updates the Caddyfile · edit proxy port removes old block and creates new block · delete proxy removes it from the list and the Caddyfile · duplicate proxy opens prefilled dialog that creates a distinct new entry · two standalone proxies can share a port via distinct subdomains · two proxies with explicit https:// scheme sharing a port keep distinct labels · two hostless proxies on the same port still conflict · an IP host only matches requests; Bind addresses decides where the site listens (live `ss` + curl over the LAN address after a reload) |
 | `redirect-workflows.spec.ts` | Redirect routes — CRUD + live status/Location header | create redirect appears in the route list · create redirect writes correct Caddyfile block · edit redirect target updates the Caddyfile · delete redirect removes it from the list and the Caddyfile · redirect actually returns the configured status and Location header via curl · redirect on a port already used by a proxy is rejected |
 | `static-workflows.spec.ts` | Static file-server routes — CRUD + real file serving | create static site appears in the route list · create static site writes correct Caddyfile block · edit static site root path updates the Caddyfile · delete static site removes it from the list and the Caddyfile · static site serves a real file via curl · static site returns 404 for a missing file · static site on a port already used by a redirect is rejected |
 | `respond-workflows.spec.ts` | Fixed status/body "respond" routes — CRUD + live response | create respond route appears in the route list · create respond route writes correct Caddyfile block · edit respond status code updates the Caddyfile · delete respond route removes it from the list and the Caddyfile · respond route actually returns the configured status and body via curl · respond route on a port already used by a redirect is rejected |
@@ -77,7 +80,7 @@ Helper reference (`e2e/helpers.ts`, `e2e/live.ts`, `e2e/fixtures.ts`):
 
 | File | What it covers | Tests |
 |---|---|---|
-| `rewrite-workflows.spec.ts` | URI rewrite (strip/add prefix, regex) | proxy with strip_prefix rewrite writes correct Caddyfile directive · proxy with regex rewrite writes matcher and rewrite directive · URI rewrite changes the path the backend actually receives · clearing rewrite on edit removes the directive from the Caddyfile |
+| `rewrite-workflows.spec.ts` | URI rewrite (rewrite type select: strip prefix, regex) | proxy with strip_prefix rewrite writes correct Caddyfile directive · proxy with regex rewrite writes matcher and rewrite directive · regex rewrite replaces only the matched part of the path after a reload · URI rewrite changes the path the backend actually receives · clearing rewrite on edit removes the directive from the Caddyfile |
 | `request-headers-workflows.spec.ts` | Headers injected into the upstream request (`header_up`) | add request header preset writes correct Caddyfile directive · custom set/add/delete header operations write correct Caddyfile directives · request headers actually reach the backend · remove header operation updates the Caddyfile |
 | `response-headers-workflows.spec.ts` | Headers added to the client response (`header`) | add response header (set) is visible in curl -I output · delete response header removes it from curl -I output · response headers persist across edit dialog reopen · a set header replaces the upstream one after a reload: exactly one X-Frame-Options |
 | `basic-auth-workflows.spec.ts` | Per-route HTTP Basic Auth (bcrypt hashing via `caddy hash-password`) | add basic auth user requires credentials for the route · basic auth password is stored as a bcrypt hash, not plaintext · remove basic auth user allows unauthenticated access again · edit password re-hashes and old password stops working |
@@ -90,15 +93,17 @@ Helper reference (`e2e/helpers.ts`, `e2e/live.ts`, `e2e/fixtures.ts`):
 
 ### Global settings (Settings tab)
 
+The Settings tab has sub-tabs (Core, TLS & ACME, Logging & metrics, Proxy headers & protocols, #346); specs reach them with `openSettingsTab()`.
+
 | File | What it covers | Tests |
 |---|---|---|
 | `dns-challenge-workflows.spec.ts` | ACME DNS challenge provider (#261), per site (#289) | without a DNS module, the setting explains what is needed and links the module list · credentials go to the root-only env file, never into the Caddyfile (skips without a Caddy build that has caddy-dns/cloudflare) · a site under automatic HTTPS inherits the DNS challenge, and a wildcard gets a warning · a per-site provider keeps its credentials in the env file under the site's own names (skips without caddy-dns/cloudflare) |
 | `global-options-workflows.spec.ts` | Settings save doesn't corrupt unrelated existing proxies | saving Settings does not strip labels from existing TLS proxies |
-| `metrics-workflows.spec.ts` | Prometheus metrics global option + dedicated site block | enabling metrics writes the global option and a dedicated site block Caddy accepts · a custom path and plain-format option round-trip correctly · disabling metrics removes both the global option and the site block · enabling without a listen address is blocked before saving |
+| `metrics-workflows.spec.ts` | Prometheus metrics global option + dedicated site block | enabling metrics writes the global option and a dedicated site block Caddy accepts · a custom path and plain-format option round-trip correctly · disabling metrics removes both the global option and the site block · enabling without a listen address is blocked before saving (Save jumps to the sub-tab with the error) |
 | `storage-workflows.spec.ts` | Certificate storage backend path, including systemd sandbox write-permission checks | Settings shows the detected default storage path with disk usage and cert count · saving a custom storage root writes a valid global option Caddy accepts · an unwritable storage path is rejected before ever being saved · a path outside the systemd sandbox ReadWritePaths is rejected even though root can create it · a fresh directory under an allowed path is usable by the caddy user, not just root |
 | `trusted-proxies-workflows.spec.ts` | `trusted_proxies` propagation to the *live* server, including the per-port `servers {}` merge edge case | trusted_proxies reaches the live server only after an explicit reload · trusted_proxies survives a per-port servers block also carrying an HTTP/3 override |
 | `proxy-protocol-workflows.spec.ts` | PROXY protocol listener wrapper | enabling PROXY protocol writes the correct listener directive and Caddy accepts the reload · disabling PROXY protocol removes the directive and Caddy still reloads cleanly |
-| `access-log-workflows.spec.ts` | Per-route access log + global runtime/error log | enabling per-route access log writes the correct log directive · a real request produces a log entry in the configured access log file · enabling the global runtime log writes the correct log directive |
+| `access-log-workflows.spec.ts` | Per-route access log + global runtime/error log | enabling per-route access log writes the correct log directive · a real request produces a log entry in the configured access log file · enabling the global runtime log writes the correct log directive and Caddy writes to that file after a reload |
 
 ### Admin & maintenance surfaces
 

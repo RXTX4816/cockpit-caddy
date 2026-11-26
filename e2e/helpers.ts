@@ -324,6 +324,7 @@ const SECTIONS = {
   accessLog: { tab: 'Logging & errors', toggle: /access logging/i },
   errorHandlers: { tab: 'Logging & errors', toggle: /custom error handlers/i },
   serverTimeouts: { tab: 'Limits', toggle: /server timeouts/i },
+  bind: { tab: 'Limits', toggle: /bind addresses/i },
 } as const;
 export type DialogSection = keyof typeof SECTIONS;
 
@@ -338,4 +339,71 @@ export async function openSection(modal: Locator, section: DialogSection): Promi
   const tabButton = modal.getByRole('tab', { name: new RegExp(`^${tab}`) });
   if (await tabButton.count()) await tabButton.click();
   else await modal.getByRole('button', { name: toggle }).click();
+}
+
+/**
+ * The Routing tab's header sections (#372): "Request Headers" (header_up), "Response
+ * headers from the upstream" (header_down) and "Response Headers" (header). All three share
+ * field labels, so scope every lookup to one of them.
+ */
+export function headerSection(modal: Locator, which: 'request' | 'upstreamResponse' | 'response'): Locator {
+  const name = { request: 'Request Headers', upstreamResponse: 'Response headers from the upstream', response: 'Response Headers' }[which];
+  return modal.getByRole('region', { name, exact: true });
+}
+
+/** Picks the operation (Set, Add, Default, Delete, Replace) for the next header a section adds. */
+export async function pickHeaderOp(section: Locator, op: 'Set' | 'Add' | 'Default' | 'Delete' | 'Replace'): Promise<void> {
+  await section.getByRole('group', { name: 'Header operation' }).getByRole('button', { name: op, exact: true }).click();
+}
+
+// ---------------------------------------------------------------------------
+// Settings tab and its sub-tabs (#346, #363)
+// ---------------------------------------------------------------------------
+
+export type SettingsTab = 'Core' | 'TLS & ACME' | 'Logging & metrics' | 'Proxy headers & protocols';
+
+/** The Settings tab's own panel, so its buttons never match the toolbar's or a toast's. */
+export function settingsPanel(page: Page): Locator {
+  return page.getByRole('tabpanel', { name: 'Settings', exact: true });
+}
+
+/**
+ * Opens the Settings tab and one of its sub-tabs. Every sub-tab stays mounted, so the
+ * fields of the others are in the DOM but hidden: click the one that holds the field
+ * before touching it.
+ */
+export async function openSettingsTab(page: Page, tab: SettingsTab): Promise<void> {
+  const banner = page.getByRole('link', { name: /continue on my own risk/i });
+  if (await banner.isVisible().catch(() => false)) await banner.click();
+  await page.getByRole('tab', { name: 'Settings', exact: true }).click();
+  const name = new RegExp(`^${tab.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`);
+  await settingsPanel(page).getByRole('tab', { name }).click();
+  await settingsPanel(page).getByRole('tabpanel', { name }).waitFor({ state: 'visible', timeout: 10000 });
+}
+
+/** The Settings form's Save button (exact, so the "Settings saved" toast's close button never matches). */
+export function settingsSaveButton(page: Page): Locator {
+  return settingsPanel(page).getByRole('button', { name: 'Save', exact: true });
+}
+
+/**
+ * Save + Confirm on the Settings form, then wait for the form to leave the confirm step,
+ * which only happens once the write succeeded (a failed save keeps Confirm/Back up).
+ * Waiting for Save to come back, not the toast, keeps a second save from matching the
+ * first save's toast, which stays up for a few seconds.
+ */
+export async function saveSettings(page: Page): Promise<void> {
+  await settingsSaveButton(page).click();
+  await settingsPanel(page).getByRole('button', { name: 'Confirm', exact: true }).click();
+  await settingsSaveButton(page).waitFor({ state: 'visible', timeout: 15000 });
+}
+
+/**
+ * The Settings tab's own "Reload config" button in its "needs reload" notice. Unlike the
+ * toolbar's reload it has no confirm dialog. Saving Settings only writes and validates
+ * the Caddyfile, so a change reaches the running Caddy only after this.
+ */
+export async function reloadFromSettings(page: Page): Promise<void> {
+  await settingsPanel(page).getByRole('button', { name: /reload config/i }).click();
+  await page.getByText(/caddy config reloaded/i).first().waitFor({ state: 'visible', timeout: 10000 });
 }

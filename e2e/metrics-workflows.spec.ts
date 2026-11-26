@@ -8,8 +8,11 @@
  * dedicated site block exposing the endpoint, and that Caddy actually serves real
  * Prometheus text at that address once reloaded.
  */
-import { test, expect, dismissAdminBanner } from './fixtures';
-import { readFile, spawnCmd, CADDYFILE_PATH, PROXY_CONF_PATH } from './helpers';
+import { test, expect } from './fixtures';
+import {
+  readFile, spawnCmd, CADDYFILE_PATH, PROXY_CONF_PATH,
+  openSettingsTab, saveSettings, settingsSaveButton, settingsPanel, reloadFromSettings,
+} from './helpers';
 
 // The plugin (and Caddy) run inside the VM — arbitrary ports the metrics site listens on
 // aren't forwarded to the host, unlike the Cockpit web UI's own port. page.request/fetch
@@ -21,22 +24,14 @@ async function curl(page: import('@playwright/test').Page, url: string): Promise
   return { body: out.slice(0, idx), status: out.slice(idx + 1).trim() };
 }
 
-async function openSettings(page: import('@playwright/test').Page) {
-  await dismissAdminBanner(page);
-  await page.getByRole('tab', { name: /settings/i }).click();
-  await page.getByRole('heading', { name: 'Prometheus metrics' }).waitFor({ state: 'visible', timeout: 10000 });
+function openSettings(page: import('@playwright/test').Page) {
+  return openSettingsTab(page, 'Logging & metrics');
 }
 
 // Saving Settings only writes and *validates* the Caddyfile — `caddy validate` just
 // checks the config parses, it doesn't push it to the running instance. The live process
-// keeps running the old config until this "Reload config" action fires, same as the
-// "needs reload" banner the Settings tab itself shows after a successful save.
-async function reloadConfig(page: import('@playwright/test').Page): Promise<void> {
-  // The page also has its own top-level "Reload config" action button distinct from the
-  // Settings tab's own post-save reload prompt — scope to the latter to avoid ambiguity.
-  await page.getByLabel(/settings/i).getByRole('button', { name: /reload config/i }).click();
-  await expect(page.getByText(/config reloaded successfully/i)).toBeVisible({ timeout: 10000 });
-}
+// keeps running the old config until the Settings tab's own "Reload config" fires.
+const reloadConfig = reloadFromSettings;
 
 test.afterEach(async ({ page }) => {
   await openSettings(page).catch(() => {});
@@ -45,8 +40,7 @@ test.afterEach(async ({ page }) => {
   const enabled = page.locator('#go-metrics-enabled');
   if (await enabled.isVisible().catch(() => false) && (await enabled.isChecked())) {
     await enabled.setChecked(false);
-    await page.getByRole('button', { name: /save/i }).click();
-    await page.getByRole('button', { name: /^confirm$/i }).click().catch(() => {});
+    await saveSettings(page).catch(() => {});
     // Reload too, so a stray metrics listener from this test doesn't stay bound on the
     // live process for whatever test runs next.
     await reloadConfig(page).catch(() => {});
@@ -57,9 +51,8 @@ test('enabling metrics writes the global option and a dedicated site block Caddy
   await openSettings(page);
   await page.locator('#go-metrics-enabled').setChecked(true);
   await page.locator('#go-metrics-listen-address').fill(':9291');
-  await page.getByRole('button', { name: /save/i }).click();
-  await page.getByRole('button', { name: /^confirm$/i }).click();
-  await expect(page.getByText(/settings saved/i)).toBeVisible({ timeout: 10000 });
+  await saveSettings(page);
+  await expect(page.getByText(/settings saved/i).first()).toBeVisible({ timeout: 10000 });
 
   const mainConf = await readFile(page, CADDYFILE_PATH);
   expect(mainConf).toContain('metrics');
@@ -84,9 +77,8 @@ test('a custom path and plain-format option round-trip correctly', async ({ plug
   await page.locator('#go-metrics-listen-address').fill(':9292');
   await page.locator('#go-metrics-path').fill('/custom-metrics');
   await page.locator('#go-metrics-plain-format').setChecked(true);
-  await page.getByRole('button', { name: /save/i }).click();
-  await page.getByRole('button', { name: /^confirm$/i }).click();
-  await expect(page.getByText(/settings saved/i)).toBeVisible({ timeout: 10000 });
+  await saveSettings(page);
+  await expect(page.getByText(/settings saved/i).first()).toBeVisible({ timeout: 10000 });
 
   const proxyConf = await readFile(page, PROXY_CONF_PATH);
   expect(proxyConf).toContain('metrics /custom-metrics {');
@@ -109,18 +101,12 @@ test('disabling metrics removes both the global option and the site block', asyn
   await openSettings(page);
   await page.locator('#go-metrics-enabled').setChecked(true);
   await page.locator('#go-metrics-listen-address').fill(':9293');
-  await page.getByRole('button', { name: /save/i }).click();
-  await page.getByRole('button', { name: /^confirm$/i }).click();
-  // Wait for the confirm step to fully return to idle (the "Save" button reappearing)
-  // rather than the "settings saved" toast text — that toast stays up to 4s, so a second
-  // save started too soon could match the *first* save's still-visible toast before its
-  // own write actually finishes, racing the file-content assertions below.
-  await expect(page.getByRole('button', { name: /save/i })).toBeVisible({ timeout: 10000 });
+  // saveSettings waits for the confirm step to return to idle, not for the toast, which
+  // stays up a few seconds and would let the second save below match the first one's.
+  await saveSettings(page);
 
   await page.locator('#go-metrics-enabled').setChecked(false);
-  await page.getByRole('button', { name: /save/i }).click();
-  await page.getByRole('button', { name: /^confirm$/i }).click();
-  await expect(page.getByRole('button', { name: /save/i })).toBeVisible({ timeout: 10000 });
+  await saveSettings(page);
 
   const mainConf = await readFile(page, CADDYFILE_PATH);
   expect(mainConf).not.toContain('metrics');
@@ -128,8 +114,18 @@ test('disabling metrics removes both the global option and the site block', asyn
   expect(proxyConf).not.toContain('cockpit-caddy:metrics');
 });
 
+// Save is never disabled (#346): with an error it jumps to the first sub-tab that has
+// one and stays out of the confirm step, so nothing reaches the disk.
 test('enabling without a listen address is blocked before saving', async ({ pluginPage: page }) => {
+  const before = await readFile(page, CADDYFILE_PATH);
   await openSettings(page);
   await page.locator('#go-metrics-enabled').setChecked(true);
-  await expect(page.getByRole('button', { name: /save/i })).toBeDisabled();
+  await openSettingsTab(page, 'Core');
+  await settingsSaveButton(page).click();
+
+  const loggingTab = settingsPanel(page).getByRole('tab', { name: /^Logging & metrics/ });
+  await expect(loggingTab).toHaveAttribute('aria-selected', 'true');
+  await expect(loggingTab.getByRole('img', { name: 'Has errors' })).toBeVisible();
+  await expect(settingsPanel(page).getByRole('button', { name: 'Confirm', exact: true })).toHaveCount(0);
+  expect(await readFile(page, CADDYFILE_PATH)).toBe(before);
 });
