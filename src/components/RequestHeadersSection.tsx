@@ -151,7 +151,7 @@ export function RequestHeadersSection({ value, onChange, isDisabled, isExpanded:
               <ToggleGroupItem
                 key={o}
                 text={t(`request_headers.op_${o}`)}
-                buttonId={`hdr-op-${o}`}
+                buttonId={`hdr-${variant}-op-${o}`}
                 isSelected={op === o}
                 onChange={() => !isDisabled && setOp(o)}
               />
