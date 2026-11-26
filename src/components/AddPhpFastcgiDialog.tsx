@@ -117,6 +117,7 @@ export function AddPhpFastcgiDialog({ existingPorts, onAdd, onClose, initialValu
           idPrefix="add-php"
           layout="site"
           showTls={true}
+          tlsMode={tlsMode}
           generalHasError={!!(portErr || upstreamErr || rootErr)}
           general={
             <Form isHorizontal>

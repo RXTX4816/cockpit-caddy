@@ -214,6 +214,7 @@ export function AddProxyDialog({ existingRoutes, onAdd, onClose, onApiError, ini
           isDisabled={isLocked}
           idPrefix="add-proxy"
           showTls={!serverCtx}
+          tlsMode={tlsMode}
           hostless={!form.externalHost.trim()}
           generalHasError={Object.values(errors).some(Boolean)}
           general={

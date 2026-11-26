@@ -990,6 +990,7 @@
     "validation_duration": "90d나 2160h 같은 Caddy 기간을 입력하세요(여기서는 \"y\"를 지원하지 않음)",
     "validation_ratio": "0과 1 사이의 숫자를 입력하세요(양 끝 제외)",
     "hostless_global_only_note": "이 프록시에는 호스트 이름이 없어서 Caddy가 이 프록시만을 위한 인증서 정책을 둘 수 없습니다. 호스트 이름 없는 프록시의 인증서 수명과 갱신 창은 전역 옵션 탭의 \"내부 TLS(호스트 이름 없는 프록시)\"에서 한 번에 모두 설정하세요.",
+    "off_note": "이 사이트는 HTTPS가 꺼져 있습니다. TLS 정책을 설정하려면 일반에서 HTTPS를 켜세요.",
     "lifetime_preset_default": "기본값(12h)",
     "lifetime_preset_90d": "90일",
     "lifetime_preset_180d": "180일",

@@ -990,6 +990,7 @@
     "validation_duration": "90d や 2160h のような Caddy の時間形式で入力してください（ここでは「y」は使えません）",
     "validation_ratio": "0 より大きく 1 より小さい数値を入力してください",
     "hostless_global_only_note": "このプロキシにはホスト名がないため、Caddy はこのプロキシだけに証明書ポリシーを限定できません。ホスト名なしのプロキシの証明書有効期間と更新ウィンドウは、「グローバルオプション」タブの「内部 TLS（ホスト名なしのプロキシ）」で、すべてに対して一度だけ設定してください。",
+    "off_note": "このサイトでは HTTPS がオフです。TLS ポリシーを設定するには、「全般」で HTTPS をオンにしてください。",
     "lifetime_preset_default": "既定（12h）",
     "lifetime_preset_90d": "90 日",
     "lifetime_preset_180d": "180 日",

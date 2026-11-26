@@ -990,6 +990,7 @@
     "validation_duration": "Geben Sie eine Caddy-Dauer wie 90d oder 2160h ein („y“ wird hier nicht unterstützt)",
     "validation_ratio": "Geben Sie eine Zahl zwischen 0 und 1 ein (ausschließlich)",
     "hostless_global_only_note": "Dieser Proxy hat keinen Hostnamen, daher kann Caddy keine Zertifikatsrichtlinie nur für ihn festlegen. Legen Sie Zertifikatslaufzeit und Erneuerungsfenster für Proxies ohne Hostname einmal für alle im Tab „Globale Optionen“ unter „Internes TLS (Proxies ohne Hostname)“ fest.",
+    "off_note": "HTTPS ist für diese Site aus. Schalten Sie es unter „Allgemein“ ein, um eine TLS-Richtlinie festzulegen.",
     "lifetime_preset_default": "Standard (12h)",
     "lifetime_preset_90d": "90 Tage",
     "lifetime_preset_180d": "180 Tage",

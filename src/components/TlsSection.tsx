@@ -17,6 +17,7 @@ import type { MtlsMode, TlsProtocolVersion } from "../api";
 import { readFile, parseCertDetails, type CertDetails } from "../api";
 import { SectionActions } from "./SectionActions";
 import { Notice } from "./Notice";
+import type { TlsMode } from "./TlsModeField";
 
 export interface TlsValues {
   protocolMin: TlsProtocolVersion | "";
@@ -95,6 +96,12 @@ interface Props {
    * other hostless proxy too — not just this one.
    */
   hostless?: boolean;
+  /**
+   * The site's certificate source, from its General tab. "off": nothing here applies, so the
+   * section only says so. "acme": the internal CA's lifetime and renewal window don't apply.
+   * "internal": the ACME account email and CA don't apply. Unset (the server dialogs): all fields.
+   */
+  tlsMode?: TlsMode;
   /** Controlled expand state, e.g. from a parent accordion coordinating single-open-at-a-time
    *  across sections. Falls back to internal state when omitted. */
   isExpanded?: boolean;
@@ -188,7 +195,7 @@ function FileCheckStatus({ state }: { state: FileCheckState }) {
   );
 }
 
-export function TlsSection({ value, onChange, isDisabled, hostless, isExpanded: isExpandedProp, onToggleExpanded }: Props) {
+export function TlsSection({ value, onChange, isDisabled, hostless, tlsMode, isExpanded: isExpandedProp, onToggleExpanded }: Props) {
   const { t } = useTranslation();
   const [internalExpanded, setInternalExpanded] = useState(isConfigured(value));
   const expanded = isExpandedProp ?? internalExpanded;
@@ -207,6 +214,14 @@ export function TlsSection({ value, onChange, isDisabled, hostless, isExpanded: 
   const certCheck = useFileCheck(value.customCertFile, true);
   const keyCheck = useFileCheck(value.customKeyFile, false);
   const caCheck = useFileCheck(value.customCaFile, true);
+
+  if (tlsMode === "off") {
+    return (
+      <SectionShell heading={t("tls_policy.heading")} toggleText={t("tls_policy.section_title")} isIndented isExpanded={expanded} onToggle={(_e, v) => setExpanded(v)}>
+        <Notice variant="info" isPlain title={t("tls_policy.off_note")} />
+      </SectionShell>
+    );
+  }
 
   return (
     <SectionShell
@@ -342,7 +357,7 @@ export function TlsSection({ value, onChange, isDisabled, hostless, isExpanded: 
           variant="info"
           title={t("tls_policy.custom_cert_lifetime_note")}
         />
-      ) : hostless ? (
+      ) : tlsMode === "acme" ? null : hostless ? (
         <Notice
           variant="info"
           title={t("tls_policy.hostless_global_only_note")}
@@ -389,32 +404,36 @@ export function TlsSection({ value, onChange, isDisabled, hostless, isExpanded: 
         </>
       )}
 
-      {/* mTLS */}
+      {/* The site's own ACME account and key type (#341) */}
       {!customCert && (
         <>
-          <FormGroup label={t("tls_policy.acme_email")} fieldId="tls-acme-email" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
-            <TextInput
-              id="tls-acme-email"
-              type="email"
-              value={value.acmeEmail}
-              onChange={(_e, v) => set({ acmeEmail: v })}
-              placeholder={t("tls_policy.acme_global_placeholder")}
-              validated={acmeEmailInvalid(value) ? "error" : "default"}
-              isDisabled={isDisabled}
-            />
-            <FormHelperText><HelperText><HelperTextItem variant={acmeEmailInvalid(value) ? "error" : "default"}>{acmeEmailInvalid(value) ? t("tls_policy.acme_invalid_email") : t("tls_policy.acme_email_help")}</HelperTextItem></HelperText></FormHelperText>
-          </FormGroup>
-          <FormGroup label={t("tls_policy.acme_ca")} fieldId="tls-acme-ca" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
-            <TextInput
-              id="tls-acme-ca"
-              value={value.acmeCa}
-              onChange={(_e, v) => set({ acmeCa: v })}
-              placeholder="https://acme-staging-v02.api.letsencrypt.org/directory"
-              validated={acmeCaInvalid(value) ? "error" : "default"}
-              isDisabled={isDisabled}
-            />
-            <FormHelperText><HelperText><HelperTextItem variant={acmeCaInvalid(value) ? "error" : "default"}>{acmeCaInvalid(value) ? t("tls_policy.acme_invalid_ca") : t("tls_policy.acme_ca_help")}</HelperTextItem></HelperText></FormHelperText>
-          </FormGroup>
+          {tlsMode !== "internal" && (
+            <>
+              <FormGroup label={t("tls_policy.acme_email")} fieldId="tls-acme-email" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+                <TextInput
+                  id="tls-acme-email"
+                  type="email"
+                  value={value.acmeEmail}
+                  onChange={(_e, v) => set({ acmeEmail: v })}
+                  placeholder={t("tls_policy.acme_global_placeholder")}
+                  validated={acmeEmailInvalid(value) ? "error" : "default"}
+                  isDisabled={isDisabled}
+                />
+                <FormHelperText><HelperText><HelperTextItem variant={acmeEmailInvalid(value) ? "error" : "default"}>{acmeEmailInvalid(value) ? t("tls_policy.acme_invalid_email") : t("tls_policy.acme_email_help")}</HelperTextItem></HelperText></FormHelperText>
+              </FormGroup>
+              <FormGroup label={t("tls_policy.acme_ca")} fieldId="tls-acme-ca" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
+                <TextInput
+                  id="tls-acme-ca"
+                  value={value.acmeCa}
+                  onChange={(_e, v) => set({ acmeCa: v })}
+                  placeholder="https://acme-staging-v02.api.letsencrypt.org/directory"
+                  validated={acmeCaInvalid(value) ? "error" : "default"}
+                  isDisabled={isDisabled}
+                />
+                <FormHelperText><HelperText><HelperTextItem variant={acmeCaInvalid(value) ? "error" : "default"}>{acmeCaInvalid(value) ? t("tls_policy.acme_invalid_ca") : t("tls_policy.acme_ca_help")}</HelperTextItem></HelperText></FormHelperText>
+              </FormGroup>
+            </>
+          )}
           <FormGroup label={t("tls_policy.key_type")} fieldId="tls-key-type" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
             <FormSelect id="tls-key-type" value={value.keyType} onChange={(_e, v) => set({ keyType: v })} isDisabled={isDisabled} style={{ maxWidth: "16rem" }}>
               <FormSelectOption value="" label={t("tls_policy.proto_default")} />
@@ -425,6 +444,7 @@ export function TlsSection({ value, onChange, isDisabled, hostless, isExpanded: 
         </>
       )}
 
+      {/* mTLS */}
       <FormGroup label={t("tls_policy.client_auth_mode")} fieldId="tls-mtls-mode" style={{ marginBottom: "var(--pf-v6-global--spacer--sm)" }}>
         <FormHelperText style={{ marginBottom: "0.25rem" }}>
           <HelperText><HelperTextItem>{t("tls_policy.client_auth_mode_help")}</HelperTextItem></HelperText>

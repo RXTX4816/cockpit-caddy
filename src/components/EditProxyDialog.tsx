@@ -182,6 +182,7 @@ export function EditProxyDialog({ proxy, onSaveSiteText, existingRoutes, onSave,
           siteText={proxy.siteText}
           onSaveSiteText={onSaveSiteText && (async (text, expected) => { await onSaveSiteText(text, expected); toast.success(t("tree.saved")); onClose(); })}
           showTls={!proxy.namedServerKey}
+          tlsMode={tlsMode}
           hostless={!externalHost.trim()}
           generalHasError={generalHasError}
           general={

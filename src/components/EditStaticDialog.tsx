@@ -107,6 +107,7 @@ export function EditStaticDialog({ proxy, existingPorts, onSave, onClose }: Prop
           idPrefix="edit-static"
           layout="site"
           showTls={!proxy.namedServerKey}
+          tlsMode={tlsMode}
           generalHasError={!!(portErr || rootErr)}
           general={
             <Form isHorizontal>

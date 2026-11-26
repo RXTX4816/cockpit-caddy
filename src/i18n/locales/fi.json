@@ -990,6 +990,7 @@
     "validation_duration": "Syötä Caddyn kesto, kuten 90d tai 2160h (\"y\" ei ole tuettu tässä)",
     "validation_ratio": "Syötä luku väliltä 0–1 (päätepisteet pois lukien)",
     "hostless_global_only_note": "Tällä proxylla ei ole isäntänimeä, joten Caddy ei voi rajata varmennekäytäntöä pelkästään siihen. Aseta isäntänimettömien proxyjen varmenteen voimassaoloaika ja uusimisikkuna kerran, kaikille yhteisesti, Yleiset asetukset -välilehdellä kohdassa \"Sisäinen TLS (isäntänimettömät proxyt)\".",
+    "off_note": "HTTPS on pois päältä tällä sivustolla. Ota se käyttöön Yleiset-välilehdellä, niin voit asettaa TLS-käytännön.",
     "lifetime_preset_default": "Oletus (12h)",
     "lifetime_preset_90d": "90 päivää",
     "lifetime_preset_180d": "180 päivää",

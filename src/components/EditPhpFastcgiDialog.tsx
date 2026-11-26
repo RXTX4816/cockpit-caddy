@@ -116,6 +116,7 @@ export function EditPhpFastcgiDialog({ proxy, existingPorts, onSave, onClose }: 
           idPrefix="edit-php"
           layout="site"
           showTls={true}
+          tlsMode={tlsMode}
           generalHasError={!!(portErr || upstreamErr || rootErr)}
           general={
             <Form isHorizontal>
