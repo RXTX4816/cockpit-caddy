@@ -1476,7 +1476,7 @@ function parseResponseReplace(name: string, r: { search?: string; search_regexp?
   if (r.search_regexp == null) return { op: "replace", name, value: r.search ?? "", replacement, literal: true };
   const find = unquoteRegexp(r.search_regexp);
   if (find !== undefined && /^(?:[^$]|\$\$)*$/.test(replacement)) {
-    return { op: "replace", name, value: find, replacement: replacement.replace(/\$\$/g, "$$"), literal: true };
+    return { op: "replace", name, value: find, replacement: replacement.replace(/\$\$/g, () => "$"), literal: true };
   }
   return { op: "replace", name, value: r.search_regexp, replacement };
 }
