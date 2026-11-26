@@ -4923,9 +4923,11 @@ describe("bind next to a host name (#323)", () => {
     expect(patchRawBlock(raw, site({ bind: ["10.0.0.6"] }))).toContain("example.com {\n\tbind 10.0.0.6\n");
   });
 
-  it("reads a pre-#323 push of an IP host as that host with that bind, and several binds without a name as binds", () => {
+  it("reads listen addresses without a host matcher as a site without a host that binds", () => {
+    // What `:7700 { bind 10.0.0.5 }` adapts to: an IP host gets a host matcher since #323.
     const one = { apps: { http: { servers: { srv0: { listen: ["10.0.0.5:7700"], routes: [{ handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:9000" }] }] }] } } } } } as unknown as CaddyConfig;
-    expect(parseProxies(one)[0]).toMatchObject({ externalHost: "10.0.0.5", bind: ["10.0.0.5"] });
+    expect(parseProxies(one)[0]).toMatchObject({ bind: ["10.0.0.5"] });
+    expect(parseProxies(one)[0].externalHost).toBeUndefined();
     const two = { apps: { http: { servers: { srv0: { listen: ["10.0.0.5:7700", "10.0.0.6:7700"], routes: [{ handle: [{ handler: "reverse_proxy", upstreams: [{ dial: "localhost:9000" }] }] }] } } } } } as unknown as CaddyConfig;
     expect(parseProxies(two)[0].externalHost).toBeUndefined();
     expect(parseProxies(two)[0].bind).toEqual(["10.0.0.5", "10.0.0.6"]);

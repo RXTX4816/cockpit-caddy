@@ -804,8 +804,8 @@ export function parseRouteToEntry(
   // `bind` next to a host (#323): the listen addresses are the bind, and the names are in the host
   // matcher. A listen host is an IP or a name (`bind localhost`). The host no longer implies a bind,
   // so an IP host's own listen address is one of the binds too: that is how a Caddyfile written
-  // before #323 (`10.0.0.5:80 { bind 10.0.0.5 }`) keeps its listener. A JSON push from before #323
-  // named an IP host by its listen address alone; it reads back as that host with that bind.
+  // before #323 (`10.0.0.5:80 { bind 10.0.0.5 }`) keeps its listener. Listen addresses without a
+  // host matcher are a site without a host that binds, as `:80 { bind 10.0.0.5 }` adapts.
   const listenHosts = [...new Set((server.listen ?? []).map(listenHostOf).filter(Boolean))];
   let bind: string[] | undefined;
   if (!namedServerKey && listenHosts.length && isHostOnlyMatcher(matchers)) {
@@ -814,7 +814,7 @@ export function parseRouteToEntry(
     matchers = undefined;
   } else if (!namedServerKey && !matchers && listenHosts.length) {
     bind = listenHosts;
-    if (listenHosts.length > 1 || !isIpAddress(listenHosts[0])) externalHost = undefined;
+    externalHost = undefined;
   }
 
   // #51 — Caddy enables h1/h2/h3 by default; an explicit protocols list omitting h3 is

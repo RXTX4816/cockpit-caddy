@@ -576,6 +576,14 @@ describe.runIf(available || required)("instant-apply JSON and the saved Caddyfil
     expect(readBack(conf)[0].bind).toBeUndefined();
   });
 
+  it("a site without a host that binds one IP reads back without a host (#323)", () => {
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, externalHost: undefined, bind: ["127.0.0.1"] })]);
+    expect(conf).toContain(":8080 {\n\tbind 127.0.0.1");
+    const [p] = readBack(conf);
+    expect(p.externalHost).toBeUndefined();
+    expect(p.bind).toEqual(["127.0.0.1"]);
+  });
+
   it("a hostname still listens on every interface", () => {
     const p = entry({ tls: false, externalPort: 8443, externalHost: "app.example.com" });
     expect(proxiesToCaddyfile([p])).not.toContain("bind");
