@@ -13,6 +13,7 @@ import {
 } from "./caddy";
 import { applyDnsSecrets, isSiteDnsVar } from "./dnsChallenge";
 import { findBlockPositions, findMatchingBlock } from "./caddyfileDocument";
+import { hasNestedBlocks } from "./siteTree";
 import type { CaddyConfig, DnsChallengeConfig, ProxyEntry, ServerDef } from "./types";
 import type { AcmeAccount } from "./caddyJsonModel";
 
@@ -56,8 +57,11 @@ export function needsCaddyfileReload(p: ProxyEntry): boolean {
   // Snippet imports (#288) only exist in the Caddyfile; hand-built JSON would drop what they add.
   // A client_ip matcher (#286) needs the server's trusted_proxies, which the global options set
   // and only Caddy's adapter puts on the server; the hand-built JSON server has none.
+  // Route and nested handle blocks (#348) are the site's text; the form's JSON knows one target
+  // and would put it in place of every reverse_proxy in them.
   return !!p.phpFastcgi || reliesOnCaddyfileTls(p) || !!p.imports?.length
-    || !!p.matchers?.client_ip?.ranges.length || !!p.matchers?.not?.client_ip?.ranges.length;
+    || !!p.matchers?.client_ip?.ranges.length || !!p.matchers?.not?.client_ip?.ranges.length
+    || (!!p.siteText && hasNestedBlocks(p.siteText));
 }
 
 /**

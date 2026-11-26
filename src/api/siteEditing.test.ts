@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { resetHost } from "@rxtx4816/cockpit-plugin-base-react/host";
 import { installFakeHost, type FakeHost } from "@rxtx4816/cockpit-plugin-base-react/testing/host";
 import { setCaddyManaged, CaddyfileError } from "./caddy";
-import { addSite, editSite, removeSite, liveChangeFor, type SiteEditContext } from "./siteEditing";
+import { addSite, editSite, removeSite, liveChangeFor, needsCaddyfileReload, type SiteEditContext } from "./siteEditing";
 import type { ProxyEntry, ServerDef } from "./types";
 
 const MAIN = "/etc/caddy/Caddyfile";
@@ -113,5 +113,14 @@ describe("liveChangeFor", () => {
     const acme = proxy(7730, { tls: true, tlsIssuer: "acme" });
     expect(liveChangeFor([acme], {}).kind).toBe("reload");
     expect(liveChangeFor([proxy(7731)], { apps: {} }).kind).toBe("push");
+  });
+});
+
+describe("needsCaddyfileReload for a site with nested blocks (#348)", () => {
+  it("reloads instead of pushing the form's single target over the blocks", () => {
+    const base = { id: "x", serverKey: "x", externalHost: "example.com", externalPort: 443, targetHost: "", targetPort: 0, targetScheme: "http", tls: true, tlsSkipVerify: false } as ProxyEntry;
+    const nested = "example.com {\n\troute {\n\t\thandle /api/* {\n\t\t\treverse_proxy api:8080\n\t\t}\n\t}\n}";
+    expect(needsCaddyfileReload({ ...base, siteText: nested })).toBe(true);
+    expect(needsCaddyfileReload({ ...base, siteText: "example.com {\n\treverse_proxy web:3000\n}" })).toBe(false);
   });
 });
