@@ -756,6 +756,7 @@ export function GlobalOptionsTab({ unmanaged = false }: { unmanaged?: boolean } 
 
         <AccessLogSection
           idPrefix="rl"
+          heading={null}
           title={t("global_opts.runtime_log_section_title")}
           titleOn={t("global_opts.runtime_log_section_title_on")}
           enableLabel={t("global_opts.runtime_log_enable")}

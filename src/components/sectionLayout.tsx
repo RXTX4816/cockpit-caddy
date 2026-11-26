@@ -16,8 +16,9 @@ export function useFlatSections(): boolean {
 }
 
 interface ShellProps {
-  /** The section's name as a heading inside a tab (#291), e.g. "HTTP Basic Auth". */
-  heading: string;
+  /** The section's name as a heading inside a tab (#291), e.g. "HTTP Basic Auth". `null` leaves
+   *  it out, for a section that sits under a heading of its own already. */
+  heading: string | null;
   toggleContent?: ReactNode;
   toggleText?: string;
   isIndented?: boolean;
@@ -38,6 +39,7 @@ export function SectionShell({ heading, toggleContent, toggleText, isIndented, i
       </ExpandableSection>
     );
   }
+  if (heading === null) return <div>{children}</div>;
   return (
     <section aria-labelledby={id} style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
       <Title headingLevel="h4" size="md" id={id}>{heading}</Title>
