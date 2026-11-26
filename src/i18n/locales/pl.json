@@ -497,7 +497,14 @@
     "preset_nosniff": "X-Content-Type-Options",
     "preset_frame": "X-Frame-Options",
     "preset_referrer": "Referrer-Policy",
-    "preset_remove_server": "Usuń Server"
+    "preset_remove_server": "Usuń Server",
+    "op_default": "Domyślny",
+    "op_replace": "Zamień",
+    "field_search": "Szukany tekst",
+    "field_replacement": "Zamiennik",
+    "field_regex": "Wyrażenie regularne",
+    "default_help": "Domyślny ustawia nagłówek tylko wtedy, gdy odpowiedź jeszcze go nie ma.",
+    "replace_help": "Zamień zmienia pasującą część wartości nagłówka. Z wyrażeniem regularnym $1 w zamienniku wstawia pierwszą grupę."
   },
   "request_headers": {
     "heading": "Nagłówki żądania",

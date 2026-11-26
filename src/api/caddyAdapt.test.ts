@@ -551,6 +551,50 @@ describe.runIf(available || required)("passive and active health checks (#252)",
   });
 });
 
+describe.runIf(available || required)("response header default and replace adapt and read back", () => {
+  const headers: ProxyEntry["responseHeaders"] = [
+    { op: "default", name: "Cache-Control", value: "max-age=60" },
+    { op: "replace", name: "Location", value: "http://a.b/{x}$", replacement: "https://a.b/$1 ok", literal: true },
+    { op: "replace", name: "Server", value: "^Apache(.*)$", replacement: "web$1" },
+  ];
+  const sites: [string, Partial<ProxyEntry>][] = [
+    ["proxied", { tls: false, externalPort: 8080 }],
+    ["static", { tls: false, externalPort: 8080, fileServer: { root: "/srv/app" } }],
+  ];
+  function headerHandlers(conf: string): unknown[] {
+    const found: unknown[] = [];
+    JSON.stringify(adapt(conf), (k, v) => {
+      if (v && typeof v === "object" && (v as { handler?: string }).handler === "headers") found.push(v);
+      return v;
+    });
+    return found;
+  }
+
+  it.each(sites)("reads back as the same model (%s)", (_, site) => {
+    const [p] = readBack(proxiesToCaddyfile([entry({ ...site, responseHeaders: headers })]));
+    expect(p.responseHeaders).toEqual(headers);
+  });
+
+  it.each(sites)("the default is Caddy's require handler and the replaces are deferred (%s)", (_, site) => {
+    const adapted = headerHandlers(proxiesToCaddyfile([entry({ ...site, responseHeaders: headers })]));
+    expect(adapted).toEqual([
+      { handler: "headers", response: { require: { headers: { "Cache-Control": null } }, set: { "Cache-Control": ["max-age=60"] } } },
+      { handler: "headers", response: { deferred: true, replace: { Location: [{ search_regexp: "http://a\\.b/\\{x\\}\\$", replace: "https://a.b/$$1 ok" }] } } },
+      { handler: "headers", response: { deferred: true, replace: { Server: [{ search_regexp: "^Apache(.*)$", replace: "web$1" }] } } },
+    ]);
+  });
+
+  it("the instant-apply JSON builds the same handlers, the replaces in one", () => {
+    const p = entry({ tls: false, externalPort: 8080, responseHeaders: headers });
+    const pushed = buildServerEntry(p).routes?.[0]?.handle?.filter(h => h.handler === "headers");
+    const adapted = headerHandlers(proxiesToCaddyfile([p])) as Array<{ response: { replace?: Record<string, unknown> } }>;
+    expect(pushed).toEqual([
+      adapted[0],
+      { handler: "headers", response: { deferred: true, replace: { ...adapted[1].response.replace, ...adapted[2].response.replace } } },
+    ]);
+  });
+});
+
 describe.runIf(available || required)("instant-apply JSON and the saved Caddyfile agree (#254)", () => {
   function firstServer(conf: string) {
     return Object.values(adapt(conf).apps?.http?.servers ?? {})[0];

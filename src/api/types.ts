@@ -360,11 +360,16 @@ export interface DynamicUpstreamSource {
 }
 
 export interface HeaderOperation {
-  /** `replace` only exists for header_down: `value` is the regexp to find, `replacement` what it becomes. */
-  op: "set" | "add" | "delete" | "replace";
+  /** `replace`: `value` is what to find, `replacement` what it becomes; header_down and the
+   *  response `header` directive have it. `default` (`header ?Name value`) only exists for
+   *  the response `header` directive: set the header only when the response has none. */
+  op: "set" | "add" | "delete" | "replace" | "default";
   name: string;
   value?: string;
   replacement?: string;
+  /** Response `replace` only: `value` is plain text, written as an escaped regexp. Without it
+   *  `value` is the regexp itself, as Caddy reads it. */
+  literal?: boolean;
 }
 
 export type RewriteConfig =

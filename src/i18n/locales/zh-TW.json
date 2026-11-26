@@ -497,7 +497,14 @@
     "preset_nosniff": "X-Content-Type-Options",
     "preset_frame": "X-Frame-Options",
     "preset_referrer": "Referrer-Policy",
-    "preset_remove_server": "移除 Server"
+    "preset_remove_server": "移除 Server",
+    "op_default": "預設",
+    "op_replace": "取代",
+    "field_search": "要尋找的文字",
+    "field_replacement": "取代為",
+    "field_regex": "規則運算式",
+    "default_help": "預設只在回應中尚無該標頭時才設定它。",
+    "replace_help": "取代會變更標頭值中相符的部分。使用規則運算式時，取代值中的 $1 會插入第一個群組。"
   },
   "request_headers": {
     "heading": "請求標頭",

@@ -497,7 +497,14 @@
     "preset_nosniff": "X-Content-Type-Options",
     "preset_frame": "X-Frame-Options",
     "preset_referrer": "Referrer-Policy",
-    "preset_remove_server": "Server を削除"
+    "preset_remove_server": "Server を削除",
+    "op_default": "既定",
+    "op_replace": "置換",
+    "field_search": "検索するテキスト",
+    "field_replacement": "置換後の値",
+    "field_regex": "正規表現",
+    "default_help": "既定は、レスポンスにまだそのヘッダーがない場合にだけ設定します。",
+    "replace_help": "置換はヘッダー値の一致した部分を変更します。正規表現では、置換後の値の $1 が最初のグループを挿入します。"
   },
   "request_headers": {
     "heading": "リクエストヘッダー",

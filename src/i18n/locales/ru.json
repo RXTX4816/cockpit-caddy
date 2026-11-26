@@ -497,7 +497,14 @@
     "preset_nosniff": "X-Content-Type-Options",
     "preset_frame": "X-Frame-Options",
     "preset_referrer": "Referrer-Policy",
-    "preset_remove_server": "Удалить Server"
+    "preset_remove_server": "Удалить Server",
+    "op_default": "По умолчанию",
+    "op_replace": "Заменить",
+    "field_search": "Искомый текст",
+    "field_replacement": "Замена",
+    "field_regex": "Регулярное выражение",
+    "default_help": "«По умолчанию» задаёт заголовок, только если в ответе его ещё нет.",
+    "replace_help": "«Заменить» меняет совпадающую часть значения заголовка. С регулярным выражением $1 в замене вставляет первую группу."
   },
   "request_headers": {
     "heading": "Заголовки запроса",

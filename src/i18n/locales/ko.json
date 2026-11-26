@@ -497,7 +497,14 @@
     "preset_nosniff": "X-Content-Type-Options",
     "preset_frame": "X-Frame-Options",
     "preset_referrer": "Referrer-Policy",
-    "preset_remove_server": "Server 제거"
+    "preset_remove_server": "Server 제거",
+    "op_default": "기본값",
+    "op_replace": "바꾸기",
+    "field_search": "찾을 텍스트",
+    "field_replacement": "대체 값",
+    "field_regex": "정규식",
+    "default_help": "기본값은 응답에 해당 헤더가 아직 없을 때만 설정합니다.",
+    "replace_help": "바꾸기는 헤더 값에서 일치하는 부분을 변경합니다. 정규식을 사용하면 대체 값의 $1이 첫 번째 그룹을 넣습니다."
   },
   "request_headers": {
     "heading": "요청 헤더",

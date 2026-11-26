@@ -497,7 +497,14 @@
     "preset_nosniff": "X-Content-Type-Options",
     "preset_frame": "X-Frame-Options",
     "preset_referrer": "Referrer-Policy",
-    "preset_remove_server": "Quitar Server"
+    "preset_remove_server": "Quitar Server",
+    "op_default": "Predeterminado",
+    "op_replace": "Reemplazar",
+    "field_search": "Texto a buscar",
+    "field_replacement": "Reemplazo",
+    "field_regex": "Expresión regular",
+    "default_help": "Predeterminado establece la cabecera solo si la respuesta aún no la tiene.",
+    "replace_help": "Reemplazar cambia la parte coincidente del valor de la cabecera. Con expresión regular, $1 en el reemplazo inserta el primer grupo."
   },
   "request_headers": {
     "heading": "Cabeceras de la petición",

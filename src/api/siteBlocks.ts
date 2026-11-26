@@ -15,14 +15,30 @@ export { caddyQuote };
 
 
 
+/** Go's regexp.QuoteMeta: `value` as a regexp that matches exactly that text. */
+export function quoteRegexp(value: string): string {
+  return value.replace(/[\\.+*?()|[\]{}^$]/g, "\\$&");
+}
+
 /**
  * One `header` / `header_up` line for a header operation, values quoted for Caddy (#251). `defer` writes a set as `>Name`: the Caddyfile adapter defers only `-`, `?`,
  * `>` and `defer`, so on a proxied route a plain set runs before reverse_proxy adds the upstream's
  * header and both reach the client (#255, checked with `caddy adapt` on 2.11.7).
+ *
+ * The response `header` directive also has `?Name` (set only when the response has none, which
+ * Caddy runs deferred by itself) and a replace, written `>Name` everywhere: undeferred it would
+ * run before reverse_proxy or file_server set the header it is meant to change.
  */
 export function headerOpLine(prefix: string, h: import("./types").HeaderOperation, opts: { quoteSet?: boolean; defer?: boolean } = {}): string {
+  const response = /(^|\s)header$/.test(prefix);
   if (h.op === "delete") return `${prefix} -${h.name}`;
-  if (h.op === "replace") return `${prefix} ${h.name} ${caddyQuote(h.value ?? "")} ${caddyQuote(h.replacement ?? "")}`;
+  if (h.op === "default") return `${prefix} ?${h.name} ${caddyQuote(h.value ?? "", { always: opts.quoteSet })}`;
+  if (h.op === "replace") {
+    // Go expands `$1` in the replacement, so plain text doubles its `$`.
+    const find = h.literal ? quoteRegexp(h.value ?? "") : h.value ?? "";
+    const replacement = h.literal ? (h.replacement ?? "").replace(/\$/g, "$$$$") : h.replacement ?? "";
+    return `${prefix} ${response ? ">" : ""}${h.name} ${caddyQuote(find)} ${caddyQuote(replacement)}`;
+  }
   if (h.op === "add") return `${prefix} +${h.name} ${caddyQuote(h.value ?? "")}`;
   return `${prefix} ${opts.defer ? ">" : ""}${h.name} ${caddyQuote(h.value ?? "", { always: opts.quoteSet })}`;
 }

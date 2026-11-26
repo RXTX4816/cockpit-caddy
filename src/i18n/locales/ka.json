@@ -497,7 +497,14 @@
     "preset_nosniff": "X-Content-Type-Options",
     "preset_frame": "X-Frame-Options",
     "preset_referrer": "Referrer-Policy",
-    "preset_remove_server": "Server-ის მოცილება"
+    "preset_remove_server": "Server-ის მოცილება",
+    "op_default": "ნაგულისხმევი",
+    "op_replace": "ჩანაცვლება",
+    "field_search": "საძიებო ტექსტი",
+    "field_replacement": "ჩამნაცვლებელი",
+    "field_regex": "რეგულარული გამოსახულება",
+    "default_help": "ნაგულისხმევი სათაურს მხოლოდ მაშინ აყენებს, თუ პასუხს ის ჯერ არ აქვს.",
+    "replace_help": "ჩანაცვლება ცვლის სათაურის მნიშვნელობის დამთხვეულ ნაწილს. რეგულარული გამოსახულებით ჩამნაცვლებელში $1 პირველ ჯგუფს სვამს."
   },
   "request_headers": {
     "heading": "მოთხოვნის სათაურები",

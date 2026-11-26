@@ -497,7 +497,14 @@
     "preset_nosniff": "X-Content-Type-Options",
     "preset_frame": "X-Frame-Options",
     "preset_referrer": "Referrer-Policy",
-    "preset_remove_server": "إزالة Server"
+    "preset_remove_server": "إزالة Server",
+    "op_default": "افتراضي",
+    "op_replace": "استبدال",
+    "field_search": "النص المراد البحث عنه",
+    "field_replacement": "البديل",
+    "field_regex": "تعبير نمطي",
+    "default_help": "الافتراضي يعيّن الترويسة فقط إذا لم تكن موجودة في الاستجابة.",
+    "replace_help": "الاستبدال يغيّر الجزء المطابق من قيمة الترويسة. مع التعبير النمطي، يُدرج $1 في البديل المجموعة الأولى."
   },
   "request_headers": {
     "heading": "ترويسات الطلب",

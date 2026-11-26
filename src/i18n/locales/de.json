@@ -497,7 +497,14 @@
     "preset_nosniff": "X-Content-Type-Options",
     "preset_frame": "X-Frame-Options",
     "preset_referrer": "Referrer-Policy",
-    "preset_remove_server": "Server entfernen"
+    "preset_remove_server": "Server entfernen",
+    "op_default": "Standard",
+    "op_replace": "Ersetzen",
+    "field_search": "Zu suchender Text",
+    "field_replacement": "Ersetzung",
+    "field_regex": "Regulärer Ausdruck",
+    "default_help": "Standard setzt den Header nur, wenn die Antwort ihn noch nicht hat.",
+    "replace_help": "Ersetzen ändert den passenden Teil des Header-Werts. Mit regulärem Ausdruck fügt $1 in der Ersetzung die erste Gruppe ein."
   },
   "request_headers": {
     "heading": "Request-Header",

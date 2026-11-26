@@ -497,7 +497,14 @@
     "preset_nosniff": "X-Content-Type-Options",
     "preset_frame": "X-Frame-Options",
     "preset_referrer": "Referrer-Policy",
-    "preset_remove_server": "Odstrániť Server"
+    "preset_remove_server": "Odstrániť Server",
+    "op_default": "Predvolené",
+    "op_replace": "Nahradiť",
+    "field_search": "Hľadaný text",
+    "field_replacement": "Náhrada",
+    "field_regex": "Regulárny výraz",
+    "default_help": "Predvolené nastaví hlavičku len vtedy, keď ju odpoveď ešte nemá.",
+    "replace_help": "Nahradiť zmení zodpovedajúcu časť hodnoty hlavičky. S regulárnym výrazom vloží $1 v náhrade prvú skupinu."
   },
   "request_headers": {
     "heading": "Hlavičky požiadavky",

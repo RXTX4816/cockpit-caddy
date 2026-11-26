@@ -4,7 +4,7 @@
 import { type CaddyHandler, type CaddyReverseProxyHandler, type CaddyRoute, type CaddyServer, type ProxyEntry, type CaddyConfig, type CaddyTLSConnectionPolicy, type CaddyTLSClientAuthentication, type BrowseSort, BROWSE_SORT_KEYS } from "./types";
 import { externalHostList } from "./externalHosts";
 import { isIpAddress } from "./caddyfileDocument";
-import { mapPlaceholders, PLACEHOLDER_SHORTHANDS, PLACEHOLDER_PREFIXES, isPathOnlyMatcher, handlePathPrefix, multiPathStripRegex, type TransportProps, type LbFields, LB_POLICIES, tlsSubjectHosts, errorHandlerResponseCodes, UPSTREAM_ERROR_MESSAGE, siteBindAddresses, canonicalBindHost, routeHosts, buildMatcherJson, hasAnyMatcher, namedServerSubjectHost } from "./siteBlocks";
+import { mapPlaceholders, PLACEHOLDER_SHORTHANDS, PLACEHOLDER_PREFIXES, isPathOnlyMatcher, handlePathPrefix, multiPathStripRegex, type TransportProps, type LbFields, LB_POLICIES, tlsSubjectHosts, errorHandlerResponseCodes, UPSTREAM_ERROR_MESSAGE, siteBindAddresses, canonicalBindHost, routeHosts, buildMatcherJson, hasAnyMatcher, namedServerSubjectHost, quoteRegexp } from "./siteBlocks";
 
 /**
  * Converts a Caddy duration value to a string.
@@ -1398,12 +1398,40 @@ function parseUpstreamResponseHeadersJson(headers: Record<string, unknown> | und
   return parseHeaderOpsJson(headers?.["response"] as Record<string, unknown> | undefined);
 }
 
-export function buildResponseHeadersHandler(ops: import("./types").HeaderOperation[]): CaddyHandler {
+/**
+ * The response `header` operations as `headers` handlers. A default (`?Name`) is a handler of
+ * its own, with a `require` that the response has no such header, as Caddy's adapter builds it;
+ * the other operations share one deferred handler, in the order of the list.
+ */
+export function buildResponseHeadersHandlers(ops: import("./types").HeaderOperation[]): CaddyHandler[] {
+  const out: CaddyHandler[] = [];
+  let group: import("./types").HeaderOperation[] = [];
+  const flush = () => {
+    if (group.length) out.push(buildDeferredHeadersHandler(group));
+    group = [];
+  };
+  for (const h of ops) {
+    if (h.op !== "default") { group.push(h); continue; }
+    flush();
+    out.push({ handler: "headers", response: { require: { headers: { [h.name]: null } }, set: { [h.name]: [h.value ?? ""] } } } as CaddyHandler);
+  }
+  flush();
+  return out;
+}
+
+function buildDeferredHeadersHandler(ops: import("./types").HeaderOperation[]): CaddyHandler {
   const set: Record<string, string[]> = {};
   const add: Record<string, string[]> = {};
   const del: string[] = [];
+  const replace: Record<string, Array<{ search_regexp: string; replace: string }>> = {};
   for (const h of ops) {
     if (h.op === "delete") { del.push(h.name); continue; }
+    if (h.op === "replace") {
+      (replace[h.name] ??= []).push(h.literal
+        ? { search_regexp: quoteRegexp(h.value ?? ""), replace: (h.replacement ?? "").replace(/\$/g, "$$$$") }
+        : { search_regexp: h.value ?? "", replace: h.replacement ?? "" });
+      continue;
+    }
     const val = [h.value ?? ""];
     if (h.op === "add") add[h.name] = val;
     else set[h.name] = val;
@@ -1418,7 +1446,25 @@ export function buildResponseHeadersHandler(ops: import("./types").HeaderOperati
   if (Object.keys(set).length) resp["set"] = set;
   if (Object.keys(add).length) resp["add"] = add;
   if (del.length) resp["delete"] = del;
+  if (Object.keys(replace).length) resp["replace"] = replace;
   return { handler: "headers", response: resp };
+}
+
+
+/** A regexp written by quoteRegexp, as the plain text it matches; undefined for any other regexp. */
+function unquoteRegexp(re: string): string | undefined {
+  return /^(?:[^\\.+*?()|[\]{}^$]|\\[\\.+*?()|[\]{}^$])*$/.test(re) ? re.replace(/\\(.)/g, "$1") : undefined;
+}
+
+/** A replace as the form edits it: plain text when both halves are plain, else the regexp as Caddy has it. */
+function parseResponseReplace(name: string, r: { search?: string; search_regexp?: string; replace?: string }): import("./types").HeaderOperation {
+  const replacement = r.replace ?? "";
+  if (r.search_regexp == null) return { op: "replace", name, value: r.search ?? "", replacement, literal: true };
+  const find = unquoteRegexp(r.search_regexp);
+  if (find !== undefined && /^(?:[^$]|\$\$)*$/.test(replacement)) {
+    return { op: "replace", name, value: find, replacement: replacement.replace(/\$\$/g, "$$"), literal: true };
+  }
+  return { op: "replace", name, value: r.search_regexp, replacement };
 }
 
 
@@ -1430,9 +1476,14 @@ export function parseResponseHeadersJson(h: AnyHandler): import("./types").Heade
   const set = resp["set"] as Record<string, string[]> | undefined;
   const add = resp["add"] as Record<string, string[]> | undefined;
   const del = resp["delete"] as string[] | undefined;
-  for (const [name, vals] of Object.entries(set ?? {})) ops.push({ op: "set", name, value: vals[0] ?? "" });
+  const replace = resp["replace"] as Record<string, Array<{ search?: string; search_regexp?: string; replace?: string }>> | undefined;
+  // `header ?Name value` requires the header to be absent (a null value list) before it sets it.
+  const required = (resp["require"] as { headers?: Record<string, string[] | null> } | undefined)?.headers ?? {};
+  const isDefault = (name: string) => name in required && required[name] == null;
+  for (const [name, vals] of Object.entries(set ?? {})) ops.push({ op: isDefault(name) ? "default" : "set", name, value: vals[0] ?? "" });
   for (const [name, vals] of Object.entries(add ?? {})) ops.push({ op: "add", name, value: vals[0] ?? "" });
   for (const name of del ?? []) ops.push({ op: "delete", name });
+  for (const [name, reps] of Object.entries(replace ?? {})) for (const r of reps) ops.push(parseResponseReplace(name, r));
   return ops;
 }
 
@@ -2126,7 +2177,7 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
     if (proxy.requestBodyMaxSize) fsHandles.push(buildRequestBodyHandler(proxy.requestBodyMaxSize));
     if (proxy.compress) fsHandles.push(buildEncodeHandler(proxy.encodeOptions));
     if (proxy.basicAuth?.length) fsHandles.push(buildBasicAuthHandler(proxy.basicAuth, proxy.basicAuthOptions));
-    if (proxy.responseHeaders?.length) fsHandles.push(buildResponseHeadersHandler(proxy.responseHeaders));
+    if (proxy.responseHeaders?.length) fsHandles.push(...buildResponseHeadersHandlers(proxy.responseHeaders));
     fsHandles.push(...buildFileServerHandlers(proxy.fileServer));
     const route: CaddyRoute = { handle: withSpaFallback(proxy.fileServer, fsHandles), terminal: isTerminal };
     if (matchArr) route.match = matchArr;
@@ -2142,7 +2193,7 @@ export function buildServerEntry(proxy: Omit<ProxyEntry, "id" | "serverKey">): C
   if (handlePathRwSingle) handles.push(handlePathRwSingle);
   if (proxy.compress) handles.push(buildEncodeHandler(proxy.encodeOptions));
   if (proxy.basicAuth?.length) handles.push(buildBasicAuthHandler(proxy.basicAuth, proxy.basicAuthOptions));
-  if (proxy.responseHeaders?.length) handles.push(buildResponseHeadersHandler(proxy.responseHeaders));
+  if (proxy.responseHeaders?.length) handles.push(...buildResponseHeadersHandlers(proxy.responseHeaders));
   if (proxy.rewrite) handles.push(buildRewriteHandler(proxy.rewrite));
   if (proxy.forwardAuth) {
     const faH = buildForwardAuthHandler(proxy.forwardAuth);
@@ -2233,7 +2284,7 @@ export function patchHandles(handles: CaddyHandler[], proxy: ProxyEntry): CaddyH
     if (proxy.requestBodyMaxSize) fsHandles.push(buildRequestBodyHandler(proxy.requestBodyMaxSize));
     if (proxy.compress) fsHandles.push(buildEncodeHandler(proxy.encodeOptions));
     if (proxy.basicAuth?.length) fsHandles.push(buildBasicAuthHandler(proxy.basicAuth, proxy.basicAuthOptions));
-    if (proxy.responseHeaders?.length) fsHandles.push(buildResponseHeadersHandler(proxy.responseHeaders));
+    if (proxy.responseHeaders?.length) fsHandles.push(...buildResponseHeadersHandlers(proxy.responseHeaders));
     fsHandles.push(...buildFileServerHandlers(proxy.fileServer));
     return withSpaFallback(proxy.fileServer, fsHandles);
   }
@@ -2277,7 +2328,7 @@ export function patchHandles(handles: CaddyHandler[], proxy: ProxyEntry): CaddyH
   if (proxy.requestBodyMaxSize) prefix.push(buildRequestBodyHandler(proxy.requestBodyMaxSize));
   if (proxy.compress) prefix.push(buildEncodeHandler(proxy.encodeOptions));
   if (proxy.basicAuth?.length) prefix.push(buildBasicAuthHandler(proxy.basicAuth, proxy.basicAuthOptions));
-  if (proxy.responseHeaders?.length) prefix.push(buildResponseHeadersHandler(proxy.responseHeaders));
+  if (proxy.responseHeaders?.length) prefix.push(...buildResponseHeadersHandlers(proxy.responseHeaders));
   if (proxy.rewrite) prefix.push(buildRewriteHandler(proxy.rewrite));
   if (proxy.forwardAuth) {
     const faH = buildForwardAuthHandler(proxy.forwardAuth);
@@ -2678,7 +2729,7 @@ export function buildRouteHandlesForEntry(proxy: ProxyEntry): CaddyHandler[] {
     if (handlePathRw) handles.push(handlePathRw);
     if (proxy.compress) handles.push(buildEncodeHandler(proxy.encodeOptions));
     if (proxy.basicAuth?.length) handles.push(buildBasicAuthHandler(proxy.basicAuth, proxy.basicAuthOptions));
-    if (proxy.responseHeaders?.length) handles.push(buildResponseHeadersHandler(proxy.responseHeaders));
+    if (proxy.responseHeaders?.length) handles.push(...buildResponseHeadersHandlers(proxy.responseHeaders));
     handles.push(...buildFileServerHandlers(proxy.fileServer));
     return withSpaFallback(proxy.fileServer, handles);
   }
@@ -2686,7 +2737,7 @@ export function buildRouteHandlesForEntry(proxy: ProxyEntry): CaddyHandler[] {
   if (handlePathRw) handles.push(handlePathRw);
   if (proxy.compress) handles.push(buildEncodeHandler(proxy.encodeOptions));
   if (proxy.basicAuth?.length) handles.push(buildBasicAuthHandler(proxy.basicAuth, proxy.basicAuthOptions));
-  if (proxy.responseHeaders?.length) handles.push(buildResponseHeadersHandler(proxy.responseHeaders));
+  if (proxy.responseHeaders?.length) handles.push(...buildResponseHeadersHandlers(proxy.responseHeaders));
   if (proxy.rewrite) handles.push(buildRewriteHandler(proxy.rewrite));
   if (proxy.forwardAuth) {
     const faH = buildForwardAuthHandler(proxy.forwardAuth);

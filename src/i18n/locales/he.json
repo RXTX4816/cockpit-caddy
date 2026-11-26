@@ -497,7 +497,14 @@
     "preset_nosniff": "X-Content-Type-Options",
     "preset_frame": "X-Frame-Options",
     "preset_referrer": "Referrer-Policy",
-    "preset_remove_server": "הסרת Server"
+    "preset_remove_server": "הסרת Server",
+    "op_default": "ברירת מחדל",
+    "op_replace": "החלף",
+    "field_search": "טקסט לחיפוש",
+    "field_replacement": "תחליף",
+    "field_regex": "ביטוי רגולרי",
+    "default_help": "ברירת מחדל מגדירה את הכותרת רק אם היא עדיין לא קיימת בתגובה.",
+    "replace_help": "החלפה משנה את החלק התואם בערך הכותרת. עם ביטוי רגולרי, $1 בתחליף מכניס את הקבוצה הראשונה."
   },
   "request_headers": {
     "heading": "כותרות בקשה",
