@@ -4,9 +4,22 @@ The **Settings** tab configures Caddy's global options block (`/etc/caddy/Caddyf
 
 Settings are written and validated on **Save**, but — unlike adding or editing a proxy — **not reloaded automatically**. A "Caddyfile updated — reload Caddy to apply" banner appears after saving; click its **Reload config** button (or the toolbar's) to actually apply the change to the running service.
 
+The options are split into four tabs; a dot on a tab means something in it differs from Caddy's defaults:
+
+| Tab | Sections |
+|---|---|
+| **Core** | Ports, grace period, shutdown delay, debug logging, storage, admin endpoint, Caddy modules |
+| **TLS & ACME** | ACME / Let's Encrypt, DNS challenge, on-demand TLS, internal TLS, advanced TLS |
+| **Logging & metrics** | Prometheus metrics, runtime / error log |
+| **Proxy headers & protocols** | Trusted proxies, PROXY protocol |
+
+**Snippets** sit below the tabs and are saved on their own.
+
 ---
 
 ## Core options
+
+![Settings, Core tab](https://raw.githubusercontent.com/RXTX4816/cockpit-caddy/main/docs/assets/screenshots/settings-core.png)
 
 | Field | Description |
 |---|---|
@@ -18,7 +31,15 @@ Settings are written and validated on **Save**, but — unlike adding or editing
 
 Where Caddy's admin API listens (`admin`), the browser origins allowed to call it (`origins`) and whether they are enforced (`enforce_origin`). The plugin itself talks to Caddy over this API, so a reload that moves it is done safely: the new config goes to the old address, the plugin waits up to 10 seconds for the new address to answer and then uses it. Without an answer, or when Caddy refuses the config, the Caddyfile from before the save is put back. The fields are read-only when Caddy isn't the local service (Docker, external). `admin off` isn't offered; one already in the Caddyfile is kept as written.
 
+### Caddy modules
+
+What the installed Caddy can do beyond a stock build: DNS challenge providers, layer 4 (TCP/UDP proxying), rate limiting and caddy-security, each marked **Installed** or **Not installed** with a "How to get it" link, plus the full module list with a filter. The list comes from `caddy list-modules`; when Caddy is only reachable over the Admin API, each feature is tested by adapting a small config instead. A feature that needs a missing module fails when Caddy loads the config, so check here first.
+
+![Caddy modules](https://raw.githubusercontent.com/RXTX4816/cockpit-caddy/main/docs/assets/screenshots/settings-modules.png)
+
 ## ACME / Let's Encrypt
+
+![Settings, TLS & ACME tab](https://raw.githubusercontent.com/RXTX4816/cockpit-caddy/main/docs/assets/screenshots/settings-tls.png)
 
 Registration email, ACME CA directory URL (with Let's Encrypt / staging / ZeroSSL presets), a custom trusted CA root, and External Account Binding (EAB) credentials for providers that require them (e.g. ZeroSSL).
 
@@ -52,19 +73,37 @@ The global `cert_issuer`: Caddy's own CA for every site (`local_certs`), the int
 
 Certificate lifetime and renewal window for proxies/servers using the internal CA **without a hostname**. Caddy only allows one shared policy for all hostless entries — proxies with a real hostname can set their own lifetime independently in their TLS Policy section instead.
 
+## Advanced TLS
+
+| Field | Caddy option |
+|---|---|
+| Automatic HTTPS | `auto_https`: default, off, no HTTP → HTTPS redirects, no certificate management, or ignore loaded certificates |
+| Certificate issuer | `cert_issuer` / `local_certs`, see [Certificate issuer](#certificate-issuer) |
+| Key type | `key_type` for every certificate (a site can override it) |
+| Preferred certificate chain | `preferred_chains`: smallest chain, or by root / any common name |
+| Default SNI | `default_sni`: the server name assumed when a client sends none |
+| Default bind addresses | `default_bind`: where sites without their own bind addresses listen |
+| Turn OCSP stapling off | `ocsp_stapling off` |
+
+![Internal and advanced TLS](https://raw.githubusercontent.com/RXTX4816/cockpit-caddy/main/docs/assets/screenshots/settings-tls-advanced.png)
+
 ## Storage
 
 Where Caddy stores certificates and other TLS state (default: `/var/lib/caddy` under systemd). Shows effective path, disk usage, and managed certificate count. Changing this does not move existing certificates.
 
 ## Prometheus metrics
 
-Exposes a `/metrics` endpoint with request-level metrics (requests, status codes, durations) across every proxy, plus Go runtime metrics. Requires a listen address since the admin API itself runs on a Unix socket.
+Exposes a `/metrics` endpoint with request-level metrics (requests, status codes, durations) across every proxy, plus Go runtime metrics. Requires a listen address since the admin API itself runs on a Unix socket. **Label metrics by host** (`per_host`) adds the requested host to each request metric so sites can be told apart; every distinct host becomes its own series.
+
+![Settings, Logging & metrics tab](https://raw.githubusercontent.com/RXTX4816/cockpit-caddy/main/docs/assets/screenshots/settings-logging.png)
 
 ## Runtime / error log
 
 Caddy's own startup/reload/error log — separate from each proxy's own access log. Defaults to stderr (captured by `journalctl -u caddy`). Supports the same file output, rotation, format, and level options as a per-proxy access log.
 
 ## Trusted proxies
+
+![Settings, Proxy headers & protocols tab](https://raw.githubusercontent.com/RXTX4816/cockpit-caddy/main/docs/assets/screenshots/settings-headers.png)
 
 If Caddy sits behind another reverse proxy, load balancer, or CDN, it otherwise logs and matches on that intermediary's IP instead of the real client. Enable **Trust upstream proxy headers for the real client IP** and set which CIDR ranges are allowed to set that header — typically `private_ranges` (all private IPv4/IPv6 space) or your CDN's published IP list.
 
@@ -83,5 +122,7 @@ An optional allow-list restricts which source IPs may send a PROXY protocol head
 ## Snippets
 
 Snippets are reusable pieces of Caddyfile (`(name) { … }`) that several sites can import, e.g. a set of security headers. **Settings → Snippets** lists them with the sites that use each one. **Add snippet** asks for a name (letters, digits, dots, dashes, underscores) and the directives as they would appear inside a site block. Saving checks the whole configuration first. The plugin keeps its snippets in `/etc/caddy/conf.d/cockpit-caddy-snippets.conf`; snippets written by hand in the main Caddyfile show up as **In Caddyfile** and can be imported but not edited here.
+
+![Snippets](https://raw.githubusercontent.com/RXTX4816/cockpit-caddy/main/docs/assets/screenshots/settings-snippets.png)
 
 A site imports snippets on its **General** tab (**Snippets** → **Import snippet**), written as `import <name>` lines at the top of its block. Settings a snippet supplies are shown on the site as coming from that snippet. Migrating a Caddyfile keeps snippets and their imports.

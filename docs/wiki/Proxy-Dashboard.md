@@ -10,7 +10,13 @@ The page is divided into three areas:
 2. **Tab bar** — Proxy List, Caddyfile, Logs and Settings.
 3. **Entry list** — entries grouped by server tabs (see below), with **Add Proxy**, **Add Server**, search, the **Health Monitor** switch and a refresh button above it.
 
+![Proxy Dashboard](https://raw.githubusercontent.com/RXTX4816/cockpit-caddy/main/docs/assets/screenshots/dashboard.png)
+
 The list re-reads Caddy's config every 5 seconds and right after every change, so edits made outside the plugin (a hand-edited Caddyfile, `caddy reload`) show up without reloading the page. At phone width the header, toolbar and list rearrange to fit the screen without sideways scrolling.
+
+<img src="https://raw.githubusercontent.com/RXTX4816/cockpit-caddy/main/docs/assets/screenshots/phone.png" alt="Phone layout" width="300">
+
+A site with `route` or nested `handle` blocks has a badge on its row; its blocks are edited in the dialog's [Tree tab](Managing-Proxies#tree-tab-nested-route-and-handle-blocks).
 
 ## Server tabs
 
@@ -64,6 +70,8 @@ The search bar in the All tab filters entries in real time across port, target/r
 
 The **Health Monitor** switch (after a confirmation) probes each proxy's upstream from the server every 5 seconds and shows a dot: **Reachable** for any HTTP answer, even 4xx/5xx, **Unreachable** for a refused connection or a timeout. Probing stops when you turn the switch off. This is the plugin's own check; Caddy's health checks, which take upstreams out of rotation, are set per site under Retry & Failover (see [Managing Entries](Managing-Proxies)).
 
+![Health Monitor on](https://raw.githubusercontent.com/RXTX4816/cockpit-caddy/main/docs/assets/screenshots/health-monitor.png)
+
 ## Adding entries
 
 ### Standalone entries
@@ -75,6 +83,8 @@ The **Health Monitor** switch (after a confirmation) probes each proxy's upstrea
 - **PHP site** — a PHP app behind PHP-FPM
 - **Redirect** — HTTP redirect rule
 - **Fixed response** — a static HTTP response
+
+![More site types](https://raw.githubusercontent.com/RXTX4816/cockpit-caddy/main/docs/assets/screenshots/site-types-menu.png)
 
 ### Named servers
 
@@ -90,6 +100,18 @@ See [Managing Entries](Managing-Proxies) for field details.
 | **Caddyfile** | Raw Caddyfile viewer and editor with syntax highlighting (addresses, directives, matchers, placeholders, strings, heredocs, comments; `{ }` blocks fold) and validation before saving |
 | **Settings** | Global Caddy options (ports, ACME, DNS challenge, on-demand TLS, storage, metrics, trusted proxies, …) and Snippets. See [Global Options](Global-Options) |
 
+![Logs tab](https://raw.githubusercontent.com/RXTX4816/cockpit-caddy/main/docs/assets/screenshots/logs.png)
+
+![Caddyfile tab](https://raw.githubusercontent.com/RXTX4816/cockpit-caddy/main/docs/assets/screenshots/caddyfile.png)
+
+## Tools
+
+**Check Config** looks for known-stale configuration in the Caddyfile and conf.d (each finding traced to a reason Caddy would refuse or misread it), explains each, and shows the change it would make; tick the fixes to apply. **Backup** writes the Caddy config as a dated `caddy-config-<date>.tar.gz` into a destination folder (default `/etc/caddy`); **Restore** scans a folder for these archives, lists them (each can be deleted with ×) and puts the selected one back.
+
+![Check Config](https://raw.githubusercontent.com/RXTX4816/cockpit-caddy/main/docs/assets/screenshots/tool-check-config.png)
+![Backup](https://raw.githubusercontent.com/RXTX4816/cockpit-caddy/main/docs/assets/screenshots/tool-backup.png)
+![Restore](https://raw.githubusercontent.com/RXTX4816/cockpit-caddy/main/docs/assets/screenshots/tool-restore.png)
+
 ## Empty state
 
 If no entries are configured, the list shows a prompt to add the first rule. This does not indicate a problem with Caddy — it simply means the Caddyfile has no managed blocks yet.
@@ -102,6 +124,12 @@ The Caddyfile a distro package ships (Arch, Debian/Ubuntu, Fedora) only holds a 
 
 **Tools → ACME / Let's Encrypt** lists each hostname with its issuer and a certificate status: *valid until* (and when Caddy renews it, at a third of the lifetime left), *renewal due*, *obtaining…*, *failed* with Caddy's error message, or *no certificate*. The status comes from the certificates in Caddy's storage and the `tls` entries of Caddy's log. Click a hostname to see its certificate: subject, names, issuer, validity, SHA-256 fingerprint and the PEM to copy or download. The private key is never read.
 
+![ACME / Let's Encrypt window](https://raw.githubusercontent.com/RXTX4816/cockpit-caddy/main/docs/assets/screenshots/tool-acme.png)
+
+(The test VM uses `.test` names, so Let's Encrypt refuses them; that is what *failed* looks like.)
+
 ## Internal CA window
 
 **Tools → Internal CA** shows Caddy's local certificate authority: the root and intermediate certificate names, the root's **Valid from** / **Valid until** dates and SHA-256 fingerprint, buttons to copy or download each PEM, and how to install the root in browsers and operating systems. When no site uses the internal CA, a notice says so: visitors then get certificates from ACME or your own files instead.
+
+![Internal CA window](https://raw.githubusercontent.com/RXTX4816/cockpit-caddy/main/docs/assets/screenshots/tool-internal-ca.png)

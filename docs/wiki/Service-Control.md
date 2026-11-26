@@ -29,6 +29,10 @@ See [Managing a containerized Caddy](Troubleshooting#managing-a-containerized-ca
 
 `journalctl -u caddy` has nothing to show for a process with no local systemd unit, so the Logs tab instead reads `docker logs <container>` for a container name you configure. Open the Admin API Address dialog (gear icon next to Service Control) and fill in **Container name (for logs)** with the name or ID of the container running Caddy, then use **Test container** to confirm it's reachable. Until a container name is set, the Logs tab shows a prompt instead of silently staying empty.
 
+<img src="https://raw.githubusercontent.com/RXTX4816/cockpit-caddy/main/docs/assets/screenshots/admin-address.png" alt="Admin API Address dialog" width="480">
+
+The dialog's values are kept in the browser's local storage, so they apply to this browser only. A TCP address and a Unix socket can be set and tested; the socket is the fallback when TCP fails.
+
 If the container runs on a **rootless** Docker daemon, also fill in **Docker socket (optional)**, e.g. `unix:///run/user/1000/docker.sock` (a bare path works too). The plugin then runs `docker --host <socket> ...` as the user that owns the socket instead of as root, since the default (rootful) daemon doesn't know the container. **Test container** says whether the socket is missing or can't be read. Leave the field empty to use the default daemon.
 
 ### "Caddy service failed" alert

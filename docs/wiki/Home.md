@@ -2,12 +2,17 @@
 
 Cockpit Caddy is a web-based UI for managing [Caddy](https://caddyserver.com/), built as a plugin for [Cockpit](https://cockpit-project.org/). It runs in your browser and communicates with Caddy's Admin API on your server — no extra daemons required.
 
+![Cockpit Caddy](https://raw.githubusercontent.com/RXTX4816/cockpit-caddy/main/docs/assets/screenshots/dashboard.png)
+
 ## What you can do
 
 - Manage reverse proxies, static file servers (with SPA fallback and precompressed files), PHP sites, redirects, and static HTTP responses
 - Several hostnames per site, and bind addresses to listen on only some interfaces
 - **Named virtual servers** — group multiple routes under one port with per-route matchers
-- **Route matchers** — match requests by path, host, method, header, query param, client or connection IP, with an exclude group and CEL expressions
+- **Route matchers** — match requests by path, host, method, header, query param, client or connection IP, path and header regex, protocol, files and variables, with an exclude group and CEL expressions
+- **Tree tab** for sites with `route` and nested `handle` blocks: edit matchers and directives, add, move and remove blocks
+- Rewrites (prefix, suffix, regex, text replace, query string, method), request and response header rules in both directions, compression settings, dynamic (DNS) upstreams, streaming and upstream connection tuning
+- Detects which Caddy modules are installed (DNS providers, layer 4, rate limiting, …)
 - **Strip path prefix** (`handle_path`) — remove the matched prefix before forwarding to the upstream
 - Search and filter entries by port, target, or label
 - Add, edit, duplicate, and delete rules from the web UI
