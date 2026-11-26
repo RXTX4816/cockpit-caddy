@@ -207,7 +207,9 @@
     "browse_file_limit_none": "Bez obmedzenia",
     "browse_file_limit_invalid": "Zadajte celé číslo 1 alebo väčšie.",
     "field_browse_reveal_symlinks": "Zobraziť ciele symbolických odkazov",
-    "field_browse_reveal_symlinks_help": "Výpis ukazuje, kam vedie každý symbolický odkaz. To môže prezradiť cesty mimo koreňa webu."
+    "field_browse_reveal_symlinks_help": "Výpis ukazuje, kam vedie každý symbolický odkaz. To môže prezradiť cesty mimo koreňa webu.",
+    "field_try_files_help": "Voliteľné. Kandidáti skúšaní postupne pred súborovým serverom, napr. {path} {path}/ /index.html?{query}. Režim SPA je riadok {path} /index.html.",
+    "field_try_files_spa_help": "Nastavené režimom SPA. Vypnite režim SPA, ak chcete napísať vlastný riadok."
   },
   "edit_static": {
     "title": "Upraviť statický server — :{{port}}",
@@ -474,14 +476,23 @@
     "health_interval": "Interval kontroly",
     "health_timeout": "Časový limit kontroly",
     "health_status": "Očakávaný stav",
-    "active_help": "Caddy v danom intervale dotazuje túto cestu na každom upstreame a zlyhávajúce vyradí z rotácie. Prázdna cesta aktívne kontroly vypne.",
+    "active_help": "Caddy v danom intervale dopytuje túto cestu na každom upstreame (na porte kontroly, ak je nastavený) a upstreamy, ktoré zlyhajú, vyradí z rotácie. Nechajte cestu aj port prázdne, ak chcete aktívne kontroly vypnúť.",
     "validation_needs_fail_duration": "Nezdravé stavové kódy a max. zlyhaní platia len s dobou zlyhania",
     "validation_max_fails": "Max. zlyhaní musí byť 1 alebo viac",
-    "validation_needs_health_uri": "Interval, časový limit a očakávaný stav vyžadujú cestu kontroly stavu",
     "validation_health_uri": "Cesta kontroly stavu musí začínať znakom /",
     "validation_health_status": "Zadajte kód ako 200 alebo triedu ako 2xx",
     "retry_methods": "Opakovať len tieto metódy",
-    "validation_methods": "Metódy sú slová ako GET alebo HEAD oddelené medzerami."
+    "validation_methods": "Metódy sú slová ako GET alebo HEAD oddelené medzerami.",
+    "health_port": "Port kontroly",
+    "health_port_default": "port upstreamu",
+    "health_headers": "Hlavičky požiadavky kontroly",
+    "health_headers_help": "Jedna na riadok: názov hlavičky, medzera a potom hodnota. Názov sa môže opakovať na viacerých riadkoch.",
+    "health_passes": "Úspechov do stavu v poriadku",
+    "health_fails": "Zlyhaní do stavu mimo prevádzky",
+    "validation_health_port": "Port musí byť číslo od 1 do 65535",
+    "validation_health_count": "Úspechy a zlyhania musia byť 1 alebo viac",
+    "validation_health_headers": "Píšte jednu hlavičku na riadok: názov, medzeru a potom hodnotu",
+    "validation_needs_health_target": "Interval, časový limit, očakávaný stav, hlavičky, úspechy a zlyhania vyžadujú cestu alebo port kontroly stavu"
   },
   "response_headers": {
     "heading": "Hlavičky odpovede",
@@ -497,7 +508,14 @@
     "preset_nosniff": "X-Content-Type-Options",
     "preset_frame": "X-Frame-Options",
     "preset_referrer": "Referrer-Policy",
-    "preset_remove_server": "Odstrániť Server"
+    "preset_remove_server": "Odstrániť Server",
+    "op_default": "Predvolené",
+    "op_replace": "Nahradiť",
+    "field_search": "Hľadaný text",
+    "field_replacement": "Náhrada",
+    "field_regex": "Regulárny výraz",
+    "default_help": "Predvolené nastaví hlavičku len vtedy, keď ju odpoveď ešte nemá.",
+    "replace_help": "Nahradiť zmení zodpovedajúcu časť hodnoty hlavičky. S regulárnym výrazom vloží $1 v náhrade prvú skupinu."
   },
   "request_headers": {
     "heading": "Hlavičky požiadavky",

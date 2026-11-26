@@ -207,7 +207,9 @@
     "browse_file_limit_none": "Geen limiet",
     "browse_file_limit_invalid": "Voer een geheel getal van 1 of meer in.",
     "field_browse_reveal_symlinks": "Doelen van symlinks tonen",
-    "field_browse_reveal_symlinks_help": "De lijst toont waar elke symlink naar wijst. Dat kan paden buiten de hoofdmap van de site prijsgeven."
+    "field_browse_reveal_symlinks_help": "De lijst toont waar elke symlink naar wijst. Dat kan paden buiten de hoofdmap van de site prijsgeven.",
+    "field_try_files_help": "Optioneel. Kandidaten die op volgorde worden geprobeerd vóór de bestandsserver, bijv. {path} {path}/ /index.html?{query}. SPA-modus is de regel {path} /index.html.",
+    "field_try_files_spa_help": "Ingesteld door SPA-modus. Zet SPA-modus uit om een eigen regel te schrijven."
   },
   "edit_static": {
     "title": "Statische server bewerken — :{{port}}",
@@ -474,14 +476,23 @@
     "health_interval": "Controle-interval",
     "health_timeout": "Controle-time-out",
     "health_status": "Verwachte status",
-    "active_help": "Caddy vraagt dit pad op elke upstream op per interval en haalt upstreams die falen uit de rotatie. Laat het pad leeg om actieve checks uit te zetten.",
+    "active_help": "Caddy vraagt dit pad bij elke upstream op met het interval (op de controlepoort, als die is ingesteld) en haalt upstreams die falen uit de rotatie. Laat pad en poort leeg om actieve controles uit te zetten.",
     "validation_needs_fail_duration": "Ongezonde statuscodes en max. fouten werken alleen met een foutduur",
     "validation_max_fails": "Max. fouten moet 1 of meer zijn",
-    "validation_needs_health_uri": "Interval, time-out en verwachte status hebben een health-check-pad nodig",
     "validation_health_uri": "Het health-check-pad moet met / beginnen",
     "validation_health_status": "Gebruik een statuscode zoals 200 of een klasse zoals 2xx",
     "retry_methods": "Alleen deze methoden opnieuw proberen",
-    "validation_methods": "Methoden zijn woorden zoals GET of HEAD, gescheiden door spaties."
+    "validation_methods": "Methoden zijn woorden zoals GET of HEAD, gescheiden door spaties.",
+    "health_port": "Controlepoort",
+    "health_port_default": "de poort van de upstream",
+    "health_headers": "Headers van het controleverzoek",
+    "health_headers_help": "Eén per regel: de headernaam, een spatie, dan de waarde. Een naam mag op meerdere regels staan.",
+    "health_passes": "Successen tot gezond",
+    "health_fails": "Mislukkingen tot uitgevallen",
+    "validation_health_port": "De poort moet een getal van 1 tot 65535 zijn",
+    "validation_health_count": "Successen en mislukkingen moeten 1 of meer zijn",
+    "validation_health_headers": "Schrijf één header per regel: een naam, een spatie, dan de waarde",
+    "validation_needs_health_target": "Interval, time-out, verwachte status, headers, successen en mislukkingen hebben een health-check-pad of -poort nodig"
   },
   "response_headers": {
     "heading": "Antwoordheaders",
@@ -497,7 +508,14 @@
     "preset_nosniff": "X-Content-Type-Options",
     "preset_frame": "X-Frame-Options",
     "preset_referrer": "Referrer-Policy",
-    "preset_remove_server": "Server verwijderen"
+    "preset_remove_server": "Server verwijderen",
+    "op_default": "Standaard",
+    "op_replace": "Vervangen",
+    "field_search": "Te zoeken tekst",
+    "field_replacement": "Vervanging",
+    "field_regex": "Reguliere expressie",
+    "default_help": "Standaard stelt de header alleen in als het antwoord hem nog niet heeft.",
+    "replace_help": "Vervangen wijzigt het overeenkomende deel van de headerwaarde. Met een reguliere expressie voegt $1 in de vervanging de eerste groep in."
   },
   "request_headers": {
     "heading": "Requestheaders",

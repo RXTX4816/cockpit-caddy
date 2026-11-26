@@ -3,6 +3,7 @@ import {
   FormGroup,
   HelperText,
   HelperTextItem,
+  TextArea,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
 import { ResettableTextInput, SectionShell } from "./sectionLayout";
@@ -23,12 +24,18 @@ export interface LbRetryValues {
   healthInterval: string;
   healthTimeout: string;
   healthStatus: string;
+  healthPort: string;
+  /** One header per line: name, whitespace, value. */
+  healthHeaders: string;
+  healthPasses: string;
+  healthFails: string;
 }
 
 const LB_RETRY_EMPTY: LbRetryValues = {
   retries: "", tryDuration: "", tryInterval: "", retryMethods: "",
   failDuration: "", maxFails: "", unhealthyStatus: "",
   healthUri: "", healthInterval: "", healthTimeout: "", healthStatus: "",
+  healthPort: "", healthHeaders: "", healthPasses: "", healthFails: "",
 };
 // A retry preset, plus passive checks that actually run: unhealthy_status does nothing in
 // Caddy without fail_duration (#252). Active checks stay off; they need a path on the backend.
@@ -50,7 +57,34 @@ export function lbRetryConfigToValues(cfg: LbRetryConfig | undefined): LbRetryVa
     healthInterval: cfg.healthInterval ?? "",
     healthTimeout: cfg.healthTimeout ?? "",
     healthStatus: cfg.healthStatus ?? "",
+    healthPort: cfg.healthPort != null ? String(cfg.healthPort) : "",
+    healthHeaders: Object.entries(cfg.healthHeaders ?? {}).flatMap(([name, vals]) => vals.map(val => `${name} ${val}`)).join("\n"),
+    healthPasses: cfg.healthPasses != null ? String(cfg.healthPasses) : "",
+    healthFails: cfg.healthFails != null ? String(cfg.healthFails) : "",
   };
+}
+
+/** The non-blank lines of the headers field, split at the first whitespace. */
+function healthHeaderLines(v: string): Array<{ name: string; value: string }> {
+  return v.split("\n").map(l => l.trim()).filter(Boolean).map(l => {
+    const m = l.match(/^(\S+)\s+(.*)$/);
+    return m ? { name: m[1], value: m[2].trim() } : { name: l, value: "" };
+  });
+}
+
+function parseHealthHeaders(v: string): Record<string, string[]> | undefined {
+  const out: Record<string, string[]> = {};
+  for (const { name, value } of healthHeaderLines(v)) (out[name] ??= []).push(value);
+  return Object.keys(out).length ? out : undefined;
+}
+
+/** Every line is a header name (an HTTP token) and a value. */
+function isHeaderList(v: string): boolean {
+  return healthHeaderLines(v).every(h => /^[A-Za-z0-9!#$%&'*+.^_`|~-]+$/.test(h.name) && h.value !== "");
+}
+
+function isPort(v: string): boolean {
+  return !v.trim() || (/^\d+$/.test(v.trim()) && +v >= 1 && +v <= 65535);
 }
 
 function parseIntOrUndefined(v: string): number | undefined {
@@ -74,6 +108,10 @@ export function lbRetryValuesToConfig(v: LbRetryValues): LbRetryConfig | undefin
     healthInterval: v.healthInterval.trim() || undefined,
     healthTimeout: v.healthTimeout.trim() || undefined,
     healthStatus: v.healthStatus.trim().toLowerCase() || undefined,
+    healthPort: parseIntOrUndefined(v.healthPort),
+    healthHeaders: parseHealthHeaders(v.healthHeaders),
+    healthPasses: parseIntOrUndefined(v.healthPasses),
+    healthFails: parseIntOrUndefined(v.healthFails),
   };
   for (const k of Object.keys(cfg) as Array<keyof LbRetryConfig>) if (cfg[k] == null) delete cfg[k];
   return Object.keys(cfg).length ? cfg : undefined;
@@ -118,9 +156,23 @@ export function validateLbRetry(v: LbRetryValues): string | null {
   if (!isMethodList(v.retryMethods)) return "lb_retry.validation_methods";
   if (!isStatusList(v.unhealthyStatus)) return "lb_retry.validation_status";
   if (!isPositiveInt(v.maxFails)) return "lb_retry.validation_max_fails";
+  return activeCheckError(v);
+}
+
+/** Active checks run once a path or a port is set; the other options only tune them. */
+function needsHealthTarget(v: LbRetryValues): boolean {
+  return !v.healthUri.trim() && !v.healthPort.trim()
+    && !!(v.healthInterval.trim() || v.healthTimeout.trim() || v.healthStatus.trim() || v.healthHeaders.trim() || v.healthPasses.trim() || v.healthFails.trim());
+}
+
+function activeCheckError(v: LbRetryValues): string | null {
   if (v.healthUri.trim() && !v.healthUri.trim().startsWith("/")) return "lb_retry.validation_health_uri";
+  if (!isPort(v.healthPort)) return "lb_retry.validation_health_port";
+  if (!isDuration(v.healthInterval) || !isDuration(v.healthTimeout)) return "lb_retry.validation_duration";
   if (!isHealthStatus(v.healthStatus)) return "lb_retry.validation_health_status";
-  if ((v.healthInterval.trim() || v.healthTimeout.trim() || v.healthStatus.trim()) && !v.healthUri.trim()) return "lb_retry.validation_needs_health_uri";
+  if (!isPositiveInt(v.healthPasses) || !isPositiveInt(v.healthFails)) return "lb_retry.validation_health_count";
+  if (!isHeaderList(v.healthHeaders)) return "lb_retry.validation_health_headers";
+  if (needsHealthTarget(v)) return "lb_retry.validation_needs_health_target";
   return null;
 }
 
@@ -172,11 +224,8 @@ export function LbRetrySection({ value, onChange, isDisabled, isExpanded: isExpa
     : !isPositiveInt(value.maxFails) ? "lb_retry.validation_max_fails" : null;
   const warning = lbRetryWarning(value);
   const uriErr = !!value.healthUri.trim() && !value.healthUri.trim().startsWith("/");
-  const needsUri = !value.healthUri.trim() && !!(value.healthInterval.trim() || value.healthTimeout.trim() || value.healthStatus.trim());
-  const activeErr = uriErr ? "lb_retry.validation_health_uri"
-    : !isDuration(value.healthInterval) || !isDuration(value.healthTimeout) ? "lb_retry.validation_duration"
-    : !isHealthStatus(value.healthStatus) ? "lb_retry.validation_health_status"
-    : needsUri ? "lb_retry.validation_needs_health_uri" : null;
+  const needsTarget = needsHealthTarget(value);
+  const activeErr = activeCheckError(value);
   const row = { display: "flex", flexWrap: "wrap" as const, gap: "1rem" };
   const heading = { marginTop: "1rem", marginBottom: "0.4rem", fontWeight: 600 };
 
@@ -226,11 +275,28 @@ export function LbRetrySection({ value, onChange, isDisabled, isExpanded: isExpa
 
       <div style={heading}>{t("lb_retry.active_title")}</div>
       <div style={row}>
-        {field("healthUri", "lbr-health-uri", t("lb_retry.health_uri"), t("common.example_value", { value: "/healthz" }), uriErr || needsUri)}
+        {field("healthUri", "lbr-health-uri", t("lb_retry.health_uri"), t("common.example_value", { value: "/healthz" }), uriErr || needsTarget)}
+        {field("healthPort", "lbr-health-port", t("lb_retry.health_port"), t("common.default_value", { value: t("lb_retry.health_port_default") }), !isPort(value.healthPort) || needsTarget, { type: "number", flex: "1 1 8rem" })}
         {field("healthInterval", "lbr-health-interval", t("lb_retry.health_interval"), t("common.default_value", { value: "30s" }), !isDuration(value.healthInterval))}
         {field("healthTimeout", "lbr-health-timeout", t("lb_retry.health_timeout"), t("common.default_value", { value: "5s" }), !isDuration(value.healthTimeout))}
         {field("healthStatus", "lbr-health-status", t("lb_retry.health_status"), t("common.default_value", { value: "2xx" }), !isHealthStatus(value.healthStatus), { flex: "1 1 8rem" })}
+        {field("healthPasses", "lbr-health-passes", t("lb_retry.health_passes"), t("common.default_value", { value: "1" }), !isPositiveInt(value.healthPasses), { type: "number", flex: "1 1 8rem" })}
+        {field("healthFails", "lbr-health-fails", t("lb_retry.health_fails"), t("common.default_value", { value: "1" }), !isPositiveInt(value.healthFails), { type: "number", flex: "1 1 8rem" })}
       </div>
+      <FormGroup label={t("lb_retry.health_headers")} fieldId="lbr-health-headers" style={{ marginTop: "0.6rem" }}>
+        <TextArea
+          id="lbr-health-headers"
+          value={value.healthHeaders}
+          onChange={(_e, v) => set("healthHeaders", v)}
+          placeholder={t("common.example_value", { value: "Host app.internal" })}
+          isDisabled={isDisabled}
+          validated={!isHeaderList(value.healthHeaders) ? "error" : "default"}
+          rows={2}
+          resizeOrientation="vertical"
+          aria-describedby="lbr-health-headers-help"
+        />
+        <HelperText id="lbr-health-headers-help"><HelperTextItem>{t("lb_retry.health_headers_help")}</HelperTextItem></HelperText>
+      </FormGroup>
       <HelperText data-testid="lbr-active-help" style={{ marginTop: "0.3rem" }}>
         <HelperTextItem variant={activeErr ? "error" : "default"}>
           {t(activeErr ?? "lb_retry.active_help")}

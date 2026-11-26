@@ -207,7 +207,9 @@
     "browse_file_limit_none": "Sınır yok",
     "browse_file_limit_invalid": "1 veya daha büyük bir tam sayı girin.",
     "field_browse_reveal_symlinks": "Sembolik bağlantı hedeflerini göster",
-    "field_browse_reveal_symlinks_help": "Liste, her sembolik bağlantının nereyi gösterdiğini gösterir. Bu, site kökü dışındaki yolları açığa çıkarabilir."
+    "field_browse_reveal_symlinks_help": "Liste, her sembolik bağlantının nereyi gösterdiğini gösterir. Bu, site kökü dışındaki yolları açığa çıkarabilir.",
+    "field_try_files_help": "İsteğe bağlı. Dosya sunucusundan önce sırayla denenen adaylar, ör. {path} {path}/ /index.html?{query}. SPA modu {path} /index.html satırıdır.",
+    "field_try_files_spa_help": "SPA modu tarafından ayarlandı. Kendi satırınızı yazmak için SPA modunu kapatın."
   },
   "edit_static": {
     "title": "Statik sunucuyu düzenle — :{{port}}",
@@ -474,14 +476,23 @@
     "health_interval": "Kontrol aralığı",
     "health_timeout": "Kontrol zaman aşımı",
     "health_status": "Beklenen durum",
-    "active_help": "Caddy bu yolu her aralıkta her upstream'den ister ve başarısız olanları rotasyondan çıkarır. Etkin kontrolleri kapatmak için yolu boş bırakın.",
+    "active_help": "Caddy bu yolu her aralıkta her upstream'den ister (ayarlanmışsa kontrol portunda) ve başarısız olanları rotasyondan çıkarır. Etkin kontrolleri kapatmak için yolu ve portu boş bırakın.",
     "validation_needs_fail_duration": "Sağlıksız durum kodları ve en fazla hata yalnızca hata süresiyle etkili olur",
     "validation_max_fails": "En fazla hata en az 1 olmalı",
-    "validation_needs_health_uri": "Aralık, zaman aşımı ve beklenen durum için bir sağlık kontrolü yolu gerekir",
     "validation_health_uri": "Sağlık kontrolü yolu / ile başlamalı",
     "validation_health_status": "200 gibi bir kod ya da 2xx gibi bir sınıf girin",
     "retry_methods": "Yalnızca bu yöntemleri yeniden dene",
-    "validation_methods": "Yöntemler GET veya HEAD gibi sözcüklerdir, boşlukla ayrılır."
+    "validation_methods": "Yöntemler GET veya HEAD gibi sözcüklerdir, boşlukla ayrılır.",
+    "health_port": "Kontrol portu",
+    "health_port_default": "upstream'in portu",
+    "health_headers": "Kontrol isteğinin başlıkları",
+    "health_headers_help": "Satır başına bir tane: başlık adı, bir boşluk, ardından değer. Bir ad birkaç satırda yer alabilir.",
+    "health_passes": "Sağlıklı saymak için başarı",
+    "health_fails": "Çökmüş saymak için hata",
+    "validation_health_port": "Port 1 ile 65535 arasında bir sayı olmalıdır",
+    "validation_health_count": "Başarı ve hata sayıları 1 veya daha fazla olmalıdır",
+    "validation_health_headers": "Satır başına bir başlık yazın: ad, boşluk, ardından değer",
+    "validation_needs_health_target": "Aralık, zaman aşımı, beklenen durum, başlıklar, başarı ve hata sayıları için bir sağlık kontrolü yolu veya portu gerekir"
   },
   "response_headers": {
     "heading": "Yanıt başlıkları",
@@ -497,7 +508,14 @@
     "preset_nosniff": "X-Content-Type-Options",
     "preset_frame": "X-Frame-Options",
     "preset_referrer": "Referrer-Policy",
-    "preset_remove_server": "Server'ı kaldır"
+    "preset_remove_server": "Server'ı kaldır",
+    "op_default": "Varsayılan",
+    "op_replace": "Değiştir",
+    "field_search": "Aranacak metin",
+    "field_replacement": "Yerine konacak değer",
+    "field_regex": "Düzenli ifade",
+    "default_help": "Varsayılan, başlığı yalnızca yanıtta henüz yoksa ayarlar.",
+    "replace_help": "Değiştir, başlık değerinin eşleşen kısmını değiştirir. Düzenli ifadeyle, yerine konacak değerdeki $1 ilk grubu ekler."
   },
   "request_headers": {
     "heading": "İstek başlıkları",

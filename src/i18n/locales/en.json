@@ -207,7 +207,9 @@
     "browse_file_limit_none": "No limit",
     "browse_file_limit_invalid": "Enter a whole number of 1 or more.",
     "field_browse_reveal_symlinks": "Show symlink targets",
-    "field_browse_reveal_symlinks_help": "The listing shows where each symlink points. This can reveal paths outside the site root."
+    "field_browse_reveal_symlinks_help": "The listing shows where each symlink points. This can reveal paths outside the site root.",
+    "field_try_files_help": "Optional. Candidates tried in order before the file server, e.g. {path} {path}/ /index.html?{query}. SPA mode is the line {path} /index.html.",
+    "field_try_files_spa_help": "Set by SPA mode. Turn SPA mode off to write your own line."
   },
   "edit_static": {
     "title": "Edit Static Server — :{{port}}",
@@ -474,14 +476,23 @@
     "health_interval": "Check interval",
     "health_timeout": "Check timeout",
     "health_status": "Expected status",
-    "active_help": "Caddy requests this path on every upstream at the interval and takes upstreams that fail out of rotation. Leave the path empty to turn active checks off.",
+    "active_help": "Caddy requests this path on every upstream (on the check port, if one is set) at the interval and takes upstreams that fail out of rotation. Leave the path and the port empty to turn active checks off.",
     "validation_needs_fail_duration": "Unhealthy status codes and max fails only take effect with a fail duration",
     "validation_max_fails": "Max fails must be 1 or greater",
-    "validation_needs_health_uri": "Interval, timeout and expected status need a health check path",
     "validation_health_uri": "The health check path must start with /",
     "validation_health_status": "Use a status code like 200 or a class like 2xx",
     "retry_methods": "Retry only these methods",
-    "validation_methods": "Methods are words like GET or HEAD, separated by spaces."
+    "validation_methods": "Methods are words like GET or HEAD, separated by spaces.",
+    "health_port": "Check port",
+    "health_port_default": "the upstream's port",
+    "health_headers": "Check request headers",
+    "health_headers_help": "One per line: the header name, a space, then the value. A name may appear on several lines.",
+    "health_passes": "Passes to mark healthy",
+    "health_fails": "Fails to mark down",
+    "validation_health_port": "The port must be a number from 1 to 65535",
+    "validation_health_count": "Passes and fails must be 1 or greater",
+    "validation_health_headers": "Write one header per line: a name, a space, then the value",
+    "validation_needs_health_target": "Interval, timeout, expected status, headers, passes and fails need a health check path or port"
   },
   "response_headers": {
     "heading": "Response Headers",
@@ -497,7 +508,14 @@
     "preset_nosniff": "X-Content-Type-Options",
     "preset_frame": "X-Frame-Options",
     "preset_referrer": "Referrer-Policy",
-    "preset_remove_server": "Remove Server"
+    "preset_remove_server": "Remove Server",
+    "op_default": "Default",
+    "op_replace": "Replace",
+    "field_search": "Text to find",
+    "field_replacement": "Replacement",
+    "field_regex": "Regular expression",
+    "default_help": "Default sets the header only if the response doesn't have it already.",
+    "replace_help": "Replace changes the matching part of the header's value. With Regular expression, $1 in the replacement inserts the first group."
   },
   "request_headers": {
     "heading": "Request Headers",

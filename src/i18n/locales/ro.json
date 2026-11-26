@@ -207,7 +207,9 @@
     "browse_file_limit_none": "Fără limită",
     "browse_file_limit_invalid": "Introduceți un număr întreg de cel puțin 1.",
     "field_browse_reveal_symlinks": "Afișează țintele legăturilor simbolice",
-    "field_browse_reveal_symlinks_help": "Lista arată unde duce fiecare legătură simbolică. Poate dezvălui căi din afara rădăcinii site-ului."
+    "field_browse_reveal_symlinks_help": "Lista arată unde duce fiecare legătură simbolică. Poate dezvălui căi din afara rădăcinii site-ului.",
+    "field_try_files_help": "Opțional. Candidați încercați în ordine înaintea serverului de fișiere, de ex. {path} {path}/ /index.html?{query}. Modul SPA este linia {path} /index.html.",
+    "field_try_files_spa_help": "Setat de modul SPA. Dezactivează modul SPA pentru a scrie propria linie."
   },
   "edit_static": {
     "title": "Editează serverul static — :{{port}}",
@@ -474,14 +476,23 @@
     "health_interval": "Intervalul verificării",
     "health_timeout": "Limita de timp a verificării",
     "health_status": "Starea așteptată",
-    "active_help": "Caddy cere această cale de la fiecare upstream la fiecare interval și scoate din rotație upstream-urile care eșuează. Lăsați calea goală pentru a opri verificările active.",
+    "active_help": "Caddy cere această cale de la fiecare upstream la intervalul dat (pe portul verificării, dacă este setat) și scoate din rotație upstream-urile care eșuează. Lasă calea și portul goale pentru a dezactiva verificările active.",
     "validation_needs_fail_duration": "Codurile de stare nesănătoase și eșecurile max. au efect doar cu o durată a eșecului",
     "validation_max_fails": "Eșecurile max. trebuie să fie cel puțin 1",
-    "validation_needs_health_uri": "Intervalul, limita de timp și starea așteptată necesită o cale de verificare",
     "validation_health_uri": "Calea verificării trebuie să înceapă cu /",
     "validation_health_status": "Folosiți un cod ca 200 sau o clasă ca 2xx",
     "retry_methods": "Reîncearcă doar aceste metode",
-    "validation_methods": "Metodele sunt cuvinte precum GET sau HEAD, separate prin spații."
+    "validation_methods": "Metodele sunt cuvinte precum GET sau HEAD, separate prin spații.",
+    "health_port": "Portul verificării",
+    "health_port_default": "portul upstream-ului",
+    "health_headers": "Antetele cererii de verificare",
+    "health_headers_help": "Câte unul pe linie: numele antetului, un spațiu, apoi valoarea. Un nume poate apărea pe mai multe linii.",
+    "health_passes": "Reușite pentru starea sănătos",
+    "health_fails": "Eșecuri pentru starea căzut",
+    "validation_health_port": "Portul trebuie să fie un număr de la 1 la 65535",
+    "validation_health_count": "Reușitele și eșecurile trebuie să fie 1 sau mai mult",
+    "validation_health_headers": "Scrie câte un antet pe linie: un nume, un spațiu, apoi valoarea",
+    "validation_needs_health_target": "Intervalul, limita de timp, starea așteptată, antetele, reușitele și eșecurile necesită o cale sau un port de verificare"
   },
   "response_headers": {
     "heading": "Antete de răspuns",
@@ -497,7 +508,14 @@
     "preset_nosniff": "X-Content-Type-Options",
     "preset_frame": "X-Frame-Options",
     "preset_referrer": "Referrer-Policy",
-    "preset_remove_server": "Elimină Server"
+    "preset_remove_server": "Elimină Server",
+    "op_default": "Implicit",
+    "op_replace": "Înlocuiește",
+    "field_search": "Text de căutat",
+    "field_replacement": "Înlocuire",
+    "field_regex": "Expresie regulată",
+    "default_help": "Implicit setează antetul doar dacă răspunsul nu îl are deja.",
+    "replace_help": "Înlocuiește schimbă partea potrivită din valoarea antetului. Cu expresie regulată, $1 din înlocuire inserează primul grup."
   },
   "request_headers": {
     "heading": "Antete ale cererii",

@@ -207,7 +207,9 @@
     "browse_file_limit_none": "无限制",
     "browse_file_limit_invalid": "请输入大于或等于 1 的整数。",
     "field_browse_reveal_symlinks": "显示符号链接目标",
-    "field_browse_reveal_symlinks_help": "列表会显示每个符号链接指向的位置,可能暴露站点根目录之外的路径。"
+    "field_browse_reveal_symlinks_help": "列表会显示每个符号链接指向的位置,可能暴露站点根目录之外的路径。",
+    "field_try_files_help": "可选。在文件服务器之前依次尝试的候选项，例如 {path} {path}/ /index.html?{query}。SPA 模式就是 {path} /index.html 这一行。",
+    "field_try_files_spa_help": "由 SPA 模式设置。关闭 SPA 模式即可编写自己的行。"
   },
   "edit_static": {
     "title": "编辑静态服务器 — :{{port}}",
@@ -474,14 +476,23 @@
     "health_interval": "检查间隔",
     "health_timeout": "检查超时",
     "health_status": "期望状态",
-    "active_help": "Caddy 按间隔向每个上游请求此路径，并把失败的上游移出轮换。路径留空即关闭主动检查。",
+    "active_help": "Caddy 按间隔向每个上游请求此路径（如设置了检查端口则使用该端口），并将失败的上游移出轮换。将路径和端口都留空即可关闭主动检查。",
     "validation_needs_fail_duration": "不健康状态码和最大失败次数只在设置故障持续时间后生效",
     "validation_max_fails": "最大失败次数必须至少为 1",
-    "validation_needs_health_uri": "间隔、超时和期望状态需要健康检查路径",
     "validation_health_uri": "健康检查路径必须以 / 开头",
     "validation_health_status": "请填写 200 这样的状态码或 2xx 这样的类别",
     "retry_methods": "仅重试这些方法",
-    "validation_methods": "方法是 GET、HEAD 之类的单词,用空格分隔。"
+    "validation_methods": "方法是 GET、HEAD 之类的单词,用空格分隔。",
+    "health_port": "检查端口",
+    "health_port_default": "上游的端口",
+    "health_headers": "检查请求的标头",
+    "health_headers_help": "每行一个：标头名称、一个空格，然后是值。同一名称可以出现在多行。",
+    "health_passes": "标记为健康所需的成功次数",
+    "health_fails": "标记为宕机所需的失败次数",
+    "validation_health_port": "端口必须是 1 到 65535 之间的数字",
+    "validation_health_count": "成功和失败次数必须为 1 或更大",
+    "validation_health_headers": "每行写一个标头：名称、一个空格，然后是值",
+    "validation_needs_health_target": "间隔、超时、期望状态、标头、成功和失败次数需要健康检查路径或端口"
   },
   "response_headers": {
     "heading": "响应头",
@@ -497,7 +508,14 @@
     "preset_nosniff": "X-Content-Type-Options",
     "preset_frame": "X-Frame-Options",
     "preset_referrer": "Referrer-Policy",
-    "preset_remove_server": "移除 Server"
+    "preset_remove_server": "移除 Server",
+    "op_default": "默认",
+    "op_replace": "替换",
+    "field_search": "要查找的文本",
+    "field_replacement": "替换为",
+    "field_regex": "正则表达式",
+    "default_help": "默认仅在响应中尚无该标头时才设置它。",
+    "replace_help": "替换会更改标头值中匹配的部分。使用正则表达式时，替换值中的 $1 会插入第一个分组。"
   },
   "request_headers": {
     "heading": "请求头",

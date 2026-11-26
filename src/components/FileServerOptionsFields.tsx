@@ -3,11 +3,13 @@ import {
   Checkbox, ExpandableSection, FormGroup, FormHelperText, FormSelect, FormSelectOption, HelperText, HelperTextItem, TextInput,
 } from "@patternfly/react-core";
 import { useTranslation } from "react-i18next";
-import { BROWSE_SORT_KEYS, type BrowseSort, type FileServerConfig, type PhpFastcgiConfig } from "../api";
+import { BROWSE_SORT_KEYS, SPA_TRY_FILES, type BrowseSort, type FileServerConfig, type PhpFastcgiConfig } from "../api";
 
 /** The static dialog's SPA and `file_server` options (#262), as edited: lists as typed text. */
 export interface FileServerOptionsDraft {
   spa: boolean;
+  /** The site's own try_files line; kept while SPA mode is on, which shows its own line instead. */
+  tryFiles: string;
   index: string;
   hide: string;
   precompressed: string[];
@@ -29,6 +31,7 @@ export const PRECOMPRESSED_FORMATS = ["zstd", "br", "gzip"] as const;
 export function fileServerOptionsDraft(fs: FileServerConfig | undefined): FileServerOptionsDraft {
   return {
     spa: !!fs?.spa,
+    tryFiles: fs?.tryFiles ?? "",
     index: fs?.index?.join(" ") ?? "",
     hide: fs?.hide?.join(" ") ?? "",
     precompressed: fs?.precompressed ?? [],
@@ -48,8 +51,8 @@ export function fileServerOptionsDraft(fs: FileServerConfig | undefined): FileSe
 const words = (s: string) => s.trim().split(/\s+/).filter(Boolean);
 
 /** The options part of a FileServerConfig; unset options stay absent so old sites save unchanged. */
-export function fileServerOptionsFromDraft(d: FileServerOptionsDraft): Pick<FileServerConfig, "spa" | "index" | "hide" | "precompressed" | "disableCanonicalUris" | "status" | "browseTemplate" | "browseRevealSymlinks" | "browseSort" | "browseFileLimit" | "templates"> {
-  const out: Pick<FileServerConfig, "spa" | "index" | "hide" | "precompressed" | "disableCanonicalUris" | "status" | "browseTemplate" | "browseRevealSymlinks" | "browseSort" | "browseFileLimit" | "templates"> = {};
+export function fileServerOptionsFromDraft(d: FileServerOptionsDraft): Pick<FileServerConfig, "spa" | "tryFiles" | "index" | "hide" | "precompressed" | "disableCanonicalUris" | "status" | "browseTemplate" | "browseRevealSymlinks" | "browseSort" | "browseFileLimit" | "templates"> {
+  const out: Pick<FileServerConfig, "spa" | "tryFiles" | "index" | "hide" | "precompressed" | "disableCanonicalUris" | "status" | "browseTemplate" | "browseRevealSymlinks" | "browseSort" | "browseFileLimit" | "templates"> = {};
   if (d.disableCanonicalUris) out.disableCanonicalUris = true;
   const status = parseInt(d.status, 10);
   if (d.status.trim() && !isNaN(status)) out.status = status;
@@ -64,7 +67,10 @@ export function fileServerOptionsFromDraft(d: FileServerOptionsDraft): Pick<File
       ...(d.templatesRoot.trim() ? { root: d.templatesRoot.trim() } : {}),
     };
   }
-  if (d.spa) out.spa = true;
+  // SPA mode is one fixed try_files line: typed by hand it is SPA mode too, so it reads back the same.
+  const tryFiles = words(d.tryFiles).join(" ");
+  if (d.spa || tryFiles === SPA_TRY_FILES) out.spa = true;
+  else if (tryFiles) out.tryFiles = tryFiles;
   if (words(d.index).length) out.index = words(d.index);
   if (words(d.hide).length) out.hide = words(d.hide);
   // The order is Caddy's preference order: keep the one the site already has (ticking a box
@@ -93,7 +99,7 @@ export function FileServerOptionsFields({ idPrefix, value, onChange, isDisabled,
   const { t } = useTranslation();
   const set = (patch: Partial<FileServerOptionsDraft>) => onChange({ ...value, ...patch });
   // Open from the start when a site already uses one of these options.
-  const [expanded, setExpanded] = useState(() => !!(value.index.trim() || value.hide.trim() || value.precompressed.length || value.disableCanonicalUris || value.status.trim() || value.browseTemplate.trim() || value.browseRevealSymlinks || value.browseSortBy || value.browseFileLimit.trim() || value.templates));
+  const [expanded, setExpanded] = useState(() => !!(value.tryFiles.trim() || value.index.trim() || value.hide.trim() || value.precompressed.length || value.disableCanonicalUris || value.status.trim() || value.browseTemplate.trim() || value.browseRevealSymlinks || value.browseSortBy || value.browseFileLimit.trim() || value.templates));
   const limitBad = browseFileLimitInvalid(value);
 
   return (
@@ -109,6 +115,14 @@ export function FileServerOptionsFields({ idPrefix, value, onChange, isDisabled,
         />
       </FormGroup>
       <ExpandableSection toggleText={t("add_static.advanced")} isIndented isExpanded={expanded} onToggle={(_e, v) => setExpanded(v)} data-testid={`${idPrefix}-advanced`}>
+        <TryFilesField
+          id={`${idPrefix}-try-files`}
+          value={value.spa ? SPA_TRY_FILES : value.tryFiles}
+          onChange={v => set({ tryFiles: v })}
+          isDisabled={isDisabled || value.spa}
+          placeholder={t("common.example_value", { value: "{path} {path}/ /index.html?{query}" })}
+          help={t(value.spa ? "add_static.field_try_files_spa_help" : "add_static.field_try_files_help")}
+        />
         <FormGroup label={t("add_static.field_index")} fieldId={`${idPrefix}-index`}>
           <TextInput
             id={`${idPrefix}-index`}
@@ -260,15 +274,21 @@ export function FileServerOptionsFields({ idPrefix, value, onChange, isDisabled,
   );
 }
 
-/** PHP sites' optional `try_files` (#262); the usual front-controller line is only a hint. */
-export function PhpTryFilesField({ id, value, onChange, isDisabled }: { id: string; value: string; onChange: (v: string) => void; isDisabled?: boolean }) {
+/** A free `try_files` line (#262), for PHP and static sites. */
+export function TryFilesField({ id, value, onChange, isDisabled, placeholder, help }: { id: string; value: string; onChange: (v: string) => void; isDisabled?: boolean; placeholder: string; help: string }) {
   const { t } = useTranslation();
   return (
     <FormGroup label={t("php_fastcgi.field_try_files")} fieldId={id}>
-      <TextInput id={id} value={value} onChange={(_e, v) => onChange(v)} placeholder="{path} {path}/ /index.php?{query}" isDisabled={isDisabled} />
-      <FormHelperText><HelperText><HelperTextItem>{t("php_fastcgi.field_try_files_help")}</HelperTextItem></HelperText></FormHelperText>
+      <TextInput id={id} value={value} onChange={(_e, v) => onChange(v)} placeholder={placeholder} isDisabled={isDisabled} />
+      <FormHelperText><HelperText><HelperTextItem>{help}</HelperTextItem></HelperText></FormHelperText>
     </FormGroup>
   );
+}
+
+/** PHP sites' optional `try_files` (#262); the usual front-controller line is only a hint. */
+export function PhpTryFilesField({ id, value, onChange, isDisabled }: { id: string; value: string; onChange: (v: string) => void; isDisabled?: boolean }) {
+  const { t } = useTranslation();
+  return <TryFilesField id={id} value={value} onChange={onChange} isDisabled={isDisabled} placeholder="{path} {path}/ /index.php?{query}" help={t("php_fastcgi.field_try_files_help")} />;
 }
 
 

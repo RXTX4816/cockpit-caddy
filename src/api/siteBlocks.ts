@@ -2,7 +2,7 @@
 // error pages) and surgically writing, editing or removing that block in a conf.d file, plus the
 // named-server (listener) blocks. Pure: no Host, no I/O. Builds on caddyfileDocument and globalOptions.
 
-import { type ProxyEntry } from "./types";
+import { type ProxyEntry, SPA_TRY_FILES } from "./types";
 import { externalHostList } from "./externalHosts";
 import { braceDelta, hasNestedBlocks } from "./siteTree";
 import { dnsProviderLines, buildLogCaddyLines } from "./globalOptions";
@@ -15,14 +15,30 @@ export { caddyQuote };
 
 
 
+/** Go's regexp.QuoteMeta: `value` as a regexp that matches exactly that text. */
+export function quoteRegexp(value: string): string {
+  return value.replace(/[\\.+*?()|[\]{}^$]/g, "\\$&");
+}
+
 /**
  * One `header` / `header_up` line for a header operation, values quoted for Caddy (#251). `defer` writes a set as `>Name`: the Caddyfile adapter defers only `-`, `?`,
  * `>` and `defer`, so on a proxied route a plain set runs before reverse_proxy adds the upstream's
  * header and both reach the client (#255, checked with `caddy adapt` on 2.11.7).
+ *
+ * The response `header` directive also has `?Name` (set only when the response has none, which
+ * Caddy runs deferred by itself) and a replace, written `>Name` everywhere: undeferred it would
+ * run before reverse_proxy or file_server set the header it is meant to change.
  */
 export function headerOpLine(prefix: string, h: import("./types").HeaderOperation, opts: { quoteSet?: boolean; defer?: boolean } = {}): string {
+  const response = /(^|\s)header$/.test(prefix);
   if (h.op === "delete") return `${prefix} -${h.name}`;
-  if (h.op === "replace") return `${prefix} ${h.name} ${caddyQuote(h.value ?? "")} ${caddyQuote(h.replacement ?? "")}`;
+  if (h.op === "default") return `${prefix} ?${h.name} ${caddyQuote(h.value ?? "", { always: opts.quoteSet })}`;
+  if (h.op === "replace") {
+    // Go expands `$1` in the replacement, so plain text doubles its `$`.
+    const find = h.literal ? quoteRegexp(h.value ?? "") : h.value ?? "";
+    const replacement = h.literal ? (h.replacement ?? "").replace(/\$/g, "$$$$") : h.replacement ?? "";
+    return `${prefix} ${response ? ">" : ""}${h.name} ${caddyQuote(find)} ${caddyQuote(replacement)}`;
+  }
   if (h.op === "add") return `${prefix} +${h.name} ${caddyQuote(h.value ?? "")}`;
   return `${prefix} ${opts.defer ? ">" : ""}${h.name} ${caddyQuote(h.value ?? "", { always: opts.quoteSet })}`;
 }
@@ -370,11 +386,17 @@ export function buildLbRetryLines(lbRetry: import("./types").LbRetryConfig | und
     if (lbRetry.maxFails != null) lines.push(`\t\tmax_fails ${lbRetry.maxFails}`);
     if (lbRetry.unhealthyStatus?.length) lines.push(`\t\tunhealthy_status ${lbRetry.unhealthyStatus.join(" ")}`);
   }
-  if (lbRetry.healthUri) {
-    lines.push(`\t\thealth_uri ${lbRetry.healthUri}`);
+  // Caddy runs active checks once a path or a port is set; the other options only tune them.
+  if (lbRetry.healthUri || lbRetry.healthPort) {
+    if (lbRetry.healthUri) lines.push(`\t\thealth_uri ${lbRetry.healthUri}`);
+    if (lbRetry.healthPort) lines.push(`\t\thealth_port ${lbRetry.healthPort}`);
     if (lbRetry.healthInterval) lines.push(`\t\thealth_interval ${lbRetry.healthInterval}`);
     if (lbRetry.healthTimeout) lines.push(`\t\thealth_timeout ${lbRetry.healthTimeout}`);
     if (lbRetry.healthStatus) lines.push(`\t\thealth_status ${lbRetry.healthStatus}`);
+    const headers = Object.entries(lbRetry.healthHeaders ?? {}).flatMap(([name, vals]) => vals.map(v => `\t\t\t${name} ${caddyQuote(v)}`));
+    if (headers.length) lines.push("\t\thealth_headers {", ...headers, "\t\t}");
+    if (lbRetry.healthPasses != null) lines.push(`\t\thealth_passes ${lbRetry.healthPasses}`);
+    if (lbRetry.healthFails != null) lines.push(`\t\thealth_fails ${lbRetry.healthFails}`);
   }
   return lines;
 }
@@ -674,7 +696,8 @@ function hasBrowseOptions(fs: import("./types").FileServerConfig): boolean {
  */
 export function buildFileServerLines(fs: import("./types").FileServerConfig, indent: string): string[] {
   const lines = [`${indent}root * ${caddyQuote(fs.root)}`];
-  if (fs.spa) lines.push(`${indent}try_files {path} /index.html`);
+  if (fs.spa) lines.push(`${indent}try_files ${SPA_TRY_FILES}`);
+  else if (fs.tryFiles?.trim()) lines.push(`${indent}try_files ${fs.tryFiles.trim()}`);
   // A listing template or listing options go on the block's own `browse`, so then the head has none.
   const template = fs.browse ? fs.browseTemplate : undefined;
   const browseBlock = !!fs.browse && hasBrowseOptions(fs);

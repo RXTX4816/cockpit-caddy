@@ -207,7 +207,9 @@
     "browse_file_limit_none": "Ei rajaa",
     "browse_file_limit_invalid": "Anna kokonaisluku, joka on vähintään 1.",
     "field_browse_reveal_symlinks": "Näytä symbolisten linkkien kohteet",
-    "field_browse_reveal_symlinks_help": "Listaus näyttää, mihin kukin symbolinen linkki osoittaa. Se voi paljastaa polkuja sivuston juuren ulkopuolelta."
+    "field_browse_reveal_symlinks_help": "Listaus näyttää, mihin kukin symbolinen linkki osoittaa. Se voi paljastaa polkuja sivuston juuren ulkopuolelta.",
+    "field_try_files_help": "Valinnainen. Ehdokkaat, joita kokeillaan järjestyksessä ennen tiedostopalvelinta, esim. {path} {path}/ /index.html?{query}. SPA-tila on rivi {path} /index.html.",
+    "field_try_files_spa_help": "SPA-tilan asettama. Poista SPA-tila käytöstä kirjoittaaksesi oman rivin."
   },
   "edit_static": {
     "title": "Muokkaa staattista palvelinta — :{{port}}",
@@ -474,14 +476,23 @@
     "health_interval": "Tarkistusväli",
     "health_timeout": "Tarkistuksen aikakatkaisu",
     "health_status": "Odotettu tila",
-    "active_help": "Caddy pyytää tätä polkua jokaiselta upstreamilta välein ja poistaa epäonnistuvat kierrosta. Jätä polku tyhjäksi poistaaksesi aktiiviset tarkistukset käytöstä.",
+    "active_help": "Caddy pyytää tätä polkua jokaiselta upstreamilta välin mukaan (tarkistusportissa, jos se on asetettu) ja poistaa epäonnistuvat kierrosta. Jätä polku ja portti tyhjiksi poistaaksesi aktiiviset tarkistukset käytöstä.",
     "validation_needs_fail_duration": "Epäterveet tilakoodit ja virheiden enimmäismäärä toimivat vain virheen keston kanssa",
     "validation_max_fails": "Virheitä enintään -arvon on oltava vähintään 1",
-    "validation_needs_health_uri": "Väli, aikakatkaisu ja odotettu tila tarvitsevat terveystarkistuksen polun",
     "validation_health_uri": "Terveystarkistuksen polun on alettava merkillä /",
     "validation_health_status": "Käytä tilakoodia kuten 200 tai luokkaa kuten 2xx",
     "retry_methods": "Yritä uudelleen vain näille metodeille",
-    "validation_methods": "Metodit ovat sanoja kuten GET tai HEAD, erotettuna välilyönnillä."
+    "validation_methods": "Metodit ovat sanoja kuten GET tai HEAD, erotettuna välilyönnillä.",
+    "health_port": "Tarkistusportti",
+    "health_port_default": "upstreamin portti",
+    "health_headers": "Tarkistuspyynnön otsakkeet",
+    "health_headers_help": "Yksi riviä kohden: otsakkeen nimi, välilyönti ja sitten arvo. Sama nimi voi olla usealla rivillä.",
+    "health_passes": "Onnistumisia terveeksi merkitsemiseen",
+    "health_fails": "Epäonnistumisia alas merkitsemiseen",
+    "validation_health_port": "Portin on oltava luku väliltä 1–65535",
+    "validation_health_count": "Onnistumisten ja epäonnistumisten on oltava 1 tai enemmän",
+    "validation_health_headers": "Kirjoita yksi otsake riville: nimi, välilyönti ja sitten arvo",
+    "validation_needs_health_target": "Väli, aikakatkaisu, odotettu tila, otsakkeet, onnistumiset ja epäonnistumiset tarvitsevat terveystarkistuksen polun tai portin"
   },
   "response_headers": {
     "heading": "Vastausotsakkeet",
@@ -497,7 +508,14 @@
     "preset_nosniff": "X-Content-Type-Options",
     "preset_frame": "X-Frame-Options",
     "preset_referrer": "Referrer-Policy",
-    "preset_remove_server": "Poista Server"
+    "preset_remove_server": "Poista Server",
+    "op_default": "Oletus",
+    "op_replace": "Korvaa",
+    "field_search": "Etsittävä teksti",
+    "field_replacement": "Korvaus",
+    "field_regex": "Säännöllinen lauseke",
+    "default_help": "Oletus asettaa otsakkeen vain, jos vastauksessa ei vielä ole sitä.",
+    "replace_help": "Korvaa muuttaa otsakkeen arvosta osuvan osan. Säännöllisellä lausekkeella korvauksen $1 lisää ensimmäisen ryhmän."
   },
   "request_headers": {
     "heading": "Pyyntöotsakkeet",

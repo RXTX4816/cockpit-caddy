@@ -207,7 +207,9 @@
     "browse_file_limit_none": "Sem limite",
     "browse_file_limit_invalid": "Insira um número inteiro igual ou maior que 1.",
     "field_browse_reveal_symlinks": "Mostrar destinos de links simbólicos",
-    "field_browse_reveal_symlinks_help": "A listagem mostra para onde cada link simbólico aponta. Isso pode revelar caminhos fora da raiz do site."
+    "field_browse_reveal_symlinks_help": "A listagem mostra para onde cada link simbólico aponta. Isso pode revelar caminhos fora da raiz do site.",
+    "field_try_files_help": "Opcional. Candidatos tentados em ordem antes do servidor de arquivos, p. ex. {path} {path}/ /index.html?{query}. O modo SPA é a linha {path} /index.html.",
+    "field_try_files_spa_help": "Definido pelo modo SPA. Desative o modo SPA para escrever sua própria linha."
   },
   "edit_static": {
     "title": "Editar servidor estático — :{{port}}",
@@ -474,14 +476,23 @@
     "health_interval": "Intervalo da verificação",
     "health_timeout": "Tempo limite da verificação",
     "health_status": "Status esperado",
-    "active_help": "O Caddy consulta este caminho em cada upstream a cada intervalo e tira da rotação os que falham. Deixe o caminho vazio para desligar as verificações ativas.",
+    "active_help": "O Caddy requisita este caminho em cada upstream a cada intervalo (na porta da verificação, se definida) e tira da rotação os que falham. Deixe o caminho e a porta vazios para desativar as verificações ativas.",
     "validation_needs_fail_duration": "Códigos de status não saudáveis e falhas máx. só valem com uma duração da falha",
     "validation_max_fails": "Falhas máx. deve ser 1 ou mais",
-    "validation_needs_health_uri": "Intervalo, tempo limite e status esperado precisam de um caminho de verificação",
     "validation_health_uri": "O caminho da verificação deve começar com /",
     "validation_health_status": "Use um código como 200 ou uma classe como 2xx",
     "retry_methods": "Repetir apenas estes métodos",
-    "validation_methods": "Métodos são palavras como GET ou HEAD, separadas por espaços."
+    "validation_methods": "Métodos são palavras como GET ou HEAD, separadas por espaços.",
+    "health_port": "Porta da verificação",
+    "health_port_default": "a porta do upstream",
+    "health_headers": "Cabeçalhos da requisição de verificação",
+    "health_headers_help": "Um por linha: o nome do cabeçalho, um espaço e depois o valor. Um nome pode aparecer em várias linhas.",
+    "health_passes": "Sucessos para marcar saudável",
+    "health_fails": "Falhas para marcar fora do ar",
+    "validation_health_port": "A porta deve ser um número de 1 a 65535",
+    "validation_health_count": "Sucessos e falhas devem ser 1 ou mais",
+    "validation_health_headers": "Escreva um cabeçalho por linha: um nome, um espaço e depois o valor",
+    "validation_needs_health_target": "Intervalo, tempo limite, status esperado, cabeçalhos, sucessos e falhas precisam de um caminho ou porta de verificação"
   },
   "response_headers": {
     "heading": "Cabeçalhos de resposta",
@@ -497,7 +508,14 @@
     "preset_nosniff": "X-Content-Type-Options",
     "preset_frame": "X-Frame-Options",
     "preset_referrer": "Referrer-Policy",
-    "preset_remove_server": "Remover Server"
+    "preset_remove_server": "Remover Server",
+    "op_default": "Padrão",
+    "op_replace": "Substituir",
+    "field_search": "Texto a procurar",
+    "field_replacement": "Substituição",
+    "field_regex": "Expressão regular",
+    "default_help": "Padrão define o cabeçalho apenas se a resposta ainda não o tiver.",
+    "replace_help": "Substituir altera a parte correspondente do valor do cabeçalho. Com expressão regular, $1 na substituição insere o primeiro grupo."
   },
   "request_headers": {
     "heading": "Cabeçalhos da requisição",

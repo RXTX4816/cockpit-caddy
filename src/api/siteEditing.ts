@@ -56,6 +56,9 @@ export function reliesOnCaddyfileTls(p: ProxyEntry): boolean {
  * the JSON push doesn't build, and snippet imports (#288) are only in the Caddyfile.
  */
 export function needsCaddyfileReload(p: ProxyEntry): boolean {
+  // A static site's own try_files adapts to grouped routes, one per candidate with a query part;
+  // only SPA mode's fixed line has a hand-built JSON form.
+  if (p.fileServer?.tryFiles?.trim()) return true;
   // Snippet imports (#288) only exist in the Caddyfile; hand-built JSON would drop what they add.
   // A client_ip matcher (#286) needs the server's trusted_proxies, which the global options set
   // and only Caddy's adapter puts on the server; the hand-built JSON server has none.

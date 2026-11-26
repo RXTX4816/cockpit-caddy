@@ -207,7 +207,9 @@
     "browse_file_limit_none": "Nessun limite",
     "browse_file_limit_invalid": "Inserisci un numero intero pari o superiore a 1.",
     "field_browse_reveal_symlinks": "Mostra le destinazioni dei link simbolici",
-    "field_browse_reveal_symlinks_help": "L'elenco mostra dove punta ogni link simbolico. Può rivelare percorsi fuori dalla radice del sito."
+    "field_browse_reveal_symlinks_help": "L'elenco mostra dove punta ogni link simbolico. Può rivelare percorsi fuori dalla radice del sito.",
+    "field_try_files_help": "Facoltativo. Candidati provati in ordine prima del file server, ad es. {path} {path}/ /index.html?{query}. La modalità SPA è la riga {path} /index.html.",
+    "field_try_files_spa_help": "Impostato dalla modalità SPA. Disattiva la modalità SPA per scrivere una riga tua."
   },
   "edit_static": {
     "title": "Modifica server statico — :{{port}}",
@@ -474,14 +476,23 @@
     "health_interval": "Intervallo del controllo",
     "health_timeout": "Timeout del controllo",
     "health_status": "Stato atteso",
-    "active_help": "Caddy richiede questo percorso su ogni upstream a ogni intervallo ed esclude dalla rotazione quelli che falliscono. Lascia vuoto il percorso per disattivare i controlli attivi.",
+    "active_help": "Caddy richiede questo percorso a ogni upstream a ogni intervallo (sulla porta del controllo, se impostata) e toglie dalla rotazione quelli che falliscono. Lascia vuoti percorso e porta per disattivare i controlli attivi.",
     "validation_needs_fail_duration": "I codici di stato non sani e i guasti max hanno effetto solo con una durata del guasto",
     "validation_max_fails": "I guasti max devono essere almeno 1",
-    "validation_needs_health_uri": "Intervallo, timeout e stato atteso richiedono un percorso di controllo",
     "validation_health_uri": "Il percorso del controllo deve iniziare con /",
     "validation_health_status": "Usa un codice come 200 o una classe come 2xx",
     "retry_methods": "Riprova solo questi metodi",
-    "validation_methods": "I metodi sono parole come GET o HEAD, separate da spazi."
+    "validation_methods": "I metodi sono parole come GET o HEAD, separate da spazi.",
+    "health_port": "Porta del controllo",
+    "health_port_default": "la porta dell'upstream",
+    "health_headers": "Intestazioni della richiesta di controllo",
+    "health_headers_help": "Una per riga: il nome dell'intestazione, uno spazio, poi il valore. Un nome può comparire su più righe.",
+    "health_passes": "Successi per segnare sano",
+    "health_fails": "Fallimenti per segnare non disponibile",
+    "validation_health_port": "La porta deve essere un numero da 1 a 65535",
+    "validation_health_count": "Successi e fallimenti devono essere 1 o più",
+    "validation_health_headers": "Scrivi un'intestazione per riga: un nome, uno spazio, poi il valore",
+    "validation_needs_health_target": "Intervallo, timeout, stato atteso, intestazioni, successi e fallimenti richiedono un percorso o una porta di controllo"
   },
   "response_headers": {
     "heading": "Header di risposta",
@@ -497,7 +508,14 @@
     "preset_nosniff": "X-Content-Type-Options",
     "preset_frame": "X-Frame-Options",
     "preset_referrer": "Referrer-Policy",
-    "preset_remove_server": "Rimuovi Server"
+    "preset_remove_server": "Rimuovi Server",
+    "op_default": "Predefinito",
+    "op_replace": "Sostituisci",
+    "field_search": "Testo da cercare",
+    "field_replacement": "Sostituzione",
+    "field_regex": "Espressione regolare",
+    "default_help": "Predefinito imposta l'intestazione solo se la risposta non ce l'ha già.",
+    "replace_help": "Sostituisci cambia la parte corrispondente del valore dell'intestazione. Con l'espressione regolare, $1 nella sostituzione inserisce il primo gruppo."
   },
   "request_headers": {
     "heading": "Header della richiesta",

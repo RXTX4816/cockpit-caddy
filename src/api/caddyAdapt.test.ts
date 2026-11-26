@@ -544,10 +544,80 @@ describe.runIf(available || required)("passive and active health checks (#252)",
     expect({ ...pushed.active, interval: ns(pushed.active.interval), timeout: ns(pushed.active.timeout) }).toEqual(fromCaddy.active);
   });
 
+  it("reads the check port, request headers, passes and fails back", () => {
+    const cfg = {
+      healthUri: "/healthz", healthPort: 8081, healthPasses: 2, healthFails: 3,
+      healthHeaders: { Host: ["app.internal"], "X-Token": ["a b", "c"] },
+    };
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, lbRetry: cfg })]);
+    expect(conf).toContain('\t\thealth_headers {\n\t\t\tHost app.internal\n\t\t\tX-Token "a b"\n\t\t\tX-Token c\n\t\t}\n');
+    const [p] = readBack(conf);
+    expect(p.lbRetry).toEqual(cfg);
+  });
+
+  it("a port without a path still runs active checks, as in Caddy", () => {
+    const cfg = { healthPort: 8081, healthInterval: "10s" };
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, lbRetry: cfg })]);
+    expect(adaptedRp(conf).health_checks).toEqual({ active: { port: 8081, interval: 10e9 } });
+    expect(readBack(conf)[0].lbRetry).toEqual(cfg);
+  });
+
+  it("the instant-apply JSON carries the same port, headers, passes and fails", () => {
+    const cfg = { healthUri: "/h", healthPort: 8081, healthPasses: 2, healthFails: 3, healthHeaders: { Host: ["app.internal"] } };
+    const p = entry({ tls: false, externalPort: 8080, lbRetry: cfg });
+    const fromCaddy = adaptedRp(proxiesToCaddyfile([p])).health_checks;
+    const pushed = (buildServerEntry(p).routes?.[0]?.handle?.find(h => h.handler === "reverse_proxy") as Record<string, unknown>).health_checks;
+    expect(pushed).toEqual(fromCaddy);
+  });
+
   it("unhealthy_status is not written without fail_duration, where Caddy would ignore it", () => {
     const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, lbRetry: { unhealthyStatus: [500] } })]);
     expect(conf).not.toContain("unhealthy_status");
     expect(adaptedRp(conf).health_checks).toBeUndefined();
+  });
+});
+
+describe.runIf(available || required)("response header default and replace adapt and read back", () => {
+  const headers: ProxyEntry["responseHeaders"] = [
+    { op: "default", name: "Cache-Control", value: "max-age=60" },
+    { op: "replace", name: "Location", value: "http://a.b/{x}$", replacement: "https://a.b/$1 ok", literal: true },
+    { op: "replace", name: "Server", value: "^Apache(.*)$", replacement: "web$1" },
+  ];
+  const sites: [string, Partial<ProxyEntry>][] = [
+    ["proxied", { tls: false, externalPort: 8080 }],
+    ["static", { tls: false, externalPort: 8080, fileServer: { root: "/srv/app" } }],
+  ];
+  function headerHandlers(conf: string): unknown[] {
+    const found: unknown[] = [];
+    JSON.stringify(adapt(conf), (k, v) => {
+      if (v && typeof v === "object" && (v as { handler?: string }).handler === "headers") found.push(v);
+      return v;
+    });
+    return found;
+  }
+
+  it.each(sites)("reads back as the same model (%s)", (_, site) => {
+    const [p] = readBack(proxiesToCaddyfile([entry({ ...site, responseHeaders: headers })]));
+    expect(p.responseHeaders).toEqual(headers);
+  });
+
+  it.each(sites)("the default is Caddy's require handler and the replaces are deferred (%s)", (_, site) => {
+    const adapted = headerHandlers(proxiesToCaddyfile([entry({ ...site, responseHeaders: headers })]));
+    expect(adapted).toEqual([
+      { handler: "headers", response: { require: { headers: { "Cache-Control": null } }, set: { "Cache-Control": ["max-age=60"] } } },
+      { handler: "headers", response: { deferred: true, replace: { Location: [{ search_regexp: "http://a\\.b/\\{x\\}\\$", replace: "https://a.b/$$1 ok" }] } } },
+      { handler: "headers", response: { deferred: true, replace: { Server: [{ search_regexp: "^Apache(.*)$", replace: "web$1" }] } } },
+    ]);
+  });
+
+  it("the instant-apply JSON builds the same handlers, the replaces in one", () => {
+    const p = entry({ tls: false, externalPort: 8080, responseHeaders: headers });
+    const pushed = buildServerEntry(p).routes?.[0]?.handle?.filter(h => h.handler === "headers");
+    const adapted = headerHandlers(proxiesToCaddyfile([p])) as Array<{ response: { replace?: Record<string, unknown> } }>;
+    expect(pushed).toEqual([
+      adapted[0],
+      { handler: "headers", response: { deferred: true, replace: { ...adapted[1].response.replace, ...adapted[2].response.replace } } },
+    ]);
   });
 });
 
@@ -780,6 +850,30 @@ describe.runIf(available || required)("static and PHP site options round-trip th
     expect(conf).toContain("\ttry_files {path} {path}/ /index.php?{query}\n");
     const [p] = readBack(conf);
     expect(p.phpFastcgi).toEqual(phpFastcgi);
+  });
+
+  it.each(sites)("a static site's own try_files (%s)", (_, site) => {
+    const fileServer = { root: "/srv/app", browse: false, tryFiles: "{path} {path}/ /index.html?{query}" };
+    const conf = proxiesToCaddyfile([entry({ ...site, fileServer })]);
+    expect(conf).toContain("\ttry_files {path} {path}/ /index.html?{query}\n");
+    const [p] = readBack(conf);
+    expect(p.fileServer).toEqual(fileServer);
+  });
+
+  it("SPA mode wins over a try_files line, which then isn't written", () => {
+    const conf = proxiesToCaddyfile([entry({ tls: false, externalPort: 8080, fileServer: { root: "/srv/app", spa: true, tryFiles: "{path} /other.html" } })]);
+    expect(conf.match(/try_files/g)).toHaveLength(1);
+    expect(readBack(conf)[0].fileServer).toEqual({ root: "/srv/app", browse: false, spa: true });
+  });
+
+  it("a hand-written try_files on a static site is read into the field and kept on save", () => {
+    const conf = `${CONF_HEADER}\n\nstatic.example.com {\n\troot * /srv/app\n\ttry_files {path} {path}.html /fallback.html\n\tfile_server\n}\n\nother.example.com {\n\treverse_proxy localhost:9000\n}\n`;
+    const p = readBack(conf).find(x => x.fileServer)!;
+    expect(p.fileServer?.tryFiles).toBe("{path} {path}.html /fallback.html");
+    const edited = surgicallyWriteProxy(conf, { ...p, fileServer: { ...p.fileServer!, hide: [".git"] } });
+    expect(edited.match(/try_files/g)).toHaveLength(1);
+    const again = readBack(edited).find(x => x.fileServer)!;
+    expect(again.fileServer).toMatchObject({ tryFiles: "{path} {path}.html /fallback.html", hide: [".git"] });
   });
 
   it("PHP try_files keeps a custom index", () => {

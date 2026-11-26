@@ -1972,6 +1972,65 @@ describe("parseProxies — responseHeaders round-trip", () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// Response headers — `?` default and replace
+// ---------------------------------------------------------------------------
+
+describe("response header default and replace", () => {
+  const def = { op: "default" as const, name: "Cache-Control", value: "max-age=60" };
+  const plain = { op: "replace" as const, name: "Location", value: "http://a.b/", replacement: "https://a.b/", literal: true };
+  const regex = { op: "replace" as const, name: "Server", value: "^Apache(.*)$", replacement: "web$1" };
+
+  it("writes a default as ?Name, and never defers it with >", () => {
+    expect(proxyToBlock(proxy({ responseHeaders: [def] }))).toContain('\theader ?Cache-Control "max-age=60"\n');
+    expect(proxyToBlock(proxy({ fileServer: { root: "/srv" }, responseHeaders: [def] }))).toContain('\theader ?Cache-Control "max-age=60"\n');
+  });
+
+  it("writes a replace deferred, plain text escaped and a regexp as typed", () => {
+    const out = proxyToBlock(proxy({ responseHeaders: [plain, regex] }));
+    expect(out).toContain('\theader >Location "http://a\\.b/" https://a.b/\n');
+    expect(out).toContain("\theader >Server ^Apache(.*)$ web$1\n");
+    // A static site's own headers are set by file_server, so the replace waits for them too.
+    expect(proxyToBlock(proxy({ fileServer: { root: "/srv" }, responseHeaders: [regex] }))).toContain("\theader >Server ^Apache(.*)$ web$1\n");
+  });
+
+  it("header_down replace is unchanged: its value is the regexp, without >", () => {
+    const out = proxyToBlock(proxy({ upstreamResponseHeaders: [{ op: "replace", name: "Location", value: "^http://", replacement: "https://" }] }));
+    expect(out).toContain("\t\theader_down Location ^http:// https://\n");
+  });
+
+  it("pushes a default as its own headers handler with require, like the adapter", () => {
+    const handles = buildServerEntry(proxy({ responseHeaders: [{ op: "set", name: "X-A", value: "1" }, def] })).routes[0].handle;
+    expect(handles.filter(h => h.handler === "headers")).toEqual([
+      { handler: "headers", response: { deferred: true, set: { "X-A": ["1"] } } },
+      { handler: "headers", response: { require: { headers: { "Cache-Control": null } }, set: { "Cache-Control": ["max-age=60"] } } },
+    ]);
+  });
+
+  it("pushes a replace as search_regexp in the deferred handler", () => {
+    const [h] = buildServerEntry(proxy({ responseHeaders: [plain, regex] })).routes[0].handle;
+    expect(h).toEqual({ handler: "headers", response: { deferred: true, replace: {
+      Location: [{ search_regexp: "http://a\\.b/", replace: "https://a.b/" }],
+      Server: [{ search_regexp: "^Apache(.*)$", replace: "web$1" }],
+    } } });
+  });
+
+  it("reads both back from the JSON, telling plain text from a regexp", () => {
+    const [p] = parseProxies(makeConfig([
+      { handler: "headers", response: { require: { headers: { "Cache-Control": null } }, set: { "Cache-Control": ["max-age=60"] } } },
+      { handler: "headers", response: { deferred: true, replace: { Location: [{ search_regexp: "http://a\\.b/", replace: "https://a.b/" }] } } },
+      { handler: "headers", response: { deferred: true, replace: { Server: [{ search_regexp: "^Apache(.*)$", replace: "web$1" }] } } },
+      { handler: "reverse_proxy", upstreams: [{ dial: "localhost:7701" }] },
+    ]));
+    expect(p.responseHeaders).toEqual([def, plain, regex]);
+  });
+
+  it("the pushed JSON reads back as the same headers", () => {
+    const [p] = parseProxies({ apps: { http: { servers: { srv0: buildServerEntry(proxy({ responseHeaders: [def, plain, regex] })) } } } });
+    expect(p.responseHeaders).toEqual([def, plain, regex]);
+  });
+});
+
 describe("parseProxies — rewrite round-trip", () => {
   it("parses strip_prefix from JSON config", () => {
     const config = makeConfig([

@@ -207,7 +207,9 @@
     "browse_file_limit_none": "Tanpa batas",
     "browse_file_limit_invalid": "Masukkan bilangan bulat 1 atau lebih.",
     "field_browse_reveal_symlinks": "Tampilkan tujuan symlink",
-    "field_browse_reveal_symlinks_help": "Daftar menampilkan tujuan setiap symlink. Ini dapat mengungkap jalur di luar root situs."
+    "field_browse_reveal_symlinks_help": "Daftar menampilkan tujuan setiap symlink. Ini dapat mengungkap jalur di luar root situs.",
+    "field_try_files_help": "Opsional. Kandidat yang dicoba berurutan sebelum server berkas, mis. {path} {path}/ /index.html?{query}. Mode SPA adalah baris {path} /index.html.",
+    "field_try_files_spa_help": "Diatur oleh mode SPA. Matikan mode SPA untuk menulis baris sendiri."
   },
   "edit_static": {
     "title": "Edit server statis — :{{port}}",
@@ -474,14 +476,23 @@
     "health_interval": "Interval pemeriksaan",
     "health_timeout": "Batas waktu pemeriksaan",
     "health_status": "Status yang diharapkan",
-    "active_help": "Caddy meminta jalur ini ke setiap upstream pada setiap interval dan mengeluarkan upstream yang gagal dari rotasi. Kosongkan jalur untuk mematikan pemeriksaan aktif.",
+    "active_help": "Caddy meminta jalur ini ke setiap upstream pada interval tersebut (di port pemeriksaan, jika diatur) dan mengeluarkan upstream yang gagal dari rotasi. Kosongkan jalur dan port untuk mematikan pemeriksaan aktif.",
     "validation_needs_fail_duration": "Kode status tidak sehat dan maks. kegagalan hanya berlaku dengan durasi kegagalan",
     "validation_max_fails": "Maks. kegagalan minimal 1",
-    "validation_needs_health_uri": "Interval, batas waktu, dan status yang diharapkan memerlukan jalur pemeriksaan",
     "validation_health_uri": "Jalur pemeriksaan harus diawali /",
     "validation_health_status": "Gunakan kode seperti 200 atau kelas seperti 2xx",
     "retry_methods": "Ulangi hanya metode ini",
-    "validation_methods": "Metode adalah kata seperti GET atau HEAD, dipisahkan spasi."
+    "validation_methods": "Metode adalah kata seperti GET atau HEAD, dipisahkan spasi.",
+    "health_port": "Port pemeriksaan",
+    "health_port_default": "port upstream",
+    "health_headers": "Header permintaan pemeriksaan",
+    "health_headers_help": "Satu per baris: nama header, spasi, lalu nilainya. Satu nama boleh muncul di beberapa baris.",
+    "health_passes": "Keberhasilan untuk ditandai sehat",
+    "health_fails": "Kegagalan untuk ditandai mati",
+    "validation_health_port": "Port harus berupa angka dari 1 sampai 65535",
+    "validation_health_count": "Keberhasilan dan kegagalan harus 1 atau lebih",
+    "validation_health_headers": "Tulis satu header per baris: nama, spasi, lalu nilainya",
+    "validation_needs_health_target": "Interval, batas waktu, status yang diharapkan, header, keberhasilan, dan kegagalan memerlukan jalur atau port pemeriksaan"
   },
   "response_headers": {
     "heading": "Header respons",
@@ -497,7 +508,14 @@
     "preset_nosniff": "X-Content-Type-Options",
     "preset_frame": "X-Frame-Options",
     "preset_referrer": "Referrer-Policy",
-    "preset_remove_server": "Hapus Server"
+    "preset_remove_server": "Hapus Server",
+    "op_default": "Bawaan",
+    "op_replace": "Ganti",
+    "field_search": "Teks yang dicari",
+    "field_replacement": "Pengganti",
+    "field_regex": "Ekspresi reguler",
+    "default_help": "Bawaan menetapkan header hanya jika respons belum memilikinya.",
+    "replace_help": "Ganti mengubah bagian nilai header yang cocok. Dengan ekspresi reguler, $1 dalam pengganti menyisipkan grup pertama."
   },
   "request_headers": {
     "heading": "Header permintaan",

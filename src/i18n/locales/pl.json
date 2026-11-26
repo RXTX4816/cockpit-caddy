@@ -207,7 +207,9 @@
     "browse_file_limit_none": "Bez limitu",
     "browse_file_limit_invalid": "Wpisz liczbę całkowitą równą 1 lub większą.",
     "field_browse_reveal_symlinks": "Pokaż cele dowiązań symbolicznych",
-    "field_browse_reveal_symlinks_help": "Lista pokazuje, dokąd prowadzi każde dowiązanie. Może to ujawnić ścieżki poza katalogiem głównym witryny."
+    "field_browse_reveal_symlinks_help": "Lista pokazuje, dokąd prowadzi każde dowiązanie. Może to ujawnić ścieżki poza katalogiem głównym witryny.",
+    "field_try_files_help": "Opcjonalne. Kandydaci sprawdzani po kolei przed serwerem plików, np. {path} {path}/ /index.html?{query}. Tryb SPA to wiersz {path} /index.html.",
+    "field_try_files_spa_help": "Ustawione przez tryb SPA. Wyłącz tryb SPA, aby wpisać własny wiersz."
   },
   "edit_static": {
     "title": "Edytuj serwer statyczny — :{{port}}",
@@ -474,14 +476,23 @@
     "health_interval": "Interwał kontroli",
     "health_timeout": "Limit czasu kontroli",
     "health_status": "Oczekiwany status",
-    "active_help": "Caddy odpytuje tę ścieżkę na każdym upstreamie co interwał i wyłącza z rotacji te, które zawodzą. Zostaw ścieżkę pustą, aby wyłączyć aktywne kontrole.",
+    "active_help": "Caddy w podanym interwale wysyła żądanie tej ścieżki do każdego upstreamu (na port kontroli, jeśli ustawiony) i usuwa z rotacji te, które zawodzą. Zostaw ścieżkę i port puste, aby wyłączyć aktywne kontrole.",
     "validation_needs_fail_duration": "Kody statusu awarii i maks. błędów działają tylko z czasem awarii",
     "validation_max_fails": "Maks. błędów musi wynosić co najmniej 1",
-    "validation_needs_health_uri": "Interwał, limit czasu i oczekiwany status wymagają ścieżki kontroli",
     "validation_health_uri": "Ścieżka kontroli stanu musi zaczynać się od /",
     "validation_health_status": "Podaj kod jak 200 lub klasę jak 2xx",
     "retry_methods": "Ponawiaj tylko te metody",
-    "validation_methods": "Metody to słowa takie jak GET lub HEAD, oddzielone spacjami."
+    "validation_methods": "Metody to słowa takie jak GET lub HEAD, oddzielone spacjami.",
+    "health_port": "Port kontroli",
+    "health_port_default": "port upstreamu",
+    "health_headers": "Nagłówki żądania kontroli",
+    "health_headers_help": "Jeden w wierszu: nazwa nagłówka, spacja, a potem wartość. Nazwa może wystąpić w kilku wierszach.",
+    "health_passes": "Sukcesy do oznaczenia jako sprawny",
+    "health_fails": "Błędy do oznaczenia jako niedostępny",
+    "validation_health_port": "Port musi być liczbą od 1 do 65535",
+    "validation_health_count": "Sukcesy i błędy muszą wynosić 1 lub więcej",
+    "validation_health_headers": "Wpisz jeden nagłówek w wierszu: nazwę, spację, a potem wartość",
+    "validation_needs_health_target": "Interwał, limit czasu, oczekiwany status, nagłówki, sukcesy i błędy wymagają ścieżki lub portu kontroli"
   },
   "response_headers": {
     "heading": "Nagłówki odpowiedzi",
@@ -497,7 +508,14 @@
     "preset_nosniff": "X-Content-Type-Options",
     "preset_frame": "X-Frame-Options",
     "preset_referrer": "Referrer-Policy",
-    "preset_remove_server": "Usuń Server"
+    "preset_remove_server": "Usuń Server",
+    "op_default": "Domyślny",
+    "op_replace": "Zamień",
+    "field_search": "Szukany tekst",
+    "field_replacement": "Zamiennik",
+    "field_regex": "Wyrażenie regularne",
+    "default_help": "Domyślny ustawia nagłówek tylko wtedy, gdy odpowiedź jeszcze go nie ma.",
+    "replace_help": "Zamień zmienia pasującą część wartości nagłówka. Z wyrażeniem regularnym $1 w zamienniku wstawia pierwszą grupę."
   },
   "request_headers": {
     "heading": "Nagłówki żądania",

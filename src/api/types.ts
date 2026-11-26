@@ -360,11 +360,16 @@ export interface DynamicUpstreamSource {
 }
 
 export interface HeaderOperation {
-  /** `replace` only exists for header_down: `value` is the regexp to find, `replacement` what it becomes. */
-  op: "set" | "add" | "delete" | "replace";
+  /** `replace`: `value` is what to find, `replacement` what it becomes; header_down and the
+   *  response `header` directive have it. `default` (`header ?Name value`) only exists for
+   *  the response `header` directive: set the header only when the response has none. */
+  op: "set" | "add" | "delete" | "replace" | "default";
   name: string;
   value?: string;
   replacement?: string;
+  /** Response `replace` only: `value` is plain text, written as an escaped regexp. Without it
+   *  `value` is the regexp itself, as Caddy reads it. */
+  literal?: boolean;
 }
 
 export type RewriteConfig =
@@ -400,11 +405,17 @@ export interface RedirectConfig {
   html?: boolean;
 }
 
+/** The `try_files` candidates of SPA mode (#262). */
+export const SPA_TRY_FILES = "{path} /index.html";
+
 export interface FileServerConfig {
   root: string;
   browse?: boolean;
   /** SPA mode (#262): `try_files {path} /index.html`, so deep links get the app's index.html. */
   spa?: boolean;
+  /** The site's own `try_files` candidates, e.g. `{path} {path}/ /index.html?{query}`. Not
+   *  written while `spa` is on, which is that one line; never the SPA line itself. */
+  tryFiles?: string;
   /** `file_server { index … }`: index file names. Omit for Caddy's default (index.html, index.txt). */
   index?: string[];
   /** `file_server { hide … }`: files or patterns never served. */
@@ -510,8 +521,17 @@ export interface LbRetryConfig {
   maxFails?: number;
   /** Passive: upstream response codes that count as a failure (only with failDuration). */
   unhealthyStatus?: number[];
-  /** Active health checks (#252): path Caddy requests on each upstream; empty = off. */
+  /** Active health checks (#252): path Caddy requests on each upstream. Active checks are off
+   *  unless this or healthPort is set. */
   healthUri?: string;
+  /** Active: the port checked instead of the upstream's own. */
+  healthPort?: number;
+  /** Active: headers on the check request, e.g. `Host`; a name may have several values. */
+  healthHeaders?: Record<string, string[]>;
+  /** Active: consecutive passing checks before an upstream counts as healthy again (Caddy: 1). */
+  healthPasses?: number;
+  /** Active: consecutive failing checks before an upstream counts as down (Caddy: 1). */
+  healthFails?: number;
   /** Active: time between checks (Caddy: 30s). */
   healthInterval?: string;
   /** Active: how long to wait for a check's reply (Caddy: 5s). */
